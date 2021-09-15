@@ -1,2 +1,2 @@
 # madock
-Local development environment for Magento
+Local development environment based on Docker for Magento
