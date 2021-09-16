@@ -21,15 +21,19 @@ func GetExecDirPath() string {
 	return dirAbsPath
 }
 
-func GetRunDirPath() string {
-	return filepath.Dir(os.Args[0])
+func GetExecDirName() string {
+	return filepath.Base(GetExecDirPath())
 }
 
-func GetRunDirName() string {
-	dir, err := filepath.Abs(GetRunDirPath())
+func GetRunDirPath() string {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		return ""
 	}
 
 	return dir
+}
+
+func GetRunDirName() string {
+	return filepath.Base(GetRunDirPath())
 }
