@@ -9,5 +9,5 @@
 !/go.sum/*
 !/src
 !/src/*
-!/projects
-!/projects/*
+!/src/**
+!/projects/config.json.sample
