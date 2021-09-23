@@ -2,6 +2,6 @@ package helper
 
 import "fmt"
 
-func help() {
-	fmt.Println("")
+func Help() {
+	fmt.Println("sdsdsad")
 }
