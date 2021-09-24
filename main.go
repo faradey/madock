@@ -15,6 +15,7 @@ func main() {
 		command := strings.ToLower(os.Args[1])
 		switch command {
 		case "setup":
+			commands.Setup()
 		case "start":
 		case "stop":
 		case "restart":
