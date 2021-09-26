@@ -22,6 +22,8 @@ func main() {
 		case "refresh":
 		case "magento":
 		case "composer":
+		case "dbimport":
+		case "dbexport":
 		case "help":
 			helper.Help()
 		default:
@@ -32,7 +34,7 @@ func main() {
 		fmt.Println(paths.GetExecDirPath())
 		fmt.Println(paths.GetRunDirPath())
 		fmt.Println(paths.GetRunDirName())
-		fmt.Println(configs.GetProjectsConfig(paths.GetExecDirPath() + "/projects"))
+		fmt.Println(configs.GetGeneralConfig())
 	} else {
 		helper.Help()
 	}

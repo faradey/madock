@@ -7,17 +7,24 @@ import (
 )
 
 type ToolsVersions struct {
-	Php, Db, Elastic, Composer string
+	Php, Db, Elastic, Composer, Redis, RabbitMQ string
 }
 
 func GetVersions() ToolsVersions {
-	_, mageVersion := getMagentoVersions()
-	return ToolsVersions{Php: GetPhpVersion(mageVersion), Db: GetDBVersion(mageVersion), Elastic: GetElasticVersion(mageVersion), Composer: GetComposerVersion(mageVersion)}
+	_, mageVersion := getMagentoVersion()
+	return ToolsVersions{
+		Php:      GetPhpVersion(mageVersion),
+		Db:       GetDBVersion(mageVersion),
+		Elastic:  GetElasticVersion(mageVersion),
+		Composer: GetComposerVersion(mageVersion),
+		Redis:    GetRedisVersion(mageVersion),
+		RabbitMQ: GetRabbitMQVersion(mageVersion),
+	}
 }
 
-func getMagentoVersions() (edition, version string) {
-	composerLockPath := paths.GetRunDirPath() + "/composer.json"
-	txt, err := ioutil.ReadFile(composerLockPath)
+func getMagentoVersion() (edition, version string) {
+	composerPath := paths.GetRunDirPath() + "/composer.json"
+	txt, err := ioutil.ReadFile(composerPath)
 	if err == nil {
 		re := regexp.MustCompile(`(?is)"magento/product-(community|enterprise)-edition".*?:.*?"([\.0-9]+?)"`)
 		magentoVersion := re.FindAllStringSubmatch(string(txt), -1)
@@ -96,6 +103,30 @@ func GetComposerVersion(mageVer string) string {
 		return "2"
 	} else if mageVer >= "2.0.0" {
 		return "1"
+	}
+
+	return ""
+}
+
+func GetRedisVersion(mageVer string) string {
+	if mageVer >= "2.4.2" {
+		return "6.0"
+	} else if mageVer >= "2.4.0" {
+		return "5.0"
+	} else if mageVer >= "2.3.7" {
+		return "6.0"
+	} else if mageVer >= "2.0.0" {
+		return "5.0"
+	}
+
+	return ""
+}
+
+func GetRabbitMQVersion(mageVer string) string {
+	if mageVer >= "2.3.4" {
+		return "3.8"
+	} else if mageVer >= "2.0.0" {
+		return "3.7"
 	}
 
 	return ""
