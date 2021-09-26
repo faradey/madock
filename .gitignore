@@ -10,4 +10,5 @@
 !/src
 !/src/*
 !/src/**
+!/projects
 !/projects/config.sample
