@@ -1,6 +1,7 @@
 package paths
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -36,4 +37,18 @@ func GetRunDirPath() string {
 
 func GetRunDirName() string {
 	return filepath.Base(GetRunDirPath())
+}
+
+func GetDirs(path string) (dirs []string) {
+	items, err := os.ReadDir(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range items {
+		if file.IsDir() {
+			dirs = append(dirs, file.Name())
+		}
+	}
+
+	return dirs
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/versions"
 	"log"
 	"os"
@@ -14,7 +14,7 @@ import (
 )
 
 func Setup() {
-	configs.IsHasConfig(paths.GetRunDirName())
+	configs.IsHasConfig()
 	fmt.Println("Start set up environment")
 	toolsDefVersions := versions.GetVersions()
 
@@ -25,8 +25,10 @@ func Setup() {
 	setupRedis(&toolsDefVersions.Redis)
 	setupRabbitMQ(&toolsDefVersions.RabbitMQ)
 
-	fmt.Println(toolsDefVersions)
-	configs.SetEnvForProject(paths.GetRunDirName(), toolsDefVersions)
+	configs.SetEnvForProject(toolsDefVersions)
+	configs.CreateNginxConfForProject()
+
+	builder.Build()
 	fmt.Println("Finish set up environment")
 }
 

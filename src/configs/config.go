@@ -16,7 +16,8 @@ import (
 var lines []string
 var dbType = "MariaDB"
 
-func SetEnvForProject(projectName string, defVersions versions.ToolsVersions) {
+func SetEnvForProject(defVersions versions.ToolsVersions) {
+	projectName := paths.GetRunDirName()
 	generalConf := GetGeneralConfig()
 	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env"
 	addLine("PHP_VERSION", defVersions.Php)
@@ -70,6 +71,26 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions) {
 	saveLines(envFile)
 }
 
+func CreateNginxConfForProject() {
+	projectName := paths.GetRunDirName()
+	generalConf := GetGeneralConfig()
+	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/conf/default.conf"
+	b, err := os.ReadFile(nginxDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	str := string(b)
+	str = strings.Replace(str, "{{{NGINX_PORT}}}", generalConf["NGINX_PORT"], -1)
+	str = strings.Replace(str, "{{{HOST_NAMES}}}", "loc."+projectName+".com", -1)
+	str = strings.Replace(str, "{{{PROJECT_NAME}}}", projectName, -1)
+	str = strings.Replace(str, "{{{HOST_NAMES_WEBSITES}}}", "loc."+projectName+".com base;", -1)
+	nginxFile := paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx/" + projectName + ".conf"
+	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+}
+
 func addLine(name, value string) {
 	lines = append(lines, name+"="+value)
 }
@@ -85,7 +106,9 @@ func saveLines(envFile string) {
 	}
 }
 
-func IsHasConfig(projectName string) {
+func IsHasConfig() {
+	paths.PrepareDirsForProject()
+	projectName := paths.GetRunDirName()
 	dir := paths.GetExecDirPath() + "/projects/" + projectName
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, 0755)

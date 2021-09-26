@@ -10,5 +10,8 @@
 !/src
 !/src/*
 !/src/**
+!/docker
+!/docker/*
+!/docker/**
 !/projects
 !/projects/config.sample
