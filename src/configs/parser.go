@@ -15,7 +15,7 @@ func ParseFile(path string) (conf map[string]string) {
 		opt := strings.Split(line, "=")
 		if len(opt) > 1 {
 			conf[opt[0]] = opt[1]
-		} else {
+		} else if len(opt) > 0 {
 			conf[opt[0]] = ""
 		}
 	}
@@ -34,7 +34,7 @@ func getLines(path string) []string {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.TrimSpace(line[:1]) != "#" {
+		if line != "" && strings.TrimSpace(line[:1]) != "#" {
 			rl := len(rows)
 			if rl > 0 && rows[rl-1][len(rows[rl-1])-1:] == "\\" {
 				rows[rl-1] = rows[rl-1][:len(rows[rl-1])-1] + line

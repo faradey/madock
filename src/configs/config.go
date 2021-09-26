@@ -17,6 +17,7 @@ var lines []string
 var dbType = "MariaDB"
 
 func SetEnvForProject(projectName string, defVersions versions.ToolsVersions) {
+	generalConf := GetGeneralConfig()
 	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env"
 	addLine("PHP_VERSION", defVersions.Php)
 	addLine("PHP_COMPOSER_VERSION", defVersions.Composer)
@@ -24,6 +25,8 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions) {
 	addLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
 	addLine("PHP_MODULE_XDEBUG", "true")
 	addLine("PHP_MODULE_IONCUBE", "true")
+
+	addEmptyLine()
 
 	addLine("DB_VERSION", defVersions.Db)
 	addLine("DB_TYPE", dbType)
@@ -34,7 +37,28 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions) {
 	addLine("DB_DATABASE", "magento")
 	addLine("DB_DUMP_FILE", "dump.sql.gz")
 
+	addEmptyLine()
+
+	addLine("ELASTICSEARCH_ENABLE", generalConf["ELASTICSEARCH_ENABLE"])
 	addLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
+
+	addEmptyLine()
+
+	addLine("REDIS_ENABLE", generalConf["REDIS_ENABLE"])
+	addLine("REDIS_VERSION", defVersions.Redis)
+
+	addEmptyLine()
+
+	addLine("RABBITMQ_ENABLE", generalConf["RABBITMQ_ENABLE"])
+	addLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
+
+	addEmptyLine()
+
+	addLine("PHPMYADMIN_ENABLE", generalConf["PHPMYADMIN_ENABLE"])
+	addLine("PHPMYADMIN_PORT", generalConf["PHPMYADMIN_PORT"])
+
+	addEmptyLine()
+
 	usr, err := user.Current()
 	if err == nil {
 		addLine("UID", usr.Uid)
@@ -48,6 +72,10 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions) {
 
 func addLine(name, value string) {
 	lines = append(lines, name+"="+value)
+}
+
+func addEmptyLine() {
+	lines = append(lines, "")
 }
 
 func saveLines(envFile string) {
@@ -70,6 +98,7 @@ func IsHasConfig(projectName string) {
 	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
 		fmtc.WarningLn("File env is already exist in project" + projectName)
 		fmt.Println("Do you want to continue? (y/N)")
+		fmt.Print("> ")
 	}
 	buf := bufio.NewReader(os.Stdin)
 	sentence, err := buf.ReadBytes('\n')
