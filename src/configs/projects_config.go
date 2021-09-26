@@ -1,26 +1,23 @@
 package configs
 
 import (
-	"github.com/spf13/viper"
+	"github.com/faradey/madock/src/paths"
+	"log"
+	"os"
 )
 
-type Conf struct {
-	Projects []map[string]map[string]string
-}
+func GetGeneralConfig() map[string]string {
+	configPath := paths.GetExecDirPath() + "/projects/config"
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		if err != nil {
+			configPath = paths.GetExecDirPath() + "/projects/config.sample"
+			if _, err = os.Stat(configPath); os.IsNotExist(err) {
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+	}
 
-func GetProjectsConfig(path string) Conf {
-	var projectsConfigs Conf
-	var viperConfig = viper.New()
-	viperConfig.SetConfigName("config")
-	viperConfig.AddConfigPath(path + "/")
-	viperConfig.SetConfigType("json")
-	err := viperConfig.ReadInConfig()
-	if err != nil {
-		panic(err)
-	}
-	err = viperConfig.Unmarshal(&projectsConfigs)
-	if err != nil {
-		panic(err)
-	}
-	return projectsConfigs
+	return ParseFile(configPath)
 }

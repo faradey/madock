@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/faradey/madock/src/cli/fmtc"
+	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/paths"
 	"github.com/faradey/madock/src/versions"
 	"log"
 	"os"
@@ -12,6 +14,7 @@ import (
 )
 
 func Setup() {
+	configs.IsHasConfig(paths.GetRunDirName())
 	fmt.Println("Start set up environment")
 	toolsDefVersions := versions.GetVersions()
 
@@ -19,8 +22,11 @@ func Setup() {
 	setupDB(&toolsDefVersions.Db)
 	setupComposer(&toolsDefVersions.Composer)
 	setupElastic(&toolsDefVersions.Elastic)
+	setupRedis(&toolsDefVersions.Redis)
+	setupRabbitMQ(&toolsDefVersions.RabbitMQ)
 
 	fmt.Println(toolsDefVersions)
+	configs.SetEnvForProject(paths.GetRunDirName(), toolsDefVersions)
 	fmt.Println("Finish set up environment")
 }
 
@@ -77,6 +83,34 @@ func setupElastic(defVersion *string) {
 	invitation(defVersion)
 
 	waiter(defVersion, availableVersions)
+}
+
+func setupRedis(defVersion *string) {
+	setTitleAndRecommended("Redis", defVersion)
+
+	availableVersions := []string{"6.0", "5.0"}
+
+	for index, ver := range availableVersions {
+		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
+	}
+
+	invitation(defVersion)
+
+	waiter(defVersion, availableVersions)
+}
+
+func setupRabbitMQ(defVersion *string) {
+	setTitleAndRecommended("RabbitMQ", defVersion)
+	availableVersions := []string{"3.8", "3.7"}
+	prepareVersions(availableVersions)
+	invitation(defVersion)
+	waiter(defVersion, availableVersions)
+}
+
+func prepareVersions(availableVersions []string) {
+	for index, ver := range availableVersions {
+		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
+	}
 }
 
 func setTitleAndRecommended(title string, recommended *string) {
