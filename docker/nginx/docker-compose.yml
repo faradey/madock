@@ -1,0 +1,22 @@
+version: "3.7"
+services:
+  nginx:
+    container_name: nginx
+    build:
+      context: ctx
+      dockerfile: Dockerfile
+    volumes:
+      - ./src/:/var/www/html/
+    ports:
+      - "80:80"
+    networks:
+      app_net:
+
+
+networks:
+  app_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.90.0/24

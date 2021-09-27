@@ -44,6 +44,7 @@ func GetDirs(path string) (dirs []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	for _, file := range items {
 		if file.IsDir() {
 			dirs = append(dirs, file.Name())
