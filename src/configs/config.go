@@ -60,13 +60,13 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 
 	addEmptyLine()
 
-	usr, err := user.Current()
+	/*usr, err := user.Current()
 	if err == nil {
 		addLine("UID", usr.Uid)
 		addLine("GUID", usr.Gid)
 	} else {
 		log.Fatal(err)
-	}
+	}*/
 
 	saveLines(envFile)
 }
@@ -74,6 +74,8 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 func CreateNginxConfForProject() {
 	projectName := paths.GetRunDirName()
 	generalConf := GetGeneralConfig()
+
+	/* Create nginx default configuration for Magento2 */
 	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/conf/default.conf"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
@@ -89,6 +91,48 @@ func CreateNginxConfForProject() {
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
+	/* END Create nginx default configuration for Magento2 */
+
+	/* Create nginx Dockerfile configuration */
+	nginxDefFile = paths.GetExecDirPath() + "/docker/nginx/Dockerfile"
+	b, err = os.ReadFile(nginxDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/projects")
+	copyLines := ""
+	for _, name := range projectsNames {
+		copyLines += "COPY conf/" + name + ".conf /etc/nginx/sites-enabled/" + name + ".conf\n"
+	}
+
+	str = string(b)
+	str = strings.Replace(str, "{{{COPY_NGINX_CONF}}}", copyLines, -1)
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+	str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
+	str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/nginx")
+	err = ioutil.WriteFile(paths.GetExecDirPath()+"/aruntime/nginx/Dockerfile", []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+	/* END Create nginx Dockerfile configuration */
+
+	/* Copy nginx docker-compose configuration */
+	nginxDefFile = paths.GetExecDirPath() + "/docker/nginx/docker-compose.yml"
+	b, err = os.ReadFile(nginxDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/nginx")
+	err = ioutil.WriteFile(paths.GetExecDirPath()+"/aruntime/nginx/docker-compose.yml", b, 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+	/* END Create nginx Dockerfile configuration */
 }
 
 func addLine(name, value string) {
