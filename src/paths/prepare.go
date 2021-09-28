@@ -8,8 +8,14 @@ import (
 
 func PrepareDirsForProject() {
 	projectName := GetRunDirName()
-	execDir := GetExecDirPath()
-	projectPath := execDir + "/projects/" + projectName
+	projectPath := GetExecDirPath() + "/projects/" + projectName
+
+	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
+		err = os.Mkdir(projectPath, 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	checkPath := projectPath + "/docker"
 	if _, err := os.Stat(checkPath); os.IsNotExist(err) {

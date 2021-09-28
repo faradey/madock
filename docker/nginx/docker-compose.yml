@@ -6,15 +6,15 @@ services:
       context: ctx
       dockerfile: Dockerfile
     volumes:
-      - ./src/:/var/www/html/
+{{{VOLUMES}}}
     ports:
       - "80:80"
     networks:
-      app_net:
+      madock_net:
 
 
 networks:
-  app_net:
+  madock_net:
     driver: bridge
     ipam:
       driver: default
