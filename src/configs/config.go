@@ -26,6 +26,7 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 	addLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
 	addLine("PHP_MODULE_XDEBUG", "true")
 	addLine("PHP_MODULE_IONCUBE", "true")
+	addLine("PHP_MEMORY_LIMIT", generalConf["PHP_MEMORY_LIMIT"])
 
 	addEmptyLine()
 
