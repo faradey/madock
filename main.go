@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/faradey/madock/src/cli/commands"
 	"github.com/faradey/madock/src/cli/helper"
-	"github.com/faradey/madock/src/docker/builder"
 	"os"
 	"strings"
 )
@@ -18,19 +17,10 @@ func main() {
 		switch command {
 		case "setup":
 			commands.Setup()
-			builder.UpWithProject()
 		case "start":
-			if flag == "--all" {
-				builder.UpAll()
-			} else {
-				builder.UpWithProject()
-			}
+			commands.Start()
 		case "stop":
-			if flag == "--all" {
-				builder.DownAll()
-			} else {
-				builder.DownProject()
-			}
+			commands.Stop(flag)
 		case "restart":
 		case "refresh":
 		case "rebuild":
