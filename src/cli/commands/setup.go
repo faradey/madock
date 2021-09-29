@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/versions"
 	"log"
 	"os"
@@ -28,7 +27,6 @@ func Setup() {
 	configs.SetEnvForProject(toolsDefVersions)
 	configs.CreateNginxConfForProject()
 
-	builder.Build()
 	fmt.Println("Finish set up environment")
 }
 
