@@ -7,20 +7,15 @@ import (
 	"os/exec"
 )
 
-func UpWithProject() {
+func Up() {
 	UpNginx()
 }
 
-func UpAll() {
-	UpNginx()
+func Down() {
 }
 
 func DownAll() {
 	DownNginx()
-}
-
-func DownProject() {
-
 }
 
 func UpNginx() {

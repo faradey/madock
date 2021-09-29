@@ -14,5 +14,25 @@ func ErrorLn(txt string) {
 }
 
 func WarningLn(txt string) {
-	fmt.Println(color.Yellow + txt + color.Reset)
+	Warning(txt + "\n")
+}
+
+func Warning(txt string) {
+	fmt.Print(color.Yellow + txt + color.Reset)
+}
+
+func ToDoLn(txt string) {
+	ToDo(txt + "\n")
+}
+
+func ToDo(txt string) {
+	fmt.Print(color.White + txt + color.Reset)
+}
+
+func SuccessLn(txt string) {
+	Success(txt + "\n")
+}
+
+func Success(txt string) {
+	fmt.Print(color.Green + txt + color.Reset)
 }

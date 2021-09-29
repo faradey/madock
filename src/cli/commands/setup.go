@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/versions"
 	"log"
 	"os"
@@ -14,7 +15,7 @@ import (
 
 func Setup() {
 	configs.IsHasConfig()
-	fmt.Println("Start set up environment")
+	fmtc.SuccessLn("Start set up environment")
 	toolsDefVersions := versions.GetVersions()
 
 	setupPhp(&toolsDefVersions.Php)
@@ -27,7 +28,32 @@ func Setup() {
 	configs.SetEnvForProject(toolsDefVersions)
 	configs.CreateNginxConfForProject()
 
-	fmt.Println("Finish set up environment")
+	fmtc.SuccessLn("Finish set up environment")
+}
+
+func Start() {
+	if !configs.IsHasNotConfig() {
+		fmtc.SuccessLn("Start containers in detached mode")
+		builder.Up()
+		fmtc.SuccessLn("Done")
+	} else {
+		fmtc.WarningLn("Set up the project")
+		fmtc.ToDoLn("Run madock setup")
+	}
+}
+
+func Stop(flag string) {
+	if !configs.IsHasNotConfig() {
+		if flag == "--all" {
+			builder.DownAll()
+		} else {
+			builder.Down()
+		}
+		fmtc.SuccessLn("Done")
+	} else {
+		fmtc.WarningLn("Set up the project")
+		fmtc.ToDoLn("Run madock setup")
+	}
 }
 
 func setupPhp(defVersion *string) {
