@@ -5,14 +5,10 @@ services:
     build:
       context: ctx
       dockerfile: Dockerfile
-    volumes:
-{{{VOLUMES}}}
     ports:
       - "80:80"
     networks:
       madock_general_net:
-
-{{{PROJECTS_DOCKER_COMPOSE}}}
 
 networks:
   madock_general_net:

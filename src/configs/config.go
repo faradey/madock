@@ -24,8 +24,8 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 	addLine("PHP_COMPOSER_VERSION", defVersions.Composer)
 	addLine("PHP_TZ", "Europe/Kiev")
 	addLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
-	addLine("PHP_MODULE_XDEBUG", "true")
-	addLine("PHP_MODULE_IONCUBE", "true")
+	addLine("PHP_MODULE_XDEBUG", "false")
+	addLine("PHP_MODULE_IONCUBE", "false")
 	addLine("PHP_MEMORY_LIMIT", generalConf["PHP_MEMORY_LIMIT"])
 
 	addEmptyLine()
@@ -78,9 +78,9 @@ func CreateNginxConfForProject() {
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx")
 
 	aruntime.CreateProjectConf(projectName, generalConf)
-	aruntime.CreateDefaultNginxConf(projectName, generalConf)
-	aruntime.CreateNginxDockerfile()
-	aruntime.CreateNginxDockerCompose()
+	aruntime.CreateDefaultNginxConf()
+	aruntime.CreateDefaultNginxDockerfile()
+	aruntime.CreateDefaultNginxDockerCompose()
 }
 
 func addLine(name, value string) {
