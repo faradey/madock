@@ -1,6 +1,5 @@
 FROM nginx:latest
 
-#COPY conf/default.conf /etc/nginx/conf.d/default.conf
-{{{COPY_NGINX_CONF}}}
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 RUN usermod -u {{{UID}}} -o nginx && groupmod -g {{{GUID}}} -o nginx
