@@ -46,7 +46,7 @@ RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true" ]; then pecl install -f xdebug-2.9.8
     && echo "xdebug.remote_enable=1" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_autostart=off" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.idekey=PHPSTORM" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.remote_host={{{XDEBUG_REMOTE_HOST}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
+    && echo "xdebug.remote_host={{{PHP_XDEBUG_REMOTE_HOST}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/11-xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/11-xdebug.ini; fi
 

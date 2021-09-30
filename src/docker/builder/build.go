@@ -2,48 +2,51 @@ package builder
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/configs/aruntime/nginx"
+	"github.com/faradey/madock/src/configs/aruntime/project"
 	"github.com/faradey/madock/src/paths"
 	"log"
 	"os/exec"
 )
 
 func Up() {
-	UpNginx()
+	upNginx()
+	upProject()
 }
 
 func Down() {
 }
 
 func DownAll() {
-	DownNginx()
+	downNginx()
 }
 
-func UpNginx() {
+func upNginx() {
+	nginx.MakeConf()
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	output, err := cmd.CombinedOutput()
+	fmt.Println(string(output))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println(string(output))
 }
 
-func UpProject(projectName string) {
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
+func upProject() {
+	projectName := paths.GetRunDirName()
+	project.MakeConf(projectName)
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	output, err := cmd.CombinedOutput()
+	fmt.Println(string(output))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println(string(output))
 }
 
-func DownNginx() {
+func downNginx() {
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "down")
 	output, err := cmd.CombinedOutput()
+	fmt.Println(string(output))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println(string(output))
 }

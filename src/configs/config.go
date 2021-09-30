@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/faradey/madock/src/cli/fmtc"
-	"github.com/faradey/madock/src/configs/aruntime"
 	"github.com/faradey/madock/src/paths"
 	"github.com/faradey/madock/src/versions"
 	"io/ioutil"
@@ -32,7 +31,6 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 
 	addLine("DB_VERSION", defVersions.Db)
 	addLine("DB_TYPE", dbType)
-	addLine("DB_DEBUG_PORT", "13306")
 	addLine("DB_ROOT_PASSWORD", "password")
 	addLine("DB_USER", "magento")
 	addLine("DB_PASSWORD", "magento")
@@ -70,16 +68,6 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 	}*/
 
 	saveLines(envFile)
-}
-
-func CreateNginxConfForProject() {
-	projectName := paths.GetRunDirName()
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx")
-
-	aruntime.CreateProjectConf(projectName)
-	aruntime.CreateDefaultNginxConf()
-	aruntime.CreateDefaultNginxDockerfile()
-	aruntime.CreateDefaultNginxDockerCompose()
 }
 
 func addLine(name, value string) {
