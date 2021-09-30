@@ -10,7 +10,7 @@ func GetGeneralConfig() map[string]string {
 	configPath := paths.GetExecDirPath() + "/projects/config"
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		if err != nil {
-			configPath = paths.GetExecDirPath() + "/projects/config.sample"
+			configPath = paths.GetExecDirPath() + "/projects/config.def"
 			if _, err = os.Stat(configPath); os.IsNotExist(err) {
 				if err != nil {
 					log.Fatal(err)
@@ -30,5 +30,8 @@ func GetProjectConfig() map[string]string {
 		}
 	}
 
-	return ParseFile(configPath)
+	config := ParseFile(configPath)
+	ConfigMapping(GetGeneralConfig(), config)
+
+	return config
 }

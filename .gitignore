@@ -14,4 +14,4 @@
 !/docker/*
 !/docker/**
 !/projects
-!/projects/config.sample
+!/projects/config.def

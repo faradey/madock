@@ -74,10 +74,9 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 
 func CreateNginxConfForProject() {
 	projectName := paths.GetRunDirName()
-	generalConf := GetGeneralConfig()
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx")
 
-	aruntime.CreateProjectConf(projectName, generalConf)
+	aruntime.CreateProjectConf(projectName)
 	aruntime.CreateDefaultNginxConf()
 	aruntime.CreateDefaultNginxDockerfile()
 	aruntime.CreateDefaultNginxDockerCompose()
@@ -126,4 +125,14 @@ func IsHasNotConfig() bool {
 		return true
 	}
 	return false
+}
+
+func ConfigMapping(mainConf map[string]string, targetConf map[string]string) {
+	if len(targetConf) > 0 && len(mainConf) > 0 {
+		for index, val := range mainConf {
+			if _, ok := targetConf[index]; !ok {
+				targetConf[index] = val
+			}
+		}
+	}
 }
