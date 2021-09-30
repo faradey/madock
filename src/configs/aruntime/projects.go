@@ -13,13 +13,11 @@ func CreateProjectConf(projectName string) {
 		if err := os.Remove(src); err != nil {
 			log.Fatalf("failed to unlink: %+v", err)
 		}
+	}
 
-		err := os.Symlink(paths.GetRunDirPath(), src)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else if os.IsNotExist(err) {
-		log.Fatalf("failed to check symlink: %+v", err)
+	err := os.Symlink(paths.GetRunDirPath(), src)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 }
