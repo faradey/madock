@@ -29,6 +29,8 @@ func MakeConf(projectName string) {
 	makeNginxConf(projectName)
 	makePhpDockerfile(projectName)
 	makeDBDockerfile(projectName)
+	makeElasticDockerfile(projectName)
+	makeRedisDockerfile(projectName)
 }
 
 func makeNginxDockerfile(projectName string) {
@@ -41,10 +43,18 @@ func makeNginxDockerfile(projectName string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	str := string(b)
+	usr, err := user.Current()
+	if err == nil {
+		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
+		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
+	} else {
+		log.Fatal(err)
+	}
 
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nginx.Dockerfile"
-	err = ioutil.WriteFile(nginxFile, b, 0755)
+	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -174,8 +184,8 @@ func makeDBDockerfile(projectName string) {
 	}
 }
 
-func makeDockerfile(projectName string) {
-	dockerDefFile := paths.GetExecDirPath() + "/docker/docker-compose.yml"
+func makeElasticDockerfile(projectName string) {
+	dockerDefFile := paths.GetExecDirPath() + "/docker/elasticsearch/Dockerfile"
 	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
 		log.Fatal(err)
 	}
@@ -185,12 +195,47 @@ func makeDockerfile(projectName string) {
 		log.Fatal(err)
 	}
 
-	str := string(b)
-	portsConfig := configs.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
-	str = strings.Replace(str, "{{{NGINX_PORT}}}", portsConfig[projectName], -1)
+	projectConf := configs.GetProjectConfig()
 
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName)
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
+	str := string(b)
+	str = strings.Replace(str, "{{{ELASTICSEARCH_VERSION}}}", projectConf["ELASTICSEARCH_VERSION"], -1)
+	usr, err := user.Current()
+	if err == nil {
+		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
+		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
+	} else {
+		log.Fatal(err)
+	}
+	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/elasticsearch.Dockerfile"
+	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+}
+
+func makeRedisDockerfile(projectName string) {
+	dockerDefFile := paths.GetExecDirPath() + "/docker/redis/Dockerfile"
+	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
+		log.Fatal(err)
+	}
+
+	b, err := os.ReadFile(dockerDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	projectConf := configs.GetProjectConfig()
+
+	str := string(b)
+	str = strings.Replace(str, "{{{REDIS_VERSION}}}", projectConf["REDIS_VERSION"], -1)
+	usr, err := user.Current()
+	if err == nil {
+		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
+		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
+	} else {
+		log.Fatal(err)
+	}
+	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/redis.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)

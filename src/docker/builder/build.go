@@ -45,10 +45,18 @@ func upProject() {
 }
 
 func downNginx() {
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "down")
+	projectName := paths.GetRunDirName()
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "down")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	cmd = exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "down")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err)
 	}

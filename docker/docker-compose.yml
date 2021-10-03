@@ -1,7 +1,6 @@
 version: "3.7"
 services:
   nginx:
-    container_name: nginx
     build:
       context: ctx
       dockerfile: nginx.Dockerfile
@@ -16,7 +15,6 @@ services:
       app_net:
 
   php:
-    container_name: php
     build:
       context: ctx
       dockerfile: php.Dockerfile
@@ -28,7 +26,6 @@ services:
       app_net:
 
   db:
-    container_name: db
     command: mysqld --default-authentication-plugin=mysql_native_password
     build:
       context: ctx
@@ -39,7 +36,6 @@ services:
       app_net:
 
   elasticsearch:
-    container_name: elasticsearch
     build:
       context: ctx
       dockerfile: elasticsearch.Dockerfile
@@ -55,9 +51,7 @@ services:
     networks:
       app_net:
 
-  redis:
-    container_name: redis
-    image: redis
+  redisdb:
     build:
       context: ctx
       dockerfile: redis.Dockerfile

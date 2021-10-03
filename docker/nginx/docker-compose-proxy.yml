@@ -1,12 +1,13 @@
 version: "3.7"
 services:
   nginx:
-    container_name: nginx
     build:
       context: ctx
       dockerfile: Dockerfile
     ports:
       - "80:80"
+    volumes:
+      - ./data/nginx/:/var/log/nginx
     networks:
       madock_general_net:
 

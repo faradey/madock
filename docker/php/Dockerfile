@@ -1,5 +1,7 @@
 FROM ubuntu:20.04
 
+RUN ln -snf /usr/share/zoneinfo/{{{PHP_TZ}}} /etc/localtime && echo {{{PHP_TZ}}} > /etc/timezone
+
 RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     curl \
     software-properties-common \
@@ -12,8 +14,6 @@ RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     libmcrypt-dev \
   && locale-gen en_US.UTF-8
 RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
-
-RUN ln -snf /usr/share/zoneinfo/{{{PHP_TZ}}} /etc/localtime && echo {{{PHP_TZ}}} > /etc/timezone
 
 RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
     php{{{PHP_VERSION}}}-cli \
