@@ -1,0 +1,8 @@
+FROM mariadb:{{{DB_VERSION}}}
+
+COPY my.cnf /etc/mysql/conf.d/mysql.cnf
+ENV MYSQL_ROOT_PASSWORD={{{DB_ROOT_PASSWORD}}}
+ENV  MYSQL_DATABASE={{{DB_DATABASE}}}
+ENV MYSQL_USER={{{DB_USER}}}
+ENV MYSQL_PASSWORD={{{DB_PASSWORD}}}
+RUN usermod -u {{{UID}}} -o mysql && groupmod -g {{{GUID}}} -o mysql
