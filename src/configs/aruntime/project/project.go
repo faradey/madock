@@ -173,3 +173,26 @@ func makeDBDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 }
+
+func makeDockerfile(projectName string) {
+	dockerDefFile := paths.GetExecDirPath() + "/docker/docker-compose.yml"
+	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
+		log.Fatal(err)
+	}
+
+	b, err := os.ReadFile(dockerDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str := string(b)
+	portsConfig := configs.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
+	str = strings.Replace(str, "{{{NGINX_PORT}}}", portsConfig[projectName], -1)
+
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName)
+	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
+	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+}
