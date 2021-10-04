@@ -14,6 +14,7 @@ func main() {
 		if len(os.Args) > 2 {
 			flag = strings.ToLower(os.Args[2])
 		}
+
 		switch command {
 		case "setup":
 			commands.Setup()
@@ -22,12 +23,21 @@ func main() {
 		case "stop":
 			commands.Stop(flag)
 		case "restart":
+			commands.Start()
 		case "refresh":
+			commands.Start()
 		case "rebuild":
+			commands.Start()
 		case "magento":
+			flag = strings.Join(os.Args[2:], " ")
+			commands.Magento(flag)
 		case "composer":
-		case "dbimport":
-		case "dbexport":
+			flag = strings.Join(os.Args[2:], " ")
+			commands.Composer(flag)
+		case "db --import":
+		case "db --export":
+		case "cron":
+		case "bash":
 		case "help":
 			helper.Help()
 		default:

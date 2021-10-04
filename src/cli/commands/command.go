@@ -31,6 +31,14 @@ func Stop(flag string) {
 	}
 }
 
+func Magento(flag string) {
+	builder.Magento(flag)
+}
+
+func Composer(flag string) {
+	builder.Composer(flag)
+}
+
 func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }

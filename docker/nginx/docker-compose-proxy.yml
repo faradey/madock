@@ -8,8 +8,7 @@ services:
       - "80:80"
     volumes:
       - ./data/nginx/:/var/log/nginx
-    networks:
-      madock_general_net:
+    network_mode: host
 
 networks:
   madock_general_net:

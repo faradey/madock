@@ -61,3 +61,19 @@ func downNginx() {
 		log.Fatal(err)
 	}
 }
+
+func Magento(flag string) {
+	projectName := paths.GetRunDirName()
+	cmd := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"_php_1", "bash", "-c", "cd /var/www/html && php bin/magento "+flag)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
+}
+
+func Composer(flag string) {
+	projectName := paths.GetRunDirName()
+	cmd := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"_php_1", "bash", "-c", "cd /var/www/html && composer "+flag)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
+}
