@@ -34,8 +34,12 @@ func main() {
 		case "composer":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Composer(flag)
-		case "db --import":
-		case "db --export":
+		case "db":
+			option := ""
+			if len(os.Args) > 3 {
+				option = strings.ToLower(os.Args[3])
+			}
+			commands.DB(flag, option)
 		case "cron":
 		case "bash":
 		case "help":

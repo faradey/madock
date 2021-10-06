@@ -4,6 +4,7 @@ import (
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
+	"log"
 )
 
 func Start() {
@@ -37,6 +38,16 @@ func Magento(flag string) {
 
 func Composer(flag string) {
 	builder.Composer(flag)
+}
+
+func DB(flag, option string) {
+	if flag == "--import" {
+		builder.DbImport(option)
+	} else if flag == "--export" {
+		builder.DbExport()
+	} else {
+		log.Fatal("The specified parameters were not found.")
+	}
 }
 
 func IsNotDefine() {

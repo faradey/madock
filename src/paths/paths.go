@@ -53,3 +53,18 @@ func GetDirs(path string) (dirs []string) {
 
 	return dirs
 }
+
+func GetFiles(path string) (dirs []string) {
+	items, err := os.ReadDir(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range items {
+		if !file.IsDir() {
+			dirs = append(dirs, file.Name())
+		}
+	}
+
+	return dirs
+}
