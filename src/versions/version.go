@@ -26,7 +26,7 @@ func getMagentoVersion() (edition, version string) {
 	composerPath := paths.GetRunDirPath() + "/composer.json"
 	txt, err := ioutil.ReadFile(composerPath)
 	if err == nil {
-		re := regexp.MustCompile(`(?is)"magento/product-(community|enterprise)-edition".*?:.*?"([\.0-9]{5,})-*.*?"`)
+		re := regexp.MustCompile(`(?is)"magento/product-(community|enterprise)-edition".*?:.*?"([\.0-9]{5,}?)-*.*?"`)
 		magentoVersion := re.FindAllStringSubmatch(string(txt), -1)
 		if len(magentoVersion) > 0 && len(magentoVersion[0]) > 2 {
 			return magentoVersion[0][1], magentoVersion[0][2]

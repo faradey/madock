@@ -31,6 +31,8 @@ func Setup() {
 
 	createProjectNginxConf(configs.GetProjectConfig())
 	createProjectNginxDockerfile()
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/backup/db")
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + paths.GetRunDirName() + "/data/mysql")
 
 	fmtc.SuccessLn("Finish set up environment")
 }

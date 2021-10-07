@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"strconv"
 	"strings"
 )
 
@@ -125,7 +126,13 @@ func makeDockerCompose(projectName string) {
 
 	str := string(b)
 	portsConfig := configs.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
-	str = strings.Replace(str, "{{{NGINX_PORT}}}", portsConfig[projectName], -1)
+	portNumber, err := strconv.Atoi(portsConfig[projectName])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str = strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(portNumber+17000), -1)
+	str = strings.Replace(str, "{{{NETWORK_NUMBER}}}", strconv.Itoa(portNumber+90), -1)
 
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"

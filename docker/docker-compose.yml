@@ -12,7 +12,7 @@ services:
     depends_on:
       - php
     networks:
-      app_net:
+      app_net_{{{NETWORK_NUMBER}}}:
 
   php:
     build:
@@ -23,7 +23,7 @@ services:
     depends_on:
       - db
     networks:
-      app_net:
+      app_net_{{{NETWORK_NUMBER}}}:
 
   db:
     command: mysqld --default-authentication-plugin=mysql_native_password
@@ -31,9 +31,9 @@ services:
       context: ctx
       dockerfile: db.Dockerfile
     volumes:
-      - ./data/mysql/:/var/lib/mysql/
+      - ./data/mysql/:/var/lib/mysql
     networks:
-      app_net:
+      app_net_{{{NETWORK_NUMBER}}}:
 
   elasticsearch:
     build:
@@ -49,16 +49,19 @@ services:
     volumes:
       - ./data/elasticsearch/:/usr/share/elasticsearch/data
     networks:
-      app_net:
+      app_net_{{{NETWORK_NUMBER}}}:
 
   redisdb:
     build:
       context: ctx
       dockerfile: redis.Dockerfile
     networks:
-      app_net:
+      app_net_{{{NETWORK_NUMBER}}}:
 
 networks:
-  app_net:
-    external: true
-    name: aruntime_madock_general_net
+  app_net_{{{NETWORK_NUMBER}}}:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.{{{NETWORK_NUMBER}}}.0/24

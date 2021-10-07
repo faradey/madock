@@ -2,13 +2,13 @@ package builder
 
 import (
 	"bufio"
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/configs/aruntime/project"
 	"github.com/faradey/madock/src/paths"
-	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -126,20 +126,21 @@ func DbImport(option string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"_db_1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", projectConfig["DB_DATABASE"])
+		cmd := exec.Command("docker", "exec", "-u", "mysql", projectName+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", projectConfig["DB_DATABASE"])
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		stdin, err := cmd.StdinPipe()
+		/*stdin, err := cmd.StdinPipe()
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer stdin.Close()
-		io.Copy(stdin, out)
-		//cmd.Stdin = out
+		io.Copy(stdin, out)*/
+		buffer := bytes.Buffer{}
+		buffer.ReadFrom(out)
+		cmd.Stdin = &buffer
 		cmd.Run()
 	} else {
-		cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"_db_1", "mysql", "-t", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", projectConfig["DB_DATABASE"], "<", dbsPath+"/"+dbNames[selectedInt-1])
+		cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-t", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", projectConfig["DB_DATABASE"], "<", dbsPath+"/"+dbNames[selectedInt-1])
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Run()

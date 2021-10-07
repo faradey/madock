@@ -9,11 +9,3 @@ services:
     volumes:
       - ./data/nginx/:/var/log/nginx
     network_mode: host
-
-networks:
-  madock_general_net:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.21.90.0/24
