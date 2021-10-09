@@ -12,74 +12,84 @@ import (
 	"strings"
 )
 
-var lines []string
+type ConfigLines struct {
+	Lines   []string
+	EnvFile string
+}
+
 var dbType = "MariaDB"
 
 func SetEnvForProject(defVersions versions.ToolsVersions) {
 	projectName := paths.GetRunDirName()
 	generalConf := GetGeneralConfig()
 	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env"
-	addLine("PHP_VERSION", defVersions.Php)
-	addLine("PHP_COMPOSER_VERSION", defVersions.Composer)
-	addLine("PHP_TZ", "Europe/Kiev")
-	addLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
-	addLine("PHP_MODULE_XDEBUG", "false")
-	addLine("PHP_MODULE_IONCUBE", "false")
-	addLine("PHP_MEMORY_LIMIT", generalConf["PHP_MEMORY_LIMIT"])
+	config := new(ConfigLines)
+	config.EnvFile = envFile
+	config.AddLine("PHP_VERSION", defVersions.Php)
+	config.AddLine("PHP_COMPOSER_VERSION", defVersions.Composer)
+	config.AddLine("PHP_TZ", "Europe/Kiev")
+	config.AddLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
+	config.AddLine("PHP_XDEBUG_IDE_KEY", "PHPSTORM")
+	config.AddLine("PHP_MODULE_XDEBUG", "false")
+	config.AddLine("PHP_MODULE_IONCUBE", "false")
+	config.AddLine("PHP_MEMORY_LIMIT", generalConf["PHP_MEMORY_LIMIT"])
 
-	addEmptyLine()
+	config.AddEmptyLine()
 
-	addLine("DB_VERSION", defVersions.Db)
-	addLine("DB_TYPE", dbType)
-	addLine("DB_ROOT_PASSWORD", "password")
-	addLine("DB_USER", "magento")
-	addLine("DB_PASSWORD", "magento")
-	addLine("DB_DATABASE", "magento")
-	addLine("DB_DUMP_FILE", "dump.sql.gz")
+	config.AddLine("DB_VERSION", defVersions.Db)
+	config.AddLine("DB_TYPE", dbType)
+	config.AddLine("DB_ROOT_PASSWORD", "password")
+	config.AddLine("DB_USER", "magento")
+	config.AddLine("DB_PASSWORD", "magento")
+	config.AddLine("DB_DATABASE", "magento")
 
-	addEmptyLine()
+	config.AddEmptyLine()
 
-	addLine("ELASTICSEARCH_ENABLE", generalConf["ELASTICSEARCH_ENABLE"])
-	addLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
+	config.AddLine("ELASTICSEARCH_ENABLE", generalConf["ELASTICSEARCH_ENABLE"])
+	config.AddLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
 
-	addEmptyLine()
+	config.AddEmptyLine()
 
-	addLine("REDIS_ENABLE", generalConf["REDIS_ENABLE"])
-	addLine("REDIS_VERSION", defVersions.Redis)
+	config.AddLine("REDIS_ENABLE", generalConf["REDIS_ENABLE"])
+	config.AddLine("REDIS_VERSION", defVersions.Redis)
 
-	addEmptyLine()
+	config.AddEmptyLine()
 
-	addLine("RABBITMQ_ENABLE", generalConf["RABBITMQ_ENABLE"])
-	addLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
+	config.AddLine("RABBITMQ_ENABLE", generalConf["RABBITMQ_ENABLE"])
+	config.AddLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
 
-	addEmptyLine()
+	config.AddEmptyLine()
 
-	addLine("PHPMYADMIN_ENABLE", generalConf["PHPMYADMIN_ENABLE"])
-	addLine("PHPMYADMIN_PORT", generalConf["PHPMYADMIN_PORT"])
+	config.AddLine("PHPMYADMIN_ENABLE", generalConf["PHPMYADMIN_ENABLE"])
+	config.AddLine("PHPMYADMIN_PORT", generalConf["PHPMYADMIN_PORT"])
 
-	addEmptyLine()
+	config.AddEmptyLine()
 
 	/*usr, err := user.Current()
 	if err == nil {
-		addLine("UID", usr.Uid)
-		addLine("GUID", usr.Gid)
+		AddLine("UID", usr.Uid)
+		AddLine("GUID", usr.Gid)
 	} else {
 		log.Fatal(err)
 	}*/
 
-	saveLines(envFile)
+	config.SaveLines()
 }
 
-func addLine(name, value string) {
-	lines = append(lines, name+"="+value)
+func (t *ConfigLines) AddLine(name, value string) {
+	t.Lines = append(t.Lines, name+"="+value)
 }
 
-func addEmptyLine() {
-	lines = append(lines, "")
+func (t *ConfigLines) AddEmptyLine() {
+	t.Lines = append(t.Lines, "")
 }
 
-func saveLines(envFile string) {
-	err := ioutil.WriteFile(envFile, []byte(strings.Join(lines, "\n")), 0755)
+func (t *ConfigLines) AddRawLine(value string) {
+	t.Lines = append(t.Lines, value)
+}
+
+func (t *ConfigLines) SaveLines() {
+	err := ioutil.WriteFile(t.EnvFile, []byte(strings.Join(t.Lines, "\n")), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}

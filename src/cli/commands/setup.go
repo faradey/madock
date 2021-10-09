@@ -170,7 +170,8 @@ func createProjectNginxConf(projectConf map[string]string) {
 	str = strings.Replace(str, "{{{HOST_NAMES}}}", "loc."+projectName+".com", -1)
 	str = strings.Replace(str, "{{{PROJECT_NAME}}}", projectName, -1)
 	str = strings.Replace(str, "{{{HOST_NAMES_WEBSITES}}}", "loc."+projectName+".com base;", -1)
-	nginxFile := paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx/default.conf"
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx/conf")
+	nginxFile := paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx/conf/default.conf"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)

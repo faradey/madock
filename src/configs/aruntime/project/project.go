@@ -62,7 +62,7 @@ func makeNginxDockerfile(projectName string) {
 }
 
 func makeNginxConf(projectName string) {
-	defFile := paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx/default.conf"
+	defFile := paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx/conf/default.conf"
 	if _, err := os.Stat(defFile); os.IsNotExist(err) {
 		log.Fatal(err)
 	}
@@ -98,6 +98,7 @@ func makePhpDockerfile(projectName string) {
 	str = strings.Replace(str, "{{{PHP_MODULE_XDEBUG}}}", projectConf["PHP_MODULE_XDEBUG"], -1)
 	str = strings.Replace(str, "{{{PHP_XDEBUG_REMOTE_HOST}}}", projectConf["PHP_XDEBUG_REMOTE_HOST"], -1)
 	str = strings.Replace(str, "{{{PHP_MODULE_IONCUBE}}}", projectConf["PHP_MODULE_IONCUBE"], -1)
+	str = strings.Replace(str, "{{{PHP_COMPOSER_VERSION}}}", projectConf["PHP_COMPOSER_VERSION"], -1)
 	usr, err := user.Current()
 	if err == nil {
 		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)

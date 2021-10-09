@@ -4,6 +4,7 @@ import (
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/paths"
 	"log"
 )
 
@@ -48,6 +49,18 @@ func DB(flag, option string) {
 	} else {
 		log.Fatal("The specified parameters were not found.")
 	}
+}
+
+func Debug(flag string) {
+	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env"
+	if flag == "--on" {
+		configs.SetParam(configPath, "PHP_MODULE_XDEBUG", "true")
+	} else if flag == "--off" {
+		configs.SetParam(configPath, "PHP_MODULE_XDEBUG", "false")
+	} else {
+		log.Fatal("The specified parameters were not found.")
+	}
+	builder.Up()
 }
 
 func IsNotDefine() {

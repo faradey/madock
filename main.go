@@ -41,6 +41,8 @@ func main() {
 			}
 			commands.DB(flag, option)
 		case "cron":
+		case "debug":
+			commands.Debug(flag)
 		case "bash":
 		case "help":
 			helper.Help()
