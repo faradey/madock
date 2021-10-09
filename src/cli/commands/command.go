@@ -69,7 +69,22 @@ func Cron(flag string) {
 	} else {
 		log.Fatal("The specified parameters were not found.")
 	}
+}
 
+func Bash(flag, flag2 string) {
+	containerName := "php"
+	isRoot := false
+	if flag == "--root" || flag2 == "--root" {
+		isRoot = true
+	}
+
+	if flag != "" && flag != "--root" {
+		containerName = flag[2:]
+	} else if flag2 != "" && flag2 != "--root" {
+		containerName = flag2[2:]
+	}
+
+	builder.Bash(containerName, isRoot)
 }
 
 func IsNotDefine() {

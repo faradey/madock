@@ -204,3 +204,20 @@ func Cron(flag string) {
 		log.Fatal(err)
 	}
 }
+
+func Bash(containerName string, isRoot bool) {
+	projectName := paths.GetRunDirName()
+	var cmd *exec.Cmd
+	/*if isRoot {
+		cmd = exec.Command("docker", "exec", "-it", "-u", "root", projectName+"-"+containerName+"-1", "bash")
+	} else {*/
+	cmd = exec.Command("docker", "exec", "-it", projectName+"-"+containerName+"-1", "bash")
+	//}
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}

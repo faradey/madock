@@ -45,6 +45,11 @@ func main() {
 		case "debug":
 			commands.Debug(flag)
 		case "bash":
+			flag2 := ""
+			if len(os.Args) > 3 {
+				flag2 = strings.ToLower(os.Args[3])
+			}
+			commands.Bash(flag, flag2)
 		case "help":
 			helper.Help()
 		default:
