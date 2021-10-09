@@ -71,18 +71,24 @@ func downNginx() {
 
 func Magento(flag string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"_php_1", "bash", "-c", "cd /var/www/html && php bin/magento "+flag)
+	cmd := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento "+flag)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func Composer(flag string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"_php_1", "bash", "-c", "cd /var/www/html && composer "+flag)
+	cmd := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && composer "+flag)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func DbImport(option string) {
@@ -167,4 +173,34 @@ func DbExport() {
 		log.Fatal(err)
 	}
 	fmt.Println("Database export completed successfully")
+}
+
+func Cron(flag string) {
+	projectName := paths.GetRunDirName()
+	var cmd *exec.Cmd
+	if flag == "--on" {
+		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "start")
+		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:install &&  php bin/magento cron:run")
+		cmdSub.Stdout = os.Stdout
+		cmdSub.Stderr = os.Stderr
+		err := cmdSub.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "stop")
+		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:remove")
+		cmdSub.Stdout = os.Stdout
+		cmdSub.Stderr = os.Stderr
+		err := cmdSub.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

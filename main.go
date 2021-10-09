@@ -41,6 +41,7 @@ func main() {
 			}
 			commands.DB(flag, option)
 		case "cron":
+			commands.Cron(flag)
 		case "debug":
 			commands.Debug(flag)
 		case "bash":

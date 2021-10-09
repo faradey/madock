@@ -63,6 +63,15 @@ func Debug(flag string) {
 	builder.Up()
 }
 
+func Cron(flag string) {
+	if flag == "--on" || flag == "--off" {
+		builder.Cron(flag)
+	} else {
+		log.Fatal("The specified parameters were not found.")
+	}
+
+}
+
 func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }
