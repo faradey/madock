@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/paths"
-	"github.com/faradey/madock/src/versions"
 	"io/ioutil"
 	"log"
 	"os"
@@ -15,65 +14,6 @@ import (
 type ConfigLines struct {
 	Lines   []string
 	EnvFile string
-}
-
-var dbType = "MariaDB"
-
-func SetEnvForProject(defVersions versions.ToolsVersions) {
-	projectName := paths.GetRunDirName()
-	generalConf := GetGeneralConfig()
-	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env"
-	config := new(ConfigLines)
-	config.EnvFile = envFile
-	config.AddLine("PHP_VERSION", defVersions.Php)
-	config.AddLine("PHP_COMPOSER_VERSION", defVersions.Composer)
-	config.AddLine("PHP_TZ", "Europe/Kiev")
-	config.AddLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
-	config.AddLine("PHP_XDEBUG_IDE_KEY", "PHPSTORM")
-	config.AddLine("PHP_MODULE_XDEBUG", "false")
-	config.AddLine("PHP_MODULE_IONCUBE", "false")
-	config.AddLine("PHP_MEMORY_LIMIT", generalConf["PHP_MEMORY_LIMIT"])
-
-	config.AddEmptyLine()
-
-	config.AddLine("DB_VERSION", defVersions.Db)
-	config.AddLine("DB_TYPE", dbType)
-	config.AddLine("DB_ROOT_PASSWORD", "password")
-	config.AddLine("DB_USER", "magento")
-	config.AddLine("DB_PASSWORD", "magento")
-	config.AddLine("DB_DATABASE", "magento")
-
-	config.AddEmptyLine()
-
-	config.AddLine("ELASTICSEARCH_ENABLE", generalConf["ELASTICSEARCH_ENABLE"])
-	config.AddLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
-
-	config.AddEmptyLine()
-
-	config.AddLine("REDIS_ENABLE", generalConf["REDIS_ENABLE"])
-	config.AddLine("REDIS_VERSION", defVersions.Redis)
-
-	config.AddEmptyLine()
-
-	config.AddLine("RABBITMQ_ENABLE", generalConf["RABBITMQ_ENABLE"])
-	config.AddLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
-
-	config.AddEmptyLine()
-
-	config.AddLine("PHPMYADMIN_ENABLE", generalConf["PHPMYADMIN_ENABLE"])
-	config.AddLine("PHPMYADMIN_PORT", generalConf["PHPMYADMIN_PORT"])
-
-	config.AddEmptyLine()
-
-	/*usr, err := user.Current()
-	if err == nil {
-		AddLine("UID", usr.Uid)
-		AddLine("GUID", usr.Gid)
-	} else {
-		log.Fatal(err)
-	}*/
-
-	config.SaveLines()
 }
 
 func (t *ConfigLines) AddLine(name, value string) {
