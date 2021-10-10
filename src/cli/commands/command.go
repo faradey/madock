@@ -113,6 +113,16 @@ func Bash(flag, flag2 string) {
 	builder.Bash(containerName, isRoot)
 }
 
+func Add(flag, flags string) {
+	if flag == "--host" {
+		if len(flags) > 0 {
+
+		} else {
+			fmtc.ErrorLn("Specify at least one domain")
+		}
+	}
+}
+
 func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }

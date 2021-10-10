@@ -50,6 +50,14 @@ func main() {
 			commands.Bash(flag, flag2)
 		case "help":
 			helper.Help()
+		case "logs":
+			helper.Help()
+		case "add":
+			flags := ""
+			if len(os.Args) > 3 {
+				flags = strings.ToLower(os.Args[3])
+			}
+			commands.Add(flag, flags)
 		default:
 			commands.IsNotDefine()
 		}
