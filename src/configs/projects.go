@@ -50,7 +50,6 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 
 	config.AddEmptyLine()
 
-	config.AddLine("PHPMYADMIN_ENABLE", generalConf["PHPMYADMIN_ENABLE"])
 	config.AddLine("PHPMYADMIN_PORT", generalConf["PHPMYADMIN_PORT"])
 
 	config.AddEmptyLine()

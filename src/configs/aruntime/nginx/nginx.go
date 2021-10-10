@@ -61,7 +61,15 @@ func makeProxy() {
 	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 	for _, name := range projectsNames {
 		if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped"); os.IsNotExist(err) {
-			strReplaced := strings.Replace(str, "{{{NGINX_PORT}}}", portsConfig[name], -1)
+			port, err := strconv.Atoi(portsConfig[name])
+			if err != nil {
+				log.Fatal(err)
+			}
+			portRanged := (port - 1) * 20
+			strReplaced := strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(17000+portRanged), -1)
+			for i := 1; i < 20; i++ {
+				strReplaced = strings.Replace(strReplaced, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
+			}
 			strReplaced = strings.Replace(strReplaced, "{{{HOST_NAMES}}}", "loc."+name+".com", -1)
 			allFileData += strReplaced
 		}

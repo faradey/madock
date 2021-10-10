@@ -21,10 +21,24 @@ func Up() {
 	upProject()
 }
 
+func UpWithBuild() {
+	upNginx()
+	upProjectWithBuild()
+}
+
 func Down() {
+	projectName := paths.GetRunDirName()
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "down")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func DownAll() {
+	Down()
 	downNginx()
 }
 
@@ -42,6 +56,18 @@ func upNginx() {
 func upProject() {
 	projectName := paths.GetRunDirName()
 	project.MakeConf(projectName)
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "up", "--no-deps", "-d")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func upProjectWithBuild() {
+	projectName := paths.GetRunDirName()
+	project.MakeConf(projectName)
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -52,18 +78,10 @@ func upProject() {
 }
 
 func downNginx() {
-	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "down")
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "down")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	cmd = exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "down")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err)
 	}

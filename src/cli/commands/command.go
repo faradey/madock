@@ -19,6 +19,32 @@ func Start() {
 	}
 }
 
+func Restart() {
+	if !configs.IsHasNotConfig() {
+		fmtc.SuccessLn("Stop containers")
+		builder.Down()
+		fmtc.SuccessLn("Start containers in detached mode")
+		builder.Up()
+		fmtc.SuccessLn("Done")
+	} else {
+		fmtc.WarningLn("Set up the project")
+		fmtc.ToDoLn("Run madock setup")
+	}
+}
+
+func Rebuild() {
+	if !configs.IsHasNotConfig() {
+		fmtc.SuccessLn("Stop containers")
+		builder.Down()
+		fmtc.SuccessLn("Start containers in detached mode")
+		builder.UpWithBuild()
+		fmtc.SuccessLn("Done")
+	} else {
+		fmtc.WarningLn("Set up the project")
+		fmtc.ToDoLn("Run madock setup")
+	}
+}
+
 func Stop(flag string) {
 	if !configs.IsHasNotConfig() {
 		if flag == "--all" {

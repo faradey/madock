@@ -22,6 +22,7 @@ services:
       - ./src/:/var/www/html/
     depends_on:
       - db
+      - phpmyadmin
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 
@@ -55,6 +56,20 @@ services:
     build:
       context: ctx
       dockerfile: redis.Dockerfile
+    networks:
+      app_net_{{{NETWORK_NUMBER}}}:
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin/"
+    ports:
+      - {{{NGINX_PORT+1}}}:80
+    depends_on:
+      - db
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 

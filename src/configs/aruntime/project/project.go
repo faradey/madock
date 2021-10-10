@@ -132,7 +132,12 @@ func makeDockerCompose(projectName string) {
 		log.Fatal(err)
 	}
 
-	str = strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(portNumber+17000), -1)
+	portNumberRanged := (portNumber - 1) * 20
+	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", "loc."+projectName+".com", -1)
+	str = strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
+	for i := 1; i < 20; i++ {
+		str = strings.Replace(str, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
+	}
 	str = strings.Replace(str, "{{{NETWORK_NUMBER}}}", strconv.Itoa(portNumber+90), -1)
 
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName)
