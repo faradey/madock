@@ -1,11 +1,13 @@
 package commands
 
 import (
+	"fmt"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/paths"
 	"log"
+	"strings"
 )
 
 func Start() {
@@ -23,9 +25,7 @@ func Restart() {
 	if !configs.IsHasNotConfig() {
 		fmtc.SuccessLn("Stop containers")
 		builder.Down()
-		fmtc.SuccessLn("Start containers in detached mode")
-		builder.Up()
-		fmtc.SuccessLn("Done")
+		Start()
 	} else {
 		fmtc.WarningLn("Set up the project")
 		fmtc.ToDoLn("Run madock setup")
@@ -113,13 +113,22 @@ func Bash(flag, flag2 string) {
 	builder.Bash(containerName, isRoot)
 }
 
-func Add(flag, flags string) {
-	if flag == "--host" {
+func SetEnvOption(flag string, flags []string) {
+	if flag == "--hosts" {
 		if len(flags) > 0 {
-
+			configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env"
+			configs.SetParam(configPath, "HOSTS", strings.Join(flags, " "))
 		} else {
 			fmtc.ErrorLn("Specify at least one domain")
 		}
+	}
+}
+
+func ShowEnv() {
+	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env"
+	lines := configs.GetAllLines(configPath)
+	for _, ln := range lines {
+		fmt.Println(ln)
 	}
 }
 

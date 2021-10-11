@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/faradey/madock/src/cli/commands"
+	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/cli/helper"
 	"os"
 	"strings"
@@ -52,12 +53,22 @@ func main() {
 			helper.Help()
 		case "logs":
 			helper.Help()
-		case "add":
-			flags := ""
+		case "config":
+			optionName := ""
 			if len(os.Args) > 3 {
-				flags = strings.ToLower(os.Args[3])
+				optionName = strings.ToLower(os.Args[3])
 			}
-			commands.Add(flag, flags)
+			var flags []string
+			if len(os.Args) > 4 {
+				flags = os.Args[4:]
+			}
+			if flag == "set" {
+				commands.SetEnvOption(optionName, flags)
+			} else if flag == "show" {
+				commands.ShowEnv()
+			} else {
+				fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
+			}
 		default:
 			commands.IsNotDefine()
 		}

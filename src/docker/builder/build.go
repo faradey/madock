@@ -63,6 +63,13 @@ func upProject() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	projectConfig := configs.GetProjectConfig()
+	if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
+		Cron("--on")
+	} else {
+		Cron("--off")
+	}
 }
 
 func upProjectWithBuild() {
@@ -74,6 +81,13 @@ func upProjectWithBuild() {
 	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	projectConfig := configs.GetProjectConfig()
+	if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
+		Cron("--on")
+	} else {
+		Cron("--off")
 	}
 }
 
