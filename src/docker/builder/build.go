@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
+	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/configs/aruntime/project"
@@ -22,7 +23,7 @@ func Up() {
 }
 
 func UpWithBuild() {
-	upNginx()
+	upNginxWithBuild()
 	upProjectWithBuild()
 }
 
@@ -42,6 +43,29 @@ func DownAll() {
 	downNginx()
 }
 
+func Start() {
+	projectName := paths.GetRunDirName()
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "start")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		fmtc.ToDoLn("Creating containers")
+		Up()
+	}
+}
+
+func Stop() {
+	projectName := paths.GetRunDirName()
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "stop")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func upNginx() {
 	nginx.MakeConf()
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up" /*, "--build"*/, "--force-recreate", "--no-deps", "-d")
@@ -53,10 +77,21 @@ func upNginx() {
 	}
 }
 
+func upNginxWithBuild() {
+	nginx.MakeConf()
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func upProject() {
 	projectName := paths.GetRunDirName()
 	project.MakeConf(projectName)
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "up", "--no-deps", "-d")
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "up", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -103,7 +138,8 @@ func downNginx() {
 
 func Magento(flag string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento "+flag)
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -114,7 +150,8 @@ func Magento(flag string) {
 
 func Composer(flag string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && composer "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && composer "+flag)
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()

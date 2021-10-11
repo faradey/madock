@@ -22,11 +22,13 @@ func main() {
 		case "start":
 			commands.Start()
 		case "stop":
-			commands.Stop(flag)
+			commands.Stop()
 		case "restart":
 			commands.Restart()
 		case "rebuild":
 			commands.Rebuild()
+		case "prune":
+			commands.Prune(flag)
 		case "magento":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Magento(flag)

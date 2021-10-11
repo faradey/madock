@@ -13,7 +13,7 @@ import (
 func Start() {
 	if !configs.IsHasNotConfig() {
 		fmtc.SuccessLn("Start containers in detached mode")
-		builder.Up()
+		builder.Start()
 		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")
@@ -21,15 +21,13 @@ func Start() {
 	}
 }
 
+func Stop() {
+	builder.Stop()
+}
+
 func Restart() {
-	if !configs.IsHasNotConfig() {
-		fmtc.SuccessLn("Stop containers")
-		builder.Down()
-		Start()
-	} else {
-		fmtc.WarningLn("Set up the project")
-		fmtc.ToDoLn("Run madock setup")
-	}
+	Stop()
+	Start()
 }
 
 func Rebuild() {
@@ -45,7 +43,7 @@ func Rebuild() {
 	}
 }
 
-func Stop(flag string) {
+func Prune(flag string) {
 	if !configs.IsHasNotConfig() {
 		if flag == "--all" {
 			builder.DownAll()

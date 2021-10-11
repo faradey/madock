@@ -21,7 +21,6 @@ services:
     volumes:
       - ./src/:/var/www/html/
     depends_on:
-      - db
       - phpmyadmin
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
