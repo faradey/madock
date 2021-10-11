@@ -5,6 +5,6 @@ ENV bootstrap.memory_lock=true
 ENV xpack.security.enabled=false
 ENV discovery.type=single-node
 
-RUN usermod -u {{{UID}}} -o elasticsearch && groupmod -g {{{GUID}}} -o elasticsearch
-
-USER {{{UID}}}
+RUN echo "xpack.security.enabled: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
+RUN bin/elasticsearch-plugin install analysis-icu && \
+    bin/elasticsearch-plugin install analysis-phonetic

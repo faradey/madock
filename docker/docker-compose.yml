@@ -47,8 +47,10 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+    environment:
+      - discovery.type=single-node
     volumes:
-      - ./data/elasticsearch/:/usr/share/elasticsearch/data
+      - elasticsearch_vlm:/usr/share/elasticsearch/data
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 
@@ -67,12 +69,13 @@ services:
       PMA_ARBITRARY: 1
       PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin/"
     ports:
-      - {{{NGINX_PORT+1}}}:80
+      - "{{{NGINX_PORT+1}}}:80"
     depends_on:
       - db
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
-
+volumes:
+  elasticsearch_vlm:
 networks:
   app_net_{{{NETWORK_NUMBER}}}:
     driver: bridge

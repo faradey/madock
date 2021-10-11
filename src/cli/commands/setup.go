@@ -19,6 +19,7 @@ func Setup() {
 	configs.IsHasConfig()
 	builder.DownAll()
 	fmtc.SuccessLn("Start set up environment")
+	projectName := paths.GetRunDirName()
 	toolsDefVersions := versions.GetVersions()
 
 	setupPhp(&toolsDefVersions.Php)
@@ -29,11 +30,10 @@ func Setup() {
 	setupRabbitMQ(&toolsDefVersions.RabbitMQ)
 
 	configs.SetEnvForProject(toolsDefVersions)
-
-	createProjectNginxConf()
-	createProjectNginxDockerfile()
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/backup/db")
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + paths.GetRunDirName() + "/data/mysql")
+	copy(paths.GetExecDirPath()+"/docker/nginx/conf/default.conf", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/conf/default.conf")
+	copy(paths.GetExecDirPath()+"/docker/nginx/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/Dockerfile")
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/data/mysql")
 
 	fmtc.SuccessLn("Finish set up environment")
 }
@@ -158,32 +158,14 @@ func waiter(defVersion *string, availableVersions []string) {
 	}
 }
 
-func createProjectNginxConf() {
-	projectName := paths.GetRunDirName()
-	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/conf/default.conf"
-	b, err := os.ReadFile(nginxDefFile)
+func copy(pathFrom, pathTo string) {
+	b, err := os.ReadFile(pathFrom)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx/conf")
-	nginxFile := paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx/conf/default.conf"
-	err = ioutil.WriteFile(nginxFile, b, 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
-}
-
-func createProjectNginxDockerfile() {
-	projectName := paths.GetRunDirName()
-	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/Dockerfile"
-	b, err := os.ReadFile(nginxDefFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx")
-	err = ioutil.WriteFile(paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/Dockerfile", b, 0755)
+	pathToAsSlice := strings.Split(pathTo, "/")
+	paths.MakeDirsByPath(strings.Join(pathToAsSlice[:len(pathToAsSlice)-1], "/"))
+	err = ioutil.WriteFile(pathTo, b, 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
