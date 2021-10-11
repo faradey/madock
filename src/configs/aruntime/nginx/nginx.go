@@ -70,7 +70,20 @@ func makeProxy() {
 			for i := 1; i < 20; i++ {
 				strReplaced = strings.Replace(strReplaced, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 			}
-			strReplaced = strings.Replace(strReplaced, "{{{HOST_NAMES}}}", "loc."+name+".com", -1)
+			hostName := "loc." + name + ".com"
+			projectConf := configs.GetProjectConfig()
+			if val, ok := projectConf["HOSTS"]; ok {
+				var onlyHosts []string
+				hosts := strings.Split(val, " ")
+				if len(hosts) > 0 {
+					for _, hostAndStore := range hosts {
+						onlyHosts = append(onlyHosts, strings.Split(hostAndStore, ":")[0])
+					}
+					hostName = strings.Join(onlyHosts, "\n")
+				}
+			}
+
+			strReplaced = strings.Replace(strReplaced, "{{{HOST_NAMES}}}", hostName, -1)
 			allFileData += strReplaced
 		}
 	}

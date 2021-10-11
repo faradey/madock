@@ -72,9 +72,37 @@ func makeNginxConf(projectName string) {
 		log.Fatal(err)
 	}
 
+	str := string(b)
+	projectConf := configs.GetProjectConfig()
+	str = strings.Replace(str, "{{{NGINX_PORT}}}", projectConf["NGINX_PORT"], -1)
+	hostName := "loc." + projectName + ".com"
+	hostNameWebsites := "loc." + projectName + ".com base;"
+	if val, ok := projectConf["HOSTS"]; ok {
+		var onlyHosts []string
+		var websitesHosts []string
+		hosts := strings.Split(val, " ")
+		if len(hosts) > 0 {
+			for _, hostAndStore := range hosts {
+				onlyHosts = append(onlyHosts, strings.Split(hostAndStore, ":")[0])
+				if len(strings.Split(hostAndStore, ":")) > 1 {
+					websitesHosts = append(websitesHosts, strings.Split(hostAndStore, ":")[0]+" "+strings.Split(hostAndStore, ":")[1]+";")
+				}
+			}
+			if len(onlyHosts) > 0 {
+				hostName = strings.Join(onlyHosts, "\n")
+			}
+			if len(websitesHosts) > 0 {
+				hostNameWebsites = strings.Join(websitesHosts, "\n")
+			}
+		}
+	}
+	str = strings.Replace(str, "{{{HOST_NAMES}}}", hostName, -1)
+	str = strings.Replace(str, "{{{PROJECT_NAME}}}", projectName, -1)
+	str = strings.Replace(str, "{{{HOST_NAMES_WEBSITES}}}", hostNameWebsites, -1)
+
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nginx.conf"
-	err = ioutil.WriteFile(nginxFile, b, 0755)
+	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
