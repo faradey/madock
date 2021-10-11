@@ -161,7 +161,15 @@ func makeDockerCompose(projectName string) {
 	}
 
 	portNumberRanged := (portNumber - 1) * 20
-	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", "loc."+projectName+".com", -1)
+	hostName := "loc." + projectName + ".com"
+	projectConf := configs.GetProjectConfig()
+	if val, ok := projectConf["HOSTS"]; ok {
+		hosts := strings.Split(val, " ")
+		if len(hosts) > 0 {
+			hostName = strings.Split(hosts[0], ":")[0]
+		}
+	}
+	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", hostName, -1)
 	str = strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
 	for i := 1; i < 20; i++ {
 		str = strings.Replace(str, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
