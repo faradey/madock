@@ -17,11 +17,6 @@ import (
 	"time"
 )
 
-func Up() {
-	upNginx()
-	upProject()
-}
-
 func UpWithBuild() {
 	upNginxWithBuild()
 	upProjectWithBuild()
@@ -51,24 +46,20 @@ func Start() {
 	err := cmd.Run()
 	if err != nil {
 		fmtc.ToDoLn("Creating containers")
-		Up()
+		UpWithBuild()
+	} else {
+		projectConfig := configs.GetProjectConfig()
+		if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
+			Cron("--on")
+		} else {
+			Cron("--off")
+		}
 	}
 }
 
 func Stop() {
 	projectName := paths.GetRunDirName()
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "stop")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func upNginx() {
-	nginx.MakeConf()
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up" /*, "--build"*/, "--force-recreate", "--no-deps", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -85,25 +76,6 @@ func upNginxWithBuild() {
 	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)
-	}
-}
-
-func upProject() {
-	projectName := paths.GetRunDirName()
-	project.MakeConf(projectName)
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "up", "-d")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	projectConfig := configs.GetProjectConfig()
-	if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
-		Cron("--on")
-	} else {
-		Cron("--off")
 	}
 }
 

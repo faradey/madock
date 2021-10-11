@@ -84,7 +84,7 @@ func Debug(flag string) {
 	} else {
 		log.Fatal("The specified parameters were not found.")
 	}
-	builder.Up()
+	builder.UpWithBuild()
 }
 
 func Cron(flag string) {
