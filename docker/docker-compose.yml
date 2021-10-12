@@ -20,7 +20,7 @@ services:
       dockerfile: php.Dockerfile
     volumes:
       - ./src/:/var/www/html/
-      - ../../.composer:/var/www/.composer
+      - ../../.composer:/var/www/.cache/composer
       - ../../.composer:/var/www/html/var/composer_home
     depends_on:
       - phpmyadmin
