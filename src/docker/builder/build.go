@@ -84,6 +84,11 @@ func upNginxWithBuild() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/data/nginx")
+	err = os.Chmod(paths.GetExecDirPath()+"/aruntime/data/nginx", 0777)
+	if err != nil {
+		log.Fatal(err)
+	}
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -98,6 +103,11 @@ func upProjectWithBuild() {
 	project.MakeConf(projectName)
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/data")
 	err := os.Chmod(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/data", 0777)
+	if err != nil {
+		log.Fatal(err)
+	}
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/data/nginx")
+	err = os.Chmod(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/data/nginx", 0777)
 	if err != nil {
 		log.Fatal(err)
 	}
