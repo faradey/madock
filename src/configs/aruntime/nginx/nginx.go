@@ -26,7 +26,7 @@ func setPorts() {
 	if _, err := os.Stat(portsFile); os.IsNotExist(err) {
 		lines := ""
 		for port, line := range projects {
-			lines += line + "=" + strconv.Itoa(17000+port) + "\n"
+			lines += line + "=" + strconv.Itoa(port+1) + "\n"
 		}
 		err = ioutil.WriteFile(portsFile, []byte(lines), 0755)
 	}
