@@ -53,6 +53,10 @@ RUN if [ "{{{PHP_MODULE_IONCUBE}}}" = "true" ]; then set -eux && EXTENSION_DIR="
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/ioncube.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/10-ioncube.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/ioncube.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/10-ioncube.ini; fi
 
+RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer
+
+RUN if [ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]; then composer self-update --1; fi
+
 RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true" ]; then apt install php{{{PHP_VERSION}}}-xdebug \
     && echo "zend_extension=xdebug.so" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_enable=1" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
@@ -62,15 +66,9 @@ RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true" ]; then apt install php{{{PHP_VERSIO
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/11-xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/11-xdebug.ini; fi
 
-USER {{{UID}}}:{{{GUID}}}
-RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/local/bin/ --filename=composer
-
-RUN if [ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]; then composer self-update --1; fi
-
 RUN apt install cron
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
-RUN mkdir -p /var/www/.composer && chmod -R 777 /var/www/.composer
 WORKDIR /var/www/html
 EXPOSE 9000
 CMD "php-fpm{{{PHP_VERSION}}}"
