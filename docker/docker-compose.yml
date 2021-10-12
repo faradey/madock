@@ -6,7 +6,6 @@ services:
       dockerfile: nginx.Dockerfile
     volumes:
       - ./src/:/var/www/html/
-      - ./data/nginx/:/var/log/nginx
     ports:
       - "{{{NGINX_PORT}}}:80"
     depends_on:

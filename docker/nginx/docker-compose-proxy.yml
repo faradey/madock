@@ -6,6 +6,4 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
-    volumes:
-      - ./data/nginx/:/var/log/nginx
     network_mode: host
