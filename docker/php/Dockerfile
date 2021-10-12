@@ -70,6 +70,7 @@ RUN apt install cron
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
+RUN mkdir -p /var/www && chown -R {{{UID}}}:{{{GUID}}} /var/www/
 WORKDIR /var/www/html
 EXPOSE 9000
 CMD "php-fpm{{{PHP_VERSION}}}"
