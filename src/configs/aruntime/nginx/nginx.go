@@ -88,6 +88,7 @@ func makeProxy() {
 		}
 	}
 
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 	nginxFile := paths.GetExecDirPath() + "/aruntime/ctx/proxy.conf"
 	err = ioutil.WriteFile(nginxFile, []byte(allFileData), 0755)
 	if err != nil {
