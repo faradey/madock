@@ -69,6 +69,7 @@ RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true" ]; then apt install php{{{PHP_VERSIO
 RUN apt install cron
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
+VOLUME /var/www
 WORKDIR /var/www/html
 EXPOSE 9000
 CMD "php-fpm{{{PHP_VERSION}}}"
