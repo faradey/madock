@@ -24,12 +24,15 @@ func UpWithBuild() {
 
 func Down() {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "down")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
+	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
+	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
+		cmd := exec.Command("docker-compose", "-f", composeFile, "down")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -99,12 +102,15 @@ func upProjectWithBuild() {
 }
 
 func downNginx() {
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "down")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
+	composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
+	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
+		cmd := exec.Command("docker-compose", "-f", composeFile, "down")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
