@@ -40,8 +40,6 @@ services:
     build:
       context: ctx
       dockerfile: node.Dockerfile
-    ports:
-      - 35729:35729
     volumes:
       - ./src/:/var/www/html/
     depends_on:
