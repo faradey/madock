@@ -8,4 +8,4 @@ RUN usermod -u {{{UID}}} -o node && groupmod -g {{{GUID}}} -o node
 USER node
 EXPOSE 35729
 WORKDIR /var/www/html
-CMD ["node"]
+CMD npm start
