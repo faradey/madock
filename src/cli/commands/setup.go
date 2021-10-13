@@ -30,8 +30,8 @@ func Setup() {
 	setupRabbitMQ(&toolsDefVersions.RabbitMQ)
 
 	configs.SetEnvForProject(toolsDefVersions)
-	copy(paths.GetExecDirPath()+"/docker/nginx/conf/default.conf", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/conf/default.conf")
-	copy(paths.GetExecDirPath()+"/docker/nginx/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/Dockerfile")
+	copyFile(paths.GetExecDirPath()+"/docker/nginx/conf/default.conf", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/conf/default.conf")
+	copyFile(paths.GetExecDirPath()+"/docker/nginx/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/Dockerfile")
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/data/mysql")
 
@@ -158,7 +158,7 @@ func waiter(defVersion *string, availableVersions []string) {
 	}
 }
 
-func copy(pathFrom, pathTo string) {
+func copyFile(pathFrom, pathTo string) {
 	b, err := os.ReadFile(pathFrom)
 	if err != nil {
 		log.Fatal(err)
