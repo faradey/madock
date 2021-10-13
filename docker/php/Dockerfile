@@ -72,7 +72,9 @@ RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true" ]; then apt install php{{{PHP_VERSIO
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/11-xdebug.ini; fi
 
 RUN apt install cron
+USER www-data
 RUN npm install -g grunt-cli && npm install -g bower
+USER root
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
