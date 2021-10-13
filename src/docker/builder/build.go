@@ -273,3 +273,15 @@ func Bash(containerName string, isRoot bool) {
 		log.Fatal(err)
 	}
 }
+
+func Grunt(flag string) {
+	projectName := paths.GetRunDirName()
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && grunt "+flag)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}

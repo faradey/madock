@@ -130,6 +130,10 @@ func ShowEnv() {
 	}
 }
 
+func Grunt(flag string) {
+	builder.Grunt(flag)
+}
+
 func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }

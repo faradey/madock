@@ -51,6 +51,8 @@ func main() {
 				flag2 = strings.ToLower(os.Args[3])
 			}
 			commands.Bash(flag, flag2)
+		case "grunt":
+			commands.Grunt(flag)
 		case "help":
 			helper.Help()
 		case "logs":
