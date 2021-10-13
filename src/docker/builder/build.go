@@ -86,8 +86,7 @@ func upNginxWithBuild() {
 func upProjectWithBuild() {
 	projectName := paths.GetRunDirName()
 	project.MakeConf(projectName)
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/.composer")
-	err := os.Chmod(paths.GetExecDirPath()+"/aruntime/.composer", 0777)
+	err := os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
 	if err != nil {
 		log.Fatal(err)
 	}

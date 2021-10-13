@@ -19,8 +19,7 @@ func MakeConf() {
 }
 
 func setPorts() {
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects")
-	projects := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
+	projects := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
 	portsConfig := make(map[string]string)
 	if _, err := os.Stat(portsFile); os.IsNotExist(err) {
@@ -88,8 +87,7 @@ func makeProxy() {
 		}
 	}
 
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
-	nginxFile := paths.GetExecDirPath() + "/aruntime/ctx/proxy.conf"
+	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
 	err = ioutil.WriteFile(nginxFile, []byte(allFileData), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -99,15 +97,14 @@ func makeProxy() {
 
 func makeDockerfile() {
 	/* Create nginx Dockerfile configuration */
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
+	ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/proxy.Dockerfile"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
-	err = ioutil.WriteFile(paths.GetExecDirPath()+"/aruntime/ctx/Dockerfile", b, 0755)
+	err = ioutil.WriteFile(ctxPath+"/Dockerfile", b, 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}

@@ -12,8 +12,8 @@ import (
 )
 
 func MakeConf(projectName string) {
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName)
-	src := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/src"
+
+	src := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/src"
 	if _, err := os.Lstat(src); err == nil {
 		if err := os.Remove(src); err != nil {
 			log.Fatalf("failed to unlink: %+v", err)
@@ -53,8 +53,7 @@ func makeNginxDockerfile(projectName string) {
 		log.Fatal(err)
 	}
 
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nginx.Dockerfile"
+	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/nginx.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -101,7 +100,7 @@ func makeNginxConf(projectName string) {
 	str = strings.Replace(str, "{{{HOST_NAMES_WEBSITES}}}", hostNameWebsites, -1)
 
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nginx.conf"
+	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/nginx.conf"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -134,8 +133,7 @@ func makePhpDockerfile(projectName string) {
 	} else {
 		log.Fatal(err)
 	}
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/php.Dockerfile"
+	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -176,8 +174,7 @@ func makeDockerCompose(projectName string) {
 	}
 	str = strings.Replace(str, "{{{NETWORK_NUMBER}}}", strconv.Itoa(portNumber+90), -1)
 
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName)
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
+	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -210,8 +207,7 @@ func makeDBDockerfile(projectName string) {
 	} else {
 		log.Fatal(err)
 	}
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/db.Dockerfile"
+	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/db.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
