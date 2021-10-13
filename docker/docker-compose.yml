@@ -21,8 +21,6 @@ services:
       - ./src/:/var/www/html/
       - ../../.composer:/var/www/.composer
       - ../../.composer:/var/www/html/var/composer_home
-    ports:
-      - 35729:35729
     depends_on:
       - phpmyadmin
     networks:
@@ -37,6 +35,17 @@ services:
       - ./data/mysql/:/var/lib/mysql
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
+
+  node:
+    build:
+      context: ctx
+      dockerfile: node.Dockerfile
+    ports:
+      - 35729:35729
+    volumes:
+      - ./src/:/var/www/html/
+    depends_on:
+      - php
 
   elasticsearch:
     build:

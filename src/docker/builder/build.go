@@ -276,7 +276,7 @@ func Bash(containerName string, isRoot bool) {
 
 func Grunt(flag string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && grunt "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "node", projectName+"-node-1", "bash", "-c", "cd /var/www/html && grunt "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

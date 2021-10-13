@@ -12,7 +12,6 @@ import (
 )
 
 func MakeConf(projectName string) {
-
 	src := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/src"
 	if _, err := os.Lstat(src); err == nil {
 		if err := os.Remove(src); err != nil {
@@ -32,6 +31,7 @@ func MakeConf(projectName string) {
 	makeDBDockerfile(projectName)
 	makeElasticDockerfile(projectName)
 	makeRedisDockerfile(projectName)
+	makeNodeDockerfile(projectName)
 }
 
 func makeNginxDockerfile(projectName string) {
@@ -281,6 +281,32 @@ func makeRedisDockerfile(projectName string) {
 		log.Fatal(err)
 	}
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/redis.Dockerfile"
+	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+}
+
+func makeNodeDockerfile(projectName string) {
+	dockerDefFile := paths.GetExecDirPath() + "/docker/node/Dockerfile"
+	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
+		log.Fatal(err)
+	}
+
+	b, err := os.ReadFile(dockerDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str := string(b)
+	usr, err := user.Current()
+	if err == nil {
+		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
+		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
+	} else {
+		log.Fatal(err)
+	}
+	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/node.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
