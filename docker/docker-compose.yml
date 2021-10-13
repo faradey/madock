@@ -21,6 +21,8 @@ services:
       - ./src/:/var/www/html/
       - ../../.composer:/var/www/.composer
       - ../../.composer:/var/www/html/var/composer_home
+    ports:
+      - 35729:35729
     depends_on:
       - phpmyadmin
     networks:
