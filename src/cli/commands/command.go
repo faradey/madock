@@ -134,6 +134,13 @@ func Grunt(flag string) {
 	builder.Grunt(flag)
 }
 
+func Logs(flag string) {
+	if len(flag) > 2 {
+		flag = flag[len(flag)-1:]
+	}
+	builder.Logs(flag)
+}
+
 func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }
