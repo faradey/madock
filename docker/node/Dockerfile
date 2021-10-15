@@ -7,4 +7,3 @@ RUN apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN usermod -u {{{UID}}} -o node && groupmod -g {{{GUID}}} -o node
 USER node
 WORKDIR /var/www/html
-CMD npm start
