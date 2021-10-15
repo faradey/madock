@@ -136,7 +136,7 @@ func Grunt(flag string) {
 
 func Logs(flag string) {
 	if len(flag) > 2 {
-		flag = flag[len(flag)-1:]
+		flag = flag[2:]
 	}
 	builder.Logs(flag)
 }
