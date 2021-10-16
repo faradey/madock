@@ -52,7 +52,7 @@ func main() {
 			}
 			commands.Bash(flag, flag2)
 		case "node":
-			commands.Grunt(flag)
+			commands.Node(flag)
 		case "help":
 			helper.Help()
 		case "logs":

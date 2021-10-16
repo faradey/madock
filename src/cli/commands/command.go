@@ -130,8 +130,8 @@ func ShowEnv() {
 	}
 }
 
-func Grunt(flag string) {
-	builder.Grunt(flag)
+func Node(flag string) {
+	builder.Node(flag)
 }
 
 func Logs(flag string) {

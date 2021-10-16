@@ -292,9 +292,9 @@ func Bash(containerName string, isRoot bool) {
 	}
 }
 
-func Grunt(flag string) {
+func Node(flag string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "node", projectName+"-node-1", "bash", "-c", "cd /var/www/html && "+flag)
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "run", "--rm", "--service-ports", "node", "bash", "-c", "cd /var/www/html && "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
