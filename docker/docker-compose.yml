@@ -72,6 +72,11 @@ services:
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 
+  rabbitmq:
+    image: rabbitmq:{{{RABBITMQ_VERSION}}}
+    networks:
+      app_net_{{{NETWORK_NUMBER}}}:
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     environment:

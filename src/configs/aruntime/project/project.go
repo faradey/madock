@@ -35,10 +35,7 @@ func MakeConf(projectName string) {
 }
 
 func makeNginxDockerfile(projectName string) {
-	dockerDefFile := paths.GetExecDirPath() + "/docker/nginx/Dockerfile"
-	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
+	dockerDefFile := getDockerFile(projectName, "/docker/nginx/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -61,10 +58,7 @@ func makeNginxDockerfile(projectName string) {
 }
 
 func makeNginxConf(projectName string) {
-	defFile := paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx/conf/default.conf"
-	if _, err := os.Stat(defFile); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
+	defFile := getDockerFile(projectName, "/docker/nginx/conf/default.conf")
 
 	b, err := os.ReadFile(defFile)
 	if err != nil {
@@ -108,10 +102,7 @@ func makeNginxConf(projectName string) {
 }
 
 func makePhpDockerfile(projectName string) {
-	dockerDefFile := paths.GetExecDirPath() + "/docker/php/Dockerfile"
-	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
+	dockerDefFile := getDockerFile(projectName, "/docker/php/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -141,10 +132,7 @@ func makePhpDockerfile(projectName string) {
 }
 
 func makeDockerCompose(projectName string) {
-	dockerDefFile := paths.GetExecDirPath() + "/docker/docker-compose.yml"
-	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
+	dockerDefFile := getDockerFile(projectName, "/docker/docker-compose.yml")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -167,6 +155,7 @@ func makeDockerCompose(projectName string) {
 			hostName = strings.Split(hosts[0], ":")[0]
 		}
 	}
+	str = strings.Replace(str, "{{{RABBITMQ_VERSION}}}", projectConf["RABBITMQ_VERSION"], -1)
 	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", hostName, -1)
 	str = strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
 	for i := 1; i < 20; i++ {
@@ -182,10 +171,7 @@ func makeDockerCompose(projectName string) {
 }
 
 func makeDBDockerfile(projectName string) {
-	dockerDefFile := paths.GetExecDirPath() + "/docker/db/Dockerfile"
-	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
+	dockerDefFile := getDockerFile(projectName, "/docker/db/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -230,10 +216,7 @@ func makeDBDockerfile(projectName string) {
 }
 
 func makeElasticDockerfile(projectName string) {
-	dockerDefFile := paths.GetExecDirPath() + "/docker/elasticsearch/Dockerfile"
-	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
+	dockerDefFile := getDockerFile(projectName, "/docker/elasticsearch/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -259,10 +242,7 @@ func makeElasticDockerfile(projectName string) {
 }
 
 func makeRedisDockerfile(projectName string) {
-	dockerDefFile := paths.GetExecDirPath() + "/docker/redis/Dockerfile"
-	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
+	dockerDefFile := getDockerFile(projectName, "/docker/redis/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -288,10 +268,7 @@ func makeRedisDockerfile(projectName string) {
 }
 
 func makeNodeDockerfile(projectName string) {
-	dockerDefFile := paths.GetExecDirPath() + "/docker/node/Dockerfile"
-	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
+	dockerDefFile := getDockerFile(projectName, "/docker/node/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -313,4 +290,16 @@ func makeNodeDockerfile(projectName string) {
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
+}
+
+func getDockerFile(projectName, path string) string {
+	dockerDefFile := paths.GetExecDirPath() + "/projects/" + projectName + path
+	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
+		dockerDefFile = paths.GetExecDirPath() + path
+		if _, err = os.Stat(dockerDefFile); os.IsNotExist(err) {
+			log.Fatal(err)
+		}
+	}
+
+	return dockerDefFile
 }

@@ -30,8 +30,23 @@ func Setup() {
 	setupRabbitMQ(&toolsDefVersions.RabbitMQ)
 
 	configs.SetEnvForProject(toolsDefVersions)
+
+	copyFile(paths.GetExecDirPath()+"/docker/docker-compose.yml", paths.GetExecDirPath()+"/projects/"+projectName+"/docker-compose.yml")
+
 	copyFile(paths.GetExecDirPath()+"/docker/nginx/conf/default.conf", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/conf/default.conf")
 	copyFile(paths.GetExecDirPath()+"/docker/nginx/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/Dockerfile")
+
+	copyFile(paths.GetExecDirPath()+"/docker/db/my.cnf", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/db/my.cnf")
+	copyFile(paths.GetExecDirPath()+"/docker/db/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/db/Dockerfile")
+
+	copyFile(paths.GetExecDirPath()+"/docker/elasticsearch/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/elasticsearch/Dockerfile")
+
+	copyFile(paths.GetExecDirPath()+"/docker/node/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/node/Dockerfile")
+
+	copyFile(paths.GetExecDirPath()+"/docker/php/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/php/Dockerfile")
+
+	copyFile(paths.GetExecDirPath()+"/docker/redis/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/redis/Dockerfile")
+
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/data/mysql")
 
