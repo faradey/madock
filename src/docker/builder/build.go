@@ -9,6 +9,7 @@ import (
 	"github.com/faradey/madock/src/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/configs/aruntime/project"
 	"github.com/faradey/madock/src/paths"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -18,8 +19,15 @@ import (
 )
 
 func UpWithBuild() {
+	prepareConfigs()
 	upNginxWithBuild()
 	upProjectWithBuild()
+}
+
+func prepareConfigs() {
+	projectName := paths.GetRunDirName()
+	nginx.MakeConf()
+	project.MakeConf(projectName)
 }
 
 func Down() {
@@ -43,7 +51,7 @@ func DownAll() {
 
 func Start() {
 	projectName := paths.GetRunDirName()
-	project.MakeConf(projectName)
+	prepareConfigs()
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "start")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -54,9 +62,9 @@ func Start() {
 	} else {
 		projectConfig := configs.GetProjectConfig()
 		if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
-			Cron("--on")
+			Cron("--on", false)
 		} else {
-			Cron("--off")
+			Cron("--off", false)
 		}
 	}
 }
@@ -73,7 +81,6 @@ func Stop() {
 }
 
 func upNginxWithBuild() {
-	nginx.MakeConf()
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -85,7 +92,6 @@ func upNginxWithBuild() {
 
 func upProjectWithBuild() {
 	projectName := paths.GetRunDirName()
-	project.MakeConf(projectName)
 	err := os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
 	if err != nil {
 		log.Fatal(err)
@@ -100,9 +106,9 @@ func upProjectWithBuild() {
 
 	projectConfig := configs.GetProjectConfig()
 	if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
-		Cron("--on")
+		Cron("--on", false)
 	} else {
-		Cron("--off")
+		Cron("--off", false)
 	}
 }
 
@@ -227,9 +233,11 @@ func DbExport() {
 	fmt.Println("Database export completed successfully")
 }
 
-func Cron(flag string) {
+func Cron(flag string, manual bool) {
 	projectName := paths.GetRunDirName()
 	var cmd *exec.Cmd
+	var bOut io.Writer
+	var bErr io.Writer
 	if flag == "--on" {
 		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "start")
 		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:install &&  php bin/magento cron:run")
@@ -242,18 +250,28 @@ func Cron(flag string) {
 	} else {
 		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "stop")
 		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:remove")
-		cmdSub.Stdout = os.Stdout
-		cmdSub.Stderr = os.Stderr
+		cmdSub.Stdout = bOut
+		cmdSub.Stderr = bErr
 		err := cmdSub.Run()
-		if err != nil {
-			log.Fatal(err)
+		if manual == true {
+			if err != nil {
+				fmt.Println(bErr)
+				log.Fatal(err)
+			} else {
+				fmt.Println(bOut)
+			}
 		}
 	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = bOut
+	cmd.Stderr = bErr
 	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
+	if manual == true {
+		if err != nil {
+			fmt.Println(bErr)
+			log.Fatal(err)
+		} else {
+			fmt.Println(bOut)
+		}
 	}
 }
 

@@ -299,6 +299,8 @@ func makeNodeDockerfile(projectName string) {
 	}
 
 	str := string(b)
+	projectConf := configs.GetProjectConfig()
+	str = strings.Replace(str, "{{{PHP_VERSION}}}", projectConf["PHP_VERSION"], -1)
 	usr, err := user.Current()
 	if err == nil {
 		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)

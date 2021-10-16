@@ -1,12 +1,13 @@
-FROM node:latest
+FROM node:8
 
-RUN apt update -y
+RUN apt-get update -y
 RUN npm install -g grunt-cli && npm install -g bower
 
-RUN apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN usermod -u {{{UID}}} -o node && groupmod -g {{{GUID}}} -o node
 RUN mkdir -p /home/app \
-    && usermod -d /home/app node \
-    && chown -R {{{UID}}}  /home/app
-USER node
+    && usermod -d /home/app -l app node \
+    && chown -R app /home/app
+
+RUN groupmod -g {{{GUID}}} -o node
+RUN usermod -u {{{UID}}} -o app
+USER app
 WORKDIR /var/www/html

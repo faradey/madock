@@ -37,6 +37,7 @@ services:
       app_net_{{{NETWORK_NUMBER}}}:
 
   node:
+    command: npm install && grunt
     build:
       context: ctx
       dockerfile: node.Dockerfile

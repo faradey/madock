@@ -89,7 +89,7 @@ func Debug(flag string) {
 
 func Cron(flag string) {
 	if flag == "--on" || flag == "--off" {
-		builder.Cron(flag)
+		builder.Cron(flag, true)
 	} else {
 		log.Fatal("The specified parameters were not found.")
 	}

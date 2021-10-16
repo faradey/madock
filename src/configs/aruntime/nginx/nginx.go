@@ -19,7 +19,11 @@ func MakeConf() {
 }
 
 func setPorts() {
-	projects := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
+	projectsAruntime := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
+	projects := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects"))
+	if len(projectsAruntime) > len(projects) {
+		projects = projectsAruntime
+	}
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
 	portsConfig := make(map[string]string)
 	if _, err := os.Stat(portsFile); os.IsNotExist(err) {
