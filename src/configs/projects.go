@@ -15,6 +15,10 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env"
 	config := new(ConfigLines)
 	config.EnvFile = envFile
+	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
+		config.IsEnv = true
+	}
+
 	config.AddLine("PHP_VERSION", defVersions.Php)
 	config.AddLine("PHP_COMPOSER_VERSION", defVersions.Composer)
 	config.AddLine("PHP_TZ", generalConf["PHP_TZ"])
@@ -23,7 +27,9 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 	config.AddLine("PHP_MODULE_XDEBUG", generalConf["PHP_MODULE_XDEBUG"])
 	config.AddLine("PHP_MODULE_IONCUBE", generalConf["PHP_MODULE_IONCUBE"])
 
-	config.AddEmptyLine()
+	if !config.IsEnv {
+		config.AddEmptyLine()
+	}
 
 	config.AddLine("DB_VERSION", defVersions.Db)
 	config.AddLine("DB_TYPE", dbType)
@@ -32,31 +38,43 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 	config.AddLine("DB_PASSWORD", generalConf["DB_PASSWORD"])
 	config.AddLine("DB_DATABASE", generalConf["DB_DATABASE"])
 
-	config.AddEmptyLine()
+	if !config.IsEnv {
+		config.AddEmptyLine()
+	}
 
 	config.AddLine("ELASTICSEARCH_ENABLE", generalConf["ELASTICSEARCH_ENABLE"])
 	config.AddLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
 
-	config.AddEmptyLine()
+	if !config.IsEnv {
+		config.AddEmptyLine()
+	}
 
 	config.AddLine("REDIS_ENABLE", generalConf["REDIS_ENABLE"])
 	config.AddLine("REDIS_VERSION", defVersions.Redis)
 
-	config.AddEmptyLine()
+	if !config.IsEnv {
+		config.AddEmptyLine()
+	}
 
 	config.AddLine("NODEJS_ENABLE", generalConf["NODEJS_ENABLE"])
 	config.AddLine("NODEJS_VERSION", generalConf["NODEJS_VERSION"])
 
-	config.AddEmptyLine()
+	if !config.IsEnv {
+		config.AddEmptyLine()
+	}
 
 	config.AddLine("RABBITMQ_ENABLE", generalConf["RABBITMQ_ENABLE"])
 	config.AddLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
 
-	config.AddEmptyLine()
+	if !config.IsEnv {
+		config.AddEmptyLine()
+	}
 
 	config.AddLine("CRON_ENABLED", generalConf["CRON_ENABLED"])
 
-	config.SaveLines()
+	if !config.IsEnv {
+		config.SaveLines()
+	}
 }
 
 func GetGeneralConfig() map[string]string {
@@ -75,8 +93,12 @@ func GetGeneralConfig() map[string]string {
 	return ParseFile(configPath)
 }
 
-func GetProjectConfig() map[string]string {
-	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env"
+func GetCurrentProjectConfig() map[string]string {
+	return GetProjectConfig(paths.GetRunDirName())
+}
+
+func GetProjectConfig(projectName string) map[string]string {
+	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/env"
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		if err != nil {
 			log.Fatal(err)

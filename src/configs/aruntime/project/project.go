@@ -59,7 +59,7 @@ func makeNginxConf(projectName string) {
 	}
 
 	str := string(b)
-	projectConf := configs.GetProjectConfig()
+	projectConf := configs.GetCurrentProjectConfig()
 	str = configs.ReplaceConfigValue(str)
 	hostName := "loc." + projectName + ".com"
 	hostNameWebsites := "loc." + projectName + ".com base;"
@@ -128,7 +128,7 @@ func makeDockerCompose(projectName string) {
 
 	portNumberRanged := (portNumber - 1) * 20
 	hostName := "loc." + projectName + ".com"
-	projectConf := configs.GetProjectConfig()
+	projectConf := configs.GetCurrentProjectConfig()
 	if val, ok := projectConf["HOSTS"]; ok {
 		hosts := strings.Split(val, " ")
 		if len(hosts) > 0 {

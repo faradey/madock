@@ -74,7 +74,7 @@ func makeProxy() {
 				strReplaced = strings.Replace(strReplaced, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 			}
 			hostName := "loc." + name + ".com"
-			projectConf := configs.GetProjectConfig()
+			projectConf := configs.GetProjectConfig(name)
 			if val, ok := projectConf["HOSTS"]; ok {
 				var onlyHosts []string
 				hosts := strings.Split(val, " ")

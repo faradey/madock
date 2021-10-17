@@ -34,7 +34,20 @@ func Down() {
 	projectName := paths.GetRunDirName()
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
-		cmd := exec.Command("docker-compose", "-f", composeFile, "down")
+		profilesOn := []string{
+			"-f",
+			composeFile,
+			"--profile",
+			"nodetrue",
+			"--profile",
+			"elasticsearchtrue",
+			"--profile",
+			"redisdbtrue",
+			"--profile",
+			"rabbitmqtrue",
+			"down",
+		}
+		cmd := exec.Command("docker-compose", profilesOn...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
@@ -60,7 +73,7 @@ func Start() {
 		fmtc.ToDoLn("Creating containers")
 		UpWithBuild()
 	} else {
-		projectConfig := configs.GetProjectConfig()
+		projectConfig := configs.GetCurrentProjectConfig()
 		if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
 			Cron("--on", false)
 		} else {
@@ -121,7 +134,7 @@ func upProjectWithBuild() {
 		log.Fatal(err)
 	}
 
-	projectConfig := configs.GetProjectConfig()
+	projectConfig := configs.GetCurrentProjectConfig()
 	if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
 		Cron("--on", false)
 	} else {
@@ -171,7 +184,7 @@ func DbImport(option string) {
 		option = ""
 	}
 	projectName := paths.GetRunDirName()
-	projectConfig := configs.GetProjectConfig()
+	projectConfig := configs.GetCurrentProjectConfig()
 	dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db"
 	dbNames := paths.GetFiles(dbsPath)
 	for index, dbName := range dbNames {
@@ -231,7 +244,7 @@ func DbImport(option string) {
 
 func DbExport() {
 	projectName := paths.GetRunDirName()
-	projectConfig := configs.GetProjectConfig()
+	projectConfig := configs.GetCurrentProjectConfig()
 	dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
 	selectedFile, err := os.Create(dbsPath + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
 	if err != nil {

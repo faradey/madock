@@ -15,10 +15,19 @@ import (
 type ConfigLines struct {
 	Lines   []string
 	EnvFile string
+	IsEnv   bool
 }
 
 func (t *ConfigLines) AddLine(name, value string) {
 	t.Lines = append(t.Lines, name+"="+value)
+}
+
+func (t *ConfigLines) AddOrSetLine(name, value string) {
+	if !t.IsEnv {
+		t.Lines = append(t.Lines, name+"="+value)
+	} else {
+		SetParam(t.EnvFile, name, value)
+	}
 }
 
 func (t *ConfigLines) AddEmptyLine() {
@@ -77,7 +86,7 @@ func ConfigMapping(mainConf map[string]string, targetConf map[string]string) {
 }
 
 func ReplaceConfigValue(str string) string {
-	projectConf := GetProjectConfig()
+	projectConf := GetCurrentProjectConfig()
 
 	for key, val := range projectConf {
 		str = strings.Replace(str, "{{{"+key+"}}}", val, -1)
