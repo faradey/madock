@@ -44,6 +44,11 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 
 	config.AddEmptyLine()
 
+	config.AddLine("NODEJS_ENABLE", generalConf["NODEJS_ENABLE"])
+	config.AddLine("NODEJS_VERSION", generalConf["NODEJS_VERSION"])
+
+	config.AddEmptyLine()
+
 	config.AddLine("RABBITMQ_ENABLE", generalConf["RABBITMQ_ENABLE"])
 	config.AddLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
 

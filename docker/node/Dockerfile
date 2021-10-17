@@ -1,4 +1,4 @@
-FROM node:8
+FROM node:{{{NODEJS_VERSION}}}
 
 RUN apt-get update -y
 RUN npm install -g grunt-cli && npm install -g bower
