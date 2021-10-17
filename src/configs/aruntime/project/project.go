@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/user"
 	"strconv"
 	"strings"
 )
@@ -193,13 +192,6 @@ func makeElasticDockerfile(projectName string) {
 
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
-	usr, err := user.Current()
-	if err == nil {
-		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
-		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
-	} else {
-		log.Fatal(err)
-	}
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/elasticsearch.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -234,13 +226,6 @@ func makeNodeDockerfile(projectName string) {
 
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
-	usr, err := user.Current()
-	if err == nil {
-		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
-		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
-	} else {
-		log.Fatal(err)
-	}
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/node.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
