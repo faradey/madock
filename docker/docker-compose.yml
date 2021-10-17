@@ -7,7 +7,7 @@ services:
     volumes:
       - ./src/:/var/www/html/
     ports:
-      - "{{{NGINX_PORT}}}:80"
+      - "{{{NGINX_PROJECT_PORT}}}:80"
     depends_on:
       - php
     networks:
@@ -21,8 +21,6 @@ services:
       - ./src/:/var/www/html/
       - ../../.composer:/var/www/.composer
       - ../../.composer:/var/www/html/var/composer_home
-    depends_on:
-      - phpmyadmin
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 
@@ -93,7 +91,7 @@ services:
       PMA_ARBITRARY: 1
       PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin/"
     ports:
-      - "{{{NGINX_PORT+1}}}:80"
+      - "{{{NGINX_PROJECT_PORT+1}}}:80"
     depends_on:
       - db
     networks:

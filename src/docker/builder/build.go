@@ -96,7 +96,24 @@ func upProjectWithBuild() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
+	profilesOn := []string{
+		"-f",
+		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
+		"--profile",
+		"nodetrue",
+		"--profile",
+		"elasticsearchtrue",
+		"--profile",
+		"redisdbtrue",
+		"--profile",
+		"rabbitmqtrue",
+		"up",
+		"--build",
+		"--force-recreate",
+		"--no-deps",
+		"-d",
+	}
+	cmd := exec.Command("docker-compose", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

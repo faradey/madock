@@ -137,9 +137,9 @@ func makeDockerCompose(projectName string) {
 	}
 	str = configs.ReplaceConfigValue(str)
 	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", hostName, -1)
-	str = strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
+	str = strings.Replace(str, "{{{NGINX_PROJECT_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
 	for i := 1; i < 20; i++ {
-		str = strings.Replace(str, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
+		str = strings.Replace(str, "{{{NGINX_PROJECT_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
 	}
 	str = strings.Replace(str, "{{{NETWORK_NUMBER}}}", strconv.Itoa(portNumber+90), -1)
 
