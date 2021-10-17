@@ -17,21 +17,20 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 	config.EnvFile = envFile
 	config.AddLine("PHP_VERSION", defVersions.Php)
 	config.AddLine("PHP_COMPOSER_VERSION", defVersions.Composer)
-	config.AddLine("PHP_TZ", "Europe/Kiev")
+	config.AddLine("PHP_TZ", generalConf["PHP_TZ"])
 	config.AddLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
-	config.AddLine("PHP_XDEBUG_IDE_KEY", "PHPSTORM")
-	config.AddLine("PHP_MODULE_XDEBUG", "false")
-	config.AddLine("PHP_MODULE_IONCUBE", "false")
-	config.AddLine("PHP_MEMORY_LIMIT", generalConf["PHP_MEMORY_LIMIT"])
+	config.AddLine("PHP_XDEBUG_IDE_KEY", generalConf["PHP_XDEBUG_IDE_KEY"])
+	config.AddLine("PHP_MODULE_XDEBUG", generalConf["PHP_MODULE_XDEBUG"])
+	config.AddLine("PHP_MODULE_IONCUBE", generalConf["PHP_MODULE_IONCUBE"])
 
 	config.AddEmptyLine()
 
 	config.AddLine("DB_VERSION", defVersions.Db)
 	config.AddLine("DB_TYPE", dbType)
-	config.AddLine("DB_ROOT_PASSWORD", "password")
-	config.AddLine("DB_USER", "magento")
-	config.AddLine("DB_PASSWORD", "magento")
-	config.AddLine("DB_DATABASE", "magento")
+	config.AddLine("DB_ROOT_PASSWORD", generalConf["DB_ROOT_PASSWORD"])
+	config.AddLine("DB_USER", generalConf["DB_USER"])
+	config.AddLine("DB_PASSWORD", generalConf["DB_PASSWORD"])
+	config.AddLine("DB_DATABASE", generalConf["DB_DATABASE"])
 
 	config.AddEmptyLine()
 
@@ -47,10 +46,6 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 
 	config.AddLine("RABBITMQ_ENABLE", generalConf["RABBITMQ_ENABLE"])
 	config.AddLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
-
-	config.AddEmptyLine()
-
-	config.AddLine("PHPMYADMIN_PORT", generalConf["PHPMYADMIN_PORT"])
 
 	config.AddEmptyLine()
 
