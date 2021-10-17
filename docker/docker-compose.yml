@@ -44,6 +44,8 @@ services:
       - 35729:35729
     volumes:
       - ./src/:/var/www/html/
+    profiles:
+      - node{{{NODEJS_ENABLE}}}
     depends_on:
       - php
 
@@ -62,6 +64,8 @@ services:
       - discovery.type=single-node
     volumes:
       - elasticsearch_vlm:/usr/share/elasticsearch/data
+    profiles:
+      - elasticsearch{{{ELASTICSEARCH_ENABLE}}}
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 
@@ -69,11 +73,15 @@ services:
     build:
       context: ctx
       dockerfile: redis.Dockerfile
+    profiles:
+      - redisdb{{{REDIS_ENABLE}}}
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 
   rabbitmq:
     image: rabbitmq:{{{RABBITMQ_VERSION}}}
+    profiles:
+      - rabbitmq{{{RABBITMQ_ENABLE}}}
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 

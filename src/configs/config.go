@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/user"
 	"strings"
 )
 
@@ -73,4 +74,22 @@ func ConfigMapping(mainConf map[string]string, targetConf map[string]string) {
 			}
 		}
 	}
+}
+
+func ReplaceConfigValue(str string) string {
+	projectConf := GetProjectConfig()
+
+	for key, val := range projectConf {
+		str = strings.Replace(str, "{{{"+key+"}}}", val, -1)
+	}
+
+	usr, err := user.Current()
+	if err == nil {
+		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
+		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
+	} else {
+		log.Fatal(err)
+	}
+
+	return str
 }

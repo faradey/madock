@@ -42,13 +42,7 @@ func makeNginxDockerfile(projectName string) {
 		log.Fatal(err)
 	}
 	str := string(b)
-	usr, err := user.Current()
-	if err == nil {
-		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
-		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
-	} else {
-		log.Fatal(err)
-	}
+	str = configs.ReplaceConfigValue(str)
 
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/nginx.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
@@ -67,7 +61,7 @@ func makeNginxConf(projectName string) {
 
 	str := string(b)
 	projectConf := configs.GetProjectConfig()
-	str = strings.Replace(str, "{{{NGINX_PORT}}}", projectConf["NGINX_PORT"], -1)
+	str = configs.ReplaceConfigValue(str)
 	hostName := "loc." + projectName + ".com"
 	hostNameWebsites := "loc." + projectName + ".com base;"
 	if val, ok := projectConf["HOSTS"]; ok {
@@ -109,21 +103,8 @@ func makePhpDockerfile(projectName string) {
 		log.Fatal(err)
 	}
 
-	projectConf := configs.GetProjectConfig()
 	str := string(b)
-	str = strings.Replace(str, "{{{PHP_VERSION}}}", projectConf["PHP_VERSION"], -1)
-	str = strings.Replace(str, "{{{PHP_TZ}}}", projectConf["PHP_TZ"], -1)
-	str = strings.Replace(str, "{{{PHP_MODULE_XDEBUG}}}", projectConf["PHP_MODULE_XDEBUG"], -1)
-	str = strings.Replace(str, "{{{PHP_XDEBUG_REMOTE_HOST}}}", projectConf["PHP_XDEBUG_REMOTE_HOST"], -1)
-	str = strings.Replace(str, "{{{PHP_MODULE_IONCUBE}}}", projectConf["PHP_MODULE_IONCUBE"], -1)
-	str = strings.Replace(str, "{{{PHP_COMPOSER_VERSION}}}", projectConf["PHP_COMPOSER_VERSION"], -1)
-	usr, err := user.Current()
-	if err == nil {
-		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
-		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
-	} else {
-		log.Fatal(err)
-	}
+	str = configs.ReplaceConfigValue(str)
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -155,7 +136,7 @@ func makeDockerCompose(projectName string) {
 			hostName = strings.Split(hosts[0], ":")[0]
 		}
 	}
-	str = strings.Replace(str, "{{{RABBITMQ_VERSION}}}", projectConf["RABBITMQ_VERSION"], -1)
+	str = configs.ReplaceConfigValue(str)
 	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", hostName, -1)
 	str = strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
 	for i := 1; i < 20; i++ {
@@ -178,21 +159,8 @@ func makeDBDockerfile(projectName string) {
 		log.Fatal(err)
 	}
 
-	projectConf := configs.GetProjectConfig()
 	str := string(b)
-	str = strings.Replace(str, "{{{DB_VERSION}}}", projectConf["DB_VERSION"], -1)
-	str = strings.Replace(str, "{{{DB_ROOT_PASSWORD}}}", projectConf["DB_ROOT_PASSWORD"], -1)
-	str = strings.Replace(str, "{{{DB_DATABASE}}}", projectConf["DB_DATABASE"], -1)
-	str = strings.Replace(str, "{{{DB_USER}}}", projectConf["DB_USER"], -1)
-	str = strings.Replace(str, "{{{DB_PASSWORD}}}", projectConf["DB_PASSWORD"], -1)
-
-	usr, err := user.Current()
-	if err == nil {
-		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
-		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
-	} else {
-		log.Fatal(err)
-	}
+	str = configs.ReplaceConfigValue(str)
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/db.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -223,10 +191,8 @@ func makeElasticDockerfile(projectName string) {
 		log.Fatal(err)
 	}
 
-	projectConf := configs.GetProjectConfig()
-
 	str := string(b)
-	str = strings.Replace(str, "{{{ELASTICSEARCH_VERSION}}}", projectConf["ELASTICSEARCH_VERSION"], -1)
+	str = configs.ReplaceConfigValue(str)
 	usr, err := user.Current()
 	if err == nil {
 		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
@@ -249,17 +215,8 @@ func makeRedisDockerfile(projectName string) {
 		log.Fatal(err)
 	}
 
-	projectConf := configs.GetProjectConfig()
-
 	str := string(b)
-	str = strings.Replace(str, "{{{REDIS_VERSION}}}", projectConf["REDIS_VERSION"], -1)
-	usr, err := user.Current()
-	if err == nil {
-		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
-		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
-	} else {
-		log.Fatal(err)
-	}
+	str = configs.ReplaceConfigValue(str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/redis.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -276,8 +233,7 @@ func makeNodeDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	projectConf := configs.GetProjectConfig()
-	str = strings.Replace(str, "{{{PHP_VERSION}}}", projectConf["PHP_VERSION"], -1)
+	str = configs.ReplaceConfigValue(str)
 	usr, err := user.Current()
 	if err == nil {
 		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
