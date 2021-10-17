@@ -18,6 +18,14 @@ type ConfigLines struct {
 	IsEnv   bool
 }
 
+type ConfigLinesInterface interface {
+	AddLine(name, value string)
+	AddOrSetLine(name, value string)
+	AddEmptyLine()
+	AddRawLine(value string)
+	SaveLines()
+}
+
 func (t *ConfigLines) AddLine(name, value string) {
 	t.Lines = append(t.Lines, name+"="+value)
 }
