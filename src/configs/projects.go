@@ -19,59 +19,59 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 		config.IsEnv = true
 	}
 
-	config.AddLine("PHP_VERSION", defVersions.Php)
-	config.AddLine("PHP_COMPOSER_VERSION", defVersions.Composer)
-	config.AddLine("PHP_TZ", generalConf["PHP_TZ"])
-	config.AddLine("PHP_XDEBUG_VERSION", defVersions.Xdebug)
-	config.AddLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
-	config.AddLine("PHP_XDEBUG_IDE_KEY", generalConf["PHP_XDEBUG_IDE_KEY"])
-	config.AddLine("PHP_MODULE_XDEBUG", generalConf["PHP_MODULE_XDEBUG"])
-	config.AddLine("PHP_MODULE_IONCUBE", generalConf["PHP_MODULE_IONCUBE"])
+	config.AddOrSetLine("PHP_VERSION", defVersions.Php)
+	config.AddOrSetLine("PHP_COMPOSER_VERSION", defVersions.Composer)
+	config.AddOrSetLine("PHP_TZ", generalConf["PHP_TZ"])
+	config.AddOrSetLine("PHP_XDEBUG_VERSION", defVersions.Xdebug)
+	config.AddOrSetLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
+	config.AddOrSetLine("PHP_XDEBUG_IDE_KEY", generalConf["PHP_XDEBUG_IDE_KEY"])
+	config.AddOrSetLine("PHP_MODULE_XDEBUG", generalConf["PHP_MODULE_XDEBUG"])
+	config.AddOrSetLine("PHP_MODULE_IONCUBE", generalConf["PHP_MODULE_IONCUBE"])
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddLine("DB_VERSION", defVersions.Db)
-	config.AddLine("DB_TYPE", dbType)
-	config.AddLine("DB_ROOT_PASSWORD", generalConf["DB_ROOT_PASSWORD"])
-	config.AddLine("DB_USER", generalConf["DB_USER"])
-	config.AddLine("DB_PASSWORD", generalConf["DB_PASSWORD"])
-	config.AddLine("DB_DATABASE", generalConf["DB_DATABASE"])
+	config.AddOrSetLine("DB_VERSION", defVersions.Db)
+	config.AddOrSetLine("DB_TYPE", dbType)
+	config.AddOrSetLine("DB_ROOT_PASSWORD", generalConf["DB_ROOT_PASSWORD"])
+	config.AddOrSetLine("DB_USER", generalConf["DB_USER"])
+	config.AddOrSetLine("DB_PASSWORD", generalConf["DB_PASSWORD"])
+	config.AddOrSetLine("DB_DATABASE", generalConf["DB_DATABASE"])
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddLine("ELASTICSEARCH_ENABLE", generalConf["ELASTICSEARCH_ENABLE"])
-	config.AddLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
+	config.AddOrSetLine("ELASTICSEARCH_ENABLE", generalConf["ELASTICSEARCH_ENABLE"])
+	config.AddOrSetLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddLine("REDIS_ENABLE", generalConf["REDIS_ENABLE"])
-	config.AddLine("REDIS_VERSION", defVersions.Redis)
+	config.AddOrSetLine("REDIS_ENABLE", generalConf["REDIS_ENABLE"])
+	config.AddOrSetLine("REDIS_VERSION", defVersions.Redis)
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddLine("NODEJS_ENABLE", generalConf["NODEJS_ENABLE"])
-	config.AddLine("NODEJS_VERSION", generalConf["NODEJS_VERSION"])
+	config.AddOrSetLine("NODEJS_ENABLE", generalConf["NODEJS_ENABLE"])
+	config.AddOrSetLine("NODEJS_VERSION", generalConf["NODEJS_VERSION"])
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddLine("RABBITMQ_ENABLE", generalConf["RABBITMQ_ENABLE"])
-	config.AddLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
+	config.AddOrSetLine("RABBITMQ_ENABLE", generalConf["RABBITMQ_ENABLE"])
+	config.AddOrSetLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddLine("CRON_ENABLED", generalConf["CRON_ENABLED"])
+	config.AddOrSetLine("CRON_ENABLED", generalConf["CRON_ENABLED"])
 
 	if !config.IsEnv {
 		config.SaveLines()
