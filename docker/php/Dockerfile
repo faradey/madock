@@ -65,6 +65,7 @@ RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true" ]; then apt install php{{{PHP_VERSIO
     && echo "xdebug.remote_host={{{PHP_XDEBUG_REMOTE_HOST}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/11-xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/11-xdebug.ini; fi
+RUN if [ "{{{PHP_XDEBUG_VERSION}}}" < "3" ]; then pecl install xdebug-2.9.8; fi
 
 RUN apt install cron
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

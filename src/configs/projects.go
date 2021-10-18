@@ -22,6 +22,7 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 	config.AddLine("PHP_VERSION", defVersions.Php)
 	config.AddLine("PHP_COMPOSER_VERSION", defVersions.Composer)
 	config.AddLine("PHP_TZ", generalConf["PHP_TZ"])
+	config.AddLine("PHP_XDEBUG_VERSION", defVersions.Xdebug)
 	config.AddLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
 	config.AddLine("PHP_XDEBUG_IDE_KEY", generalConf["PHP_XDEBUG_IDE_KEY"])
 	config.AddLine("PHP_MODULE_XDEBUG", generalConf["PHP_MODULE_XDEBUG"])

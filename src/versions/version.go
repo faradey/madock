@@ -7,7 +7,7 @@ import (
 )
 
 type ToolsVersions struct {
-	Php, Db, Elastic, Composer, Redis, RabbitMQ string
+	Php, Db, Elastic, Composer, Redis, RabbitMQ, Xdebug string
 }
 
 func GetVersions() ToolsVersions {
@@ -19,6 +19,7 @@ func GetVersions() ToolsVersions {
 		Composer: GetComposerVersion(mageVersion),
 		Redis:    GetRedisVersion(mageVersion),
 		RabbitMQ: GetRabbitMQVersion(mageVersion),
+		Xdebug:   GetXdebugVersion(mageVersion),
 	}
 }
 
@@ -130,4 +131,12 @@ func GetRabbitMQVersion(mageVer string) string {
 	}
 
 	return ""
+}
+
+func GetXdebugVersion(mageVer string) string {
+	if mageVer >= "2.4" {
+		return "2.9.8"
+	}
+
+	return "3"
 }
