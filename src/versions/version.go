@@ -134,7 +134,7 @@ func GetRabbitMQVersion(mageVer string) string {
 }
 
 func GetXdebugVersion(mageVer string) string {
-	if mageVer >= "2.4" {
+	if mageVer < "2.4" {
 		return "2.9.8"
 	}
 
