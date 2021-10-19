@@ -62,10 +62,12 @@ func DownAll() {
 	downNginx()
 }
 
-func Start() {
+func Start(flag string) {
 	projectName := paths.GetRunDirName()
 	prepareConfigs()
-	upNginxWithBuild()
+	if flag == "--force" {
+		upNginxWithBuild()
+	}
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "start")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

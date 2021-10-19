@@ -10,10 +10,10 @@ import (
 	"strings"
 )
 
-func Start() {
+func Start(flag string) {
 	if !configs.IsHasNotConfig() {
 		fmtc.SuccessLn("Start containers in detached mode")
-		builder.Start()
+		builder.Start(flag)
 		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")
@@ -27,7 +27,7 @@ func Stop() {
 
 func Restart() {
 	Stop()
-	Start()
+	Start("--force")
 }
 
 func Rebuild() {

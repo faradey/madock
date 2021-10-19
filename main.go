@@ -20,7 +20,7 @@ func main() {
 		case "setup":
 			commands.Setup()
 		case "start":
-			commands.Start()
+			commands.Start("")
 		case "stop":
 			commands.Stop()
 		case "restart":
