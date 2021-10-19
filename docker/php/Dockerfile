@@ -6,13 +6,19 @@ RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     curl \
     software-properties-common \
     git \
+    zip \
+    gzip \
     mc \
-    mysql-client \
+    mariadb-client \
     telnet \
     libmagickwand-dev \
     imagemagick \
     libmcrypt-dev \
+    procps \
+    openssh-client \
+    lsof \
   && locale-gen en_US.UTF-8
+
 RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
 
 RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
@@ -57,7 +63,7 @@ RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-di
 
 RUN if [ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]; then composer self-update --1; fi
 
-RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true" ]; then apt install php{{{PHP_VERSION}}}-xdebug{{{PHP_XDEBUG_VERSION}}} \
+RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true" ]; then pecl install xdebug-{{{PHP_XDEBUG_VERSION}}} \
     && echo "zend_extension=xdebug.so" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_enable=1" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_autostart=off" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
