@@ -76,6 +76,7 @@ services:
         hard: 65536
     environment:
       - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms400m -Xmx400m"
     volumes:
       - elasticsearch_vlm:/usr/share/elasticsearch/data
     profiles:
