@@ -5,6 +5,10 @@ import (
 	"github.com/faradey/madock/src/cli/color"
 )
 
+func Title(txt string) {
+	fmt.Print(color.Blue + txt + color.Reset)
+}
+
 func TitleLn(txt string) {
 	fmt.Println(color.Blue + txt + color.Reset)
 }
