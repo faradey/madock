@@ -66,7 +66,20 @@ func Start() {
 	projectName := paths.GetRunDirName()
 	prepareConfigs()
 	upNginxWithBuild()
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "start")
+	profilesOn := []string{
+		"-f",
+		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
+		"--profile",
+		"nodetrue",
+		"--profile",
+		"elasticsearchtrue",
+		"--profile",
+		"redisdbtrue",
+		"--profile",
+		"rabbitmqtrue",
+		"start",
+	}
+	cmd := exec.Command("docker-compose", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -85,7 +98,20 @@ func Start() {
 
 func Stop() {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "stop")
+	profilesOn := []string{
+		"-f",
+		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
+		"--profile",
+		"nodetrue",
+		"--profile",
+		"elasticsearchtrue",
+		"--profile",
+		"redisdbtrue",
+		"--profile",
+		"rabbitmqtrue",
+		"stop",
+	}
+	cmd := exec.Command("docker-compose", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
