@@ -17,46 +17,15 @@ func main() {
 		}
 
 		switch command {
-		case "setup":
-			commands.Setup()
-		case "start":
-			commands.Start()
-		case "stop":
-			commands.Stop()
-		case "restart":
-			commands.Restart()
-		case "rebuild":
-			commands.Rebuild()
-		case "prune":
-			commands.Prune(flag)
-		case "magento":
-			flag = strings.Join(os.Args[2:], " ")
-			commands.Magento(flag)
-		case "composer":
-			flag = strings.Join(os.Args[2:], " ")
-			commands.Composer(flag)
-		case "db":
-			option := ""
-			if len(os.Args) > 3 {
-				option = strings.ToLower(os.Args[3])
-			}
-			commands.DB(flag, option)
-		case "cron":
-			commands.Cron(flag)
-		case "debug":
-			commands.Debug(flag)
 		case "bash":
 			flag2 := ""
 			if len(os.Args) > 3 {
 				flag2 = strings.ToLower(os.Args[3])
 			}
 			commands.Bash(flag, flag2)
-		case "node":
-			commands.Node(flag)
-		case "help":
-			helper.Help()
-		case "logs":
-			commands.Logs(flag)
+		case "composer":
+			flag = strings.Join(os.Args[2:], " ")
+			commands.Composer(flag)
 		case "config":
 			optionName := ""
 			if len(os.Args) > 3 {
@@ -73,6 +42,37 @@ func main() {
 			} else {
 				fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 			}
+		case "cron":
+			commands.Cron(flag)
+		case "db":
+			option := ""
+			if len(os.Args) > 3 {
+				option = strings.ToLower(os.Args[3])
+			}
+			commands.DB(flag, option)
+		case "debug":
+			commands.Debug(flag)
+		case "help":
+			helper.Help()
+		case "logs":
+			commands.Logs(flag)
+		case "magento":
+			flag = strings.Join(os.Args[2:], " ")
+			commands.Magento(flag)
+		case "node":
+			commands.Node(flag)
+		case "prune":
+			commands.Prune(flag)
+		case "rebuild":
+			commands.Rebuild()
+		case "restart":
+			commands.Restart()
+		case "setup":
+			commands.Setup()
+		case "start":
+			commands.Start()
+		case "stop":
+			commands.Stop()
 		default:
 			commands.IsNotDefine()
 		}
