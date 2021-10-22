@@ -106,9 +106,11 @@ func upNginxWithBuild() {
 
 func upProjectWithBuild() {
 	projectName := paths.GetRunDirName()
-	err := os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
-	if err != nil {
-		log.Fatal(err)
+	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/.composer"); os.IsNotExist(err) {
+		err = os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	profilesOn := []string{
 		"-f",
@@ -130,7 +132,7 @@ func upProjectWithBuild() {
 	cmd := exec.Command("docker-compose", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
