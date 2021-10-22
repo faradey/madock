@@ -62,7 +62,7 @@ func DownAll() {
 	downNginx()
 }
 
-func Start(flag string) {
+func Start() {
 	projectName := paths.GetRunDirName()
 	prepareConfigs()
 	upNginxWithBuild()
