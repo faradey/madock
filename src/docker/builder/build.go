@@ -325,7 +325,7 @@ func DbSoftClean() {
 	tablesList += "DELETE FROM search_query;"
 	tablesList += "TRUNCATE TABLE mailchimp_errors;"
 
-	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysqldump", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-e", "SHOW TABLES LIKE \"catalogrule_product%__temp%\"", projectConfig["DB_DATABASE"])
+	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-e", "SHOW TABLES LIKE \"catalogrule_product%__temp%\"", projectConfig["DB_DATABASE"])
 	cmdTemp.Stdout = os.Stdout
 	cmdTemp.Stderr = os.Stderr
 	err := cmdTemp.Run()
