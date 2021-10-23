@@ -317,7 +317,7 @@ func DbSoftClean() {
 	tablesList += "TRUNCATE TABLE adminnotification_inbox;"
 	tablesList += "TRUNCATE TABLE aw_core_logger;"
 
-	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "bash", "-c", "\"mysql -u root -p"+projectConfig["DB_ROOT_PASSWORD"]+" -h db && use "+projectConfig["DB_DATABASE"]+" && "+tablesList+"\"")
+	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "bash", "-c", "mysql -u root -p"+projectConfig["DB_ROOT_PASSWORD"]+" -h db "+projectConfig["DB_DATABASE"]+" < \""+tablesList+"\"")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
