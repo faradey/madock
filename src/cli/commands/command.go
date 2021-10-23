@@ -138,11 +138,12 @@ func Node(flag string) {
 	builder.Node(flag)
 }
 
-func Logs(flag string) {
-	if len(flag) > 2 {
-		flag = flag[2:]
+func Logs(flag, flag2 string) {
+	containerName := "php"
+	if flag == "--name" {
+		containerName = flag2
 	}
-	builder.Logs(flag)
+	builder.Logs(containerName)
 }
 
 func IsNotDefine() {

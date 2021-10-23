@@ -60,7 +60,11 @@ func main() {
 		case "help":
 			helper.Help()
 		case "logs":
-			commands.Logs(flag)
+			flag2 := ""
+			if len(os.Args) > 3 {
+				flag2 = strings.ToLower(os.Args[3])
+			}
+			commands.Logs(flag, flag2)
 		case "magento":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Magento(flag)
