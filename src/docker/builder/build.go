@@ -323,7 +323,9 @@ func DbSoftClean() {
 	tablesList += "DELETE FROM kiwicommerce_login_activity;"
 	tablesList += "TRUNCATE TABLE amasty_amsmtp_log;"
 	tablesList += "DELETE FROM search_query;"
+	tablesList += "DELETE FROM persistent_session;"
 	tablesList += "TRUNCATE TABLE mailchimp_errors;"
+	tablesList += "TRUNCATE TABLE session;"
 
 	var b strings.Builder
 	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SELECT concat('TRUNCATE TABLE `', TABLE_NAME, '`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'catalogrule_product%__temp%'", projectConfig["DB_DATABASE"])
