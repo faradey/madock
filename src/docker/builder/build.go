@@ -336,6 +336,7 @@ func DbSoftClean() {
 	}
 	//tbNames := strings.Split(fmt.Sprint(b), "\n")
 	fmt.Println(b)
+	fmt.Println(e)
 	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", tablesList, "-f", projectConfig["DB_DATABASE"])
 	err = cmd.Run()
 	if err != nil {
