@@ -293,7 +293,7 @@ func DbExport() {
 }
 
 func DbSoftClean() {
-	fmt.Println("Start DB clear")
+	fmt.Println("Start cleaning up the database")
 	projectName := paths.GetRunDirName()
 	projectConfig := configs.GetCurrentProjectConfig()
 	tablesList := "TRUNCATE TABLE dataflow_batch_export;"
