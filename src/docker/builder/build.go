@@ -325,18 +325,18 @@ func DbSoftClean() {
 	tablesList += "DELETE FROM search_query;"
 	tablesList += "TRUNCATE TABLE mailchimp_errors;"
 
-	var b io.Writer
-	var e io.Writer
+	//var b io.Writer
+	//var e io.Writer
 	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", "SELECT concat('TRUNCATE TABLE `', TABLE_NAME, '`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'catalogrule_product%__temp%'", projectConfig["DB_DATABASE"])
-	cmdTemp.Stdout = b
-	cmdTemp.Stderr = e
+	cmdTemp.Stdout = os.Stdout
+	cmdTemp.Stderr = os.Stderr
 	err := cmdTemp.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
 	//tbNames := strings.Split(fmt.Sprint(b), "\n")
-	fmt.Println(b)
-	fmt.Println(e)
+	//fmt.Println(b)
+	//fmt.Println(e)
 	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", tablesList, "-f", projectConfig["DB_DATABASE"])
 	err = cmd.Run()
 	if err != nil {
