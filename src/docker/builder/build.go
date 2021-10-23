@@ -293,6 +293,7 @@ func DbExport() {
 }
 
 func DbSoftClean() {
+	fmt.Println("Start DB clear")
 	projectName := paths.GetRunDirName()
 	projectConfig := configs.GetCurrentProjectConfig()
 	tablesList := "TRUNCATE TABLE dataflow_batch_export;"
@@ -325,8 +326,6 @@ func DbSoftClean() {
 	tablesList += "TRUNCATE TABLE mailchimp_errors;"
 
 	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", tablesList, "-f", projectConfig["DB_DATABASE"])
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)
