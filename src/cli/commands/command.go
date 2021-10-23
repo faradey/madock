@@ -70,6 +70,8 @@ func DB(flag, option string) {
 		builder.DbImport(option)
 	} else if flag == "--export" {
 		builder.DbExport()
+	} else if flag == "--soft-clean" {
+		builder.DbSoftClean()
 	} else {
 		log.Fatal("The specified parameters were not found.")
 	}

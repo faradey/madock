@@ -292,6 +292,41 @@ func DbExport() {
 	fmt.Println("Database export completed successfully")
 }
 
+func DbSoftClean() {
+	projectName := paths.GetRunDirName()
+	projectConfig := configs.GetCurrentProjectConfig()
+	tablesList := "TRUNCATE TABLE dataflow_batch_export;"
+	tablesList += "TRUNCATE TABLE dataflow_batch_import;"
+	tablesList += "TRUNCATE TABLE log_customer;"
+	tablesList += "TRUNCATE TABLE log_quote;"
+	tablesList += "TRUNCATE TABLE log_summary;"
+	tablesList += "TRUNCATE TABLE log_summary_type;"
+	tablesList += "TRUNCATE TABLE log_url;"
+	tablesList += "TRUNCATE TABLE log_url_info;"
+	tablesList += "TRUNCATE TABLE log_visitor;"
+	tablesList += "TRUNCATE TABLE log_visitor_info;"
+	tablesList += "TRUNCATE TABLE log_visitor_online;"
+	tablesList += "TRUNCATE TABLE report_viewed_product_index;"
+	tablesList += "TRUNCATE TABLE report_compared_product_index;"
+	tablesList += "TRUNCATE TABLE report_event;"
+	tablesList += "TRUNCATE TABLE index_event;"
+	tablesList += "TRUNCATE TABLE catalog_compare_item;"
+	tablesList += "TRUNCATE TABLE catalogindex_aggregation;"
+	tablesList += "TRUNCATE TABLE catalogindex_aggregation_tag;"
+	tablesList += "TRUNCATE TABLE catalogindex_aggregation_to_tag;"
+	tablesList += "TRUNCATE TABLE adminnotification_inbox;"
+	tablesList += "TRUNCATE TABLE aw_core_logger;"
+
+	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "bash", "-c", "mysql -u root -p"+projectConfig["DB_ROOT_PASSWORD"]+" -h db;use "+projectConfig["DB_DATABASE"]+";"+tablesList)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("The database was cleaned successfully")
+}
+
 func Cron(flag string, manual bool) {
 	projectName := paths.GetRunDirName()
 	var cmd *exec.Cmd
