@@ -328,7 +328,7 @@ func DbSoftClean() {
 	tablesList += "TRUNCATE TABLE session;"
 
 	var b strings.Builder
-	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SELECT concat('TRUNCATE TABLE `', TABLE_NAME, '`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'catalogrule_product%__temp%' OR TABLE_NAME LIKE 'quote%'", projectConfig["DB_DATABASE"])
+	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SELECT concat('DELETE FROM `', TABLE_NAME, '`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'catalogrule_product%__temp%' OR TABLE_NAME LIKE 'quote%'", projectConfig["DB_DATABASE"])
 	cmdTemp.Stdout = &b
 	cmdTemp.Stderr = os.Stderr
 	err := cmdTemp.Run()
