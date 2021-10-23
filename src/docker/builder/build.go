@@ -316,12 +316,12 @@ func DbSoftClean() {
 	tablesList += "TRUNCATE TABLE catalogindex_aggregation_to_tag;"
 	tablesList += "TRUNCATE TABLE adminnotification_inbox;"
 	tablesList += "TRUNCATE TABLE aw_core_logger;"
-	tablesList += "TRUNCATE TABLE kiwicommerce_activity_log;"
-	tablesList += "TRUNCATE TABLE kiwicommerce_activity_detail;"
-	tablesList += "TRUNCATE TABLE kiwicommerce_activity;"
-	tablesList += "TRUNCATE TABLE kiwicommerce_login_activity;"
+	tablesList += "DELETE FROM kiwicommerce_activity_log;"
+	tablesList += "DELETE FROM kiwicommerce_activity_detail;"
+	tablesList += "DELETE FROM kiwicommerce_activity;"
+	tablesList += "DELETE FROM kiwicommerce_login_activity;"
 	tablesList += "TRUNCATE TABLE amasty_amsmtp_log;"
-	tablesList += "TRUNCATE TABLE search_query;"
+	tablesList += "DELETE FROM search_query;"
 	tablesList += "TRUNCATE TABLE mailchimp_errors;"
 
 	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", tablesList, "-f", projectConfig["DB_DATABASE"])
