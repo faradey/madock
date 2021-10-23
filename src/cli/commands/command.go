@@ -95,17 +95,21 @@ func Cron(flag string) {
 	}
 }
 
-func Bash(flag, flag2 string) {
+func Bash(flag, flag2, flag3 string) {
 	containerName := "php"
 	isRoot := false
-	if flag == "--root" || flag2 == "--root" {
+	if flag == "--root" {
 		isRoot = true
-	}
-
-	if flag != "" && flag != "--root" {
-		containerName = flag[2:]
-	} else if flag2 != "" && flag2 != "--root" {
-		containerName = flag2[2:]
+		if flag2 == "--name" {
+			containerName = flag3
+		}
+	} else {
+		if flag3 == "--root" {
+			isRoot = true
+		}
+		if flag == "--name" {
+			containerName = flag2
+		}
 	}
 
 	builder.Bash(containerName, isRoot)

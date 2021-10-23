@@ -19,10 +19,15 @@ func main() {
 		switch command {
 		case "bash":
 			flag2 := ""
+			flag3 := ""
 			if len(os.Args) > 3 {
 				flag2 = strings.ToLower(os.Args[3])
+
+				if len(os.Args) > 4 {
+					flag3 = strings.ToLower(os.Args[4])
+				}
 			}
-			commands.Bash(flag, flag2)
+			commands.Bash(flag, flag2, flag3)
 		case "composer":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Composer(flag)
