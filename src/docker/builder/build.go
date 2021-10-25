@@ -248,9 +248,9 @@ func DbImport(option string) {
 
 	var cmd *exec.Cmd
 	if option != "" {
-		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", projectConfig["DB_DATABASE"])
+		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
 	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", projectConfig["DB_DATABASE"])
+		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
 	}
 
 	if ext == "gz" {
@@ -340,7 +340,7 @@ func DbSoftClean() {
 		tablesList += strings.Join(tbNames[1:], "")
 	}
 
-	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", tablesList, "-f", projectConfig["DB_DATABASE"])
+	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", "SET @@session.unique_checks = 0;SET @@session.foreign_key_checks = 0;SET @@global.innodb_autoinc_lock_mode = 2;"+tablesList, "-f", projectConfig["DB_DATABASE"])
 	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err)
