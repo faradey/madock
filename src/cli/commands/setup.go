@@ -31,7 +31,7 @@ func Setup() {
 
 	configs.SetEnvForProject(toolsDefVersions)
 
-	copyFile(paths.GetExecDirPath()+"/docker/docker-compose.yml", paths.GetExecDirPath()+"/projects/"+projectName+"/docker-compose.yml")
+	copyFile(paths.GetExecDirPath()+"/docker/docker-compose.yml", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/docker-compose.yml")
 
 	copyFile(paths.GetExecDirPath()+"/docker/nginx/conf/default.conf", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/conf/default.conf")
 	copyFile(paths.GetExecDirPath()+"/docker/nginx/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/Dockerfile")
