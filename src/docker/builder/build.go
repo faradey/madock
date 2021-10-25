@@ -246,7 +246,9 @@ func DbImport(option string) {
 	}
 	defer selectedFile.Close()
 
-	var cmd *exec.Cmd
+	var cmd, cmdFKeys *exec.Cmd
+	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConfig["DB_DATABASE"])
+	cmdFKeys.Run()
 	if option != "" {
 		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
 	} else {
@@ -265,6 +267,8 @@ func DbImport(option string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
+	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConfig["DB_DATABASE"])
+	cmdFKeys.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -317,18 +321,18 @@ func DbSoftClean() {
 	tablesList += "TRUNCATE TABLE catalogindex_aggregation_to_tag;"
 	tablesList += "TRUNCATE TABLE adminnotification_inbox;"
 	tablesList += "TRUNCATE TABLE aw_core_logger;"
-	tablesList += "DELETE FROM kiwicommerce_activity_log;"
-	tablesList += "DELETE FROM kiwicommerce_activity_detail;"
-	tablesList += "DELETE FROM kiwicommerce_activity;"
-	tablesList += "DELETE FROM kiwicommerce_login_activity;"
+	tablesList += "TRUNCATE TABLE kiwicommerce_activity_log;"
+	tablesList += "TRUNCATE TABLE kiwicommerce_activity_detail;"
+	tablesList += "TRUNCATE TABLE kiwicommerce_activity;"
+	tablesList += "TRUNCATE TABLE kiwicommerce_login_activity;"
 	tablesList += "TRUNCATE TABLE amasty_amsmtp_log;"
-	tablesList += "DELETE FROM search_query;"
-	tablesList += "DELETE FROM persistent_session;"
+	tablesList += "TRUNCATE TABLE search_query;"
+	tablesList += "TRUNCATE TABLE persistent_session;"
 	tablesList += "TRUNCATE TABLE mailchimp_errors;"
 	tablesList += "TRUNCATE TABLE session;"
 
 	var b strings.Builder
-	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SELECT concat('TRUNCATE TABLE `', TABLE_NAME, '`;','DELETE FROM `', TABLE_NAME, '`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'catalogrule_product%__temp%' OR TABLE_NAME LIKE 'quote%'", projectConfig["DB_DATABASE"])
+	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SELECT concat('TRUNCATE TABLE `', TABLE_NAME, '`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'catalogrule_product%__temp%' OR TABLE_NAME LIKE 'quote%'", projectConfig["DB_DATABASE"])
 	cmdTemp.Stdout = &b
 	cmdTemp.Stderr = os.Stderr
 	err := cmdTemp.Run()
@@ -340,7 +344,7 @@ func DbSoftClean() {
 		tablesList += strings.Join(tbNames[1:], "")
 	}
 
-	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", "SET @@session.unique_checks = 0;SET @@session.foreign_key_checks = 0;SET @@global.innodb_autoinc_lock_mode = 2;"+tablesList, "-f", projectConfig["DB_DATABASE"])
+	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", "SET @@session.unique_checks = 0;SET @@session.foreign_key_checks = 0;SET @@global.innodb_autoinc_lock_mode = 2;SET FOREIGN_KEY_CHECKS=0;"+tablesList+"SET FOREIGN_KEY_CHECKS=1;", "-f", projectConfig["DB_DATABASE"])
 	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err)
