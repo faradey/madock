@@ -166,7 +166,7 @@ func makeDBDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	myCnfFile := paths.GetExecDirPath() + "/docker/db/my.cnf"
+	myCnfFile := getDockerFile(projectName, "/docker/db/my.cnf")
 	if _, err := os.Stat(myCnfFile); os.IsNotExist(err) {
 		log.Fatal(err)
 	}
