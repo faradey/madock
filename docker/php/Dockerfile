@@ -79,8 +79,8 @@ RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true"]; then pecl install xdebug-{{{PHP_XD
     && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.idekey={{{PHP_XDEBUG_IDE_KEY}}}" >> /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.client_host={{{PHP_XDEBUG_REMOTE_HOST}}}" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.client_port=9003" >> /usr/local/etc/php/conf.d/xdebug.ini fi \
-    fi
+    && echo "xdebug.client_port=9003" >> /usr/local/etc/php/conf.d/xdebug.ini; fi \
+    && fi
 
 RUN apt install cron
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
