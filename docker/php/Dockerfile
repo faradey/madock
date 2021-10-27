@@ -64,7 +64,7 @@ RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-di
 RUN if [ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]; then composer self-update --1; fi
 
 RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true"]; then pecl install xdebug-{{{PHP_XDEBUG_VERSION}}} \
-    if [ "{{{PHP_XDEBUG_VERSION}}}" < "3.0.0" ] then \
+    && if [ "{{{PHP_XDEBUG_VERSION}}}" < "3.0.0" ] then \
     && echo "zend_extension=xdebug.so" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_enable=1" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_autostart=off" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
@@ -73,7 +73,7 @@ RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true"]; then pecl install xdebug-{{{PHP_XD
     && echo "xdebug.remote_port=9001" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/11-xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/11-xdebug.ini; fi \
-    if [ "{{{PHP_XDEBUG_VERSION}}}" >= "3.0.0" ] then \
+    && if [ "{{{PHP_XDEBUG_VERSION}}}" >= "3.0.0" ] then \
     && echo "zend_extension=xdebug.so" >> /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.remote_enable=1" >> /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini \
