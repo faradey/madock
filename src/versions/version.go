@@ -138,5 +138,5 @@ func GetXdebugVersion(mageVer string) string {
 		return "2.9.8"
 	}
 
-	return "3"
+	return "3.1.1"
 }
