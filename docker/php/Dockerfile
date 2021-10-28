@@ -64,6 +64,7 @@ RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-di
 RUN if [ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]; then composer self-update --1; fi
 
 RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true"]; then pecl install xdebug-{{{PHP_XDEBUG_VERSION}}} \
+    && touch /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "zend_extension=xdebug.so" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.mode=debug" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_enable=1" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
