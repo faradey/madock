@@ -2,7 +2,6 @@
 !/main.go
 !/madock
 !/LICENSE
-!/.gitattributes
 !/README.md
 !/go.mod
 !/go.mod/*
@@ -15,4 +14,4 @@
 !/docker/*
 !/docker/**
 !/projects
-!/projects/config.def
+!/config.def

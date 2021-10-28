@@ -82,7 +82,7 @@ func GetGeneralConfig() map[string]string {
 	configPath := paths.GetExecDirPath() + "/projects/config"
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		if err != nil {
-			configPath = paths.GetExecDirPath() + "/projects/config.def"
+			configPath = paths.GetExecDirPath() + "/config.def"
 			if _, err = os.Stat(configPath); os.IsNotExist(err) {
 				if err != nil {
 					log.Fatal(err)
