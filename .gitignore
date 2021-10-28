@@ -2,6 +2,7 @@
 !/main.go
 !/madock
 !/LICENSE
+!/.gitattributes
 !/README.md
 !/go.mod
 !/go.mod/*
