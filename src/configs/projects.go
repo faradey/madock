@@ -12,7 +12,7 @@ var dbType = "MariaDB"
 func SetEnvForProject(defVersions versions.ToolsVersions) {
 	projectName := paths.GetRunDirName()
 	generalConf := GetGeneralConfig()
-	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env"
+	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env"
 	config := new(ConfigLines)
 	config.EnvFile = envFile
 	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
