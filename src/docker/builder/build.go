@@ -20,7 +20,7 @@ import (
 
 func UpWithBuild() {
 	prepareConfigs()
-	upNginxWithBuild()
+	upNginx()
 	upProjectWithBuild()
 }
 
@@ -65,7 +65,7 @@ func DownAll() {
 func Start() {
 	projectName := paths.GetRunDirName()
 	prepareConfigs()
-	upNginxWithBuild()
+	upNginx()
 	profilesOn := []string{
 		"-f",
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
@@ -117,6 +117,16 @@ func Stop() {
 	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func upNginx() {
+	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "-d")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		upNginxWithBuild()
 	}
 }
 
