@@ -77,7 +77,6 @@ func IsHasConfig() {
 
 func IsHasNotConfig() bool {
 	envFile := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env"
-	fmt.Println(envFile)
 	if _, err := os.Stat(envFile); os.IsNotExist(err) {
 		return true
 	}
