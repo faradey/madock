@@ -8,18 +8,21 @@ import (
 
 func GetExecDirPath() string {
 	var dirAbsPath string
-	ex, err := os.Executable()
-	if err == nil {
-		dirAbsPath = filepath.Dir(ex)
-		return dirAbsPath
-	}
 
-	exReal, err := filepath.EvalSymlinks(ex)
+	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
 	}
-	dirAbsPath = filepath.Dir(exReal)
-	return dirAbsPath
+	exReal, err := filepath.EvalSymlinks(ex)
+	if err != nil {
+		dirAbsPath = filepath.Dir(ex)
+		return dirAbsPath
+	} else {
+		dirAbsPath = filepath.Dir(exReal)
+		return dirAbsPath
+	}
+
+	panic("Unknown error")
 }
 
 func GetExecDirName() string {
