@@ -5,5 +5,4 @@ services:
       context: ctx
       dockerfile: Dockerfile
     ports:
-      - "80:80"
-    network_mode: host
+      - 80:80
