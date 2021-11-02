@@ -5,7 +5,7 @@ services:
       context: ctx
       dockerfile: nginx.Dockerfile
     volumes:
-      - ./src/:/var/www/html/
+      - ./src/:/var/www/html/:delegated
     ports:
       - "{{{NGINX_PROJECT_PORT}}}:80"
     extra_hosts:
@@ -24,9 +24,9 @@ services:
         limits:
           memory: 1024m
     volumes:
-      - ./src/:/var/www/html/
-      - ../../.composer:/var/www/.composer
-      - ../../.composer:/var/www/html/var/composer_home
+      - ./src/:/var/www/html/:delegated
+      - ../../.composer:/var/www/.composer:delegated
+      - ../../.composer:/var/www/html/var/composer_home:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -42,7 +42,7 @@ services:
         limits:
           memory: 1024m
     volumes:
-      - ./data/mysql/:/var/lib/mysql
+      - ./data/mysql/:/var/lib/mysql:delegated
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 
@@ -53,7 +53,7 @@ services:
     ports:
       - 35729:35729
     volumes:
-      - ./src/:/var/www/html/
+      - ./src/:/var/www/html/:delegated
     profiles:
       - node{{{NODEJS_ENABLE}}}
     depends_on:
