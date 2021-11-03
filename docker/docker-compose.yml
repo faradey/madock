@@ -2,10 +2,10 @@ version: "3.7"
 services:
   nginx:
     build:
-      context: ctx
       dockerfile: nginx.Dockerfile
     volumes:
       - ./src/:/var/www/html/:delegated
+      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     ports:
       - "{{{NGINX_PROJECT_PORT}}}:80"
     extra_hosts:
@@ -19,10 +19,6 @@ services:
     build:
       context: ctx
       dockerfile: php.Dockerfile
-    deploy:
-      resources:
-        limits:
-          memory: 1024m
     volumes:
       - ./src/:/var/www/html/:delegated
       - ../../.composer:/var/www/.composer:delegated
@@ -37,12 +33,9 @@ services:
     build:
       context: ctx
       dockerfile: db.Dockerfile
-    deploy:
-      resources:
-        limits:
-          memory: 1024m
     volumes:
       - ./data/mysql/:/var/lib/mysql:delegated
+      - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 
@@ -63,10 +56,6 @@ services:
     build:
       context: ctx
       dockerfile: elasticsearch.Dockerfile
-    deploy:
-      resources:
-        limits:
-          memory: 1256m
     ulimits:
       memlock:
         soft: -1
@@ -76,7 +65,6 @@ services:
         hard: 65536
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms450m -Xmx450m"
     volumes:
       - elasticsearch_vlm:/usr/share/elasticsearch/data
     profiles:
