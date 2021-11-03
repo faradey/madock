@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"runtime"
 	"strings"
 )
 
@@ -95,10 +96,19 @@ func ConfigMapping(mainConf map[string]string, targetConf map[string]string) {
 
 func ReplaceConfigValue(str string) string {
 	projectConf := GetCurrentProjectConfig()
+	osArch := runtime.GOARCH
+	arches := map[string]string{"arm64": "aarch64"}
 
+	if arch, ok := arches[osArch]; ok {
+		osArch = arch
+	} else {
+		osArch = "x86-64"
+	}
 	for key, val := range projectConf {
 		str = strings.Replace(str, "{{{"+key+"}}}", val, -1)
 	}
+
+	str = strings.Replace(str, "{{{OSARCH}}}", osArch, -1)
 
 	usr, err := user.Current()
 	if err == nil {
