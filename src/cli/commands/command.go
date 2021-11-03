@@ -78,7 +78,7 @@ func DB(flag, option string) {
 }
 
 func Debug(flag string) {
-	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env"
+	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
 	if flag == "--on" {
 		configs.SetParam(configPath, "PHP_MODULE_XDEBUG", "true")
 	} else if flag == "--off" {
@@ -120,7 +120,7 @@ func Bash(flag, flag2, flag3 string) {
 func SetEnvOption(flag string, flags []string) {
 	if flag == "--hosts" {
 		if len(flags) > 0 {
-			configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env"
+			configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
 			configs.SetParam(configPath, "HOSTS", strings.Join(flags, " "))
 		} else {
 			fmtc.ErrorLn("Specify at least one domain")
@@ -129,7 +129,7 @@ func SetEnvOption(flag string, flags []string) {
 }
 
 func ShowEnv() {
-	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env"
+	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
 	lines := configs.GetAllLines(configPath)
 	for _, ln := range lines {
 		fmt.Println(ln)

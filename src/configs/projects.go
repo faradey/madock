@@ -12,7 +12,7 @@ var dbType = "MariaDB"
 func SetEnvForProject(defVersions versions.ToolsVersions) {
 	projectName := paths.GetRunDirName()
 	generalConf := GetGeneralConfig()
-	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env"
+	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 	config := new(ConfigLines)
 	config.EnvFile = envFile
 	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
@@ -79,10 +79,10 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 }
 
 func GetGeneralConfig() map[string]string {
-	configPath := paths.GetExecDirPath() + "/projects/config"
+	configPath := paths.GetExecDirPath() + "/projects/config.txt"
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		if err != nil {
-			configPath = paths.GetExecDirPath() + "/config.def"
+			configPath = paths.GetExecDirPath() + "/config.txt"
 			if _, err = os.Stat(configPath); os.IsNotExist(err) {
 				if err != nil {
 					log.Fatal(err)
@@ -99,7 +99,7 @@ func GetCurrentProjectConfig() map[string]string {
 }
 
 func GetProjectConfig(projectName string) map[string]string {
-	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/env"
+	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		if err != nil {
 			log.Fatal(err)
