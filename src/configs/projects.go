@@ -5,6 +5,7 @@ import (
 	"github.com/faradey/madock/src/versions"
 	"log"
 	"os"
+	"strings"
 )
 
 var dbType = "MariaDB"
@@ -43,35 +44,35 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("ELASTICSEARCH_ENABLE", generalConf["ELASTICSEARCH_ENABLE"])
+	config.AddOrSetLine("ELASTICSEARCH_ENABLE", strings.TrimSpace(generalConf["ELASTICSEARCH_ENABLE"]))
 	config.AddOrSetLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("REDIS_ENABLE", generalConf["REDIS_ENABLE"])
+	config.AddOrSetLine("REDIS_ENABLE", strings.TrimSpace(generalConf["REDIS_ENABLE"]))
 	config.AddOrSetLine("REDIS_VERSION", defVersions.Redis)
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("NODEJS_ENABLE", generalConf["NODEJS_ENABLE"])
+	config.AddOrSetLine("NODEJS_ENABLE", strings.TrimSpace(generalConf["NODEJS_ENABLE"]))
 	config.AddOrSetLine("NODEJS_VERSION", generalConf["NODEJS_VERSION"])
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("RABBITMQ_ENABLE", generalConf["RABBITMQ_ENABLE"])
+	config.AddOrSetLine("RABBITMQ_ENABLE", strings.TrimSpace(generalConf["RABBITMQ_ENABLE"]))
 	config.AddOrSetLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("CRON_ENABLED", generalConf["CRON_ENABLED"])
+	config.AddOrSetLine("CRON_ENABLED", strings.TrimSpace(generalConf["CRON_ENABLED"]))
 
 	if !config.IsEnv {
 		config.SaveLines()
