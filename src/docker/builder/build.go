@@ -33,13 +33,13 @@ func prepareConfigs() {
 func Down() {
 	projectName := paths.GetRunDirName()
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
-	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
+	//composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
 		profilesOn := []string{
 			"-f",
 			composeFile,
-			"-f",
-			composeFileOS,
+			/*"-f",
+			composeFileOS,*/
 			"--profile",
 			"nodetrue",
 			"--profile",
@@ -69,12 +69,12 @@ func Start() {
 	projectName := paths.GetRunDirName()
 	prepareConfigs()
 	upNginx()
-	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
+	//composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"-f",
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
-		"-f",
-		composeFileOS,
+		/*"-f",
+		composeFileOS,*/
 		"--profile",
 		"nodetrue",
 		"--profile",
@@ -104,12 +104,12 @@ func Start() {
 
 func Stop() {
 	projectName := paths.GetRunDirName()
-	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
+	//composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"-f",
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
-		"-f",
-		composeFileOS,
+		/*"-f",
+		composeFileOS,*/
 		"--profile",
 		"nodetrue",
 		"--profile",
@@ -157,12 +157,12 @@ func upProjectWithBuild() {
 			log.Fatal(err)
 		}
 	}
-	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
+	//composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"-f",
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
-		"-f",
-		composeFileOS,
+		/*"-f",
+		composeFileOS,*/
 		"--profile",
 		"nodetrue",
 		"--profile",
