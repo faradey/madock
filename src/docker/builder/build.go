@@ -190,7 +190,7 @@ func upProjectWithBuild() {
 		//usr, _ := user.Current()
 		cmd = exec.Command("mutagen", "sync", "create", "--name",
 			projectName+"-php-1",
-			"-default-group-beta", "www-data",
+			"--default-group-beta", "www-data",
 			"--default-owner-beta", "www-data",
 			"--sync-mode", "two-way-resolved",
 			"--default-file-mode", "0664",
