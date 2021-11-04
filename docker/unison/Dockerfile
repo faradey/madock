@@ -30,7 +30,7 @@ ENV UNISON_USER="{{{UNAME}}}" \
 
 COPY ./ctx/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
-COPY ./sync.sh /usr/local/bin/sync
-COPY ./watch.sh /usr/local/bin/watch
+COPY ./ctx/sync.sh /usr/local/bin/sync
+COPY ./ctx/watch.sh /usr/local/bin/watch
 
 ENTRYPOINT ["docker-entrypoint.sh"]
