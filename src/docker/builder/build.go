@@ -190,6 +190,7 @@ func upProjectWithBuild() {
 		//usr, _ := user.Current()
 		cmd = exec.Command("mutagen", "sync", "create", "--name",
 			projectName+"-php-1",
+			"--symlink-mode", "posix-raw",
 			paths.GetRunDirPath(),
 			"docker://www-data@"+projectName+"-php-1/var/www/html",
 		)
