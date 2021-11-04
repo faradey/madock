@@ -4,10 +4,10 @@ services:
   phpfpm:
     volumes: &appvolumes-mac
       - workspace:/var/www/html
-      - ./app:/var/www/html/app:delegated
-      - ./.git:/var/www/html/.git:delegated
-      - ./composer.json:/var/www/html/composer.json:delegated
-      - ./composer.lock:/var/www/html/composer.lock:delegated
+      - ./src/app:/var/www/html/app:delegated
+      - ./src/.git:/var/www/html/.git:delegated
+      - ./src/composer.json:/var/www/html/composer.json:delegated
+      - ./src/composer.lock:/var/www/html/composer.lock:delegated
       # {FILES_IN_GIT}
 
   nginx:
@@ -21,7 +21,7 @@ services:
       dockerfile: ./ctx/unison.Dockerfile
     volumes:
       - workspace:/var/www/html
-      - ./vendor:/sync/vendor
+      - ./src/vendor:/sync/vendor
     environment:
       - SYNC_SOURCE_BASE_PATH=/sync
       - SYNC_DESTINATION_BASE_PATH=/var/www/html
