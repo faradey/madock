@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -33,10 +34,13 @@ func prepareConfigs() {
 func Down() {
 	projectName := paths.GetRunDirName()
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
+	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose" + runtime.GOOS + ".yml"
 	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
 		profilesOn := []string{
 			"-f",
 			composeFile,
+			"-f",
+			composeFileOS,
 			"--profile",
 			"nodetrue",
 			"--profile",
@@ -66,9 +70,12 @@ func Start() {
 	projectName := paths.GetRunDirName()
 	prepareConfigs()
 	upNginx()
+	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose" + runtime.GOOS + ".yml"
 	profilesOn := []string{
 		"-f",
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
+		"-f",
+		composeFileOS,
 		"--profile",
 		"nodetrue",
 		"--profile",
@@ -98,9 +105,12 @@ func Start() {
 
 func Stop() {
 	projectName := paths.GetRunDirName()
+	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose" + runtime.GOOS + ".yml"
 	profilesOn := []string{
 		"-f",
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
+		"-f",
+		composeFileOS,
 		"--profile",
 		"nodetrue",
 		"--profile",
@@ -148,9 +158,12 @@ func upProjectWithBuild() {
 			log.Fatal(err)
 		}
 	}
+	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose" + runtime.GOOS + ".yml"
 	profilesOn := []string{
 		"-f",
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
+		"-f",
+		composeFileOS,
 		"--profile",
 		"nodetrue",
 		"--profile",
