@@ -197,7 +197,7 @@ func upProjectWithBuild() {
 			"--default-directory-mode", "0755",
 			"--symlink-mode", "posix-raw",
 			paths.GetRunDirPath(),
-			"docker://www-data@"+projectName+"-php-1/var/www/html",
+			"docker://"+projectName+"-php-1/var/www/html",
 		)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
