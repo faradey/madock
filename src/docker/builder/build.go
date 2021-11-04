@@ -191,7 +191,8 @@ func upProjectWithBuild() {
 		usr, _ := user.Current()
 		cmd = exec.Command("mutagen", "sync", "create", "--name",
 			projectName+"-php-1",
-			paths.GetRunDirPath()+" docker://"+usr.Username+"@"+projectName+"-php-1/var/www/html",
+			paths.GetRunDirPath(),
+			"docker://"+usr.Username+"@"+projectName+"-php-1/var/www/html",
 		)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
