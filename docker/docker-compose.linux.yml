@@ -3,7 +3,9 @@ version: "3.7"
 services:
   php:
     volumes: &appvolumes-linux
-      - ./src/:/var/www/html
+      - ./src:/var/www/html:delegated
+      - ../../.composer:/var/www/.composer:delegated
+      - ../../.composer:/var/www/html/var/composer_home:delegated
 
   nginx:
     volumes: *appvolumes-linux

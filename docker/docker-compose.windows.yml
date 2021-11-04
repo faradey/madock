@@ -3,32 +3,12 @@ version: "3.7"
 services:
   php:
     volumes: &appvolumes-windows
-      - workspace:/var/www/html
-      - ./src/app:/var/www/html/app
-      - ./src/.git:/var/www/html/.git
-      - ./src/composer.json:/var/www/html/composer.json
-      - ./src/composer.lock:/var/www/html/composer.lock
-      # {FILES_IN_GIT}
+      - ./src:/var/www/html:delegated
+      - ../../.composer:/var/www/.composer:delegated
+      - ../../.composer:/var/www/html/var/composer_home:delegated
 
   nginx:
     volumes: *appvolumes-windows
 
   node:
     volumes: *appvolumes-windows
-
-  unison:
-    build:
-      dockerfile: ./ctx/unison.Dockerfile
-    volumes:
-      - workspace:/var/www/html
-      - ./src/vendor:/sync/vendor
-    environment:
-      - SYNC_SOURCE_BASE_PATH=/sync
-      - SYNC_DESTINATION_BASE_PATH=/var/www/html
-      - SYNC_MAX_INOTIFY_WATCHES=60000
-    depends_on:
-      - php
-    privileged: true
-
-volumes:
-  workspace:

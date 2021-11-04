@@ -4,9 +4,6 @@ services:
     build:
       dockerfile: ./ctx/php.Dockerfile
     volumes: &appvolumes
-      - ./src:/var/www/html:delegated
-      - ../../.composer:/var/www/.composer:delegated
-      - ../../.composer:/var/www/html/var/composer_home:delegated
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -31,7 +28,7 @@ services:
     build:
       dockerfile: ./ctx/db.Dockerfile
     volumes:
-      - ./data/mysql/:/var/lib/mysql:delegated
+      - .dbdata:/var/lib/mysql:delegated
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
