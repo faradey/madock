@@ -50,6 +50,10 @@ services:
   elasticsearch:
     build:
       dockerfile: ./ctx/elasticsearch.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 1524m
     ulimits:
       memlock:
         soft: -1
@@ -59,6 +63,7 @@ services:
         hard: 65536
     environment:
       - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms700m -Xmx700m"
     volumes:
       - elasticsearch_vlm:/usr/share/elasticsearch/data
     profiles:
