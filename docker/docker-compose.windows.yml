@@ -18,7 +18,7 @@ services:
 
   unison:
     build:
-      dockerfile: unison.Dockerfile
+      dockerfile: ./ctx/unison.Dockerfile
     volumes:
       - workspace:/var/www/html
       - ./vendor:/sync/vendor
