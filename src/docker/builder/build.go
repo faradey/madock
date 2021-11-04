@@ -13,7 +13,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"os/user"
 	"runtime"
 	"strconv"
 	"strings"
@@ -188,11 +187,11 @@ func upProjectWithBuild() {
 	}
 
 	if runtime.GOOS == "darwin" {
-		usr, _ := user.Current()
+		//usr, _ := user.Current()
 		cmd = exec.Command("mutagen", "sync", "create", "--name",
 			projectName+"-php-1",
 			paths.GetRunDirPath(),
-			"docker://"+usr.Username+"@"+projectName+"-php-1/var/www/html",
+			"docker://www-data@"+projectName+"-php-1/var/www/html",
 		)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
