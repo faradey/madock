@@ -28,7 +28,7 @@ ENV UNISON_USER="{{{UNAME}}}" \
     SYNC_EXTRA_UNISON_PROFILE_OPTS='' \
     SYNC_NODELETE_SOURCE="0"
 
-COPY ./docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY ./ctx/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 COPY ./sync.sh /usr/local/bin/sync
 COPY ./watch.sh /usr/local/bin/watch
