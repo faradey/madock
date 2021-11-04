@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -31,6 +32,7 @@ func MakeConf(projectName string) {
 	makeElasticDockerfile(projectName)
 	makeRedisDockerfile(projectName)
 	makeNodeDockerfile(projectName)
+	makeUnisonData(projectName)
 }
 
 func makeNginxDockerfile(projectName string) {
@@ -113,6 +115,7 @@ func makePhpDockerfile(projectName string) {
 
 func makeDockerCompose(projectName string) {
 	dockerDefFile := getDockerFile(projectName, "/docker/docker-compose.yml")
+	dockerDefFileForOS := getDockerFile(projectName, "/docker/docker-compose."+runtime.GOOS+".yml")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -143,8 +146,19 @@ func makeDockerCompose(projectName string) {
 	}
 	str = strings.Replace(str, "{{{NETWORK_NUMBER}}}", strconv.Itoa(portNumber+90), -1)
 
-	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml"
-	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	resultFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml"
+	err = ioutil.WriteFile(resultFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+
+	b, err = os.ReadFile(dockerDefFileForOS)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resultFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.override.yml"
+	err = ioutil.WriteFile(resultFile, b, 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -228,6 +242,68 @@ func makeNodeDockerfile(projectName string) {
 	str = configs.ReplaceConfigValue(str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/node.Dockerfile"
 	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+}
+
+func makeUnisonData(projectName string) {
+	dockerDefFile := getDockerFile(projectName, "/docker/unison/Dockerfile")
+
+	b, err := os.ReadFile(dockerDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str := string(b)
+	str = configs.ReplaceConfigValue(str)
+	resultFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/unison.Dockerfile"
+	err = ioutil.WriteFile(resultFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+
+	dockerDefFile = getDockerFile(projectName, "/docker/unison/docker-entrypoint.sh")
+
+	b, err = os.ReadFile(dockerDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str = string(b)
+	str = configs.ReplaceConfigValue(str)
+	resultFile = paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/docker-entrypoint.sh"
+	err = ioutil.WriteFile(resultFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+
+	dockerDefFile = getDockerFile(projectName, "/docker/unison/sync.sh")
+
+	b, err = os.ReadFile(dockerDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str = string(b)
+	str = configs.ReplaceConfigValue(str)
+	resultFile = paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/sync.sh"
+	err = ioutil.WriteFile(resultFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+
+	dockerDefFile = getDockerFile(projectName, "/docker/unison/watch.sh")
+
+	b, err = os.ReadFile(dockerDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str = string(b)
+	str = configs.ReplaceConfigValue(str)
+	resultFile = paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/watch.sh"
+	err = ioutil.WriteFile(resultFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}

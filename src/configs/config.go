@@ -113,7 +113,10 @@ func ReplaceConfigValue(str string) string {
 	usr, err := user.Current()
 	if err == nil {
 		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
+		str = strings.Replace(str, "{{{UNAME}}}", usr.Username, -1)
 		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
+		gr, _ := user.LookupGroupId(usr.Gid)
+		str = strings.Replace(str, "{{{UGROUP}}}", gr.Name, -1)
 	} else {
 		log.Fatal(err)
 	}
