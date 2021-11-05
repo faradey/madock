@@ -30,7 +30,7 @@ services:
     build:
       dockerfile: ./ctx/db.Dockerfile
     volumes:
-      - .dbdata:/var/lib/mysql
+      - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
@@ -100,6 +100,7 @@ services:
       app_net_{{{NETWORK_NUMBER}}}:
 
 volumes:
+  dbdata:
   elasticsearch_vlm:
 networks:
   app_net_{{{NETWORK_NUMBER}}}:
