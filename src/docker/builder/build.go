@@ -187,8 +187,8 @@ func upProjectWithBuild() {
 	}
 
 	if runtime.GOOS == "darwin" {
-		syncMutagen(projectName, "nginx")
-		syncMutagen(projectName, "php")
+		syncMutagen(projectName, "nginx", "nginx")
+		syncMutagen(projectName, "php", "www-data")
 	}
 
 	projectConfig := configs.GetCurrentProjectConfig()
@@ -199,11 +199,11 @@ func upProjectWithBuild() {
 	}
 }
 
-func syncMutagen(projectName, containerName string) {
+func syncMutagen(projectName, containerName, usr string) {
 	cmd := exec.Command("mutagen", "sync", "create", "--name",
 		projectName+"-"+containerName+"-1",
-		"--default-group-beta", "www-data",
-		"--default-owner-beta", "www-data",
+		"--default-group-beta", usr,
+		"--default-owner-beta", usr,
 		"--sync-mode", "two-way-resolved",
 		"--default-file-mode", "0664",
 		"--default-directory-mode", "0755",
