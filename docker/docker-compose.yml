@@ -50,7 +50,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1524m
+          memory: 2512m
     ulimits:
       memlock:
         soft: -1
@@ -60,7 +60,7 @@ services:
         hard: 65536
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms700m -Xmx700m"
+      - "ES_JAVA_OPTS=-Xms800m -Xmx800m"
     volumes:
       - elasticsearch_vlm:/usr/share/elasticsearch/data
     profiles:
