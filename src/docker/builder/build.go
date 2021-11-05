@@ -187,7 +187,7 @@ func upProjectWithBuild() {
 	}
 
 	if runtime.GOOS == "darwin" {
-		syncMutagen(projectName, "nginx", "nginx")
+		//syncMutagen(projectName, "nginx", "nginx")
 		syncMutagen(projectName, "php", "www-data")
 	}
 
