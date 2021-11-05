@@ -187,24 +187,8 @@ func upProjectWithBuild() {
 	}
 
 	if runtime.GOOS == "darwin" {
-		//usr, _ := user.Current()
-		cmd = exec.Command("mutagen", "sync", "create", "--name",
-			projectName+"-php-1",
-			"--default-group-beta", "www-data",
-			"--default-owner-beta", "www-data",
-			"--sync-mode", "two-way-resolved",
-			"--default-file-mode", "0664",
-			"--default-directory-mode", "0755",
-			"--symlink-mode", "posix-raw",
-			paths.GetRunDirPath(),
-			"docker://"+projectName+"-php-1/var/www/html",
-		)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
-		if err != nil {
-			log.Fatal(err)
-		}
+		syncMutagen(projectName, "nginx")
+		syncMutagen(projectName, "php")
 	}
 
 	projectConfig := configs.GetCurrentProjectConfig()
@@ -212,6 +196,26 @@ func upProjectWithBuild() {
 		Cron("--on", false)
 	} else {
 		Cron("--off", false)
+	}
+}
+
+func syncMutagen(projectName, containerName string) {
+	cmd := exec.Command("mutagen", "sync", "create", "--name",
+		projectName+"-"+containerName+"-1",
+		"--default-group-beta", "www-data",
+		"--default-owner-beta", "www-data",
+		"--sync-mode", "two-way-resolved",
+		"--default-file-mode", "0664",
+		"--default-directory-mode", "0755",
+		"--symlink-mode", "posix-raw",
+		paths.GetRunDirPath(),
+		"docker://"+projectName+"-"+containerName+"-1/var/www/html",
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
