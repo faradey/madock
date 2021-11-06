@@ -1,1 +1,24 @@
 version: "3.7"
+
+services:
+  php:
+    volumes: &appvolumes-mac
+      - filesdata:/var/www/html
+      - composercache:/var/www/.composer:delegated
+      - composercache:/var/www/html/var/composer_home
+
+  nginx:
+    volumes: *appvolumes-mac
+
+  node:
+    volumes: *appvolumes-mac
+
+  mutagen:
+    image: alpine:3.14.2
+    volumes:
+      - composercache:/var/www/.composer:delegated
+
+volumes:
+  filesdata:
+  composercache:
+    external: true

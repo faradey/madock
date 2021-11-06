@@ -223,6 +223,29 @@ func syncMutagen(projectName, containerName, usr string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	cmd = exec.Command("mutagen", "sync", "terminate",
+		projectName+"-composercache",
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	cmd = exec.Command("mutagen", "sync", "create", "--name",
+		projectName+"-composercache",
+		"--sync-mode", "two-way-resolved",
+		"--symlink-mode", "posix-raw",
+		paths.GetExecDirPath()+"/.composer",
+		"docker://"+projectName+"-mutagen-1/var/www/html",
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func clearMutagen(projectName, containerName string) {
