@@ -237,8 +237,8 @@ func syncMutagen(projectName, containerName, usr string) {
 		"--symlink-mode", "posix-raw",
 		"--default-group-beta", usr,
 		"--default-owner-beta", usr,
-		paths.GetExecDirPath()+"/.composer",
-		"docker://"+projectName+"-mutagen-1/var/www/html",
+		paths.GetExecDirPath()+"/aruntime/.composer",
+		"docker://"+projectName+"-mutagen-1/var/www/.composer",
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
