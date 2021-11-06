@@ -3,7 +3,7 @@ version: "3.7"
 services:
   php:
     volumes: &appvolumes-mac
-      - filesdata:/var/www/html
+      - filesdata:/var/www/html:delegated
       #- composercache:/var/www/html/var/composer_home
 
   nginx:
