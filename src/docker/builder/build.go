@@ -200,6 +200,7 @@ func upProjectWithBuild() {
 }
 
 func syncMutagen(projectName, containerName, usr string) {
+	clearMutagen(projectName, containerName)
 	cmd := exec.Command("mutagen", "sync", "create", "--name",
 		projectName+"-"+containerName+"-1",
 		"--default-group-beta", usr,
@@ -215,6 +216,18 @@ func syncMutagen(projectName, containerName, usr string) {
 		"-i", "/.idea",
 		paths.GetRunDirPath(),
 		"docker://"+projectName+"-"+containerName+"-1/var/www/html",
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func clearMutagen(projectName, containerName string) {
+	cmd := exec.Command("mutagen", "sync", "terminate",
+		projectName+"-"+containerName+"-1",
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
