@@ -208,6 +208,11 @@ func syncMutagen(projectName, containerName, usr string) {
 		"--default-file-mode", "0664",
 		"--default-directory-mode", "0755",
 		"--symlink-mode", "posix-raw",
+		"--ignore-vcs",
+		"-i", "/pub/media",
+		"-i", "/pub/static",
+		"-i", "/generated",
+		"-i", "/.idea",
 		paths.GetRunDirPath(),
 		"docker://"+projectName+"-"+containerName+"-1/var/www/html",
 	)
