@@ -212,6 +212,7 @@ func syncMutagen(projectName, containerName, usr string) {
 		"--ignore-vcs",
 		"-i", "/pub/static",
 		"-i", "/generated",
+		"-i", "/var/cache",
 		"-i", "/.idea",
 		paths.GetRunDirPath(),
 		"docker://"+projectName+"-"+containerName+"-1/var/www/html",
