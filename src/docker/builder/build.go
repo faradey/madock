@@ -235,8 +235,6 @@ func syncMutagen(projectName, containerName, usr string) {
 		projectName+"-composercache",
 		"--sync-mode", "two-way-resolved",
 		"--symlink-mode", "posix-raw",
-		"--default-group-beta", usr,
-		"--default-owner-beta", usr,
 		paths.GetExecDirPath()+"/aruntime/.composer",
 		"docker://"+projectName+"-mutagen-1/var/www/.composer",
 	)
