@@ -227,8 +227,6 @@ func syncMutagen(projectName, containerName, usr string) {
 	cmd = exec.Command("mutagen", "sync", "terminate",
 		projectName+"-composercache",
 	)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	cmd.Run()
 
 	cmd = exec.Command("mutagen", "sync", "create", "--name",
@@ -250,8 +248,6 @@ func clearMutagen(projectName, containerName string) {
 	cmd := exec.Command("mutagen", "sync", "terminate",
 		projectName+"-"+containerName+"-1",
 	)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	cmd.Run()
 }
 
