@@ -4,7 +4,7 @@ services:
   php:
     volumes: &appvolumes-mac
       - filesdata:/var/www/html
-      - composercache:/var/www/html/var/composer_home
+      #- composercache:/var/www/html/var/composer_home
 
   nginx:
     volumes: *appvolumes-mac
@@ -14,5 +14,5 @@ services:
 
 volumes:
   filesdata:
-  composercache:
-    external: true
+  #composercache:
+    #external: true
