@@ -229,10 +229,8 @@ func syncMutagen(projectName, containerName, usr string) {
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
+	cmd.Run()
+
 	cmd = exec.Command("mutagen", "sync", "create", "--name",
 		projectName+"-composercache",
 		"--sync-mode", "two-way-resolved",
@@ -256,10 +254,7 @@ func clearMutagen(projectName, containerName string) {
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
+	cmd.Run()
 }
 
 func downNginx() {
