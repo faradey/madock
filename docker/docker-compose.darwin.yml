@@ -2,12 +2,14 @@ version: "3.7"
 
 services:
   php:
-    volumes: &appvolumes-mac
-      - filesdata:/var/www/html:delegated
+    build:
+      dockerfile: ./ctx/php.darwin.Dockerfile
+    #volumes: &appvolumes-mac
+      #- filesdata:/var/www/html:delegated
       #- composercache:/var/www/html/var/composer_home
 
-  nginx:
-    volumes: *appvolumes-mac
+  #nginx:
+    #volumes: *appvolumes-mac
 
   node:
     volumes: *appvolumes-mac
