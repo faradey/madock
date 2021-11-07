@@ -116,7 +116,7 @@ func makePhpDockerfile(projectName string) {
 
 	if _, err := os.Stat(dockerDefFile); !os.IsNotExist(err) {
 		b, err = os.ReadFile(dockerDefFile)
-		if err == nil {
+		if err != nil {
 			log.Fatal(err)
 		}
 
