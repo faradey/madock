@@ -7,6 +7,12 @@ services:
     #volumes: &appvolumes-mac
       #- filesdata:/var/www/html:delegated
       #- composercache:/var/www/html/var/composer_home
+    ports:
+      - "{{{NGINX_PROJECT_PORT}}}:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      app_net_{{{NETWORK_NUMBER}}}:
 
   #nginx:
     #volumes: *appvolumes-mac
