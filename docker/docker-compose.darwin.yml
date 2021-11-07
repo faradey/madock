@@ -11,9 +11,6 @@ services:
   #nginx:
     #volumes: *appvolumes-mac
 
-  node:
-    volumes: *appvolumes-mac
-
 volumes:
   filesdata:
   #composercache:
