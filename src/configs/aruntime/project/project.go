@@ -112,7 +112,7 @@ func makePhpDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	dockerDefFile = getDockerFile(projectName, "/docker/php/"+runtime.GOOS+"Dockerfile")
+	dockerDefFile = getDockerFile(projectName, "/docker/php/"+runtime.GOOS+".Dockerfile")
 
 	if _, err := os.Stat(dockerDefFile); !os.IsNotExist(err) {
 		b, err = os.ReadFile(dockerDefFile)
