@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM nginx:latest
 
 RUN ln -snf /usr/share/zoneinfo/{{{PHP_TZ}}} /etc/localtime && echo {{{PHP_TZ}}} > /etc/timezone
 
@@ -19,10 +19,9 @@ RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     lsof \
   && locale-gen en_US.UTF-8
 
-RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/nginx
 RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
 
-RUN apt-get update && apt-get install -y nginx php{{{PHP_VERSION}}}-bcmath \
+RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
     php{{{PHP_VERSION}}}-cli \
     php{{{PHP_VERSION}}}-common \
     php{{{PHP_VERSION}}}-curl \
@@ -80,9 +79,9 @@ RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true" ]; then pecl install -f xdebug-{{{PH
 
 RUN apt-get install cron
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN usermod -u {{{UID}}} -o nginx && groupmod -g {{{GUID}}} -o nginx
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
 WORKDIR /var/www/html
 RUN chown {{{UID}}}:{{{GUID}}} /var/www/html
 EXPOSE 9001 9003
-CMD ["nginx", "-g", "daemon off;"]
