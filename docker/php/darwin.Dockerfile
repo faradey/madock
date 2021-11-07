@@ -85,4 +85,4 @@ RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
 WORKDIR /var/www/html
 RUN chown {{{UID}}}:{{{GUID}}} /var/www/html
 EXPOSE 9001 9003
-CMD ["nginx" "-g" "daemon off;"]
+CMD ["nginx", "-g", "daemon off;"]
