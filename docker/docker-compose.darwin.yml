@@ -3,19 +3,29 @@ version: "3.7"
 services:
   php:
     build:
-      dockerfile: ./ctx/php.darwin.Dockerfile
-    #volumes: &appvolumes-mac
-      #- filesdata:/var/www/html:delegated
+      dockerfile: ./ctx/php.Dockerfile
+    volumes:
+      - filesdata:/var/www/html:cached
       #- composercache:/var/www/html/var/composer_home
-    ports:
-      - "{{{NGINX_PROJECT_PORT}}}:80"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       app_net_{{{NETWORK_NUMBER}}}:
 
-  #nginx:
-    #volumes: *appvolumes-mac
+  nginx:
+    build:
+      dockerfile: ./ctx/nginx.Dockerfile
+    volumes:
+      - ./src:/var/www/html:delegated
+      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+    ports:
+      - "{{{NGINX_PROJECT_PORT}}}:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - php
+    networks:
+      app_net_{{{NETWORK_NUMBER}}}:
 
 volumes:
   filesdata:
