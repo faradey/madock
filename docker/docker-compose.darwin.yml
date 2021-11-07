@@ -5,7 +5,7 @@ services:
     build:
       dockerfile: ./ctx/php.Dockerfile
     volumes:
-      - filesdata:/var/www/html:cached
+      - filesdata:/var/www/html
       #- composercache:/var/www/html/var/composer_home
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -16,7 +16,7 @@ services:
     build:
       dockerfile: ./ctx/nginx.Dockerfile
     volumes:
-      - ./src:/var/www/html:delegated
+      - ./src:/var/www/html:cached
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     ports:
       - "{{{NGINX_PROJECT_PORT}}}:80"
