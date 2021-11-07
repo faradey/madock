@@ -16,7 +16,7 @@ services:
     build:
       dockerfile: ./ctx/nginx.Dockerfile
     volumes:
-      - ./src:/var/www/html:cached
+      - ./src:/var/www/html:delegated
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     ports:
       - "{{{NGINX_PROJECT_PORT}}}:80"
