@@ -174,8 +174,32 @@ func makeDockerCompose(projectName string) {
 		log.Fatal(err)
 	}
 
+	str = string(b)
+	portsConfig = configs.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
+	portNumber, err = strconv.Atoi(portsConfig[projectName])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	portNumberRanged = (portNumber - 1) * 20
+	hostName = "loc." + projectName + ".com"
+	projectConf = configs.GetCurrentProjectConfig()
+	if val, ok := projectConf["HOSTS"]; ok {
+		hosts := strings.Split(val, " ")
+		if len(hosts) > 0 {
+			hostName = strings.Split(hosts[0], ":")[0]
+		}
+	}
+	str = configs.ReplaceConfigValue(str)
+	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", hostName, -1)
+	str = strings.Replace(str, "{{{NGINX_PROJECT_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
+	for i := 1; i < 20; i++ {
+		str = strings.Replace(str, "{{{NGINX_PROJECT_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
+	}
+	str = strings.Replace(str, "{{{NETWORK_NUMBER}}}", strconv.Itoa(portNumber+90), -1)
+
 	resultFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.override.yml"
-	err = ioutil.WriteFile(resultFile, b, 0755)
+	err = ioutil.WriteFile(resultFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
