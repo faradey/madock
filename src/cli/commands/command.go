@@ -33,7 +33,7 @@ func Restart() {
 func Rebuild() {
 	if !configs.IsHasNotConfig() {
 		fmtc.SuccessLn("Stop containers")
-		builder.Down(true)
+		builder.Down(false)
 		fmtc.SuccessLn("Start containers in detached mode")
 		builder.UpWithBuild()
 		fmtc.SuccessLn("Done")

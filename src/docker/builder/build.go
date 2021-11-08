@@ -55,8 +55,12 @@ func Down(withError bool) {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
-		if err != nil && withError {
-			log.Fatal(err)
+		if err != nil {
+			if withError {
+				log.Println(err)
+			} else {
+				log.Fatal(err)
+			}
 		}
 	}
 }
