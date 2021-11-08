@@ -31,7 +31,7 @@ func prepareConfigs() {
 	project.MakeConf(projectName)
 }
 
-func Down(withError bool) {
+func Down() {
 	projectName := paths.GetRunDirName()
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
@@ -56,17 +56,13 @@ func Down(withError bool) {
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
 		if err != nil {
-			if withError {
-				log.Println(err)
-			} else {
-				log.Fatal(err)
-			}
+			fmt.Println(err)
 		}
 	}
 }
 
-func DownAll(withError bool) {
-	Down(withError)
+func DownAll() {
+	Down()
 	downNginx()
 }
 
