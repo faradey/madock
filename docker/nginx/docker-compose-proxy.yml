@@ -2,7 +2,8 @@ version: "3.7"
 services:
   nginx:
     build:
-      dockerfile: ./ctx/Dockerfile
+      context: ctx
+      dockerfile: Dockerfile
     volumes:
       - ./ctx/proxy.conf:/etc/nginx/conf.d/default.conf:delegated
     ports:
