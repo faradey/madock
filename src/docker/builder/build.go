@@ -346,7 +346,7 @@ func DbExport() {
 	}
 	defer selectedFile.Close()
 	writer := gzip.NewWriter(selectedFile)
-	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"_db_1", "mysqldump", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", projectConfig["DB_DATABASE"])
+	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"_db_1", "mysqldump", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-v", "-h", "db", projectConfig["DB_DATABASE"])
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = writer
