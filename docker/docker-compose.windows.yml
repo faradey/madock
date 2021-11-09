@@ -8,17 +8,7 @@ services:
       - ../../.composer:/var/www/html/var/composer_home:delegated
 
   nginx:
-    build:
-      dockerfile: ./ctx/nginx.Dockerfile
     volumes: *appvolumes-windows
-    ports:
-      - "{{{NGINX_PROJECT_PORT}}}:80"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      - php
-    networks:
-      app_net_{{{NETWORK_NUMBER}}}:
 
   node:
     volumes: *appvolumes-windows
