@@ -2,15 +2,9 @@ version: "3.7"
 
 services:
   php:
-    build:
-      dockerfile: ./ctx/php.Dockerfile
     volumes:
       - filesdata:/var/www/html
       #- composercache:/var/www/html/var/composer_home
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      app_net_{{{NETWORK_NUMBER}}}:
 
   nginx:
     volumes:
