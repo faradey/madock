@@ -276,7 +276,7 @@ func DbImport(option string) {
 	projectName := paths.GetRunDirName()
 	projectConfig := configs.GetCurrentProjectConfig()
 	dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db"
-	dbNames := paths.GetFiles(dbsPath)
+	dbNames := paths.GetDBFiles(dbsPath)
 	for index, dbName := range dbNames {
 		fmt.Println(strconv.Itoa(index+1) + ") " + dbName)
 	}
