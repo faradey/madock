@@ -202,7 +202,7 @@ func upProjectWithBuild() {
 func syncMutagen(projectName, containerName, usr string) {
 	clearMutagen(projectName, containerName)
 	cmd := exec.Command("mutagen", "sync", "create", "--name",
-		projectName+"_"+containerName+"_1",
+		projectName+"-"+containerName+"-1",
 		"--default-group-beta", usr,
 		"--default-owner-beta", usr,
 		"--sync-mode", "two-way-resolved",
@@ -227,7 +227,7 @@ func syncMutagen(projectName, containerName, usr string) {
 
 func clearMutagen(projectName, containerName string) {
 	cmd := exec.Command("mutagen", "sync", "terminate",
-		projectName+"_"+containerName+"_1",
+		projectName+"-"+containerName+"-1",
 	)
 	cmd.Run()
 }
