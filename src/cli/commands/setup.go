@@ -97,7 +97,7 @@ func setupComposer(defVersion *string) {
 func setupElastic(defVersion *string) {
 	setTitleAndRecommended("Elasticsearch", defVersion)
 
-	availableVersions := []string{"7.10", "7.9", "7.7", "7.6", "6.8", "5.1"}
+	availableVersions := []string{"7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
 
 	for index, ver := range availableVersions {
 		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
