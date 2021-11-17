@@ -5,7 +5,7 @@ services:
       context: ctx
       dockerfile: Dockerfile
     volumes:
-      - ./ctx/proxy.conf:/etc/nginx/conf.d/default.conf:delegated
+      - ./ctx/proxy.conf:/etc/nginx/nginx.conf:delegated
     ports:
       - 80:80
     extra_hosts:
