@@ -55,7 +55,7 @@ func makeProxy() {
 	portsConfig := configs.ParseFile(portsFile)
 	/* Create nginx default configuration for Magento2 */
 	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/conf/default-proxy.conf"
-	allFileData := "events {\n    worker_connections 4096;\n}\n"
+	allFileData := "events {\n    worker_connections 4096;\n}\nhttp {\n"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
 		log.Fatal(err)
@@ -90,7 +90,7 @@ func makeProxy() {
 			allFileData += strReplaced
 		}
 	}
-
+	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
 	err = ioutil.WriteFile(nginxFile, []byte(allFileData), 0755)
 	if err != nil {
