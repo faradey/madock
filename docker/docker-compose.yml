@@ -1,6 +1,7 @@
 version: "3.7"
 services:
   php:
+    container_name: {{{PROJECT_NAME}}}_php
     build:
       context: ctx
       dockerfile: php.Dockerfile
@@ -12,6 +13,7 @@ services:
       app_net:
 
   nginx:
+    container_name: {{{PROJECT_NAME}}}_nginx
     build:
       context: ctx
       dockerfile: nginx.Dockerfile
@@ -23,6 +25,7 @@ services:
       app_net:
 
   db:
+    container_name: {{{PROJECT_NAME}}}_db
     command: mysqld --default-authentication-plugin=mysql_native_password
     build:
       context: ctx
@@ -34,6 +37,7 @@ services:
       app_net:
 
   node:
+    container_name: {{{PROJECT_NAME}}}_node
     build:
       context: ctx
       dockerfile: node.Dockerfile
@@ -48,6 +52,7 @@ services:
       app_net:
 
   elasticsearch:
+    container_name: {{{PROJECT_NAME}}}_elasticsearch
     build:
       context: ctx
       dockerfile: elasticsearch.Dockerfile
@@ -73,6 +78,7 @@ services:
       app_net:
 
   redisdb:
+    container_name: {{{PROJECT_NAME}}}_redisdb
     build:
       context: ctx
       dockerfile: redis.Dockerfile
@@ -82,6 +88,7 @@ services:
       app_net:
 
   rabbitmq:
+    container_name: {{{PROJECT_NAME}}}_rabbitmq
     image: rabbitmq:{{{RABBITMQ_VERSION}}}
     profiles:
       - rabbitmq{{{RABBITMQ_ENABLE}}}
@@ -89,6 +96,7 @@ services:
       app_net:
 
   phpmyadmin:
+    container_name: {{{PROJECT_NAME}}}_phpmyadmin
     image: phpmyadmin/phpmyadmin:latest
     environment:
       PMA_HOST: db
