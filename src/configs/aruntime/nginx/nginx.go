@@ -87,7 +87,6 @@ func makeProxy() {
 			}
 
 			strReplaced = strings.Replace(strReplaced, "{{{HOST_NAMES}}}", hostName, -1)
-			strReplaced = strings.Replace(strReplaced, "{{{PROJECT_NAME}}}", name, -1)
 			allFileData += strReplaced
 		}
 	}
