@@ -109,6 +109,8 @@ func ReplaceConfigValue(str string) string {
 	}
 
 	str = strings.Replace(str, "{{{OSARCH}}}", osArch, -1)
+	projectName := paths.GetRunDirName()
+	str = strings.Replace(str, "{{{PROJECT_NAME}}}", projectName, -1)
 
 	usr, err := user.Current()
 	if err == nil {
