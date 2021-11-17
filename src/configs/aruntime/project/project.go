@@ -85,6 +85,7 @@ func makeNginxConf(projectName string) {
 		}
 	}
 	str = strings.Replace(str, "{{{HOST_NAMES}}}", hostName, -1)
+	str = strings.Replace(str, "{{{PROJECT_NAME}}}", projectName, -1)
 	str = strings.Replace(str, "{{{HOST_NAMES_WEBSITES}}}", hostNameWebsites, -1)
 
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
