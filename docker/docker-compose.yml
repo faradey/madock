@@ -8,8 +8,6 @@ services:
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    networks:
-      app_net:
 
   nginx:
     build:
@@ -32,8 +30,6 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
-    networks:
-      app_net:
 
   node:
     build:
@@ -46,8 +42,6 @@ services:
       - node{{{NODEJS_ENABLE}}}
     depends_on:
       - php
-    networks:
-      app_net:
 
   elasticsearch:
     build:
@@ -71,8 +65,6 @@ services:
       - elasticsearch_vlm:/usr/share/elasticsearch/data
     profiles:
       - elasticsearch{{{ELASTICSEARCH_ENABLE}}}
-    networks:
-      app_net:
 
   redisdb:
     build:
@@ -80,15 +72,11 @@ services:
       dockerfile: redis.Dockerfile
     profiles:
       - redisdb{{{REDIS_ENABLE}}}
-    networks:
-      app_net:
 
   rabbitmq:
     image: rabbitmq:{{{RABBITMQ_VERSION}}}
     profiles:
       - rabbitmq{{{RABBITMQ_ENABLE}}}
-    networks:
-      app_net:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -101,8 +89,6 @@ services:
       - "{{{NGINX_PROJECT_PORT+1}}}:80"
     depends_on:
       - db
-    networks:
-      app_net:
 
 volumes:
   dbdata:
