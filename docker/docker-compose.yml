@@ -19,8 +19,6 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - php
-    networks:
-      app_net:
 
   db:
     command: mysqld --default-authentication-plugin=mysql_native_password
@@ -93,8 +91,3 @@ services:
 volumes:
   dbdata:
   elasticsearch_vlm:
-
-networks:
-  app_net:
-    external: true
-    name: aruntime_madock
