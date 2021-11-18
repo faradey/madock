@@ -131,12 +131,23 @@ func Stop() {
 }
 
 func upNginx() {
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "-d")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		upNginxWithBuild()
+	projectConfig := configs.GetCurrentProjectConfig()
+	if val, ok := projectConfig["NGINX_PLACE"]; !ok || val == "docker" {
+		cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "-d")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			upNginxWithBuild()
+		}
+	} else {
+		cmd := exec.Command("sudo", "nginx", "-s", "reload")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
@@ -233,9 +244,20 @@ func clearMutagen(projectName, containerName string) {
 }
 
 func downNginx() {
-	composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
-	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
-		cmd := exec.Command("docker-compose", "-f", composeFile, "down")
+	projectConfig := configs.GetCurrentProjectConfig()
+	if val, ok := projectConfig["NGINX_PLACE"]; !ok || val == "docker" {
+		composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
+		if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
+			cmd := exec.Command("docker-compose", "-f", composeFile, "down")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err := cmd.Run()
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+	} else {
+		cmd := exec.Command("sudo", "nginx", "-s", "reload")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
