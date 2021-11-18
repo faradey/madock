@@ -55,7 +55,7 @@ func makeProxy() {
 	portsConfig := configs.ParseFile(portsFile)
 	/* Create nginx default configuration for Magento2 */
 	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/conf/default-proxy.conf"
-	allFileData := "worker_processes 2;\nworker_priority -10;\nworker_rlimit_nofile 200000;\nkeepalive 512;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\n"
+	allFileData := "worker_processes 2;\nworker_priority -10;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\n"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
 		log.Fatal(err)
