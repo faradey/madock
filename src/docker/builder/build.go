@@ -21,7 +21,8 @@ import (
 
 func UpWithBuild() {
 	prepareConfigs()
-	upNginx()
+	downNginx()
+	upNginxWithBuild()
 	upProjectWithBuild()
 }
 
