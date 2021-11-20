@@ -35,7 +35,7 @@ func RunCommand(cmd string) {
 	}
 }
 
-func Connect(keyPath string) {
+func Connect(keyPath, host, port string) {
 	config := &ssh.ClientConfig{
 		User: "username",
 		Auth: []ssh.AuthMethod{
@@ -45,7 +45,7 @@ func Connect(keyPath string) {
 	}
 
 	var err error
-	conn, err = ssh.Dial("tcp", "host", config)
+	conn, err = ssh.Dial("tcp", host+":"+port, config)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -62,6 +62,7 @@ func publicKey(path string) ssh.AuthMethod {
 	}
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
+		fmt.Println("Input your password for ssh key:")
 		buf := bufio.NewReader(os.Stdin)
 		sentence, err := buf.ReadBytes('\n')
 		password := strings.TrimSpace(string(sentence))
