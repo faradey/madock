@@ -3,10 +3,11 @@ package ssh
 import (
 	"fmt"
 	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 	"log"
 )
 
-func Sync(remoteDir string) {
+func Sync(conn *ssh.Client, remoteDir string) {
 	sc, err := sftp.NewClient(conn)
 	if err != nil {
 		fmt.Println(err)
@@ -15,7 +16,7 @@ func Sync(remoteDir string) {
 	listFiles(sc, remoteDir+"/pub/media/")
 
 	defer sc.Close()
-	defer Disconnect()
+	defer Disconnect(conn)
 }
 
 func listFiles(sc *sftp.Client, remoteDir string) (err error) {

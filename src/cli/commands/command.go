@@ -48,8 +48,8 @@ func Remote(flag, option string) {
 	if flag == "--sync" {
 		if option == "media" {
 			projectConfig := configs.GetCurrentProjectConfig()
-			ssh.Connect(projectConfig["SSH_KEY_PATH"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"])
-			ssh.Sync(projectConfig["SSH_SITE_ROOT_PATH"])
+			conn := ssh.Connect(projectConfig["SSH_KEY_PATH"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"])
+			ssh.Sync(conn, projectConfig["SSH_SITE_ROOT_PATH"])
 		}
 	} else {
 		log.Fatal("The specified parameters were not found.")

@@ -11,9 +11,7 @@ import (
 	"strings"
 )
 
-var conn *ssh.Client
-
-func RunCommand(cmd string) {
+func RunCommand(conn *ssh.Client, cmd string) {
 	sess, err := conn.NewSession()
 	if err != nil {
 		panic(err)
@@ -35,7 +33,7 @@ func RunCommand(cmd string) {
 	}
 }
 
-func Connect(keyPath, host, port string) {
+func Connect(keyPath, host, port string) *ssh.Client {
 	config := &ssh.ClientConfig{
 		User: "username",
 		Auth: []ssh.AuthMethod{
@@ -44,14 +42,14 @@ func Connect(keyPath, host, port string) {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	var err error
-	conn, err = ssh.Dial("tcp", host+":"+port, config)
+	conn, err := ssh.Dial("tcp", host+":"+port, config)
 	if err != nil {
 		fmt.Println(err)
 	}
+	return conn
 }
 
-func Disconnect() {
+func Disconnect(conn *ssh.Client) {
 	conn.Close()
 }
 
