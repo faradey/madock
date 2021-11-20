@@ -47,7 +47,7 @@ func Rebuild() {
 func Remote(flag, option string) {
 	if flag == "--sync" {
 		if option == "media" {
-			projectConfig := configs.GetProjectConfig(paths.GetExecDirName())
+			projectConfig := configs.GetCurrentProjectConfig()
 			ssh.Connect(projectConfig["SSH_KEY_PATH"])
 			ssh.Sync(projectConfig["SSH_SITE_ROOT_PATH"])
 		}
