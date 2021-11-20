@@ -74,6 +74,12 @@ func main() {
 			commands.Prune(flag)
 		case "rebuild":
 			commands.Rebuild()
+		case "remote":
+			option := ""
+			if len(os.Args) > 3 {
+				option = strings.ToLower(os.Args[3])
+			}
+			commands.Remote(flag, option)
 		case "restart":
 			commands.Restart()
 		case "setup":

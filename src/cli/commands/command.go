@@ -6,6 +6,7 @@ import (
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/ssh"
 	"log"
 	"strings"
 )
@@ -40,6 +41,18 @@ func Rebuild() {
 	} else {
 		fmtc.WarningLn("Set up the project")
 		fmtc.ToDoLn("Run madock setup")
+	}
+}
+
+func Remote(flag, option string) {
+	if flag == "--sync" {
+		if option == "media" {
+			projectConfig := configs.GetProjectConfig(paths.GetRunDirName())
+			ssh.Connect(projectConfig["SSH_KEY_PATH"])
+			ssh.Sync(projectConfig["SSH_SITE_ROOT_PATH"])
+		}
+	} else {
+		log.Fatal("The specified parameters were not found.")
 	}
 }
 
