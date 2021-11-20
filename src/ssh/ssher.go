@@ -1,12 +1,14 @@
 package ssh
 
 import (
+	"bufio"
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 var conn *ssh.Client
@@ -60,7 +62,16 @@ func publicKey(path string) ssh.AuthMethod {
 	}
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
-		log.Fatal(err)
+		buf := bufio.NewReader(os.Stdin)
+		sentence, err := buf.ReadBytes('\n')
+		password := strings.TrimSpace(string(sentence))
+		if err != nil {
+			log.Fatalln(err)
+		}
+		signer, err = ssh.ParsePrivateKeyWithPassphrase(key, []byte(password))
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	return ssh.PublicKeys(signer)
 }
