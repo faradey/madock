@@ -77,6 +77,10 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 
 	config.AddOrSetLine("CRON_ENABLED", getOption("CRON_ENABLED", generalConf, projectConfig))
 
+	config.AddOrSetLine("SSH_USERNAME", getOption("SSH_USERNAME", generalConf, projectConfig))
+	config.AddOrSetLine("SSH_KEY_PATH", getOption("SSH_KEY_PATH", generalConf, projectConfig))
+	config.AddOrSetLine("SSH_SITE_ROOT_PATH", getOption("SSH_SITE_ROOT_PATH", generalConf, projectConfig))
+
 	if !config.IsEnv {
 		config.SaveLines()
 	}
