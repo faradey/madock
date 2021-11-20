@@ -48,7 +48,7 @@ func Remote(flag, option string) {
 	if flag == "--sync" {
 		if option == "media" {
 			projectConfig := configs.GetCurrentProjectConfig()
-			conn := ssh.Connect(projectConfig["SSH_KEY_PATH"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"])
+			conn := ssh.Connect(projectConfig["SSH_KEY_PATH"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
 			ssh.Sync(conn, projectConfig["SSH_SITE_ROOT_PATH"])
 		}
 	} else {

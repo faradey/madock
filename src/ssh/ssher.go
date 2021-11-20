@@ -33,9 +33,9 @@ func RunCommand(conn *ssh.Client, cmd string) {
 	}
 }
 
-func Connect(keyPath, host, port string) *ssh.Client {
+func Connect(keyPath, host, port, username string) *ssh.Client {
 	config := &ssh.ClientConfig{
-		User: "username",
+		User: username,
 		Auth: []ssh.AuthMethod{
 			publicKey(keyPath),
 		},
