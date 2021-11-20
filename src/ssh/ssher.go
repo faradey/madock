@@ -5,6 +5,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 )
 
@@ -55,11 +56,11 @@ func Disconnect() {
 func publicKey(path string) ssh.AuthMethod {
 	key, err := ioutil.ReadFile(path)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return ssh.PublicKeys(signer)
 }
