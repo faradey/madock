@@ -13,33 +13,30 @@ func Sync(conn *ssh.Client, remoteDir string) {
 		fmt.Println(err)
 	}
 
-	listFiles(sc, remoteDir+"/pub/media/")
+	listFiles(sc, remoteDir+"/pub/media/", "")
 
 	defer sc.Close()
 	defer Disconnect(conn)
 }
 
-func listFiles(sc *sftp.Client, remoteDir string) (err error) {
-	files, err := sc.ReadDir(remoteDir)
+func listFiles(sc *sftp.Client, remoteDir, subdir string) (err error) {
+	files, err := sc.ReadDir(remoteDir + subdir)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, f := range files {
-		var name, modTime, size string
+		var name string
 
 		name = f.Name()
-		modTime = f.ModTime().Format("2006-01-02 15:04:05")
-		size = fmt.Sprintf("%12d", f.Size())
 
 		if f.IsDir() {
-			name = name + "/"
-			modTime = ""
-			size = "PRE"
+			subdir += "/" + name
+			listFiles(sc, remoteDir, subdir)
+			fmt.Printf("%s\n", subdir)
+		} else {
+			fmt.Printf("%s\n", name)
 		}
-		// Output each file name and size in bytes
-		fmt.Println("")
-		fmt.Printf("%19s %12s %s\n", modTime, size, name)
 	}
 
 	return
