@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -39,7 +40,13 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 				os.Mkdir(projectPath+"/pub/media/"+subdir+name, 0775)
 			}
 			if isFirst == true {
-				go listFiles(sc, ch, remoteDir, subdir+name+"/", false)
+				projectConfig := configs.GetCurrentProjectConfig()
+				conn := Connect(projectConfig["SSH_KEY_PATH"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
+				sc2, err := sftp.NewClient(conn)
+				if err != nil {
+					fmt.Println(err)
+				}
+				go listFiles(sc2, ch, remoteDir, subdir+name+"/", false)
 				dirCount++
 			} else {
 				listFiles(sc, ch, remoteDir, subdir+name+"/", false)
