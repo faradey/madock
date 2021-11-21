@@ -12,6 +12,8 @@ import (
 	"syscall"
 )
 
+var passwd string
+
 func RunCommand(conn *ssh.Client, cmd string) {
 	sess, err := conn.NewSession()
 	if err != nil {
@@ -61,14 +63,16 @@ func publicKey(path string) ssh.AuthMethod {
 	}
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
-		fmt.Println("Input your password for ssh key:")
-		var sentence []byte
-		sentence, err = terminal.ReadPassword(int(syscall.Stdin))
-		if err != nil {
-			log.Fatalln(err)
+		if passwd == "" {
+			fmt.Println("Input your password for ssh key:")
+			var sentence []byte
+			sentence, err = terminal.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				log.Fatalln(err)
+			}
+			passwd = strings.TrimSpace(string(sentence))
 		}
-		password := strings.TrimSpace(string(sentence))
-		signer, err = ssh.ParsePrivateKeyWithPassphrase(key, []byte(password))
+		signer, err = ssh.ParsePrivateKeyWithPassphrase(key, []byte(passwd))
 		if err != nil {
 			log.Fatal(err)
 		}
