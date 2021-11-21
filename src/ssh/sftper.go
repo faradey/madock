@@ -33,11 +33,14 @@ func listFiles(sc *sftp.Client, remoteDir, subdir string) (err error) {
 	for _, f := range files {
 		name = f.Name()
 		if f.IsDir() {
+			if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
+				os.Mkdir(projectPath+"/pub/media/"+subdir+name, 0775)
+			}
 			listFiles(sc, remoteDir, subdir+name+"/")
 		} else {
-			if _, err := os.Stat(projectPath + "/" + subdir + name); os.IsNotExist(err) {
-				fmt.Printf("%s\n", projectPath+"/"+subdir+name)
-				downloadFile(sc, remoteDir+"/"+subdir+name, projectPath+"/"+subdir+name)
+			if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
+				fmt.Printf("%s\n", projectPath+"/pub/media/"+subdir+name)
+				downloadFile(sc, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
 			}
 		}
 	}
@@ -46,29 +49,25 @@ func listFiles(sc *sftp.Client, remoteDir, subdir string) (err error) {
 }
 
 func downloadFile(sc *sftp.Client, remoteFile, localFile string) (err error) {
-
-	fmt.Fprintf(os.Stdout, "Downloading [%s] to [%s] ...\n", remoteFile, localFile)
 	// Note: SFTP To Go doesn't support O_RDWR mode
 	srcFile, err := sc.OpenFile(remoteFile, (os.O_RDONLY))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to open remote file: %v\n", err)
+		fmt.Println("Unable to open remote file: " + err.Error() + "\n")
 		return
 	}
 	defer srcFile.Close()
 
 	dstFile, err := os.Create(localFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to open local file: %v\n", err)
+		fmt.Println("Unable to open local file: " + err.Error() + "\n")
 		return
 	}
 	defer dstFile.Close()
 
-	bytes, err := io.Copy(dstFile, srcFile)
+	_, err = io.Copy(dstFile, srcFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to download remote file: %v\n", err)
-		os.Exit(1)
+		fmt.Println("Unable to download remote file: " + err.Error() + "\n")
 	}
-	fmt.Fprintf(os.Stdout, "%d bytes copied\n", bytes)
 
 	return
 }
