@@ -48,7 +48,9 @@ func listFiles(sc *sftp.Client, remoteDir, subdir string, isFirst bool) (err err
 		}
 	}
 
-	fmt.Println("Synchronization will run in the background")
+	if isFirst == true {
+		fmt.Println("Synchronization is running in the background")
+	}
 
 	return
 }

@@ -1,14 +1,15 @@
 package ssh
 
 import (
-	"bufio"
 	"fmt"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+	"syscall"
 )
 
 func RunCommand(conn *ssh.Client, cmd string) {
@@ -61,12 +62,12 @@ func publicKey(path string) ssh.AuthMethod {
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
 		fmt.Println("Input your password for ssh key:")
-		buf := bufio.NewReader(os.Stdin)
-		sentence, err := buf.ReadBytes('\n')
-		password := strings.TrimSpace(string(sentence))
+		var sentence []byte
+		sentence, err = terminal.ReadPassword(int(syscall.Stdin))
 		if err != nil {
 			log.Fatalln(err)
 		}
+		password := strings.TrimSpace(string(sentence))
 		signer, err = ssh.ParsePrivateKeyWithPassphrase(key, []byte(password))
 		if err != nil {
 			log.Fatal(err)
