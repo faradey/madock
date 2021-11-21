@@ -18,13 +18,13 @@ func Sync(conn *ssh.Client, remoteDir string) {
 	}
 
 	ch := make(chan bool, 50)
-	listFiles(sc, ch, remoteDir+"/pub/media/", "", true)
+	listFiles(sc, ch, remoteDir+"/pub/media/", "", 0)
 
 	defer sc.Close()
 	defer Disconnect(conn)
 }
 
-func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst bool) (err error) {
+func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst int) (err error) {
 	projectPath := paths.GetRunDirPath()
 	dirCount := 0
 	files, err := sc.ReadDir(remoteDir + subdir)
@@ -39,17 +39,17 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 			if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
 				os.Mkdir(projectPath+"/pub/media/"+subdir+name, 0775)
 			}
-			if isFirst == true {
+			if isFirst == 0 {
 				projectConfig := configs.GetCurrentProjectConfig()
 				conn := Connect(projectConfig["SSH_KEY_PATH"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
 				sc2, err := sftp.NewClient(conn)
 				if err != nil {
 					fmt.Println(err)
 				}
-				go listFiles(sc2, ch, remoteDir, subdir+name+"/", false)
+				go listFiles(sc2, ch, remoteDir, subdir+name+"/", isFirst+1)
 				dirCount++
 			} else {
-				listFiles(sc, ch, remoteDir, subdir+name+"/", false)
+				listFiles(sc, ch, remoteDir, subdir+name+"/", isFirst+1)
 			}
 		} else {
 			if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
@@ -59,7 +59,7 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 		}
 	}
 
-	if isFirst == true {
+	if isFirst == 0 {
 		loop := true
 		i := 0
 		for loop {
@@ -72,7 +72,7 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 			}
 		}
 		fmt.Println("Synchronization is completed")
-	} else {
+	} else if isFirst == 1 {
 		ch <- true
 	}
 
