@@ -20,6 +20,7 @@ func Sync(conn *ssh.Client, remoteDir string) {
 }
 
 func listFiles(sc *sftp.Client, remoteDir, subdir string) (err error) {
+	fmt.Printf("%s\n", remoteDir+subdir)
 	files, err := sc.ReadDir(remoteDir + subdir)
 	if err != nil {
 		log.Fatal(err)
