@@ -57,9 +57,9 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 		i := 0
 		for loop {
 			select {
-			case msg := <-ch:
+			case _ = <-ch:
 				i++
-				if !msg || i == dirCount {
+				if i == dirCount {
 					loop = false
 				}
 			}
