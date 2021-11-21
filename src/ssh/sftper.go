@@ -26,14 +26,12 @@ func listFiles(sc *sftp.Client, remoteDir, subdir string) (err error) {
 		log.Fatal(err)
 	}
 
+	var name string
 	for _, f := range files {
-		var name string
-
 		name = f.Name()
 
 		if f.IsDir() {
-			subdir += "/" + name
-			listFiles(sc, remoteDir, subdir)
+			listFiles(sc, remoteDir, subdir+name+"/")
 			fmt.Printf("%s\n", subdir)
 		} else {
 			fmt.Printf("%s\n", name)
