@@ -1,7 +1,7 @@
 package ssh
 
 import (
-	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/z7zmey/php-parser/php7"
 	"github.com/z7zmey/php-parser/visitor"
@@ -40,12 +40,11 @@ func DbDump(conn *ssh.Client, remoteDir string) {
 		fmt.Println(e)
 	}
 
-	var buf bufio.Writer
+	var buf bytes.Buffer
 	dumper := visitor.Dumper{
 		Writer: &buf,
 		Indent: "",
 	}
-
 	rootNode := parser.GetRootNode()
 	rootNode.Walk(&dumper)
 
