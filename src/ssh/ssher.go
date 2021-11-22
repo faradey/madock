@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,41 +13,42 @@ import (
 
 var passwd string
 
-func RunCommand(conn *ssh.Client, cmd string) (sessStdOutr, sessStderrr io.Reader) {
+func RunCommand(conn *ssh.Client, cmd string) (sessStdOutText, sessStderrText string) {
 	sess, err := conn.NewSession()
 	if err != nil {
 		panic(err)
 	}
 	defer sess.Close()
-	var sessStdOut io.Writer
-	var sessStderr io.Writer
-	sessStdOutr, sessStdOut, _ = os.Pipe()
-	sessStderrr, sessStderr, _ = os.Pipe()
+	sessStdOutr, sessStdOut, _ := os.Pipe()
+	sessStderrr, sessStderr, _ := os.Pipe()
 	sess.Stdout = sessStdOut
 	sess.Stderr = sessStderr
 	err = sess.Run(cmd)
 	if err != nil {
 		log.Fatal(err)
 	}
+	sessStdOutByte, err := ioutil.ReadAll(sessStdOutr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	sessStderrByte, err := ioutil.ReadAll(sessStderrr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	sessStderrText = string(sessStderrByte)
+	sessStdOutText = string(sessStdOutByte)
+	sessStdOut.Close()
+	sessStderr.Close()
 	return
 }
 
 func DbDump(conn *ssh.Client, remoteDir string) {
 	sessStdOut, sessStderr := RunCommand(conn, "cat "+remoteDir+"/app/etc/env.php")
-	sessStdOutByte, err := ioutil.ReadAll(sessStdOut)
-	if err != nil {
-		log.Fatal(err)
-	}
-	sessStderrByte, err := ioutil.ReadAll(sessStderr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	sessStderrText := string(sessStderrByte)
-	sessStdOutText := string(sessStdOutByte)
-	if len(sessStderrText) > 0 {
-		log.Fatal(sessStderrText)
+
+	if len(sessStderr) > 0 {
+		log.Fatal(sessStderr)
 	} else {
-		fmt.Println(sessStdOutText)
+		fmt.Println(sessStdOut)
 	}
 }
 
