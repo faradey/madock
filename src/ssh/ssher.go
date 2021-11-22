@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/z7zmey/php-parser/php7"
 	"github.com/z7zmey/php-parser/visitor"
@@ -8,7 +9,6 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"log"
-	"os"
 	"strings"
 	"syscall"
 )
@@ -40,13 +40,16 @@ func DbDump(conn *ssh.Client, remoteDir string) {
 		fmt.Println(e)
 	}
 
+	var buf bufio.Writer
 	dumper := visitor.Dumper{
-		Writer: os.Stdout,
+		Writer: &buf,
 		Indent: "",
 	}
 
 	rootNode := parser.GetRootNode()
 	rootNode.Walk(&dumper)
+
+	fmt.Println(buf)
 }
 
 func Connect(keyPath, host, port, username string) *ssh.Client {
