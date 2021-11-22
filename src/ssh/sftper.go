@@ -36,20 +36,22 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 	for _, f := range files {
 		name = f.Name()
 		if f.IsDir() {
-			if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
-				os.Mkdir(projectPath+"/pub/media/"+subdir+name, 0775)
-			}
-			if isFirst == 0 {
-				projectConfig := configs.GetCurrentProjectConfig()
-				conn := Connect(projectConfig["SSH_KEY_PATH"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
-				sc2, err := sftp.NewClient(conn)
-				if err != nil {
-					fmt.Println(err)
+			if subdir+name != "catalog/product/cache" {
+				if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
+					os.Mkdir(projectPath+"/pub/media/"+subdir+name, 0775)
 				}
-				go listFiles(sc2, ch, remoteDir, subdir+name+"/", isFirst+1)
-				dirCount++
-			} else {
-				listFiles(sc, ch, remoteDir, subdir+name+"/", isFirst+1)
+				if isFirst == 0 {
+					projectConfig := configs.GetCurrentProjectConfig()
+					conn := Connect(projectConfig["SSH_KEY_PATH"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
+					sc2, err := sftp.NewClient(conn)
+					if err != nil {
+						fmt.Println(err)
+					}
+					go listFiles(sc2, ch, remoteDir, subdir+name+"/", isFirst+1)
+					dirCount++
+				} else {
+					listFiles(sc, ch, remoteDir, subdir+name+"/", isFirst+1)
+				}
 			}
 		} else {
 			if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
