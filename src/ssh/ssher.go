@@ -2,10 +2,13 @@ package ssh
 
 import (
 	"fmt"
+	"github.com/z7zmey/php-parser/php7"
+	"github.com/z7zmey/php-parser/visitor"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"syscall"
 )
@@ -27,7 +30,23 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 
 func DbDump(conn *ssh.Client, remoteDir string) {
 	sessStdOut := RunCommand(conn, "cat "+remoteDir+"/app/etc/env.php")
+
 	fmt.Println(sessStdOut)
+
+	parser := php7.NewParser([]byte(sessStdOut), "7.4")
+	parser.Parse()
+
+	for _, e := range parser.GetErrors() {
+		fmt.Println(e)
+	}
+
+	dumper := visitor.Dumper{
+		Writer: os.Stdout,
+		Indent: "",
+	}
+
+	rootNode := parser.GetRootNode()
+	rootNode.Walk(&dumper)
 }
 
 func Connect(keyPath, host, port, username string) *ssh.Client {
