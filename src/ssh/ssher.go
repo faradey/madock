@@ -47,8 +47,8 @@ func DbDump(conn *ssh.Client, remoteDir string) {
 	}
 
 	rootNode := parser.GetRootNode()
-	//rootNode.Walk(&dumper)
 	dumper.EnterChildNode("db", rootNode)
+	rootNode.Walk(&dumper)
 
 	fmt.Println(buf.String())
 }
