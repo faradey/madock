@@ -14,25 +14,39 @@ import (
 
 var passwd string
 
-func RunCommand(conn *ssh.Client, cmd string) {
+func RunCommand(conn *ssh.Client, cmd string) (sessStdOutr, sessStderrr io.Reader) {
 	sess, err := conn.NewSession()
 	if err != nil {
 		panic(err)
 	}
 	defer sess.Close()
-	sessStdOut, err := sess.StdoutPipe()
+	var sessStdOut io.Writer
+	var sessStderr io.Writer
+	sessStdOutr, sessStdOut, _ = os.Pipe()
+	sessStderrr, sessStderr, _ = os.Pipe()
+	sess.Stdout = sessStdOut
+	sess.Stderr = sessStderr
+	err = sess.Run(cmd)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	go io.Copy(os.Stdout, sessStdOut)
-	sessStderr, err := sess.StderrPipe()
+	return
+}
+
+func DbDump(conn *ssh.Client, remoteDir string) {
+	sessStdOut, sessStderr := RunCommand(conn, "cat "+remoteDir+"/app/etc/env.php")
+	sessStdOutText, err := ioutil.ReadAll(sessStdOut)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	go io.Copy(os.Stderr, sessStderr)
-	err = sess.Run(cmd) // eg., /usr/bin/whoami
+	sessStderrText, err := ioutil.ReadAll(sessStderr)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+	}
+	if len(sessStderrText) > 0 {
+		log.Fatal(sessStderrText)
+	} else {
+		fmt.Println(sessStdOutText)
 	}
 }
 
