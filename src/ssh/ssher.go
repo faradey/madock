@@ -13,43 +13,29 @@ import (
 
 var passwd string
 
-func RunCommand(conn *ssh.Client, cmd string) (sessStdOutText, sessStderrText string) {
+func RunCommand(conn *ssh.Client, cmd string) {
 	sess, err := conn.NewSession()
 	if err != nil {
 		panic(err)
 	}
 	defer sess.Close()
-	sessStdOutr, sessStdOut, _ := os.Pipe()
-	sessStderrr, sessStderr, _ := os.Pipe()
-	sess.Stdout = sessStdOut
-	sess.Stderr = sessStderr
+	sess.Stdout = os.Stdout
+	sess.Stderr = os.Stderr
 	err = sess.Run(cmd)
 	if err != nil {
 		log.Fatal(err)
 	}
-	sessStdOutByte, err := ioutil.ReadAll(sessStdOutr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	sessStderrByte, err := ioutil.ReadAll(sessStderrr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	sessStderrText = string(sessStderrByte)
-	sessStdOutText = string(sessStdOutByte)
-	sessStdOut.Close()
-	sessStderr.Close()
 	return
 }
 
 func DbDump(conn *ssh.Client, remoteDir string) {
-	sessStdOut, sessStderr := RunCommand(conn, "cat "+remoteDir+"/app/etc/env.php")
+	RunCommand(conn, "cat "+remoteDir+"/app/etc/env.php")
 
-	if len(sessStderr) > 0 {
+	/*if len(sessStderr) > 0 {
 		log.Fatal(sessStderr)
 	} else {
 		fmt.Println(sessStdOut)
-	}
+	}*/
 }
 
 func Connect(keyPath, host, port, username string) *ssh.Client {
