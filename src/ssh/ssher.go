@@ -1,55 +1,33 @@
 package ssh
 
 import (
-	"bytes"
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
-	"io"
 	"io/ioutil"
 	"log"
-	"os"
 	"strings"
 	"syscall"
 )
 
 var passwd string
 
-func RunCommand(conn *ssh.Client, cmd string) (sessStdOutText, sessStderrText string) {
+func RunCommand(conn *ssh.Client, cmd string) string {
 	sess, err := conn.NewSession()
 	if err != nil {
 		panic(err)
 	}
 	defer sess.Close()
-	sessStdOutr, sessStdOut, _ := os.Pipe()
-	sessStderrr, sessStderr, _ := os.Pipe()
-	sess.Stdout = sessStdOut
-	sess.Stderr = sessStderr
-	err = sess.Run(cmd)
+	out, err := sess.CombinedOutput(cmd)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("cmd.Run() failed with %s\n", err)
 	}
-	var sessStdOutByte bytes.Buffer
-	io.Copy(&sessStdOutByte, sessStdOutr)
-
-	var sessStderrByte bytes.Buffer
-	io.Copy(&sessStdOutByte, sessStderrr)
-
-	sessStderrText = sessStderrByte.String()
-	sessStdOutText = sessStdOutByte.String()
-	sessStdOut.Close()
-	sessStderr.Close()
-	return
+	return string(out)
 }
 
 func DbDump(conn *ssh.Client, remoteDir string) {
-	sessStdOut, sessStderr := RunCommand(conn, "cat "+remoteDir+"/app/etc/env.php")
-
-	if len(sessStderr) > 0 {
-		log.Fatal(sessStderr)
-	} else {
-		fmt.Println(sessStdOut)
-	}
+	sessStdOut := RunCommand(conn, "cat "+remoteDir+"/app/etc/env.php")
+	fmt.Println(sessStdOut)
 }
 
 func Connect(keyPath, host, port, username string) *ssh.Client {
