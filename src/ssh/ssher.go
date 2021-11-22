@@ -41,13 +41,14 @@ func DbDump(conn *ssh.Client, remoteDir string) {
 	}
 
 	var buf bytes.Buffer
-	dumper := visitor.PrettyJsonDumper{
+	dumper := visitor.Dumper{
 		Writer: &buf,
+		Indent: "",
 	}
 
 	rootNode := parser.GetRootNode()
-	rootNode.Walk(&dumper)
-	//dumper.EnterChildNode("db", rootNode)
+	//rootNode.Walk(&dumper)
+	dumper.EnterChildNode("db", rootNode)
 
 	fmt.Println(buf.String())
 }
