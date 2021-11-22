@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 func Sync(conn *ssh.Client, remoteDir string) {
@@ -36,7 +37,13 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 	for _, f := range files {
 		name = f.Name()
 		if f.IsDir() {
-			if subdir+name != "catalog/product/cache" && subdir+name != "cache" && subdir+name != "images/cache" && subdir+name != "sitemap" && subdir+name != "tmp" {
+			if subdir+name != "catalog/product/cache" &&
+				subdir+name != "cache" &&
+				subdir+name != "images/cache" &&
+				subdir+name != "sitemap" &&
+				subdir+name != "tmp" &&
+				subdir+name != "trashcan" &&
+				!strings.Contains(subdir+name+"/", "/cache/") {
 				if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
 					os.Mkdir(projectPath+"/pub/media/"+subdir+name, 0775)
 				}
