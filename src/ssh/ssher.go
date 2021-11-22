@@ -35,14 +35,16 @@ func RunCommand(conn *ssh.Client, cmd string) (sessStdOutr, sessStderrr io.Reade
 
 func DbDump(conn *ssh.Client, remoteDir string) {
 	sessStdOut, sessStderr := RunCommand(conn, "cat "+remoteDir+"/app/etc/env.php")
-	sessStdOutText, err := ioutil.ReadAll(sessStdOut)
+	sessStdOutByte, err := ioutil.ReadAll(sessStdOut)
 	if err != nil {
 		log.Fatal(err)
 	}
-	sessStderrText, err := ioutil.ReadAll(sessStderr)
+	sessStderrByte, err := ioutil.ReadAll(sessStderr)
 	if err != nil {
 		log.Fatal(err)
 	}
+	sessStderrText := string(sessStderrByte)
+	sessStdOutText := string(sessStdOutByte)
 	if len(sessStderrText) > 0 {
 		log.Fatal(sessStderrText)
 	} else {
