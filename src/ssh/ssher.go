@@ -23,8 +23,8 @@ func RunCommand(conn *ssh.Client, cmd string) (sessStdOutText, sessStderrText st
 	defer sess.Close()
 	sessStdOutr, sessStdOut, _ := os.Pipe()
 	sessStderrr, sessStderr, _ := os.Pipe()
-	os.Stdout = sessStdOut
-	os.Stderr = sessStderr
+	sess.Stdout = sessStdOut
+	sess.Stderr = sessStderr
 	err = sess.Run(cmd)
 	if err != nil {
 		log.Fatal(err)
