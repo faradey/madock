@@ -34,6 +34,9 @@ func prepareConfigs() {
 
 func Down() {
 	projectName := paths.GetRunDirName()
+	if runtime.GOOS == "darwin" {
+		clearMutagen(projectName, "php")
+	}
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
@@ -101,11 +104,18 @@ func Start() {
 		} else {
 			Cron("--off", false)
 		}
+
+		if runtime.GOOS == "darwin" {
+			syncMutagen(projectName, "php", "www-data")
+		}
 	}
 }
 
 func Stop() {
 	projectName := paths.GetRunDirName()
+	if runtime.GOOS == "darwin" {
+		clearMutagen(projectName, "php")
+	}
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"-f",
@@ -129,6 +139,7 @@ func Stop() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }
 
 func upNginx() {
@@ -199,7 +210,6 @@ func upProjectWithBuild() {
 	}
 
 	if runtime.GOOS == "darwin" {
-		//syncMutagen(projectName, "nginx", "nginx")
 		syncMutagen(projectName, "php", "www-data")
 	}
 
