@@ -233,6 +233,7 @@ func syncMutagen(projectName, containerName, usr string) {
 		"--symlink-mode", "posix-raw",
 		"--ignore-vcs",
 		"-i", "/pub/static",
+		"-i", "/pub/media",
 		"-i", "/generated",
 		"-i", "/var/cache",
 		"-i", "/.idea",

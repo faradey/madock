@@ -4,11 +4,13 @@ services:
   php:
     volumes:
       - filesdata:/var/www/html
+      - ./src/pub/media:/var/www/html/pub/media
       #- composercache:/var/www/html/var/composer_home
 
   nginx:
     volumes:
       - filesdata:/var/www/html
+      - ./src/pub/media:/var/www/html/pub/media
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
 
 volumes:
