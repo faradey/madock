@@ -85,5 +85,7 @@ WORKDIR /var/www/html
 RUN chown {{{UID}}}:{{{GUID}}} /var/www/html
 RUN mkdir /var/www/html/pub
 RUN chown www-data:www-data /var/www/html/pub
+RUN mkdir /var/www/html/pub/media
+RUN chown www-data:www-data /var/www/html/pub/media
 EXPOSE 9001 9003
 CMD "php-fpm{{{PHP_VERSION}}}"
