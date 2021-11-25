@@ -2,14 +2,12 @@ version: "3.7"
 
 services:
   php:
-    user: "www-data:www-data"
     volumes:
       - filesdata:/var/www/html
       - ./src/pub/media:/var/www/html/pub/media
       #- composercache:/var/www/html/var/composer_home
 
   nginx:
-    user: "www-data:www-data"
     volumes:
       - filesdata:/var/www/html
       - ./src/pub/media:/var/www/html/pub/media

@@ -83,5 +83,7 @@ RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
 WORKDIR /var/www/html
 RUN chown {{{UID}}}:{{{GUID}}} /var/www/html
+RUN mkdir /var/www/html/pub
+RUN chown {{{UID}}}:{{{GUID}}} /var/www/html/pub
 EXPOSE 9001 9003
 CMD "php-fpm{{{PHP_VERSION}}}"
