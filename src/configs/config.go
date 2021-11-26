@@ -54,7 +54,7 @@ func (t *ConfigLines) SaveLines() {
 	}
 }
 
-func IsHasConfig() {
+func IsHasConfig() bool {
 	paths.PrepareDirsForProject()
 	projectName := paths.GetRunDirName()
 	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
@@ -73,7 +73,11 @@ func IsHasConfig() {
 				log.Fatal("Exit")
 			}
 		}
+
+		return true
 	}
+
+	return false
 }
 
 func IsHasNotConfig() bool {
