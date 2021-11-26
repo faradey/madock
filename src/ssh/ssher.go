@@ -62,9 +62,8 @@ func Connect(authType, keyPath, passwd, host, port, username string) *ssh.Client
 			ssh.Password(passwd),
 		}
 		config = &ssh.ClientConfig{
-			User:            username,
-			Auth:            sshAuth,
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			User: username,
+			Auth: sshAuth,
 		}
 	} else {
 		sshAuth = []ssh.AuthMethod{
