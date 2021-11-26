@@ -53,13 +53,14 @@ func DbDump(conn *ssh.Client, remoteDir string) {
 	fmt.Println(buf.String())
 }
 
-func Connect(authType, keyPath, passwd, host, port, username string) *ssh.Client {
+func Connect(authType, keyPath, pswd, host, port, username string) *ssh.Client {
 	config := &ssh.ClientConfig{}
 	var sshAuth []ssh.AuthMethod
 
 	if authType == "password" {
+		passwd = pswd
 		sshAuth = []ssh.AuthMethod{
-			ssh.Password(passwd),
+			ssh.KeyboardInteractive(SshInteractive),
 		}
 		config = &ssh.ClientConfig{
 			User:            username,
@@ -76,12 +77,22 @@ func Connect(authType, keyPath, passwd, host, port, username string) *ssh.Client
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		}
 	}
-	fmt.Println(config)
+
 	conn, err := ssh.Dial("tcp", host+":"+port, config)
 	if err != nil {
 		fmt.Println(err)
 	}
 	return conn
+}
+
+func SshInteractive(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
+	answers = make([]string, len(questions))
+	// The second parameter is unused
+	for n, _ := range questions {
+		answers[n] = passwd
+	}
+
+	return answers, nil
 }
 
 func Disconnect(conn *ssh.Client) {
