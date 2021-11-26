@@ -54,13 +54,15 @@ func DbDump(conn *ssh.Client, remoteDir string) {
 }
 
 func Connect(authType, keyPath, passwd, host, port, username string) *ssh.Client {
-	sshAuth := []ssh.AuthMethod{
-		publicKey(keyPath),
-	}
+	var sshAuth []ssh.AuthMethod
 
 	if authType == "password" {
 		sshAuth = []ssh.AuthMethod{
 			ssh.Password(passwd),
+		}
+	} else {
+		sshAuth = []ssh.AuthMethod{
+			publicKey(keyPath),
 		}
 	}
 	config := &ssh.ClientConfig{
