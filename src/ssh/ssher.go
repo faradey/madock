@@ -54,21 +54,27 @@ func DbDump(conn *ssh.Client, remoteDir string) {
 }
 
 func Connect(authType, keyPath, passwd, host, port, username string) *ssh.Client {
+	config := &ssh.ClientConfig{}
 	var sshAuth []ssh.AuthMethod
 
 	if authType == "password" {
 		sshAuth = []ssh.AuthMethod{
 			ssh.Password(passwd),
 		}
+		config = &ssh.ClientConfig{
+			User:            username,
+			Auth:            sshAuth,
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}
 	} else {
 		sshAuth = []ssh.AuthMethod{
 			publicKey(keyPath),
 		}
-	}
-	config := &ssh.ClientConfig{
-		User:            username,
-		Auth:            sshAuth,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		config = &ssh.ClientConfig{
+			User:            username,
+			Auth:            sshAuth,
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}
 	}
 
 	conn, err := ssh.Dial("tcp", host+":"+port, config)
