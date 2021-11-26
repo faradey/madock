@@ -49,7 +49,7 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 				}
 				if isFirst == 0 {
 					projectConfig := configs.GetCurrentProjectConfig()
-					conn := Connect(projectConfig["SSH_KEY_PATH"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
+					conn := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
 					sc2, err := sftp.NewClient(conn)
 					if err != nil {
 						fmt.Println(err)
