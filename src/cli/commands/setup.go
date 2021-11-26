@@ -21,6 +21,9 @@ func Setup() {
 	}
 	fmtc.SuccessLn("Start set up environment")
 	projectName := paths.GetRunDirName()
+
+	paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
+
 	toolsDefVersions := versions.GetVersions()
 
 	setupPhp(&toolsDefVersions.Php)
