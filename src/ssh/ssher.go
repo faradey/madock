@@ -58,14 +58,14 @@ func Connect(authType, keyPath, pswrd, host, port, username string) *ssh.Client 
 	var sshAuth []ssh.AuthMethod
 
 	if authType == "password" {
-		fmt.Println(pswrd)
+		var hostKey ssh.PublicKey
 		sshAuth = []ssh.AuthMethod{
 			ssh.Password(pswrd),
 		}
 		config = &ssh.ClientConfig{
 			User:            username,
 			Auth:            sshAuth,
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			HostKeyCallback: ssh.FixedHostKey(hostKey),
 		}
 	} else {
 		sshAuth = []ssh.AuthMethod{
