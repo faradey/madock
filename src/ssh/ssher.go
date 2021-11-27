@@ -26,7 +26,7 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 }
 
 func DbDump(conn *ssh.Client, remoteDir string) {
-	sessStdOut := RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1);\"")
+	sessStdOut := RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\"db\"]);\"")
 
 	fmt.Println(sessStdOut)
 }
