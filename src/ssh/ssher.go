@@ -1,10 +1,7 @@
 package ssh
 
 import (
-	"bytes"
 	"fmt"
-	"github.com/z7zmey/php-parser/php7"
-	"github.com/z7zmey/php-parser/visitor"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
@@ -29,27 +26,9 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 }
 
 func DbDump(conn *ssh.Client, remoteDir string) {
-	sessStdOut := RunCommand(conn, "cat "+remoteDir+"/app/etc/env.php")
+	sessStdOut := RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1);\"")
 
 	fmt.Println(sessStdOut)
-
-	parser := php7.NewParser([]byte(sessStdOut), "7.4")
-	parser.Parse()
-
-	for _, e := range parser.GetErrors() {
-		fmt.Println(e)
-	}
-
-	var buf bytes.Buffer
-	dumper := visitor.JsonDumper{
-		Writer: &buf,
-	}
-
-	rootNode := parser.GetRootNode()
-	dumper.EnterChildNode("db", rootNode)
-	rootNode.Walk(&dumper)
-
-	fmt.Println(buf.String())
 }
 
 func Connect(authType, keyPath, pswrd, host, port, username string) *ssh.Client {
