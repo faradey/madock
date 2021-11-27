@@ -15,7 +15,7 @@ import (
 func Sync(conn *ssh.Client, remoteDir string) {
 	sc, err := sftp.NewClient(conn)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 
 	ch := make(chan bool, 50)
