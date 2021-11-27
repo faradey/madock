@@ -59,7 +59,7 @@ func Connect(authType, keyPath, pswrd, host, port, username string) *ssh.Client 
 
 	if authType == "password" {
 		sshAuth = []ssh.AuthMethod{
-			ssh.Password(pswrd),
+			ssh.Password(pswrd + "\n"),
 		}
 		config = &ssh.ClientConfig{
 			User:            username,
