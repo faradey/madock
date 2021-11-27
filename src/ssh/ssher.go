@@ -79,7 +79,7 @@ func Connect(authType, keyPath, pswrd, host, port, username string) *ssh.Client 
 
 	conn, err := ssh.Dial("tcp", host+":"+port, config)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	return conn
 }
