@@ -3,12 +3,15 @@ package ssh
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/faradey/madock/src/paths"
+	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"log"
 	"strings"
 	"syscall"
+	"time"
 )
 
 var passwd string
@@ -39,11 +42,27 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 }
 
 func DbDump(conn *ssh.Client, remoteDir string) {
-	sessStdOut := RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
-	if len(sessStdOut) > 2 {
+	result := RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
+	if len(result) > 2 {
 		dbAuthData := RemoteDbStruct{}
-		json.Unmarshal([]byte(sessStdOut), &dbAuthData)
-		fmt.Println(dbAuthData)
+		err := json.Unmarshal([]byte(result), &dbAuthData)
+		if err != nil {
+			fmt.Println(err)
+		}
+		curDateTime := time.Now().Format("2006-01-02_15-04-05")
+		dumpName := "dump_db_" + curDateTime + ".sql.gz"
+		result = RunCommand(conn, "mysqldump -u "+dbAuthData.Username+" -p"+dbAuthData.Password+" --single-transaction --quick --lock-tables=false --no-tablespaces --triggers "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+dumpName)
+		sc, err := sftp.NewClient(conn)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer sc.Close()
+		execPath := paths.GetExecDirPath()
+		err = downloadFile(sc, remoteDir+"/"+dumpName, execPath+"/projects/backup/db/"+dumpName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		result = RunCommand(conn, "rm "+remoteDir+"/"+dumpName)
 	} else {
 		fmt.Println("Failed to get database authentication data")
 	}
