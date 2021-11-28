@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"encoding/json"
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
@@ -12,6 +13,17 @@ import (
 
 var passwd string
 
+type RemoteDbStruct struct {
+	Host           string `json:"host"`
+	Dbname         string `json:"dbname"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	Active         string `json:"active"`
+	Model          string `json:"model"`
+	Engine         string `json:"engine"`
+	InitStatements string `json:"initStatements"`
+}
+
 func RunCommand(conn *ssh.Client, cmd string) string {
 	sess, err := conn.NewSession()
 	if err != nil {
@@ -22,13 +34,19 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 	if err != nil {
 		log.Fatalf("cmd.Run() failed with %s\n", err)
 	}
+
 	return string(out)
 }
 
 func DbDump(conn *ssh.Client, remoteDir string) {
 	sessStdOut := RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
-
-	fmt.Println(sessStdOut)
+	if len(sessStdOut) > 2 {
+		dbAuthData := RemoteDbStruct{}
+		json.Unmarshal([]byte(sessStdOut), &dbAuthData)
+		fmt.Println(dbAuthData)
+	} else {
+		fmt.Println("Failed to get database authentication data")
+	}
 }
 
 func Connect(authType, keyPath, pswrd, host, port, username string) *ssh.Client {
@@ -51,6 +69,7 @@ func Connect(authType, keyPath, pswrd, host, port, username string) *ssh.Client 
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return conn
 }
 
@@ -79,5 +98,6 @@ func publicKey(path string) ssh.AuthMethod {
 			log.Fatal(err)
 		}
 	}
+
 	return ssh.PublicKeys(signer)
 }
