@@ -3,6 +3,7 @@ package ssh
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -65,6 +66,7 @@ func DbDump(conn *ssh.Client, remoteDir string) {
 			log.Fatal(err)
 		}
 		result = RunCommand(conn, "rm "+remoteDir+"/"+dumpName)
+		fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db --import`")
 	} else {
 		fmt.Println("Failed to get database authentication data")
 	}
