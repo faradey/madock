@@ -6,9 +6,12 @@ import (
 	"github.com/faradey/madock/src/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -104,10 +107,47 @@ func downloadFile(sc *sftp.Client, remoteFile, localFile string) (err error) {
 	}
 	defer dstFile.Close()
 
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		fmt.Println("Unable to download remote file: " + err.Error() + "\n")
+	fmt.Println(strings.ToLower(filepath.Ext(remoteFile)))
+	isCompressed := false
+	switch strings.ToLower(filepath.Ext(remoteFile)) {
+	case "jpg", "jpeg":
+		isCompressed = compressJpg(srcFile, dstFile)
+	case "png":
+		isCompressed = compressPng(srcFile, dstFile)
+	}
+
+	if !isCompressed {
+		_, err = io.Copy(dstFile, srcFile)
+		if err != nil {
+			fmt.Println("Unable to download remote file: " + err.Error() + "\n")
+		}
 	}
 
 	return
+}
+
+func compressJpg(r io.Reader, w io.Writer) bool {
+	img, err := jpeg.Decode(r)
+	if err != nil {
+		return false
+	}
+	q := jpeg.Options{Quality: 30}
+	err = jpeg.Encode(w, img, &q)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func compressPng(r io.Reader, w io.Writer) bool {
+	img, err := png.Decode(r)
+	if err != nil {
+		return false
+	}
+	enc := png.Encoder{CompressionLevel: -3}
+	err = enc.Encode(w, img)
+	if err != nil {
+		return false
+	}
+	return true
 }
