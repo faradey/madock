@@ -92,6 +92,10 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 }
 
 func downloadFile(sc *sftp.Client, remoteFile, localFile string) (err error) {
+	ext := strings.ToLower(filepath.Ext(remoteFile))
+	if ext != ".jpeg" && ext != ".jpg" && ext != ".png" && ext != ".webp" {
+		return nil
+	}
 	// Note: SFTP To Go doesn't support O_RDWR mode
 	srcFile, err := sc.OpenFile(remoteFile, (os.O_RDONLY))
 	if err != nil {
@@ -107,9 +111,8 @@ func downloadFile(sc *sftp.Client, remoteFile, localFile string) (err error) {
 	}
 	defer dstFile.Close()
 
-	fmt.Println(strings.ToLower(filepath.Ext(remoteFile)))
 	isCompressed := false
-	switch strings.ToLower(filepath.Ext(remoteFile)) {
+	switch ext {
 	case ".jpg", ".jpeg":
 		isCompressed = compressJpg(srcFile, dstFile)
 	case ".png":
