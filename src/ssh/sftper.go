@@ -110,9 +110,9 @@ func downloadFile(sc *sftp.Client, remoteFile, localFile string) (err error) {
 	fmt.Println(strings.ToLower(filepath.Ext(remoteFile)))
 	isCompressed := false
 	switch strings.ToLower(filepath.Ext(remoteFile)) {
-	case "jpg", "jpeg":
+	case ".jpg", ".jpeg":
 		isCompressed = compressJpg(srcFile, dstFile)
-	case "png":
+	case ".png":
 		isCompressed = compressPng(srcFile, dstFile)
 	}
 
