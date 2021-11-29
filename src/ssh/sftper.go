@@ -65,8 +65,11 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 			}
 		} else {
 			if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
-				fmt.Printf("%s\n", projectPath+"/pub/media/"+subdir+name)
-				downloadFile(sc, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
+				ext := strings.ToLower(filepath.Ext(name))
+				if ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
+					fmt.Printf("%s\n", projectPath+"/pub/media/"+subdir+name)
+					downloadFile(sc, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
+				}
 			}
 		}
 	}
@@ -93,9 +96,6 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 
 func downloadFile(sc *sftp.Client, remoteFile, localFile string) (err error) {
 	ext := strings.ToLower(filepath.Ext(remoteFile))
-	if ext != ".jpeg" && ext != ".jpg" && ext != ".png" && ext != ".webp" {
-		return nil
-	}
 	// Note: SFTP To Go doesn't support O_RDWR mode
 	srcFile, err := sc.OpenFile(remoteFile, (os.O_RDONLY))
 	if err != nil {
