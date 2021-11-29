@@ -63,13 +63,11 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 					listFiles(sc, ch, remoteDir, subdir+name+"/", isFirst+1)
 				}
 			}
-		} else {
-			if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
-				ext := strings.ToLower(filepath.Ext(name))
-				if ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
-					fmt.Printf("%s\n", projectPath+"/pub/media/"+subdir+name)
-					downloadFile(sc, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
-				}
+		} else if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
+			ext := strings.ToLower(filepath.Ext(name))
+			if ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
+				fmt.Printf("%s\n", projectPath+"/pub/media/"+subdir+name)
+				downloadFile(sc, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
 			}
 		}
 	}
