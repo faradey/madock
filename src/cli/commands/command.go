@@ -58,13 +58,31 @@ func Remote(flag, option string) {
 	}
 }
 
-func Prune(flag string) {
+func Proxy(flag string) {
 	if !configs.IsHasNotConfig() {
-		if flag == "--all" {
-			builder.DownAll()
-		} else {
-			builder.Down()
+		if flag == "prune" {
+			builder.DownNginx()
+		} else if flag == "stop" {
+			builder.StopNginx()
+		} else if flag == "restart" {
+			builder.StopNginx()
+			builder.UpNginx()
+		} else if flag == "start" {
+			builder.UpNginx()
+		} else if flag == "rebuild" {
+			builder.DownNginx()
+			builder.UpNginxWithBuild()
 		}
+		fmtc.SuccessLn("Done")
+	} else {
+		fmtc.WarningLn("Set up the project")
+		fmtc.ToDoLn("Run madock setup")
+	}
+}
+
+func Prune() {
+	if !configs.IsHasNotConfig() {
+		builder.Down()
 		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")

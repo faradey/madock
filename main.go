@@ -70,8 +70,10 @@ func main() {
 			commands.Magento(flag)
 		case "node":
 			commands.Node(flag)
+		case "proxy":
+			commands.Proxy(flag)
 		case "prune":
-			commands.Prune(flag)
+			commands.Prune()
 		case "rebuild":
 			commands.Rebuild()
 		case "remote":

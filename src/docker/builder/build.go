@@ -21,8 +21,8 @@ import (
 
 func UpWithBuild() {
 	prepareConfigs()
-	downNginx()
-	upNginxWithBuild()
+	DownNginx()
+	UpNginxWithBuild()
 	upProjectWithBuild()
 }
 
@@ -65,15 +65,10 @@ func Down() {
 	}
 }
 
-func DownAll() {
-	Down()
-	downNginx()
-}
-
 func Start() {
 	projectName := paths.GetRunDirName()
 	prepareConfigs()
-	upNginx()
+	UpNginx()
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"-f",
@@ -139,10 +134,9 @@ func Stop() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
-func upNginx() {
+func UpNginx() {
 	projectConfig := configs.GetCurrentProjectConfig()
 	if val, ok := projectConfig["NGINX_PLACE"]; !ok || val == "docker" {
 		cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "-d")
@@ -150,7 +144,7 @@ func upNginx() {
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
 		if err != nil {
-			upNginxWithBuild()
+			UpNginxWithBuild()
 		}
 	} else {
 		cmd := exec.Command("sudo", "nginx", "-s", "reload")
@@ -163,7 +157,7 @@ func upNginx() {
 	}
 }
 
-func upNginxWithBuild() {
+func UpNginxWithBuild() {
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -255,7 +249,7 @@ func clearMutagen(projectName, containerName string) {
 	cmd.Run()
 }
 
-func downNginx() {
+func DownNginx() {
 	projectConfig := configs.GetCurrentProjectConfig()
 	if val, ok := projectConfig["NGINX_PLACE"]; !ok || val == "docker" {
 		composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
@@ -270,6 +264,19 @@ func downNginx() {
 		}
 	} else {
 		cmd := exec.Command("sudo", "nginx", "-s", "reload")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
+func StopNginx() {
+	composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
+	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
+		cmd := exec.Command("docker-compose", "-f", composeFile, "stop")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()

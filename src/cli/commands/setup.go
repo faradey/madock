@@ -18,7 +18,7 @@ import (
 
 func Setup() {
 	if configs.IsHasConfig() {
-		builder.DownAll()
+		builder.Down()
 	}
 	fmtc.SuccessLn("Start set up environment")
 	projectName := paths.GetRunDirName()
