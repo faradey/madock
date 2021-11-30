@@ -51,6 +51,7 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 				if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
 					os.Mkdir(projectPath+"/pub/media/"+subdir+name, 0775)
 				}
+				fmt.Println(countGoroutine)
 				if countGoroutine <= 3 {
 					//projectConfig := configs.GetCurrentProjectConfig()
 					//conn := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
