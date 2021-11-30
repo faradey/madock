@@ -60,9 +60,11 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 						fmt.Println(err)
 					}
 					countGoroutine++
+					fmt.Println(subdir + name + "/")
 					go listFiles(sc2, ch, remoteDir, subdir+name+"/", isFirst+1)
 				} else {
 					countGoroutine++
+					fmt.Println(subdir + name + "/")
 					listFiles(sc, ch, remoteDir, subdir+name+"/", isFirst+1)
 				}
 			}
@@ -81,6 +83,7 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 			select {
 			case _ = <-ch:
 				countGoroutine--
+				fmt.Println(countGoroutine)
 				if 0 == countGoroutine {
 					loop = false
 				}
