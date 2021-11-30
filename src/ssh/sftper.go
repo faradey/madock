@@ -21,7 +21,7 @@ func Sync(conn *ssh.Client, remoteDir string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	countGoroutine = 0
 	ch := make(chan bool, 50)
 	fmt.Println("Synchronization is started")
 	listFiles(sc, ch, remoteDir+"/pub/media/", "", 0)
