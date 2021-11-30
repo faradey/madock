@@ -24,13 +24,13 @@ func Sync(conn *ssh.Client, remoteDir string) {
 
 	ch := make(chan bool, 50)
 	fmt.Println("Synchronization is started")
-	listFiles(conn, sc, ch, remoteDir+"/pub/media/", "", 0)
+	listFiles(sc, ch, remoteDir+"/pub/media/", "", 0)
 
 	defer sc.Close()
 	defer Disconnect(conn)
 }
 
-func listFiles(conn *ssh.Client, sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst int) (err error) {
+func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst int) (err error) {
 	projectPath := paths.GetRunDirPath()
 	files, err := sc.ReadDir(remoteDir + subdir)
 	if err != nil {
@@ -60,11 +60,11 @@ func listFiles(conn *ssh.Client, sc *sftp.Client, ch chan bool, remoteDir, subdi
 					}*/
 					countGoroutine++
 					fmt.Println(subdir + name + "/")
-					go listFiles(conn, sc, ch, remoteDir, subdir+name+"/", isFirst+1)
+					go listFiles(sc, ch, remoteDir, subdir+name+"/", isFirst+1)
 				} else {
 					countGoroutine++
 					fmt.Println(subdir + name + "/")
-					listFiles(conn, sc, ch, remoteDir, subdir+name+"/", isFirst+1)
+					listFiles(sc, ch, remoteDir, subdir+name+"/", isFirst+1)
 				}
 			}
 		} else if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
