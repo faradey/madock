@@ -82,7 +82,7 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 			case _ = <-ch:
 				countGoroutine--
 				fmt.Println(countGoroutine)
-				if 0 <= countGoroutine {
+				if 0 >= countGoroutine {
 					loop = false
 				}
 			}
