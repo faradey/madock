@@ -24,6 +24,7 @@ func Sync(conn *ssh.Client, remoteDir string) {
 	}
 
 	ch := make(chan bool, 50)
+	fmt.Println("Synchronization is started")
 	listFiles(sc, ch, remoteDir+"/pub/media/", "", 0)
 
 	defer sc.Close()
@@ -79,6 +80,7 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 		for loop {
 			select {
 			case _ = <-ch:
+				countGoroutine--
 				if 0 == countGoroutine {
 					loop = false
 				}
@@ -86,7 +88,7 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 		}
 		fmt.Println("Synchronization is completed")
 	} else if isFirst > 0 {
-		countGoroutine--
+		ch <- true
 	}
 
 	return
