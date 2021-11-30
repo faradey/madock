@@ -45,7 +45,7 @@ func Rebuild() {
 }
 
 func Remote(flag, option string) {
-	if flag == "--sync" {
+	if flag == "sync" {
 		projectConfig := configs.GetCurrentProjectConfig()
 		conn := ssh.Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
 		if option == "media" {
@@ -99,11 +99,11 @@ func Composer(flag string) {
 }
 
 func DB(flag, option string) {
-	if flag == "--import" {
+	if flag == "import" {
 		builder.DbImport(option)
-	} else if flag == "--export" {
+	} else if flag == "export" {
 		builder.DbExport()
-	} else if flag == "--soft-clean" {
+	} else if flag == "soft-clean" {
 		builder.DbSoftClean()
 	} else {
 		log.Fatal("The specified parameters were not found.")
@@ -112,9 +112,9 @@ func DB(flag, option string) {
 
 func Debug(flag string) {
 	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
-	if flag == "--on" {
+	if flag == "on" {
 		configs.SetParam(configPath, "PHP_MODULE_XDEBUG", "true")
-	} else if flag == "--off" {
+	} else if flag == "off" {
 		configs.SetParam(configPath, "PHP_MODULE_XDEBUG", "false")
 	} else {
 		log.Fatal("The specified parameters were not found.")
@@ -123,7 +123,7 @@ func Debug(flag string) {
 }
 
 func Cron(flag string) {
-	if flag == "--on" || flag == "--off" {
+	if flag == "on" || flag == "off" {
 		builder.Cron(flag, true)
 	} else {
 		log.Fatal("The specified parameters were not found.")

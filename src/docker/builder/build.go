@@ -95,9 +95,9 @@ func Start() {
 	} else {
 		projectConfig := configs.GetCurrentProjectConfig()
 		if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
-			Cron("--on", false)
+			Cron("on", false)
 		} else {
-			Cron("--off", false)
+			Cron("off", false)
 		}
 
 		if runtime.GOOS == "darwin" {
@@ -209,9 +209,9 @@ func upProjectWithBuild() {
 
 	projectConfig := configs.GetCurrentProjectConfig()
 	if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
-		Cron("--on", false)
+		Cron("on", false)
 	} else {
-		Cron("--off", false)
+		Cron("off", false)
 	}
 }
 
@@ -460,7 +460,7 @@ func Cron(flag string, manual bool) {
 	var cmd *exec.Cmd
 	var bOut io.Writer
 	var bErr io.Writer
-	if flag == "--on" {
+	if flag == "on" {
 		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "start")
 		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:install &&  php bin/magento cron:run")
 		cmdSub.Stdout = os.Stdout
