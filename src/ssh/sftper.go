@@ -15,6 +15,8 @@ import (
 	"strings"
 )
 
+var countGoroutine int
+
 func Sync(conn *ssh.Client, remoteDir string) {
 	sc, err := sftp.NewClient(conn)
 	if err != nil {
@@ -30,7 +32,6 @@ func Sync(conn *ssh.Client, remoteDir string) {
 
 func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst int) (err error) {
 	projectPath := paths.GetRunDirPath()
-	dirCount := 0
 	files, err := sc.ReadDir(remoteDir + subdir)
 	if err != nil {
 		log.Fatal(err)
@@ -50,7 +51,7 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 				if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
 					os.Mkdir(projectPath+"/pub/media/"+subdir+name, 0775)
 				}
-				if isFirst == 0 {
+				if countGoroutine <= 3 {
 					projectConfig := configs.GetCurrentProjectConfig()
 					conn := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
 					sc2, err := sftp.NewClient(conn)
@@ -58,8 +59,9 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 						fmt.Println(err)
 					}
 					go listFiles(sc2, ch, remoteDir, subdir+name+"/", isFirst+1)
-					dirCount++
+					countGoroutine++
 				} else {
+					countGoroutine++
 					listFiles(sc, ch, remoteDir, subdir+name+"/", isFirst+1)
 				}
 			}
@@ -74,19 +76,17 @@ func listFiles(sc *sftp.Client, ch chan bool, remoteDir, subdir string, isFirst 
 
 	if isFirst == 0 {
 		loop := true
-		i := 0
 		for loop {
 			select {
 			case _ = <-ch:
-				i++
-				if i == dirCount {
+				if 0 == countGoroutine {
 					loop = false
 				}
 			}
 		}
 		fmt.Println("Synchronization is completed")
-	} else if isFirst == 1 {
-		ch <- true
+	} else if isFirst > 0 {
+		countGoroutine--
 	}
 
 	return
