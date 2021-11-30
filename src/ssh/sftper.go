@@ -54,13 +54,13 @@ func listFiles(conn *ssh.Client, sc *sftp.Client, ch chan bool, remoteDir, subdi
 				if countGoroutine <= 3 || isFirst == 0 {
 					//projectConfig := configs.GetCurrentProjectConfig()
 					//conn := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
-					sc2, err := sftp.NewClient(conn)
+					/*sc2, err := sftp.NewClient(conn)
 					if err != nil {
 						fmt.Println(err)
-					}
+					}*/
 					countGoroutine++
 					fmt.Println(subdir + name + "/")
-					go listFiles(conn, sc2, ch, remoteDir, subdir+name+"/", isFirst+1)
+					go listFiles(conn, sc, ch, remoteDir, subdir+name+"/", isFirst+1)
 				} else {
 					countGoroutine++
 					fmt.Println(subdir + name + "/")
