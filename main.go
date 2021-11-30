@@ -18,16 +18,7 @@ func main() {
 
 		switch command {
 		case "bash":
-			flag2 := ""
-			flag3 := ""
-			if len(os.Args) > 3 {
-				flag2 = strings.ToLower(os.Args[3])
-
-				if len(os.Args) > 4 {
-					flag3 = strings.ToLower(os.Args[4])
-				}
-			}
-			commands.Bash(flag, flag2, flag3)
+			commands.Bash(flag)
 		case "composer":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Composer(flag)
@@ -60,11 +51,7 @@ func main() {
 		case "help":
 			helper.Help()
 		case "logs":
-			flag2 := ""
-			if len(os.Args) > 3 {
-				flag2 = strings.ToLower(os.Args[3])
-			}
-			commands.Logs(flag, flag2)
+			commands.Logs(flag)
 		case "magento":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Magento(flag)

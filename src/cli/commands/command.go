@@ -130,24 +130,13 @@ func Cron(flag string) {
 	}
 }
 
-func Bash(flag, flag2, flag3 string) {
+func Bash(flag string) {
 	containerName := "php"
-	isRoot := false
-	if flag == "--root" {
-		isRoot = true
-		if flag2 == "--name" {
-			containerName = flag3
-		}
-	} else {
-		if flag3 == "--root" {
-			isRoot = true
-		}
-		if flag == "--name" {
-			containerName = flag2
-		}
+	if flag != "" {
+		containerName = flag
 	}
 
-	builder.Bash(containerName, isRoot)
+	builder.Bash(containerName)
 }
 
 func SetEnvOption(flag string, flags []string) {
@@ -173,10 +162,10 @@ func Node(flag string) {
 	builder.Node(flag)
 }
 
-func Logs(flag, flag2 string) {
+func Logs(flag string) {
 	containerName := "php"
-	if flag == "--name" {
-		containerName = flag2
+	if flag != "" {
+		containerName = flag
 	}
 	builder.Logs(containerName)
 }

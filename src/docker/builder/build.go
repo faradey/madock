@@ -497,14 +497,10 @@ func Cron(flag string, manual bool) {
 	}
 }
 
-func Bash(containerName string, isRoot bool) {
+func Bash(containerName string) {
 	projectName := paths.GetRunDirName()
 	var cmd *exec.Cmd
-	/*if isRoot {
-		cmd = exec.Command("docker", "exec", "-it", "-u", "root", projectName+"-"+containerName+"-1", "bash")
-	} else {*/
 	cmd = exec.Command("docker", "exec", "-it", projectName+"-"+containerName+"-1", "bash")
-	//}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
