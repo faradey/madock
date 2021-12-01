@@ -25,6 +25,10 @@ func Warning(txt string) {
 	fmt.Print(color.Yellow + txt + color.Reset)
 }
 
+func Purple(txt string) {
+	fmt.Print(color.Purple + txt + color.Reset)
+}
+
 func ToDoLn(txt string) {
 	ToDo(txt + "\n")
 }

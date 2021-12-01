@@ -44,8 +44,9 @@ func Help() {
 	describeByLevel("remote", "Performing actions on a remote server", 0)
 	describeByLevel("sync", "Synchronization media, DB, etc.", 1)
 	describeByLevel("media", "Synchronization media files from remote host", 2)
+	describeByLevel("--images-only", "Synchronization images only", 3)
+	describeByLevel("--compress", "Apply lossy compression. Images will have weight equals 30% of original", 3)
 	describeByLevel("db", "Create and download dump of DB from remote host", 2)
-
 	describeByLevel("restart", "Restarting all containers and services. Stop all containers and start them again", 0)
 	describeByLevel("setup", "Initial project setup", 0)
 	describeByLevel("start", "Starting all containers and services", 0)
@@ -67,6 +68,11 @@ func describeByLevel(name, desc string, level int) {
 		tab()
 		tab()
 		fmtc.Title(name)
+	case 3:
+		tab()
+		tab()
+		tab()
+		fmtc.Purple(name)
 	}
 	tab()
 	fmt.Println(desc)
