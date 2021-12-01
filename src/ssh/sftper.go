@@ -18,6 +18,7 @@ import (
 var countGoroutine int
 var sc *sftp.Client
 var sc2 *sftp.Client
+var sc3 *sftp.Client
 
 func Sync(conn *ssh.Client, remoteDir string) {
 	var err error
@@ -32,6 +33,11 @@ func Sync(conn *ssh.Client, remoteDir string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	conn3 := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
+	sc3, err = sftp.NewClient(conn3)
+	if err != nil {
+		fmt.Println(err)
+	}
 	countGoroutine = 0
 	ch := make(chan bool, 50)
 	fmt.Println("Synchronization is started")
@@ -39,15 +45,19 @@ func Sync(conn *ssh.Client, remoteDir string) {
 
 	defer sc.Close()
 	defer sc2.Close()
+	defer sc3.Close()
 	defer Disconnect(conn)
 	defer Disconnect(conn2)
+	defer Disconnect(conn3)
 }
 
 func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) {
 	scp := sc
-	remainder := countGoroutine % 2
+	remainder := countGoroutine % 3
 	if remainder == 1 {
 		scp = sc2
+	} else if remainder == 2 {
+		scp = sc3
 	}
 	projectPath := paths.GetRunDirPath()
 	files, err := scp.ReadDir(remoteDir + subdir)
