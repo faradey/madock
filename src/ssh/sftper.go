@@ -94,7 +94,7 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 			ext := strings.ToLower(filepath.Ext(name))
 			isImagesOnly := attr.Attributes["--images-only"]
 			if isImagesOnly == "" || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
-				fmt.Printf("%s\n", projectPath+"/pub/media/"+subdir+name)
+				fmt.Printf("\n%s", projectPath+"/pub/media/"+subdir+name)
 				downloadFile(scp, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
 			}
 		}
@@ -157,8 +157,11 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 			sd, err := srcFile.Stat()
 			if err == nil {
 				fmt.Print("  (saved " + strconv.Itoa(int((sd.Size()-fd.Size())/sd.Size()*100)) + "%)")
-				fd.Size()
+			} else {
+				fmt.Println(err)
 			}
+		} else {
+			fmt.Println(err)
 		}
 	}
 
