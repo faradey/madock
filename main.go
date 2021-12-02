@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/commands"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/cli/helper"
@@ -15,6 +16,7 @@ func main() {
 		if len(os.Args) > 2 {
 			flag = strings.ToLower(os.Args[2])
 		}
+		attr.ParseAttributes(os.Args)
 
 		switch command {
 		case "bash":

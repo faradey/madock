@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/paths"
 	"github.com/pkg/sftp"
@@ -90,7 +91,8 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 			}
 		} else if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
 			ext := strings.ToLower(filepath.Ext(name))
-			if ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
+			_, isImagesOnly := attr.Attributes["--images-only"]
+			if isImagesOnly || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
 				fmt.Printf("%s\n", projectPath+"/pub/media/"+subdir+name)
 				downloadFile(scp, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
 			}
@@ -134,17 +136,28 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 	defer dstFile.Close()
 
 	isCompressed := false
-	switch ext {
-	case ".jpg", ".jpeg":
-		isCompressed = compressJpg(srcFile, dstFile)
-	case ".png":
-		isCompressed = compressPng(srcFile, dstFile)
+	_, isCompressedOk := attr.Attributes["--images-only"]
+	if isCompressedOk {
+		switch ext {
+		case ".jpg", ".jpeg":
+			isCompressed = compressJpg(srcFile, dstFile)
+		case ".png":
+			isCompressed = compressPng(srcFile, dstFile)
+		}
 	}
 
 	if !isCompressed {
 		_, err = io.Copy(dstFile, srcFile)
 		if err != nil {
 			fmt.Println("Unable to download remote file: " + err.Error() + "\n")
+		}
+		fd, err := dstFile.Stat()
+		if err == nil {
+			sd, err := srcFile.Stat()
+			if err == nil {
+				fmt.Printf("(saved %s%)", (sd.Size()-fd.Size())/sd.Size()*100)
+				fd.Size()
+			}
 		}
 	}
 
