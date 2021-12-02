@@ -152,16 +152,13 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 		if err != nil {
 			fmt.Println("Unable to download remote file: " + err.Error() + "\n")
 		}
+	} else {
 		fd, err := dstFile.Stat()
 		if err == nil {
 			sd, err := srcFile.Stat()
 			if err == nil {
 				fmt.Print("  (saved " + strconv.Itoa(int((sd.Size()-fd.Size())/sd.Size()*100)) + "%)")
-			} else {
-				fmt.Println(err)
 			}
-		} else {
-			fmt.Println(err)
 		}
 	}
 
