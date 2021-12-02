@@ -23,6 +23,7 @@ var sc2 *sftp.Client
 var sc3 *sftp.Client
 
 func Sync(conn *ssh.Client, remoteDir string) {
+	fmt.Println(attr.Attributes)
 	var err error
 	sc, err = sftp.NewClient(conn)
 	if err != nil {
