@@ -93,8 +93,8 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 			}
 		} else if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
 			ext := strings.ToLower(filepath.Ext(name))
-			_, isImagesOnly := attr.Attributes["--images-only"]
-			if isImagesOnly || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
+			isImagesOnly := attr.Attributes["--images-only"]
+			if isImagesOnly == "" || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
 				fmt.Printf("%s\n", projectPath+"/pub/media/"+subdir+name)
 				downloadFile(scp, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
 			}
@@ -138,8 +138,8 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 	defer dstFile.Close()
 
 	isCompressed := false
-	_, isCompressedOk := attr.Attributes["--images-only"]
-	if isCompressedOk {
+	isCompressedOk := attr.Attributes["--compress"]
+	if isCompressedOk != "" {
 		switch ext {
 		case ".jpg", ".jpeg":
 			isCompressed = compressJpg(srcFile, dstFile)
