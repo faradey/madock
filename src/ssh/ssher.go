@@ -108,7 +108,7 @@ func publicKey(path string) ssh.AuthMethod {
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
 		if passwd == "" {
-			fmt.Println("Input your password for ssh key:")
+			fmt.Print("Input your password for ssh key:")
 			var sentence []byte
 			sentence, err = terminal.ReadPassword(int(syscall.Stdin))
 			if err != nil {
