@@ -13,7 +13,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -159,7 +158,7 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 			if err == nil {
 				fmt.Printf("     %d", sd.Size())
 				fmt.Printf("     %d", fd.Size())
-				fmt.Print("  (saved " + strconv.Itoa(int((sd.Size()-fd.Size())/sd.Size()*100.0)) + "%)")
+				fmt.Printf("  (saved %d%)", ((sd.Size()-fd.Size())/sd.Size())*100)
 			} else {
 				fmt.Println(err)
 			}
