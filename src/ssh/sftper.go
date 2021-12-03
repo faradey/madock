@@ -5,6 +5,7 @@ import (
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/paths"
+	"github.com/foobaz/lossypng/lossypng"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"image/jpeg"
@@ -20,8 +21,11 @@ var countGoroutine int
 var sc *sftp.Client
 var sc2 *sftp.Client
 var sc3 *sftp.Client
+var sc4 *sftp.Client
 
 func Sync(conn *ssh.Client, remoteDir string) {
+	fmt.Println("")
+	fmt.Println("Server connection...")
 	var err error
 	sc, err = sftp.NewClient(conn)
 	if err != nil {
@@ -39,27 +43,35 @@ func Sync(conn *ssh.Client, remoteDir string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	conn4 := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
+	sc4, err = sftp.NewClient(conn4)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Synchronization is started")
 	countGoroutine = 0
 	ch := make(chan bool, 50)
-	fmt.Println("")
-	fmt.Println("Synchronization is started")
 	listFiles(ch, remoteDir+"/pub/media/", "", 0)
 
 	defer sc.Close()
 	defer sc2.Close()
 	defer sc3.Close()
+	defer sc4.Close()
 	defer Disconnect(conn)
 	defer Disconnect(conn2)
 	defer Disconnect(conn3)
+	defer Disconnect(conn4)
 }
 
 func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) {
 	scp := sc
-	remainder := countGoroutine % 3
+	remainder := countGoroutine % 4
 	if remainder == 1 {
 		scp = sc2
 	} else if remainder == 2 {
 		scp = sc3
+	} else if remainder == 3 {
+		scp = sc4
 	}
 	projectPath := paths.GetRunDirPath()
 	files, err := scp.ReadDir(remoteDir + subdir)
@@ -67,8 +79,10 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 		log.Fatal(err)
 	}
 
+	countDownload := 0
+	chDownload := make(chan bool, 50)
 	var name string
-	for _, f := range files {
+	for indx, f := range files {
 		name = f.Name()
 		if f.IsDir() {
 			if subdir+name != "catalog/product/cache" &&
@@ -94,8 +108,33 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 			ext := strings.ToLower(filepath.Ext(name))
 			isImagesOnly := attr.Attributes["--images-only"]
 			if isImagesOnly == "" || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
-				fmt.Printf("\n%s", projectPath+"/pub/media/"+subdir+name)
-				downloadFile(scp, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
+				scp := sc
+				remainder := indx % 4
+				if remainder == 1 {
+					scp = sc2
+				} else if remainder == 2 {
+					scp = sc3
+				} else if remainder == 3 {
+					scp = sc4
+				}
+				countDownload++
+				go func() {
+					downloadFile(scp, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
+					chDownload <- true
+				}()
+
+				if countDownload > 3 {
+					loopinfor := true
+					for loopinfor {
+						select {
+						case _ = <-chDownload:
+							countDownload--
+							if 4 > countDownload {
+								loopinfor = false
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -151,6 +190,8 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 		_, err = io.Copy(dstFile, srcFile)
 		if err != nil {
 			fmt.Println("Unable to download remote file: " + err.Error() + "\n")
+		} else {
+			fmt.Printf("\n%s", localFile)
 		}
 	} else {
 		fd, err := dstFile.Stat()
@@ -160,6 +201,7 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 				fSize := fd.Size()
 				sSize := sd.Size()
 				lessOne := (float64(sSize-fSize) / float64(sSize)) * float64(100)
+				fmt.Printf("\n%s", localFile)
 				fmt.Printf("   (save %d%%)", int(lessOne))
 			} else {
 				fmt.Println(err)
@@ -187,11 +229,11 @@ func compressJpg(r io.Reader, w io.Writer) bool {
 
 func compressPng(r io.Reader, w io.Writer) bool {
 	img, err := png.Decode(r)
+	img = lossypng.Compress(img, 0, 20)
 	if err != nil {
 		return false
 	}
-	enc := png.Encoder{CompressionLevel: -3}
-	err = enc.Encode(w, img)
+	err = png.Encode(w, img)
 	if err != nil {
 		return false
 	}

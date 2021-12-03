@@ -92,14 +92,10 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 
 func GetGeneralConfig() map[string]string {
 	configPath := paths.GetExecDirPath() + "/projects/config.txt"
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		if err != nil {
-			configPath = paths.GetExecDirPath() + "/config.txt"
-			if _, err = os.Stat(configPath); os.IsNotExist(err) {
-				if err != nil {
-					log.Fatal(err)
-				}
-			}
+	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
+		configPath = paths.GetExecDirPath() + "/config.txt"
+		if _, err = os.Stat(configPath); os.IsNotExist(err) && err != nil {
+			log.Fatal(err)
 		}
 	}
 
@@ -112,10 +108,8 @@ func GetCurrentProjectConfig() map[string]string {
 
 func GetProjectConfig(projectName string) map[string]string {
 	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		if err != nil {
-			log.Fatal(err)
-		}
+	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
+		log.Fatal(err)
 	}
 
 	config := ParseFile(configPath)

@@ -68,10 +68,8 @@ func IsHasConfig() bool {
 		selected := strings.TrimSpace(string(sentence))
 		if err != nil {
 			log.Fatal(err)
-		} else {
-			if selected != "y" {
-				log.Fatal("Exit")
-			}
+		} else if selected != "y" {
+			log.Fatal("Exit")
 		}
 
 		return true
