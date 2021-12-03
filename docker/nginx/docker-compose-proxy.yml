@@ -1,6 +1,7 @@
 version: "3.7"
 services:
   nginx:
+    container_name: aruntime-nginx-1
     build:
       context: ctx
       dockerfile: Dockerfile

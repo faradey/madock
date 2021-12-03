@@ -1,6 +1,7 @@
 version: "3.7"
 services:
   php:
+    container_name: {{{PROJECT_NAME}}}-php-1
     build:
       context: ctx
       dockerfile: php.Dockerfile
@@ -10,6 +11,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   nginx:
+    container_name: {{{PROJECT_NAME}}}-nginx-1
     build:
       context: ctx
       dockerfile: nginx.Dockerfile
@@ -21,6 +23,7 @@ services:
       - php
 
   db:
+    container_name: {{{PROJECT_NAME}}}-db-1
     command: mysqld --default-authentication-plugin=mysql_native_password
     build:
       context: ctx
@@ -30,6 +33,7 @@ services:
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
 
   node:
+    container_name: {{{PROJECT_NAME}}}-node-1
     build:
       context: ctx
       dockerfile: node.Dockerfile
@@ -42,6 +46,7 @@ services:
       - php
 
   elasticsearch:
+    container_name: {{{PROJECT_NAME}}}-elasticsearch-1
     build:
       context: ctx
       dockerfile: elasticsearch.Dockerfile
@@ -65,6 +70,7 @@ services:
       - elasticsearch{{{ELASTICSEARCH_ENABLE}}}
 
   redisdb:
+    container_name: {{{PROJECT_NAME}}}-redisdb-1
     build:
       context: ctx
       dockerfile: redis.Dockerfile
@@ -72,11 +78,13 @@ services:
       - redisdb{{{REDIS_ENABLE}}}
 
   rabbitmq:
+    container_name: {{{PROJECT_NAME}}}-rabbitmq-1
     image: rabbitmq:{{{RABBITMQ_VERSION}}}
     profiles:
       - rabbitmq{{{RABBITMQ_ENABLE}}}
 
   phpmyadmin:
+    container_name: {{{PROJECT_NAME}}}-phpmyadmin-1
     image: phpmyadmin/phpmyadmin:latest
     environment:
       PMA_HOST: db

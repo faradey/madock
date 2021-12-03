@@ -162,6 +162,7 @@ func makeDockerCompose(projectName string) {
 		str = strings.Replace(str, "{{{NGINX_PROJECT_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
 	}
 	str = strings.Replace(str, "{{{NETWORK_NUMBER}}}", strconv.Itoa(portNumber+90), -1)
+	str = strings.Replace(str, "{{{PROJECT_NAME}}}", projectName, -1)
 
 	resultFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml"
 	err = ioutil.WriteFile(resultFile, []byte(str), 0755)

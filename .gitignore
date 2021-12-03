@@ -12,5 +12,4 @@
 !/docker
 !/docker/*
 !/docker/**
-!/projects
 !/config.txt
