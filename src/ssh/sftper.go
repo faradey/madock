@@ -157,7 +157,7 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 		if err == nil {
 			sd, err := srcFile.Stat()
 			if err == nil {
-				fmt.Printf("  (saved %s)", string(((sd.Size()-fd.Size())/(sd.Size()*1.0))*100))
+				fmt.Printf("  (saved %s)", string(((sd.Size()-fd.Size())/(sd.Size()*1.0))*100.0))
 			} else {
 				fmt.Println(err)
 			}
