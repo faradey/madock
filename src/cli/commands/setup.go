@@ -70,7 +70,6 @@ func setupPhp(defVersion *string) {
 	}
 
 	invitation(defVersion)
-
 	waiter(defVersion, availableVersions)
 }
 
@@ -84,7 +83,6 @@ func setupDB(defVersion *string) {
 	}
 
 	invitation(defVersion)
-
 	waiter(defVersion, availableVersions)
 }
 
@@ -96,8 +94,8 @@ func setupComposer(defVersion *string) {
 	for index, ver := range availableVersions {
 		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
 	}
-	invitation(defVersion)
 
+	invitation(defVersion)
 	waiter(defVersion, availableVersions)
 }
 
@@ -111,7 +109,6 @@ func setupElastic(defVersion *string) {
 	}
 
 	invitation(defVersion)
-
 	waiter(defVersion, availableVersions)
 }
 
@@ -125,7 +122,6 @@ func setupRedis(defVersion *string) {
 	}
 
 	invitation(defVersion)
-
 	waiter(defVersion, availableVersions)
 }
 
@@ -175,7 +171,7 @@ func waiter(defVersion *string, availableVersions []string) {
 			fmt.Println("Your choice: " + *defVersion)
 		} else {
 			fmtc.WarningLn("Choose one of the options offered")
-			setupElastic(defVersion)
+			waiter(defVersion, availableVersions)
 		}
 	}
 }
