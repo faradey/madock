@@ -3,7 +3,9 @@ version: "3.7"
 services:
   php:
     volumes:
-      - ./src/pub/media/:/var/www/html/pub/media/
+      - ./src/pub/media/:/var/www/html/pub/media/:delegated
+      - - ../../.composer:/var/www/.composer:delegated
+          - ../../.composer:/var/www/html/var/composer_home:delegated
       - filesdata:/var/www/html
       #- composercache:/var/www/html/var/composer_home
 
