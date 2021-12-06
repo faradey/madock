@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/functions"
 	"github.com/faradey/madock/src/paths"
 	"github.com/foobaz/lossypng/lossypng"
 	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -18,61 +18,40 @@ import (
 )
 
 var countGoroutine int
-var sc *sftp.Client
-var sc2 *sftp.Client
-var sc3 *sftp.Client
-var sc4 *sftp.Client
+var sc []*sftp.Client
 
-func Sync(conn *ssh.Client, remoteDir string) {
-	fmt.Println("")
-	fmt.Println("Server connection...")
+func Sync(remoteDir string) {
 	var err error
-	sc, err = sftp.NewClient(conn)
-	if err != nil {
-		log.Fatal(err)
+	projectConfig := configs.GetCurrentProjectConfig()
+	maxProcs := functions.MaxParallelism() - 1
+	var scTemp *sftp.Client
+	isFirstConnect := false
+	for maxProcs > 0 {
+		conn := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
+		if isFirstConnect == false {
+			fmt.Println("")
+			fmt.Println("Server connection...")
+			isFirstConnect = true
+		}
+		defer Disconnect(conn)
+		scTemp, err = sftp.NewClient(conn)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer scTemp.Close()
+		sc = append(sc, scTemp)
+		maxProcs--
 	}
 
-	projectConfig := configs.GetCurrentProjectConfig()
-	conn2 := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
-	sc2, err = sftp.NewClient(conn2)
-	if err != nil {
-		fmt.Println(err)
-	}
-	conn3 := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
-	sc3, err = sftp.NewClient(conn3)
-	if err != nil {
-		fmt.Println(err)
-	}
-	conn4 := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
-	sc4, err = sftp.NewClient(conn4)
-	if err != nil {
-		fmt.Println(err)
-	}
 	fmt.Println("Synchronization is started")
 	countGoroutine = 0
 	ch := make(chan bool, 50)
 	listFiles(ch, remoteDir+"/pub/media/", "", 0)
-
-	defer sc.Close()
-	defer sc2.Close()
-	defer sc3.Close()
-	defer sc4.Close()
-	defer Disconnect(conn)
-	defer Disconnect(conn2)
-	defer Disconnect(conn3)
-	defer Disconnect(conn4)
 }
 
 func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) {
-	scp := sc
-	remainder := countGoroutine % 4
-	if remainder == 1 {
-		scp = sc2
-	} else if remainder == 2 {
-		scp = sc3
-	} else if remainder == 3 {
-		scp = sc4
-	}
+	remainder := countGoroutine % len(sc)
+	scp := sc[remainder]
 	projectPath := paths.GetRunDirPath()
 	files, err := scp.ReadDir(remoteDir + subdir)
 	if err != nil {
@@ -108,18 +87,11 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 			ext := strings.ToLower(filepath.Ext(name))
 			isImagesOnly := attr.Attributes["--images-only"]
 			if isImagesOnly == "" || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
-				scp := sc
-				remainder := indx % 4
-				if remainder == 1 {
-					scp = sc2
-				} else if remainder == 2 {
-					scp = sc3
-				} else if remainder == 3 {
-					scp = sc4
-				}
+				remainderDownload := indx % len(sc)
+				scpDownload := sc[remainderDownload]
 				countDownload++
 				go func() {
-					downloadFile(scp, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
+					downloadFile(scpDownload, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
 					chDownload <- true
 				}()
 

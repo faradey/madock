@@ -47,10 +47,10 @@ func Rebuild() {
 func Remote(flag, option string) {
 	if flag == "sync" {
 		projectConfig := configs.GetCurrentProjectConfig()
-		conn := ssh.Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
 		if option == "media" {
-			ssh.Sync(conn, projectConfig["SSH_SITE_ROOT_PATH"])
+			ssh.Sync(projectConfig["SSH_SITE_ROOT_PATH"])
 		} else if option == "db" {
+			conn := ssh.Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
 			ssh.DbDump(conn, projectConfig["SSH_SITE_ROOT_PATH"])
 		}
 	} else {
