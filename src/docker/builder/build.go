@@ -158,6 +158,7 @@ func UpNginx() {
 }
 
 func UpNginxWithBuild() {
+	dockerComposePull([]string{"-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -195,6 +196,10 @@ func upProjectWithBuild() {
 		"--no-deps",
 		"-d",
 	}
+	dockerComposePull([]string{"-f",
+		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
+		"-f",
+		composeFileOS})
 	cmd := exec.Command("docker-compose", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -212,6 +217,17 @@ func upProjectWithBuild() {
 		Cron("on", false)
 	} else {
 		Cron("off", false)
+	}
+}
+
+func dockerComposePull(composeFiles []string) {
+	composeFiles = append(composeFiles, "pull")
+	cmd := exec.Command("docker-compose", composeFiles...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
