@@ -44,6 +44,7 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 
 func DbDump(conn *ssh.Client, remoteDir string) {
 	defer conn.Close()
+	fmt.Println("")
 	fmt.Println("Dumping and downloading DB is started")
 	result := RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
 	if len(result) > 2 {
@@ -67,7 +68,8 @@ func DbDump(conn *ssh.Client, remoteDir string) {
 			log.Fatal(err)
 		}
 		result = RunCommand(conn, "rm "+remoteDir+"/"+dumpName)
-		fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db --import`")
+		fmt.Println("")
+		fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db import`")
 	} else {
 		fmt.Println("Failed to get database authentication data")
 	}
