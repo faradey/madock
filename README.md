@@ -66,20 +66,21 @@ madock
    * Install Docker on [CentOS](https://docs.docker.com/engine/installation/linux/docker-ce/centos/)
 2. Configure permissions
    * [Manage Docker as a non-root user](https://docs.docker.com/install/linux/linux-postinstall/)
-3. Install [Golang](https://go.dev/doc/install)
-4. Clone this repo and follow into folder "madock"
+3. Install [Docker-compose](https://docs.docker.com/compose/install/)
+4. Install [Golang](https://go.dev/doc/install)
+5. Clone this repo and follow into folder "madock"
 ```
 git clone git@github.com:faradey/madock.git
 ```
-5. Compile
+6. Compile
 ```
 go build -o madock
 ```
-6. Add `madock` bin into your `$PATH`
+7. Add `madock` bin into your `$PATH`
 ```
 ln -s absolute_path_to_your_madok_dir/madock /usr/local/bin/
 ```
-7. Open a new terminal tab/window and check that `madock` works
+8. Open a new terminal tab/window and check that `madock` works
 ```
 which madock
 madock
