@@ -16,10 +16,45 @@ This project is written in Golang and is distributed under a MIT License.
 
 ## Tested on
 * Linux (Ubuntu 20.04)
+* macOS (Monterey)
 
 ## Installation
-1. Clone this repo
+
+You need 5 things on your local machine: `git`, `docker`, `docker-compose`, `golang` and `madock`
+
+Follow the installation steps for your system.
+<details>
+<summary>Mac</summary>
+
+1. Install [Docker](https://docs.docker.com/docker-for-mac/install/)
+2. Install [Golang](https://go.dev/doc/install)
+3. Install [Mutagen](https://mutagen.io/documentation/introduction/installation)
+4. Clone this repo and follow into folder "madock"
 ```
 git clone git@github.com:faradey/madock.git
 ```
-2. 
+5. Compile
+```
+Run command below for Apple M1
+
+GOARCH=arm64 go build -o madock
+```
+```
+Run command below for Apple Intel
+
+go build -o madock
+```
+6. Add `madock` bin into your `$PATH`
+```
+ln -s absolute_path_to_your_madok_dir/madock /usr/local/bin/
+```
+7. Open a new terminal tab/window and check that `madock` works
+```
+which madock
+madock
+```
+8. Optionally you can also apply these performance tweaks
+    * [http://markshust.com/2018/01/30/performance-tuning-docker-mac](http://markshust.com/2018/01/30/performance-tuning-docker-mac)
+</details>
+
+## Project Setup
