@@ -57,4 +57,31 @@ madock
     * [http://markshust.com/2018/01/30/performance-tuning-docker-mac](http://markshust.com/2018/01/30/performance-tuning-docker-mac)
 </details>
 
+<details>
+<summary>Linux</summary>
+
+1. Install docker
+   * Install Docker on [Debian](https://docs.docker.com/engine/installation/linux/docker-ce/debian/)
+   * Install Docker on [Ubuntu](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/)
+   * Install Docker on [CentOS](https://docs.docker.com/engine/installation/linux/docker-ce/centos/)
+2. Install [Golang](https://go.dev/doc/install)
+3. Clone this repo and follow into folder "madock"
+```
+git clone git@github.com:faradey/madock.git
+```
+4. Compile
+```
+go build -o madock
+```
+5. Add `madock` bin into your `$PATH`
+```
+ln -s absolute_path_to_your_madok_dir/madock /usr/local/bin/
+```
+6. Open a new terminal tab/window and check that `madock` works
+```
+which madock
+madock
+```
+</details>
+
 ## Project Setup
