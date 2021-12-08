@@ -64,7 +64,7 @@ madock
    * Install Docker on [Debian](https://docs.docker.com/engine/installation/linux/docker-ce/debian/)
    * Install Docker on [Ubuntu](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/)
    * Install Docker on [CentOS](https://docs.docker.com/engine/installation/linux/docker-ce/centos/)
-2. 2. Configure permissions
+2. Configure permissions
    * [Manage Docker as a non-root user](https://docs.docker.com/install/linux/linux-postinstall/)
 3. Install [Golang](https://go.dev/doc/install)
 4. Clone this repo and follow into folder "madock"
