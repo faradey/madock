@@ -225,10 +225,7 @@ func dockerComposePull(composeFiles []string) {
 	cmd := exec.Command("docker-compose", composeFiles...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
+	cmd.Run()
 }
 
 func syncMutagen(projectName, containerName, usr string) {
