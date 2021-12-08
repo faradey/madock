@@ -44,6 +44,7 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 
 func DbDump(conn *ssh.Client, remoteDir string) {
 	defer conn.Close()
+	fmt.Println("Dumping and downloading DB is started")
 	result := RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
 	if len(result) > 2 {
 		dbAuthData := RemoteDbStruct{}
