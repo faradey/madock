@@ -27,6 +27,12 @@ func Setup() {
 		paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
 	}
 
+	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+	var projectConfig map[string]string
+	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
+		projectConfig = configs.GetProjectConfig(projectName)
+	}
+
 	toolsDefVersions := versions.GetVersions()
 
 	setupPhp(&toolsDefVersions.Php)
@@ -35,9 +41,9 @@ func Setup() {
 	setupElastic(&toolsDefVersions.Elastic)
 	setupRedis(&toolsDefVersions.Redis)
 	setupRabbitMQ(&toolsDefVersions.RabbitMQ)
-	setupHosts(&toolsDefVersions.Hosts)
+	setupHosts(&toolsDefVersions.Hosts, projectConfig)
 
-	configs.SetEnvForProject(toolsDefVersions)
+	configs.SetEnvForProject(toolsDefVersions, projectConfig)
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
 	fmtc.SuccessLn("Finish set up environment")
@@ -116,10 +122,15 @@ func setupRabbitMQ(defVersion *string) {
 	waiterAndProceed(defVersion, availableVersions)
 }
 
-func setupHosts(defVersion *string) {
+func setupHosts(defVersion *string, projectConfig map[string]string) {
 	projectName := paths.GetRunDirName()
-	host := projectName + ".loc"
-	setTitleAndRecommended("Hosts", &host)
+	host := projectName + ".loc:base"
+	if val, ok := projectConfig["HOSTS"]; ok && val != "" {
+		host = val
+	}
+	fmtc.TitleLn("Hosts")
+	fmt.Println("Input format: a.example.com:x_website_code b.example.com:y_website_code")
+	fmt.Println("Recommended host: " + host)
 	availableVersions := []string{host, "loc." + projectName + ".com"}
 	prepareVersions(availableVersions)
 	fmt.Println("Choose one of the suggested options or enter your hostname")
@@ -136,9 +147,6 @@ func setupHosts(defVersion *string) {
 			*defVersion = selected
 		}
 		fmt.Println("Your choice: " + *defVersion)
-	} else {
-		fmtc.WarningLn("Choose one of the options offered")
-		setupHosts(defVersion)
 	}
 }
 

@@ -10,16 +10,14 @@ import (
 
 var dbType = "MariaDB"
 
-func SetEnvForProject(defVersions versions.ToolsVersions) {
+func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[string]string) {
 	projectName := paths.GetRunDirName()
 	generalConf := GetGeneralConfig()
-	var projectConfig map[string]string
-	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 	config := new(ConfigLines)
+	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 	config.EnvFile = envFile
-	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
+	if len(projectConfig) > 0 {
 		config.IsEnv = true
-		projectConfig = GetProjectConfig(projectName)
 	}
 
 	config.AddOrSetLine("NGINX_PLACE", getOption("NGINX_PLACE", generalConf, projectConfig))
@@ -76,6 +74,11 @@ func SetEnvForProject(defVersions versions.ToolsVersions) {
 	}
 
 	config.AddOrSetLine("CRON_ENABLED", getOption("CRON_ENABLED", generalConf, projectConfig))
+	if val, ok := projectConfig["HOSTS"]; ok {
+		config.AddOrSetLine("HOSTS", val)
+	} else {
+		config.AddOrSetLine("HOSTS", defVersions.Hosts)
+	}
 
 	config.AddOrSetLine("SSH_AUTH_TYPE", getOption("SSH_AUTH_TYPE", generalConf, projectConfig))
 	config.AddOrSetLine("SSH_HOST", getOption("SSH_HOST", generalConf, projectConfig))
