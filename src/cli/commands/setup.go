@@ -138,7 +138,7 @@ func setupHosts(defVersion *string, projectConfig map[string]string) {
 	selected := waiter()
 	if selected == "" && host != "" {
 		*defVersion = host
-		fmt.Println("Your choice: " + *defVersion)
+		fmtc.SuccessLn("Your choice: " + *defVersion)
 	} else if selected != "" {
 		selectedInt, err := strconv.Atoi(selected)
 		if err == nil && len(availableVersions) >= selectedInt {
