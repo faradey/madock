@@ -146,7 +146,7 @@ func setupHosts(defVersion *string, projectConfig map[string]string) {
 		} else {
 			*defVersion = selected
 		}
-		fmt.Println("Your choice: " + *defVersion)
+		fmtc.SuccessLn("Your choice: " + *defVersion)
 	}
 }
 
@@ -192,10 +192,10 @@ func waiter() string {
 func setSelectedVersion(defVersion *string, availableVersions []string, selected string) {
 	selectedInt, err := strconv.Atoi(selected)
 	if selected == "" && *defVersion != "" {
-		fmt.Println("Your choice: " + *defVersion)
+		fmtc.SuccessLn("Your choice: " + *defVersion)
 	} else if selected != "" && err == nil && len(availableVersions) >= selectedInt {
 		*defVersion = availableVersions[selectedInt-1]
-		fmt.Println("Your choice: " + *defVersion)
+		fmtc.SuccessLn("Your choice: " + *defVersion)
 	} else {
 		fmtc.WarningLn("Choose one of the options offered")
 		waiterAndProceed(defVersion, availableVersions)
