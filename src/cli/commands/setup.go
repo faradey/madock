@@ -157,6 +157,7 @@ func prepareVersions(availableVersions []string) {
 }
 
 func setTitleAndRecommended(title string, recommended *string) {
+	fmt.Println("")
 	fmtc.TitleLn(title)
 	if *recommended != "" {
 		fmt.Println("Recommended version: " + *recommended)
