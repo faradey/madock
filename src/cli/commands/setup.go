@@ -131,7 +131,7 @@ func setupHosts(defVersion *string, projectConfig map[string]string) {
 	fmtc.TitleLn("Hosts")
 	fmt.Println("Input format: a.example.com:x_website_code b.example.com:y_website_code")
 	fmt.Println("Recommended host: " + host)
-	availableVersions := []string{host, "loc." + projectName + ".com:base"}
+	availableVersions := []string{projectName + ".loc:base", "loc." + projectName + ".com:base"}
 	prepareVersions(availableVersions)
 	fmt.Println("Choose one of the suggested options or enter your hostname")
 	fmt.Print("> ")
