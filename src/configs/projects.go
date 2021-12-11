@@ -74,7 +74,16 @@ func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[stri
 	}
 
 	config.AddOrSetLine("CRON_ENABLED", getOption("CRON_ENABLED", generalConf, projectConfig))
+
+	if !config.IsEnv {
+		config.AddEmptyLine()
+	}
+
 	config.AddOrSetLine("HOSTS", defVersions.Hosts)
+
+	if !config.IsEnv {
+		config.AddEmptyLine()
+	}
 
 	config.AddOrSetLine("SSH_AUTH_TYPE", getOption("SSH_AUTH_TYPE", generalConf, projectConfig))
 	config.AddOrSetLine("SSH_HOST", getOption("SSH_HOST", generalConf, projectConfig))
