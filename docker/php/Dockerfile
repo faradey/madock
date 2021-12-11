@@ -87,5 +87,9 @@ RUN mkdir /var/www/html/pub
 RUN chown www-data:www-data /var/www/html/pub
 RUN mkdir /var/www/html/pub/media
 RUN chown www-data:www-data /var/www/html/pub/media
+RUN mkdir /var/www/html/var
+RUN chown www-data:www-data /var/www/html/var
+RUN mkdir /var/www/html/var/composer_home
+RUN chown www-data:www-data /var/www/html/var/composer_home
 EXPOSE 9001 9003
 CMD "php-fpm{{{PHP_VERSION}}}"
