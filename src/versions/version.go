@@ -7,7 +7,7 @@ import (
 )
 
 type ToolsVersions struct {
-	Php, Db, Elastic, Composer, Redis, RabbitMQ, Xdebug string
+	Php, Db, Elastic, Composer, Redis, RabbitMQ, Xdebug, Hosts string
 }
 
 func GetVersions() ToolsVersions {

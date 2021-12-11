@@ -35,27 +35,10 @@ func Setup() {
 	setupElastic(&toolsDefVersions.Elastic)
 	setupRedis(&toolsDefVersions.Redis)
 	setupRabbitMQ(&toolsDefVersions.RabbitMQ)
+	setupHosts(&toolsDefVersions.Hosts)
 
 	configs.SetEnvForProject(toolsDefVersions)
-	/*
-		copyFile(paths.GetExecDirPath()+"/docker/docker-compose.yml", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/docker-compose.yml")
-
-		copyFile(paths.GetExecDirPath()+"/docker/nginx/conf/default.conf", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/conf/default.conf")
-		copyFile(paths.GetExecDirPath()+"/docker/nginx/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/nginx/Dockerfile")
-
-		copyFile(paths.GetExecDirPath()+"/docker/db/my.cnf", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/db/my.cnf")
-		copyFile(paths.GetExecDirPath()+"/docker/db/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/db/Dockerfile")
-
-		copyFile(paths.GetExecDirPath()+"/docker/elasticsearch/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/elasticsearch/Dockerfile")
-
-		copyFile(paths.GetExecDirPath()+"/docker/node/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/node/Dockerfile")
-
-		copyFile(paths.GetExecDirPath()+"/docker/php/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/php/Dockerfile")
-
-		copyFile(paths.GetExecDirPath()+"/docker/redis/Dockerfile", paths.GetExecDirPath()+"/projects/"+projectName+"/docker/redis/Dockerfile")
-	*/
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
-	/*paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/data/mysql")*/
 
 	fmtc.SuccessLn("Finish set up environment")
 }
@@ -70,7 +53,7 @@ func setupPhp(defVersion *string) {
 	}
 
 	invitation(defVersion)
-	waiter(defVersion, availableVersions)
+	waiterAndProceed(defVersion, availableVersions)
 }
 
 func setupDB(defVersion *string) {
@@ -83,7 +66,7 @@ func setupDB(defVersion *string) {
 	}
 
 	invitation(defVersion)
-	waiter(defVersion, availableVersions)
+	waiterAndProceed(defVersion, availableVersions)
 }
 
 func setupComposer(defVersion *string) {
@@ -96,7 +79,7 @@ func setupComposer(defVersion *string) {
 	}
 
 	invitation(defVersion)
-	waiter(defVersion, availableVersions)
+	waiterAndProceed(defVersion, availableVersions)
 }
 
 func setupElastic(defVersion *string) {
@@ -109,7 +92,7 @@ func setupElastic(defVersion *string) {
 	}
 
 	invitation(defVersion)
-	waiter(defVersion, availableVersions)
+	waiterAndProceed(defVersion, availableVersions)
 }
 
 func setupRedis(defVersion *string) {
@@ -122,7 +105,7 @@ func setupRedis(defVersion *string) {
 	}
 
 	invitation(defVersion)
-	waiter(defVersion, availableVersions)
+	waiterAndProceed(defVersion, availableVersions)
 }
 
 func setupRabbitMQ(defVersion *string) {
@@ -130,7 +113,33 @@ func setupRabbitMQ(defVersion *string) {
 	availableVersions := []string{"3.8", "3.7"}
 	prepareVersions(availableVersions)
 	invitation(defVersion)
-	waiter(defVersion, availableVersions)
+	waiterAndProceed(defVersion, availableVersions)
+}
+
+func setupHosts(defVersion *string) {
+	projectName := paths.GetRunDirName()
+	host := projectName + ".loc"
+	setTitleAndRecommended("Hosts", &host)
+	availableVersions := []string{host, "loc." + projectName + ".com"}
+	prepareVersions(availableVersions)
+	fmt.Println("Choose one of the suggested options or enter your hostname")
+	fmt.Print("> ")
+	selected := waiter()
+	if selected == "" && host != "" {
+		*defVersion = host
+		fmt.Println("Your choice: " + *defVersion)
+	} else if selected != "" {
+		selectedInt, err := strconv.Atoi(selected)
+		if err == nil && len(availableVersions) >= selectedInt {
+			*defVersion = availableVersions[selectedInt-1]
+		} else {
+			*defVersion = selected
+		}
+		fmt.Println("Your choice: " + *defVersion)
+	} else {
+		fmtc.WarningLn("Choose one of the options offered")
+		setupHosts(defVersion)
+	}
 }
 
 func prepareVersions(availableVersions []string) {
@@ -156,23 +165,32 @@ func invitation(ver *string) {
 	fmt.Print("> ")
 }
 
-func waiter(defVersion *string, availableVersions []string) {
+func waiterAndProceed(defVersion *string, availableVersions []string) {
+	selected := waiter()
+	setSelectedVersion(defVersion, availableVersions, selected)
+}
+
+func waiter() string {
 	buf := bufio.NewReader(os.Stdin)
 	sentence, err := buf.ReadBytes('\n')
-	selected := strings.TrimSpace(string(sentence))
 	if err != nil {
 		log.Fatalln(err)
+	}
+	selected := strings.TrimSpace(string(sentence))
+
+	return selected
+}
+
+func setSelectedVersion(defVersion *string, availableVersions []string, selected string) {
+	selectedInt, err := strconv.Atoi(selected)
+	if selected == "" && *defVersion != "" {
+		fmt.Println("Your choice: " + *defVersion)
+	} else if selected != "" && err == nil && len(availableVersions) >= selectedInt {
+		*defVersion = availableVersions[selectedInt-1]
+		fmt.Println("Your choice: " + *defVersion)
 	} else {
-		selectedInt, err := strconv.Atoi(selected)
-		if selected == "" && *defVersion != "" {
-			fmt.Println("Your choice: " + *defVersion)
-		} else if selected != "" && err == nil && len(availableVersions) >= selectedInt {
-			*defVersion = availableVersions[selectedInt-1]
-			fmt.Println("Your choice: " + *defVersion)
-		} else {
-			fmtc.WarningLn("Choose one of the options offered")
-			waiter(defVersion, availableVersions)
-		}
+		fmtc.WarningLn("Choose one of the options offered")
+		waiterAndProceed(defVersion, availableVersions)
 	}
 }
 
