@@ -9,29 +9,9 @@ import (
 func PrepareDirsForProject() {
 	projectName := GetRunDirName()
 	projectPath := GetExecDirPath() + "/projects/" + projectName
-
-	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
-		err = os.Mkdir(projectPath, 0755)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	checkPath := projectPath + "/docker"
-	if _, err := os.Stat(checkPath); os.IsNotExist(err) {
-		err = os.Mkdir(checkPath, 0755)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	checkPath = projectPath + "/docker/nginx"
-	if _, err := os.Stat(checkPath); os.IsNotExist(err) {
-		err = os.Mkdir(checkPath, 0755)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	MakeDirsByPath(projectPath)
+	MakeDirsByPath(projectPath + "/docker")
+	MakeDirsByPath(projectPath + "/docker/nginx")
 }
 
 func MakeDirsByPath(val string) string {
