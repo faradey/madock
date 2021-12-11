@@ -114,8 +114,13 @@ func makePhpDockerfile(projectName string) {
 }
 
 func makeDockerCompose(projectName string) {
+	overrideFile := runtime.GOOS
+	projectConf := configs.GetCurrentProjectConfig()
+	if projectConf["MUTAGEN_USE"] == "false" {
+		overrideFile = runtime.GOOS + "_mutagen_off"
+	}
 	dockerDefFile := getDockerFile(projectName, "/docker/docker-compose.yml")
-	dockerDefFileForOS := getDockerFile(projectName, "/docker/docker-compose."+runtime.GOOS+".yml")
+	dockerDefFileForOS := getDockerFile(projectName, "/docker/docker-compose."+overrideFile+".yml")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -131,7 +136,6 @@ func makeDockerCompose(projectName string) {
 
 	portNumberRanged := (portNumber - 1) * 20
 	hostName := "loc." + projectName + ".com"
-	projectConf := configs.GetCurrentProjectConfig()
 	if val, ok := projectConf["HOSTS"]; ok {
 		hosts := strings.Split(val, " ")
 		if len(hosts) > 0 {

@@ -34,7 +34,8 @@ func prepareConfigs() {
 
 func Down() {
 	projectName := paths.GetRunDirName()
-	if runtime.GOOS == "darwin" {
+	projectConf := configs.GetCurrentProjectConfig()
+	if runtime.GOOS == "darwin" && projectConf["MUTAGEN_USE"] != "false" {
 		clearMutagen(projectName, "php")
 	}
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
@@ -100,7 +101,7 @@ func Start() {
 			Cron("off", false)
 		}
 
-		if runtime.GOOS == "darwin" {
+		if runtime.GOOS == "darwin" && projectConfig["MUTAGEN_USE"] != "false" {
 			syncMutagen(projectName, "php", "www-data")
 		}
 	}
@@ -108,7 +109,8 @@ func Start() {
 
 func Stop() {
 	projectName := paths.GetRunDirName()
-	if runtime.GOOS == "darwin" {
+	projectConf := configs.GetCurrentProjectConfig()
+	if runtime.GOOS == "darwin" && projectConf["MUTAGEN_USE"] != "false" {
 		clearMutagen(projectName, "php")
 	}
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
@@ -208,11 +210,11 @@ func upProjectWithBuild() {
 		log.Fatal(err)
 	}
 
-	if runtime.GOOS == "darwin" {
+	projectConfig := configs.GetCurrentProjectConfig()
+	if runtime.GOOS == "darwin" && projectConfig["MUTAGEN_USE"] != "false" {
 		syncMutagen(projectName, "php", "www-data")
 	}
 
-	projectConfig := configs.GetCurrentProjectConfig()
 	if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
 		Cron("on", false)
 	} else {

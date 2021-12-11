@@ -100,14 +100,19 @@ func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[stri
 
 func GetGeneralConfig() map[string]string {
 	configPath := paths.GetExecDirPath() + "/projects/config.txt"
-	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
-		configPath = paths.GetExecDirPath() + "/config.txt"
-		if _, err = os.Stat(configPath); os.IsNotExist(err) && err != nil {
-			log.Fatal(err)
-		}
+	generalConfig := make(map[string]string)
+	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
+		generalConfig = ParseFile(configPath)
 	}
 
-	return ParseFile(configPath)
+	configPath = paths.GetExecDirPath() + "/config.txt"
+	origGeneralConfig := make(map[string]string)
+	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
+		origGeneralConfig = ParseFile(configPath)
+	}
+	ConfigMapping(origGeneralConfig, generalConfig)
+
+	return generalConfig
 }
 
 func GetCurrentProjectConfig() map[string]string {
