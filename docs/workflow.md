@@ -54,7 +54,8 @@ madock node grunt watch
 ```
   madock help
  ```
-This command show you follow items:
+
+This command shows you the following items:
 
 * `bash`    Connect into container using bash
 
