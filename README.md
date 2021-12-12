@@ -110,3 +110,22 @@ See detailed documentation about development workflow with madock
 * [PHPStorm + Xdebug Setup](docs/xdebug_phpstorm.md)
 * [Docker images list](docs/docker_images.md)
 * [Other customizations](docs/customizations.md)
+
+## Donations
+If you find it useful and want to invite us for a beer, just click on the donation button. Thanks! 🍺
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/faradey)
+
+## Resources
+This project has been possible thanks to the following resources:
+
+* [docker-magento](https://github.com/markoshust/docker-magento)
+* [dockergento](https://github.com/ModestCoders/magento2-dockergento)
+* [mutagen](https://mutagen.io/)
+
+## License
+
+* [The MIT License](https://opensource.org/licenses/MIT)
+
+## Copyright
+(c) faradey
