@@ -8,15 +8,13 @@ The following guide shows you the normal development workflow using madock.
 madock start
 ```
 
-#### 2. Install/update dependecies with composer
+#### 2. Composer commands
 
 ```
-madock composer <install/update>
+madock composer <command>
 ```
 
-#### 3. Develop code normally inside `magento/app`
-
-While developing you might need to execute magento commands like `cache:flush` for example
+#### 3. Magento commands
 
 ```
 madock magento <command>
@@ -25,6 +23,7 @@ madock magento <command>
 #### 4. Working on frontend
 
 ```
+madock node <command>
 madock node grunt exec:<theme>
 madock node grunt watch
 ```
@@ -50,3 +49,104 @@ madock node grunt watch
   ```
   madock debug off
   ```
+
+#### 6. help
+```
+  madock help
+ ```
+This command show you follow items:
+
+* `bash`    Connect into container using bash
+
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[name of container]` Name of container. Optional. Default container: php. For example: php, node, db, nginx
+
+
+* `composer`  Execute composer inside php container
+            
+            
+* `config`  Viewing and changing the project configuration
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`show`    List all project environment settings
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`set`     Set parameters
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--hosts` Domains and code of project websites. Separated by commas. For example: one.example.com:base two.example.com:two_code. Optional
+               
+         
+* `cron`    Enable / disable cron
+
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`on`  Enable cron
+
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`off`   Disable cron
+              
+          
+* `db`      Database import / export
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`import`  Database import
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`export`  Database export
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`soft-clean`      Soft cleanup of the database from unnecessary garbage.
+                     
+   
+* `debug`   Enable / disable xdebug
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`on`      Enable xdebug
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`off`     Disable xdebug
+                    
+    
+* `help`    Displays help for commands
+                      
+  
+* `logs`    View logs of a container
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[name of container]`     Container name. Optional. Default container: php. Example: php
+                        
+
+* `magento` Execute Magento command inside php container
+                        
+
+* `node`    Execute NodeJs command inside php container
+                        
+
+* `proxy`   Actions on the proxy server
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`start`   Start a proxy server
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`stop`    Stop a proxy server
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`restart` Restart a proxy server 
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rebuild` Rebuild a proxy server
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`prune`   Prune a proxy server
+                        
+
+* `prune`   Stop and delete running project containers
+                        
+
+* `rebuild` Recreation of all containers in the project. All containers are re-created and the images from the Dockerfile are rebuilt
+                        
+
+* `remote`  Performing actions on a remote server
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`sync`    Synchronization media, DB, etc.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`media`   Synchronization media files from remote host
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--images-only`   Synchronization images only
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--compress`      Apply lossy compression. Images will have weight equals 30% of original
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`db`      Create and download dump of DB from remote host
+                        
+
+* `restart` Restarting all containers and services. Stop all containers and start them again
+                        
+
+* `setup`   Initial project setup
+                        
+
+* `start`   Starting all containers and services
+                        
+
+* `stop`    Stopping all containers and services
