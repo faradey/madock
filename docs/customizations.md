@@ -21,4 +21,5 @@ Default list of properties that can be customised:
 
 Default list of properties that can be customised:
 
-* See [docker/docker-compose.yml](../docker/docker-compose.yml)
+* [docker/docker-compose.yml](../docker/docker-compose.yml)
+* etc.
