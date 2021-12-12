@@ -115,7 +115,7 @@ See detailed documentation about development workflow with madock
 ## Donations
 If you find it useful and want to invite us for a beer, just click on the donation button. Thanks!
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/faradey){:target="_blank"}
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/faradey)
 
 ## Resources
 This project has been possible thanks to the following resources:
