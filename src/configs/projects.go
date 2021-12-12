@@ -20,7 +20,6 @@ func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[stri
 		config.IsEnv = true
 	}
 
-	config.AddOrSetLine("NGINX_PLACE", getOption("NGINX_PLACE", generalConf, projectConfig))
 	config.AddOrSetLine("PHP_VERSION", defVersions.Php)
 	config.AddOrSetLine("PHP_COMPOSER_VERSION", defVersions.Composer)
 	config.AddOrSetLine("PHP_TZ", getOption("PHP_TZ", generalConf, projectConfig))
