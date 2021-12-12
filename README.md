@@ -104,3 +104,9 @@ sudo vim /etc/hosts
 ### Workflow
 See detailed documentation about development workflow with madock
 * [Development Workflow](docs/workflow.md)
+
+## More Documentation
+
+* [PHPStorm + Xdebug Setup](docs/xdebug_phpstorm.md)
+* [Docker images list](docs/docker_images.md)
+* [Other customizations](docs/customizations.md)
