@@ -13,3 +13,6 @@
 !/docker/*
 !/docker/**
 !/config.txt
+!/docs
+!/docs/*
+!/docs/**

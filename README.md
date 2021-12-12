@@ -88,3 +88,19 @@ madock
 </details>
 
 ## Project Setup
+```
+cd <your_project>
+madock setup
+```
+
+## Usage
+### Start Application
+```
+madock start
+madock composer install
+sudo vim /etc/hosts
+// Add -> 127.0.0.1 <your-domain>
+```
+### Workflow
+See detailed documentation about development workflow with madock
+* [Development Workflow](docs/workflow.md)
