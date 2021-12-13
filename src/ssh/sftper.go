@@ -90,6 +90,7 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 				scpDownload := sc[remainderDownload]
 				countDownload++
 				go func() {
+					countGoroutine++
 					downloadFile(scpDownload, remoteDir+subdirName, projectPath+"/pub/media/"+subdirName)
 					chDownload <- true
 				}()
@@ -121,7 +122,7 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 				}
 			}
 		}
-		fmt.Println("Synchronization is completed")
+		fmt.Println("\n" + "Synchronization is completed")
 	} else {
 		ch <- true
 	}
@@ -133,6 +134,7 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 	ext := strings.ToLower(filepath.Ext(remoteFile))
 	// Note: SFTP To Go doesn't support O_RDWR mode
 	srcFile, err := scp.OpenFile(remoteFile, (os.O_RDONLY))
+	defer func() { countGoroutine-- }()
 	if err != nil {
 		fmt.Println("\n" + "Unable to open remote file: " + err.Error() + "\n")
 		return
