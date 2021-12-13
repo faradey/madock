@@ -41,7 +41,7 @@ func Sync(remoteDir string) {
 		maxProcs--
 	}
 
-	fmt.Println("Synchronization is started")
+	fmt.Println("\n" + "Synchronization is started")
 	countGoroutine = 0
 	ch := make(chan bool, 50)
 	listFiles(ch, remoteDir+"/pub/media/", "", 0)
@@ -61,27 +61,28 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 	var name string
 	for indx, f := range files {
 		name = f.Name()
+		subdirName := strings.Trim(subdir+name, "/")
 		if f.IsDir() {
-			if subdir+name != "catalog/product/cache" &&
-				subdir+name != "cache" &&
-				subdir+name != "images/cache" &&
-				subdir+name != "sitemap" &&
-				subdir+name != "tmp" &&
-				subdir+name != "trashcan" &&
-				!strings.Contains(subdir+name+"/", "/cache/") {
-				if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
-					os.Mkdir(projectPath+"/pub/media/"+subdir+name, 0775)
+			if subdirName != "catalog/product/cache" &&
+				subdirName != "cache" &&
+				subdirName != "images/cache" &&
+				subdirName != "sitemap" &&
+				subdirName != "tmp" &&
+				subdirName != "trashcan" &&
+				!strings.Contains(subdirName+"/", "/cache/") {
+				if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
+					os.Mkdir(projectPath+"/pub/media/"+subdirName, 0775)
 				}
 
 				if countGoroutine <= 5 || isFirst == 0 {
 					countGoroutine++
-					go listFiles(ch, remoteDir, subdir+name+"/", isFirst+1)
+					go listFiles(ch, remoteDir, subdirName+"/", isFirst+1)
 				} else {
 					countGoroutine++
-					listFiles(ch, remoteDir, subdir+name+"/", isFirst+1)
+					listFiles(ch, remoteDir, subdirName+"/", isFirst+1)
 				}
 			}
-		} else if _, err := os.Stat(projectPath + "/pub/media/" + subdir + name); os.IsNotExist(err) {
+		} else if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
 			ext := strings.ToLower(filepath.Ext(name))
 			isImagesOnly := attr.Attributes["--images-only"]
 			if isImagesOnly == "" || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
@@ -89,7 +90,7 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 				scpDownload := sc[remainderDownload]
 				countDownload++
 				go func() {
-					downloadFile(scpDownload, remoteDir+"/"+subdir+name, projectPath+"/pub/media/"+subdir+name)
+					downloadFile(scpDownload, remoteDir+"/"+subdirName, projectPath+"/pub/media/"+subdirName)
 					chDownload <- true
 				}()
 
