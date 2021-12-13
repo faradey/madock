@@ -201,10 +201,10 @@ func compressJpg(r io.Reader, w io.Writer) bool {
 
 func compressPng(r io.Reader, w io.Writer) bool {
 	img, err := png.Decode(r)
-	img = lossypng.Compress(img, 0, 20)
 	if err != nil {
 		return false
 	}
+	img = lossypng.Compress(img, 0, 20)
 	err = png.Encode(w, img)
 	if err != nil {
 		return false
