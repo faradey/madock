@@ -131,10 +131,10 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 }
 
 func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
+	defer func() { countGoroutine-- }()
 	ext := strings.ToLower(filepath.Ext(remoteFile))
 	// Note: SFTP To Go doesn't support O_RDWR mode
 	srcFile, err := scp.OpenFile(remoteFile, (os.O_RDONLY))
-	defer func() { countGoroutine-- }()
 	if err != nil {
 		fmt.Println("\n" + "Unable to open remote file: " + err.Error() + "\n")
 		return
