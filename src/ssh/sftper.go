@@ -133,14 +133,14 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 	// Note: SFTP To Go doesn't support O_RDWR mode
 	srcFile, err := scp.OpenFile(remoteFile, (os.O_RDONLY))
 	if err != nil {
-		fmt.Println("Unable to open remote file: " + err.Error() + "\n")
+		fmt.Println("\n" + "Unable to open remote file: " + err.Error() + "\n")
 		return
 	}
 	defer srcFile.Close()
 
 	dstFile, err := os.Create(localFile)
 	if err != nil {
-		fmt.Println("Unable to open local file: " + err.Error() + "\n")
+		fmt.Println("\n" + "Unable to open local file: " + err.Error() + "\n")
 		return
 	}
 	defer dstFile.Close()
@@ -157,7 +157,7 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 	if !isCompressed {
 		_, err = io.Copy(dstFile, srcFile)
 		if err != nil {
-			fmt.Println("Unable to download remote file " + remoteFile + ": " + err.Error() + "\n")
+			fmt.Println("\n" + "Unable to download remote file " + remoteFile + ": " + err.Error() + "\n")
 		} else {
 			fmt.Printf("\n%s", localFile)
 		}
