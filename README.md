@@ -48,7 +48,7 @@ go build -o madock
 ```
 6. Add `madock` bin into your `$PATH`
 ```
-ln -s absolute_path_to_your_madok_dir/madock /usr/local/bin/
+ln -s absolute_path_to_your_madock_dir/madock /usr/local/bin/
 ```
 7. Open a new terminal tab/window and check that `madock` works
 ```
@@ -81,7 +81,7 @@ go build -o madock
 ```
 7. Add `madock` bin into your `$PATH`
 ```
-ln -s absolute_path_to_your_madok_dir/madock /usr/local/bin/
+ln -s absolute_path_to_your_madock_dir/madock /usr/local/bin/
 ```
 8. Open a new terminal tab/window and check that `madock` works
 ```
