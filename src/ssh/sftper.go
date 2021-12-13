@@ -92,7 +92,7 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 				countGoroutine++
 				go func() {
 					downloadFile(scpDownload, remoteDir+subdirName, projectPath+"/pub/media/"+subdirName)
-					countGoroutine--
+					ch <- true
 					chDownload <- true
 				}()
 
