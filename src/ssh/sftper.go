@@ -157,7 +157,7 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 	if !isCompressed {
 		_, err = io.Copy(dstFile, srcFile)
 		if err != nil {
-			fmt.Println("Unable to download remote file: " + err.Error() + "\n")
+			fmt.Println("Unable to download remote file " + remoteFile + ": " + err.Error() + "\n")
 		} else {
 			fmt.Printf("\n%s", localFile)
 		}
