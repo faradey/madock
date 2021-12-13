@@ -6,10 +6,8 @@ import (
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/functions"
 	"github.com/faradey/madock/src/paths"
-	"github.com/foobaz/lossypng/lossypng"
 	"github.com/pkg/sftp"
 	"image/jpeg"
-	"image/png"
 	"io"
 	"log"
 	"os"
@@ -153,8 +151,6 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 		switch ext {
 		case ".jpg", ".jpeg":
 			isCompressed = compressJpg(srcFile, dstFile)
-		case ".png":
-			isCompressed = compressPng(srcFile, dstFile)
 		}
 	}
 
@@ -193,19 +189,6 @@ func compressJpg(r io.Reader, w io.Writer) bool {
 	}
 	q := jpeg.Options{Quality: 30}
 	err = jpeg.Encode(w, img, &q)
-	if err != nil {
-		return false
-	}
-	return true
-}
-
-func compressPng(r io.Reader, w io.Writer) bool {
-	img, err := png.Decode(r)
-	if err != nil {
-		return false
-	}
-	img = lossypng.Compress(img, 0, 20)
-	err = png.Encode(w, img)
 	if err != nil {
 		return false
 	}
