@@ -131,9 +131,12 @@ func GetProjectConfig(projectName string) map[string]string {
 }
 
 func getOption(name string, generalConfig, projectConfig map[string]string) string {
-	if val, ok := projectConfig[name]; ok {
+	if val, ok := projectConfig[name]; ok && val != "" {
 		return strings.TrimSpace(val)
 	}
 
-	return strings.TrimSpace(generalConfig[name])
+	if val, ok := generalConfig[name]; ok && val != "" {
+		return strings.TrimSpace(generalConfig[name])
+	}
+	return ""
 }
