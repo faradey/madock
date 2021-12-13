@@ -109,9 +109,9 @@ func GetGeneralConfig() map[string]string {
 	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
 		origGeneralConfig = ParseFile(configPath)
 	}
-	ConfigMapping(generalConfig, origGeneralConfig)
+	GeneralConfigMapping(origGeneralConfig, generalConfig)
 
-	return origGeneralConfig
+	return generalConfig
 }
 
 func GetCurrentProjectConfig() map[string]string {

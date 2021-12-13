@@ -86,6 +86,16 @@ func IsHasNotConfig() bool {
 	return false
 }
 
+func GeneralConfigMapping(mainConf map[string]string, targetConf map[string]string) {
+	if len(mainConf) > 0 {
+		for index, val := range mainConf {
+			if _, ok := targetConf[index]; !ok {
+				targetConf[index] = val
+			}
+		}
+	}
+}
+
 func ConfigMapping(mainConf map[string]string, targetConf map[string]string) {
 	if len(targetConf) > 0 && len(mainConf) > 0 {
 		for index, val := range mainConf {
