@@ -92,6 +92,7 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 				countGoroutine++
 				go func() {
 					downloadFile(scpDownload, remoteDir+subdirName, projectPath+"/pub/media/"+subdirName)
+					countGoroutine--
 					chDownload <- true
 				}()
 
@@ -131,7 +132,6 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 }
 
 func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
-	defer func() { countGoroutine-- }()
 	ext := strings.ToLower(filepath.Ext(remoteFile))
 	// Note: SFTP To Go doesn't support O_RDWR mode
 	srcFile, err := scp.OpenFile(remoteFile, (os.O_RDONLY))
