@@ -89,8 +89,8 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 				remainderDownload := indx % len(sc)
 				scpDownload := sc[remainderDownload]
 				countDownload++
+				countGoroutine++
 				go func() {
-					countGoroutine++
 					downloadFile(scpDownload, remoteDir+subdirName, projectPath+"/pub/media/"+subdirName)
 					chDownload <- true
 				}()
