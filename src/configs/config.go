@@ -89,7 +89,7 @@ func IsHasNotConfig() bool {
 func GeneralConfigMapping(mainConf map[string]string, targetConf map[string]string) {
 	if len(mainConf) > 0 {
 		for index, val := range mainConf {
-			if _, ok := targetConf[index]; !ok {
+			if v, ok := targetConf[index]; !ok || v == "" {
 				targetConf[index] = val
 			}
 		}
