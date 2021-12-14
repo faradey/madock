@@ -20,8 +20,14 @@ func Setup() {
 	if configs.IsHasConfig() {
 		builder.Down()
 	}
-	fmtc.SuccessLn("Start set up environment")
 	projectName := paths.GetRunDirName()
+
+	if strings.Contains(projectName, ".") || strings.Contains(projectName, " ") {
+		fmtc.ErrorLn("The project folder name cannot contain a period or space")
+		return
+	}
+
+	fmtc.SuccessLn("Start set up environment")
 
 	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
 		paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
@@ -46,7 +52,10 @@ func Setup() {
 	configs.SetEnvForProject(toolsDefVersions, projectConfig)
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
-	fmtc.SuccessLn("Finish set up environment")
+	fmtc.SuccessLn("\n" + "Finish set up environment")
+	fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order " +
+		"\nto synchronize the database and media files. Enter SSH data in \n" +
+		paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 }
 
 func setupPhp(defVersion *string) {
