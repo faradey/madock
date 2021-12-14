@@ -234,6 +234,8 @@ func syncMutagen(projectName, containerName, usr string) {
 		"-i", "/pub/media",
 		"-i", "/generated",
 		"-i", "/var/cache",
+		"-i", "/var/view_preprocessed",
+		"-i", "/phpserver",
 		"-i", "/.idea",
 		paths.GetRunDirPath(),
 		"docker://"+projectName+"-"+containerName+"-1/var/www/html",
