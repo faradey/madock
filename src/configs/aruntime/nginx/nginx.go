@@ -60,6 +60,7 @@ func makeProxy() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	str := string(b)
 	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 	for _, name := range projectsNames {
