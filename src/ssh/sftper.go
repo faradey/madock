@@ -43,7 +43,7 @@ func Sync(remoteDir string) {
 
 	fmt.Println("\n" + "Synchronization is started")
 	countGoroutine = 0
-	ch := make(chan bool, 50)
+	ch := make(chan bool, 150)
 	listFiles(ch, remoteDir+"/pub/media/", "", 0)
 }
 
@@ -57,7 +57,7 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 	}
 
 	countDownload := 0
-	chDownload := make(chan bool, 50)
+	chDownload := make(chan bool, 150)
 	var name string
 	for indx, f := range files {
 		name = f.Name()
