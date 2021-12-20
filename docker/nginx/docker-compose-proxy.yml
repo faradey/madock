@@ -7,6 +7,4 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./ctx/proxy.conf:/etc/nginx/nginx.conf:delegated
-    ports:
-      - 80:80
     network_mode: host
