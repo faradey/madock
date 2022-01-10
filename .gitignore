@@ -16,3 +16,4 @@
 !/docs
 !/docs/*
 !/docs/**
+.DS_Store
