@@ -21,6 +21,7 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - php
+    network_mode: host
 
   db:
     container_name: {{{PROJECT_NAME}}}-db-1
