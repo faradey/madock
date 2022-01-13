@@ -113,7 +113,7 @@ See detailed documentation about development workflow with madock
 * [PHPStorm + Xdebug Setup](docs/xdebug_phpstorm.md)
 * [Docker images list](docs/docker_images.md)
 * [Customizations](docs/customizations.md)
-* [Database import, export, synchronization](docs/database.md)
+* [Database import, export, synchronization, phpmyadmin](docs/database.md)
 * [Media synchronization](docs/media.md)
 
 ## Donations
