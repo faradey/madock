@@ -112,7 +112,9 @@ See detailed documentation about development workflow with madock
 
 * [PHPStorm + Xdebug Setup](docs/xdebug_phpstorm.md)
 * [Docker images list](docs/docker_images.md)
-* [Other customizations](docs/customizations.md)
+* [Customizations](docs/customizations.md)
+* [Database import, export, synchronization](docs/database.md)
+* [Media synchronization](docs/media.md)
 
 ## Donations
 If you find it useful and want to invite us for a beer, just click on the donation button. Thanks!
