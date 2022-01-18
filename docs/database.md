@@ -9,7 +9,7 @@ List of ssh options
 * SSH_KEY_PATH
 * SSH_SITE_ROOT_PATH
 * SSH_AUTH_TYPE (key or password)
-* SSH_PASSWORD (enter only if you do not use a public key)
+* SSH_PASSWORD (enter only if you do not use a ssh key)
 
 Run the following commands
 ```
