@@ -6,3 +6,7 @@ And run the command in the project folder
 ```
 madock remote sync media
 ```
+or
+```
+madock remote sync media --images-only --compress
+```
