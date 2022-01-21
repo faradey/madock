@@ -3,7 +3,7 @@ Local development environment based on Docker for Magento
 
 ## Description
 `madock` is a local Docker-based environment that allows you to run Magento2 projects.
-This project is written on Golang and is distributed under a MIT License.
+This project is written on Golang and it is distributed under a MIT License.
 
 ## Key Features
 * Automatic project setup
