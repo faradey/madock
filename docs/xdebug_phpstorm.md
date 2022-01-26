@@ -15,7 +15,7 @@ madock debug on
 
 2. `PHPStorm > Preferences > PHP > Servers`
 
-    * Name: `localhost`
+    * Name: `[your-domain].[xxx]` (for example world.loc)
     * Port: 80
     * Mapping: `/Users/<username>/Sites/<project> -> /var/www/html`
 
