@@ -4,11 +4,6 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
-	"github.com/faradey/madock/src/cli/fmtc"
-	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/configs/aruntime/nginx"
-	"github.com/faradey/madock/src/configs/aruntime/project"
-	"github.com/faradey/madock/src/paths"
 	"io"
 	"log"
 	"os"
@@ -17,6 +12,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/faradey/madock/src/cli/fmtc"
+	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/configs/aruntime/nginx"
+	"github.com/faradey/madock/src/configs/aruntime/project"
+	"github.com/faradey/madock/src/paths"
 )
 
 func UpWithBuild() {
@@ -238,6 +239,7 @@ func syncMutagen(projectName, containerName, usr string) {
 		"-i", "/var/page_cache",
 		"-i", "/var/tmp",
 		"-i", "/var/vendor",
+		"-i", "/var/composer_home",
 		"-i", "/phpserver",
 		"-i", "/.idea",
 		paths.GetRunDirPath(),
