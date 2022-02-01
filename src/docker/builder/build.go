@@ -250,6 +250,8 @@ func syncMutagen(projectName, containerName, usr string) {
 	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)
+	} else {
+		fmt.Println("Synchronization enabled")
 	}
 }
 
@@ -461,7 +463,6 @@ func Cron(flag string, manual bool) {
 	var bOut io.Writer
 	var bErr io.Writer
 	if flag == "on" {
-		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "start")
 		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:install &&  php bin/magento cron:run")
 		cmdSub.Stdout = os.Stdout
 		cmdSub.Stderr = os.Stderr
@@ -469,12 +470,11 @@ func Cron(flag string, manual bool) {
 		if err != nil {
 			log.Fatal(err)
 		}
-	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "stop")
-		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:remove")
-		cmdSub.Stdout = bOut
-		cmdSub.Stderr = bErr
-		err := cmdSub.Run()
+
+		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "start")
+		cmd.Stdout = bOut
+		cmd.Stderr = bErr
+		err = cmd.Run()
 		if manual == true {
 			if err != nil {
 				fmt.Println(bErr)
@@ -483,18 +483,40 @@ func Cron(flag string, manual bool) {
 				fmt.Println(bOut)
 			}
 		}
-	}
-	cmd.Stdout = bOut
-	cmd.Stderr = bErr
-	err := cmd.Run()
-	if manual == true {
-		if err != nil {
-			fmt.Println(bErr)
-			log.Fatal(err)
-		} else {
-			fmt.Println(bOut)
+	} else {
+		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "status")
+		cmd.Stdout = bOut
+		cmd.Stderr = bErr
+		err := cmd.Run()
+		if err == nil {
+			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:remove")
+			cmdSub.Stdout = bOut
+			cmdSub.Stderr = bErr
+			err := cmdSub.Run()
+			if manual == true {
+				if err != nil {
+					fmt.Println(bErr)
+					log.Fatal(err)
+				} else {
+					fmt.Println(bOut)
+				}
+			}
+
+			cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "stop")
+			cmd.Stdout = bOut
+			cmd.Stderr = bErr
+			err = cmd.Run()
+			if manual == true {
+				if err != nil {
+					fmt.Println(bErr)
+					log.Fatal(err)
+				} else {
+					fmt.Println(bOut)
+				}
+			}
 		}
 	}
+
 }
 
 func Bash(containerName string) {
