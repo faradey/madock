@@ -480,7 +480,7 @@ func Cron(flag string, manual bool) {
 				fmt.Println(bErr)
 				log.Fatal(err)
 			} else {
-				fmt.Println(bOut)
+				fmt.Println("Cron was started")
 			}
 		}
 	} else {
@@ -498,7 +498,7 @@ func Cron(flag string, manual bool) {
 					fmt.Println(bErr)
 					log.Fatal(err)
 				} else {
-					fmt.Println(bOut)
+					fmt.Println("Cron was removed from Magento")
 				}
 			}
 
@@ -511,7 +511,7 @@ func Cron(flag string, manual bool) {
 					fmt.Println(bErr)
 					log.Fatal(err)
 				} else {
-					fmt.Println(bOut)
+					fmt.Println("Cron was stopped from System (container)")
 				}
 			}
 		}
