@@ -223,7 +223,7 @@ func dockerComposePull(composeFiles []string) {
 func syncMutagen(projectName, containerName, usr string) {
 	clearMutagen(projectName, containerName)
 	cmd := exec.Command("mutagen", "sync", "create", "--name",
-		projectName+"-"+containerName+"-1",
+		strings.ToLower(projectName)+"-"+containerName+"-1",
 		"--default-group-beta", usr,
 		"--default-owner-beta", usr,
 		"--sync-mode", "two-way-resolved",
@@ -243,7 +243,7 @@ func syncMutagen(projectName, containerName, usr string) {
 		"-i", "/phpserver",
 		"-i", "/.idea",
 		paths.GetRunDirPath(),
-		"docker://"+projectName+"-"+containerName+"-1/var/www/html",
+		"docker://"+strings.ToLower(projectName)+"-"+containerName+"-1/var/www/html",
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -290,7 +290,7 @@ func StopNginx() {
 
 func Magento(flag string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -302,7 +302,7 @@ func Magento(flag string) {
 
 func Composer(flag string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && composer "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && composer "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -351,12 +351,12 @@ func DbImport(option string) {
 	defer selectedFile.Close()
 
 	var cmd, cmdFKeys *exec.Cmd
-	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConfig["DB_DATABASE"])
+	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConfig["DB_DATABASE"])
 	cmdFKeys.Run()
 	if option != "" {
-		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
+		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
 	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
+		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
 	}
 
 	if ext == "gz" {
@@ -371,7 +371,7 @@ func DbImport(option string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
-	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConfig["DB_DATABASE"])
+	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConfig["DB_DATABASE"])
 	cmdFKeys.Run()
 	if err != nil {
 		log.Fatal(err)
@@ -390,7 +390,7 @@ func DbExport() {
 	defer selectedFile.Close()
 	writer := gzip.NewWriter(selectedFile)
 	defer writer.Close()
-	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysqldump", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-v", "-h", "db", projectConfig["DB_DATABASE"])
+	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysqldump", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-v", "-h", "db", projectConfig["DB_DATABASE"])
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = writer
@@ -437,7 +437,7 @@ func DbSoftClean() {
 	tablesList += "TRUNCATE TABLE session;"
 
 	var b strings.Builder
-	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SELECT concat('TRUNCATE TABLE `', TABLE_NAME, '`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'catalogrule_product%__temp%' OR TABLE_NAME LIKE 'quote%'", projectConfig["DB_DATABASE"])
+	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SELECT concat('TRUNCATE TABLE `', TABLE_NAME, '`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'catalogrule_product%__temp%' OR TABLE_NAME LIKE 'quote%'", projectConfig["DB_DATABASE"])
 	cmdTemp.Stdout = &b
 	cmdTemp.Stderr = os.Stderr
 	err := cmdTemp.Run()
@@ -449,7 +449,7 @@ func DbSoftClean() {
 		tablesList += strings.Join(tbNames[1:], "")
 	}
 
-	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", projectName+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", "SET @@session.unique_checks = 0;SET @@session.foreign_key_checks = 0;SET @@global.innodb_autoinc_lock_mode = 2;SET FOREIGN_KEY_CHECKS=0;"+tablesList+"SET FOREIGN_KEY_CHECKS=1;", "-f", projectConfig["DB_DATABASE"])
+	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", "SET @@session.unique_checks = 0;SET @@session.foreign_key_checks = 0;SET @@global.innodb_autoinc_lock_mode = 2;SET FOREIGN_KEY_CHECKS=0;"+tablesList+"SET FOREIGN_KEY_CHECKS=1;", "-f", projectConfig["DB_DATABASE"])
 	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err)
@@ -463,7 +463,7 @@ func Cron(flag string, manual bool) {
 	var bOut io.Writer
 	var bErr io.Writer
 	if flag == "on" {
-		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:install &&  php bin/magento cron:run")
+		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:install &&  php bin/magento cron:run")
 		cmdSub.Stdout = os.Stdout
 		cmdSub.Stderr = os.Stderr
 		err := cmdSub.Run()
@@ -471,7 +471,7 @@ func Cron(flag string, manual bool) {
 			log.Fatal(err)
 		}
 
-		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "start")
+		cmd = exec.Command("docker", "exec", "-i", "-u", "root", strings.ToLower(projectName)+"-php-1", "service", "cron", "start")
 		cmd.Stdout = bOut
 		cmd.Stderr = bErr
 		err = cmd.Run()
@@ -484,12 +484,12 @@ func Cron(flag string, manual bool) {
 			}
 		}
 	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "status")
+		cmd = exec.Command("docker", "exec", "-i", "-u", "root", strings.ToLower(projectName)+"-php-1", "service", "cron", "status")
 		cmd.Stdout = bOut
 		cmd.Stderr = bErr
 		err := cmd.Run()
 		if err == nil {
-			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", projectName+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:remove")
+			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:remove")
 			cmdSub.Stdout = bOut
 			cmdSub.Stderr = bErr
 			err := cmdSub.Run()
@@ -502,7 +502,7 @@ func Cron(flag string, manual bool) {
 				}
 			}
 
-			cmd = exec.Command("docker", "exec", "-i", "-u", "root", projectName+"-php-1", "service", "cron", "stop")
+			cmd = exec.Command("docker", "exec", "-i", "-u", "root", strings.ToLower(projectName)+"-php-1", "service", "cron", "stop")
 			cmd.Stdout = bOut
 			cmd.Stderr = bErr
 			err = cmd.Run()
@@ -522,7 +522,7 @@ func Cron(flag string, manual bool) {
 func Bash(containerName string) {
 	projectName := paths.GetRunDirName()
 	var cmd *exec.Cmd
-	cmd = exec.Command("docker", "exec", "-it", projectName+"-"+containerName+"-1", "bash")
+	cmd = exec.Command("docker", "exec", "-it", strings.ToLower(projectName)+"-"+containerName+"-1", "bash")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -546,7 +546,7 @@ func Node(flag string) {
 
 func Logs(flag string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "logs", projectName+"-"+flag+"-1")
+	cmd := exec.Command("docker", "logs", strings.ToLower(projectName)+"-"+flag+"-1")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
