@@ -2,17 +2,18 @@ package ssh
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/cli/attr"
-	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/functions"
-	"github.com/faradey/madock/src/paths"
-	"github.com/pkg/sftp"
 	"image/jpeg"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/faradey/madock/src/cli/attr"
+	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/functions"
+	"github.com/faradey/madock/src/paths"
+	"github.com/pkg/sftp"
 )
 
 var countGoroutine int
@@ -69,7 +70,8 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 				subdirName != "sitemap" &&
 				subdirName != "tmp" &&
 				subdirName != "trashcan" &&
-				!strings.Contains(subdirName+"/", "/cache/") {
+				!strings.Contains(subdirName+"/", "/cache/") &&
+				!strings.Contains(subdirName, ".thumb") {
 				if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
 					os.Mkdir(projectPath+"/pub/media/"+subdirName, 0775)
 				}
