@@ -2,13 +2,14 @@ package commands
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/paths"
 	"github.com/faradey/madock/src/ssh"
-	"log"
-	"strings"
 )
 
 func Start() {
@@ -137,6 +138,10 @@ func Bash(flag string) {
 	}
 
 	builder.Bash(containerName)
+}
+
+func CleanCache() {
+	builder.CleanCache()
 }
 
 func SetEnvOption(flag string, flags []string) {

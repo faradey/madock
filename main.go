@@ -1,12 +1,13 @@
 package main
 
 import (
+	"os"
+	"strings"
+
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/commands"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/cli/helper"
-	"os"
-	"strings"
 )
 
 func main() {
@@ -21,6 +22,8 @@ func main() {
 		switch command {
 		case "bash":
 			commands.Bash(flag)
+		case "c:f":
+			commands.CleanCache()
 		case "composer":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Composer(flag)

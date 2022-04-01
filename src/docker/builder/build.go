@@ -532,6 +532,18 @@ func Bash(containerName string) {
 	}
 }
 
+func CleanCache() {
+	projectName := paths.GetRunDirName()
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && rm -R pub/static/* && rm -R var/view_preprocessed/* && rm -R generated/* && php bin/magento c:f")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func Node(flag string) {
 	projectName := paths.GetRunDirName()
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "run", "--rm", "--service-ports", "node", "bash", "-c", "cd /var/www/html && "+flag)
