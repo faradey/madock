@@ -475,7 +475,7 @@ func Cron(flag string, manual bool) {
 		cmd.Stdout = bOut
 		cmd.Stderr = bErr
 		err = cmd.Run()
-		if manual == true {
+		if manual {
 			if err != nil {
 				fmt.Println(bErr)
 				log.Fatal(err)
@@ -493,7 +493,7 @@ func Cron(flag string, manual bool) {
 			cmdSub.Stdout = bOut
 			cmdSub.Stderr = bErr
 			err := cmdSub.Run()
-			if manual == true {
+			if manual {
 				if err != nil {
 					fmt.Println(bErr)
 					log.Fatal(err)
@@ -506,7 +506,7 @@ func Cron(flag string, manual bool) {
 			cmd.Stdout = bOut
 			cmd.Stderr = bErr
 			err = cmd.Run()
-			if manual == true {
+			if manual {
 				if err != nil {
 					fmt.Println(bErr)
 					log.Fatal(err)
@@ -521,8 +521,7 @@ func Cron(flag string, manual bool) {
 
 func Bash(containerName string) {
 	projectName := paths.GetRunDirName()
-	var cmd *exec.Cmd
-	cmd = exec.Command("docker", "exec", "-it", strings.ToLower(projectName)+"-"+containerName+"-1", "bash")
+	cmd := exec.Command("docker", "exec", "-it", strings.ToLower(projectName)+"-"+containerName+"-1", "bash")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

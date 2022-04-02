@@ -2,6 +2,7 @@ package helper
 
 import (
 	"fmt"
+
 	"github.com/faradey/madock/src/cli/fmtc"
 )
 
@@ -13,6 +14,7 @@ func Help() {
 	fmtc.Warning("Available commands:")
 	describeByLevel("bash", "Connect into container using bash", 0)
 	describeByLevel("[name of container]", "Name of container. Optional. Default container: php. For example: php, node, db, nginx", 1)
+	describeByLevel("c:f", "Cleaning up static and generated files", 0)
 	describeByLevel("composer", "Execute composer inside php container", 0)
 	describeByLevel("config", "Viewing and changing the project configuration", 0)
 	describeByLevel("show", "List all project environment settings", 1)

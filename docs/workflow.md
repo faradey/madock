@@ -61,6 +61,8 @@ This command shows you the following items:
 
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[name of container]` Name of container. Optional. Default container: php. For example: php, node, db, nginx
 
+* `c:f`  Cleaning up static and generated files
+
 
 * `composer`  Execute composer inside php container
             
