@@ -57,7 +57,6 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms800m -Xmx800m"
-      - cluster.routing.allocation.disk.threshold_enabled=false
     volumes:
       - elasticsearch_vlm:/usr/share/elasticsearch/data
     profiles:
