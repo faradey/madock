@@ -57,7 +57,7 @@ func main() {
 			helper.Help()
 		case "logs":
 			commands.Logs(flag)
-		case "magento":
+		case "magento", "m":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Magento(flag)
 		case "node":
