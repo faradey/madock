@@ -3,16 +3,17 @@ package ssh
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/faradey/madock/src/cli/fmtc"
-	"github.com/faradey/madock/src/paths"
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"log"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/faradey/madock/src/cli/fmtc"
+	"github.com/faradey/madock/src/paths"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var passwd string
@@ -36,6 +37,7 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 	defer sess.Close()
 	out, err := sess.CombinedOutput(cmd)
 	if err != nil {
+		fmt.Println(string(out))
 		log.Fatalf("cmd.Run() failed with %s\n", err)
 	}
 
