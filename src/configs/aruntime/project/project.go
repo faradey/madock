@@ -1,14 +1,15 @@
 package project
 
 import (
-	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/paths"
 	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/paths"
 )
 
 func MakeConf(projectName string) {
@@ -144,7 +145,8 @@ func makeDockerCompose(projectName string) {
 	str = configs.ReplaceConfigValue(str)
 	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", hostName, -1)
 	str = strings.Replace(str, "{{{NGINX_PROJECT_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
-	for i := 1; i < 20; i++ {
+	str = strings.Replace(str, "{{{NGINX_PROJECT_PORT_SSL}}}", strconv.Itoa(portNumberRanged+17001), -1)
+	for i := 2; i < 20; i++ {
 		str = strings.Replace(str, "{{{NGINX_PROJECT_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
 	}
 	str = strings.Replace(str, "{{{NETWORK_NUMBER}}}", strconv.Itoa(portNumber+90), -1)
@@ -180,7 +182,8 @@ func makeDockerCompose(projectName string) {
 	str = configs.ReplaceConfigValue(str)
 	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", hostName, -1)
 	str = strings.Replace(str, "{{{NGINX_PROJECT_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
-	for i := 1; i < 20; i++ {
+	str = strings.Replace(str, "{{{NGINX_PROJECT_PORT_SSL}}}", strconv.Itoa(portNumberRanged+17001), -1)
+	for i := 2; i < 20; i++ {
 		str = strings.Replace(str, "{{{NGINX_PROJECT_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
 	}
 	str = strings.Replace(str, "{{{NETWORK_NUMBER}}}", strconv.Itoa(portNumber+90), -1)

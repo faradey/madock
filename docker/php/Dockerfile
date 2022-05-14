@@ -4,6 +4,7 @@ RUN ln -snf /usr/share/zoneinfo/{{{PHP_TZ}}} /etc/localtime && echo {{{PHP_TZ}}}
 
 RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     curl \
+    ca-certificates \
     software-properties-common \
     git \
     zip \
