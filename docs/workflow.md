@@ -67,6 +67,9 @@ This command shows you the following items:
 * `composer`  Execute composer inside php container
             
             
+* `compress`  Compress a project to archive
+            
+            
 * `config`  Viewing and changing the project configuration
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`show`    List all project environment settings
@@ -153,3 +156,6 @@ This command shows you the following items:
                         
 
 * `stop`    Stopping all containers and services
+                        
+
+* `uncompress`  Uncompress a project from archive

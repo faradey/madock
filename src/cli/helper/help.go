@@ -16,6 +16,7 @@ func Help() {
 	describeByLevel("[name of container]", "Name of container. Optional. Default container: php. For example: php, node, db, nginx", 1)
 	describeByLevel("c:f", "Cleaning up static and generated files", 0)
 	describeByLevel("composer", "Execute composer inside php container", 0)
+	describeByLevel("compress", "Compress a project to archive", 0)
 	describeByLevel("config", "Viewing and changing the project configuration", 0)
 	describeByLevel("show", "List all project environment settings", 1)
 	describeByLevel("set", "Set parameters", 1)
@@ -53,6 +54,7 @@ func Help() {
 	describeByLevel("setup", "Initial project setup", 0)
 	describeByLevel("start", "Starting all containers and services", 0)
 	describeByLevel("stop", "Stopping all containers and services", 0)
+	describeByLevel("uncompress", "Uncompress a project from archive", 0)
 
 	fmt.Println("")
 }
