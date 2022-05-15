@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/faradey/madock/src/cli/fmtc"
+	"github.com/faradey/madock/src/compress"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/paths"
@@ -97,6 +98,14 @@ func Magento(flag string) {
 
 func Composer(flag string) {
 	builder.Composer(flag)
+}
+
+func Compress() {
+	compress.Zip()
+}
+
+func Uncompress() {
+	compress.Unzip()
 }
 
 func DB(flag, option string) {

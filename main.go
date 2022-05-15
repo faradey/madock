@@ -27,6 +27,8 @@ func main() {
 		case "composer":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Composer(flag)
+		case "compress":
+			commands.Compress()
 		case "config":
 			optionName := ""
 			if len(os.Args) > 3 {
@@ -82,6 +84,8 @@ func main() {
 			commands.Start()
 		case "stop":
 			commands.Stop()
+		case "uncompress":
+			commands.Uncompress()
 		default:
 			commands.IsNotDefine()
 		}
