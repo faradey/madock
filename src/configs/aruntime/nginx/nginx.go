@@ -1,13 +1,15 @@
 package nginx
 
 import (
-	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/paths"
 	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/functions"
+	"github.com/faradey/madock/src/paths"
 )
 
 func MakeConf() {
@@ -109,7 +111,32 @@ func makeDockerfile() {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(ctxPath+"/Dockerfile", b, 0755)
+	str := string(b)
+	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
+	var commands []string
+	for _, name := range projectsNames {
+		projectConf := configs.GetProjectConfig(name)
+		if val, ok := projectConf["HOSTS"]; ok {
+			var onlyHost string
+			hosts := strings.Split(val, " ")
+			if len(hosts) > 0 {
+				for _, hostAndStore := range hosts {
+					onlyHost = strings.Split(hostAndStore, ":")[0]
+					commands = append(commands, "openssl req -x509 -newkey rsa:4096 -keyout "+onlyHost+".pem -out "+onlyHost+".pem -sha256 -days 365 -nodes -subj '/CN="+onlyHost+"'")
+				}
+
+			}
+		}
+	}
+	commandsString := "RUN " + strings.Join(commands, " && ")
+	str = strings.Replace(str, "{{{SSL_CREATE_BY_HOST_NAMES}}}", commandsString, -1)
+
+	err = ioutil.WriteFile(ctxPath+"/Dockerfile", []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+
+	err = ioutil.WriteFile(ctxPath+"/rsapassword.txt", []byte(functions.GeneratePassword(15, 3, 4, 3)), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
