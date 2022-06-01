@@ -122,7 +122,7 @@ func makeDockerfile() {
 			if len(hosts) > 0 {
 				for _, hostAndStore := range hosts {
 					onlyHost = strings.Split(hostAndStore, ":")[0]
-					commands = append(commands, "openssl req -x509 -newkey rsa:4096 -keyout "+onlyHost+".pem -out "+onlyHost+".pem -sha256 -days 365 -nodes -subj '/CN="+onlyHost+"'")
+					commands = append(commands, "openssl req -x509 -key madock.key -out "+onlyHost+".pem -sha256 -days 365 -nodes -subj '/CN="+onlyHost+"'")
 				}
 
 			}
