@@ -1,9 +1,11 @@
 package nginx
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -111,9 +113,10 @@ func makeDockerfile() {
 		log.Fatal(err)
 	}
 
-	str := string(b)
+	//str := string(b)
 	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 	var commands []string
+	var i int = 0
 	for _, name := range projectsNames {
 		projectConf := configs.GetProjectConfig(name)
 		if val, ok := projectConf["HOSTS"]; ok {
@@ -122,16 +125,16 @@ func makeDockerfile() {
 			if len(hosts) > 0 {
 				for _, hostAndStore := range hosts {
 					onlyHost = strings.Split(hostAndStore, ":")[0]
-					commands = append(commands, "openssl req -x509 -key madock.key -out "+onlyHost+".pem -sha256 -days 365 -nodes -subj '/CN="+onlyHost+"'")
+					commands = append(commands, "DNS."+strconv.Itoa(i)+" = "+onlyHost)
+					i++
 				}
-
 			}
 		}
 	}
-	commandsString := "RUN " + strings.Join(commands, " && ")
+	/*commandsString := "RUN " + strings.Join(commands, " && ")
 	str = strings.Replace(str, "{{{SSL_CREATE_BY_HOST_NAMES}}}", commandsString, -1)
-
-	err = ioutil.WriteFile(ctxPath+"/Dockerfile", []byte(str), 0755)
+	*/
+	err = ioutil.WriteFile(ctxPath+"/Dockerfile", b, 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -139,6 +142,37 @@ func makeDockerfile() {
 	err = ioutil.WriteFile(ctxPath+"/rsapassword.txt", []byte(functions.GeneratePassword(15, 3, 4, 3)), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
+	}
+
+	extFileContent := "authorityKeyIdentifier=keyid,issuer\n" +
+		"basicConstraints=CA:FALSE\n" +
+		"keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\n" +
+		"subjectAltName = @alt_names\n" +
+		"\n" +
+		"[alt_names]\n" +
+		"" + strings.Join(commands, "\n")
+
+	err = ioutil.WriteFile(ctxPath+"/madock.ca.ext", []byte(extFileContent), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+
+	cmd := exec.Command("openssl", "req", "-x509", "-newkey", "rsa:4096", "-keyout", ctxPath+"/madockCA.key", "-out", ctxPath+"/madockCA.pem", "-sha256", "-days", "1800", "-nodes", "-subj", "/CN=madock")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Enter your password for adding ssl certificate to your system.")
+
+	cmd = exec.Command("sudo", "security", "add-trusted-cert", "-d", "-r", "trustRoot", "-k", "/Library/Keychains/System.keychain", ctxPath+"/madockCA.pem")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
 	}
 	/* END Create nginx Dockerfile configuration */
 }

@@ -1,3 +1,3 @@
 FROM nginx:1.21.4
-RUN openssl genrsa -des3 -passout file:rsapassword.txt -out madock.key 2048
-{{{SSL_CREATE_BY_HOST_NAMES}}}
+COPY . /
+#RUN openssl req -x509 -newkey rsa:4096 -keyout madockCA.key -out madockCA.pem -sha256 -days 365 -nodes -subj '/CN=madock'  -extfile "madock.ca.ext"
