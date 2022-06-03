@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"runtime"
 	"strconv"
 	"strings"
@@ -262,7 +263,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
 				if err != nil {
-					cmd = exec.Command("sudo", "apt", "install", "libnss3-tools")
+					cmd = exec.Command("sudo", "apt", "install", "-y", "libnss3-tools")
 					cmd.Stdout = os.Stdout
 					cmd.Stderr = os.Stderr
 					err = cmd.Run()
@@ -271,7 +272,8 @@ func GenerateSslCert(ctxPath string, force bool) {
 					}
 				}
 
-				cmd = exec.Command("certutil", "-d", "sql:$HOME/.pki/nssdb", "-A", "-t", "C,,", "-n", "madocklocalkey", "-i", ctxPath+"/madockCA.pem")
+				usr, _ := user.Current()
+				cmd = exec.Command("certutil", "-d", "sql:"+usr.HomeDir+".pki/nssdb", "-A", "-t", "C,,", "-n", "madocklocalkey", "-i", ctxPath+"/madockCA.pem")
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
