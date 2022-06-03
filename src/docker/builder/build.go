@@ -21,13 +21,13 @@ import (
 )
 
 func UpWithBuild() {
-	prepareConfigs()
+	PrepareConfigs()
 	DownNginx()
 	UpNginxWithBuild()
 	upProjectWithBuild()
 }
 
-func prepareConfigs() {
+func PrepareConfigs() {
 	projectName := paths.GetRunDirName()
 	nginx.MakeConf()
 	project.MakeConf(projectName)
@@ -69,7 +69,7 @@ func Down() {
 
 func Start() {
 	projectName := paths.GetRunDirName()
-	prepareConfigs()
+	PrepareConfigs()
 	UpNginx()
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{

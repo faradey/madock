@@ -62,6 +62,7 @@ func Remote(flag, option string) {
 
 func Proxy(flag string) {
 	if !configs.IsHasNotConfig() {
+		builder.PrepareConfigs()
 		if flag == "prune" {
 			builder.DownNginx()
 		} else if flag == "stop" {
