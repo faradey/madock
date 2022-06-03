@@ -257,6 +257,20 @@ func GenerateSslCert(ctxPath string, force bool) {
 					log.Fatal(err)
 				}
 
+				cmd = exec.Command("certutil", "-v")
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				err = cmd.Run()
+				if err != nil {
+					cmd = exec.Command("sudo", "apt", "install", "libnss3-tools")
+					cmd.Stdout = os.Stdout
+					cmd.Stderr = os.Stderr
+					err = cmd.Run()
+					if err != nil {
+						log.Fatal(err)
+					}
+				}
+
 				cmd = exec.Command("certutil", "-d", "sql:$HOME/.pki/nssdb", "-A", "-t", "C,,", "-n", "madocklocalkey", "-i", ctxPath+"/madockCA.pem")
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
