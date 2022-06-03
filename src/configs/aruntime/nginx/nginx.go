@@ -30,16 +30,15 @@ func setPorts() {
 		projects = projectsAruntime
 	}
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
-	portsConfig := make(map[string]string)
 	if _, err := os.Stat(portsFile); os.IsNotExist(err) {
 		lines := ""
 		for port, line := range projects {
 			lines += line + "=" + strconv.Itoa(port+1) + "\n"
 		}
-		err = ioutil.WriteFile(portsFile, []byte(lines), 0755)
+		_ = ioutil.WriteFile(portsFile, []byte(lines), 0755)
 	}
 
-	portsConfig = configs.ParseFile(portsFile)
+	portsConfig := configs.ParseFile(portsFile)
 
 	if _, ok := portsConfig[paths.GetRunDirName()]; !ok {
 		f, err := os.OpenFile(portsFile,
