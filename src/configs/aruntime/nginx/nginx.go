@@ -273,7 +273,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 					log.Fatal(err)
 				}
 
-				cmd = exec.Command("sudo", "update-ca-certificates")
+				cmd = exec.Command("sudo", "update-ca-certificates", "-f")
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
