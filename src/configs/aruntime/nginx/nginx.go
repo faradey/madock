@@ -274,7 +274,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 
 				usr, _ := user.Current()
 				fmt.Println(usr.HomeDir)
-				cmd = exec.Command("certutil", "-d", "sql:"+usr.HomeDir+".pki/nssdb", "-A", "-t", "C,,", "-n", "madocklocalkey", "-i", ctxPath+"/madockCA.pem")
+				cmd = exec.Command("certutil", "-d", "sql:"+usr.HomeDir+"/.pki/nssdb", "-A", "-t", "C,,", "-n", "madocklocalkey", "-i", ctxPath+"/madockCA.pem")
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
