@@ -241,7 +241,15 @@ func GenerateSslCert(ctxPath string, force bool) {
 					log.Fatal(err)
 				}
 			} else if runtime.GOOS == "linux" {
-				cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", "/usr/local/share/ca-certificates/madockCA.crt")
+				cmd = exec.Command("sudo", "mkdir", "/usr/local/share/ca-certificates/madock")
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				err = cmd.Run()
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", "/usr/local/share/ca-certificates/madock/madockCA.crt")
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
