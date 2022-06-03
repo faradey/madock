@@ -566,3 +566,8 @@ func Logs(flag string) {
 		log.Fatal(err)
 	}
 }
+
+func SslRebuild() {
+	ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
+	nginx.GenerateSslCert(ctxPath, true)
+}

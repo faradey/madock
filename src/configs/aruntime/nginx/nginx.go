@@ -118,9 +118,46 @@ func makeDockerfile() {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	generalConfig := configs.GetGeneralConfig()
-	if val, ok := generalConfig["SSL"]; ok && val == "true" {
+	GenerateSslCert(ctxPath, false)
+	/* END Create nginx Dockerfile configuration */
+}
 
+func makeDockerCompose() {
+	/* Copy nginx docker-compose configuration */
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
+	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/docker-compose-proxy.yml"
+	b, err := os.ReadFile(nginxDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ioutil.WriteFile(paths.GetExecDirPath()+"/aruntime/docker-compose.yml", b, 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+	/* END Create nginx Dockerfile configuration */
+}
+
+func getMaxPort(conf map[string]string) int {
+	max := 0
+	portInt := 0
+	var err error
+	for _, port := range conf {
+		portInt, err = strconv.Atoi(port)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if max < portInt {
+			max = portInt
+		}
+	}
+
+	return max
+}
+
+func GenerateSslCert(ctxPath string, force bool) {
+	generalConfig := configs.GetGeneralConfig()
+	if val, ok := generalConfig["SSL"]; force || (ok && val == "true") {
 		projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 		var commands []string
 		var i int = 0
@@ -148,7 +185,7 @@ func makeDockerfile() {
 			"DNS.1 = madocklocalkey\n" +
 			strings.Join(commands, "\n")
 
-		err = ioutil.WriteFile(ctxPath+"/madock.ca.ext", []byte(extFileContent), 0755)
+		err := ioutil.WriteFile(ctxPath+"/madock.ca.ext", []byte(extFileContent), 0755)
 		if err != nil {
 			log.Fatalf("Unable to write file: %v", err)
 		}
@@ -176,7 +213,7 @@ func makeDockerfile() {
 			}
 		}
 
-		if doGenerateSsl {
+		if doGenerateSsl || force {
 			cmd := exec.Command("openssl", "req", "-x509", "-newkey", "rsa:4096", "-keyout", ctxPath+"/madockCA.key", "-out", ctxPath+"/madockCA.pem", "-sha256", "-days", "365", "-nodes", "-subj", "/CN=madock")
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -246,38 +283,4 @@ func makeDockerfile() {
 			log.Fatal(err)
 		}
 	}
-	/* END Create nginx Dockerfile configuration */
-}
-
-func makeDockerCompose() {
-	/* Copy nginx docker-compose configuration */
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
-	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/docker-compose-proxy.yml"
-	b, err := os.ReadFile(nginxDefFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = ioutil.WriteFile(paths.GetExecDirPath()+"/aruntime/docker-compose.yml", b, 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
-	/* END Create nginx Dockerfile configuration */
-}
-
-func getMaxPort(conf map[string]string) int {
-	max := 0
-	portInt := 0
-	var err error
-	for _, port := range conf {
-		portInt, err = strconv.Atoi(port)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if max < portInt {
-			max = portInt
-		}
-	}
-
-	return max
 }

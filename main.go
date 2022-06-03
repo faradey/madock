@@ -80,6 +80,8 @@ func main() {
 			commands.Restart()
 		case "setup":
 			commands.Setup()
+		case "ssl":
+			commands.Ssl(flag)
 		case "start":
 			commands.Start()
 		case "stop":

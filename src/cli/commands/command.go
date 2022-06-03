@@ -188,3 +188,9 @@ func Logs(flag string) {
 func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }
+
+func Ssl(flag string) {
+	if flag == "--rebuild" {
+		builder.SslRebuild()
+	}
+}

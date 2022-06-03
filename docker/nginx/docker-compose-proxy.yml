@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./ctx/proxy.conf:/etc/nginx/nginx.conf:delegated
+      - ./ctx/:/sslcert/:delegated
     ports:
       - 80:80
       - 443:443

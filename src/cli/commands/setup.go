@@ -3,17 +3,18 @@ package commands
 import (
 	"bufio"
 	"fmt"
-	"github.com/faradey/madock/src/cli/fmtc"
-	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/docker/builder"
-	"github.com/faradey/madock/src/paths"
-	"github.com/faradey/madock/src/versions"
 	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/faradey/madock/src/cli/fmtc"
+	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/versions"
 )
 
 func Setup() {
