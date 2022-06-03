@@ -249,6 +249,22 @@ func GenerateSslCert(ctxPath string, force bool) {
 					log.Fatal(err)
 				}
 
+				cmd = exec.Command("sudo", "chmod", "644", "/usr/local/share/ca-certificates/madockCA.crt")
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				err = cmd.Run()
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				cmd = exec.Command("sudo", "dpkg-reconfigure", "ca-certificates")
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				err = cmd.Run()
+				if err != nil {
+					log.Fatal(err)
+				}
+
 				cmd = exec.Command("sudo", "update-ca-certificates")
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
