@@ -1,6 +1,7 @@
 package nginx
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -263,12 +264,22 @@ func GenerateSslCert(ctxPath string, force bool) {
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
 				if err != nil {
-					cmd = exec.Command("sudo", "apt", "install", "-y", "libnss3-tools")
-					cmd.Stdout = os.Stdout
-					cmd.Stderr = os.Stderr
-					err = cmd.Run()
+					fmt.Println("You need to install \"certutil\" to proceed with the certificate installation. Continue installation? y - continue. n - cancel certificate generation and continue without ssl.")
+					fmt.Print("> ")
+					buf := bufio.NewReader(os.Stdin)
+					sentence, err := buf.ReadBytes('\n')
 					if err != nil {
-						log.Fatal(err)
+						log.Fatalln(err)
+					}
+					selected := strings.TrimSpace(string(sentence))
+					if selected == "y" {
+						cmd = exec.Command("sudo", "apt", "install", "-y", "libnss3-tools")
+						cmd.Stdout = os.Stdout
+						cmd.Stderr = os.Stderr
+						err = cmd.Run()
+						if err != nil {
+							log.Fatal(err)
+						}
 					}
 				}
 
