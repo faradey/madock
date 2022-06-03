@@ -245,9 +245,9 @@ func GenerateSslCert(ctxPath string, force bool) {
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
-				if err != nil {
+				/*if err != nil {
 					log.Fatal(err)
-				}
+				}*/
 
 				cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", "/usr/share/ca-certificates/madock/madockCA.crt")
 				cmd.Stdout = os.Stdout
