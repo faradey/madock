@@ -93,7 +93,7 @@ func makeProxy() {
 			}
 
 			strReplaced = strings.Replace(strReplaced, "{{{HOST_NAMES}}}", hostName, -1)
-			allFileData += strReplaced
+			allFileData += "\n" + strReplaced
 		}
 	}
 	allFileData += "\n}"
@@ -121,6 +121,52 @@ func makeDockerfile() {
 
 	generalConfig := configs.GetGeneralConfig()
 	if val, ok := generalConfig["SSL"]; ok && val == "true" {
+
+		projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
+		var commands []string
+		var i int = 0
+		for _, name := range projectsNames {
+			projectConf := configs.GetProjectConfig(name)
+			if val, ok := projectConf["HOSTS"]; ok {
+				var onlyHost string
+				hosts := strings.Split(val, " ")
+				if len(hosts) > 0 {
+					for _, hostAndStore := range hosts {
+						onlyHost = strings.Split(hostAndStore, ":")[0]
+						commands = append(commands, "DNS."+strconv.Itoa(i+2)+" = "+onlyHost)
+						i++
+					}
+				}
+			}
+		}
+
+		extFileContent := "authorityKeyIdentifier=keyid,issuer\n" +
+			"basicConstraints=CA:FALSE\n" +
+			"keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\n" +
+			"subjectAltName = @alt_names\n" +
+			"\n" +
+			"[alt_names]\n" +
+			"DNS.1 = madocklocalkey\n" +
+			strings.Join(commands, "\n")
+
+		err = ioutil.WriteFile(ctxPath+"/madock.ca.ext", []byte(extFileContent), 0755)
+		if err != nil {
+			log.Fatalf("Unable to write file: %v", err)
+		}
+
+		sslConfigFileContent := "ssl_session_cache shared:le_nginx_SSL:1m;\n" +
+			"ssl_session_timeout 1440m;\n" +
+			"\n" +
+			"ssl_protocols TLSv1 TLSv1.1 TLSv1.2;\n" +
+			"ssl_prefer_server_ciphers on;\n" +
+			"\n" +
+			"ssl_ciphers \"ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS\";"
+
+		err = ioutil.WriteFile(ctxPath+"/options-ssl-nginx.conf", []byte(sslConfigFileContent), 0755)
+		if err != nil {
+			log.Fatalf("Unable to write file: %v", err)
+		}
+
 		doGenerateSsl := false
 		if _, err := os.Stat(ctxPath + "/madockCA.pem"); os.IsNotExist(err) {
 			doGenerateSsl = true
@@ -132,51 +178,6 @@ func makeDockerfile() {
 		}
 
 		if doGenerateSsl {
-			projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
-			var commands []string
-			var i int = 0
-			for _, name := range projectsNames {
-				projectConf := configs.GetProjectConfig(name)
-				if val, ok := projectConf["HOSTS"]; ok {
-					var onlyHost string
-					hosts := strings.Split(val, " ")
-					if len(hosts) > 0 {
-						for _, hostAndStore := range hosts {
-							onlyHost = strings.Split(hostAndStore, ":")[0]
-							commands = append(commands, "DNS."+strconv.Itoa(i+2)+" = "+onlyHost)
-							i++
-						}
-					}
-				}
-			}
-
-			extFileContent := "authorityKeyIdentifier=keyid,issuer\n" +
-				"basicConstraints=CA:FALSE\n" +
-				"keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\n" +
-				"subjectAltName = @alt_names\n" +
-				"\n" +
-				"[alt_names]\n" +
-				"DNS.1 = madocklocalkey\n" +
-				strings.Join(commands, "\n")
-
-			err = ioutil.WriteFile(ctxPath+"/madock.ca.ext", []byte(extFileContent), 0755)
-			if err != nil {
-				log.Fatalf("Unable to write file: %v", err)
-			}
-
-			sslConfigFileContent := "ssl_session_cache shared:le_nginx_SSL:1m;\n" +
-				"ssl_session_timeout 1440m;\n" +
-				"\n" +
-				"ssl_protocols TLSv1 TLSv1.1 TLSv1.2;\n" +
-				"ssl_prefer_server_ciphers on;\n" +
-				"\n" +
-				"ssl_ciphers \"ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS\";"
-
-			err = ioutil.WriteFile(ctxPath+"/options-ssl-nginx.conf", []byte(sslConfigFileContent), 0755)
-			if err != nil {
-				log.Fatalf("Unable to write file: %v", err)
-			}
-
 			cmd := exec.Command("openssl", "req", "-x509", "-newkey", "rsa:4096", "-keyout", ctxPath+"/madockCA.key", "-out", ctxPath+"/madockCA.pem", "-sha256", "-days", "365", "-nodes", "-subj", "/CN=madock")
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -220,30 +221,30 @@ func makeDockerfile() {
 					log.Fatal(err)
 				}
 			}
+		}
 
-			cmd = exec.Command("openssl", "req", "-newkey", "rsa:4096", "-keyout", ctxPath+"/madock.local.key", "-out", ctxPath+"/madock.local.csr", "-nodes", "-subj", "/CN=madocklocalkey")
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			err = cmd.Run()
-			if err != nil {
-				log.Fatal(err)
-			}
+		cmd := exec.Command("openssl", "req", "-newkey", "rsa:4096", "-keyout", ctxPath+"/madock.local.key", "-out", ctxPath+"/madock.local.csr", "-nodes", "-subj", "/CN=madocklocalkey")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 
-			cmd = exec.Command("openssl", "x509", "-req", "-in", ctxPath+"/madock.local.csr", "-CA", ctxPath+"/madockCA.pem", "-CAkey", ctxPath+"/madockCA.key", "-CAcreateserial", "-out", ctxPath+"/madock.local.crt", "-days", "365", "-sha256", "-extfile", ctxPath+"/madock.ca.ext")
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			err = cmd.Run()
-			if err != nil {
-				log.Fatal(err)
-			}
+		cmd = exec.Command("openssl", "x509", "-req", "-in", ctxPath+"/madock.local.csr", "-CA", ctxPath+"/madockCA.pem", "-CAkey", ctxPath+"/madockCA.key", "-CAcreateserial", "-out", ctxPath+"/madock.local.crt", "-days", "365", "-sha256", "-extfile", ctxPath+"/madock.ca.ext")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 
-			cmd = exec.Command("bash", "-c", "cat "+ctxPath+"/madock.local.crt "+ctxPath+"/madockCA.pem > "+ctxPath+"/fullchain.crt")
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			err = cmd.Run()
-			if err != nil {
-				log.Fatal(err)
-			}
+		cmd = exec.Command("bash", "-c", "cat "+ctxPath+"/madock.local.crt "+ctxPath+"/madockCA.pem > "+ctxPath+"/fullchain.crt")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 	/* END Create nginx Dockerfile configuration */

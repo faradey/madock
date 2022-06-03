@@ -30,7 +30,6 @@ RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
     php{{{PHP_VERSION}}}-fpm \
     php{{{PHP_VERSION}}}-gd \
     php{{{PHP_VERSION}}}-intl \
-    php{{{PHP_VERSION}}}-json \
     php{{{PHP_VERSION}}}-mbstring \
     php{{{PHP_VERSION}}}-mysql \
     php{{{PHP_VERSION}}}-opcache \
@@ -41,6 +40,8 @@ RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
     php{{{PHP_VERSION}}}-xsl \
     php{{{PHP_VERSION}}}-zip \
     php{{{PHP_VERSION}}}-imagick
+
+RUN if [ "{{{PHP_VERSION}}}" < "8.0" ]; then apt-get install -y php{{{PHP_VERSION}}}-json; fi
 
 RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{PHP_VERSION}}}-fpm.pid/" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
     && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
