@@ -273,7 +273,6 @@ func GenerateSslCert(ctxPath string, force bool) {
 					}
 					selected := strings.TrimSpace(string(sentence))
 					if selected == "y" {
-						fmt.Println(user.Current())
 						cmd = exec.Command("sudo", "apt", "install", "-y", "libnss3-tools")
 						cmd.Stdout = os.Stdout
 						cmd.Stderr = os.Stderr
