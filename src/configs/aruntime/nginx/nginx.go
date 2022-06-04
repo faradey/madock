@@ -264,7 +264,8 @@ func GenerateSslCert(ctxPath string, force bool) {
 				var outb, errb bytes.Buffer
 				cmd.Stdout = &outb
 				cmd.Stderr = &errb
-				_ = cmd.Run()
+				err = cmd.Run()
+				fmt.Println(err)
 				fmt.Println(errb.String())
 				fmt.Println(outb.String())
 				if errb.String() != "" {
