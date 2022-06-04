@@ -265,9 +265,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 				cmd.Stdout = &outb
 				cmd.Stderr = &errb
 				err = cmd.Run()
-				fmt.Println(err)
-				fmt.Println(errb.String())
-				fmt.Println(outb.String())
+				selected := "y"
 				if err != nil && errb.String() == "" {
 					fmt.Println("You need to install \"certutil\" to proceed with the certificate installation. Continue installation? y - continue. n - cancel certificate generation and continue without ssl.")
 					fmt.Print("> ")
@@ -276,7 +274,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 					if err != nil {
 						log.Fatalln(err)
 					}
-					selected := strings.TrimSpace(string(sentence))
+					selected = strings.TrimSpace(string(sentence))
 					if selected == "y" {
 						cmd = exec.Command("sudo", "apt", "install", "-y", "libnss3-tools")
 						cmd.Stdout = os.Stdout
@@ -288,13 +286,15 @@ func GenerateSslCert(ctxPath string, force bool) {
 					}
 				}
 
-				usr, _ := user.Current()
-				cmd = exec.Command("certutil", "-d", "sql:"+usr.HomeDir+"/.pki/nssdb", "-A", "-t", "C,,", "-n", "madocklocalkey", "-i", ctxPath+"/madockCA.pem")
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
-				err = cmd.Run()
-				if err != nil {
-					log.Fatal(err)
+				if selected != "y" {
+					usr, _ := user.Current()
+					cmd = exec.Command("certutil", "-d", "sql:"+usr.HomeDir+"/.pki/nssdb", "-A", "-t", "C,,", "-n", "madocklocalkey", "-i", ctxPath+"/madockCA.pem")
+					cmd.Stdout = os.Stdout
+					cmd.Stderr = os.Stderr
+					err = cmd.Run()
+					if err != nil {
+						log.Fatal(err)
+					}
 				}
 
 				cmd = exec.Command("sudo", "update-ca-certificates", "-f")
