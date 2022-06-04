@@ -265,7 +265,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 				cmd.Stdout = &outb
 				cmd.Stderr = &errb
 				_ = cmd.Run()
-				if errb.String() == "" {
+				if errb.String() != "" {
 					fmt.Println("You need to install \"certutil\" to proceed with the certificate installation. Continue installation? y - continue. n - cancel certificate generation and continue without ssl.")
 					fmt.Print("> ")
 					buf := bufio.NewReader(os.Stdin)
