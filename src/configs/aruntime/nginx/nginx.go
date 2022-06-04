@@ -259,8 +259,8 @@ func GenerateSslCert(ctxPath string, force bool) {
 					log.Fatal(err)
 				}
 
-				cmd = exec.Command("certutil", "-H")
-				//cmd.Stdout = os.Stdout
+				cmd = exec.Command("certutil", "-H", "1", ">", "/dev/null")
+				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
 				if err != nil {
