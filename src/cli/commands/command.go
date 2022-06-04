@@ -190,7 +190,7 @@ func IsNotDefine() {
 }
 
 func Ssl(flag string) {
-	if flag == "--rebuild" {
+	if flag == "rebuild" {
 		builder.SslRebuild()
 	}
 }

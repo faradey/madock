@@ -153,6 +153,10 @@ This command shows you the following items:
 * `setup`   Initial project setup
                         
 
+* `ssl`   SSL Certificates
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rebuild`   Rebuild SSL Certificates
+                        
+
 * `start`   Starting all containers and services
                         
 

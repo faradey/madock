@@ -52,6 +52,8 @@ func Help() {
 	describeByLevel("db", "Create and download dump of DB from remote host", 2)
 	describeByLevel("restart", "Restarting all containers and services. Stop all containers and start them again", 0)
 	describeByLevel("setup", "Initial project setup", 0)
+	describeByLevel("ssl", "SSL Certificates", 0)
+	describeByLevel("rebuild", "Rebuild SSL Certificates", 1)
 	describeByLevel("start", "Starting all containers and services", 0)
 	describeByLevel("stop", "Stopping all containers and services", 0)
 	describeByLevel("uncompress", "Uncompress a project from archive", 0)
