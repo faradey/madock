@@ -86,13 +86,14 @@ RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
 WORKDIR /var/www/html
 RUN chown {{{UID}}}:{{{GUID}}} /var/www/html
-RUN mkdir /var/www/html/pub
-RUN chown www-data:www-data /var/www/html/pub
-RUN mkdir /var/www/html/pub/media
-RUN chown www-data:www-data /var/www/html/pub/media
-RUN mkdir /var/www/html/var
-RUN chown www-data:www-data /var/www/html/var
-RUN mkdir /var/www/html/var/composer_home
-RUN chown www-data:www-data /var/www/html/var/composer_home
+RUN if [ "{{{MUTAGEN_USE}}}" = "true" ]; then mkdir /var/www/html/pub \
+    && chown www-data:www-data /var/www/html/pub \
+    && mkdir /var/www/html/pub/media \
+    && chown www-data:www-data /var/www/html/pub/media \
+    && mkdir /var/www/html/var \
+    && chown www-data:www-data /var/www/html/var \
+    && mkdir /var/www/html/var/composer_home \
+    && chown www-data:www-data /var/www/html/var/composer_home; fi
+
 EXPOSE 9001 9003
 CMD "php-fpm{{{PHP_VERSION}}}"
