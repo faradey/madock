@@ -84,6 +84,8 @@ func main() {
 			commands.Ssl(flag)
 		case "start":
 			commands.Start()
+		case "status":
+			commands.Status()
 		case "stop":
 			commands.Stop()
 		case "uncompress":

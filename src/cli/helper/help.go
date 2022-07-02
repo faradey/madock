@@ -55,6 +55,7 @@ func Help() {
 	describeByLevel("ssl", "SSL Certificates", 0)
 	describeByLevel("rebuild", "Rebuild SSL Certificates", 1)
 	describeByLevel("start", "Starting all containers and services", 0)
+	describeByLevel("status", "Display the status of the project", 0)
 	describeByLevel("stop", "Stopping all containers and services", 0)
 	describeByLevel("uncompress", "Uncompress a project from archive", 0)
 

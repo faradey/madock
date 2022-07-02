@@ -105,7 +105,7 @@ This command shows you the following items:
 * `help`    Displays help for commands
                       
   
-* `logs`    View logs of a container
+* `logs`    View logs of the container
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[name of container]`     Container name. Optional. Default container: php. Example: php
                         
@@ -150,7 +150,7 @@ This command shows you the following items:
 * `restart` Restarting all containers and services. Stop all containers and start them again
                         
 
-* `setup`   Initial project setup
+* `setup`   Initial the project setup
                         
 
 * `ssl`   SSL Certificates
@@ -161,7 +161,10 @@ This command shows you the following items:
 * `start`   Starting all containers and services
                         
 
+* `status`   Display the status of the project
+                        
+
 * `stop`    Stopping all containers and services
                         
 
-* `uncompress`  Uncompress a project from archive
+* `uncompress`  Uncompress the project from archive
