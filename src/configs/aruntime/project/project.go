@@ -111,6 +111,21 @@ func makePhpDockerfile(projectName string) {
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
+
+	dockerDefFile = getDockerFile(projectName, "/docker/php/DockerfileWithoutXdebug")
+
+	b, err = os.ReadFile(dockerDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str = string(b)
+	str = configs.ReplaceConfigValue(str)
+	nginxFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.DockerfileWithoutXdebug"
+	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
 }
 
 func makeDockerCompose(projectName string) {
