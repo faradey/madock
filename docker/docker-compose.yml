@@ -82,8 +82,8 @@ services:
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
       PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin/"
-      PMA_USER: magento
-      PMA_PASSWORD: magento
+      PMA_USER: root
+      PMA_PASSWORD: {{{DB_ROOT_PASSWORD}}}
       UPLOAD_LIMIT: 1G
     ports:
       - "{{{NGINX_PROJECT_PORT+2}}}:80"
