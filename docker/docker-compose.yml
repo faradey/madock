@@ -96,6 +96,8 @@ services:
       UPLOAD_LIMIT: 1G
     ports:
       - "{{{NGINX_PROJECT_PORT+2}}}:80"
+    profiles:
+      - phpmyadmin{{{PHPMYADMIN_ENABLE}}}
     depends_on:
       - db
 

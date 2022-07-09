@@ -57,6 +57,8 @@ func Down() {
 			"rabbitmqtrue",
 			"--profile",
 			"kibanatrue",
+			"--profile",
+			"phpmyadmintrue",
 			"down",
 		}
 		cmd := exec.Command("docker-compose", profilesOn...)
@@ -89,6 +91,8 @@ func Start() {
 		"rabbitmqtrue",
 		"--profile",
 		"kibanatrue",
+		"--profile",
+		"phpmyadmintrue",
 		"start",
 	}
 	cmd := exec.Command("docker-compose", profilesOn...)
@@ -134,6 +138,8 @@ func Stop() {
 		"rabbitmqtrue",
 		"--profile",
 		"kibanatrue",
+		"--profile",
+		"phpmyadmintrue",
 		"stop",
 	}
 	cmd := exec.Command("docker-compose", profilesOn...)
@@ -190,6 +196,8 @@ func upProjectWithBuild() {
 		"rabbitmqtrue",
 		"--profile",
 		"kibanatrue",
+		"--profile",
+		"phpmyadmintrue",
 		"up",
 		"--build",
 		"--force-recreate",
