@@ -55,6 +55,8 @@ func Down() {
 			"redisdbtrue",
 			"--profile",
 			"rabbitmqtrue",
+			"--profile",
+			"kibanatrue",
 			"down",
 		}
 		cmd := exec.Command("docker-compose", profilesOn...)
@@ -85,6 +87,8 @@ func Start() {
 		"redisdbtrue",
 		"--profile",
 		"rabbitmqtrue",
+		"--profile",
+		"kibanatrue",
 		"start",
 	}
 	cmd := exec.Command("docker-compose", profilesOn...)
@@ -128,6 +132,8 @@ func Stop() {
 		"redisdbtrue",
 		"--profile",
 		"rabbitmqtrue",
+		"--profile",
+		"kibanatrue",
 		"stop",
 	}
 	cmd := exec.Command("docker-compose", profilesOn...)
@@ -182,6 +188,8 @@ func upProjectWithBuild() {
 		"redisdbtrue",
 		"--profile",
 		"rabbitmqtrue",
+		"--profile",
+		"kibanatrue",
 		"up",
 		"--build",
 		"--force-recreate",

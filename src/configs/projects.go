@@ -1,11 +1,12 @@
 package configs
 
 import (
-	"github.com/faradey/madock/src/paths"
-	"github.com/faradey/madock/src/versions"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/versions"
 )
 
 var dbType = "MariaDB"
