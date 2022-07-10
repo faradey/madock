@@ -91,9 +91,9 @@ func DB(flag, option string) {
 func Debug(flag string) {
 	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
 	if flag == "on" {
-		configs.SetParam(configPath, "PHP_MODULE_XDEBUG", "true")
+		configs.SetParam(configPath, "XDEBUG_ENABLED", "true")
 	} else if flag == "off" {
-		configs.SetParam(configPath, "PHP_MODULE_XDEBUG", "false")
+		configs.SetParam(configPath, "XDEBUG_ENABLED", "false")
 	} else {
 		log.Fatal("The specified parameters were not found.")
 	}

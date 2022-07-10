@@ -29,6 +29,10 @@ func GetExecDirName() string {
 	return filepath.Base(GetExecDirPath())
 }
 
+func GetExecDirNameByPath(path string) string {
+	return filepath.Base(path)
+}
+
 func GetRunDirPath() string {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

@@ -45,7 +45,7 @@ services:
       dockerfile: node.Dockerfile
     volumes: *appvolumes
     profiles:
-      - node{{{NODEJS_ENABLE}}}
+      - node{{{NODEJS_ENABLED}}}
     depends_on:
       - php
 
@@ -70,19 +70,19 @@ services:
     volumes:
       - elasticsearch_vlm:/usr/share/elasticsearch/data
     profiles:
-      - elasticsearch{{{ELASTICSEARCH_ENABLE}}}
+      - elasticsearch{{{ELASTICSEARCH_ENABLED}}}
 
   redisdb:
     build:
       context: ctx
       dockerfile: redis.Dockerfile
     profiles:
-      - redisdb{{{REDIS_ENABLE}}}
+      - redisdb{{{REDIS_ENABLED}}}
 
   rabbitmq:
     image: rabbitmq:{{{RABBITMQ_VERSION}}}
     profiles:
-      - rabbitmq{{{RABBITMQ_ENABLE}}}
+      - rabbitmq{{{D}}}
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:5.1.3
@@ -97,7 +97,7 @@ services:
     ports:
       - "{{{NGINX_PROJECT_PORT+2}}}:80"
     profiles:
-      - phpmyadmin{{{PHPMYADMIN_ENABLE}}}
+      - phpmyadmin{{{PHPMYADMIN_ENABLED}}}
     depends_on:
       - db
 
@@ -110,7 +110,7 @@ services:
     ports:
       - "{{{NGINX_PROJECT_PORT+3}}}:5601"
     profiles:
-      - kibana{{{KIBANA_ENABLE}}}
+      - kibana{{{KIBANA_ENABLED}}}
     depends_on:
       - elasticsearch
 

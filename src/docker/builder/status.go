@@ -70,7 +70,7 @@ func Status() {
 		fmtc.WarningLn(" Cron is not running")
 	}
 
-	if strings.ToLower(projectConfig["PHP_MODULE_XDEBUG"]) == "true" {
+	if strings.ToLower(projectConfig["XDEBUG_ENABLED"]) == "true" {
 		fmtc.SuccessLn(" Debugger is enabled")
 	} else {
 		fmtc.WarningLn(" Debugger is disabled")

@@ -8,10 +8,14 @@ import (
 	"github.com/faradey/madock/src/cli/commands"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/cli/helper"
+	"github.com/faradey/madock/src/migration"
 )
+
+var appVersion string = "1.4.0"
 
 func main() {
 	if len(os.Args) > 1 {
+		migration.Apply(appVersion)
 		command := strings.ToLower(os.Args[1])
 		flag := ""
 		if len(os.Args) > 2 {

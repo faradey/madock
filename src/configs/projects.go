@@ -24,11 +24,11 @@ func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[stri
 	config.AddOrSetLine("PHP_VERSION", defVersions.Php)
 	config.AddOrSetLine("PHP_COMPOSER_VERSION", defVersions.Composer)
 	config.AddOrSetLine("PHP_TZ", getOption("PHP_TZ", generalConf, projectConfig))
-	config.AddOrSetLine("PHP_XDEBUG_VERSION", defVersions.Xdebug)
-	config.AddOrSetLine("PHP_XDEBUG_REMOTE_HOST", "host.docker.internal")
-	config.AddOrSetLine("PHP_XDEBUG_IDE_KEY", getOption("PHP_XDEBUG_IDE_KEY", generalConf, projectConfig))
-	config.AddOrSetLine("PHP_MODULE_XDEBUG", getOption("PHP_MODULE_XDEBUG", generalConf, projectConfig))
-	config.AddOrSetLine("PHP_MODULE_IONCUBE", getOption("PHP_MODULE_IONCUBE", generalConf, projectConfig))
+	config.AddOrSetLine("XDEBUG_VERSION", defVersions.Xdebug)
+	config.AddOrSetLine("XDEBUG_REMOTE_HOST", "host.docker.internal")
+	config.AddOrSetLine("XDEBUG_IDE_KEY", getOption("XDEBUG_IDE_KEY", generalConf, projectConfig))
+	config.AddOrSetLine("XDEBUG_ENABLED", getOption("XDEBUG_ENABLED", generalConf, projectConfig))
+	config.AddOrSetLine("IONCUBE_ENABLED", getOption("IONCUBE_ENABLED", generalConf, projectConfig))
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
@@ -45,28 +45,28 @@ func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[stri
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("ELASTICSEARCH_ENABLE", getOption("ELASTICSEARCH_ENABLE", generalConf, projectConfig))
+	config.AddOrSetLine("ELASTICSEARCH_ENABLED", getOption("ELASTICSEARCH_ENABLED", generalConf, projectConfig))
 	config.AddOrSetLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("REDIS_ENABLE", getOption("REDIS_ENABLE", generalConf, projectConfig))
+	config.AddOrSetLine("REDIS_ENABLED", getOption("REDIS_ENABLED", generalConf, projectConfig))
 	config.AddOrSetLine("REDIS_VERSION", defVersions.Redis)
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("NODEJS_ENABLE", getOption("NODEJS_ENABLE", generalConf, projectConfig))
+	config.AddOrSetLine("NODEJS_ENABLED", getOption("NODEJS_ENABLED", generalConf, projectConfig))
 	config.AddOrSetLine("NODEJS_VERSION", generalConf["NODEJS_VERSION"])
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("RABBITMQ_ENABLE", getOption("RABBITMQ_ENABLE", generalConf, projectConfig))
+	config.AddOrSetLine("RABBITMQ_ENABLED", getOption("RABBITMQ_ENABLED", generalConf, projectConfig))
 	config.AddOrSetLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
 
 	if !config.IsEnv {

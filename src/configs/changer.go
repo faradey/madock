@@ -31,3 +31,26 @@ func SetParam(file, name, value string) {
 		config.SaveLines()
 	}
 }
+
+func ChangeParamName(file string, names map[string]string) {
+	confList := GetAllLines(file)
+	config := new(ConfigLines)
+	config.EnvFile = file
+
+	for _, line := range confList {
+		if strings.TrimSpace(line) == "" || strings.TrimSpace(line)[:1] == "#" {
+			config.AddRawLine(line)
+		} else {
+			opt := strings.Split(strings.TrimSpace(line), "=")
+			if newName, ok := names[opt[0]]; ok {
+				config.AddLine(newName, opt[1])
+			} else {
+				config.AddRawLine(line)
+			}
+		}
+	}
+
+	if len(config.Lines) > 0 {
+		config.SaveLines()
+	}
+}
