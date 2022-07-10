@@ -49,7 +49,7 @@ RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{PHP_VERSION}}}-fpm.pid/" /etc/p
     && sed -i "s/listen = .*/listen = 9000/" /etc/php/{{{PHP_VERSION}}}/fpm/pool.d/www.conf \
     && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/{{{PHP_VERSION}}}/fpm/pool.d/www.conf
 
-RUN if [ "{{{PHP_MODULE_IONCUBE}}}" = "true" ]; then set -eux && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
+RUN if [ "{{{IONCUBE_ENABLED}}}" = "true" ]; then set -eux && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
     && curl -o ioncube.tar.gz http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_{{{OSARCH}}}.tar.gz \
     && tar xvfz ioncube.tar.gz \
     && cd ioncube \
@@ -65,16 +65,16 @@ RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-di
 
 RUN if [ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]; then composer self-update --1; fi
 
-RUN if [ "{{{PHP_MODULE_XDEBUG}}}" = "true" ]; then pecl install -f xdebug-{{{PHP_XDEBUG_VERSION}}} \
+RUN if [ "{{{XDEBUG_ENABLED}}}" = "true" ]; then pecl install -f xdebug-{{{XDEBUG_VERSION}}} \
     && touch /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "zend_extension=xdebug.so" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.mode=debug" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_enable=1" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.start_with_request=on" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_autostart=on" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.idekey={{{PHP_XDEBUG_IDE_KEY}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.client_host={{{PHP_XDEBUG_REMOTE_HOST}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.remote_host={{{PHP_XDEBUG_REMOTE_HOST}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
+    && echo "xdebug.idekey={{{XDEBUG_IDE_KEY}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
+    && echo "xdebug.client_host={{{XDEBUG_REMOTE_HOST}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
+    && echo "xdebug.remote_host={{{XDEBUG_REMOTE_HOST}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_port=9001" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.client_port=9003" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/11-xdebug.ini \
