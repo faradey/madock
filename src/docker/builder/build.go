@@ -348,11 +348,8 @@ func DbImport(option string) {
 		log.Fatalln(err)
 	} else {
 		selectedInt, err = strconv.Atoi(selected)
-		if err != nil {
-			log.Fatal(err)
-		}
 
-		if selectedInt > len(dbNames) {
+		if err != nil || selectedInt > len(dbNames) {
 			log.Fatal("The item you selected was not found")
 		}
 	}
