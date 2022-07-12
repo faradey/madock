@@ -76,6 +76,21 @@ func GetFiles(path string) (dirs []string) {
 	return dirs
 }
 
+func GetFilesRecursively(path string) (dirs []string) {
+	items, err := os.ReadDir(path)
+	if err == nil {
+		for _, file := range items {
+			if !file.IsDir() {
+				dirs = append(dirs, path+"/"+file.Name())
+			} else {
+				dirs = append(dirs, GetFilesRecursively(path+"/"+file.Name())...)
+			}
+		}
+	}
+
+	return dirs
+}
+
 func GetDBFiles(path string) (dirs []string) {
 	items, err := os.ReadDir(path)
 	if err != nil {

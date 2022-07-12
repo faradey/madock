@@ -1,6 +1,10 @@
 package versions
 
 import (
+	"io/ioutil"
+	"os"
+	"strings"
+
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/paths"
 )
@@ -25,5 +29,18 @@ func V140() {
 	dirs := paths.GetDirs(projectsPath)
 	for _, val := range dirs {
 		configs.ChangeParamName(projectsPath+"/"+val+"/env.txt", mapNames)
+		dockerFiles := paths.GetFilesRecursively(projectsPath + "/" + val + "/docker")
+		if len(dockerFiles) > 0 {
+			for _, pth := range dockerFiles {
+				b, err := os.ReadFile(pth)
+				if err == nil {
+					str := string(b)
+					for from, to := range mapNames {
+						str = strings.Replace(str, "{{{"+from+"}}}", "{{{"+to+"}}}", -1)
+					}
+					ioutil.WriteFile(pth, []byte(str), 0755)
+				}
+			}
+		}
 	}
 }
