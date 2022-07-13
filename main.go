@@ -82,6 +82,12 @@ func main() {
 			commands.Remote(flag, option)
 		case "restart":
 			commands.Restart()
+		case "service":
+			option := ""
+			if len(os.Args) > 3 {
+				option = strings.ToLower(os.Args[3])
+			}
+			commands.SwitchService(flag, option)
 		case "setup":
 			commands.Setup()
 		case "ssl":
