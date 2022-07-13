@@ -76,18 +76,6 @@ func Uncompress() {
 	compress.Unzip()
 }
 
-func DB(flag, option string) {
-	if flag == "import" {
-		builder.DbImport(option)
-	} else if flag == "export" {
-		builder.DbExport()
-	} else if flag == "soft-clean" {
-		builder.DbSoftClean()
-	} else {
-		log.Fatal("The specified parameters were not found.")
-	}
-}
-
 func Debug(flag string) {
 	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
 	if flag == "on" {
