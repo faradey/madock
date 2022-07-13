@@ -396,7 +396,7 @@ func DbExport() {
 	projectName := paths.GetRunDirName()
 	projectConfig := configs.GetCurrentProjectConfig()
 	dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
-	selectedFile, err := os.Create(dbsPath + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
+	selectedFile, err := os.Create(dbsPath + "local-" + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
 	if err != nil {
 		log.Fatal(err)
 	}
