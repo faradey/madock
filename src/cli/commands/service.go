@@ -15,4 +15,5 @@ func SwitchService(name, action string) {
 	} else if action == "off" {
 		service.ServiceOff(name)
 	}
+	Rebuild()
 }
