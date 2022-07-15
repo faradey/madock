@@ -38,12 +38,12 @@ func ServiceOff(name string) {
 }
 
 func isService(name string) bool {
-	name = strings.ToUpper(name)
+	upperName := strings.ToUpper(name)
 	configData := configs.GetCurrentProjectConfig()
 
 	for key := range configData {
 		serviceName := strings.SplitN(key, "_ENABLED", 2)
-		if serviceName[0] == name {
+		if serviceName[0] == upperName {
 			return true
 		}
 	}
