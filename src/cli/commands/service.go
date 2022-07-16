@@ -12,8 +12,9 @@ func SwitchService(name, action string) {
 		service.ServiceList()
 	} else if action == "on" {
 		service.ServiceOn(name)
+		Rebuild()
 	} else if action == "off" {
 		service.ServiceOff(name)
+		Rebuild()
 	}
-	Rebuild()
 }
