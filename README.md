@@ -119,6 +119,7 @@ See detailed documentation about development workflow with madock
 * [Database import, export, synchronization, phpmyadmin](docs/database.md)
 * [Media synchronization](docs/media.md)
 * [Cron](docs/cron.md)
+* Kibana. URL http://{you_domain_name}/kibana
 
 ## Donations
 If you find it useful and want to invite us for a beer, just click on the donation button. Thanks!
