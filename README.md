@@ -30,7 +30,7 @@ Follow the installation steps for your system.
 
 1. Install [Docker](https://docs.docker.com/docker-for-mac/install/)
 2. Install [Golang](https://go.dev/doc/install)
-3. Install [Mutagen](https://mutagen.io/documentation/introduction/installation)
+3. ~~Install [Mutagen](https://mutagen.io/documentation/introduction/installation)~~ (deprecated)
 4. Clone this repo and follow into folder "madock"
 ```
 git clone git@github.com:faradey/madock.git
