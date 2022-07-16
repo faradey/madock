@@ -77,6 +77,7 @@ madock
 git clone git@github.com:faradey/madock.git
 ```
 If you got error "git@github.com: Permission denied (publickey)." see [solution](https://docs.github.com/en/authentication/troubleshooting-ssh/error-permission-denied-publickey#verify-the-public-key-is-attached-to-your-account)
+
 6. Compile
 ```
 go build -o madock
