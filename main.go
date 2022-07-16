@@ -59,6 +59,8 @@ func main() {
 			commands.DB(flag, option)
 		case "debug":
 			commands.Debug(flag)
+		case "info":
+			commands.Info()
 		case "help":
 			helper.Help()
 		case "logs":

@@ -10,6 +10,7 @@ import (
 
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/paths"
+	cp "github.com/otiai10/copy"
 )
 
 func MakeConf(projectName string) {
@@ -34,6 +35,12 @@ func MakeConf(projectName string) {
 	makeRedisDockerfile(projectName)
 	makeNodeDockerfile(projectName)
 	makeKibanaConf(projectName)
+	makeScriptsConf(projectName)
+}
+
+func makeScriptsConf(projectName string) {
+	exPath := paths.GetExecDirPath()
+	cp.Copy(exPath+"/scripts", exPath+"/aruntime/projects/"+projectName+"/ctx/scripts")
 }
 
 func makeKibanaConf(projectName string) {

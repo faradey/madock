@@ -9,6 +9,7 @@ import (
 	"github.com/faradey/madock/src/compress"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/docker/scripts"
 	"github.com/faradey/madock/src/paths"
 	"github.com/faradey/madock/src/ssh"
 )
@@ -86,6 +87,10 @@ func Debug(flag string) {
 		log.Fatal("The specified parameters were not found.")
 	}
 	builder.UpWithBuild()
+}
+
+func Info() {
+	scripts.MagentoInfo()
 }
 
 func Cron(flag string) {
