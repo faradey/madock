@@ -1,9 +1,10 @@
 package versions
 
 import (
-	"github.com/faradey/madock/src/paths"
 	"io/ioutil"
 	"regexp"
+
+	"github.com/faradey/madock/src/paths"
 )
 
 type ToolsVersions struct {
@@ -73,6 +74,8 @@ func GetDBVersion(mageVer string) string {
 
 func GetElasticVersion(mageVer string) string {
 	if mageVer >= "2.4.4" {
+		return "7.16.3"
+	} else if mageVer >= "2.4.3" {
 		return "7.10.1"
 	} else if mageVer >= "2.4.2" {
 		return "7.9.3"
@@ -124,7 +127,9 @@ func GetRedisVersion(mageVer string) string {
 }
 
 func GetRabbitMQVersion(mageVer string) string {
-	if mageVer >= "2.3.4" {
+	if mageVer >= "2.4.4" {
+		return "3.9"
+	} else if mageVer >= "2.3.4" {
 		return "3.8"
 	} else if mageVer >= "2.0.0" {
 		return "3.7"
