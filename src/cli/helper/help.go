@@ -55,7 +55,7 @@ func Help() {
 	describeByLevel("service", "Services", 0)
 	describeByLevel("list", "Show all services", 1)
 	describeByLevel("[service name] on", "Enable the service", 1)
-	describeByLevel("[service name] on", "Disable the service", 1)
+	describeByLevel("[service name] off", "Disable the service", 1)
 	describeByLevel("setup", "Initial project setup", 0)
 	describeByLevel("ssl", "SSL Certificates", 0)
 	describeByLevel("rebuild", "Rebuild SSL Certificates", 1)
