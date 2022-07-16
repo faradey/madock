@@ -100,7 +100,10 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`on`      Enable xdebug
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`off`     Disable xdebug
-                    
+                     
+   
+* `info`   Show information about third-parties modules (name, current version, latest version, status)             
+    
     
 * `help`    Displays help for commands
                       
@@ -148,6 +151,12 @@ This command shows you the following items:
                         
 
 * `restart` Restarting all containers and services. Stop all containers and start them again
+                        
+
+* `service`   Services
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`list`   Show all services
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[service name] on`   Enable the service
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[service name] off`  Disable the service
                         
 
 * `setup`   Initial the project setup
