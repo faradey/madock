@@ -14,6 +14,7 @@ This project is written on Golang and it is distributed under a MIT License.
 * Simple viewing of logs with one command
 * Debug support
 * Synchronization of the local database and media files with the dev site
+* Additional services: phpmyadmin, redis, rabbitMQ, Kibana, ioncube, xdebug, cron
 
 ## Tested on
 * Linux (Ubuntu 20.04)
