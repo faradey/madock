@@ -16,4 +16,7 @@
 !/docs
 !/docs/*
 !/docs/**
+!/scripts
+!/scripts/*
+!/scripts/**
 .DS_Store
