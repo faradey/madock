@@ -23,12 +23,6 @@ if(file_exists($configPath)){
     print($magentoVersion."\n\n");
     print("Third-parties modules\n");
     print("Name, Current version,  Latest version, Status\n");
-    if(exec("composer show -f json", $latests) !== false){
-        if(!empty($latests)){
-            $latests = json_decode(implode("", $latests), true);
-            $latests = prepareLatest($latests['installed']);
-        }
-    }
     
     foreach($modules as $moduleName => $isActive) {
         if(strpos($moduleName, "Magento_", 0) !== 0){
@@ -42,7 +36,22 @@ if(file_exists($configPath)){
                     continue;
                 }
                 $version = $composerData['version']??$version;
-                $latestVersion = $latests[$composerData['name']]['version']??null;
+                $latests = [];
+                if(exec("composer show --all -f json ".$composerData['name'], $latests) !== false){
+                    $latests = json_decode(implode("", $latests), true);
+                    if(!empty($latests['versions'])) {
+                        if(count($latests['versions'])==1){
+                            $latestVersion = $latests['versions'][0]??null;
+                        } else {
+                            foreach($latests['versions'] as $v) {
+                                if(preg_match("/[a-z]+/i", $v) === 0){
+                                    $latestVersion = $v;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
             } else {
                 $modVN = explode("_", $moduleName);
                 if(file_exists($appCodePath."/".$modVN[0]."/".$modVN[1]."/composer.json")) {
