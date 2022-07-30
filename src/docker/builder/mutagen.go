@@ -29,7 +29,6 @@ func syncMutagen(projectName, containerName, usr string) {
 		"-i", "/var/page_cache",
 		"-i", "/var/tmp",
 		"-i", "/var/vendor",
-		"-i", "/var/composer_home",
 		"-i", "/phpserver",
 		"-i", "/.idea",
 		paths.GetRunDirPath(),

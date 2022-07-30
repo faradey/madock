@@ -5,7 +5,6 @@ services:
     volumes: &appvolumes-windows
       - ./src:/var/www/html:delegated
       - ../../.composer:/var/www/.composer:delegated
-      - ../../.composer:/var/www/html/var/composer_home:delegated
 
   php_without_xdebug:
     volumes: &appvolumes-windows

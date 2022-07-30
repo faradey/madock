@@ -5,15 +5,12 @@ services:
     volumes:
       - ./src/pub/media/:/var/www/html/pub/media/:delegated
       - ../../.composer:/var/www/.composer:delegated
-      - ../../.composer:/var/www/html/var/composer_home:delegated
       - filesdata:/var/www/html
-      #- composercache:/var/www/html/var/composer_home
 
   php_without_xdebug:
     volumes:
       - ./src/pub/media/:/var/www/html/pub/media/:delegated
       - filesdata:/var/www/html
-      #- composercache:/var/www/html/var/composer_home
 
   nginx:
     volumes:

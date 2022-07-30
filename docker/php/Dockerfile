@@ -91,9 +91,7 @@ RUN if [ "{{{MUTAGEN_USE}}}" = "true" ]; then mkdir /var/www/html/pub \
     && mkdir /var/www/html/pub/media \
     && chown www-data:www-data /var/www/html/pub/media \
     && mkdir /var/www/html/var \
-    && chown www-data:www-data /var/www/html/var \
-    && mkdir /var/www/html/var/composer_home \
-    && chown www-data:www-data /var/www/html/var/composer_home; fi
+    && chown www-data:www-data /var/www/html/var; fi
 
 EXPOSE 9001 9003
 CMD "php-fpm{{{PHP_VERSION}}}"
