@@ -11,8 +11,14 @@ type ToolsVersions struct {
 	Php, Db, Elastic, Composer, Redis, RabbitMQ, Xdebug, Hosts string
 }
 
-func GetVersions() ToolsVersions {
-	_, mageVersion := getMagentoVersion()
+func GetVersions(ver string) ToolsVersions {
+	mageVersion := ""
+	if ver == "" {
+		_, mageVersion = getMagentoVersion()
+	} else {
+		mageVersion = ver
+	}
+
 	return ToolsVersions{
 		Php:      GetPhpVersion(mageVersion),
 		Db:       GetDBVersion(mageVersion),

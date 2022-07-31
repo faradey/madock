@@ -40,7 +40,16 @@ func Setup() {
 		projectConfig = configs.GetProjectConfig(projectName)
 	}
 
-	toolsDefVersions := versions.GetVersions()
+	toolsDefVersions := versions.GetVersions("")
+
+	if toolsDefVersions.Php == "" {
+		fmt.Println("")
+		fmtc.Title("Specify Magento version: ")
+		mageVersion := waiter()
+		if mageVersion != "" {
+			toolsDefVersions = versions.GetVersions(mageVersion)
+		}
+	}
 
 	setupPhp(&toolsDefVersions.Php)
 	setupDB(&toolsDefVersions.Db)
