@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/faradey/madock/src/cli/attr"
@@ -25,9 +26,12 @@ func Sync(remoteDir string) {
 	maxProcs := functions.MaxParallelism() - 1
 	var scTemp *sftp.Client
 	isFirstConnect := false
+	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+		paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
+	}
 	for maxProcs > 0 {
 		conn := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
-		if isFirstConnect == false {
+		if !isFirstConnect {
 			fmt.Println("")
 			fmt.Println("Server connection...")
 			isFirstConnect = true

@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -29,10 +28,6 @@ func Setup() {
 	}
 
 	fmtc.SuccessLn("Start set up environment")
-
-	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
-		paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
-	}
 
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 	var projectConfig map[string]string
