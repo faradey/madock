@@ -18,6 +18,7 @@ RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     procps \
     openssh-client \
     lsof \
+    openssl \
   && locale-gen en_US.UTF-8
 
 RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
@@ -39,7 +40,15 @@ RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
     php{{{PHP_VERSION}}}-xmlrpc \
     php{{{PHP_VERSION}}}-xsl \
     php{{{PHP_VERSION}}}-zip \
-    php{{{PHP_VERSION}}}-imagick
+    php{{{PHP_VERSION}}}-imagick \
+    php{{{PHP_VERSION}}}-ctype \
+    php{{{PHP_VERSION}}}-dom \
+    php{{{PHP_VERSION}}}-fileinfo \
+    php{{{PHP_VERSION}}}-iconv \
+    php{{{PHP_VERSION}}}-simplexml \
+    php{{{PHP_VERSION}}}-sockets \
+    php{{{PHP_VERSION}}}-tokenizer \
+    php{{{PHP_VERSION}}}-xmlwriter
 
 RUN if [ "{{{PHP_VERSION}}}" < "8.0" ]; then apt-get install -y php{{{PHP_VERSION}}}-json; fi
 
