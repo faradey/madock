@@ -156,7 +156,7 @@ func makePhpDockerfile(projectName string) {
 func makeDockerCompose(projectName string) {
 	overrideFile := runtime.GOOS
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["MUTAGEN_USE"] == "false" && runtime.GOOS == "darwin" {
+	if projectConf["MUTAGEN_USE"] != "true" && runtime.GOOS == "darwin" {
 		overrideFile = runtime.GOOS + "_mutagen_off"
 	}
 	dockerDefFile := getDockerConfigFile(projectName, "/docker/docker-compose.yml")
