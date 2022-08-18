@@ -20,6 +20,10 @@ This project is written on Golang and it is distributed under a MIT License.
 * Linux (Ubuntu 20.04)
 * macOS (Monterey)
 
+## Video
+
+[![madock - install the two Magento 2 projects](https://i9.ytimg.com/vi/_9NvZak_kt8/mq1.jpg?sqp=CPTN95cG&rs=AOn4CLCdHqilfuAftZYHtejLn8v52qWP3g)](https://www.youtube.com/watch?v=_9NvZak_kt8)
+
 ## Installation
 
 You need 5 things on your local machine: `git`, `docker`, `docker-compose`, `golang` and `madock`
