@@ -1,14 +1,1 @@
 version: "3.7"
-
-services:
-  php:
-    volumes: &appvolumes-linux
-
-  php_without_xdebug:
-    volumes: &appvolumes-linux
-
-  nginx:
-    volumes: *appvolumes-linux
-
-  node:
-    volumes: *appvolumes-linux

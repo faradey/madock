@@ -1,15 +1,1 @@
 version: "3.7"
-
-services:
-  php:
-    volumes: &appvolumes-darwin
-
-  php_without_xdebug:
-    volumes: &appvolumes-darwin
-
-
-  nginx:
-    volumes: *appvolumes-darwin
-
-  node:
-    volumes: *appvolumes-darwin

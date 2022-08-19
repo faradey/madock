@@ -102,15 +102,15 @@ func Setup(download, install string) {
 func downloadMagento(mageVersion string) {
 	fmt.Println("")
 	fmtc.TitleLn("Specify Magento version: ")
-	fmt.Println("1) Community")
+	fmt.Println("1) Community (default)")
 	fmt.Println("2) Enterprise")
 	edition := waiter()
 	edition = strings.TrimSpace(edition)
-	if edition != "1" && edition != "2" {
+	if edition != "1" && edition != "2" && edition != "" {
 		fmtc.ErrorLn("The specified edition '" + edition + "' is incorrect.")
 		return
 	}
-	if edition == "1" {
+	if edition == "1" || edition == "" {
 		edition = "community"
 	} else if edition == "2" {
 		edition = "enterprise"
