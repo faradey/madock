@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 
 	"github.com/faradey/madock/src/cli/fmtc"
@@ -30,10 +29,6 @@ func PrepareConfigs() {
 
 func Down() {
 	projectName := paths.GetRunDirName()
-	projectConf := configs.GetCurrentProjectConfig()
-	if runtime.GOOS == "darwin" && projectConf["MUTAGEN_USE"] != "false" {
-		clearMutagen(projectName, "php")
-	}
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
@@ -104,19 +99,11 @@ func Start() {
 		} else {
 			Cron("off", false)
 		}
-
-		if runtime.GOOS == "darwin" && projectConfig["MUTAGEN_USE"] != "false" {
-			syncMutagen(projectName, "php", "www-data")
-		}
 	}
 }
 
 func Stop() {
 	projectName := paths.GetRunDirName()
-	projectConf := configs.GetCurrentProjectConfig()
-	if runtime.GOOS == "darwin" && projectConf["MUTAGEN_USE"] != "false" {
-		clearMutagen(projectName, "php")
-	}
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"-f",
@@ -212,9 +199,6 @@ func upProjectWithBuild() {
 	}
 
 	projectConfig := configs.GetCurrentProjectConfig()
-	if runtime.GOOS == "darwin" && projectConfig["MUTAGEN_USE"] != "false" {
-		syncMutagen(projectName, "php", "www-data")
-	}
 
 	if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
 		Cron("on", false)
