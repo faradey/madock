@@ -2,23 +2,19 @@ version: "3.7"
 
 services:
   php:
-    volumes:
-      - ./src/pub/media/:/var/www/html/pub/media/:delegated
+    volumes: &appvolumes-darwin
+      - ./src:/var/www/html:delegated
       - ../../.composer:/var/www/.composer:delegated
-      - filesdata:/var/www/html
-
-  php_without_xdebug:
-    volumes:
-      - ./src/pub/media/:/var/www/html/pub/media/:delegated
-      - filesdata:/var/www/html
-
-  nginx:
-    volumes:
-      - ./src/pub/media/:/var/www/html/pub/media/
-      - filesdata:/var/www/html
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
 
-volumes:
-  filesdata:
-  #composercache:
-    #external: true
+  php_without_xdebug:
+    volumes: &appvolumes-darwin
+      - ./src:/var/www/html:delegated
+      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+
+
+  nginx:
+    volumes: *appvolumes-darwin
+
+  node:
+    volumes: *appvolumes-darwin

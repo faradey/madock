@@ -34,8 +34,7 @@ Follow the installation steps for your system.
 
 1. Install [Docker](https://docs.docker.com/docker-for-mac/install/)
 2. Install [Golang](https://go.dev/doc/install)
-3. ~~Install [Mutagen](https://mutagen.io/documentation/introduction/installation)~~ (deprecated)
-4. Clone this repo and follow into folder "madock"
+3. Clone this repo and follow into folder "madock"
 ```
 git clone git@github.com:faradey/madock.git
 ```
@@ -135,7 +134,6 @@ This project has been possible thanks to the following resources:
 
 * [docker-magento](https://github.com/markoshust/docker-magento)
 * [dockergento](https://github.com/ModestCoders/magento2-dockergento)
-* [mutagen](https://mutagen.io/)
 
 ## License
 
