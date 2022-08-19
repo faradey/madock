@@ -53,11 +53,5 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 WORKDIR /var/www/html
 RUN chown {{{UID}}}:{{{GUID}}} /var/www/html
-RUN if [ "{{{MUTAGEN_USE}}}" = "true" ]; then mkdir /var/www/html/pub \
-    && chown www-data:www-data /var/www/html/pub \
-    && mkdir /var/www/html/pub/media \
-    && chown www-data:www-data /var/www/html/pub/media \
-    && mkdir /var/www/html/var \
-    && chown www-data:www-data /var/www/html/var; fi
 
 CMD "php-fpm{{{PHP_VERSION}}}"

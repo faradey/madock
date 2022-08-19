@@ -91,7 +91,11 @@ func main() {
 			}
 			commands.SwitchService(flag, option)
 		case "setup":
-			commands.Setup()
+			option := ""
+			if len(os.Args) > 3 {
+				option = strings.ToLower(os.Args[3])
+			}
+			commands.Setup(flag, option)
 		case "ssl":
 			commands.Ssl(flag)
 		case "start":

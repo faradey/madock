@@ -16,7 +16,16 @@ import (
 	"github.com/faradey/madock/src/versions"
 )
 
-func Setup() {
+func Setup(download, install string) {
+	if download != "" && download != "--download" && download != "--install" {
+		fmtc.ErrorLn("The specified parameter '" + download + "' were not found.")
+		return
+	}
+	if install != "" && install != "--download" && install != "--install" {
+		fmtc.ErrorLn("The specified parameter '" + install + "' were not found.")
+		return
+	}
+
 	if configs.IsHasConfig() {
 		builder.Down()
 	}
@@ -37,10 +46,11 @@ func Setup() {
 
 	toolsDefVersions := versions.GetVersions("")
 
+	mageVersion := ""
 	if toolsDefVersions.Php == "" {
 		fmt.Println("")
 		fmtc.Title("Specify Magento version: ")
-		mageVersion := waiter()
+		mageVersion = waiter()
 		if mageVersion != "" {
 			toolsDefVersions = versions.GetVersions(mageVersion)
 		}
@@ -61,6 +71,56 @@ func Setup() {
 	fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order " +
 		"\nto synchronize the database and media files. Enter SSH data in \n" +
 		paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
+
+	isDownload := false
+	isInstall := false
+	if download != "" {
+		if download == "--download" {
+			isDownload = true
+		} else if download == "--install" {
+			isInstall = true
+		}
+	}
+
+	if install != "" {
+		if install == "--download" {
+			isDownload = true
+		} else if install == "--install" {
+			isInstall = true
+		}
+	}
+
+	if isDownload {
+		downloadMagento(mageVersion)
+	}
+
+	if isInstall {
+		installMagento()
+	}
+}
+
+func downloadMagento(mageVersion string) {
+	fmt.Println("")
+	fmtc.TitleLn("Specify Magento version: ")
+	fmt.Println("1) Community")
+	fmt.Println("2) Enterprise")
+	edition := waiter()
+	edition = strings.TrimSpace(edition)
+	if edition != "1" && edition != "2" {
+		fmtc.ErrorLn("The specified edition '" + edition + "' is incorrect.")
+		return
+	}
+	if edition == "1" {
+		edition = "community"
+	} else if edition == "2" {
+		edition = "enterprise"
+	}
+	builder.UpWithBuild()
+	builder.DownloadMagento(edition, mageVersion)
+}
+
+func installMagento() {
+	builder.InstallMagento()
 }
 
 func setupPhp(defVersion *string) {

@@ -96,12 +96,6 @@ RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
 WORKDIR /var/www/html
 RUN chown {{{UID}}}:{{{GUID}}} /var/www/html
 RUN mkdir /var/www/.composer && chown {{{UID}}}:{{{GUID}}} /var/www/.composer
-RUN if [ "{{{MUTAGEN_USE}}}" = "true" ]; then mkdir /var/www/html/pub \
-    && chown www-data:www-data /var/www/html/pub \
-    && mkdir /var/www/html/pub/media \
-    && chown www-data:www-data /var/www/html/pub/media \
-    && mkdir /var/www/html/var \
-    && chown www-data:www-data /var/www/html/var; fi
 
 EXPOSE 9001 9003
 CMD "php-fpm{{{PHP_VERSION}}}"

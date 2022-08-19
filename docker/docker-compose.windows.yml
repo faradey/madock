@@ -3,12 +3,9 @@ version: "3.7"
 services:
   php:
     volumes: &appvolumes-windows
-      - ./src:/var/www/html:delegated
-      - ../../.composer:/var/www/.composer:delegated
 
   php_without_xdebug:
     volumes: &appvolumes-windows
-      - ./src:/var/www/html:delegated
 
   nginx:
     volumes: *appvolumes-windows

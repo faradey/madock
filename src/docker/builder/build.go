@@ -253,6 +253,54 @@ func Magento(flag string) {
 	}
 }
 
+func DownloadMagento(edition, version string) {
+	projectName := paths.GetRunDirName()
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && composer create-project --repository-url=https://repo.magento.com/ magento/project-"+edition+"-edition:"+version+" ./")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func InstallMagento() {
+	projectName := paths.GetRunDirName()
+	projectConfig := configs.GetCurrentProjectConfig()
+	host := strings.Split(strings.Split(projectConfig["HOSTS"], " ")[0], ":")[0]
+	installCommand := "bin/magento setup:install " +
+		"--base-url=https://" + host + " " +
+		"--db-host=db " +
+		"--db-name=magento " +
+		"--db-user=magento " +
+		"--db-password=magento " +
+		"--admin-firstname=" + projectConfig["MAGENTO_ADMIN_FIRST_NAME"] + " " +
+		"--admin-lastname=" + projectConfig["MAGENTO_ADMIN_LAST_NAME"] + " " +
+		"--admin-email=" + projectConfig["MAGENTO_ADMIN_EMAIL"] + " " +
+		"--admin-user=" + projectConfig["MAGENTO_ADMIN_USER"] + " " +
+		"--admin-password=" + projectConfig["MAGENTO_ADMIN_PASSWORD"] + " " +
+		"--backend-frontname=" + projectConfig["MAGENTO_ADMIN_FRONTNAME"] + "" +
+		"--language=" + projectConfig["MAGENTO_LOCALE"] + " " +
+		"--currency=" + projectConfig["MAGENTO_CURRENCY"] + " " +
+		"--timezone=" + projectConfig["MAGENTO_TIMEZONE"] + " " +
+		"--use-rewrites=1 " +
+		"--search-engine=elasticsearch7 " +
+		"--elasticsearch-host=elasticsearch " +
+		"--elasticsearch-port=9200 " +
+		"--elasticsearch-index-prefix=magento2 " +
+		"--elasticsearch-timeout=15 " +
+		" && bin/magento s:up && bin/magento c:c && bin/magento i:rei && bin/magento c:f"
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && "+installCommand)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func Composer(flag string) {
 	projectName := paths.GetRunDirName()
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && composer "+flag)
