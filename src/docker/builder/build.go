@@ -162,6 +162,37 @@ func upProjectWithBuild() {
 			log.Fatal(err)
 		}
 	}
+
+	src := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/composer"
+
+	composerGlobalDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		if _, err := os.Stat(composerGlobalDir + "/.composer"); os.IsNotExist(err) {
+			paths.MakeDirsByPath(composerGlobalDir + "/.composer")
+		}
+	}
+
+	if fi, err := os.Lstat(src); err == nil {
+		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
+			err := os.RemoveAll(src)
+			if err == nil {
+				err := os.Symlink(composerGlobalDir+"/.composer", src)
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				fmt.Println(err)
+			}
+		}
+	} else {
+		err := os.Symlink(composerGlobalDir+"/.composer", src)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"-f",
@@ -193,7 +224,7 @@ func upProjectWithBuild() {
 	cmd := exec.Command("docker-compose", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -255,7 +286,7 @@ func Magento(flag string) {
 
 func DownloadMagento(edition, version string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && composer create-project --repository-url=https://repo.magento.com/ magento/project-"+edition+"-edition:"+version+" ./")
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && composer create-project --repository-url=https://repo.magento.com/ magento/project-"+edition+"-edition:"+version+" ./ && composer install")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -280,7 +311,7 @@ func InstallMagento() {
 		"--admin-email=" + projectConfig["MAGENTO_ADMIN_EMAIL"] + " " +
 		"--admin-user=" + projectConfig["MAGENTO_ADMIN_USER"] + " " +
 		"--admin-password=" + projectConfig["MAGENTO_ADMIN_PASSWORD"] + " " +
-		"--backend-frontname=" + projectConfig["MAGENTO_ADMIN_FRONTNAME"] + "" +
+		"--backend-frontname=" + projectConfig["MAGENTO_ADMIN_FRONTNAME"] + " " +
 		"--language=" + projectConfig["MAGENTO_LOCALE"] + " " +
 		"--currency=" + projectConfig["MAGENTO_CURRENCY"] + " " +
 		"--timezone=" + projectConfig["MAGENTO_TIMEZONE"] + " " +
@@ -290,6 +321,7 @@ func InstallMagento() {
 		"--elasticsearch-port=9200 " +
 		"--elasticsearch-index-prefix=magento2 " +
 		"--elasticsearch-timeout=15 " +
+		"&& bin/magento module:disable Magento_TwoFactorAuth " +
 		" && bin/magento s:up && bin/magento c:c && bin/magento i:rei && bin/magento c:f"
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && "+installCommand)
 	cmd.Stdin = os.Stdin
@@ -299,6 +331,11 @@ func InstallMagento() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Magento installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin URI: /" + projectConfig["MAGENTO_ADMIN_FRONTNAME"])
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin User: " + projectConfig["MAGENTO_ADMIN_USER"])
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin Password: " + projectConfig["MAGENTO_ADMIN_PASSWORD"])
 }
 
 func Composer(flag string) {

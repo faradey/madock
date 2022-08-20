@@ -94,8 +94,6 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
 WORKDIR /var/www/html
-RUN chown {{{UID}}}:{{{GUID}}} /var/www/html
-RUN mkdir /var/www/.composer && chown {{{UID}}}:{{{GUID}}} /var/www/.composer
 
 EXPOSE 9001 9003
 CMD "php-fpm{{{PHP_VERSION}}}"
