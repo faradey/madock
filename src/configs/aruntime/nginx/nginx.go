@@ -38,14 +38,14 @@ func setPorts() {
 		for port, line := range projects {
 			lines += line + "=" + strconv.Itoa(port+1) + "\n"
 		}
-		_ = ioutil.WriteFile(portsFile, []byte(lines), 0755)
+		_ = ioutil.WriteFile(portsFile, []byte(lines), 0664)
 	}
 
 	portsConfig := configs.ParseFile(portsFile)
 
 	if _, ok := portsConfig[paths.GetRunDirName()]; !ok {
 		f, err := os.OpenFile(portsFile,
-			os.O_APPEND|os.O_WRONLY, 0644)
+			os.O_APPEND|os.O_WRONLY, 0664)
 		if err != nil {
 			log.Println(err)
 		}

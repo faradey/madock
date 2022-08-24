@@ -48,6 +48,8 @@ services:
     build:
       context: ctx
       dockerfile: db.Dockerfile
+    ports:
+      - "{{{NGINX_PROJECT_PORT+4}}}:3306"
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
@@ -56,7 +58,8 @@ services:
     build:
       context: ctx
       dockerfile: node.Dockerfile
-    volumes: *appvolumes
+    volumes:
+      - ./src:/var/www/html:delegated
     profiles:
       - node{{{NODEJS_ENABLED}}}
     depends_on:

@@ -69,6 +69,7 @@ func main() {
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Magento(flag)
 		case "node":
+			flag = strings.Join(os.Args[2:], " ")
 			commands.Node(flag)
 		case "proxy":
 			commands.Proxy(flag)
