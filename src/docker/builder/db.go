@@ -101,6 +101,10 @@ func DbExport() {
 	fmt.Println("Database export completed successfully")
 }
 
+func DbInfo() {
+
+}
+
 func DbSoftClean() {
 	fmt.Println("Start cleaning up the database")
 	projectName := paths.GetRunDirName()
