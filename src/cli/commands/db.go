@@ -13,8 +13,6 @@ func DB(flag, option string) {
 		builder.DbExport()
 	} else if flag == "soft-clean" {
 		builder.DbSoftClean()
-	} else if flag == "info" {
-		builder.DbInfo()
 	} else {
 		log.Fatal("The specified parameters were not found.")
 	}
