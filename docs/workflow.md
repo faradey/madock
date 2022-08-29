@@ -50,7 +50,7 @@ madock node grunt watch
   madock debug off
   ```
 
-#### 6. ssl certificates
+#### 6. SSL certificates
 
 If you want to manually add an ssl certificate to the browser, you can find it at [path to madock folder]/aruntime/ctx/madockCA.pem
 
