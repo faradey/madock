@@ -1,6 +1,7 @@
 FROM node:{{{NODEJS_VERSION}}}
 
-RUN apt-get update -y
+RUN apt update -y
+RUN apt install chromium -y
 RUN npm install -g grunt-cli && npm install -g bower
 
 RUN mkdir -p /home/app \
