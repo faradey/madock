@@ -50,7 +50,11 @@ madock node grunt watch
   madock debug off
   ```
 
-#### 6. help
+#### 7. ssl certificates
+
+If you want to manually add an ssl certificate to the browser, you can find it at [path to madock folder]/aruntime/ctx/madockCA.pem
+
+#### 7. help
 ```
   madock help
  ```
@@ -87,6 +91,8 @@ This command shows you the following items:
               
           
 * `db`      Database import / export
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`info`  Information about credentials and remote host and port
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`import`  Database import
 
@@ -163,6 +169,10 @@ This command shows you the following items:
                         
 
 * `setup`   Initial the project setup
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--download`   Download specific Magento version from Composer to the container
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--install`   Install Magento from the source code
                         
 
 * `ssl`   SSL Certificates
