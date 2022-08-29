@@ -58,7 +58,7 @@ func Help() {
 	describeByLevel("[service name] on", "Enable the service", 1)
 	describeByLevel("[service name] off", "Disable the service", 1)
 	describeByLevel("setup", "Initial project setup", 0)
-	describeByLevel("--download", "Download specific Magento version from Composer to the container", 1)
+	describeByLevel("--download", "Download the specific Magento version from Composer to the container", 1)
 	describeByLevel("--install", "Install Magento from the source code", 1)
 	describeByLevel("ssl", "SSL Certificates", 0)
 	describeByLevel("rebuild", "Rebuild SSL Certificates", 1)
