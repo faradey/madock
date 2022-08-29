@@ -10,4 +10,3 @@ RUN mkdir -p /home/app \
 RUN groupmod -g {{{GUID}}} -o node
 RUN usermod -u {{{UID}}} -o app
 USER app
-WORKDIR /var/www/html
