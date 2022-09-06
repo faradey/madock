@@ -83,7 +83,7 @@ services:
       - "cluster.routing.allocation.disk.threshold_enabled=false"
       - "index.blocks.read_only_allow_delete"
     volumes:
-      - elasticsearch_vlm:/usr/share/elasticsearch/data
+      - elasticsearch_vlm_{{{ELASTICSEARCH_VERSION}}}:/usr/share/elasticsearch/data
     profiles:
       - elasticsearch{{{ELASTICSEARCH_ENABLED}}}
 
@@ -97,7 +97,7 @@ services:
   rabbitmq:
     image: rabbitmq:{{{RABBITMQ_VERSION}}}
     profiles:
-      - rabbitmq{{{D}}}
+      - rabbitmq{{{RABBITMQ_ENABLED}}}
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:5.1.3
@@ -131,4 +131,4 @@ services:
 
 volumes:
   dbdata:
-  elasticsearch_vlm:
+  elasticsearch_vlm_{{{ELASTICSEARCH_VERSION}}}:
