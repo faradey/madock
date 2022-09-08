@@ -3,6 +3,7 @@ package versions
 import (
 	"io/ioutil"
 	"regexp"
+	"strings"
 
 	"github.com/faradey/madock/src/paths"
 )
@@ -16,7 +17,7 @@ func GetVersions(ver string) ToolsVersions {
 	if ver == "" {
 		_, mageVersion = getMagentoVersion()
 	} else {
-		mageVersion = ver
+		mageVersion = strings.TrimSpace(ver)
 	}
 
 	return ToolsVersions{
@@ -37,7 +38,7 @@ func getMagentoVersion() (edition, version string) {
 		re := regexp.MustCompile(`(?is)"magento/product-(community|enterprise)-edition".*?:.*?"([\.0-9]{5,}?)-*.*?"`)
 		magentoVersion := re.FindAllStringSubmatch(string(txt), -1)
 		if len(magentoVersion) > 0 && len(magentoVersion[0]) > 2 {
-			return magentoVersion[0][1], magentoVersion[0][2]
+			return strings.TrimSpace(magentoVersion[0][1]), strings.TrimSpace(magentoVersion[0][2])
 		}
 	}
 
