@@ -98,7 +98,7 @@ RUN apt-get install cron
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
-RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/magento-cloud
+RUN if [ "{{{MAGENTOCLOUD_ENABLED}}}" = "true" ]; then chown {{{UID}}}:{{{GUID}}} /usr/bin/magento-cloud; fi
 WORKDIR /var/www/html
 
 EXPOSE 9001 9003
