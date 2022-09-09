@@ -163,8 +163,6 @@ func upProjectWithBuild() {
 		}
 	}
 
-	src := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/composer"
-
 	composerGlobalDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
@@ -173,6 +171,8 @@ func upProjectWithBuild() {
 			paths.MakeDirsByPath(composerGlobalDir + "/.composer")
 		}
 	}
+
+	src := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/composer"
 
 	if fi, err := os.Lstat(src); err == nil {
 		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
@@ -188,6 +188,27 @@ func upProjectWithBuild() {
 		}
 	} else {
 		err := os.Symlink(composerGlobalDir+"/.composer", src)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	sshDir := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ssh"
+
+	if fi, err := os.Lstat(sshDir); err == nil {
+		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
+			err := os.RemoveAll(sshDir)
+			if err == nil {
+				err := os.Symlink(composerGlobalDir+"/.ssh", sshDir)
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				fmt.Println(err)
+			}
+		}
+	} else {
+		err := os.Symlink(composerGlobalDir+"/.ssh", sshDir)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -275,6 +296,18 @@ func StopNginx() {
 func Magento(flag string) {
 	projectName := paths.GetRunDirName()
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento "+flag)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func Cloud(flag string) {
+	projectName := paths.GetRunDirName()
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && magento-cloud "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

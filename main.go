@@ -28,6 +28,9 @@ func main() {
 			commands.Bash(flag)
 		case "c:f":
 			commands.CleanCache()
+		case "magento-cloud", "cloud":
+			flag = strings.Join(os.Args[2:], " ")
+			commands.Cloud(flag)
 		case "composer":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Composer(flag)

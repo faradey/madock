@@ -65,6 +65,12 @@ func Magento(flag string) {
 	builder.Magento(flag)
 }
 
+func Cloud(flag string) {
+	projectConfig := configs.GetCurrentProjectConfig()
+	flag = strings.Replace(flag, "$project", projectConfig["MAGENTOCLOUD_PROJECT_NAME"], -1)
+	builder.Cloud(flag)
+}
+
 func Composer(flag string) {
 	builder.Composer(flag)
 }
