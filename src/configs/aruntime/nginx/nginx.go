@@ -71,7 +71,7 @@ func makeProxy() {
 	str := string(b)
 	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 	for _, name := range projectsNames {
-		if _, err := os.Stat(paths.GetRunDirPath() + "/aruntime/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
+		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
 			if _, err = os.Stat(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped"); os.IsNotExist(err) {
 				port, err := strconv.Atoi(portsConfig[name])
 				if err != nil {
