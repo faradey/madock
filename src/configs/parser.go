@@ -49,7 +49,7 @@ func GetAllLines(path string) []string {
 	var rows []string
 	file, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		return rows
 	}
 	defer file.Close()
 
