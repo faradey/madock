@@ -71,31 +71,33 @@ func makeProxy() {
 	str := string(b)
 	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 	for _, name := range projectsNames {
-		if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped"); os.IsNotExist(err) {
-			port, err := strconv.Atoi(portsConfig[name])
-			if err != nil {
-				log.Fatal(err)
-			}
-			portRanged := (port - 1) * 20
-			strReplaced := strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(17000+portRanged), -1)
-			for i := 1; i < 20; i++ {
-				strReplaced = strings.Replace(strReplaced, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
-			}
-			hostName := "loc." + name + ".com"
-			projectConf := configs.GetProjectConfig(name)
-			if val, ok := projectConf["HOSTS"]; ok {
-				var onlyHosts []string
-				hosts := strings.Split(val, " ")
-				if len(hosts) > 0 {
-					for _, hostAndStore := range hosts {
-						onlyHosts = append(onlyHosts, strings.Split(hostAndStore, ":")[0])
-					}
-					hostName = strings.Join(onlyHosts, "\n")
+		if _, err := os.Stat(paths.GetRunDirPath() + "/aruntime/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
+			if _, err = os.Stat(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped"); os.IsNotExist(err) {
+				port, err := strconv.Atoi(portsConfig[name])
+				if err != nil {
+					log.Fatal(err)
 				}
-			}
+				portRanged := (port - 1) * 20
+				strReplaced := strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(17000+portRanged), -1)
+				for i := 1; i < 20; i++ {
+					strReplaced = strings.Replace(strReplaced, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
+				}
+				hostName := "loc." + name + ".com"
+				projectConf := configs.GetProjectConfig(name)
+				if val, ok := projectConf["HOSTS"]; ok {
+					var onlyHosts []string
+					hosts := strings.Split(val, " ")
+					if len(hosts) > 0 {
+						for _, hostAndStore := range hosts {
+							onlyHosts = append(onlyHosts, strings.Split(hostAndStore, ":")[0])
+						}
+						hostName = strings.Join(onlyHosts, "\n")
+					}
+				}
 
-			strReplaced = strings.Replace(strReplaced, "{{{HOST_NAMES}}}", hostName, -1)
-			allFileData += "\n" + strReplaced
+				strReplaced = strings.Replace(strReplaced, "{{{HOST_NAMES}}}", hostName, -1)
+				allFileData += "\n" + strReplaced
+			}
 		}
 	}
 	allFileData += "\n}"
