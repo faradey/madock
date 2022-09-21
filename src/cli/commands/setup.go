@@ -198,14 +198,14 @@ func setupRabbitMQ(defVersion *string) {
 
 func setupHosts(defVersion *string, projectConfig map[string]string) {
 	projectName := paths.GetRunDirName()
-	host := projectName + ".loc:base"
+	host := projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base"
 	if val, ok := projectConfig["HOSTS"]; ok && val != "" {
 		host = val
 	}
 	fmtc.TitleLn("Hosts")
 	fmt.Println("Input format: a.example.com:x_website_code b.example.com:y_website_code")
 	fmt.Println("Recommended host: " + host)
-	availableVersions := []string{projectName + ".loc:base", "loc." + projectName + ".com:base"}
+	availableVersions := []string{projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base", "loc." + projectName + ".com:base"}
 	prepareVersions(availableVersions)
 	fmt.Println("Choose one of the suggested options or enter your hostname")
 	fmt.Print("> ")

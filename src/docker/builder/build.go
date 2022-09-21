@@ -319,7 +319,7 @@ func Cloud(flag string) {
 
 func DownloadMagento(edition, version string) {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && composer create-project --repository-url=https://repo.magento.com/ magento/project-"+edition+"-edition:"+version+" ./ && composer install")
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && mkdir /var/www/html/download-magento && composer create-project --repository-url=https://repo.magento.com/ magento/project-"+edition+"-edition:"+version+" ./download-magento && shopt -s dotglob && mv  -v ./download-magento/* ./ && rmdir ./download-magento  && composer install")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
