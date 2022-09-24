@@ -15,6 +15,8 @@ services:
     - COMPOSER_HOME=/var/www/composer
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    ports:
+      - "{{{NGINX_PROJECT_PORT+5}}}:35729"
 
   php_without_xdebug:
     build:
@@ -52,17 +54,6 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
-
-  node:
-    build:
-      context: ctx
-      dockerfile: node.Dockerfile
-    volumes:
-      - ./src:/var/www/html:delegated
-    profiles:
-      - node{{{NODEJS_ENABLED}}}
-    depends_on:
-      - php
 
   elasticsearch:
     build:
