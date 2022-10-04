@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:{{{UBUNTU_VERSION}}}
 
 RUN ln -snf /usr/share/zoneinfo/{{{PHP_TZ}}} /etc/localtime && echo {{{PHP_TZ}}} > /etc/timezone
 
