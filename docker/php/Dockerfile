@@ -89,6 +89,8 @@ RUN if [ "{{{XDEBUG_ENABLED}}}" = "true" ]; then pecl install -f xdebug-{{{XDEBU
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/11-xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/11-xdebug.ini; fi
 
+RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini
+
 WORKDIR /var/www
 
 RUN if [ "{{{MAGENTOCLOUD_ENABLED}}}" = "true" ]; then curl -sS https://accounts.magento.cloud/cli/installer | php \
