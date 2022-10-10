@@ -89,7 +89,9 @@ RUN if [ "{{{XDEBUG_ENABLED}}}" = "true" ]; then pecl install -f xdebug-{{{XDEBU
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/11-xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/11-xdebug.ini; fi
 
-RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini
+RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
+    && sed -i 's/post_max_size = 8M/post_max_size = 80M/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
+    && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 50M/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini
 
 WORKDIR /var/www
 
