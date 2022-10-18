@@ -42,6 +42,8 @@ func Setup(download, install string) {
 	var projectConfig map[string]string
 	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
 		projectConfig = configs.GetProjectConfig(projectName)
+	} else {
+		projectConfig = configs.GetGeneralConfig()
 	}
 
 	toolsDefVersions := versions.GetVersions("")
