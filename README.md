@@ -15,6 +15,7 @@ This project is written on Golang and it is distributed under a MIT License.
 * Debug support
 * Synchronization of the local database and media files with the dev site
 * Additional services: phpmyadmin, redis, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
+* LiveReload with [Google Chrome plugin](https://chrome.google.com/webstore/detail/livereload-for-madock/cmablbpbnbbgmakinefjgmgpolfahdbo)
 
 ## Tested on
 * Linux (Ubuntu 20.04)
