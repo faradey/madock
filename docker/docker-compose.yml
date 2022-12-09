@@ -93,7 +93,7 @@ services:
       - rabbitmq{{{RABBITMQ_ENABLED}}}
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:5.1.3
+    image: phpmyadmin/phpmyadmin:5.2.0
     environment:
       PMA_HOST: "db"
       PMA_PORT: 3306

@@ -167,7 +167,7 @@ func setupComposer(defVersion *string) {
 func setupElastic(defVersion *string) {
 	setTitleAndRecommended("Elasticsearch", defVersion)
 
-	availableVersions := []string{"7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
+	availableVersions := []string{"7.17.5", "7.16.3", "7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
 
 	for index, ver := range availableVersions {
 		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
@@ -180,7 +180,7 @@ func setupElastic(defVersion *string) {
 func setupRedis(defVersion *string) {
 	setTitleAndRecommended("Redis", defVersion)
 
-	availableVersions := []string{"6.0", "5.0"}
+	availableVersions := []string{"6.2", "6.0", "5.0"}
 
 	for index, ver := range availableVersions {
 		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
@@ -192,7 +192,7 @@ func setupRedis(defVersion *string) {
 
 func setupRabbitMQ(defVersion *string) {
 	setTitleAndRecommended("RabbitMQ", defVersion)
-	availableVersions := []string{"3.8", "3.7"}
+	availableVersions := []string{"3.9", "3.8", "3.7"}
 	prepareVersions(availableVersions)
 	invitation(defVersion)
 	waiterAndProceed(defVersion, availableVersions)
