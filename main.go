@@ -21,7 +21,7 @@ func main() {
 		if len(os.Args) > 2 {
 			flag = strings.ToLower(os.Args[2])
 		}
-		attr.ParseAttributes(os.Args)
+		attr.ParseAttributes()
 
 		switch command {
 		case "bash":

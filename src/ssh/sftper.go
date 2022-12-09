@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/faradey/madock/src/cli/attr"
@@ -20,15 +19,13 @@ import (
 var countGoroutine int
 var sc []*sftp.Client
 
-func Sync(remoteDir string) {
+func SyncMedia(remoteDir string) {
 	var err error
 	projectConfig := configs.GetCurrentProjectConfig()
 	maxProcs := functions.MaxParallelism() - 1
 	var scTemp *sftp.Client
 	isFirstConnect := false
-	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
-		paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
-	}
+	paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
 	for maxProcs > 0 {
 		conn := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
 		if !isFirstConnect {
@@ -50,6 +47,29 @@ func Sync(remoteDir string) {
 	countGoroutine = 0
 	ch := make(chan bool, 150)
 	listFiles(ch, remoteDir+"/pub/media/", "", 0)
+}
+
+func SyncFile(remoteDir string) {
+	var err error
+	path := strings.Trim(attr.Options.Path, "/")
+	if path == "" {
+		log.Fatal("")
+	}
+	projectConfig := configs.GetCurrentProjectConfig()
+	var sc *sftp.Client
+	conn := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
+	fmt.Println("")
+	fmt.Println("Server connection...")
+	defer Disconnect(conn)
+	sc, err = sftp.NewClient(conn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sc.Close()
+
+	fmt.Println("\n" + "Synchronization is started")
+
+	downloadFile(sc, strings.TrimRight(remoteDir, "/")+"/"+path, strings.TrimRight(paths.GetRunDirPath(), "/")+"/"+path)
 }
 
 func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) {
@@ -90,8 +110,7 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 			}
 		} else if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
 			ext := strings.ToLower(filepath.Ext(name))
-			isImagesOnly := attr.Attributes["--images-only"]
-			if isImagesOnly == "" || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
+			if !attr.Options.ImagesOnly || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
 				remainderDownload := indx % len(sc)
 				scpDownload := sc[remainderDownload]
 				countDownload++
@@ -142,7 +161,7 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 	// Note: SFTP To Go doesn't support O_RDWR mode
 	srcFile, err := scp.OpenFile(remoteFile, (os.O_RDONLY))
 	if err != nil {
-		fmt.Println("\n" + "Unable to open remote file: " + err.Error() + "\n")
+		fmt.Println("\n" + "Unable to open remote file: " + remoteFile + " " + err.Error() + "\n")
 		return
 	}
 	defer srcFile.Close()
@@ -155,8 +174,8 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 	defer dstFile.Close()
 
 	isCompressed := false
-	isCompressedOk := attr.Attributes["--compress"]
-	if isCompressedOk != "" {
+	isCompressedOk := attr.Options.Compress
+	if isCompressedOk {
 		switch ext {
 		case ".jpg", ".jpeg":
 			isCompressed = compressJpg(srcFile, dstFile)

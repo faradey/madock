@@ -1,24 +1,20 @@
 package attr
 
-import "strconv"
+import (
+	"os"
 
-var Attributes map[string]string
+	flags "github.com/jessevdk/go-flags"
+)
 
-func ParseAttributes(args []string) {
-	Attributes = make(map[string]string)
-	if len(args) > 2 {
-		lastAttribute := ""
-		for i, val := range args[2:] {
-			if val[:2] == "--" {
-				Attributes[val] = strconv.Itoa(i)
-				lastAttribute = val
-			} else {
-				if lastAttribute == "" {
-					Attributes[strconv.Itoa(i)] = val
-				} else {
-					Attributes[lastAttribute] = val
-				}
-			}
-		}
+var Options struct {
+	Path       string `long:"path" description:"Path to file on server (from Magento root)"`
+	Global     bool   `long:"global" description:"Global"`
+	ImagesOnly bool   `long:"images-only" description:"Sync images only"`
+	Compress   bool   `long:"compress" description:"Compress images"`
+}
+
+func ParseAttributes() {
+	if len(os.Args) > 2 {
+		flags.ParseArgs(&Options, os.Args)
 	}
 }

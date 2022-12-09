@@ -86,6 +86,8 @@ RUN if [ "{{{XDEBUG_ENABLED}}}" = "true" ]; then pecl install -f xdebug-{{{XDEBU
     && echo "xdebug.remote_host={{{XDEBUG_REMOTE_HOST}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_port=9003" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.client_port=9003" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
+    && echo "xdebug.log=/var/www/var/log/xdebug.log" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
+    && echo "xdebug.log_level=7" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/11-xdebug.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/11-xdebug.ini; fi
 
@@ -99,6 +101,7 @@ RUN if [ "{{{MAGENTOCLOUD_ENABLED}}}" = "true" ]; then curl -sS https://accounts
     && cp -r /root/.magento-cloud/ /var/www/ && chown -R {{{UID}}}:{{{GUID}}} /var/www/.magento-cloud && ln -s /var/www/.magento-cloud/bin/magento-cloud /usr/bin/magento-cloud; fi
 
 RUN apt-get install cron
+RUN mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
 RUN if [ "{{{NODEJS_ENABLED}}}" = "true" ]; then mkdir /var/www/.npm && chown {{{UID}}}:{{{GUID}}} /var/www/.npm && apt install nodejs npm -y && apt install chromium-bsu -y && npm install -g grunt-cli && npm install -g bower && npm install -g livereload; fi
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data

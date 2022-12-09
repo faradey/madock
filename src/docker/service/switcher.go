@@ -14,7 +14,7 @@ func ServiceOn(name string) {
 		serviceName := strings.ToUpper(name) + "_ENABLED"
 		projectName := paths.GetRunDirName()
 		envFile := ""
-		if _, ok := attr.Attributes["--global"]; !ok {
+		if !attr.Options.Global {
 			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 		} else {
 			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.txt"
@@ -28,7 +28,7 @@ func ServiceOff(name string) {
 		serviceName := strings.ToUpper(name) + "_ENABLED"
 		projectName := paths.GetRunDirName()
 		envFile := ""
-		if _, ok := attr.Attributes["--global"]; !ok {
+		if !attr.Options.Global {
 			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 		} else {
 			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.txt"
