@@ -58,6 +58,9 @@ func Setup(download, install string) {
 		}
 	}
 
+	fmt.Println("")
+	fmtc.Title("Your Magento version is " + toolsDefVersions.Magento)
+
 	setupPhp(&toolsDefVersions.Php)
 	setupDB(&toolsDefVersions.Db)
 	setupComposer(&toolsDefVersions.Composer)
@@ -99,6 +102,8 @@ func Setup(download, install string) {
 	if isInstall {
 		installMagento()
 	}
+
+	builder.Start()
 }
 
 func downloadMagento(mageVersion string) {

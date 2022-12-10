@@ -9,7 +9,7 @@ import (
 )
 
 type ToolsVersions struct {
-	Php, Db, Elastic, Composer, Redis, RabbitMQ, Xdebug, Hosts string
+	Php, Db, Elastic, Composer, Redis, RabbitMQ, Xdebug, Hosts, Magento string
 }
 
 func GetVersions(ver string) ToolsVersions {
@@ -28,6 +28,7 @@ func GetVersions(ver string) ToolsVersions {
 		Redis:    GetRedisVersion(mageVersion),
 		RabbitMQ: GetRabbitMQVersion(mageVersion),
 		Xdebug:   GetXdebugVersion(mageVersion),
+		Magento:  mageVersion,
 	}
 }
 
@@ -35,7 +36,7 @@ func getMagentoVersion() (edition, version string) {
 	composerPath := paths.GetRunDirPath() + "/composer.json"
 	txt, err := ioutil.ReadFile(composerPath)
 	if err == nil {
-		re := regexp.MustCompile(`(?is)"magento/product-(community|enterprise)-edition".*?:.*?"([\.0-9]{5,}?)-*.*?"`)
+		re := regexp.MustCompile(`(?is)"magento/product-(community|enterprise)-edition".*?:.*?"[^0-9]*?([\.0-9]{5,}?)-*.*?"`)
 		magentoVersion := re.FindAllStringSubmatch(string(txt), -1)
 		if len(magentoVersion) > 0 && len(magentoVersion[0]) > 2 {
 			return strings.TrimSpace(magentoVersion[0][1]), strings.TrimSpace(magentoVersion[0][2])
