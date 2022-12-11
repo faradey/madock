@@ -37,16 +37,8 @@ func main() {
 		case "compress":
 			commands.Compress()
 		case "config":
-			optionName := ""
-			if len(os.Args) > 3 {
-				optionName = strings.ToLower(os.Args[3])
-			}
-			var flags []string
-			if len(os.Args) > 4 {
-				flags = os.Args[4:]
-			}
 			if flag == "set" {
-				commands.SetEnvOption(optionName, flags)
+				commands.SetEnvOption()
 			} else if flag == "show" {
 				commands.ShowEnv()
 			} else {
@@ -95,11 +87,7 @@ func main() {
 			}
 			commands.SwitchService(flag, option)
 		case "setup":
-			option := ""
-			if len(os.Args) > 3 {
-				option = strings.ToLower(os.Args[3])
-			}
-			commands.Setup(flag, option)
+			commands.Setup()
 		case "ssl":
 			commands.Ssl(flag)
 		case "start":

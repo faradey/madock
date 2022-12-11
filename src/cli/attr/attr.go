@@ -11,10 +11,14 @@ var Options struct {
 	Global     bool   `long:"global" description:"Global"`
 	ImagesOnly bool   `long:"images-only" description:"Sync images only"`
 	Compress   bool   `long:"compress" description:"Compress images"`
+	Hosts      bool   `long:"hosts" description:"Website Hosts and codes"`
+	Args       []string
+	Download   bool `long:"download" description:"Download Magento from repository"`
+	Install    bool `long:"install" description:"Install Magento"`
 }
 
 func ParseAttributes() {
 	if len(os.Args) > 2 {
-		flags.ParseArgs(&Options, os.Args)
+		Options.Args, _ = flags.ParseArgs(&Options, os.Args)
 	}
 }

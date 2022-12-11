@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
@@ -16,16 +17,7 @@ import (
 	"github.com/faradey/madock/src/versions"
 )
 
-func Setup(download, install string) {
-	if download != "" && download != "--download" && download != "--install" {
-		fmtc.ErrorLn("The specified parameter '" + download + "' were not found.")
-		return
-	}
-	if install != "" && install != "--download" && install != "--install" {
-		fmtc.ErrorLn("The specified parameter '" + install + "' were not found.")
-		return
-	}
-
+func Setup() {
 	if configs.IsHasConfig() {
 		builder.Down()
 	}
@@ -77,29 +69,11 @@ func Setup(download, install string) {
 		"\nto synchronize the database and media files. Enter SSH data in \n" +
 		paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 
-	isDownload := false
-	isInstall := false
-	if download != "" {
-		if download == "--download" {
-			isDownload = true
-		} else if download == "--install" {
-			isInstall = true
-		}
-	}
-
-	if install != "" {
-		if install == "--download" {
-			isDownload = true
-		} else if install == "--install" {
-			isInstall = true
-		}
-	}
-
-	if isDownload {
+	if attr.Options.Download {
 		downloadMagento(mageVersion)
 	}
 
-	if isInstall {
+	if attr.Options.Install {
 		installMagento()
 	}
 

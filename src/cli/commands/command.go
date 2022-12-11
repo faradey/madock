@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/compress"
 	"github.com/faradey/madock/src/configs"
@@ -122,11 +123,11 @@ func CleanCache() {
 	builder.CleanCache()
 }
 
-func SetEnvOption(flag string, flags []string) {
-	if flag == "--hosts" {
-		if len(flags) > 0 {
+func SetEnvOption() {
+	if attr.Options.Hosts {
+		if len(attr.Options.Args) > 0 {
 			configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
-			configs.SetParam(configPath, "HOSTS", strings.Join(flags, " "))
+			configs.SetParam(configPath, "HOSTS", strings.Join(attr.Options.Args, " "))
 		} else {
 			fmtc.ErrorLn("Specify at least one domain")
 		}
