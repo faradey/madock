@@ -28,6 +28,8 @@ madock node grunt exec:<theme>
 madock node grunt watch
 ```
 
+**IMPORTANT:** For the Chrome browser, you can download the LiveReload plugin specifically for madock from the link [Google Chrome plugin](https://chrome.google.com/webstore/detail/livereload-for-madock/cmablbpbnbbgmakinefjgmgpolfahdbo). Then install it and enable it for the site you need.
+
 **NOTE:** You might also need to disable your browser cache. For example in Chrome:
 
 * `Open inspector > Settings > Network > Disable cache (while DevTools is open)`
