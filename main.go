@@ -11,7 +11,7 @@ import (
 	"github.com/faradey/madock/src/migration"
 )
 
-var appVersion string = "1.4.0"
+var appVersion string = "1.5.0"
 
 func main() {
 	if len(os.Args) > 1 {
