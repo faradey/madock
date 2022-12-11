@@ -63,7 +63,6 @@ func Down() {
 
 func Start() {
 	projectName := paths.GetRunDirName()
-	PrepareConfigs()
 	UpNginx()
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
@@ -144,6 +143,7 @@ func UpNginx() {
 }
 
 func UpNginxWithBuild() {
+	PrepareConfigs()
 	dockerComposePull([]string{"-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
 	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	cmd.Stdout = os.Stdout
