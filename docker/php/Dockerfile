@@ -19,9 +19,9 @@ RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     openssh-client \
     lsof \
     openssl \
-  && locale-gen en_US.UTF-8
-
-RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
+    msmtp \
+    && locale-gen en_US.UTF-8 \
+    && LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
 
 RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
     php{{{PHP_VERSION}}}-cli \
@@ -93,7 +93,8 @@ RUN if [ "{{{XDEBUG_ENABLED}}}" = "true" ]; then pecl install -f xdebug-{{{XDEBU
 
 RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
     && sed -i 's/post_max_size = 8M/post_max_size = 80M/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
-    && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 50M/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini
+    && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 50M/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
+    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini
 
 WORKDIR /var/www
 
