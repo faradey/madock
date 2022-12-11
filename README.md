@@ -16,6 +16,7 @@ This project is written on Golang and it is distributed under a MIT License.
 * Synchronization of the local database and media files with the dev site
 * Additional services: phpmyadmin, redis, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
 * LiveReload with [Google Chrome plugin](https://chrome.google.com/webstore/detail/livereload-for-madock/cmablbpbnbbgmakinefjgmgpolfahdbo)
+* MailHog (email testing tool for developers)
 
 ## Tested on
 * Linux (Ubuntu 20.04)
@@ -124,6 +125,7 @@ See detailed documentation about development workflow with madock
 * [Media synchronization](docs/media.md)
 * [Cron](docs/cron.md)
 * Kibana. URL http://{you_domain_name}/kibana
+* Mailhog. Default URL http://localhost:8025
 
 ## Donations
 If you find it useful and want to invite us for a beer, just click on the donation button. Thanks!
