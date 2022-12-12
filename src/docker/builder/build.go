@@ -329,7 +329,7 @@ func DownloadMagento(edition, version string) {
 	}
 }
 
-func InstallMagento() {
+func InstallMagento(magentoVer string) {
 	projectName := paths.GetRunDirName()
 	projectConfig := configs.GetCurrentProjectConfig()
 	host := strings.Split(strings.Split(projectConfig["HOSTS"], " ")[0], ":")[0]
@@ -348,14 +348,16 @@ func InstallMagento() {
 		"--language=" + projectConfig["MAGENTO_LOCALE"] + " " +
 		"--currency=" + projectConfig["MAGENTO_CURRENCY"] + " " +
 		"--timezone=" + projectConfig["MAGENTO_TIMEZONE"] + " " +
-		"--use-rewrites=1 " +
-		"--search-engine=elasticsearch7 " +
-		"--elasticsearch-host=elasticsearch " +
-		"--elasticsearch-port=9200 " +
-		"--elasticsearch-index-prefix=magento2 " +
-		"--elasticsearch-timeout=15 " +
-		"&& bin/magento module:disable Magento_TwoFactorAuth " +
-		" && bin/magento s:up && bin/magento c:c && bin/magento i:rei && bin/magento c:f"
+		"--use-rewrites=1 "
+	if magentoVer >= "2.3.7" {
+		installCommand = "--search-engine=elasticsearch7 " +
+			"--elasticsearch-host=elasticsearch " +
+			"--elasticsearch-port=9200 " +
+			"--elasticsearch-index-prefix=magento2 " +
+			"--elasticsearch-timeout=15 " +
+			"&& bin/magento module:disable Magento_TwoFactorAuth "
+	}
+	installCommand = " && bin/magento s:up && bin/magento c:c && bin/magento i:rei && bin/magento c:f"
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && "+installCommand)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

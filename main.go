@@ -37,8 +37,16 @@ func main() {
 		case "compress":
 			commands.Compress()
 		case "config":
+			optionName := ""
+			if len(os.Args) > 3 {
+				optionName = strings.ToLower(os.Args[3])
+			}
+			var flags []string
+			if len(os.Args) > 4 {
+				flags = os.Args[4:]
+			}
 			if flag == "set" {
-				commands.SetEnvOption()
+				commands.SetEnvOption(optionName, flags)
 			} else if flag == "show" {
 				commands.ShowEnv()
 			} else {

@@ -74,7 +74,7 @@ func Setup() {
 	}
 
 	if attr.Options.Install {
-		installMagento()
+		installMagento(toolsDefVersions.Magento)
 	}
 
 	builder.Start()
@@ -100,8 +100,8 @@ func downloadMagento(mageVersion string) {
 	builder.DownloadMagento(edition, mageVersion)
 }
 
-func installMagento() {
-	builder.InstallMagento()
+func installMagento(magentoVer string) {
+	builder.InstallMagento(magentoVer)
 }
 
 func setupPhp(defVersion *string) {
