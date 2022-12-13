@@ -19,6 +19,7 @@ var Options struct {
 
 func ParseAttributes() {
 	if len(os.Args) > 2 {
-		Options.Args, _ = flags.ParseArgs(&Options, os.Args)
+		np := flags.NewParser(&Options, flags.HelpFlag|0|flags.PassDoubleDash)
+		Options.Args, _ = np.Parse()
 	}
 }
