@@ -350,14 +350,14 @@ func InstallMagento(magentoVer string) {
 		"--timezone=" + projectConfig["MAGENTO_TIMEZONE"] + " " +
 		"--use-rewrites=1 "
 	if magentoVer >= "2.3.7" {
-		installCommand = "--search-engine=elasticsearch7 " +
+		installCommand += "--search-engine=elasticsearch7 " +
 			"--elasticsearch-host=elasticsearch " +
 			"--elasticsearch-port=9200 " +
 			"--elasticsearch-index-prefix=magento2 " +
 			"--elasticsearch-timeout=15 " +
 			"&& bin/magento module:disable Magento_TwoFactorAuth "
 	}
-	installCommand = " && bin/magento s:up && bin/magento c:c && bin/magento i:rei && bin/magento c:f"
+	installCommand += " && bin/magento s:up && bin/magento c:c && bin/magento i:rei && bin/magento c:f"
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && "+installCommand)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
