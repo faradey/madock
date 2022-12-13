@@ -31,6 +31,9 @@ func main() {
 		case "magento-cloud", "cloud":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Cloud(flag)
+		case "cli":
+			flag = strings.Join(os.Args[2:], " ")
+			commands.Cli(flag)
 		case "composer":
 			flag = strings.Join(os.Args[2:], " ")
 			commands.Composer(flag)

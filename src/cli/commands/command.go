@@ -73,6 +73,10 @@ func Cloud(flag string) {
 	builder.Cloud(flag)
 }
 
+func Cli(flag string) {
+	builder.Cli(flag)
+}
+
 func Composer(flag string) {
 	builder.Composer(flag)
 }
