@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/faradey/madock/src/cli/fmtc"
@@ -14,20 +13,20 @@ import (
 	"github.com/faradey/madock/src/ssh"
 )
 
-func Remote(flag, option string) {
-	if flag == "sync" {
-		projectConfig := configs.GetCurrentProjectConfig()
-		if option == "media" {
-			ssh.SyncMedia(projectConfig["SSH_SITE_ROOT_PATH"])
-		} else if option == "db" {
-			conn := ssh.Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
-			ssh.DbDump(conn, projectConfig["SSH_SITE_ROOT_PATH"])
-		} else if option == "file" {
-			ssh.SyncFile(projectConfig["SSH_SITE_ROOT_PATH"])
-		}
-	} else {
-		log.Fatal("The specified parameters were not found.")
-	}
+func RemoteSyncDb() {
+	projectConfig := configs.GetCurrentProjectConfig()
+	conn := ssh.Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
+	ssh.DbDump(conn, projectConfig["SSH_SITE_ROOT_PATH"])
+}
+
+func RemoteSyncMedia() {
+	projectConfig := configs.GetCurrentProjectConfig()
+	ssh.SyncMedia(projectConfig["SSH_SITE_ROOT_PATH"])
+}
+
+func RemoteSyncFile() {
+	projectConfig := configs.GetCurrentProjectConfig()
+	ssh.SyncFile(projectConfig["SSH_SITE_ROOT_PATH"])
 }
 
 func Proxy(flag string) {
@@ -89,15 +88,15 @@ func Uncompress() {
 	compress.Unzip()
 }
 
-func Debug(flag string) {
+func DebugEnable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
-	if flag == "on" {
-		configs.SetParam(configPath, "XDEBUG_ENABLED", "true")
-	} else if flag == "off" {
-		configs.SetParam(configPath, "XDEBUG_ENABLED", "false")
-	} else {
-		log.Fatal("The specified parameters were not found.")
-	}
+	configs.SetParam(configPath, "XDEBUG_ENABLED", "true")
+	builder.UpWithBuild()
+}
+
+func DebugDisable() {
+	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
+	configs.SetParam(configPath, "XDEBUG_ENABLED", "false")
 	builder.UpWithBuild()
 }
 
@@ -161,8 +160,6 @@ func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }
 
-func Ssl(flag string) {
-	if flag == "rebuild" {
-		builder.SslRebuild()
-	}
+func Ssl() {
+	builder.SslRebuild()
 }

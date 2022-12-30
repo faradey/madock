@@ -9,31 +9,37 @@ import (
 	"github.com/faradey/madock/src/paths"
 )
 
-func ServiceOn(name string) {
-	if isService(name) {
-		serviceName := strings.ToUpper(name) + "_ENABLED"
-		projectName := paths.GetRunDirName()
-		envFile := ""
-		if !attr.Options.Global {
-			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
-		} else {
-			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.txt"
+func ServiceEnable() {
+	if len(attr.Options.Args) > 0 {
+		name := strings.ToLower(attr.Options.Args[0])
+		if isService(name) {
+			serviceName := strings.ToUpper(name) + "_ENABLED"
+			projectName := paths.GetRunDirName()
+			envFile := ""
+			if !attr.Options.Global {
+				envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+			} else {
+				envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.txt"
+			}
+			configs.SetParam(envFile, serviceName, "true")
 		}
-		configs.SetParam(envFile, serviceName, "true")
 	}
 }
 
-func ServiceOff(name string) {
-	if isService(name) {
-		serviceName := strings.ToUpper(name) + "_ENABLED"
-		projectName := paths.GetRunDirName()
-		envFile := ""
-		if !attr.Options.Global {
-			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
-		} else {
-			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.txt"
+func ServiceDisable() {
+	if len(attr.Options.Args) > 0 {
+		name := strings.ToLower(attr.Options.Args[0])
+		if isService(name) {
+			serviceName := strings.ToUpper(name) + "_ENABLED"
+			projectName := paths.GetRunDirName()
+			envFile := ""
+			if !attr.Options.Global {
+				envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+			} else {
+				envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.txt"
+			}
+			configs.SetParam(envFile, serviceName, "false")
 		}
-		configs.SetParam(envFile, serviceName, "false")
 	}
 }
 

@@ -65,8 +65,10 @@ func main() {
 			commands.DBExport()
 		case "db:info":
 			commands.DBInfo()
-		case "debug":
-			commands.Debug(flag)
+		case "debug:enable":
+			commands.DebugEnable()
+		case "debug:disable":
+			commands.DebugDisable()
 		case "info":
 			commands.Info()
 		case "help":
@@ -85,24 +87,24 @@ func main() {
 			commands.Prune()
 		case "rebuild":
 			commands.Rebuild()
-		case "remote":
-			option := ""
-			if len(os.Args) > 3 {
-				option = strings.ToLower(os.Args[3])
-			}
-			commands.Remote(flag, option)
+		case "remote:sync:db":
+			commands.RemoteSyncDb()
+		case "remote:sync:media":
+			commands.RemoteSyncMedia()
+		case "remote:sync:file":
+			commands.RemoteSyncFile()
 		case "restart":
 			commands.Restart()
-		case "service":
-			option := ""
-			if len(os.Args) > 3 {
-				option = strings.ToLower(os.Args[3])
-			}
-			commands.SwitchService(flag, option)
+		case "service:list":
+			commands.ServiceList()
+		case "service:enable":
+			commands.ServiceEnable()
+		case "service:disable":
+			commands.ServiceDisable()
 		case "setup":
 			commands.Setup()
-		case "ssl":
-			commands.Ssl(flag)
+		case "ssl:rebuild":
+			commands.Ssl()
 		case "start":
 			commands.Start()
 		case "status":

@@ -255,7 +255,7 @@ func upProjectWithBuild() {
 	if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
 		Cron(true, false)
 	} else {
-		Cron(true, false)
+		Cron(false, false)
 	}
 }
 
