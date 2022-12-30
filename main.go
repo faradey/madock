@@ -55,14 +55,16 @@ func main() {
 			} else {
 				fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 			}
-		case "cron":
-			commands.Cron(flag)
-		case "db":
-			option := ""
-			if len(os.Args) > 3 {
-				option = strings.ToLower(os.Args[3])
-			}
-			commands.DB(flag, option)
+		case "cron:enable":
+			commands.CronEnable()
+		case "cron:disable":
+			commands.CronDisable()
+		case "db:import":
+			commands.DBImport()
+		case "db:export":
+			commands.DBExport()
+		case "db:info":
+			commands.DBInfo()
 		case "debug":
 			commands.Debug(flag)
 		case "info":

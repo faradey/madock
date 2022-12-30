@@ -105,12 +105,12 @@ func Info() {
 	scripts.MagentoInfo()
 }
 
-func Cron(flag string) {
-	if flag == "on" || flag == "off" {
-		builder.Cron(flag, true)
-	} else {
-		log.Fatal("The specified parameters were not found.")
-	}
+func CronEnable() {
+	builder.Cron(true, true)
+}
+
+func CronDisable() {
+	builder.Cron(false, true)
 }
 
 func Bash(flag string) {

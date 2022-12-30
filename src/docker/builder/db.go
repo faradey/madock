@@ -11,14 +11,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/paths"
 )
 
-func DbImport(option string) {
-	if len(option) > 0 && option != "-f" {
-		option = ""
+func DbImport() {
+	option := ""
+	if attr.Options.Force {
+		option = "-f"
 	}
 	projectName := paths.GetRunDirName()
 	projectConfig := configs.GetCurrentProjectConfig()
@@ -115,60 +117,4 @@ func DbInfo() {
 	fmtc.SuccessLn("password: " + projectConfig["DB_PASSWORD"])
 	fmtc.SuccessLn("root password: " + projectConfig["DB_ROOT_PASSWORD"])
 	fmtc.SuccessLn("remote HOST:PORT: " + "localhost:" + strconv.Itoa(17000+((port-1)*20)+4))
-}
-
-func DbSoftClean() {
-	fmt.Println("Start cleaning up the database")
-	projectName := paths.GetRunDirName()
-	projectConfig := configs.GetCurrentProjectConfig()
-	tablesList := "TRUNCATE TABLE dataflow_batch_export;"
-	tablesList += "TRUNCATE TABLE dataflow_batch_import;"
-	tablesList += "TRUNCATE TABLE log_customer;"
-	tablesList += "TRUNCATE TABLE log_quote;"
-	tablesList += "TRUNCATE TABLE log_summary;"
-	tablesList += "TRUNCATE TABLE log_summary_type;"
-	tablesList += "TRUNCATE TABLE log_url;"
-	tablesList += "TRUNCATE TABLE log_url_info;"
-	tablesList += "TRUNCATE TABLE log_visitor;"
-	tablesList += "TRUNCATE TABLE log_visitor_info;"
-	tablesList += "TRUNCATE TABLE log_visitor_online;"
-	tablesList += "TRUNCATE TABLE report_viewed_product_index;"
-	tablesList += "TRUNCATE TABLE report_compared_product_index;"
-	tablesList += "TRUNCATE TABLE report_event;"
-	tablesList += "TRUNCATE TABLE index_event;"
-	tablesList += "TRUNCATE TABLE catalog_compare_item;"
-	tablesList += "TRUNCATE TABLE catalogindex_aggregation;"
-	tablesList += "TRUNCATE TABLE catalogindex_aggregation_tag;"
-	tablesList += "TRUNCATE TABLE catalogindex_aggregation_to_tag;"
-	tablesList += "TRUNCATE TABLE adminnotification_inbox;"
-	tablesList += "TRUNCATE TABLE aw_core_logger;"
-	tablesList += "TRUNCATE TABLE kiwicommerce_activity_log;"
-	tablesList += "TRUNCATE TABLE kiwicommerce_activity_detail;"
-	tablesList += "TRUNCATE TABLE kiwicommerce_activity;"
-	tablesList += "TRUNCATE TABLE kiwicommerce_login_activity;"
-	tablesList += "TRUNCATE TABLE amasty_amsmtp_log;"
-	tablesList += "TRUNCATE TABLE search_query;"
-	tablesList += "TRUNCATE TABLE persistent_session;"
-	tablesList += "TRUNCATE TABLE mailchimp_errors;"
-	tablesList += "TRUNCATE TABLE session;"
-
-	var b strings.Builder
-	cmdTemp := exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SELECT concat('TRUNCATE TABLE `', TABLE_NAME, '`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'catalogrule_product%__temp%' OR TABLE_NAME LIKE 'quote%'", projectConfig["DB_DATABASE"])
-	cmdTemp.Stdout = &b
-	cmdTemp.Stderr = os.Stderr
-	err := cmdTemp.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	tbNames := strings.Split(b.String(), "\n")
-	if len(tbNames) > 1 {
-		tablesList += strings.Join(tbNames[1:], "")
-	}
-
-	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--execute", "SET @@session.unique_checks = 0;SET @@session.foreign_key_checks = 0;SET @@global.innodb_autoinc_lock_mode = 2;SET FOREIGN_KEY_CHECKS=0;"+tablesList+"SET FOREIGN_KEY_CHECKS=1;", "-f", projectConfig["DB_DATABASE"])
-	err = cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("The database was cleaned successfully")
 }

@@ -15,6 +15,7 @@ var Options struct {
 	Args       []string
 	Download   bool `long:"download" description:"Download Magento from repository"`
 	Install    bool `long:"install" description:"Install Magento"`
+	Force      bool `long:"forse" short:"f" description:"Install Magento"`
 }
 
 func ParseAttributes() {

@@ -85,22 +85,21 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--hosts` Domains and code of project websites. Separated by commas. For example: one.example.com:base two.example.com:two_code. Optional
                
          
-* `cron`    Enable / disable cron
+* `cron:enable`    Enable cron
 
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`on`  Enable cron
 
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`off`   Disable cron
+* `cron:disable`    Disable cron
               
           
-* `db`      Database import / export
+* `db:import`      Import database
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`info`  Information about credentials and remote host and port
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`-f`  Forse mode
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`import`  Database import
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`export`  Database export
+* `db:export`      Export database
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`soft-clean`      Soft cleanup of the database from unnecessary garbage.
+
+* `db:info`      Information about credentials and remote host and port
                      
    
 * `debug`   Enable / disable xdebug

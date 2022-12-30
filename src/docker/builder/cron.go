@@ -11,12 +11,12 @@ import (
 	"github.com/faradey/madock/src/paths"
 )
 
-func Cron(flag string, manual bool) {
+func Cron(flag, manual bool) {
 	projectName := paths.GetRunDirName()
 	var cmd *exec.Cmd
 	var bOut io.Writer
 	var bErr io.Writer
-	if flag == "on" {
+	if flag {
 		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:install &&  php bin/magento cron:run")
 		cmdSub.Stdout = os.Stdout
 		cmdSub.Stderr = os.Stderr

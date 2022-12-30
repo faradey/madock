@@ -94,9 +94,9 @@ func Start() {
 	} else {
 		projectConfig := configs.GetCurrentProjectConfig()
 		if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
-			Cron("on", false)
+			Cron(true, false)
 		} else {
-			Cron("off", false)
+			Cron(false, false)
 		}
 	}
 }
@@ -253,9 +253,9 @@ func upProjectWithBuild() {
 	projectConfig := configs.GetCurrentProjectConfig()
 
 	if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
-		Cron("on", false)
+		Cron(true, false)
 	} else {
-		Cron("off", false)
+		Cron(true, false)
 	}
 }
 
