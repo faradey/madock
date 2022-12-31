@@ -6,7 +6,6 @@ import (
 
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/commands"
-	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/cli/helper"
 	"github.com/faradey/madock/src/migration"
 )
@@ -17,44 +16,25 @@ func main() {
 	if len(os.Args) > 1 {
 		migration.Apply(appVersion)
 		command := strings.ToLower(os.Args[1])
-		flag := ""
-		if len(os.Args) > 2 {
-			flag = strings.ToLower(os.Args[2])
-		}
 		attr.ParseAttributes()
 
 		switch command {
 		case "bash":
-			commands.Bash(flag)
+			commands.Bash()
 		case "c:f":
 			commands.CleanCache()
 		case "magento-cloud", "cloud":
-			flag = strings.Join(os.Args[2:], " ")
-			commands.Cloud(flag)
+			commands.Cloud(strings.Join(attr.Options.Args, " "))
 		case "cli":
-			flag = strings.Join(os.Args[2:], " ")
-			commands.Cli(flag)
+			commands.Cli(strings.Join(attr.Options.Args, " "))
 		case "composer":
-			flag = strings.Join(os.Args[2:], " ")
-			commands.Composer(flag)
+			commands.Composer(strings.Join(attr.Options.Args, " "))
 		case "compress":
 			commands.Compress()
-		case "config":
-			optionName := ""
-			if len(os.Args) > 3 {
-				optionName = strings.ToLower(os.Args[3])
-			}
-			var flags []string
-			if len(os.Args) > 4 {
-				flags = os.Args[4:]
-			}
-			if flag == "set" {
-				commands.SetEnvOption(optionName, flags)
-			} else if flag == "show" {
-				commands.ShowEnv()
-			} else {
-				fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
-			}
+		case "config:list":
+			commands.ShowEnv()
+		case "config:set":
+			commands.SetEnvOption()
 		case "cron:enable":
 			commands.CronEnable()
 		case "cron:disable":
@@ -74,15 +54,21 @@ func main() {
 		case "help":
 			helper.Help()
 		case "logs":
-			commands.Logs(flag)
+			commands.Logs()
 		case "magento", "m":
-			flag = strings.Join(os.Args[2:], " ")
-			commands.Magento(flag)
+			commands.Magento(strings.Join(attr.Options.Args, " "))
 		case "node":
-			flag = strings.Join(os.Args[2:], " ")
-			commands.Node(flag)
-		case "proxy":
-			commands.Proxy(flag)
+			commands.Node(strings.Join(attr.Options.Args, " "))
+		case "proxy:start":
+			commands.Proxy("start")
+		case "proxy:stop":
+			commands.Proxy("stop")
+		case "proxy:restart":
+			commands.Proxy("restart")
+		case "proxy:rebuild":
+			commands.Proxy("rebuild")
+		case "proxy:prune":
+			commands.Proxy("prune")
 		case "prune":
 			commands.Prune()
 		case "rebuild":

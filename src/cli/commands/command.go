@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/compress"
 	"github.com/faradey/madock/src/configs"
@@ -112,10 +113,10 @@ func CronDisable() {
 	builder.Cron(false, true)
 }
 
-func Bash(flag string) {
+func Bash() {
 	containerName := "php"
-	if flag != "" {
-		containerName = flag
+	if len(attr.Options.Args) > 0 && attr.Options.Args[0] != "" {
+		containerName = attr.Options.Args[0]
 	}
 
 	builder.Bash(containerName)
@@ -125,14 +126,12 @@ func CleanCache() {
 	builder.CleanCache()
 }
 
-func SetEnvOption(flag string, flags []string) {
-	if flag == "--hosts" {
-		if len(flags) > 0 {
-			configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
-			configs.SetParam(configPath, "HOSTS", strings.Join(flags, " "))
-		} else {
-			fmtc.ErrorLn("Specify at least one domain")
-		}
+func SetEnvOption() {
+	name := strings.ToUpper(attr.Options.Name)
+	val := attr.Options.Value
+	if len(name) > 0 && configs.IsOption(name) {
+		configPath := paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/env.txt"
+		configs.SetParam(configPath, name, val)
 	}
 }
 
@@ -148,10 +147,10 @@ func Node(flag string) {
 	builder.Node(flag)
 }
 
-func Logs(flag string) {
+func Logs() {
 	containerName := "php"
-	if flag != "" {
-		containerName = flag
+	if len(attr.Options.Args) > 0 && attr.Options.Args[0] != "" {
+		containerName = attr.Options.Args[0]
 	}
 	builder.Logs(containerName)
 }

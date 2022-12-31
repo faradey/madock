@@ -3,14 +3,15 @@ package configs
 import (
 	"bufio"
 	"fmt"
-	"github.com/faradey/madock/src/cli/fmtc"
-	"github.com/faradey/madock/src/paths"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
 	"runtime"
 	"strings"
+
+	"github.com/faradey/madock/src/cli/fmtc"
+	"github.com/faradey/madock/src/paths"
 )
 
 type ConfigLines struct {
@@ -134,4 +135,19 @@ func ReplaceConfigValue(str string) string {
 	}
 
 	return str
+}
+
+func IsOption(name string) bool {
+	upperName := strings.ToUpper(name)
+	projectConf := GetCurrentProjectConfig()
+
+	for key := range projectConf {
+		if key == upperName {
+			return true
+		}
+	}
+
+	log.Fatalln("The option \"" + name + "\" doesn't exist.")
+
+	return false
 }

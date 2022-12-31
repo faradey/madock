@@ -11,7 +11,8 @@ var Options struct {
 	Global     bool   `long:"global" description:"Global"`
 	ImagesOnly bool   `long:"images-only" description:"Sync images only"`
 	Compress   bool   `long:"compress" description:"Compress images"`
-	Hosts      bool   `long:"hosts" description:"Website Hosts and codes"`
+	Name       string `long:"name" description:"Parameter name"`
+	Value      string `long:"value" description:"Parameter value"`
 	Args       []string
 	Download   bool `long:"download" description:"Download Magento from repository"`
 	Install    bool `long:"install" description:"Install Magento"`

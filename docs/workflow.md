@@ -76,13 +76,14 @@ This command shows you the following items:
 * `compress`  Compress a project to archive
             
             
-* `config`  Viewing and changing the project configuration
+* `config:list`  List all project environment settings
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`show`    List all project environment settings
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`set`     Set parameters
+* `config:set`  Set a new value for parameter
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--hosts` Domains and code of project websites. Separated by commas. For example: one.example.com:base two.example.com:two_code. Optional
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name`     Parameter name
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--value`     Parameter value
                
          
 * `cron:enable`    Enable cron
@@ -125,16 +126,19 @@ This command shows you the following items:
 * `node`    Execute NodeJs command inside php container
                         
 
-* `proxy`   Actions on the proxy server
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`start`   Start a proxy server
+* `proxy:start`   Start a proxy server
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`stop`    Stop a proxy server
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`restart` Restart a proxy server 
+* `proxy:stop`   Stop a proxy server
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rebuild` Rebuild a proxy server
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`prune`   Prune a proxy server
+* `proxy:restart`   Restart a proxy server
+
+
+* `proxy:rebuild`   Rebuild a proxy server
+
+
+* `proxy:prune`   Prune a proxy server
                         
 
 * `prune`   Stop and delete running project containers
