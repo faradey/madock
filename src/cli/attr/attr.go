@@ -14,9 +14,10 @@ var Options struct {
 	Name       string `long:"name" description:"Parameter name"`
 	Value      string `long:"value" description:"Parameter value"`
 	Args       []string
-	Download   bool `long:"download" description:"Download Magento from repository"`
-	Install    bool `long:"install" description:"Install Magento"`
-	Force      bool `long:"forse" short:"f" description:"Install Magento"`
+	Download   bool   `long:"download" description:"Download Magento from repository"`
+	Install    bool   `long:"install" description:"Install Magento"`
+	Force      bool   `long:"forse" short:"f" description:"Install Magento"`
+	File       string `long:"file" description:"File path"`
 }
 
 func ParseAttributes() {

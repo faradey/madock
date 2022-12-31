@@ -3,7 +3,6 @@ package commands
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -265,7 +264,7 @@ func copyFile(pathFrom, pathTo string) {
 	}
 	pathToAsSlice := strings.Split(pathTo, "/")
 	paths.MakeDirsByPath(strings.Join(pathToAsSlice[:len(pathToAsSlice)-1], "/"))
-	err = ioutil.WriteFile(pathTo, b, 0755)
+	err = os.WriteFile(pathTo, b, 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}

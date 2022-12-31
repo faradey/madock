@@ -59,6 +59,8 @@ func main() {
 			commands.Magento(strings.Join(attr.Options.Args, " "))
 		case "node":
 			commands.Node(strings.Join(attr.Options.Args, " "))
+		case "patch:create":
+			commands.PatchCreate()
 		case "proxy:start":
 			commands.Proxy("start")
 		case "proxy:stop":
