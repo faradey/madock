@@ -3,9 +3,9 @@ $patchContainerPath = "/var/www/patches";
 $siteRootPath = "/var/www/html";
 
 $vendorPath = $siteRootPath."/vendor";
-$patchMagentoPath = $siteRootPath."/patch/composer";
+$patchMagentoPath = $siteRootPath."/patches/composer";
 $filePatch = $siteRootPath."/".trim($argv[1],"/");
-$patchName = $argv[1];
+$patchName = $argv[2];
 
 if(file_exists($filePatch)){
     $moduleRoot = explode("vendor", $filePatch, 2)[1]??null;
@@ -36,10 +36,22 @@ if(file_exists($filePatch)){
                     $moduleRoot[2] = trim($moduleRoot[2], "/");
                     copy($patchContainerPath."/".$composerModuleNameDir."/".$moduleRoot[2], $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2].".new");
                     exec("cd ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]." && diff -u ".$moduleRoot[2]. " ".$moduleRoot[2] . ".new > ".$patchName, $output, $responseCode);
-                    if($responseCode != 0){
-                        print_r($output);
-                    } else {
+                    
+                    if(file_exists($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName)){
+                        $patchContent = file_get_contents($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
+                        $patchContent = str_replace($moduleRoot[2].".new", $moduleRoot[2], $patchContent);
+                        file_put_contents($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchContent);
+                        if(!file_exists($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1])){
+                            mkdir($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1], 0755, true);
+                        }
+                        copy($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
 
+                        $composerFile = $siteRootPath."/composer.json";
+                        $composerJsonData = json_decode(file_get_contents($composerFile), true);
+                        $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchName] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
+                        file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                    } else {
+                        print("Something went wrong");
                     }
                 }
             } catch(\Exception | \Error $e) {

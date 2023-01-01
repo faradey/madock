@@ -126,6 +126,13 @@ This command shows you the following items:
 * `node`    Execute NodeJs command inside php container
                         
 
+* `patch:create`   Create patch. The patch can be used with the composer plugin cweagans/composer-patches
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--file`     Path of changed file. For example: vendor/magento/module-analytics/Cron/CollectData.php
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name`     Name of the patch file
+
+
 * `proxy:start`   Start a proxy server
 
 
