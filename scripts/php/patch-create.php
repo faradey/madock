@@ -16,36 +16,37 @@ if(file_exists($filePatch)){
             $composerJsonData = file_get_contents($moduleComposerPath);
             $jsonData = json_decode($composerJsonData, true);
             $composerModuleName = $jsonData['name'];
-            $composerModuleNameDir = str_replace("/", "_", $jsonData['name']);
+            $composerModuleNameDir = str_replace("/", "_", str_replace("//", "//", $jsonData['name']));
             $composerModuleVersion = $jsonData['version'];
-
-            if(!file_exists($patchContainerPath)){
-                mkdir($patchContainerPath);
-            }
 
             if(file_exists($patchContainerPath."/".$composerModuleNameDir)){
                 deleteDirectory($patchContainerPath."/".$composerModuleNameDir);
             }
             mkdir($patchContainerPath."/".$composerModuleNameDir);
+            recurseCopy($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1], $patchContainerPath."/".$composerModuleNameDir);
+            deleteDirectory($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
+            try {
+                $output = null;
+                $responseCode = 0;
 
-            file_put_contents($patchContainerPath."/".$composerModuleNameDir."/composer.json", "{
-                \"name\": \"patcher/patcher\",
-                \"description\": \"N/A\",
-                \"type\": \"magento2-module\",
-                \"version\": \"1.0.0\",
-                \"require\": {
-                    \"".$composerModuleName."\": \"".$composerModuleVersion."\"
-                },
-            
+                exec("cd ".$siteRootPath." && composer install", $output, $responseCode);
+                if($responseCode != 0){
+                    print_r($output);
+                } else {
+                    $moduleRoot[2] = trim($moduleRoot[2], "/");
+                    copy($patchContainerPath."/".$composerModuleNameDir."/".$moduleRoot[2], $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2].".new");
+                    exec("cd ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]." && diff -u ".$moduleRoot[2]. " ".$moduleRoot[2] . ".new > ".$patchName, $output, $responseCode);
+                    if($responseCode != 0){
+                        print_r($output);
+                    } else {
+
+                    }
+                }
+            } catch(\Exception | \Error $e) {
+
             }
-            ");
 
-            $output = null;
-            $responseCode = 0;
-
-            exec("cd ".$patchContainerPath."/".$composerModuleNameDir." && composer update", $output, $responseCode);
-            print_r($output);
-            print_r($responseCode);
+            recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
         }
     }
 } else {
@@ -73,4 +74,53 @@ function deleteDirectory($dir) {
     }
 
     return rmdir($dir);
+}
+
+function recurseCopy(
+    string $sourceDirectory,
+    string $destinationDirectory,
+    string $childFolder = ''
+): void {
+    $directory = opendir($sourceDirectory);
+
+    if (is_dir($destinationDirectory) === false) {
+        mkdir($destinationDirectory);
+    }
+
+    if ($childFolder !== '') {
+        if (is_dir("$destinationDirectory/$childFolder") === false) {
+            mkdir("$destinationDirectory/$childFolder");
+        }
+
+        while (($file = readdir($directory)) !== false) {
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
+
+            if (is_dir("$sourceDirectory/$file") === true) {
+                recurseCopy("$sourceDirectory/$file", "$destinationDirectory/$childFolder/$file");
+            } else {
+                copy("$sourceDirectory/$file", "$destinationDirectory/$childFolder/$file");
+            }
+        }
+
+        closedir($directory);
+
+        return;
+    }
+
+    while (($file = readdir($directory)) !== false) {
+        if ($file === '.' || $file === '..') {
+            continue;
+        }
+
+        if (is_dir("$sourceDirectory/$file") === true) {
+            recurseCopy("$sourceDirectory/$file", "$destinationDirectory/$file");
+        }
+        else {
+            copy("$sourceDirectory/$file", "$destinationDirectory/$file");
+        }
+    }
+
+    closedir($directory);
 }
