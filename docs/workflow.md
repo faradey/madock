@@ -70,6 +70,9 @@ This command shows you the following items:
 * `c:f`  Cleaning up static and generated files
 
 
+* `cloud`  Executing commands to work with Magento Cloud. Also, can be used the long command: magento-cloud)
+
+
 * `composer`  Execute composer inside php container
             
             
@@ -120,7 +123,7 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[name of container]`     Container name. Optional. Default container: php. Example: php
                         
 
-* `magento` Execute Magento command inside php container
+* `magento` Execute Magento command inside php container. Also, can be used the short command: m
                         
 
 * `node`    Execute NodeJs command inside php container
