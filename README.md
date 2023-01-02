@@ -17,6 +17,8 @@ This project is written on Golang and it is distributed under a MIT License.
 * Additional services: phpmyadmin, redis, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
 * LiveReload with [Google Chrome plugin](https://chrome.google.com/webstore/detail/livereload-for-madock/cmablbpbnbbgmakinefjgmgpolfahdbo)
 * MailHog (email testing tool for developers)
+* Magento Cloud
+* Composer patches
 
 ## Tested on
 * Linux (Ubuntu 20.04)

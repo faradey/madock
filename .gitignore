@@ -2,6 +2,7 @@
 !/main.go
 !/LICENSE
 !/README.md
+!/CHANGELOG.md
 !/go.mod
 !/go.mod/*
 !/go.sum
