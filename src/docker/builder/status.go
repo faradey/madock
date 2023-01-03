@@ -21,7 +21,7 @@ type StatusInfoStruct struct {
 
 func Status() {
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "ps", "--format", "json")
+	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "ps", "--format", "json")
 	result, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatal(err)
@@ -42,7 +42,7 @@ func Status() {
 		}
 	}
 	fmtc.TitleLn("Proxy:")
-	cmd = exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
+	cmd = exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
 	result, err = cmd.CombinedOutput()
 	if err != nil {
 		log.Fatal(err)

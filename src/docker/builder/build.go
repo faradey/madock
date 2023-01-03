@@ -33,6 +33,7 @@ func Down() {
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
 		profilesOn := []string{
+			"compose",
 			"-f",
 			composeFile,
 			"-f",
@@ -51,7 +52,7 @@ func Down() {
 			"phpmyadmintrue",
 			"down",
 		}
-		cmd := exec.Command("docker-compose", profilesOn...)
+		cmd := exec.Command("docker", profilesOn...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
@@ -66,6 +67,7 @@ func Start() {
 	UpNginx()
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
+		"compose",
 		"-f",
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
 		"-f",
@@ -84,7 +86,7 @@ func Start() {
 		"phpmyadmintrue",
 		"start",
 	}
-	cmd := exec.Command("docker-compose", profilesOn...)
+	cmd := exec.Command("docker", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -105,6 +107,7 @@ func Stop() {
 	projectName := paths.GetRunDirName()
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
+		"compose",
 		"-f",
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
 		"-f",
@@ -123,7 +126,7 @@ func Stop() {
 		"phpmyadmintrue",
 		"stop",
 	}
-	cmd := exec.Command("docker-compose", profilesOn...)
+	cmd := exec.Command("docker", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -133,7 +136,7 @@ func Stop() {
 }
 
 func UpNginx() {
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "-d")
+	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -144,8 +147,8 @@ func UpNginx() {
 
 func UpNginxWithBuild() {
 	PrepareConfigs()
-	dockerComposePull([]string{"-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
-	cmd := exec.Command("docker-compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
+	dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
+	cmd := exec.Command("docker", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -216,6 +219,7 @@ func upProjectWithBuild() {
 
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
+		"compose",
 		"-f",
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
 		"-f",
@@ -242,7 +246,7 @@ func upProjectWithBuild() {
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
 		"-f",
 		composeFileOS})
-	cmd := exec.Command("docker-compose", profilesOn...)
+	cmd := exec.Command("docker", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -261,7 +265,8 @@ func upProjectWithBuild() {
 
 func dockerComposePull(composeFiles []string) {
 	composeFiles = append(composeFiles, "pull")
-	cmd := exec.Command("docker-compose", composeFiles...)
+	composeFiles = append([]string{"compose"}, composeFiles...)
+	cmd := exec.Command("docker", composeFiles...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Run()
@@ -270,7 +275,7 @@ func dockerComposePull(composeFiles []string) {
 func DownNginx() {
 	composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
 	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
-		cmd := exec.Command("docker-compose", "-f", composeFile, "down")
+		cmd := exec.Command("docker", "compose", "-f", composeFile, "down")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
@@ -283,7 +288,7 @@ func DownNginx() {
 func StopNginx() {
 	composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
 	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
-		cmd := exec.Command("docker-compose", "-f", composeFile, "stop")
+		cmd := exec.Command("docker", "compose", "-f", composeFile, "stop")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
