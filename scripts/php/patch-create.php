@@ -19,13 +19,14 @@ if(file_exists($filePatch)){
             $composerModuleNameDir = str_replace("/", "_", str_replace("//", "//", $jsonData['name']));
             $composerModuleVersion = $jsonData['version'];
 
-            if(file_exists($patchContainerPath."/".$composerModuleNameDir)){
-                deleteDirectory($patchContainerPath."/".$composerModuleNameDir);
-            }
-            mkdir($patchContainerPath."/".$composerModuleNameDir);
-            recurseCopy($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1], $patchContainerPath."/".$composerModuleNameDir);
-            deleteDirectory($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
             try {
+                if(file_exists($patchContainerPath."/".$composerModuleNameDir)){
+                    deleteDirectory($patchContainerPath."/".$composerModuleNameDir);
+                }
+                mkdir($patchContainerPath."/".$composerModuleNameDir);
+                recurseCopy($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1], $patchContainerPath."/".$composerModuleNameDir);
+                deleteDirectory($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
+            
                 $output = null;
                 $responseCode = 0;
 
@@ -54,11 +55,11 @@ if(file_exists($filePatch)){
                         print("Something went wrong");
                     }
                 }
+
+                recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
             } catch(\Exception | \Error $e) {
-
+                print($e->getMessage());
             }
-
-            recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
         }
     }
 } else {
@@ -79,7 +80,7 @@ function deleteDirectory($dir) {
             continue;
         }
 
-        if (!deleteDirectory($dir . DIRECTORY_SEPARATOR . $item)) {
+        if (!deleteDirectory($dir . "/" . $item)) {
             return false;
         }
 
@@ -92,7 +93,7 @@ function recurseCopy(
     string $sourceDirectory,
     string $destinationDirectory,
     string $childFolder = ''
-): void {
+) {
     $directory = opendir($sourceDirectory);
 
     if (is_dir($destinationDirectory) === false) {
@@ -100,8 +101,8 @@ function recurseCopy(
     }
 
     if ($childFolder !== '') {
-        if (is_dir("$destinationDirectory/$childFolder") === false) {
-            mkdir("$destinationDirectory/$childFolder");
+        if (is_dir($destinationDirectory."/".$childFolder) === false) {
+            mkdir($destinationDirectory."/".$childFolder);
         }
 
         while (($file = readdir($directory)) !== false) {
@@ -109,10 +110,10 @@ function recurseCopy(
                 continue;
             }
 
-            if (is_dir("$sourceDirectory/$file") === true) {
-                recurseCopy("$sourceDirectory/$file", "$destinationDirectory/$childFolder/$file");
+            if (is_dir($sourceDirectory."/".$file) === true) {
+                recurseCopy($sourceDirectory."/".$file, $destinationDirectory."/".$childFolder/$file);
             } else {
-                copy("$sourceDirectory/$file", "$destinationDirectory/$childFolder/$file");
+                copy($sourceDirectory."/".$file, $destinationDirectory."/".$childFolder."/".$file);
             }
         }
 
@@ -126,11 +127,10 @@ function recurseCopy(
             continue;
         }
 
-        if (is_dir("$sourceDirectory/$file") === true) {
-            recurseCopy("$sourceDirectory/$file", "$destinationDirectory/$file");
-        }
-        else {
-            copy("$sourceDirectory/$file", "$destinationDirectory/$file");
+        if (is_dir($sourceDirectory."/".$file) === true) {
+            recurseCopy($sourceDirectory."/".$file, $destinationDirectory."/".$file);
+        } else {
+            copy($sourceDirectory."/".$file, $destinationDirectory."/".$file);
         }
     }
 
