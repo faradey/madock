@@ -12,7 +12,7 @@ import (
 func CreatePatch(filePath, patchName string) {
 	containerName := "php"
 	projectName := paths.GetRunDirName()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-"+containerName+"-1", "php", "/var/scripts/php/patch-create.php", filePath, patchName)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-"+containerName+"-1", "php", "/var/www/scripts/php/patch-create.php", filePath, patchName)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
