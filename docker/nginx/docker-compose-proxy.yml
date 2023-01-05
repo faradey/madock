@@ -8,14 +8,14 @@ services:
       - ./ctx/proxy.conf:/etc/nginx/nginx.conf:delegated
       - ./ctx/:/sslcert/:delegated
     ports:
-      - 80:80
-      - 443:443
-      - 35729:35729
+      - 127.0.0.1:80:80
+      - 127.0.0.1:443:443
+      - 127.0.0.1:35729:35729
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
   mailhog:
     image: mailhog/mailhog:v1.0.1
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - 127.0.0.1:1025:1025
+      - 127.0.0.1:8025:8025
