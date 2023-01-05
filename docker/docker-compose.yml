@@ -16,7 +16,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "{{{NGINX_PROJECT_PORT+5}}}:35729"
+      - "127.0.0.1:{{{NGINX_PROJECT_PORT+5}}}:35729"
 
   php_without_xdebug:
     build:
@@ -50,7 +50,7 @@ services:
       context: ctx
       dockerfile: db.Dockerfile
     ports:
-      - "{{{NGINX_PROJECT_PORT+4}}}:3306"
+      - "127.0.0.1:{{{NGINX_PROJECT_PORT+4}}}:3306"
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
@@ -103,7 +103,7 @@ services:
       PMA_PASSWORD: {{{DB_ROOT_PASSWORD}}}
       UPLOAD_LIMIT: 1G
     ports:
-      - "{{{NGINX_PROJECT_PORT+2}}}:80"
+      - "127.0.0.1:{{{NGINX_PROJECT_PORT+2}}}:80"
     profiles:
       - phpmyadmin{{{PHPMYADMIN_ENABLED}}}
     depends_on:
@@ -116,7 +116,7 @@ services:
       SERVER_BASEPATH: /kibana
       ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
     ports:
-      - "{{{NGINX_PROJECT_PORT+3}}}:5601"
+      - "127.0.0.1:{{{NGINX_PROJECT_PORT+3}}}:5601"
     profiles:
       - kibana{{{KIBANA_ENABLED}}}
     depends_on:

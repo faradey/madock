@@ -24,11 +24,11 @@ func main() {
 		case "c:f":
 			commands.CleanCache()
 		case "magento-cloud", "cloud":
-			commands.Cloud(strings.Join(attr.Options.Args, " "))
+			commands.Cloud(strings.Join(os.Args[2:], " "))
 		case "cli":
-			commands.Cli(strings.Join(attr.Options.Args, " "))
+			commands.Cli(strings.Join(os.Args[2:], " "))
 		case "composer":
-			commands.Composer(strings.Join(attr.Options.Args, " "))
+			commands.Composer(strings.Join(os.Args[2:], " "))
 		case "compress":
 			commands.Compress()
 		case "config:list":
@@ -56,9 +56,9 @@ func main() {
 		case "logs":
 			commands.Logs()
 		case "magento", "m":
-			commands.Magento(strings.Join(attr.Options.Args, " "))
+			commands.Magento(strings.Join(os.Args[2:], " "))
 		case "node":
-			commands.Node(strings.Join(attr.Options.Args, " "))
+			commands.Node(strings.Join(os.Args[2:], " "))
 		case "patch:create":
 			commands.PatchCreate()
 		case "proxy:start":
