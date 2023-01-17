@@ -6,6 +6,8 @@ $vendorPath = $siteRootPath."/vendor";
 $patchMagentoPath = $siteRootPath."/patches/composer";
 $filePatch = $siteRootPath."/".trim($argv[1],"/");
 $patchName = $argv[2];
+$patchTitle = $argv[3]?:$patchName;
+$force = $argv[4]??"";
 
 if(file_exists($filePatch)){
     $moduleRoot = explode("vendor", $filePatch, 2)[1]??null;
@@ -30,7 +32,7 @@ if(file_exists($filePatch)){
                 $output = null;
                 $responseCode = 0;
 
-                exec("cd ".$siteRootPath." && composer install", $output, $responseCode);
+                exec("cd ".$siteRootPath." && composer install --no-plugins", $output, $responseCode);
                 if($responseCode != 0){
                     print_r($output);
                 } else {
@@ -41,16 +43,24 @@ if(file_exists($filePatch)){
                     if(file_exists($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName)){
                         $patchContent = file_get_contents($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
                         $patchContent = str_replace($moduleRoot[2].".new", $moduleRoot[2], $patchContent);
-                        file_put_contents($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchContent);
-                        if(!file_exists($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1])){
-                            mkdir($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1], 0755, true);
+                        if(!empty($force) || !file_exists($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName)){
+                            file_put_contents($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchContent);
+                            if(!file_exists($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1])){
+                                mkdir($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1], 0755, true);
+                            }
+                            copy($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
+                        } else {
+                            print("The patch with same title or name is already exists.");
                         }
-                        copy($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
 
                         $composerFile = $siteRootPath."/composer.json";
                         $composerJsonData = json_decode(file_get_contents($composerFile), true);
-                        $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchName] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
-                        file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                        if(!empty($force) || empty($composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
+                            $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
+                            file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                        } else {
+                            print("The patch with same title or name has already been created.");
+                        }
                     } else {
                         print("Something went wrong");
                     }
@@ -71,7 +81,7 @@ function deleteDirectory($dir) {
         return true;
     }
 
-    if (!is_dir($dir)) {
+    if (!is_dir($dir) || is_link($dir)) {
         return unlink($dir);
     }
 

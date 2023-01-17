@@ -39,6 +39,8 @@ func Help() {
 	describeByLevel("patch:create", "Create patch. The patch can be used with the composer plugin cweagans/composer-patches", 0)
 	describeByLevel("--file", "Path of changed file. For example: vendor/magento/module-analytics/Cron/CollectData.php", 1)
 	describeByLevel("--name", "Name of the patch file", 1)
+	describeByLevel("--title", "Title of the patch", 1)
+	describeByLevel("--force", "Replace patch if it already exists", 1)
 	describeByLevel("proxy:start", "Start a proxy server", 0)
 	describeByLevel("proxy:stop", "Stop a proxy server", 0)
 	describeByLevel("proxy:restart", "Restart a proxy server", 0)

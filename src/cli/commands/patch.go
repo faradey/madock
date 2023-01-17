@@ -10,6 +10,8 @@ import (
 func PatchCreate() {
 	filePath := attr.Options.File
 	patchName := attr.Options.Name
+	title := attr.Options.Title
+	force := attr.Options.Force
 	if filePath == "" {
 		log.Fatal("The --file option is incorrect or not specified.")
 	}
@@ -18,5 +20,5 @@ func PatchCreate() {
 		log.Fatal("The --name option is incorrect or not specified.")
 	}
 
-	scripts.CreatePatch(filePath, patchName)
+	scripts.CreatePatch(filePath, patchName, title, force)
 }
