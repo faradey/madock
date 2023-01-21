@@ -85,8 +85,12 @@ func DbImport() {
 func DbExport() {
 	projectName := paths.GetRunDirName()
 	projectConfig := configs.GetCurrentProjectConfig()
+	name := strings.TrimSpace(attr.Options.Name)
+	if len(name) > 0 {
+		name += "_"
+	}
 	dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
-	selectedFile, err := os.Create(dbsPath + "local-" + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
+	selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
 	if err != nil {
 		log.Fatal(err)
 	}

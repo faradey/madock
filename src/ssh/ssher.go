@@ -44,11 +44,13 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 	return string(out)
 }
 
-func DbDump(conn *ssh.Client, remoteDir string) {
+func DbDump(conn *ssh.Client, remoteDir, name string) {
 	defer conn.Close()
 	fmt.Println("")
 	fmt.Println("Dumping and downloading DB is started")
 	result := RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
+	nOpenBrace := strings.Index(result, "{")
+	result = result[nOpenBrace:]
 	if len(result) > 2 {
 		dbAuthData := RemoteDbStruct{}
 		err := json.Unmarshal([]byte(result), &dbAuthData)
@@ -56,7 +58,11 @@ func DbDump(conn *ssh.Client, remoteDir string) {
 			fmt.Println(err)
 		}
 		curDateTime := time.Now().Format("2006-01-02_15-04-05")
-		dumpName := "remote_" + curDateTime + ".sql.gz"
+		name = strings.TrimSpace(name)
+		if len(name) > 0 {
+			name += "_"
+		}
+		dumpName := "remote_" + name + curDateTime + ".sql.gz"
 		result = RunCommand(conn, "mysqldump -u \""+dbAuthData.Username+"\" -p\""+dbAuthData.Password+"\" -h "+dbAuthData.Host+" --single-transaction --quick --lock-tables=false --no-tablespaces --triggers "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+remoteDir+"/var/"+dumpName)
 		sc, err := sftp.NewClient(conn)
 		if err != nil {

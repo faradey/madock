@@ -102,6 +102,8 @@ This command shows you the following items:
 
 * `db:export`      Export database
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name`  Name of the DB export file
+
 
 * `db:info`      Information about credentials and remote host and port
                      
@@ -168,6 +170,8 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--compress`      Apply lossy compression. Images will have weight equals 30% of original
 
 * `remote:sync:db`  Create and download dump of DB from remote host
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name`  Name of the DB export file
 
 
 * `remote:sync:file`  Create and download dump of DB from remote host 
