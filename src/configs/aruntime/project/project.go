@@ -1,6 +1,7 @@
 package project
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/paths"
-	cp "github.com/otiai10/copy"
 )
 
 func MakeConf(projectName string) {
@@ -40,7 +40,25 @@ func MakeConf(projectName string) {
 
 func makeScriptsConf(projectName string) {
 	exPath := paths.GetExecDirPath()
-	cp.Copy(exPath+"/scripts", exPath+"/aruntime/projects/"+projectName+"/ctx/scripts")
+	src := exPath + "/aruntime/projects/" + projectName + "/ctx/scripts"
+	if fi, err := os.Lstat(src); err == nil {
+		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
+			err := os.RemoveAll(src)
+			if err == nil {
+				err := os.Symlink(exPath+"/scripts", src)
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				fmt.Println(err)
+			}
+		}
+	} else {
+		err := os.Symlink(exPath+"/scripts", src)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 func makeKibanaConf(projectName string) {

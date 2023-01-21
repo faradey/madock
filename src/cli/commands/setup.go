@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/docker/scripts"
 	"github.com/faradey/madock/src/paths"
 	"github.com/faradey/madock/src/versions"
 )
@@ -267,5 +269,18 @@ func copyFile(pathFrom, pathTo string) {
 	err = os.WriteFile(pathTo, b, 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
+	}
+}
+
+func SetupEnv() {
+	envFile := paths.MakeDirsByPath(paths.GetRunDirPath() + "/app/etc/env.php")
+	if _, err := os.Stat(envFile); !os.IsNotExist(err) && !attr.Options.Force {
+		log.Fatal("The env.php file is already exist.")
+	} else {
+		data, err := json.Marshal(configs.GetCurrentProjectConfig())
+		if err != nil {
+			log.Fatal(err)
+		}
+		scripts.CreateEnv(string(data))
 	}
 }

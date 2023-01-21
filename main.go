@@ -91,6 +91,8 @@ func main() {
 			commands.ServiceDisable()
 		case "setup":
 			commands.Setup()
+		case "setup:env":
+			commands.SetupEnv()
 		case "ssl:rebuild":
 			commands.Ssl()
 		case "start":
