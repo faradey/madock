@@ -202,6 +202,11 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--install`   Install Magento from the source code
                         
 
+* `setup:env`   Generate app/etc/env.php
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`-f`   Force re-create the file
+                        
+
 * `ssl:rebuild`   Rebuild SSL Certificates  
                         
 

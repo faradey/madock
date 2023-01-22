@@ -25,7 +25,6 @@ try {
     // set the resulting array to associative
     $result = $stmt->setFetchMode(PDO::FETCH_ASSOC);
     $data = $stmt->fetchAll();
-    print_r($data);
     if(!empty($data)){
         $coreConfigDataName = $data[0]["table_name"];
 
@@ -45,9 +44,13 @@ try {
         $stmt->execute();
         $data = $stmt->fetchAll();
         $storeWebsites = [];
+        $defaultWebsiteCode = "";
         foreach ($data as $k => $v){
             if(!empty($v['code'])){
                 $storeWebsites[$v['website_id']] = $v['code'];
+            }
+            if($v['is_default'] == 1){
+                $defaultWebsiteCode = $v['code'];
             }
         }
 
@@ -63,36 +66,164 @@ try {
         ;");
         $stmt->execute();
         $data = $stmt->fetchAll();
+        $hosts = [];
         foreach ($data as $k => $v){
             if(!empty($v['value'])){
+                $val = preg_replace("/^(.+?)\.[^\.]+$/i", "$1".$projectConfig["DEFAULT_HOST_FIRST_LEVEL"], $v['value'])."/";
+                $domain = str_replace(["https://", "http://"], "", trim(strtolower($val), "/"));
+                $env["downloadable_domains"][] = $domain;
+                $scopeId = $v['scope_id'];
                 if($v['scope'] == "default"){
+                    $hosts[] = $domain.":".$defaultWebsiteCode;
                     if($v["path"] == "web/unsecure/base_url"){
-                        $env["system"]["default"]["web"]["unsecure"]["base_url"] = $v['value'];
+                        $env["system"]["default"]["web"]["unsecure"]["base_url"] = $val;
                     }
                     if($v["path"] == "web/secure/base_url"){
-                        $env["system"]["default"]["web"]["secure"]["base_url"] = $v['value'];
+                        $env["system"]["default"]["web"]["secure"]["base_url"] = $val;
                     }
                     if($v["path"] == "web/secure/base_static_url"){
-                        $env["system"]["default"]["web"]["secure"]["base_static_url"] = $v['value'];
+                        $env["system"]["default"]["web"]["secure"]["base_static_url"] = $val;
                     }
                     if($v["path"] == "web/unsecure/base_static_url"){
-                        $env["system"]["default"]["web"]["unsecure"]["base_static_url"] = $v['value'];
+                        $env["system"]["default"]["web"]["unsecure"]["base_static_url"] = $val;
                     }
                     if($v["path"] == "web/secure/base_media_url"){
-                        $env["system"]["default"]["web"]["secure"]["base_media_url"] = $v['value'];
+                        $env["system"]["default"]["web"]["secure"]["base_media_url"] = $val;
                     }
                     if($v["path"] == "web/unsecure/base_media_url"){
-                        $env["system"]["default"]["web"]["unsecure"]["base_media_url"] = $v['value'];
+                        $env["system"]["default"]["web"]["unsecure"]["base_media_url"] = $val;
                     }
                     if($v["path"] == "web/secure/base_link_url"){
-                        $env["system"]["default"]["web"]["secure"]["base_link_url"] = $v['value'];
+                        $env["system"]["default"]["web"]["secure"]["base_link_url"] = $val;
                     }
                     if($v["path"] == "web/unsecure/base_link_url"){
-                        $env["system"]["default"]["web"]["unsecure"]["base_link_url"] = $v['value'];
+                        $env["system"]["default"]["web"]["unsecure"]["base_link_url"] = $val;
                     }
+                    $env["system"]["default"]["web"]["secure"]["use_in_frontend"] = 1;
+                    $env["system"]["default"]["web"]["secure"]["use_in_adminhtml"] = 1;
+                } elseif($v['scope'] == "websites"){
+                    $scopeCode = $storeWebsites[$scopeId];
+                    if(!$scopeCode){continue;}
+                    $hosts[] = $domain.":".$scopeCode;
+                    if($v["path"] == "web/unsecure/base_url"){
+                        $env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_url"] = $val;
+                    }
+                    if($v["path"] == "web/secure/base_url"){
+                        $env["system"]["websites"][$scopeCode]["web"]["secure"]["base_url"] = $val;
+                    }
+                    if($v["path"] == "web/secure/base_static_url"){
+                        $env["system"]["websites"][$scopeCode]["web"]["secure"]["base_static_url"] = $val;
+                    }
+                    if($v["path"] == "web/unsecure/base_static_url"){
+                        $env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_static_url"] = $val;
+                    }
+                    if($v["path"] == "web/secure/base_media_url"){
+                        $env["system"]["websites"][$scopeCode]["web"]["secure"]["base_media_url"] = $val;
+                    }
+                    if($v["path"] == "web/unsecure/base_media_url"){
+                        $env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_media_url"] = $val;
+                    }
+                    if($v["path"] == "web/secure/base_link_url"){
+                        $env["system"]["websites"][$scopeCode]["web"]["secure"]["base_link_url"] = $val;
+                    }
+                    if($v["path"] == "web/unsecure/base_link_url"){
+                        $env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_link_url"] = $val;
+                    }
+                    $env["system"]["websites"][$scopeCode]["web"]["secure"]["use_in_frontend"] = 1;
+                    $env["system"]["websites"][$scopeCode]["web"]["secure"]["use_in_adminhtml"] = 1;
+                } elseif($v['scope'] == "stores"){
+                    $scopeCode = $stores[$scopeId]??null;
+                    if(!$scopeCode){continue;}
+                    /*$hosts[] = $domain.":".$scopeCode;*/
+                    if($v["path"] == "web/unsecure/base_url"){
+                        $env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_url"] = $val;
+                    }
+                    if($v["path"] == "web/secure/base_url"){
+                        $env["system"]["stores"][$scopeCode]["web"]["secure"]["base_url"] = $val;
+                    }
+                    if($v["path"] == "web/secure/base_static_url"){
+                        $env["system"]["stores"][$scopeCode]["web"]["secure"]["base_static_url"] = $val;
+                    }
+                    if($v["path"] == "web/unsecure/base_static_url"){
+                        $env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_static_url"] = $val;
+                    }
+                    if($v["path"] == "web/secure/base_media_url"){
+                        $env["system"]["stores"][$scopeCode]["web"]["secure"]["base_media_url"] = $val;
+                    }
+                    if($v["path"] == "web/unsecure/base_media_url"){
+                        $env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_media_url"] = $val;
+                    }
+                    if($v["path"] == "web/secure/base_link_url"){
+                        $env["system"]["stores"][$scopeCode]["web"]["secure"]["base_link_url"] = $val;
+                    }
+                    if($v["path"] == "web/unsecure/base_link_url"){
+                        $env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_link_url"] = $val;
+                    }
+                    $env["system"]["stores"][$scopeCode]["web"]["secure"]["use_in_frontend"] = 1;
+                    $env["system"]["stores"][$scopeCode]["web"]["secure"]["use_in_adminhtml"] = 1;
                 }
             }
         }
+
+        $env["system"]["default"]["web"]["cookie"]["cookie_domain"] = "";
+        $env["system"]["default"]["web"]["secure"]["offloader_header"] = "X-Forwarded-Proto";
+        $env["system"]["default"]["catalog"]["search"]["engine"] = "elasticsearch".$projectConfig["ELASTICSEARCH_VERSION"][0];
+        $env["system"]["default"]["catalog"]["search"]["elasticsearch7_server_hostname"] = "elasticsearch";
+        $env["system"]["default"]["catalog"]["search"]["elasticsearch7_server_port"] = "9200";
+        $env["system"]["default"]["admin"]["security"]["password_lifetime"] = 0;
+        $env["system"]["default"]["admin"]["security"]["password_is_forced"] = 0;
+        $env["system"]["default"]["admin"]["captcha"]["enable"] = 0;
+        $env["system"]["default"]["system"]["full_page_cache"]["caching_application"] = 1;
+        $env["system"]["default"]["system"]["security"]["max_session_size_admin"] = '2560000';
+        $env["system"]["default"]["algoliasearch_credentials"]["credentials"]["index_prefix"] = 'magento2_loc_';
+        $env["downloadable_domains"] = array_unique($env["downloadable_domains"]);
+        $env["db"]["connection"]["default"]["host"] = "db";
+        $env["db"]["connection"]["default"]["dbname"] = $projectConfig["DB_DATABASE"];
+        $env["db"]["connection"]["default"]["username"] = $projectConfig["DB_USER"];
+        $env["db"]["connection"]["default"]["password"] = $projectConfig["DB_PASSWORD"];
+        $env["db"]["connection"]["default"]["model"] = "mysql4";
+        $env["db"]["connection"]["default"]["engine"] = "innodb";
+        $env["db"]["connection"]["default"]["initStatements"] = "SET NAMES utf8;";
+        $env["db"]["connection"]["default"]["active"] = 1;
+        $env["db"]["table_prefix"] = $tablePrefix;
+
+        if($projectConfig["REDIS_ENABLED"] == "true"){
+            $env["cache"]["frontend"]["default"]["backend"] = "Cm_Cache_Backend_Redis";
+            $env["cache"]["frontend"]["default"]["backend_options"]["server"] = "redisdb";
+            $env["cache"]["frontend"]["default"]["backend_options"]["port"] = "6379";
+            $env["cache"]["frontend"]["default"]["backend_options"]["persistent"] = "";
+            $env["cache"]["frontend"]["default"]["backend_options"]["database"] = 1;
+            $env["cache"]["frontend"]["default"]["backend_options"]["force_standalone"] = 0;
+            $env["cache"]["frontend"]["default"]["backend_options"]["connect_retries"] = 1;
+            $env["cache"]["frontend"]["default"]["backend_options"]["read_timeout"] = 10;
+            $env["cache"]["frontend"]["default"]["backend_options"]["automatic_cleaning_factor"] = 0;
+            $env["cache"]["frontend"]["default"]["backend_options"]["compress_data"] = 1;
+            $env["cache"]["frontend"]["default"]["backend_options"]["compress_tags"] = 1;
+            $env["cache"]["frontend"]["default"]["backend_options"]["compress_threshold"] = 20480;
+            $env["cache"]["frontend"]["default"]["backend_options"]["compression_lib"] = "gzip";
+
+            $env["cache"]["frontend"]["page_cache"]["backend"] = "Cm_Cache_Backend_Redis";
+            $env["cache"]["frontend"]["page_cache"]["backend_options"]["server"] = "redisdb";
+            $env["cache"]["frontend"]["page_cache"]["backend_options"]["port"] = "6379";
+            $env["cache"]["frontend"]["page_cache"]["backend_options"]["persistent"] = "";
+            $env["cache"]["frontend"]["page_cache"]["backend_options"]["database"] = 0;
+            $env["cache"]["frontend"]["page_cache"]["backend_options"]["password"] = "";
+            $env["cache"]["frontend"]["page_cache"]["backend_options"]["force_standalone"] = 0;
+            $env["cache"]["frontend"]["page_cache"]["backend_options"]["connect_retries"] = 1;
+        }
+
+        if($projectConfig["RABBITMQ_ENABLED"] == "true"){
+            $env["queue"]["amqp"]["host"] = "rabbitmq";
+            $env["queue"]["amqp"]["port"] = "5672";
+            $env["queue"]["amqp"]["user"] = "guest";
+            $env["queue"]["amqp"]["host"] = "guest";
+            $env["queue"]["amqp"]["virtualhost"] = "/";
+        }
+
+        file_put_contents($envPath, "<?php\n    return ".var_export($env, true).";\n");
+        print("The env.php file was generated. \n");
+        print("You should update the hosts by using the command below\n");
+        print("madock config:set --name=HOSTS --value=\"".implode(" ", array_unique($hosts))."\"\n");        
     } else {
         die("Table core_config_data was not found");
     }
@@ -100,8 +231,3 @@ try {
   } catch(PDOException $e) {
     die("DB connection failed: " . $e->getMessage());
   }
-
-
-
-//print_r($projectConfig);
-print_r($env);

@@ -65,6 +65,8 @@ func Help() {
 	describeByLevel("setup", "Initial project setup", 0)
 	describeByLevel("--download", "Download the specific Magento version from Composer to the container", 1)
 	describeByLevel("--install", "Install Magento from the source code", 1)
+	describeByLevel("setup:env", "Generate app/etc/env.php", 0)
+	describeByLevel("-f", "Force re-create the file", 1)
 	describeByLevel("ssl:rebuild", "Rebuild SSL Certificates", 0)
 	describeByLevel("start", "Starting all containers and services", 0)
 	describeByLevel("status", "Display the status of the project", 0)

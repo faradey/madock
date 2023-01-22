@@ -54,9 +54,10 @@ return array (
             'config_integration_api' => 1,
             'translate' => 1,
             'config_webservice' => 1,
+            'compiled_config' => 1,
         ),
     'install' =>
         array (
-            'date' => 'Tue, 21 Dec 2023 14:14:48 +0000',
+            'date' => 'Tue, 21 Dec 2023 14:17:48 +0000',
         ),
 );

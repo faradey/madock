@@ -273,7 +273,7 @@ func copyFile(pathFrom, pathTo string) {
 }
 
 func SetupEnv() {
-	envFile := paths.MakeDirsByPath(paths.GetRunDirPath() + "/app/etc/env.php")
+	envFile := paths.GetRunDirPath() + "/app/etc/env.php"
 	if _, err := os.Stat(envFile); !os.IsNotExist(err) && !attr.Options.Force {
 		log.Fatal("The env.php file is already exist.")
 	} else {
