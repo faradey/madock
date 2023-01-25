@@ -37,6 +37,31 @@ try {
         foreach ($data as $k => $v){
             if(!empty($v['code'])){
                 $stores[$v['store_id']] = $v['code'];
+                $scopeCode = $v['code'];
+                if(!empty($env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_url"])){
+                    unset($env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_url"]);
+                }
+                if(!empty($env["system"]["stores"][$scopeCode]["web"]["secure"]["base_url"])){
+                    unset($env["system"]["stores"][$scopeCode]["web"]["secure"]["base_url"]);
+                }
+                if(!empty($env["system"]["stores"][$scopeCode]["web"]["secure"]["base_static_url"])){
+                    unset($env["system"]["stores"][$scopeCode]["web"]["secure"]["base_static_url"]);
+                }
+                if(!empty($env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_static_url"])){
+                    unset($env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_static_url"]);
+                }
+                if(!empty($env["system"]["stores"][$scopeCode]["web"]["secure"]["base_media_url"])){
+                    unset($env["system"]["stores"][$scopeCode]["web"]["secure"]["base_media_url"]);
+                }
+                if(!empty($env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_media_url"])){
+                    unset($env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_media_url"]);
+                }
+                if(!empty($env["system"]["stores"][$scopeCode]["web"]["secure"]["base_link_url"])){
+                    unset($env["system"]["stores"][$scopeCode]["web"]["secure"]["base_link_url"]);
+                }
+                if(!empty($env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_link_url"])){
+                    unset($env["system"]["stores"][$scopeCode]["web"]["unsecure"]["base_link_url"]);
+                }
             }
         }
 
@@ -48,6 +73,31 @@ try {
         foreach ($data as $k => $v){
             if(!empty($v['code'])){
                 $storeWebsites[$v['website_id']] = $v['code'];
+                $scopeCode = $v['code'];
+                if(!empty($env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_url"])){
+                    unset($env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_url"]);
+                }
+                if(!empty($env["system"]["websites"][$scopeCode]["web"]["secure"]["base_url"])){
+                    unset($env["system"]["websites"][$scopeCode]["web"]["secure"]["base_url"]);
+                }
+                if(!empty($env["system"]["websites"][$scopeCode]["web"]["secure"]["base_static_url"])){
+                    unset($env["system"]["websites"][$scopeCode]["web"]["secure"]["base_static_url"]);
+                }
+                if(!empty($env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_static_url"])){
+                    unset($env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_static_url"]);
+                }
+                if(!empty($env["system"]["websites"][$scopeCode]["web"]["secure"]["base_media_url"])){
+                    unset($env["system"]["websites"][$scopeCode]["web"]["secure"]["base_media_url"]);
+                }
+                if(!empty($env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_media_url"])){
+                    unset($env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_media_url"]);
+                }
+                if(!empty($env["system"]["websites"][$scopeCode]["web"]["secure"]["base_link_url"])){
+                    unset($env["system"]["websites"][$scopeCode]["web"]["secure"]["base_link_url"]);
+                }
+                if(!empty($env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_link_url"])){
+                    unset($env["system"]["websites"][$scopeCode]["web"]["unsecure"]["base_link_url"]);
+                }
             }
             if($v['is_default'] == 1){
                 $defaultWebsiteCode = $v['code'];
@@ -67,6 +117,31 @@ try {
         $stmt->execute();
         $data = $stmt->fetchAll();
         $hosts = [];
+
+        if(!empty($env["system"]["default"]["web"]["unsecure"]["base_url"])){
+            unset($env["system"]["default"]["web"]["unsecure"]["base_url"]);
+        }
+        if(!empty($env["system"]["default"]["web"]["secure"]["base_url"])){
+            unset($env["system"]["default"]["web"]["secure"]["base_url"]);
+        }
+        if(!empty($env["system"]["default"]["web"]["secure"]["base_static_url"])){
+            unset($env["system"]["default"]["web"]["secure"]["base_static_url"]);
+        }
+        if(!empty($env["system"]["default"]["web"]["unsecure"]["base_static_url"])){
+            unset($env["system"]["default"]["web"]["unsecure"]["base_static_url"]);
+        }
+        if(!empty($env["system"]["default"]["web"]["secure"]["base_media_url"])){
+            unset($env["system"]["default"]["web"]["secure"]["base_media_url"]);
+        }
+        if(!empty($env["system"]["default"]["web"]["unsecure"]["base_media_url"])){
+            unset($env["system"]["default"]["web"]["unsecure"]["base_media_url"]);
+        }
+        if(!empty($env["system"]["default"]["web"]["secure"]["base_link_url"])){
+            unset($env["system"]["default"]["web"]["secure"]["base_link_url"]);
+        }
+        if(!empty($env["system"]["default"]["web"]["unsecure"]["base_link_url"])){
+            unset($env["system"]["default"]["web"]["unsecure"]["base_link_url"]);
+        }
         foreach ($data as $k => $v){
             if(!empty($v['value'])){
                 $val = preg_replace("/^(.+?)\.[^\.]+$/i", "$1".$projectConfig["DEFAULT_HOST_FIRST_LEVEL"], $v['value'])."/";
