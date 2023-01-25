@@ -1,6 +1,7 @@
 package project
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -275,6 +276,10 @@ func makeDBDockerfile(projectName string) {
 	b, err = os.ReadFile(myCnfFile)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if configs.GetCurrentProjectConfig()["DB_VERSION"] >= "10.4" {
+		b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
 	}
 
 	err = ioutil.WriteFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx/my.cnf", b, 0755)
