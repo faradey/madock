@@ -3,7 +3,6 @@ package project
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
@@ -73,7 +72,7 @@ func makeKibanaConf(projectName string) {
 	str = configs.ReplaceConfigValue(str)
 
 	filePath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/kibana.yml"
-	err = ioutil.WriteFile(filePath, []byte(str), 0755)
+	err = os.WriteFile(filePath, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -90,7 +89,7 @@ func makeNginxDockerfile(projectName string) {
 	str = configs.ReplaceConfigValue(str)
 
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/nginx.Dockerfile"
-	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -134,7 +133,7 @@ func makeNginxConf(projectName string) {
 
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/nginx.conf"
-	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -151,7 +150,7 @@ func makePhpDockerfile(projectName string) {
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.Dockerfile"
-	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -166,7 +165,7 @@ func makePhpDockerfile(projectName string) {
 	str = string(b)
 	str = configs.ReplaceConfigValue(str)
 	nginxFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.DockerfileWithoutXdebug"
-	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -210,7 +209,7 @@ func makeDockerCompose(projectName string) {
 	str = strings.Replace(str, "{{{PROJECT_NAME}}}", projectName, -1)
 
 	resultFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml"
-	err = ioutil.WriteFile(resultFile, []byte(str), 0755)
+	err = os.WriteFile(resultFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -246,7 +245,7 @@ func makeDockerCompose(projectName string) {
 	str = strings.Replace(str, "{{{NETWORK_NUMBER}}}", strconv.Itoa(portNumber+90), -1)
 
 	resultFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.override.yml"
-	err = ioutil.WriteFile(resultFile, []byte(str), 0755)
+	err = os.WriteFile(resultFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -263,7 +262,7 @@ func makeDBDockerfile(projectName string) {
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/db.Dockerfile"
-	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -282,7 +281,7 @@ func makeDBDockerfile(projectName string) {
 		b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
 	}
 
-	err = ioutil.WriteFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx/my.cnf", b, 0755)
+	err = os.WriteFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx/my.cnf", b, 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -299,7 +298,7 @@ func makeElasticDockerfile(projectName string) {
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/elasticsearch.Dockerfile"
-	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -316,7 +315,7 @@ func makeRedisDockerfile(projectName string) {
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/redis.Dockerfile"
-	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -333,7 +332,7 @@ func makeNodeDockerfile(projectName string) {
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/node.Dockerfile"
-	err = ioutil.WriteFile(nginxFile, []byte(str), 0755)
+	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
