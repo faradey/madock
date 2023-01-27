@@ -32,9 +32,25 @@ if(file_exists($filePatch)){
                 $output = null;
                 $responseCode = 0;
 
-                exec("cd ".$siteRootPath." && composer install --no-plugins", $output, $responseCode);
+                exec("cd ".$siteRootPath." && composer install --no-plugins --ignore-platform-reqs", $output, $responseCode);
                 if($responseCode != 0){
-                    print_r($output);
+                    recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
+                    if(file_exists($patchContainerPath."/".$composerModuleNameDir)){
+                        deleteDirectory($patchContainerPath."/".$composerModuleNameDir);
+                    }
+                    if(file_exists($patchContainerPath."/vendor")){
+                        deleteDirectory($patchContainerPath."/vendor");
+                    }
+                    mkdir($patchContainerPath."/vendor");
+                    recurseCopy($vendorPath, $patchContainerPath."/vendor");
+                    deleteDirectory($vendorPath);
+
+                    exec("cd ".$siteRootPath." && composer install --no-plugins --ignore-platform-reqs", $output, $responseCode);
+                    
+                    if($responseCode != 0){
+                        recurseCopy($patchContainerPath."/vendor", $vendorPath);
+                        print_r($output);
+                    }
                 } else {
                     $moduleRoot[2] = trim($moduleRoot[2], "/");
                     copy($patchContainerPath."/".$composerModuleNameDir."/".$moduleRoot[2], $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2].".new");
@@ -65,9 +81,8 @@ if(file_exists($filePatch)){
                     } else {
                         print("Something went wrong\n");
                     }
+                    recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
                 }
-
-                recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
             } catch(\Exception | \Error $e) {
                 print($e->getMessage()."\n");
             }
