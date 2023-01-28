@@ -25,10 +25,49 @@ try {
     // set the resulting array to associative
     $result = $stmt->setFetchMode(PDO::FETCH_ASSOC);
     $data = $stmt->fetchAll();
+    $prefixes = [];
     if(!empty($data)){
-        $coreConfigDataName = $data[0]["table_name"];
+        $prefix = str_replace("core_config_data", "", $data[0]["table_name"]);
+        if(empty($prefixes[$prefix])){
+            $prefixes[$prefix] = 0;
+        }
+        $prefixes[$prefix] += 1;
 
-        $tablePrefix = str_replace("core_config_data", "", $coreConfigDataName);
+        $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["DB_DATABASE"]."' AND table_name LIKE '%catalog_category_product' LIMIT 1;");
+        $stmt->execute();
+        $data = $stmt->fetchAll();
+        if(!empty($data)){
+            $prefix = str_replace("catalog_category_product", "", $data[0]["table_name"]);
+            if(empty($prefixes[$prefix])){
+                $prefixes[$prefix] = 0;
+            }
+            $prefixes[$prefix] += 1;
+        }
+
+        $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["DB_DATABASE"]."' AND table_name LIKE '%admin_user' LIMIT 1;");
+        $stmt->execute();
+        $data = $stmt->fetchAll();
+        if(!empty($data)){
+            $prefix = str_replace("admin_user", "", $data[0]["table_name"]);
+            if(empty($prefixes[$prefix])){
+                $prefixes[$prefix] = 0;
+            }
+            $prefixes[$prefix] += 1;
+        }
+
+        $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["DB_DATABASE"]."' AND table_name LIKE '%cron_schedule' LIMIT 1;");
+        $stmt->execute();
+        $data = $stmt->fetchAll();
+        if(!empty($data)){
+            $prefix = str_replace("cron_schedule", "", $data[0]["table_name"]);
+            if(empty($prefixes[$prefix])){
+                $prefixes[$prefix] = 0;
+            }
+            $prefixes[$prefix] += 1;
+        }
+
+        krsort($prefixes);
+        $tablePrefix = array_search(max($prefixes), $prefixes);
 
         $stmt = $conn->prepare("SELECT * FROM ".$tablePrefix."store;");
         $stmt->execute();
@@ -104,7 +143,7 @@ try {
             }
         }
 
-        $stmt = $conn->prepare("SELECT * FROM $coreConfigDataName WHERE 
+        $stmt = $conn->prepare("SELECT * FROM ".$tablePrefix."core_config_data WHERE 
         path = 'web/unsecure/base_url'
          OR path = 'web/secure/base_url'
          OR path = 'web/secure/base_static_url'
