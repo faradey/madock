@@ -44,6 +44,10 @@ git clone git@github.com:faradey/madock.git
 ```
 If you got error "git@github.com: Permission denied (publickey)." see [solution](https://docs.github.com/en/authentication/troubleshooting-ssh/error-permission-denied-publickey#verify-the-public-key-is-attached-to-your-account)
 
+4. Go to the cloned directory
+```shell
+cd madock
+```
 5. Compile
 ```
 Run command below for Apple M1
@@ -56,7 +60,14 @@ Run command below for Apple Intel
 go build -o madock
 ```
 6. Add `madock` bin into your `$PATH`
+```shell
+Run command below for Apple M1
+
+ln -s absolute_path_to_your_madock_dir/madock /opt/homebrew/bin/
 ```
+```shell
+Run command below for Apple Intel
+
 ln -s absolute_path_to_your_madock_dir/madock /usr/local/bin/
 ```
 7. Open a new terminal tab/window and check that `madock` works
@@ -101,9 +112,10 @@ madock
 </details>
 
 ## Project Setup
-```
+```shell
 cd <your_project>
-madock setup
+madock setup --download # for a new project
+madock setup --install # for an existing project
 ```
 
 ## Usage
