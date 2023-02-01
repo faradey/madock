@@ -56,7 +56,16 @@ madock node grunt watch
 
 If you want to manually add an ssl certificate to the browser, you can find it at [path to madock folder]/aruntime/ctx/madockCA.pem
 
-#### 7. help
+#### 7. auth.json
+
+If your project does not have an auth.json file, then when executing `composer` commands, the global auth.json file will be used.
+
+#### 8. Multistores and website codes
+
+Magento uses "base" as the store code by default.
+But if you are using multistore, then you need to specify the code of each website along with the website host in the madock configuration. For example: `madock config:set --name=HOSTS --value="website1.test:base website2.test:websitecode"`. You can see site codes in the database table store_website. Or by querying the database `SELECT * FROM store_website`.
+
+#### 9. help
 ```
   madock help
  ```
