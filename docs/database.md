@@ -13,10 +13,10 @@ List of ssh options
 
 Run the following commands
 ```
-madock remote sync db
+madock remote:sync:db
 ```
 ```
-madock db import
+madock db:import
 ```
 After the successful execution of these commands, the database will be imported.
 
@@ -24,6 +24,6 @@ You can access the database through phpmyadmin by going to http://{you_domain_na
 
 For DB exporting run command
 ```
-madock db export
+madock db:export
 ```
 The files of DB dumps keep in madock/projects/{projects_name}/backup/db

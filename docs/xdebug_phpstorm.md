@@ -5,7 +5,7 @@
 Xdebug needs to be enabled inside the `phpfpm` container.
 
 ```
-madock debug on
+madock debug:enable
 ```
 
 ## PHPStorm configuration
@@ -15,7 +15,7 @@ madock debug on
 
 2. `PHPStorm > Preferences > PHP > Servers`
 
-    * Name: `[your-domain].[xxx]` (for example world.loc)
+    * Name: `[your-domain].[xxx]` (for example world.test)
     * Port: 80
     * Mapping: `/Users/<username>/Sites/<project> -> /var/www/html`
 

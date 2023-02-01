@@ -77,7 +77,7 @@ func DbDump(conn *ssh.Client, remoteDir, name string) {
 		}
 		result = RunCommand(conn, "rm "+remoteDir+"/var/"+dumpName)
 		fmt.Println("")
-		fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db import`")
+		fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db:import`")
 	} else {
 		fmt.Println("Failed to get database authentication data")
 	}

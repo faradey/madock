@@ -125,7 +125,7 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[name of container]`     Container name. Optional. Default container: php. Example: php
                         
 
-* `magento` Execute Magento command inside php container. Also, can be used the short command: m
+* `magento` or `m` Execute Magento command inside php container.
                         
 
 * `node`    Execute NodeJs command inside php container
