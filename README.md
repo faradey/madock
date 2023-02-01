@@ -128,6 +128,7 @@ sudo vim /etc/hosts
 ```
 ### Workflow
 See detailed documentation about development workflow with madock
+IMPORTANT: Please, read all items before starting work.
 * [Development Workflow](docs/workflow.md)
 
 ## More Documentation
