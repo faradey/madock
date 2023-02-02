@@ -54,7 +54,7 @@ func DbImport() {
 	defer selectedFile.Close()
 
 	var cmd, cmdFKeys *exec.Cmd
-	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConfig["DB_DATABASE"])
+	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConfig["DB_DATABASE"])
 	cmdFKeys.Run()
 	if option != "" {
 		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
@@ -74,7 +74,7 @@ func DbImport() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
-	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConfig["DB_DATABASE"])
+	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConfig["DB_DATABASE"])
 	cmdFKeys.Run()
 	if err != nil {
 		log.Fatal(err)

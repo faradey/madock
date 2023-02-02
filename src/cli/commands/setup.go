@@ -160,7 +160,7 @@ func setupElastic(defVersion *string) {
 func setupRedis(defVersion *string) {
 	setTitleAndRecommended("Redis", defVersion)
 
-	availableVersions := []string{"6.2", "6.0", "5.0"}
+	availableVersions := []string{"6.2 (Magento version > 2.4.3-p3)", "6.0 (Magento version <= 2.4.3-p3)", "5.0 (Magento version <= 2.3.2)"}
 
 	for index, ver := range availableVersions {
 		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
@@ -172,7 +172,7 @@ func setupRedis(defVersion *string) {
 
 func setupRabbitMQ(defVersion *string) {
 	setTitleAndRecommended("RabbitMQ", defVersion)
-	availableVersions := []string{"3.9", "3.8", "3.7"}
+	availableVersions := []string{"3.9 (Magento version > 2.4.3-p3)", "3.8 (Magento version <= 2.4.3-p3)", "3.7 (Magento version <= 2.3.4)"}
 	prepareVersions(availableVersions)
 	invitation(defVersion)
 	waiterAndProceed(defVersion, availableVersions)
