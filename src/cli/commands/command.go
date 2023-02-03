@@ -55,7 +55,7 @@ func Proxy(flag string) {
 
 func Prune() {
 	if !configs.IsHasNotConfig() {
-		builder.Down()
+		builder.Down(attr.Options.WithVolumes)
 		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")

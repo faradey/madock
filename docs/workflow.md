@@ -171,6 +171,8 @@ This command shows you the following items:
                         
 
 * `prune`   Stop and delete running project containers
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--with-volumes`   Remove volumes, too
                         
 
 * `rebuild` Recreation of all containers in the project. All containers are re-created and the images from the Dockerfile are rebuilt

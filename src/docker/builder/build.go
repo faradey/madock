@@ -27,7 +27,7 @@ func PrepareConfigs() {
 	project.MakeConf(projectName)
 }
 
-func Down() {
+func Down(withVolumes bool) {
 	projectName := paths.GetRunDirName()
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
@@ -50,8 +50,14 @@ func Down() {
 			"kibanatrue",
 			"--profile",
 			"phpmyadmintrue",
-			"down",
 		}
+
+		profilesOn = append(profilesOn, "down")
+
+		if withVolumes {
+			profilesOn = append(profilesOn, "-v")
+		}
+
 		cmd := exec.Command("docker", profilesOn...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

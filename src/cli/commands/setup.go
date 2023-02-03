@@ -20,7 +20,7 @@ import (
 
 func Setup() {
 	if configs.IsHasConfig() {
-		builder.Down()
+		builder.Down(false)
 	}
 	projectName := paths.GetRunDirName()
 
