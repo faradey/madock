@@ -218,6 +218,8 @@ This command shows you the following items:
 * `setup:env`   Generate app/etc/env.php
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`-f`   Force re-create the file
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--host`   Default host
                         
 
 * `ssl:rebuild`   Rebuild SSL Certificates  

@@ -19,6 +19,7 @@ var Options struct {
 	Force      bool   `long:"forse" short:"f" description:"Install Magento"`
 	File       string `long:"file" description:"File path"`
 	Title      string `long:"title" description:"Title"`
+	Host       string `long:"host" description:"Host"`
 }
 
 func ParseAttributes() {

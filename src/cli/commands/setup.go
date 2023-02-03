@@ -281,6 +281,6 @@ func SetupEnv() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		scripts.CreateEnv(string(data))
+		scripts.CreateEnv(string(data), attr.Options.Host)
 	}
 }

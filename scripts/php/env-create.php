@@ -3,7 +3,7 @@ $siteRootPath = "/var/www/html";
 
 $envPath = $siteRootPath."/app/etc/env.php";
 $projectConfig = json_decode($argv[1], true);
-
+$defaultHost = $argv[2]??null;
 $env = [];
 if(file_exists($envPath)){
     $env = getEnvPhp($envPath);
@@ -114,19 +114,19 @@ try {
                 $domain = "";
                 $scopeId = $v['scope_id'];
                 if($v['scope'] == "default"){
-                    setUrls($domain, $val, $v["path"], "default", null, $env, $hosts, $domains);
+                    setUrls($domain, $val, $v["path"], "default", null, $env, $hosts, $domains, $defaultHost, $defaultWebsiteCode);
                     $env["system"]["default"]["web"]["secure"]["use_in_frontend"] = 1;
                     $env["system"]["default"]["web"]["secure"]["use_in_adminhtml"] = 1;
                 } elseif($v['scope'] == "websites"){
                     $scopeCode = $storeWebsites[$scopeId];
                     if(!$scopeCode){continue;}
-                    setUrls($domain, $val, $v["path"], "websites", $scopeCode, $env, $hosts, $domains);
+                    setUrls($domain, $val, $v["path"], "websites", $scopeCode, $env, $hosts, $domains, $defaultHost, $defaultWebsiteCode);
                     $env["system"]["websites"][$scopeCode]["web"]["secure"]["use_in_frontend"] = 1;
                     $env["system"]["websites"][$scopeCode]["web"]["secure"]["use_in_adminhtml"] = 1;
                 } elseif($v['scope'] == "stores"){
                     $scopeCode = $stores[$scopeId]??null;
                     if(!$scopeCode){continue;}
-                    setUrls($domain, $val, $v["path"], "stores", $scopeCode, $env, $hosts, $domains);
+                    setUrls($domain, $val, $v["path"], "stores", $scopeCode, $env, $hosts, $domains, $defaultHost, $defaultWebsiteCode);
                     $env["system"]["stores"][$scopeCode]["web"]["secure"]["use_in_frontend"] = 1;
                     $env["system"]["stores"][$scopeCode]["web"]["secure"]["use_in_adminhtml"] = 1;
                 }
@@ -203,17 +203,23 @@ try {
     die("DB connection failed: " . $e->getMessage());
   }
 
-  function setUrls(&$domain, $val, $path, $scope, $scopeCode, &$env, &$hosts, &$domains) {
+  function setUrls(&$domain, $val, $path, $scope, $scopeCode, &$env, &$hosts, &$domains, $defaultHost, $defaultWebsiteCode) {
     $types = ['base_url', 'base_static_url', 'base_media_url', 'base_link_url'];
     
     foreach($types as $type) {
         if($path == "web/unsecure/".$type) {
             if($scope == "default") {
+                if(!empty($defaultHost)){
+                    $val = "https://".$defaultHost."/";
+                }
                 if(empty($env["system"][$scope]["web"]["unsecure"][$type])){
                     $env["system"][$scope]["web"]["unsecure"][$type] = $val;
                 }
                 $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope]["web"]["unsecure"][$type]), "/"));
             } else {
+                if($scope == "websites" && $defaultWebsiteCode == $scopeCode && !empty($defaultHost)){
+                    $val = "https://".$defaultHost."/";
+                }
                 if(empty($env["system"][$scope][$scopeCode]["web"]["unsecure"][$type])){
                     $env["system"][$scope][$scopeCode]["web"]["unsecure"][$type] = $val;
                 }
@@ -221,11 +227,17 @@ try {
             }
         } elseif($path == "web/secure/".$type) {
             if($scope == "default") {
+                if(!empty($defaultHost)){
+                    $val = "https://".$defaultHost."/";
+                }
                 if(empty($env["system"][$scope]["web"]["secure"][$type])){
                     $env["system"][$scope]["web"]["secure"][$type] = $val;
                 }
                 $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope]["web"]["unsecure"][$type]), "/"));
             } else {
+                if($scope == "websites" && $defaultWebsiteCode == $scopeCode && !empty($defaultHost)){
+                    $val = "https://".$defaultHost."/";
+                }
                 if(empty($env["system"][$scope][$scopeCode]["web"]["secure"][$type])){
                     $env["system"][$scope][$scopeCode]["web"]["secure"][$type] = $val;
                 }
@@ -235,7 +247,7 @@ try {
     }
 
     if($scope != "stores"){
-        $hosts[] = $domain.":".$scopeCode;
+        $hosts[] = $domain.":".($scopeCode??$defaultWebsiteCode);
         $domains[] = $domain;
     }
   }
