@@ -199,8 +199,9 @@ func GenerateSslCert(ctxPath string, force bool) {
 			"\n" +
 			"[ v3_req ]\n" +
 			"# Extensions to add to a certificate request\n" +
+			"authorityKeyIdentifier=keyid,issuer\n" +
 			"basicConstraints = CA:FALSE\n" +
-			"keyUsage = nonRepudiation, digitalSignature, keyEncipherment\n" +
+			"keyUsage = nonRepudiation, digitalSignature, keyEncipherment, dataEncipherment\n" +
 			"subjectAltName = @alt_names\n" +
 			"\n" +
 			"[alt_names]\n" +
