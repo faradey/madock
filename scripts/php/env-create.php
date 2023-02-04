@@ -145,6 +145,10 @@ try {
         $env["system"]["default"]["system"]["full_page_cache"]["caching_application"] = 1;
         $env["system"]["default"]["system"]["security"]["max_session_size_admin"] = '2560000';
         $env["system"]["default"]["algoliasearch_credentials"]["credentials"]["index_prefix"] = 'magento2_loc_';
+        /* Set the test mode by default for the Stripe module */
+        $env["system"]["default"]["payment"]["stripe_payments_basic"]["stripe_mode"] = "test";
+        /* Set the test mode by default for the Paypal Braintree module */
+        $env["system"]["default"]["payment"]["braintree"]["environment"] = "sandbox";
         $env["downloadable_domains"] = array_unique($env["downloadable_domains"]);
         $env["db"]["connection"]["default"]["host"] = "db";
         $env["db"]["connection"]["default"]["dbname"] = $projectConfig["DB_DATABASE"];
