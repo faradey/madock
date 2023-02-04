@@ -114,8 +114,8 @@ madock
 ## Project Setup
 ```shell
 cd <your_project>
-madock setup --download # for a new project
-madock setup --install # for an existing project
+madock setup --download --install # for a new empty project with the clean Magento
+madock setup # for an existing project
 ```
 
 ## Usage
