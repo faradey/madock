@@ -181,9 +181,26 @@ func GenerateSslCert(ctxPath string, force bool) {
 			}
 		}
 
-		extFileContent := "authorityKeyIdentifier=keyid,issuer\n" +
-			"basicConstraints=CA:FALSE\n" +
-			"keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\n" +
+		extFileContent := "[req]\n" +
+			"distinguished_name = req_distinguished_name\n" +
+			"req_extensions = v3_req\n" +
+			"\n" +
+			"[req_distinguished_name]\n" +
+			"countryName = Country Name (2 letter code)\n" +
+			"countryName_default = US\n" +
+			"stateOrProvinceName = State or Province Name (full name)\n" +
+			"stateOrProvinceName_default = MN\n" +
+			"localityName = Locality Name (eg, city)\n" +
+			"localityName_default = Minneapolis\n" +
+			"organizationalUnitName	= Organizational Unit Name (eg, section)\n" +
+			"organizationalUnitName_default	= Domain Control Validated\n" +
+			"commonName = Internet Widgits Ltd\n" +
+			"commonName_max	= 64\n" +
+			"\n" +
+			"[ v3_req ]\n" +
+			"# Extensions to add to a certificate request\n" +
+			"basicConstraints = CA:FALSE\n" +
+			"keyUsage = nonRepudiation, digitalSignature, keyEncipherment\n" +
 			"subjectAltName = @alt_names\n" +
 			"\n" +
 			"[alt_names]\n" +
@@ -219,7 +236,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 		}
 
 		if doGenerateSsl || force {
-			cmd := exec.Command("openssl", "req", "-x509", "-newkey", "rsa:4096", "-keyout", ctxPath+"/madockCA.key", "-out", ctxPath+"/madockCA.pem", "-sha256", "-days", "365", "-nodes", "-subj", "/CN=madock")
+			cmd := exec.Command("openssl", "req", "-x509", "-newkey", "rsa:2048", "-keyout", ctxPath+"/madockCA.key", "-out", ctxPath+"/madockCA.pem", "-sha256", "-days", "365", "-nodes", "-subj", "/C=/ST=/O=Madock CA Self Signed Organization/localityName=/commonName=Madock CA Self Signed CN/organizationalUnitName=Developers/emailAddress=madock@madock.com/")
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			err = cmd.Run()
@@ -309,7 +326,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 			}
 		}
 
-		cmd := exec.Command("openssl", "req", "-newkey", "rsa:4096", "-keyout", ctxPath+"/madock.local.key", "-out", ctxPath+"/madock.local.csr", "-nodes", "-subj", "/CN=madocklocalkey")
+		cmd := exec.Command("openssl", "req", "-newkey", "rsa:2048", "-keyout", ctxPath+"/madock.local.key", "-out", ctxPath+"/madock.local.csr", "-nodes", "-subj", "/C=/ST=/O=/localityName=/commonName=madocklocalkey/organizationalUnitName=/emailAddress=madock@madock.com/")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
@@ -317,7 +334,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 			log.Fatal(err)
 		}
 
-		cmd = exec.Command("openssl", "x509", "-req", "-in", ctxPath+"/madock.local.csr", "-CA", ctxPath+"/madockCA.pem", "-CAkey", ctxPath+"/madockCA.key", "-CAcreateserial", "-out", ctxPath+"/madock.local.crt", "-days", "365", "-sha256", "-extfile", ctxPath+"/madock.ca.ext")
+		cmd = exec.Command("openssl", "x509", "-req", "-in", ctxPath+"/madock.local.csr", "-CA", ctxPath+"/madockCA.pem", "-CAkey", ctxPath+"/madockCA.key", "-CAcreateserial", "-out", ctxPath+"/madock.local.crt", "-days", "365", "-sha256", "-extensions", "v3_req", "-extfile", ctxPath+"/madock.ca.ext")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
