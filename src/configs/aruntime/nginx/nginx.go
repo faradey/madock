@@ -287,6 +287,16 @@ func GenerateSslCert(ctxPath string, force bool) {
 
 				if selected == "y" {
 					usr, _ := user.Current()
+					if _, err := os.Stat(usr.HomeDir + "/.pki/nssdb"); os.IsNotExist(err) {
+						paths.MakeDirsByPath(usr.HomeDir + "/.pki/nssdb")
+						err = ioutil.WriteFile(ctxPath+"/certutil_db_passwd.txt", []byte(""), 0755)
+						if err != nil {
+							cmd = exec.Command("certutil", "-d", usr.HomeDir+"/.pki/nssdb", "-N", ctxPath+"/certutil_db_passwd.txt")
+							cmd.Stdout = os.Stdout
+							cmd.Stderr = os.Stderr
+							_ = cmd.Run()
+						}
+					}
 					cmd = exec.Command("certutil", "-d", "sql:"+usr.HomeDir+"/.pki/nssdb", "-A", "-t", "C,,", "-n", "madocklocalkey", "-i", ctxPath+"/madockCA.pem")
 					cmd.Stdout = os.Stdout
 					cmd.Stderr = os.Stderr
