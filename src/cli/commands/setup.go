@@ -102,6 +102,7 @@ func downloadMagento(mageVersion string) {
 }
 
 func installMagento(magentoVer string) {
+	builder.UpWithBuild()
 	builder.InstallMagento(magentoVer)
 }
 
