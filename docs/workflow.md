@@ -59,6 +59,7 @@ madock node grunt watch
 #### 6. SSL certificates
 
 If you want to manually add an ssl certificate to the browser, you can find it at [path to madock folder]/aruntime/ctx/madockCA.pem
+If the SSL certificates do not work, run the `madock ssl:rebuild` command and restart your browser.
 
 #### 7. auth.json
 
