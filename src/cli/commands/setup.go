@@ -70,12 +70,14 @@ func Setup() {
 		"\nto synchronize the database and media files. Enter SSH data in \n" +
 		paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 
+	isDownload := false
 	if attr.Options.Download {
+		isDownload = true
 		downloadMagento(mageVersion)
 	}
 
 	if attr.Options.Install {
-		installMagento(toolsDefVersions.Magento)
+		installMagento(toolsDefVersions.Magento, isDownload)
 	}
 
 	builder.Start()
@@ -101,8 +103,10 @@ func downloadMagento(mageVersion string) {
 	builder.DownloadMagento(edition, mageVersion)
 }
 
-func installMagento(magentoVer string) {
-	builder.UpWithBuild()
+func installMagento(magentoVer string, isDownload bool) {
+	if !isDownload {
+		builder.UpWithBuild()
+	}
 	builder.InstallMagento(magentoVer)
 }
 
