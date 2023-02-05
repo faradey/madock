@@ -118,7 +118,10 @@ func makeDockerfile() {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(ctxPath+"/Dockerfile", b, 0755)
+	str := string(b)
+	str = configs.ReplaceConfigValue(str)
+
+	err = ioutil.WriteFile(ctxPath+"/Dockerfile", []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -136,7 +139,10 @@ func makeDockerCompose() {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(paths.GetExecDirPath()+"/aruntime/docker-compose.yml", b, 0755)
+	str := string(b)
+	str = configs.ReplaceConfigValue(str)
+
+	err = ioutil.WriteFile(paths.GetExecDirPath()+"/aruntime/docker-compose.yml", []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
