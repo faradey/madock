@@ -105,8 +105,8 @@ func Start(withChown bool) {
 		projectConfig := configs.GetCurrentProjectConfig()
 		if withChown {
 			projectName := paths.GetRunDirName()
-			usr, err := user.Current()
-			cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-php-1", "bash", "-c", "sudo chown -R "+usr.Uid+":"+usr.Gid+" /var/www")
+			usr, _ := user.Current()
+			cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" /var/www/html")
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -284,8 +284,8 @@ func upProjectWithBuild(withChown bool) {
 
 	if withChown {
 		projectName := paths.GetRunDirName()
-		usr, err := user.Current()
-		cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" /var/www")
+		usr, _ := user.Current()
+		cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" /var/www/html")
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
