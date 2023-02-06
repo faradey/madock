@@ -5,8 +5,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"strings"
 
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/configs/aruntime/nginx"
@@ -18,7 +20,7 @@ func UpWithBuild() {
 	PrepareConfigs()
 	DownNginx()
 	UpNginxWithBuild()
-	upProjectWithBuild()
+	upProjectWithBuild(attr.Options.WithChown)
 }
 
 func PrepareConfigs() {
@@ -68,7 +70,7 @@ func Down(withVolumes bool) {
 	}
 }
 
-func Start() {
+func Start(withChown bool) {
 	projectName := paths.GetRunDirName()
 	UpNginx()
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
@@ -101,6 +103,18 @@ func Start() {
 		UpWithBuild()
 	} else {
 		projectConfig := configs.GetCurrentProjectConfig()
+		if withChown {
+			projectName := paths.GetRunDirName()
+			usr, err := user.Current()
+			cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-php-1", "bash", "-c", "sudo chown -R "+usr.Uid+":"+usr.Gid+" /var/www")
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err = cmd.Run()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 		if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
 			Cron(true, false)
 		} else {
@@ -163,7 +177,7 @@ func UpNginxWithBuild() {
 	}
 }
 
-func upProjectWithBuild() {
+func upProjectWithBuild(withChown bool) {
 	projectName := paths.GetRunDirName()
 	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/.composer"); os.IsNotExist(err) {
 		err = os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
@@ -266,6 +280,19 @@ func upProjectWithBuild() {
 		Cron(true, false)
 	} else {
 		Cron(false, false)
+	}
+
+	if withChown {
+		projectName := paths.GetRunDirName()
+		usr, err := user.Current()
+		cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" /var/www")
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 

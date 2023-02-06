@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
@@ -9,7 +10,7 @@ import (
 func Start() {
 	if !configs.IsHasNotConfig() {
 		fmtc.SuccessLn("Start containers in detached mode")
-		builder.Start()
+		builder.Start(attr.Options.WithChown)
 		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")

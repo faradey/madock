@@ -80,7 +80,7 @@ func Setup() {
 		installMagento(toolsDefVersions.Magento, isDownload)
 	}
 
-	builder.Start()
+	builder.Start(attr.Options.WithChown)
 }
 
 func downloadMagento(mageVersion string) {
