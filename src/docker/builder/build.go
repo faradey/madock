@@ -115,6 +115,7 @@ func Start(withChown bool) {
 				log.Fatal(err)
 			}
 		}
+
 		if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
 			Cron(true, false)
 		} else {

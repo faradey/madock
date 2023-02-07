@@ -84,6 +84,9 @@ This command shows you the following items:
 * `c:f`  Cleaning up static and generated files
 
 
+* `cli`  Execute any commands inside php container. If you want to run several commands you can cover them in the quotes
+
+
 * `cloud`  Executing commands to work with Magento Cloud. Also, can be used the long command: magento-cloud)
 
 
