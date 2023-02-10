@@ -173,15 +173,17 @@ func GenerateSslCert(ctxPath string, force bool) {
 		var commands []string
 		var i int = 0
 		for _, name := range projectsNames {
-			projectConf := configs.GetProjectConfig(name)
-			if val, ok := projectConf["HOSTS"]; ok {
-				var onlyHost string
-				hosts := strings.Split(val, " ")
-				if len(hosts) > 0 {
-					for _, hostAndStore := range hosts {
-						onlyHost = strings.Split(hostAndStore, ":")[0]
-						commands = append(commands, "DNS."+strconv.Itoa(i+2)+" = "+onlyHost)
-						i++
+			if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
+				projectConf := configs.GetProjectConfig(name)
+				if val, ok := projectConf["HOSTS"]; ok {
+					var onlyHost string
+					hosts := strings.Split(val, " ")
+					if len(hosts) > 0 {
+						for _, hostAndStore := range hosts {
+							onlyHost = strings.Split(hostAndStore, ":")[0]
+							commands = append(commands, "DNS."+strconv.Itoa(i+2)+" = "+onlyHost)
+							i++
+						}
 					}
 				}
 			}
