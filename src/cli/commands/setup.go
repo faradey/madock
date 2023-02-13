@@ -19,9 +19,7 @@ import (
 )
 
 func Setup() {
-	if configs.IsHasConfig() {
-		builder.Down(false)
-	}
+	configs.IsHasConfig()
 	projectName := paths.GetRunDirName()
 
 	if strings.Contains(projectName, ".") || strings.Contains(projectName, " ") {
@@ -66,21 +64,20 @@ func Setup() {
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
 	fmtc.SuccessLn("\n" + "Finish set up environment")
-	fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order " +
-		"\nto synchronize the database and media files. Enter SSH data in \n" +
-		paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
+	fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
+	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
+	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 
-	isDownload := false
+	builder.Stop()
+	builder.Start(attr.Options.WithChown)
+
 	if attr.Options.Download {
-		isDownload = true
 		downloadMagento(mageVersion)
 	}
 
 	if attr.Options.Install {
-		installMagento(toolsDefVersions.Magento, isDownload)
+		installMagento(toolsDefVersions.Magento)
 	}
-
-	builder.Start(attr.Options.WithChown)
 }
 
 func downloadMagento(mageVersion string) {
@@ -99,26 +96,19 @@ func downloadMagento(mageVersion string) {
 	} else if edition == "2" {
 		edition = "enterprise"
 	}
-	builder.UpWithBuild()
 	builder.DownloadMagento(edition, mageVersion)
 }
 
-func installMagento(magentoVer string, isDownload bool) {
-	if !isDownload {
-		builder.UpWithBuild()
-	}
+func installMagento(magentoVer string) {
 	builder.InstallMagento(magentoVer)
 }
 
 func setupPhp(defVersion *string) {
 	setTitleAndRecommended("PHP", defVersion)
 
-	availableVersions := []string{"8.1", "8.0", "7.4", "7.3", "7.2", "7.1", "7.0"}
+	availableVersions := []string{"Custom", "8.1", "8.0", "7.4", "7.3", "7.2", "7.1", "7.0"}
 
-	for index, ver := range availableVersions {
-		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
-	}
-
+	prepareVersions(availableVersions)
 	invitation(defVersion)
 	waiterAndProceed(defVersion, availableVersions)
 }
@@ -126,12 +116,9 @@ func setupPhp(defVersion *string) {
 func setupDB(defVersion *string) {
 	setTitleAndRecommended("MariaDB", defVersion)
 
-	availableVersions := []string{"10.4", "10.3", "10.2", "10.1", "10.0"}
+	availableVersions := []string{"Custom", "10.4", "10.3", "10.2", "10.1", "10.0"}
 
-	for index, ver := range availableVersions {
-		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
-	}
-
+	prepareVersions(availableVersions)
 	invitation(defVersion)
 	waiterAndProceed(defVersion, availableVersions)
 }
@@ -139,12 +126,9 @@ func setupDB(defVersion *string) {
 func setupComposer(defVersion *string) {
 	setTitleAndRecommended("Composer", defVersion)
 
-	availableVersions := []string{"1", "2"}
+	availableVersions := []string{"Custom", "1", "2"}
 
-	for index, ver := range availableVersions {
-		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
-	}
-
+	prepareVersions(availableVersions)
 	invitation(defVersion)
 	waiterAndProceed(defVersion, availableVersions)
 }
@@ -152,12 +136,9 @@ func setupComposer(defVersion *string) {
 func setupElastic(defVersion *string) {
 	setTitleAndRecommended("Elasticsearch", defVersion)
 
-	availableVersions := []string{"7.17.5", "7.16.3", "7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
+	availableVersions := []string{"Custom", "7.17.5", "7.16.3", "7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
 
-	for index, ver := range availableVersions {
-		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
-	}
-
+	prepareVersions(availableVersions)
 	invitation(defVersion)
 	waiterAndProceed(defVersion, availableVersions)
 }
@@ -165,19 +146,17 @@ func setupElastic(defVersion *string) {
 func setupRedis(defVersion *string) {
 	setTitleAndRecommended("Redis", defVersion)
 
-	availableVersions := []string{"6.2 (Magento version > 2.4.3-p3)", "6.0 (Magento version <= 2.4.3-p3)", "5.0 (Magento version <= 2.3.2)"}
+	availableVersions := []string{"Custom", "6.2 (Magento version > 2.4.3-p3)", "6.0 (Magento version <= 2.4.3-p3)", "5.0 (Magento version <= 2.3.2)"}
 
-	for index, ver := range availableVersions {
-		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
-	}
-
+	prepareVersions(availableVersions)
 	invitation(defVersion)
 	waiterAndProceed(defVersion, availableVersions)
 }
 
 func setupRabbitMQ(defVersion *string) {
 	setTitleAndRecommended("RabbitMQ", defVersion)
-	availableVersions := []string{"3.9 (Magento version > 2.4.3-p3)", "3.8 (Magento version <= 2.4.3-p3)", "3.7 (Magento version <= 2.3.4)"}
+	availableVersions := []string{"Custom", "3.9 (Magento version > 2.4.3-p3)", "3.8 (Magento version <= 2.4.3-p3)", "3.7 (Magento version <= 2.3.4)"}
+
 	prepareVersions(availableVersions)
 	invitation(defVersion)
 	waiterAndProceed(defVersion, availableVersions)
@@ -213,7 +192,7 @@ func setupHosts(defVersion *string, projectConfig map[string]string) {
 
 func prepareVersions(availableVersions []string) {
 	for index, ver := range availableVersions {
-		fmt.Println(strconv.Itoa(index+1) + ") " + ver)
+		fmt.Println(strconv.Itoa(index) + ") " + ver)
 	}
 }
 
