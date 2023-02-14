@@ -34,8 +34,16 @@ func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[stri
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("DB_VERSION", defVersions.Db)
-	config.AddOrSetLine("DB_TYPE", dbType)
+	repoVersion := strings.Split(defVersions.Db, ":")
+	if len(repoVersion) > 1 {
+		config.AddOrSetLine("DB_REPOSITORY", repoVersion[0])
+		config.AddOrSetLine("DB_VERSION", repoVersion[1])
+		config.AddOrSetLine("DB_TYPE", repoVersion[0])
+	} else {
+		config.AddOrSetLine("DB_VERSION", defVersions.Db)
+		config.AddOrSetLine("DB_TYPE", dbType)
+	}
+
 	config.AddOrSetLine("DB_ROOT_PASSWORD", getOption("DB_ROOT_PASSWORD", generalConf, projectConfig))
 	config.AddOrSetLine("DB_USER", getOption("DB_USER", generalConf, projectConfig))
 	config.AddOrSetLine("DB_PASSWORD", getOption("DB_PASSWORD", generalConf, projectConfig))
@@ -46,14 +54,26 @@ func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[stri
 	}
 
 	config.AddOrSetLine("ELASTICSEARCH_ENABLED", getOption("ELASTICSEARCH_ENABLED", generalConf, projectConfig))
-	config.AddOrSetLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
+	repoVersion = strings.Split(defVersions.Elastic, ":")
+	if len(repoVersion) > 1 {
+		config.AddOrSetLine("ELASTICSEARCH_REPOSITORY", repoVersion[0])
+		config.AddOrSetLine("ELASTICSEARCH_VERSION", repoVersion[1])
+	} else {
+		config.AddOrSetLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
+	}
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
 
 	config.AddOrSetLine("REDIS_ENABLED", getOption("REDIS_ENABLED", generalConf, projectConfig))
-	config.AddOrSetLine("REDIS_VERSION", defVersions.Redis)
+	repoVersion = strings.Split(defVersions.Redis, ":")
+	if len(repoVersion) > 1 {
+		config.AddOrSetLine("REDIS_REPOSITORY", repoVersion[0])
+		config.AddOrSetLine("REDIS_VERSION", repoVersion[1])
+	} else {
+		config.AddOrSetLine("REDIS_VERSION", defVersions.Redis)
+	}
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
@@ -67,7 +87,13 @@ func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[stri
 	}
 
 	config.AddOrSetLine("RABBITMQ_ENABLED", getOption("RABBITMQ_ENABLED", generalConf, projectConfig))
-	config.AddOrSetLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
+	repoVersion = strings.Split(defVersions.RabbitMQ, ":")
+	if len(repoVersion) > 1 {
+		config.AddOrSetLine("RABBITMQ_REPOSITORY", repoVersion[0])
+		config.AddOrSetLine("RABBITMQ_VERSION", repoVersion[1])
+	} else {
+		config.AddOrSetLine("RABBITMQ_VERSION", defVersions.RabbitMQ)
+	}
 
 	if !config.IsEnv {
 		config.AddEmptyLine()

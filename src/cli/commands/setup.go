@@ -43,7 +43,7 @@ func Setup() {
 	if toolsDefVersions.Php == "" {
 		fmt.Println("")
 		fmtc.Title("Specify Magento version: ")
-		mageVersion = waiter()
+		mageVersion, _ = waiter()
 		if mageVersion != "" {
 			toolsDefVersions = versions.GetVersions(mageVersion)
 		}
@@ -68,7 +68,7 @@ func Setup() {
 	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 
-	builder.Stop()
+	builder.Down(attr.Options.WithVolumes)
 	builder.Start(attr.Options.WithChown)
 
 	if attr.Options.Download {
@@ -85,7 +85,7 @@ func downloadMagento(mageVersion string) {
 	fmtc.TitleLn("Specify Magento version: ")
 	fmt.Println("1) Community (default)")
 	fmt.Println("2) Enterprise")
-	edition := waiter()
+	edition, _ := waiter()
 	edition = strings.TrimSpace(edition)
 	if edition != "1" && edition != "2" && edition != "" {
 		fmtc.ErrorLn("The specified edition '" + edition + "' is incorrect.")
@@ -114,7 +114,7 @@ func setupPhp(defVersion *string) {
 }
 
 func setupDB(defVersion *string) {
-	setTitleAndRecommended("MariaDB", defVersion)
+	setTitleAndRecommended("DB", defVersion)
 
 	availableVersions := []string{"Custom", "10.4", "10.3", "10.2", "10.1", "10.0"}
 
@@ -175,7 +175,7 @@ func setupHosts(defVersion *string, projectConfig map[string]string) {
 	prepareVersions(availableVersions)
 	fmt.Println("Choose one of the suggested options or enter your hostname")
 	fmt.Print("> ")
-	selected := waiter()
+	selected, _ := waiter()
 	if selected == "" && host != "" {
 		*defVersion = host
 		fmtc.SuccessLn("Your choice: " + *defVersion)
@@ -215,27 +215,39 @@ func invitation(ver *string) {
 }
 
 func waiterAndProceed(defVersion *string, availableVersions []string) {
-	selected := waiter()
-	setSelectedVersion(defVersion, availableVersions, selected)
+	selected, repoAndVersion := waiter()
+	setSelectedVersion(defVersion, availableVersions, selected, repoAndVersion)
 }
 
-func waiter() string {
+func waiter() (selected, repoAndVersion string) {
 	buf := bufio.NewReader(os.Stdin)
 	sentence, err := buf.ReadBytes('\n')
 	if err != nil {
 		log.Fatalln(err)
 	}
-	selected := strings.TrimSpace(string(sentence))
+	selected = strings.TrimSpace(string(sentence))
+	if selected == "0" {
+		fmt.Println("Enter the version")
+		fmt.Print("> ")
+		buf = bufio.NewReader(os.Stdin)
+		sentence, err = buf.ReadBytes('\n')
+		if err != nil {
+			log.Fatalln(err)
+		}
+		repoAndVersion = strings.TrimSpace(string(sentence))
+	}
 
-	return selected
+	return
 }
 
-func setSelectedVersion(defVersion *string, availableVersions []string, selected string) {
+func setSelectedVersion(defVersion *string, availableVersions []string, selected, repoAndVersion string) {
 	selectedInt, err := strconv.Atoi(selected)
 	if selected == "" && *defVersion != "" {
 		fmtc.SuccessLn("Your choice: " + *defVersion)
+	} else if selected == "0" {
+		*defVersion = repoAndVersion
 	} else if selected != "" && err == nil && len(availableVersions) >= selectedInt {
-		*defVersion = availableVersions[selectedInt-1]
+		*defVersion = availableVersions[selectedInt]
 		fmtc.SuccessLn("Your choice: " + *defVersion)
 	} else {
 		fmtc.WarningLn("Choose one of the options offered")

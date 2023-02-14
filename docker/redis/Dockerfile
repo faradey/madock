@@ -1,4 +1,4 @@
-FROM redis:{{{REDIS_VERSION}}}
+FROM {{{REDIS_REPOSITORY}}}:{{{REDIS_VERSION}}}
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 

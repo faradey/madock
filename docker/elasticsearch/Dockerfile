@@ -1,4 +1,4 @@
-FROM elasticsearch:{{{ELASTICSEARCH_VERSION}}}
+FROM {{{ELASTICSEARCH_REPOSITORY}}}:{{{ELASTICSEARCH_VERSION}}}
 
 ENV cluster.name=docker-cluster
 ENV bootstrap.memory_lock=true
