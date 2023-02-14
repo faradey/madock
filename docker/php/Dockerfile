@@ -70,9 +70,9 @@ RUN if [ "{{{IONCUBE_ENABLED}}}" = "true" ]; then set -eux && EXTENSION_DIR="$( 
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/ioncube.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/10-ioncube.ini \
     && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/ioncube.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/10-ioncube.ini; fi
 
-RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer
-
-RUN if [ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]; then composer self-update --1; fi
+RUN is_composer_version_one="" \
+    && if [ "{{{PHP_COMPOSER_VERSION}}}" = "2" ]; then is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]; then  is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
+    && if [ -z "${is_composer_version_one}" ]; then php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version={{{PHP_COMPOSER_VERSION}}}; fi
 
 RUN if [ "{{{XDEBUG_ENABLED}}}" = "true" ]; then pecl install -f xdebug-{{{XDEBUG_VERSION}}} \
     && touch /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
