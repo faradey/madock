@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func GetExecDirPath() string {
@@ -98,8 +99,12 @@ func GetDBFiles(path string) (dirs []string) {
 	}
 
 	for _, file := range items {
-		if !file.IsDir() && file.Name()[0:1] != "." {
-			dirs = append(dirs, file.Name())
+		if !file.IsDir() {
+			if file.Name()[0:1] != "." && strings.Contains(strings.ToLower(file.Name()), ".sql") {
+				dirs = append(dirs, path+"/"+file.Name())
+			}
+		} else {
+			dirs = append(dirs, GetDBFiles(path+"/"+file.Name())...)
 		}
 	}
 

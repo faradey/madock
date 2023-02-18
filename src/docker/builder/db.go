@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -24,12 +25,32 @@ func DbImport() {
 	}
 	projectName := paths.GetRunDirName()
 	projectConfig := configs.GetCurrentProjectConfig()
+
+	globalIndex := 0
 	dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db"
 	dbNames := paths.GetDBFiles(dbsPath)
-	for index, dbName := range dbNames {
-		fmt.Println(strconv.Itoa(index+1) + ") " + dbName)
+	fmt.Println("Location: madock/projects/" + projectName + "/backup/db")
+	if len(dbNames) == 0 {
+		fmt.Println("No DB files")
 	}
-	fmt.Println("Choose one of the options offered")
+	for index, dbName := range dbNames {
+		fmt.Println(strconv.Itoa(index+1) + ") " + filepath.Base(dbName))
+		globalIndex += 1
+	}
+
+	dbsPath = paths.GetRunDirPath()
+	dbNames2 := paths.GetDBFiles(dbsPath)
+	fmt.Println("Location: " + dbsPath)
+	if len(dbNames2) == 0 {
+		fmt.Println("No DB files")
+	} else {
+		dbNames = append(dbNames, dbNames2...)
+	}
+	for index, dbName := range dbNames2 {
+		fmt.Println(strconv.Itoa(globalIndex+index+1) + ") " + filepath.Base(dbName) + "  " + dbName)
+	}
+
+	fmt.Println("Choose one of the offered variants")
 	buf := bufio.NewReader(os.Stdin)
 	sentence, err := buf.ReadBytes('\n')
 	selected := strings.TrimSpace(string(sentence))
@@ -47,7 +68,7 @@ func DbImport() {
 	ext := dbNames[selectedInt-1][len(dbNames[selectedInt-1])-2:]
 	out := &gzip.Reader{}
 
-	selectedFile, err := os.Open(dbsPath + "/" + dbNames[selectedInt-1])
+	selectedFile, err := os.Open(dbNames[selectedInt-1])
 	if err != nil {
 		log.Fatal(err)
 	}
