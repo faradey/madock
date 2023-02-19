@@ -19,7 +19,7 @@ import (
 )
 
 func MakeConf() {
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + paths.GetRunDirName() + "/docker/nginx")
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + paths.GetProjectName() + "/docker/nginx")
 	setPorts()
 	makeProxy()
 	makeDockerfile()
@@ -43,7 +43,7 @@ func setPorts() {
 
 	portsConfig := configs.ParseFile(portsFile)
 
-	if _, ok := portsConfig[paths.GetRunDirName()]; !ok {
+	if _, ok := portsConfig[paths.GetProjectName()]; !ok {
 		f, err := os.OpenFile(portsFile,
 			os.O_APPEND|os.O_WRONLY, 0664)
 		if err != nil {
@@ -51,7 +51,7 @@ func setPorts() {
 		}
 		defer f.Close()
 		maxPort := getMaxPort(portsConfig)
-		if _, err := f.WriteString(paths.GetRunDirName() + "=" + strconv.Itoa(maxPort+1) + "\n"); err != nil {
+		if _, err := f.WriteString(paths.GetProjectName() + "=" + strconv.Itoa(maxPort+1) + "\n"); err != nil {
 			log.Println(err)
 		}
 	}

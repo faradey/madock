@@ -12,7 +12,7 @@ import (
 )
 
 func Cron(flag, manual bool) {
-	projectName := paths.GetRunDirName()
+	projectName := paths.GetProjectName()
 	var cmd *exec.Cmd
 	var bOut io.Writer
 	var bErr io.Writer

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/functions"
 )
 
@@ -52,6 +53,28 @@ func GetRunDirName() string {
 
 func GetRunDirNameWithHash() string {
 	return filepath.Base(GetRunDirPath()) + "__" + strconv.Itoa(int(functions.Hash(GetRunDirPath())))
+}
+
+func GetProjectName() string {
+	suffix := ""
+	envFile := ""
+	name := ""
+	for i := 2; i < 1000; i++ {
+		name = GetRunDirName() + suffix
+		envFile = GetExecDirPath() + "/projects/" + name + "/env.txt"
+		if _, err := os.Stat(envFile); !os.IsNotExist(err) {
+			projectConf := configs.GetProjectConfig(name)
+			if projectConf["PATH"] != name {
+				suffix = "-" + strconv.Itoa(i)
+			} else {
+				break
+			}
+		} else {
+			break
+		}
+	}
+
+	return GetRunDirName() + suffix
 }
 
 func GetDirs(path string) (dirs []string) {

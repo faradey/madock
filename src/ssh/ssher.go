@@ -70,7 +70,7 @@ func DbDump(conn *ssh.Client, remoteDir, name string) {
 		}
 		defer sc.Close()
 		execPath := paths.GetExecDirPath()
-		projectName := paths.GetRunDirName()
+		projectName := paths.GetProjectName()
 		err = downloadFile(sc, remoteDir+"/var/"+dumpName, execPath+"/projects/"+projectName+"/backup/db/"+dumpName)
 		if err != nil {
 			log.Fatal(err)

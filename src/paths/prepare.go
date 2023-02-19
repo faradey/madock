@@ -7,7 +7,7 @@ import (
 )
 
 func PrepareDirsForProject() {
-	projectName := GetRunDirName()
+	projectName := GetProjectName()
 	projectPath := GetExecDirPath() + "/projects/" + projectName
 	MakeDirsByPath(projectPath)
 	MakeDirsByPath(projectPath + "/docker")

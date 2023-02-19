@@ -20,7 +20,7 @@ type StatusInfoStruct struct {
 }
 
 func Status() {
-	projectName := paths.GetRunDirName()
+	projectName := paths.GetProjectName()
 	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "ps", "--format", "json")
 	result, err := cmd.CombinedOutput()
 	if err != nil {

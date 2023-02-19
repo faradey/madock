@@ -11,7 +11,7 @@ import (
 
 func CreatePatch(filePath, patchName, title string, force bool) {
 	containerName := "php"
-	projectName := paths.GetRunDirName()
+	projectName := paths.GetProjectName()
 	isForce := ""
 	if force {
 		isForce = "f"

@@ -14,7 +14,7 @@ func ServiceEnable() {
 		name := strings.ToLower(attr.Options.Args[0])
 		if isService(name) {
 			serviceName := strings.ToUpper(name) + "_ENABLED"
-			projectName := paths.GetRunDirName()
+			projectName := paths.GetProjectName()
 			envFile := ""
 			if !attr.Options.Global {
 				envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
@@ -31,7 +31,7 @@ func ServiceDisable() {
 		name := strings.ToLower(attr.Options.Args[0])
 		if isService(name) {
 			serviceName := strings.ToUpper(name) + "_ENABLED"
-			projectName := paths.GetRunDirName()
+			projectName := paths.GetProjectName()
 			envFile := ""
 			if !attr.Options.Global {
 				envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"

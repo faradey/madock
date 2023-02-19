@@ -11,7 +11,7 @@ import (
 
 func MagentoInfo() {
 	containerName := "php"
-	projectName := paths.GetRunDirName()
+	projectName := paths.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", strings.ToLower(projectName)+"-"+containerName+"-1", "php", "/var/www/scripts/php/magento-info.php")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
