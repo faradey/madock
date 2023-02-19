@@ -4,7 +4,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+
+	"github.com/faradey/madock/src/functions"
 )
 
 func GetExecDirPath() string {
@@ -45,6 +48,10 @@ func GetRunDirPath() string {
 
 func GetRunDirName() string {
 	return filepath.Base(GetRunDirPath())
+}
+
+func GetRunDirNameWithHash() string {
+	return filepath.Base(GetRunDirPath()) + "__" + strconv.Itoa(int(functions.Hash(GetRunDirPath())))
 }
 
 func GetDirs(path string) (dirs []string) {
