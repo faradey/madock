@@ -24,13 +24,13 @@ func UpWithBuild() {
 }
 
 func PrepareConfigs() {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	nginx.MakeConf()
 	project.MakeConf(projectName)
 }
 
 func Down(withVolumes bool) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
@@ -71,7 +71,7 @@ func Down(withVolumes bool) {
 }
 
 func Start(withChown bool) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	UpNginx()
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
@@ -104,7 +104,7 @@ func Start(withChown bool) {
 	} else {
 		projectConfig := configs.GetCurrentProjectConfig()
 		if withChown {
-			projectName := paths.GetProjectName()
+			projectName := configs.GetProjectName()
 			usr, _ := user.Current()
 			cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" /var/www/html && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/composer")
 			cmd.Stdin = os.Stdin
@@ -125,7 +125,7 @@ func Start(withChown bool) {
 }
 
 func Stop() {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"compose",
@@ -179,7 +179,7 @@ func UpNginxWithBuild() {
 }
 
 func upProjectWithBuild(withChown bool) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/.composer"); os.IsNotExist(err) {
 		err = os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
 		if err != nil {
@@ -331,7 +331,7 @@ func StopNginx() {
 }
 
 func Magento(flag string) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -343,7 +343,7 @@ func Magento(flag string) {
 }
 
 func Cloud(flag string) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && magento-cloud "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -355,7 +355,7 @@ func Cloud(flag string) {
 }
 
 func DownloadMagento(edition, version string) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && mkdir /var/www/html/download-magento && composer create-project --repository-url=https://repo.magento.com/ magento/project-"+edition+"-edition:"+version+" ./download-magento && shopt -s dotglob && mv  -v ./download-magento/* ./ && rmdir ./download-magento && composer install")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -367,7 +367,7 @@ func DownloadMagento(edition, version string) {
 }
 
 func InstallMagento(magentoVer string) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
 	host := strings.Split(strings.Split(projectConfig["HOSTS"], " ")[0], ":")[0]
 	installCommand := "bin/magento setup:install " +
@@ -411,7 +411,7 @@ func InstallMagento(magentoVer string) {
 }
 
 func Cli(flag string) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -423,7 +423,7 @@ func Cli(flag string) {
 }
 
 func Composer(flag string) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && composer "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -435,7 +435,7 @@ func Composer(flag string) {
 }
 
 func Bash(containerName string) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", strings.ToLower(projectName)+"-"+containerName+"-1", "bash")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -447,7 +447,7 @@ func Bash(containerName string) {
 }
 
 func CleanCache() {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && rm -f pub/static/deployed_version.txt && rm -Rf pub/static/frontend && rm -Rf pub/static/adminhtml && rm -Rf var/view_preprocessed/pub && rm -Rf generated/code && php bin/magento c:f")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -459,7 +459,7 @@ func CleanCache() {
 }
 
 func Node(flag string) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -471,7 +471,7 @@ func Node(flag string) {
 }
 
 func Logs(flag string) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "logs", strings.ToLower(projectName)+"-"+flag+"-1")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

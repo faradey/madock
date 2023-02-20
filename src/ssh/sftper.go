@@ -11,7 +11,7 @@ import (
 
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/functions"
+	"github.com/faradey/madock/src/helper"
 	"github.com/faradey/madock/src/paths"
 	"github.com/pkg/sftp"
 )
@@ -22,7 +22,7 @@ var sc []*sftp.Client
 func SyncMedia(remoteDir string) {
 	var err error
 	projectConfig := configs.GetCurrentProjectConfig()
-	maxProcs := functions.MaxParallelism() - 1
+	maxProcs := helper.MaxParallelism() - 1
 	var scTemp *sftp.Client
 	isFirstConnect := false
 	paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")

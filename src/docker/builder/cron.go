@@ -8,11 +8,11 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/configs"
 )
 
 func Cron(flag, manual bool) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	var cmd *exec.Cmd
 	var bOut io.Writer
 	var bErr io.Writer

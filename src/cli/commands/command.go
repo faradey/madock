@@ -90,13 +90,13 @@ func Uncompress() {
 }
 
 func DebugEnable() {
-	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetProjectName() + "/env.txt"
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_ENABLED", "true")
 	builder.UpWithBuild()
 }
 
 func DebugDisable() {
-	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetProjectName() + "/env.txt"
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_ENABLED", "false")
 	builder.UpWithBuild()
 }
@@ -130,13 +130,13 @@ func SetEnvOption() {
 	name := strings.ToUpper(attr.Options.Name)
 	val := attr.Options.Value
 	if len(name) > 0 && configs.IsOption(name) {
-		configPath := paths.GetExecDirPath() + "/projects/" + paths.GetProjectName() + "/env.txt"
+		configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 		configs.SetParam(configPath, name, val)
 	}
 }
 
 func ShowEnv() {
-	configPath := paths.GetExecDirPath() + "/projects/" + paths.GetProjectName() + "/env.txt"
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	lines := configs.GetAllLines(configPath)
 	for _, ln := range lines {
 		fmt.Println(ln)

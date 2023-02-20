@@ -56,8 +56,8 @@ func (t *ConfigLines) SaveLines() {
 }
 
 func IsHasConfig() bool {
-	paths.PrepareDirsForProject()
-	projectName := paths.GetRunDirName()
+	PrepareDirsForProject()
+	projectName := GetProjectName()
 	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
 	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
 		fmtc.WarningLn("File env is already exist in project " + projectName)

@@ -23,7 +23,7 @@ func DbImport() {
 	if attr.Options.Force {
 		option = "-f"
 	}
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
 
 	globalIndex := 0
@@ -104,7 +104,7 @@ func DbImport() {
 }
 
 func DbExport() {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
 	name := strings.TrimSpace(attr.Options.Name)
 	if len(name) > 0 {
@@ -133,7 +133,7 @@ func DbInfo() {
 	projectConfig := configs.GetCurrentProjectConfig()
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
 	portsConfig := configs.ParseFile(portsFile)
-	port, err := strconv.Atoi(portsConfig[paths.GetProjectName()])
+	port, err := strconv.Atoi(portsConfig[configs.GetProjectName()])
 	if err != nil {
 		log.Fatal(err)
 	}

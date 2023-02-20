@@ -6,12 +6,12 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/configs"
 )
 
 func MagentoInfo() {
 	containerName := "php"
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", strings.ToLower(projectName)+"-"+containerName+"-1", "php", "/var/www/scripts/php/magento-info.php")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

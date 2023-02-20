@@ -6,12 +6,12 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/configs"
 )
 
 func CreatePatch(filePath, patchName, title string, force bool) {
 	containerName := "php"
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	isForce := ""
 	if force {
 		isForce = "f"

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/faradey/madock/src/cli/fmtc"
+	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -70,7 +71,7 @@ func DbDump(conn *ssh.Client, remoteDir, name string) {
 		}
 		defer sc.Close()
 		execPath := paths.GetExecDirPath()
-		projectName := paths.GetProjectName()
+		projectName := configs.GetProjectName()
 		err = downloadFile(sc, remoteDir+"/var/"+dumpName, execPath+"/projects/"+projectName+"/backup/db/"+dumpName)
 		if err != nil {
 			log.Fatal(err)

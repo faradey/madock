@@ -3,6 +3,7 @@ package configs
 import (
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/faradey/madock/src/paths"
@@ -166,4 +167,34 @@ func getOption(name string, generalConfig, projectConfig map[string]string) stri
 		return strings.TrimSpace(generalConfig[name])
 	}
 	return ""
+}
+
+func PrepareDirsForProject() {
+	projectName := GetProjectName()
+	projectPath := paths.GetExecDirPath() + "/projects/" + projectName
+	paths.MakeDirsByPath(projectPath)
+	paths.MakeDirsByPath(projectPath + "/docker")
+	paths.MakeDirsByPath(projectPath + "/docker/nginx")
+}
+
+func GetProjectName() string {
+	suffix := ""
+	envFile := ""
+	name := ""
+	for i := 2; i < 1000; i++ {
+		name = paths.GetRunDirName() + suffix
+		envFile = paths.GetExecDirPath() + "/projects/" + name + "/env.txt"
+		if _, err := os.Stat(envFile); !os.IsNotExist(err) {
+			projectConf := GetProjectConfig(name)
+			if projectConf["PATH"] != name {
+				suffix = "-" + strconv.Itoa(i)
+			} else {
+				break
+			}
+		} else {
+			break
+		}
+	}
+
+	return paths.GetRunDirName() + suffix
 }

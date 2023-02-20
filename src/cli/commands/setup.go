@@ -20,7 +20,7 @@ import (
 
 func Setup() {
 	configs.IsHasConfig()
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 
 	if strings.Contains(projectName, ".") || strings.Contains(projectName, " ") {
 		fmtc.ErrorLn("The project folder name cannot contain a period or space")
@@ -163,7 +163,7 @@ func setupRabbitMQ(defVersion *string) {
 }
 
 func setupHosts(defVersion *string, projectConfig map[string]string) {
-	projectName := paths.GetProjectName()
+	projectName := configs.GetProjectName()
 	host := projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base"
 	if val, ok := projectConfig["HOSTS"]; ok && val != "" {
 		host = val

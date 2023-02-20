@@ -7,8 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/functions"
+	"github.com/faradey/madock/src/helper"
 )
 
 func GetExecDirPath() string {
@@ -52,29 +51,7 @@ func GetRunDirName() string {
 }
 
 func GetRunDirNameWithHash() string {
-	return filepath.Base(GetRunDirPath()) + "__" + strconv.Itoa(int(functions.Hash(GetRunDirPath())))
-}
-
-func GetProjectName() string {
-	suffix := ""
-	envFile := ""
-	name := ""
-	for i := 2; i < 1000; i++ {
-		name = GetRunDirName() + suffix
-		envFile = GetExecDirPath() + "/projects/" + name + "/env.txt"
-		if _, err := os.Stat(envFile); !os.IsNotExist(err) {
-			projectConf := configs.GetProjectConfig(name)
-			if projectConf["PATH"] != name {
-				suffix = "-" + strconv.Itoa(i)
-			} else {
-				break
-			}
-		} else {
-			break
-		}
-	}
-
-	return GetRunDirName() + suffix
+	return filepath.Base(GetRunDirPath()) + "__" + strconv.Itoa(int(helper.Hash(GetRunDirPath())))
 }
 
 func GetDirs(path string) (dirs []string) {
@@ -139,4 +116,21 @@ func GetDBFiles(path string) (dirs []string) {
 	}
 
 	return dirs
+}
+
+func MakeDirsByPath(val string) string {
+	trimVal := strings.Trim(val, "/")
+	if trimVal != "" {
+		dirs := strings.Split(trimVal, "/")
+		for i := 0; i < len(dirs); i++ {
+			if _, err := os.Stat("/" + strings.Join(dirs[:i+1], "/")); os.IsNotExist(err) {
+				err = os.Mkdir("/"+strings.Join(dirs[:i+1], "/"), 0755)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+	}
+
+	return val
 }
