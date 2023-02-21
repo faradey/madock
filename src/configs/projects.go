@@ -12,8 +12,7 @@ import (
 
 var dbType = "MariaDB"
 
-func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[string]string) {
-	projectName := paths.GetRunDirName()
+func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, projectConfig map[string]string) {
 	generalConf := GetGeneralConfig()
 	config := new(ConfigLines)
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
@@ -22,6 +21,7 @@ func SetEnvForProject(defVersions versions.ToolsVersions, projectConfig map[stri
 		config.IsEnv = true
 	}
 
+	config.AddOrSetLine("PATH", paths.GetRunDirPath())
 	config.AddOrSetLine("PHP_VERSION", defVersions.Php)
 	config.AddOrSetLine("PHP_COMPOSER_VERSION", defVersions.Composer)
 	config.AddOrSetLine("PHP_TZ", getOption("PHP_TZ", generalConf, projectConfig))
@@ -143,7 +143,7 @@ func GetGeneralConfig() map[string]string {
 }
 
 func GetCurrentProjectConfig() map[string]string {
-	return GetProjectConfig(paths.GetRunDirName())
+	return GetProjectConfig(GetProjectName())
 }
 
 func GetProjectConfig(projectName string) map[string]string {
@@ -169,8 +169,7 @@ func getOption(name string, generalConfig, projectConfig map[string]string) stri
 	return ""
 }
 
-func PrepareDirsForProject() {
-	projectName := GetProjectName()
+func PrepareDirsForProject(projectName string) {
 	projectPath := paths.GetExecDirPath() + "/projects/" + projectName
 	paths.MakeDirsByPath(projectPath)
 	paths.MakeDirsByPath(projectPath + "/docker")
@@ -181,12 +180,14 @@ func GetProjectName() string {
 	suffix := ""
 	envFile := ""
 	name := ""
+
 	for i := 2; i < 1000; i++ {
 		name = paths.GetRunDirName() + suffix
 		envFile = paths.GetExecDirPath() + "/projects/" + name + "/env.txt"
 		if _, err := os.Stat(envFile); !os.IsNotExist(err) {
 			projectConf := GetProjectConfig(name)
-			if projectConf["PATH"] != name {
+			val, ok := projectConf["PATH"]
+			if ok && val != paths.GetRunDirPath() {
 				suffix = "-" + strconv.Itoa(i)
 			} else {
 				break
@@ -196,5 +197,5 @@ func GetProjectName() string {
 		}
 	}
 
-	return paths.GetRunDirName() + suffix
+	return name
 }

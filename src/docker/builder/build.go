@@ -354,8 +354,7 @@ func Cloud(flag string) {
 	}
 }
 
-func DownloadMagento(edition, version string) {
-	projectName := configs.GetProjectName()
+func DownloadMagento(projectName, edition, version string) {
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && mkdir /var/www/html/download-magento && composer create-project --repository-url=https://repo.magento.com/ magento/project-"+edition+"-edition:"+version+" ./download-magento && shopt -s dotglob && mv  -v ./download-magento/* ./ && rmdir ./download-magento && composer install")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -366,8 +365,7 @@ func DownloadMagento(edition, version string) {
 	}
 }
 
-func InstallMagento(magentoVer string) {
-	projectName := configs.GetProjectName()
+func InstallMagento(projectName, magentoVer string) {
 	projectConfig := configs.GetCurrentProjectConfig()
 	host := strings.Split(strings.Split(projectConfig["HOSTS"], " ")[0], ":")[0]
 	installCommand := "bin/magento setup:install " +

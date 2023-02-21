@@ -19,8 +19,8 @@ import (
 )
 
 func Setup() {
-	configs.IsHasConfig()
 	projectName := configs.GetProjectName()
+	configs.IsHasConfig(projectName)
 
 	if strings.Contains(projectName, ".") || strings.Contains(projectName, " ") {
 		fmtc.ErrorLn("The project folder name cannot contain a period or space")
@@ -58,9 +58,9 @@ func Setup() {
 	setupElastic(&toolsDefVersions.Elastic)
 	setupRedis(&toolsDefVersions.Redis)
 	setupRabbitMQ(&toolsDefVersions.RabbitMQ)
-	setupHosts(&toolsDefVersions.Hosts, projectConfig)
+	setupHosts(projectName, &toolsDefVersions.Hosts, projectConfig)
 
-	configs.SetEnvForProject(toolsDefVersions, projectConfig)
+	configs.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
 	fmtc.SuccessLn("\n" + "Finish set up environment")
@@ -72,15 +72,15 @@ func Setup() {
 	builder.Start(attr.Options.WithChown)
 
 	if attr.Options.Download {
-		downloadMagento(mageVersion)
+		downloadMagento(projectName, mageVersion)
 	}
 
 	if attr.Options.Install {
-		installMagento(toolsDefVersions.Magento)
+		installMagento(projectName, toolsDefVersions.Magento)
 	}
 }
 
-func downloadMagento(mageVersion string) {
+func downloadMagento(projectName, mageVersion string) {
 	fmt.Println("")
 	fmtc.TitleLn("Specify Magento version: ")
 	fmt.Println("1) Community (default)")
@@ -96,11 +96,11 @@ func downloadMagento(mageVersion string) {
 	} else if edition == "2" {
 		edition = "enterprise"
 	}
-	builder.DownloadMagento(edition, mageVersion)
+	builder.DownloadMagento(projectName, edition, mageVersion)
 }
 
-func installMagento(magentoVer string) {
-	builder.InstallMagento(magentoVer)
+func installMagento(projectName, magentoVer string) {
+	builder.InstallMagento(projectName, magentoVer)
 }
 
 func setupPhp(defVersion *string) {
@@ -162,8 +162,7 @@ func setupRabbitMQ(defVersion *string) {
 	waiterAndProceed(defVersion, availableVersions)
 }
 
-func setupHosts(defVersion *string, projectConfig map[string]string) {
-	projectName := configs.GetProjectName()
+func setupHosts(projectName string, defVersion *string, projectConfig map[string]string) {
 	host := projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base"
 	if val, ok := projectConfig["HOSTS"]; ok && val != "" {
 		host = val
