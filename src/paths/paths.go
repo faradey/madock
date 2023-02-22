@@ -1,7 +1,6 @@
 package paths
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -108,7 +107,6 @@ func GetDBFiles(path string) (dirs []string) {
 
 	for _, file := range items {
 		if !file.IsDir() {
-			fmt.Println(GetRunDirPath())
 			if file.Name()[0:1] != "." &&
 				strings.Contains(strings.ToLower(file.Name()), ".sql") &&
 				!strings.Contains(strings.ToLower(path), "/dev/tests/acceptance") &&
