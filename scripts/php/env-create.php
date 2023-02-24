@@ -26,6 +26,7 @@ try {
     $result = $stmt->setFetchMode(PDO::FETCH_ASSOC);
     $data = $stmt->fetchAll();
     $prefixes = [];
+    $domainValues = ["hosts" => []];
     if(!empty($data)){
         $prefix = str_replace("core_config_data", "", $data[0]["table_name"]);
         if(empty($prefixes[$prefix])){
@@ -111,6 +112,18 @@ try {
         foreach ($data as $k => $v){
             if(!empty($v['value'])){
                 $val = preg_replace("/^(.+?)\.[^\.]+$/i", "$1".$projectConfig["DEFAULT_HOST_FIRST_LEVEL"], $v['value'])."/";
+                if(in_array($val, $domainValues["hosts"])) {
+                    $val = trim($v['value'], "/").$projectConfig["DEFAULT_HOST_FIRST_LEVEL"]."/";
+                } else {
+                    $domainValues["hosts"][] = $val;
+                }
+
+                if(empty($domainValues[$v['scope'].$v['scope_id']])){
+                    $domainValues[$v['scope'].$v['scope_id']] = $val;
+                }
+
+                $val = $domainValues[$v['scope'].$v['scope_id']];
+                
                 $domain = "";
                 $scopeId = $v['scope_id'];
                 if($v['scope'] == "default"){
@@ -149,6 +162,17 @@ try {
         $env["system"]["default"]["payment"]["stripe_payments_basic"]["stripe_mode"] = "test";
         /* Set the test mode by default for the Paypal Braintree module */
         $env["system"]["default"]["payment"]["braintree"]["environment"] = "sandbox";
+
+        /* Minify CSS and JS, HTML */
+        $env["system"]["default"]["dev"]["js"]["merge_files"] = "0";
+        $env["system"]["default"]["dev"]["js"]["minify_files"] = "0";
+        $env["system"]["default"]["dev"]["js"]["enable_js_bundling"] = "0";
+        $env["system"]["default"]["dev"]["css"]["minify_files"] = "0";
+        $env["system"]["default"]["dev"]["css"]["merge_css_files"] = "0";
+        $env["system"]["default"]["dev"]["template"]["minify_html"] = "0";
+        $env["system"]["default"]["dev"]["static"]["sign"] = "1";
+        /* END Minify CSS and JS, HTML*/
+
         $env["downloadable_domains"] = array_unique($env["downloadable_domains"]);
         $env["db"]["connection"]["default"]["host"] = "db";
         $env["db"]["connection"]["default"]["dbname"] = $projectConfig["DB_DATABASE"];
