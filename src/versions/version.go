@@ -1,7 +1,7 @@
 package versions
 
 import (
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -34,7 +34,7 @@ func GetVersions(ver string) ToolsVersions {
 
 func getMagentoVersion() (edition, version string) {
 	composerPath := paths.GetRunDirPath() + "/composer.json"
-	txt, err := ioutil.ReadFile(composerPath)
+	txt, err := os.ReadFile(composerPath)
 	if err == nil {
 		re := regexp.MustCompile(`(?is)"magento/product-(community|enterprise)-edition".*?:.*?"[^0-9]*?([\.0-9]{5,}?)-*.*?"`)
 		magentoVersion := re.FindAllStringSubmatch(string(txt), -1)

@@ -1,7 +1,6 @@
 package versions
 
 import (
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -38,7 +37,7 @@ func V140() {
 					for from, to := range mapNames {
 						str = strings.Replace(str, "{{{"+from+"}}}", "{{{"+to+"}}}", -1)
 					}
-					ioutil.WriteFile(pth, []byte(str), 0755)
+					os.WriteFile(pth, []byte(str), 0755)
 				}
 			}
 		}

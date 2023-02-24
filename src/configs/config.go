@@ -3,7 +3,6 @@ package configs
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
@@ -49,7 +48,7 @@ func (t *ConfigLines) AddRawLine(value string) {
 }
 
 func (t *ConfigLines) SaveLines() {
-	err := ioutil.WriteFile(t.EnvFile, []byte(strings.Join(t.Lines, "\n")), 0755)
+	err := os.WriteFile(t.EnvFile, []byte(strings.Join(t.Lines, "\n")), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}

@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -121,7 +120,7 @@ func Unzip() {
 
 func addFiles(w *zip.Writer, basePath, baseInZip string) {
 	// Open the Directory
-	files, err := ioutil.ReadDir(basePath)
+	files, err := os.ReadDir(basePath)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -130,7 +129,7 @@ func addFiles(w *zip.Writer, basePath, baseInZip string) {
 		fmt.Println(basePath + file.Name())
 		if !file.IsDir() {
 			if file.Name() != archiveName {
-				dat, err := ioutil.ReadFile(basePath + file.Name())
+				dat, err := os.ReadFile(basePath + file.Name())
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -163,7 +162,7 @@ func addFiles(w *zip.Writer, basePath, baseInZip string) {
 
 func removeFiles(basePath string) {
 	// Open the Directory
-	files, err := ioutil.ReadDir(basePath)
+	files, err := os.ReadDir(basePath)
 	if err != nil {
 		fmt.Println(err)
 		return

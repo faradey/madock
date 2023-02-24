@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -38,7 +37,7 @@ func setPorts() {
 		for port, line := range projects {
 			lines += line + "=" + strconv.Itoa(port+1) + "\n"
 		}
-		_ = ioutil.WriteFile(portsFile, []byte(lines), 0664)
+		_ = os.WriteFile(portsFile, []byte(lines), 0664)
 	}
 
 	portsConfig := configs.ParseFile(portsFile)
@@ -102,7 +101,7 @@ func makeProxy() {
 	}
 	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
-	err = ioutil.WriteFile(nginxFile, []byte(allFileData), 0755)
+	err = os.WriteFile(nginxFile, []byte(allFileData), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -121,7 +120,7 @@ func makeDockerfile() {
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
 
-	err = ioutil.WriteFile(ctxPath+"/Dockerfile", []byte(str), 0755)
+	err = os.WriteFile(ctxPath+"/Dockerfile", []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -142,7 +141,7 @@ func makeDockerCompose() {
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
 
-	err = ioutil.WriteFile(paths.GetExecDirPath()+"/aruntime/docker-compose.yml", []byte(str), 0755)
+	err = os.WriteFile(paths.GetExecDirPath()+"/aruntime/docker-compose.yml", []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -198,7 +197,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 			"DNS.1 = madocklocalkey\n" +
 			strings.Join(commands, "\n")
 
-		err := ioutil.WriteFile(ctxPath+"/madock.ca.ext", []byte(extFileContent), 0755)
+		err := os.WriteFile(ctxPath+"/madock.ca.ext", []byte(extFileContent), 0755)
 		if err != nil {
 			log.Fatalf("Unable to write file: %v", err)
 		}
@@ -211,7 +210,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 			"\n" +
 			"ssl_ciphers \"ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS\";"
 
-		err = ioutil.WriteFile(ctxPath+"/options-ssl-nginx.conf", []byte(sslConfigFileContent), 0755)
+		err = os.WriteFile(ctxPath+"/options-ssl-nginx.conf", []byte(sslConfigFileContent), 0755)
 		if err != nil {
 			log.Fatalf("Unable to write file: %v", err)
 		}
@@ -297,7 +296,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 					usr, _ := user.Current()
 					if _, err := os.Stat(usr.HomeDir + "/.pki/nssdb"); os.IsNotExist(err) {
 						paths.MakeDirsByPath(usr.HomeDir + "/.pki/nssdb")
-						err = ioutil.WriteFile(ctxPath+"/certutil_db_passwd.txt", []byte(""), 0755)
+						err = os.WriteFile(ctxPath+"/certutil_db_passwd.txt", []byte(""), 0755)
 						if err != nil {
 							cmd = exec.Command("certutil", "-d", usr.HomeDir+"/.pki/nssdb", "-N", ctxPath+"/certutil_db_passwd.txt")
 							cmd.Stdout = os.Stdout

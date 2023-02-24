@@ -3,8 +3,8 @@ package ssh
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"syscall"
 	"time"
@@ -113,7 +113,7 @@ func Disconnect(conn *ssh.Client) {
 }
 
 func publicKey(path string) ssh.AuthMethod {
-	key, err := ioutil.ReadFile(path)
+	key, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal(err)
 	}
