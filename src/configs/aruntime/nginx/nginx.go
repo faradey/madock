@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/faradey/madock/src/helper"
 	"log"
 	"os"
 	"os/exec"
@@ -68,6 +69,7 @@ func makeProxy() {
 	}
 
 	str := string(b)
+	var onlyHostsGlobal []string
 	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 	for _, name := range projectsNames {
 		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
@@ -87,8 +89,14 @@ func makeProxy() {
 					var onlyHosts []string
 					hosts := strings.Split(val, " ")
 					if len(hosts) > 0 {
+						domain := ""
 						for _, hostAndStore := range hosts {
-							onlyHosts = append(onlyHosts, strings.Split(hostAndStore, ":")[0])
+							domain = strings.Split(hostAndStore, ":")[0]
+							if helper.IsContain(onlyHostsGlobal, domain) {
+								log.Fatalln("Error. Duplicate domain " + domain)
+							}
+							onlyHosts = append(onlyHosts, domain)
+							onlyHostsGlobal = append(onlyHostsGlobal, domain)
 						}
 						hostName = strings.Join(onlyHosts, "\n")
 					}
