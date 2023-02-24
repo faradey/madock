@@ -64,7 +64,7 @@ func DbDump(conn *ssh.Client, remoteDir, name string) {
 			name += "_"
 		}
 		dumpName := "remote_" + name + curDateTime + ".sql.gz"
-		result = RunCommand(conn, "mysqldump -u \""+dbAuthData.Username+"\" -p\""+dbAuthData.Password+"\" -h "+dbAuthData.Host+" --single-transaction --quick --lock-tables=false --no-tablespaces --triggers "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+remoteDir+"/var/"+dumpName)
+		result = RunCommand(conn, "mysqldump -u \""+dbAuthData.Username+"\" -p\""+dbAuthData.Password+"\" -h "+dbAuthData.Host+" --single-transaction --quick --lock-tables=false --no-tablespaces --triggers "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+"/tmp/"+dumpName)
 		sc, err := sftp.NewClient(conn)
 		if err != nil {
 			log.Fatal(err)
@@ -72,11 +72,11 @@ func DbDump(conn *ssh.Client, remoteDir, name string) {
 		defer sc.Close()
 		execPath := paths.GetExecDirPath()
 		projectName := configs.GetProjectName()
-		err = downloadFile(sc, remoteDir+"/var/"+dumpName, execPath+"/projects/"+projectName+"/backup/db/"+dumpName)
+		err = downloadFile(sc, "/tmp/"+dumpName, execPath+"/projects/"+projectName+"/backup/db/"+dumpName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		result = RunCommand(conn, "rm "+remoteDir+"/var/"+dumpName)
+		result = RunCommand(conn, "rm "+"/tmp/"+dumpName)
 		fmt.Println("")
 		fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db:import`")
 	} else {
