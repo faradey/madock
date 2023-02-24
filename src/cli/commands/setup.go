@@ -163,7 +163,7 @@ func setupRabbitMQ(defVersion *string) {
 }
 
 func setupHosts(projectName string, defVersion *string, projectConfig map[string]string) {
-	host := projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base"
+	host := strings.ToLower(projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base")
 	if val, ok := projectConfig["HOSTS"]; ok && val != "" {
 		host = val
 	}
