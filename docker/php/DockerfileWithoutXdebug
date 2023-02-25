@@ -1,5 +1,8 @@
 FROM ubuntu:{{{UBUNTU_VERSION}}}
 
+ARG DEBIAN_FRONTEND="noninteractive"
+ARG DEBCONF_NOWARNINGS="yes"
+
 RUN ln -snf /usr/share/zoneinfo/{{{PHP_TZ}}} /etc/localtime && echo {{{PHP_TZ}}} > /etc/timezone
 
 RUN apt-get clean && apt-get -y update && apt-get install -y locales \
