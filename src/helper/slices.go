@@ -16,6 +16,20 @@ func IsContain(slice []string, val string) bool {
 	return result
 }
 
+func FindInt(slice []int, val int) (int, bool) {
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+func IsContainInt(slice []int, val int) bool {
+	_, result := FindInt(slice, val)
+	return result
+}
+
 func MaxParallelism() int {
 	maxProcs := runtime.GOMAXPROCS(0)
 	numCPU := runtime.NumCPU()

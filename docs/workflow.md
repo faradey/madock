@@ -159,6 +159,8 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--force`     Replace patch if it already exists
 
 
+* `project:remove`   Remove project (project folder, madock project configuration, volumes, images, containers)
+
 * `proxy:start`   Start a proxy server
 
 

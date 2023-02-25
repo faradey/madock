@@ -58,6 +58,8 @@ func Down(withVolumes bool) {
 
 		if withVolumes {
 			profilesOn = append(profilesOn, "-v")
+			profilesOn = append(profilesOn, "--rmi")
+			profilesOn = append(profilesOn, "all")
 		}
 
 		cmd := exec.Command("docker", profilesOn...)

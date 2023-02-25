@@ -61,6 +61,8 @@ func main() {
 			commands.Node(strings.Join(os.Args[2:], " "))
 		case "patch:create":
 			commands.PatchCreate()
+		case "project:remove":
+			commands.ProjectRemove()
 		case "proxy:start":
 			commands.Proxy("start")
 		case "proxy:stop":

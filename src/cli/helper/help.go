@@ -44,6 +44,7 @@ func Help() {
 	describeByLevel("--name", "Name of the patch file", 1)
 	describeByLevel("--title", "Title of the patch", 1)
 	describeByLevel("--force", "Replace patch if it already exists", 1)
+	describeByLevel("project:remove", "Remove project (project folder, madock project configuration, volumes, images, containers)", 0)
 	describeByLevel("proxy:start", "Start a proxy server", 0)
 	describeByLevel("proxy:stop", "Stop a proxy server", 0)
 	describeByLevel("proxy:restart", "Restart a proxy server", 0)

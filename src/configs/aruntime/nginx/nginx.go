@@ -42,6 +42,16 @@ func setPorts() {
 	}
 
 	portsConfig := configs.ParseFile(portsFile)
+	lines := ""
+	for projectName, port := range portsConfig {
+		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + projectName); !os.IsNotExist(err) {
+			lines += projectName + "=" + port + "\n"
+		}
+	}
+
+	if lines != "" {
+		_ = os.WriteFile(portsFile, []byte(lines), 0664)
+	}
 
 	if _, ok := portsConfig[configs.GetProjectName()]; !ok {
 		f, err := os.OpenFile(portsFile,
@@ -160,13 +170,18 @@ func getMaxPort(conf map[string]string) int {
 	max := 0
 	portInt := 0
 	var err error
+	var ports []int
 	for _, port := range conf {
 		portInt, err = strconv.Atoi(port)
 		if err != nil {
 			log.Fatal(err)
 		}
-		if max < portInt {
-			max = portInt
+		ports = append(ports, portInt)
+	}
+
+	for i := 1; i < 1000; i++ {
+		if !helper.IsContainInt(ports, i) {
+			return max
 		}
 	}
 
