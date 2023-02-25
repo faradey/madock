@@ -181,7 +181,7 @@ func getMaxPort(conf map[string]string) int {
 
 	for i := 1; i < 1000; i++ {
 		if !helper.IsContainInt(ports, i) {
-			return max
+			return i - 1
 		}
 	}
 
