@@ -159,6 +159,7 @@ func Stop() {
 }
 
 func UpNginx() {
+	PrepareConfigs()
 	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -169,7 +170,6 @@ func UpNginx() {
 }
 
 func UpNginxWithBuild() {
-	PrepareConfigs()
 	dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
 	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	cmd.Stdout = os.Stdout
