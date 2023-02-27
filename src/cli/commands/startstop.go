@@ -20,6 +20,9 @@ func Start() {
 
 func Stop() {
 	builder.Stop()
+	if len(builder.GetActiveProjects()) == 0 {
+		Proxy("stop")
+	}
 }
 
 func Restart() {
@@ -31,6 +34,9 @@ func Rebuild() {
 	if !configs.IsHasNotConfig() {
 		fmtc.SuccessLn("Stop containers")
 		builder.Down(false)
+		if len(builder.GetActiveProjects()) == 0 {
+			Proxy("stop")
+		}
 		fmtc.SuccessLn("Start containers in detached mode")
 		builder.UpWithBuild()
 		fmtc.SuccessLn("Done")

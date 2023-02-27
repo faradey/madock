@@ -486,3 +486,20 @@ func SslRebuild() {
 	ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 	nginx.GenerateSslCert(ctxPath, true)
 }
+
+func GetActiveProjects() []string {
+	var activeProjects []string
+	projects := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
+	for _, projectName := range projects {
+		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "ps", "--format", "json")
+		result, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(result) > 100 {
+			activeProjects = append(activeProjects, projectName)
+		}
+	}
+
+	return activeProjects
+}
