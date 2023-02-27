@@ -3,6 +3,7 @@ package paths
 import (
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -136,4 +137,21 @@ func MakeDirsByPath(val string) string {
 	}
 
 	return val
+}
+
+func GetActiveProjects() []string {
+	var activeProjects []string
+	projects := GetDirs(GetExecDirPath() + "/aruntime/projects")
+	for _, projectName := range projects {
+		cmd := exec.Command("docker", "compose", "-f", GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "ps", "--format", "json")
+		result, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(result) > 100 {
+			activeProjects = append(activeProjects, projectName)
+		}
+	}
+
+	return activeProjects
 }

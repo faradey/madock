@@ -80,7 +80,10 @@ func makeProxy() {
 
 	str := string(b)
 	var onlyHostsGlobal []string
-	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
+	projectsNames := paths.GetActiveProjects()
+	if !helper.IsContain(projectsNames, configs.GetProjectName()) {
+		projectsNames = append(projectsNames, configs.GetProjectName())
+	}
 	for _, name := range projectsNames {
 		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
 			if _, err = os.Stat(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped"); os.IsNotExist(err) {

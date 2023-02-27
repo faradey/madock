@@ -5,6 +5,7 @@ import (
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/paths"
 )
 
 func Start() {
@@ -20,7 +21,7 @@ func Start() {
 
 func Stop() {
 	builder.Stop()
-	if len(builder.GetActiveProjects()) == 0 {
+	if len(paths.GetActiveProjects()) == 0 {
 		Proxy("stop")
 	}
 }
@@ -34,7 +35,7 @@ func Rebuild() {
 	if !configs.IsHasNotConfig() {
 		fmtc.SuccessLn("Stop containers")
 		builder.Down(false)
-		if len(builder.GetActiveProjects()) == 0 {
+		if len(paths.GetActiveProjects()) == 0 {
 			Proxy("stop")
 		}
 		fmtc.SuccessLn("Start containers in detached mode")

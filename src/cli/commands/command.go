@@ -56,7 +56,7 @@ func Proxy(flag string) {
 func Prune() {
 	if !configs.IsHasNotConfig() {
 		builder.Down(attr.Options.WithVolumes)
-		if len(builder.GetActiveProjects()) == 0 {
+		if len(paths.GetActiveProjects()) == 0 {
 			Proxy("stop")
 		}
 		fmtc.SuccessLn("Done")
