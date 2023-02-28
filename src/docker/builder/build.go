@@ -19,7 +19,7 @@ import (
 func UpWithBuild() {
 	PrepareConfigs()
 	DownNginx()
-	UpNginxWithBuild()
+	UpNginx()
 	upProjectWithBuild(attr.Options.WithChown)
 }
 

@@ -43,7 +43,7 @@ func Proxy(flag string) {
 			builder.UpNginx()
 		} else if flag == "rebuild" {
 			builder.DownNginx()
-			builder.UpNginxWithBuild()
+			builder.UpNginx()
 		}
 		fmtc.SuccessLn("Done")
 	} else {
