@@ -17,7 +17,6 @@ import (
 )
 
 func UpWithBuild() {
-	PrepareConfigs()
 	DownNginx()
 	UpNginx()
 	upProjectWithBuild(attr.Options.WithChown)
@@ -102,7 +101,7 @@ func Start(withChown bool) {
 	err := cmd.Run()
 	if err != nil {
 		fmtc.ToDoLn("Creating containers")
-		UpWithBuild()
+		upProjectWithBuild(attr.Options.WithChown)
 	} else {
 		projectConfig := configs.GetCurrentProjectConfig()
 		if withChown {
@@ -159,17 +158,18 @@ func Stop() {
 }
 
 func UpNginx() {
-	PrepareConfigs()
+	/*PrepareConfigs()
 	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "-d")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
-	if err != nil {
-		UpNginxWithBuild()
-	}
+	if err != nil {*/
+	UpNginxWithBuild()
+	/*}*/
 }
 
 func UpNginxWithBuild() {
+	PrepareConfigs()
 	dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
 	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 	cmd.Stdout = os.Stdout

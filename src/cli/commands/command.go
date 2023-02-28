@@ -56,7 +56,7 @@ func Prune() {
 	if !configs.IsHasNotConfig() {
 		builder.Down(attr.Options.WithVolumes)
 		if len(paths.GetActiveProjects()) == 0 {
-			Proxy("stop")
+			Proxy("prune")
 		}
 		fmtc.SuccessLn("Done")
 	} else {
