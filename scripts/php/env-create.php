@@ -178,7 +178,7 @@ try {
         $env["db"]["connection"]["default"]["dbname"] = $projectConfig["DB_DATABASE"];
         $env["db"]["connection"]["default"]["username"] = $projectConfig["DB_USER"];
         $env["db"]["connection"]["default"]["password"] = $projectConfig["DB_PASSWORD"];
-        $env["db"]["connection"]["default"]["model"] = "mysql4";/var/log/rabbitmq/rabbit@292b5e833609_upgrade.log
+        $env["db"]["connection"]["default"]["model"] = "mysql4";
         $env["db"]["connection"]["default"]["engine"] = "innodb";
         $env["db"]["connection"]["default"]["initStatements"] = "SET NAMES utf8;";
         $env["db"]["connection"]["default"]["active"] = 1;
