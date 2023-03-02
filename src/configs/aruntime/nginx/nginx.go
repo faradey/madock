@@ -120,6 +120,7 @@ func makeProxy() {
 			}
 		}
 	}
+	allFileData += "\nserver {\n    listen       80  default_server;\n listen 443 default_server ssl;\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
 	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
 	err = os.WriteFile(nginxFile, []byte(allFileData), 0755)
