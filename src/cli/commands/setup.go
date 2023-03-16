@@ -116,7 +116,7 @@ func setupPhp(defVersion *string) {
 func setupDB(defVersion *string) {
 	setTitleAndRecommended("DB", defVersion)
 
-	availableVersions := []string{"Custom", "10.4", "10.3", "10.2", "10.1", "10.0"}
+	availableVersions := []string{"Custom", "10.6", "10.4", "10.3", "10.2", "10.1", "10.0"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)
@@ -136,7 +136,7 @@ func setupComposer(defVersion *string) {
 func setupElastic(defVersion *string) {
 	setTitleAndRecommended("Elasticsearch", defVersion)
 
-	availableVersions := []string{"Custom", "7.17.5", "7.16.3", "7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
+	availableVersions := []string{"Custom", "8.4.3", "7.17.5", "7.16.3", "7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)
@@ -146,7 +146,7 @@ func setupElastic(defVersion *string) {
 func setupRedis(defVersion *string) {
 	setTitleAndRecommended("Redis", defVersion)
 
-	availableVersions := []string{"Custom", "6.2 (Magento version > 2.4.3-p3)", "6.0 (Magento version <= 2.4.3-p3)", "5.0 (Magento version <= 2.3.2)"}
+	availableVersions := []string{"Custom", "7.0 (Magento version > 2.4.6)", "6.2 (Magento version > 2.4.3-p3)", "6.0 (Magento version <= 2.4.3-p3)", "5.0 (Magento version <= 2.3.2)"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)

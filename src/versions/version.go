@@ -65,7 +65,9 @@ func GetPhpVersion(mageVer string) string {
 }
 
 func GetDBVersion(mageVer string) string {
-	if mageVer >= "2.4.1" {
+	if mageVer >= "2.4.6" {
+		return "10.6"
+	} else if mageVer >= "2.4.1" {
 		return "10.4"
 	} else if mageVer >= "2.3.7" {
 		return "10.3"
@@ -81,7 +83,9 @@ func GetDBVersion(mageVer string) string {
 }
 
 func GetElasticVersion(mageVer string) string {
-	if mageVer >= "2.4.5" {
+	if mageVer >= "2.4.6" {
+		return "8.4.3"
+	} else if mageVer >= "2.4.5" {
 		return "7.17.5"
 	} else if mageVer >= "2.4.4" {
 		return "7.16.3"
@@ -123,7 +127,9 @@ func GetComposerVersion(mageVer string) string {
 }
 
 func GetRedisVersion(mageVer string) string {
-	if mageVer >= "2.4.4" {
+	if mageVer >= "2.4.6" {
+		return "7.0"
+	} else if mageVer >= "2.4.4" {
 		return "6.2"
 	} else if mageVer >= "2.4.2" {
 		return "6.0"
