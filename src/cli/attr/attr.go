@@ -22,6 +22,7 @@ var Options struct {
 	Host        string `long:"host" description:"Host"`
 	WithVolumes bool   `long:"with-volumes" description:"With Volumes"`
 	WithChown   bool   `long:"with-chown" description:"With Chown"`
+	SampleData  bool   `long:"sample-data" description:"sample-data"`
 }
 
 func ParseAttributes() {

@@ -221,7 +221,8 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--download`   Download the specific Magento version from Composer to the container
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--install`   Install Magento from the source code
-                        
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--sample-data`   Install Magento Sample Data                    
 
 * `setup:env`   Generate app/etc/env.php
 

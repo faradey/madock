@@ -357,7 +357,27 @@ func Cloud(flag string) {
 }
 
 func DownloadMagento(projectName, edition, version string) {
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && mkdir /var/www/html/download-magento && composer create-project --repository-url=https://repo.magento.com/ magento/project-"+edition+"-edition:"+version+" ./download-magento && shopt -s dotglob && mv  -v ./download-magento/* ./ && rmdir ./download-magento && composer install")
+	sampleData := ""
+	if attr.Options.SampleData {
+		sampleData = " && bin/magento sampledata:deploy"
+	}
+	command := []string{
+		"exec",
+		"-it",
+		"-u",
+		"www-data",
+		strings.ToLower(projectName) + "-php-1",
+		"bash",
+		"-c",
+		"cd /var/www/html " +
+			"&& mkdir /var/www/html/download-magento " +
+			"&& composer create-project --repository-url=https://repo.magento.com/ magento/project-" + edition + "-edition:" + version + " ./download-magento " +
+			"&& shopt -s dotglob " +
+			"&& mv  -v ./download-magento/* ./ " +
+			"&& rmdir ./download-magento " +
+			"&& composer install" + sampleData,
+	}
+	cmd := exec.Command("docker", command...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -391,10 +411,13 @@ func InstallMagento(projectName, magentoVer string) {
 			"--elasticsearch-host=elasticsearch " +
 			"--elasticsearch-port=9200 " +
 			"--elasticsearch-index-prefix=magento2 " +
-			"--elasticsearch-timeout=15 " +
-			"&& bin/magento module:disable Magento_TwoFactorAuth "
+			"--elasticsearch-timeout=15 "
+		if magentoVer >= "2.4.6" {
+			installCommand += "&& bin/magento module:disable Magento_AdminAdobeImsTwoFactorAuth "
+		}
+		installCommand += "&& bin/magento module:disable Magento_TwoFactorAuth "
 	}
-	installCommand += " && bin/magento s:up && bin/magento c:c && bin/magento i:rei && bin/magento c:f"
+	installCommand += " && bin/magento s:up && bin/magento c:c && bin/magento i:rei | bin/magento c:f"
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && "+installCommand)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
