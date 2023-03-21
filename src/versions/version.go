@@ -9,7 +9,7 @@ import (
 )
 
 type ToolsVersions struct {
-	Php, Db, Elastic, Composer, Redis, RabbitMQ, Xdebug, Hosts, Magento string
+	Php, Db, SearchEngine, Elastic, OpenSearch, Composer, Redis, RabbitMQ, Xdebug, Hosts, Magento string
 }
 
 func GetVersions(ver string) ToolsVersions {
@@ -21,14 +21,16 @@ func GetVersions(ver string) ToolsVersions {
 	}
 
 	return ToolsVersions{
-		Php:      GetPhpVersion(mageVersion),
-		Db:       GetDBVersion(mageVersion),
-		Elastic:  GetElasticVersion(mageVersion),
-		Composer: GetComposerVersion(mageVersion),
-		Redis:    GetRedisVersion(mageVersion),
-		RabbitMQ: GetRabbitMQVersion(mageVersion),
-		Xdebug:   GetXdebugVersion(mageVersion),
-		Magento:  mageVersion,
+		Php:          GetPhpVersion(mageVersion),
+		Db:           GetDBVersion(mageVersion),
+		SearchEngine: GetSearchEngineVersion(mageVersion),
+		Elastic:      GetElasticVersion(mageVersion),
+		OpenSearch:   GetOpenSearchVersion(mageVersion),
+		Composer:     GetComposerVersion(mageVersion),
+		Redis:        GetRedisVersion(mageVersion),
+		RabbitMQ:     GetRabbitMQVersion(mageVersion),
+		Xdebug:       GetXdebugVersion(mageVersion),
+		Magento:      mageVersion,
 	}
 }
 
@@ -107,6 +109,30 @@ func GetElasticVersion(mageVer string) string {
 		return "6.8.13"
 	} else if mageVer >= "2.0.0" {
 		return "6.8.13"
+	}
+
+	return ""
+}
+
+func GetSearchEngineVersion(mageVer string) string {
+	if mageVer >= "2.4.6" {
+		return "OpenSearch"
+	}
+
+	return "Elasticsearch"
+}
+
+func GetOpenSearchVersion(mageVer string) string {
+	if mageVer >= "2.4.6" {
+		return "2.5"
+	} else if mageVer >= "2.4.3-p2" {
+		return "1.2"
+	} else if mageVer == "2.3.7-p4" {
+		return "1.2"
+	} else if mageVer == "2.3.7-p3" {
+		return "1.2"
+	} else {
+		return "Not compatible"
 	}
 
 	return ""

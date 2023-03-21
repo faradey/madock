@@ -32,6 +32,7 @@ func MakeConf(projectName string) {
 	makePhpDockerfile(projectName)
 	makeDBDockerfile(projectName)
 	makeElasticDockerfile(projectName)
+	makeOpenSearchDockerfile(projectName)
 	makeRedisDockerfile(projectName)
 	makeNodeDockerfile(projectName)
 	makeKibanaConf(projectName)
@@ -298,6 +299,23 @@ func makeElasticDockerfile(projectName string) {
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/elasticsearch.Dockerfile"
+	err = os.WriteFile(nginxFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+}
+
+func makeOpenSearchDockerfile(projectName string) {
+	dockerDefFile := getDockerConfigFile(projectName, "/docker/opensearch/Dockerfile")
+
+	b, err := os.ReadFile(dockerDefFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str := string(b)
+	str = configs.ReplaceConfigValue(str)
+	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/opensearch.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)

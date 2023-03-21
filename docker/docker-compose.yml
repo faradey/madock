@@ -82,6 +82,31 @@ services:
     profiles:
       - elasticsearch{{{ELASTICSEARCH_ENABLED}}}
 
+  opensearch:
+    build:
+      context: ctx
+      dockerfile: opensearch.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 2512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms800m -Xmx800m"
+      - "cluster.routing.allocation.disk.threshold_enabled=false"
+      - "index.blocks.read_only_allow_delete"
+    volumes:
+      - opensearch_vlm_{{{OPENSEARCH_VERSION}}}:/usr/share/opensearch/data
+    profiles:
+      - opensearch{{{OPENSEARCH_ENABLED}}}
+
   redisdb:
     build:
       context: ctx
@@ -124,6 +149,20 @@ services:
     depends_on:
       - elasticsearch
 
+  opensearchdashboard:
+    platform: linux/x86_64
+    image: {{{OPENSEARCH_REPOSITORY}}}:{{{OPENSEARCH_VERSION}}}
+    environment:
+      SERVER_BASEPATH: /opensearch-dashboard
+      ELASTICSEARCH_HOSTS: '["http://opensearch:9200"]'
+    ports:
+      - "{{{NGINX_PROJECT_PORT+3}}}:5601"
+    profiles:
+      - opensearchdashboard{{{OPENSEARCHDASHBOARD_ENABLED}}}
+    depends_on:
+      - opensearch
+
 volumes:
   dbdata:
   elasticsearch_vlm_{{{ELASTICSEARCH_VERSION}}}:
+  opensearch_vlm_{{{OPENSEARCH_VERSION}}}:

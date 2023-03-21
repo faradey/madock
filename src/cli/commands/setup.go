@@ -55,7 +55,13 @@ func Setup() {
 	setupPhp(&toolsDefVersions.Php)
 	setupDB(&toolsDefVersions.Db)
 	setupComposer(&toolsDefVersions.Composer)
-	setupElastic(&toolsDefVersions.Elastic)
+	setupSearchEngine(&toolsDefVersions.SearchEngine)
+	if toolsDefVersions.SearchEngine == "Elasticsearch" {
+		setupElastic(&toolsDefVersions.Elastic)
+	} else {
+		setupOpenSearch(&toolsDefVersions.OpenSearch)
+	}
+
 	setupRedis(&toolsDefVersions.Redis)
 	setupRabbitMQ(&toolsDefVersions.RabbitMQ)
 	setupHosts(projectName, &toolsDefVersions.Hosts, projectConfig)
@@ -133,10 +139,30 @@ func setupComposer(defVersion *string) {
 	waiterAndProceed(defVersion, availableVersions)
 }
 
+func setupSearchEngine(defVersion *string) {
+	setTitleAndRecommended("Search Engine", defVersion)
+
+	availableVersions := []string{"", "OpenSearch", "Elasticsearch", "Do not use"}
+
+	prepareVersions(availableVersions)
+	invitation(defVersion)
+	waiterAndProceed(defVersion, availableVersions)
+}
+
 func setupElastic(defVersion *string) {
 	setTitleAndRecommended("Elasticsearch", defVersion)
 
 	availableVersions := []string{"Custom", "8.4.3", "7.17.5", "7.16.3", "7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
+
+	prepareVersions(availableVersions)
+	invitation(defVersion)
+	waiterAndProceed(defVersion, availableVersions)
+}
+
+func setupOpenSearch(defVersion *string) {
+	setTitleAndRecommended("OpenSearch", defVersion)
+
+	availableVersions := []string{"Custom", "2.5", "1.2"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)
@@ -191,7 +217,9 @@ func setupHosts(projectName string, defVersion *string, projectConfig map[string
 
 func prepareVersions(availableVersions []string) {
 	for index, ver := range availableVersions {
-		fmt.Println(strconv.Itoa(index) + ") " + ver)
+		if ver != "" {
+			fmt.Println(strconv.Itoa(index) + ") " + ver)
+		}
 	}
 }
 

@@ -54,13 +54,30 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("ELASTICSEARCH_ENABLED", getOption("ELASTICSEARCH_ENABLED", generalConf, projectConfig))
-	repoVersion = strings.Split(defVersions.Elastic, ":")
-	if len(repoVersion) > 1 {
-		config.AddOrSetLine("ELASTICSEARCH_REPOSITORY", repoVersion[0])
-		config.AddOrSetLine("ELASTICSEARCH_VERSION", repoVersion[1])
+	if defVersions.SearchEngine == "Elasticsearch" {
+		config.AddOrSetLine("OPENSEARCH_ENABLED", "false")
+		config.AddOrSetLine("ELASTICSEARCH_ENABLED", "true")
+		repoVersion = strings.Split(defVersions.Elastic, ":")
+		if len(repoVersion) > 1 {
+			config.AddOrSetLine("ELASTICSEARCH_REPOSITORY", repoVersion[0])
+			config.AddOrSetLine("ELASTICSEARCH_VERSION", repoVersion[1])
+		} else {
+			config.AddOrSetLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
+		}
+	} else if defVersions.SearchEngine == "OpenSearch" {
+		config.AddOrSetLine("ELASTICSEARCH_ENABLED", "false")
+
+		config.AddOrSetLine("OPENSEARCH_ENABLED", "true")
+		repoVersion = strings.Split(defVersions.OpenSearch, ":")
+		if len(repoVersion) > 1 {
+			config.AddOrSetLine("OPENSEARCH_REPOSITORY", repoVersion[0])
+			config.AddOrSetLine("OPENSEARCH_VERSION", repoVersion[1])
+		} else {
+			config.AddOrSetLine("OPENSEARCH_VERSION", defVersions.OpenSearch)
+		}
 	} else {
-		config.AddOrSetLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
+		config.AddOrSetLine("ELASTICSEARCH_ENABLED", "false")
+		config.AddOrSetLine("OPENSEARCH_ENABLED", "false")
 	}
 
 	if !config.IsEnv {
