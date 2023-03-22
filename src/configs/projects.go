@@ -56,6 +56,8 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 
 	if defVersions.SearchEngine == "Elasticsearch" {
 		config.AddOrSetLine("OPENSEARCH_ENABLED", "false")
+		config.AddOrSetLine("OPENSEARCH_VERSION", defVersions.OpenSearch)
+
 		config.AddOrSetLine("ELASTICSEARCH_ENABLED", "true")
 		repoVersion = strings.Split(defVersions.Elastic, ":")
 		if len(repoVersion) > 1 {
@@ -66,6 +68,7 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 		}
 	} else if defVersions.SearchEngine == "OpenSearch" {
 		config.AddOrSetLine("ELASTICSEARCH_ENABLED", "false")
+		config.AddOrSetLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
 
 		config.AddOrSetLine("OPENSEARCH_ENABLED", "true")
 		repoVersion = strings.Split(defVersions.OpenSearch, ":")
@@ -77,7 +80,9 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 		}
 	} else {
 		config.AddOrSetLine("ELASTICSEARCH_ENABLED", "false")
+		config.AddOrSetLine("ELASTICSEARCH_VERSION", defVersions.Elastic)
 		config.AddOrSetLine("OPENSEARCH_ENABLED", "false")
+		config.AddOrSetLine("OPENSEARCH_VERSION", defVersions.OpenSearch)
 	}
 
 	if !config.IsEnv {

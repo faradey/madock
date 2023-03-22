@@ -124,13 +124,13 @@ func GetSearchEngineVersion(mageVer string) string {
 
 func GetOpenSearchVersion(mageVer string) string {
 	if mageVer >= "2.4.6" {
-		return "2.5"
+		return "2.5.0"
 	} else if mageVer >= "2.4.3-p2" {
-		return "1.2"
+		return "1.2.0"
 	} else if mageVer == "2.3.7-p4" {
-		return "1.2"
+		return "1.2.0"
 	} else if mageVer == "2.3.7-p3" {
-		return "1.2"
+		return "1.2.0"
 	} else {
 		return "Not compatible"
 	}

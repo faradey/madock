@@ -162,7 +162,7 @@ func setupElastic(defVersion *string) {
 func setupOpenSearch(defVersion *string) {
 	setTitleAndRecommended("OpenSearch", defVersion)
 
-	availableVersions := []string{"Custom", "2.5", "1.2"}
+	availableVersions := []string{"Custom", "2.5.0", "1.2.0"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)
