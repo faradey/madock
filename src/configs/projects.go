@@ -53,7 +53,7 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	if !config.IsEnv {
 		config.AddEmptyLine()
 	}
-
+	config.AddOrSetLine("SEARCH_ENGINE", defVersions.SearchEngine)
 	if defVersions.SearchEngine == "Elasticsearch" {
 		config.AddOrSetLine("OPENSEARCH_ENABLED", "false")
 		config.AddOrSetLine("OPENSEARCH_VERSION", defVersions.OpenSearch)

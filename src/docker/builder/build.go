@@ -423,11 +423,21 @@ func InstallMagento(projectName, magentoVer string) {
 		"--timezone=" + projectConfig["MAGENTO_TIMEZONE"] + " " +
 		"--use-rewrites=1 "
 	if magentoVer >= "2.3.7" {
-		installCommand += "--search-engine=elasticsearch7 " +
-			"--elasticsearch-host=elasticsearch " +
-			"--elasticsearch-port=9200 " +
-			"--elasticsearch-index-prefix=magento2 " +
-			"--elasticsearch-timeout=15 "
+		searchEngine := projectConfig["SEARCH_ENGINE"]
+		if searchEngine == "Elasticsearch" {
+			installCommand += "--search-engine=elasticsearch7 " +
+				"--elasticsearch-host=elasticsearch " +
+				"--elasticsearch-port=9200 " +
+				"--elasticsearch-index-prefix=magento2 " +
+				"--elasticsearch-timeout=15 "
+		} else if searchEngine == "OpenSearch" {
+			installCommand += "--search-engine=elasticsearch7 " +
+				"--elasticsearch-host=opensearch " +
+				"--elasticsearch-port=9200 " +
+				"--elasticsearch-index-prefix=magento2 " +
+				"--elasticsearch-timeout=15 "
+		}
+
 		if magentoVer >= "2.4.6" {
 			installCommand += "&& bin/magento module:disable Magento_AdminAdobeImsTwoFactorAuth "
 		}

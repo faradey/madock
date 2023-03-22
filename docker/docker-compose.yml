@@ -99,6 +99,7 @@ services:
         hard: 65536
     environment:
       - discovery.type=single-node
+      - "plugins.security.disabled=true"
       - "ES_JAVA_OPTS=-Xms800m -Xmx800m"
       - "cluster.routing.allocation.disk.threshold_enabled=false"
       - "index.blocks.read_only_allow_delete"
@@ -154,7 +155,8 @@ services:
     image: {{{OPENSEARCH_REPOSITORY}}}:{{{OPENSEARCH_VERSION}}}
     environment:
       SERVER_BASEPATH: /opensearch-dashboard
-      ELASTICSEARCH_HOSTS: '["http://opensearch:9200"]'
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: 'true'
     ports:
       - "{{{NGINX_PROJECT_PORT+3}}}:5601"
     profiles:

@@ -20,7 +20,25 @@ import (
 
 func Setup() {
 	projectName := configs.GetProjectName()
-	configs.IsHasConfig(projectName)
+	hasConfig := configs.IsHasConfig(projectName)
+	continueSetup := true
+	if hasConfig {
+		fmtc.WarningLn("File env is already exist in project " + projectName)
+		fmt.Println("Do you want to continue? (y/N)")
+		fmt.Print("> ")
+
+		buf := bufio.NewReader(os.Stdin)
+		sentence, err := buf.ReadBytes('\n')
+		selected := strings.TrimSpace(string(sentence))
+		if err != nil {
+			log.Fatal(err)
+		} else if selected != "y" {
+			if !attr.Options.Download && !attr.Options.Install {
+				log.Fatal("Exit")
+			}
+			continueSetup = false
+		}
+	}
 
 	if strings.Contains(projectName, ".") || strings.Contains(projectName, " ") {
 		fmtc.ErrorLn("The project folder name cannot contain a period or space")
@@ -49,30 +67,32 @@ func Setup() {
 		}
 	}
 
-	fmt.Println("")
-	fmtc.Title("Your Magento version is " + toolsDefVersions.Magento)
+	if continueSetup {
+		fmt.Println("")
+		fmtc.Title("Your Magento version is " + toolsDefVersions.Magento)
 
-	setupPhp(&toolsDefVersions.Php)
-	setupDB(&toolsDefVersions.Db)
-	setupComposer(&toolsDefVersions.Composer)
-	setupSearchEngine(&toolsDefVersions.SearchEngine)
-	if toolsDefVersions.SearchEngine == "Elasticsearch" {
-		setupElastic(&toolsDefVersions.Elastic)
-	} else {
-		setupOpenSearch(&toolsDefVersions.OpenSearch)
+		setupPhp(&toolsDefVersions.Php)
+		setupDB(&toolsDefVersions.Db)
+		setupComposer(&toolsDefVersions.Composer)
+		setupSearchEngine(&toolsDefVersions.SearchEngine)
+		if toolsDefVersions.SearchEngine == "Elasticsearch" {
+			setupElastic(&toolsDefVersions.Elastic)
+		} else {
+			setupOpenSearch(&toolsDefVersions.OpenSearch)
+		}
+
+		setupRedis(&toolsDefVersions.Redis)
+		setupRabbitMQ(&toolsDefVersions.RabbitMQ)
+		setupHosts(projectName, &toolsDefVersions.Hosts, projectConfig)
+
+		configs.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
+		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
+
+		fmtc.SuccessLn("\n" + "Finish set up environment")
+		fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
+		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
+		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 	}
-
-	setupRedis(&toolsDefVersions.Redis)
-	setupRabbitMQ(&toolsDefVersions.RabbitMQ)
-	setupHosts(projectName, &toolsDefVersions.Hosts, projectConfig)
-
-	configs.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
-
-	fmtc.SuccessLn("\n" + "Finish set up environment")
-	fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
-	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
-	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 
 	builder.Down(attr.Options.WithVolumes)
 	builder.Start(attr.Options.WithChown)

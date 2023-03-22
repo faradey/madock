@@ -1,15 +1,12 @@
 package configs
 
 import (
-	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"os/user"
 	"runtime"
 	"strings"
 
-	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/paths"
 )
 
@@ -58,19 +55,6 @@ func IsHasConfig(projectName string) bool {
 	PrepareDirsForProject(projectName)
 	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
 	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
-		fmtc.WarningLn("File env is already exist in project " + projectName)
-		fmt.Println("Do you want to continue? (y/N)")
-		fmt.Print("> ")
-
-		buf := bufio.NewReader(os.Stdin)
-		sentence, err := buf.ReadBytes('\n')
-		selected := strings.TrimSpace(string(sentence))
-		if err != nil {
-			log.Fatal(err)
-		} else if selected != "y" {
-			log.Fatal("Exit")
-		}
-
 		return true
 	}
 
