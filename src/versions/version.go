@@ -20,8 +20,9 @@ func GetVersions(ver string) ToolsVersions {
 		mageVersion = strings.TrimSpace(ver)
 	}
 
+	phpVer := GetPhpVersion(mageVersion)
 	return ToolsVersions{
-		Php:          GetPhpVersion(mageVersion),
+		Php:          phpVer,
 		Db:           GetDBVersion(mageVersion),
 		SearchEngine: GetSearchEngineVersion(mageVersion),
 		Elastic:      GetElasticVersion(mageVersion),
@@ -29,7 +30,7 @@ func GetVersions(ver string) ToolsVersions {
 		Composer:     GetComposerVersion(mageVersion),
 		Redis:        GetRedisVersion(mageVersion),
 		RabbitMQ:     GetRabbitMQVersion(mageVersion),
-		Xdebug:       GetXdebugVersion(mageVersion),
+		Xdebug:       GetXdebugVersion(phpVer),
 		Magento:      mageVersion,
 	}
 }
@@ -132,7 +133,7 @@ func GetOpenSearchVersion(mageVer string) string {
 	} else if mageVer == "2.3.7-p3" {
 		return "1.2.0"
 	} else {
-		return "Not compatible"
+		return "NotCompatible"
 	}
 
 	return ""
@@ -182,10 +183,12 @@ func GetRabbitMQVersion(mageVer string) string {
 	return ""
 }
 
-func GetXdebugVersion(mageVer string) string {
-	if mageVer < "2.4" {
-		return "2.9.8"
+func GetXdebugVersion(phpVer string) string {
+	if phpVer >= "8.1" {
+		return "3.2.1"
+	} else if phpVer >= "7.2" {
+		return "3.1.6"
 	}
 
-	return "3.1.5"
+	return "2.7.2"
 }
