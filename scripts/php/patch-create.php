@@ -45,43 +45,46 @@ if(file_exists($filePatch)){
                     recurseCopy($vendorPath, $patchContainerPath."/vendor");
                     deleteDirectory($vendorPath);
 
+                    $output = null;
+                    $responseCode = 0;
                     exec("cd ".$siteRootPath." && composer install --no-plugins --ignore-platform-reqs", $output, $responseCode);
                     
                     if($responseCode != 0){
+                        exec("rm -r ".$vendorPath."/" . $moduleRoot[0]."/".$moduleRoot[1]);
                         recurseCopy($patchContainerPath."/vendor", $vendorPath);
                         print_r($output);
                     }
                 } else {
-                    $moduleRoot[2] = trim($moduleRoot[2], "/");
-                    copy($patchContainerPath."/".$composerModuleNameDir."/".$moduleRoot[2], $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2].".new");
-                    exec("cd ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]." && diff -u ".$moduleRoot[2]. " ".$moduleRoot[2] . ".new > ".$patchName, $output, $responseCode);
-                    
-                    if(file_exists($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName)){
-                        $patchContent = file_get_contents($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
-                        $patchContent = str_replace($moduleRoot[2].".new", $moduleRoot[2], $patchContent);
-                        if(!empty($force) || !file_exists($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName)){
-                            file_put_contents($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchContent);
-                            if(!file_exists($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1])){
-                                mkdir($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1], 0755, true);
-                            }
-                            copy($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
-                            
-                            $composerFile = $siteRootPath."/composer.json";
-                            $composerJsonData = json_decode(file_get_contents($composerFile), true);
-                            if(!empty($force) || empty($composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
-                                $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
-                                file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
-                                print("\nThe patch was created successfully\n");
-                            } else {
-                                print("The patch with same title or name has already been created.\n");
-                            }
-                        } else {
-                            print("The patch with same title or name is already exists.\n");
+                    if(!empty($force) || !file_exists($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName)){
+                        if(!file_exists($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1])){
+                            mkdir($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1], 0755, true);
                         }
+                        if(is_dir($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2])){
+                            exec("diff -u -r -N ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2]. "/ ".$patchContainerPath."/".$composerModuleNameDir."/".$moduleRoot[2] . "/ > " .$patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $output, $responseCode);
+                        } else {
+                            $moduleRoot[2] = trim($moduleRoot[2], "/");
+                            exec("diff -u ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2]. " ".$patchContainerPath."/".$composerModuleNameDir."/".$moduleRoot[2] . " > ".$patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $output, $responseCode);
+                        }
+
+                        $patchContent = file_get_contents($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
+                        $patchContent = str_replace($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1], "", $patchContent);
+                        $patchContent = str_replace($patchContainerPath."/".$composerModuleNameDir, "", $patchContent);
+                        file_put_contents($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchContent);
+
+                        $composerFile = $siteRootPath."/composer.json";
+                        $composerJsonData = json_decode(file_get_contents($composerFile), true);
+                        if(!empty($force) || empty($composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
+                            $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
+                            file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                            print("\nThe patch was created successfully\n");
+                        } else {
+                            print("The patch with same title or name has already been created.\n");
+                        }
+                        exec("rm -r ".$vendorPath."/" . $moduleRoot[0]."/".$moduleRoot[1]);
+                        recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
                     } else {
-                        print("Something went wrong\n");
+                        print("The patch with same title or name is already exists.\n");
                     }
-                    recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
                 }
             } catch(\Exception | \Error $e) {
                 print($e->getMessage()."\n");
