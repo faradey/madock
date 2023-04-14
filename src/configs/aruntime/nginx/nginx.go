@@ -71,7 +71,7 @@ func makeProxy() {
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
 	portsConfig := configs.ParseFile(portsFile)
 	/* Create nginx default configuration for Magento2 */
-	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/conf/default-proxy.conf"
+	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/conf/default-proxy.conf"
 	allFileData := "worker_processes 2;\nworker_priority -10;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\n"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
@@ -133,7 +133,7 @@ func makeProxy() {
 func makeDockerfile() {
 	/* Create nginx Dockerfile configuration */
 	ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
-	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/proxy.Dockerfile"
+	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/proxy.Dockerfile"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
 		log.Fatal(err)
@@ -154,7 +154,7 @@ func makeDockerfile() {
 func makeDockerCompose() {
 	/* Copy nginx docker-compose configuration */
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
-	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/docker-compose-proxy.yml"
+	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/docker-compose-proxy.yml"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
 		log.Fatal(err)

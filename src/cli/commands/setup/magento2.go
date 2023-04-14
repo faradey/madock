@@ -1,0 +1,87 @@
+package setup
+
+import (
+	"fmt"
+	"github.com/faradey/madock/src/cli/attr"
+	"github.com/faradey/madock/src/cli/fmtc"
+	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/versions"
+	"strings"
+)
+
+func Magento2(projectName string, projectConfig map[string]string, continueSetup bool) {
+	toolsDefVersions := versions.GetVersions("")
+
+	mageVersion := ""
+	if toolsDefVersions.Php == "" {
+		fmt.Println("")
+		fmtc.Title("Specify Magento version: ")
+		mageVersion, _ = Waiter()
+		if mageVersion != "" {
+			toolsDefVersions = versions.GetVersions(mageVersion)
+		}
+	}
+
+	if continueSetup {
+		fmt.Println("")
+		fmtc.Title("Your Magento version is " + toolsDefVersions.Magento)
+
+		Php(&toolsDefVersions.Php)
+		Db(&toolsDefVersions.Db)
+		Composer(&toolsDefVersions.Composer)
+		SearchEngine(&toolsDefVersions.SearchEngine)
+		if toolsDefVersions.SearchEngine == "Elasticsearch" {
+			Elastic(&toolsDefVersions.Elastic)
+		} else {
+			OpenSearch(&toolsDefVersions.OpenSearch)
+		}
+
+		Redis(&toolsDefVersions.Redis)
+		RabbitMQ(&toolsDefVersions.RabbitMQ)
+		Hosts(projectName, &toolsDefVersions.Hosts, projectConfig)
+
+		configs.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
+		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
+
+		fmtc.SuccessLn("\n" + "Finish set up environment")
+		fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
+		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
+		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
+	}
+
+	builder.Down(attr.Options.WithVolumes)
+	builder.Start(attr.Options.WithChown)
+
+	if attr.Options.Download {
+		downloadMagento(projectName, mageVersion)
+	}
+
+	if attr.Options.Install {
+		installMagento(projectName, toolsDefVersions.Magento)
+	}
+}
+
+func downloadMagento(projectName, mageVersion string) {
+	fmt.Println("")
+	fmtc.TitleLn("Specify Magento version: ")
+	fmt.Println("1) Community (default)")
+	fmt.Println("2) Enterprise")
+	edition, _ := Waiter()
+	edition = strings.TrimSpace(edition)
+	if edition != "1" && edition != "2" && edition != "" {
+		fmtc.ErrorLn("The specified edition '" + edition + "' is incorrect.")
+		return
+	}
+	if edition == "1" || edition == "" {
+		edition = "community"
+	} else if edition == "2" {
+		edition = "enterprise"
+	}
+	builder.DownloadMagento(projectName, edition, mageVersion)
+}
+
+func installMagento(projectName, magentoVer string) {
+	builder.InstallMagento(projectName, magentoVer)
+}
