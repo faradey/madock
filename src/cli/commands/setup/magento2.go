@@ -7,12 +7,12 @@ import (
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/paths"
-	"github.com/faradey/madock/src/versions"
+	"github.com/faradey/madock/src/versions/magento2"
 	"strings"
 )
 
 func Magento2(projectName string, projectConfig map[string]string, continueSetup bool) {
-	toolsDefVersions := versions.GetVersions("")
+	toolsDefVersions := magento2.GetVersions("")
 
 	mageVersion := ""
 	if toolsDefVersions.Php == "" {
@@ -20,7 +20,7 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 		fmtc.Title("Specify Magento version: ")
 		mageVersion, _ = Waiter()
 		if mageVersion != "" {
-			toolsDefVersions = versions.GetVersions(mageVersion)
+			toolsDefVersions = magento2.GetVersions(mageVersion)
 		}
 	}
 

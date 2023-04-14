@@ -1,13 +1,14 @@
 package configs
 
 import (
+	"github.com/faradey/madock/src/versions"
+	"github.com/faradey/madock/src/versions/magento2"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/faradey/madock/src/paths"
-	"github.com/faradey/madock/src/versions"
 )
 
 var dbType = "MariaDB"
@@ -22,10 +23,11 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	}
 
 	config.AddOrSetLine("PATH", paths.GetRunDirPath())
+	config.AddOrSetLine("PLATFORM", defVersions.Platform)
 	config.AddOrSetLine("PHP_VERSION", defVersions.Php)
 	config.AddOrSetLine("PHP_COMPOSER_VERSION", defVersions.Composer)
 	config.AddOrSetLine("PHP_TZ", getOption("PHP_TZ", generalConf, projectConfig))
-	config.AddOrSetLine("XDEBUG_VERSION", versions.GetXdebugVersion(defVersions.Php))
+	config.AddOrSetLine("XDEBUG_VERSION", magento2.GetXdebugVersion(defVersions.Php))
 	config.AddOrSetLine("XDEBUG_REMOTE_HOST", "host.docker.internal")
 	config.AddOrSetLine("XDEBUG_IDE_KEY", getOption("XDEBUG_IDE_KEY", generalConf, projectConfig))
 	config.AddOrSetLine("XDEBUG_ENABLED", getOption("XDEBUG_ENABLED", generalConf, projectConfig))

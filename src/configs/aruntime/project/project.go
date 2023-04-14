@@ -176,8 +176,8 @@ func makeDockerCompose(projectName string) {
 	overrideFile := runtime.GOOS
 	projectConf := configs.GetCurrentProjectConfig()
 
-	dockerDefFile := getDockerConfigFile(projectName, "/docker/docker-compose.yml")
-	dockerDefFileForOS := getDockerConfigFile(projectName, "/docker/docker-compose."+overrideFile+".yml")
+	dockerDefFile := getDockerConfigFile(projectName, "/docker/"+projectConf["PLATFORM"]+"docker-compose.yml")
+	dockerDefFileForOS := getDockerConfigFile(projectName, "/docker/"+projectConf["PLATFORM"]+"docker-compose."+overrideFile+".yml")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
