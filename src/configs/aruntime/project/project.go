@@ -253,7 +253,8 @@ func makeDockerCompose(projectName string) {
 }
 
 func makeDBDockerfile(projectName string) {
-	dockerDefFile := getDockerConfigFile(projectName, "/docker/db/Dockerfile")
+	projectConf := configs.GetCurrentProjectConfig()
+	dockerDefFile := getDockerConfigFile(projectName, "/docker/"+projectConf["PLATFORM"]+"/db/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -268,7 +269,7 @@ func makeDBDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	myCnfFile := getDockerConfigFile(projectName, "/docker/db/my.cnf")
+	myCnfFile := getDockerConfigFile(projectName, "/docker/"+projectConf["PLATFORM"]+"/db/my.cnf")
 	if _, err := os.Stat(myCnfFile); os.IsNotExist(err) {
 		log.Fatal(err)
 	}
@@ -289,7 +290,8 @@ func makeDBDockerfile(projectName string) {
 }
 
 func makeElasticDockerfile(projectName string) {
-	dockerDefFile := getDockerConfigFile(projectName, "/docker/elasticsearch/Dockerfile")
+	projectConf := configs.GetCurrentProjectConfig()
+	dockerDefFile := getDockerConfigFile(projectName, "/docker/"+projectConf["PLATFORM"]+"/elasticsearch/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
