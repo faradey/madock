@@ -6,7 +6,7 @@ import (
 )
 
 func GetVersions() versions.ToolsVersions {
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetGeneralConfig()
 	return versions.ToolsVersions{
 		Platform: "pwa",
 		NodeJs:   projectConf["NODE_VERSION"],

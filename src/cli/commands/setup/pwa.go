@@ -9,6 +9,8 @@ import (
 func PWA(projectName string, projectConfig map[string]string, continueSetup bool) {
 	if continueSetup {
 		toolsDefVersions := pwa.GetVersions()
+		NodeJs(&toolsDefVersions.NodeJs)
+		Yarn(&toolsDefVersions.Yarn)
 		projects.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
 		fmtc.SuccessLn("\n" + "Finish set up environment")
 	}

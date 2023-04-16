@@ -58,6 +58,8 @@ func Setup() {
 	platform := setup.Platform()
 	if platform == "magento2" {
 		setup.Magento2(projectName, projectConfig, continueSetup)
+	} else if platform == "pwa" {
+		setup.PWA(projectName, projectConfig, continueSetup)
 	}
 }
 

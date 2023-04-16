@@ -129,6 +129,26 @@ func Hosts(projectName string, defVersion *string, projectConfig map[string]stri
 	}
 }
 
+func NodeJs(defVersion *string) {
+	setTitleAndRecommended("NodeJs", defVersion)
+
+	availableVersions := []string{"Custom", "18.15.0"}
+
+	prepareVersions(availableVersions)
+	invitation(defVersion)
+	waiterAndProceed(defVersion, availableVersions)
+}
+
+func Yarn(defVersion *string) {
+	setTitleAndRecommended("Yarn", defVersion)
+
+	availableVersions := []string{"Custom", "1.22.19"}
+
+	prepareVersions(availableVersions)
+	invitation(defVersion)
+	waiterAndProceed(defVersion, availableVersions)
+}
+
 func setTitleAndRecommended(title string, recommended *string) {
 	fmt.Println("")
 	fmtc.TitleLn(title)
