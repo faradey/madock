@@ -14,6 +14,8 @@ import (
 )
 
 func MakeConf(projectName string) {
+	// get project config
+	projectConfig := configs.GetProjectConfig(projectName)
 	src := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/src"
 	if _, err := os.Lstat(src); err == nil {
 		if err := os.Remove(src); err != nil {
@@ -26,17 +28,14 @@ func MakeConf(projectName string) {
 		log.Fatal(err)
 	}
 
-	makeDockerCompose(projectName)
 	makeNginxDockerfile(projectName)
 	makeNginxConf(projectName)
-	makePhpDockerfile(projectName)
-	makeDBDockerfile(projectName)
-	makeElasticDockerfile(projectName)
-	makeOpenSearchDockerfile(projectName)
-	makeRedisDockerfile(projectName)
-	makeNodeDockerfile(projectName)
-	makeKibanaConf(projectName)
-	makeScriptsConf(projectName)
+
+	if projectConfig["PLATFORM"] == "magento2" {
+		MakeConfMagento2(projectName)
+	} else if projectConfig["PLATFORM"] == "pwa" {
+		MakeConfPWA(projectName)
+	}
 }
 
 func makeScriptsConf(projectName string) {
@@ -339,8 +338,8 @@ func makeRedisDockerfile(projectName string) {
 	}
 }
 
-func makeNodeDockerfile(projectName string) {
-	dockerDefFile := getDockerConfigFile(projectName, "node/Dockerfile")
+func makeNodeJsDockerfile(projectName string) {
+	dockerDefFile := getDockerConfigFile(projectName, "nodejs/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -349,7 +348,7 @@ func makeNodeDockerfile(projectName string) {
 
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/node.Dockerfile"
+	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nodejs.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)

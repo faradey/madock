@@ -11,6 +11,7 @@ func PWA(projectName string, projectConfig map[string]string, continueSetup bool
 		toolsDefVersions := pwa.GetVersions()
 		NodeJs(&toolsDefVersions.NodeJs)
 		Yarn(&toolsDefVersions.Yarn)
+		Hosts(projectName, &toolsDefVersions.Hosts, projectConfig)
 		projects.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
 		fmtc.SuccessLn("\n" + "Finish set up environment")
 	}

@@ -52,7 +52,7 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 	}
 
 	builder.Down(attr.Options.WithVolumes)
-	builder.Start(attr.Options.WithChown)
+	builder.StartMagento2(attr.Options.WithChown, projectConfig)
 
 	if attr.Options.Download {
 		downloadMagento(projectName, mageVersion)
