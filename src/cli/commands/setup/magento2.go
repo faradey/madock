@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
-	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/configs/projects"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/paths"
 	"github.com/faradey/madock/src/versions/magento2"
@@ -42,7 +42,7 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 		RabbitMQ(&toolsDefVersions.RabbitMQ)
 		Hosts(projectName, &toolsDefVersions.Hosts, projectConfig)
 
-		configs.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
+		projects.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
 		fmtc.SuccessLn("\n" + "Finish set up environment")

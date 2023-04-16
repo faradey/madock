@@ -117,6 +117,10 @@ func CronDisable() {
 
 func Bash() {
 	containerName := "php"
+	projectConf := configs.GetCurrentProjectConfig()
+	if projectConf["PLATFORM"] == "pwa" {
+		containerName = "nodejs"
+	}
 	if len(attr.Options.Args) > 0 && attr.Options.Args[0] != "" {
 		containerName = attr.Options.Args[0]
 	}
