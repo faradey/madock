@@ -363,7 +363,13 @@ func InstallMagento(projectName, magentoVer string) {
 
 func Cli(flag string) {
 	projectName := configs.GetProjectName()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", flag)
+	// get project config
+	projectConfig := configs.GetCurrentProjectConfig()
+	containerSlug := "php"
+	if projectConfig["PLATFORM"] == "pwa" {
+		containerSlug = "nodejs"
+	}
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-"+containerSlug+"-1", "bash", "-c", flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
