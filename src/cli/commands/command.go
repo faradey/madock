@@ -69,6 +69,10 @@ func Magento(flag string) {
 	builder.Magento(flag)
 }
 
+func PWA(flag string) {
+	builder.PWA(flag)
+}
+
 func Cloud(flag string) {
 	projectConfig := configs.GetCurrentProjectConfig()
 	flag = strings.Replace(flag, "$project", projectConfig["MAGENTOCLOUD_PROJECT_NAME"], -1)
