@@ -7,4 +7,5 @@ RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 
 RUN yarn set version {{{YARN_VERSION}}}
 
+EXPOSE 443
 WORKDIR /var/www/html
