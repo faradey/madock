@@ -131,7 +131,7 @@ services:
       PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin/"
       PMA_USER: root
       PMA_PASSWORD: {{{DB_ROOT_PASSWORD}}}
-      UPLOAD_LIMIT: 1G
+      UPLOAD_LIMIT: 2G
     ports:
       - "{{{NGINX_PROJECT_PORT+2}}}:80"
     profiles:
