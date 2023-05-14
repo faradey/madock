@@ -192,20 +192,23 @@ func setupOpenSearch(defVersion *string) {
 func setupRedis(defVersion *string) {
 	setTitleAndRecommended("Redis", defVersion)
 
+	availableVersionsShort := []string{"Custom", "7.0", "6.2", "6.0", "5.0"}
 	availableVersions := []string{"Custom", "7.0 (Magento version > 2.4.6)", "6.2 (Magento version > 2.4.3-p3)", "6.0 (Magento version <= 2.4.3-p3)", "5.0 (Magento version <= 2.3.2)"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	waiterAndProceed(defVersion, availableVersionsShort)
 }
 
 func setupRabbitMQ(defVersion *string) {
 	setTitleAndRecommended("RabbitMQ", defVersion)
+
+	availableVersionsShort := []string{"Custom", "3.9", "3.8", "3.7"}
 	availableVersions := []string{"Custom", "3.9 (Magento version > 2.4.3-p3)", "3.8 (Magento version <= 2.4.3-p3)", "3.7 (Magento version <= 2.3.4)"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	waiterAndProceed(defVersion, availableVersionsShort)
 }
 
 func setupHosts(projectName string, defVersion *string, projectConfig map[string]string) {
