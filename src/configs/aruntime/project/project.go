@@ -30,7 +30,7 @@ func MakeConf(projectName string) {
 
 	makeNginxDockerfile(projectName)
 	makeNginxConf(projectName)
-
+	makeDockerCompose(projectName)
 	if projectConfig["PLATFORM"] == "magento2" {
 		MakeConfMagento2(projectName)
 	} else if projectConfig["PLATFORM"] == "pwa" {

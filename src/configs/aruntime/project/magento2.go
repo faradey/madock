@@ -1,7 +1,6 @@
 package project
 
 func MakeConfMagento2(projectName string) {
-	makeDockerCompose(projectName)
 	makePhpDockerfile(projectName)
 	makeDBDockerfile(projectName)
 	makeElasticDockerfile(projectName)

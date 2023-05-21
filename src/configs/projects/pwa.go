@@ -7,7 +7,7 @@ import (
 
 func PWA(config *configs.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConfig map[string]string) {
 	config.AddOrSetLine("NODEJS_ENABLED", "true")
-	config.AddOrSetLine("NODE_VERSION", defVersions.NodeJs)
+	config.AddOrSetLine("NODEJS_VERSION", defVersions.NodeJs)
 	config.AddOrSetLine("YARN_ENABLED", "true")
 	config.AddOrSetLine("YARN_VERSION", defVersions.Yarn)
 }

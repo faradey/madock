@@ -132,7 +132,7 @@ func Hosts(projectName string, defVersion *string, projectConfig map[string]stri
 func NodeJs(defVersion *string) {
 	setTitleAndRecommended("NodeJs", defVersion)
 
-	availableVersions := []string{"Custom", "18.15.0"}
+	availableVersions := []string{"Custom", "16.20.0", "18.15.0"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)
