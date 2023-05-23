@@ -269,6 +269,9 @@ try {
                 if(empty($env["system"][$scope][$scopeCode]["web"]["secure"][$type])){
                     $env["system"][$scope][$scopeCode]["web"]["secure"][$type] = $val;
                 }
+                if(empty($env["system"][$scope][$scopeCode]["web"]["unsecure"][$type])){
+                    $env["system"][$scope][$scopeCode]["web"]["unsecure"][$type] = $val;
+                }
                 $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope][$scopeCode]["web"]["unsecure"][$type]), "/"));
             }
         }
