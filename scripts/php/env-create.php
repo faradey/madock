@@ -117,6 +117,7 @@ try {
             foreach ($data as $k => $v){
                 if(!empty($v['value'])){
                     $tempPath = implode("_", array_slice(explode("/", $v['path']), 0, 2));
+                    $urlType = array_slice(explode("/", $v['path']), 2, 1);
                     $val = trim(preg_replace("/^(.+?)\.[^\.]+?(|\/.+)$/i", "$1".$projectConfig["DEFAULT_HOST_FIRST_LEVEL"]."$2", $v['value']), "/")."/";
                     if(in_array($val, $domainValues["hosts"])) {
                         $val = trim($v['value'], "/").$projectConfig["DEFAULT_HOST_FIRST_LEVEL"]."/";
@@ -128,6 +129,9 @@ try {
                     }
 
                     $val = $domainValues[$v['scope'].$v['scope_id'].$tempPath];
+                    if($urlType[0] != "base_url"){
+                        $val = "";
+                    }
                     $domain = "";
                     $scopeId = $v['scope_id'];
                     if($v['scope'] == "default") {
@@ -242,6 +246,10 @@ try {
     foreach($types as $type) {
         if($path == "web/unsecure/".$type) {
             if($scope == "default") {
+                if(empty($val)){
+                    $env["system"][$scope]["web"]["unsecure"][$type] = "";
+                    continue;
+                }
                 if(!empty($defaultHost)){
                     $val = "https://".$defaultHost."/";
                 }
@@ -250,6 +258,10 @@ try {
                 }
                 $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope]["web"]["unsecure"][$type]), "/"));
             } else {
+                if(empty($val)){
+                    $env["system"][$scope][$scopeCode]["web"]["unsecure"][$type] = "";
+                    continue;
+                }
                 if($scope == "websites" && $defaultWebsiteCode == $scopeCode && !empty($defaultHost)){
                     $val = "https://".$defaultHost."/";
                 }
@@ -260,6 +272,10 @@ try {
             }
         } elseif($path == "web/secure/".$type) {
             if($scope == "default") {
+                if(empty($val)){
+                    $env["system"][$scope]["web"]["secure"][$type] = "";
+                    continue;
+                }
                 if(!empty($defaultHost)){
                     $val = "https://".$defaultHost."/";
                 }
@@ -268,6 +284,10 @@ try {
                 }
                 $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope]["web"]["unsecure"][$type]), "/"));
             } else {
+                if(empty($val)){
+                    $env["system"][$scope][$scopeCode]["web"]["secure"][$type] = "";
+                    continue;
+                }
                 if($scope == "websites" && $defaultWebsiteCode == $scopeCode && !empty($defaultHost)){
                     $val = "https://".$defaultHost."/";
                 }
@@ -279,7 +299,7 @@ try {
         }
     }
 
-    if($scope != "stores"){
+    if($scope != "stores" && !empty($domain)){
         $hosts[] = $domain.":".($scopeCode??$defaultWebsiteCode);
         $domains[] = $domain;
     }
