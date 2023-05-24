@@ -242,12 +242,13 @@ try {
 
   function setUrls(&$domain, $val, $path, $scope, $scopeCode, &$env, &$hosts, &$domains, $defaultHost, $defaultWebsiteCode) {
     $types = ['base_url', 'base_static_url', 'base_media_url', 'base_link_url'];
-    
+    $typesPaths = ['base_static_url' => "/static/", 'base_media_url' => "/media/", 'base_link_url' => ""];
+
     foreach($types as $type) {
         if($path == "web/unsecure/".$type) {
             if($scope == "default") {
                 if(empty($val)){
-                    $env["system"][$scope]["web"]["unsecure"][$type] = "";
+                    $env["system"][$scope]["web"]["unsecure"][$type] = '{{unsecure_base_url}}'.$typesPaths[$type];
                     continue;
                 }
                 if(!empty($defaultHost)){
@@ -259,7 +260,7 @@ try {
                 $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope]["web"]["unsecure"][$type]), "/"));
             } else {
                 if(empty($val)){
-                    $env["system"][$scope][$scopeCode]["web"]["unsecure"][$type] = "";
+                    $env["system"][$scope][$scopeCode]["web"]["unsecure"][$type] = '{{unsecure_base_url}}'.$typesPaths[$type];
                     continue;
                 }
                 if($scope == "websites" && $defaultWebsiteCode == $scopeCode && !empty($defaultHost)){
@@ -273,7 +274,7 @@ try {
         } elseif($path == "web/secure/".$type) {
             if($scope == "default") {
                 if(empty($val)){
-                    $env["system"][$scope]["web"]["secure"][$type] = "";
+                    $env["system"][$scope]["web"]["secure"][$type] = '{{secure_base_url}}'.$typesPaths[$type];
                     continue;
                 }
                 if(!empty($defaultHost)){
@@ -285,7 +286,7 @@ try {
                 $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope]["web"]["unsecure"][$type]), "/"));
             } else {
                 if(empty($val)){
-                    $env["system"][$scope][$scopeCode]["web"]["secure"][$type] = "";
+                    $env["system"][$scope][$scopeCode]["web"]["secure"][$type] = '{{secure_base_url}}'.$typesPaths[$type];
                     continue;
                 }
                 if($scope == "websites" && $defaultWebsiteCode == $scopeCode && !empty($defaultHost)){
