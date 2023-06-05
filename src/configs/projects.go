@@ -10,8 +10,6 @@ import (
 	"github.com/faradey/madock/src/versions"
 )
 
-var dbType = "MariaDB"
-
 func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, projectConfig map[string]string) {
 	generalConf := GetGeneralConfig()
 	config := new(ConfigLines)
@@ -39,10 +37,9 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	if len(repoVersion) > 1 {
 		config.AddOrSetLine("DB_REPOSITORY", repoVersion[0])
 		config.AddOrSetLine("DB_VERSION", repoVersion[1])
-		config.AddOrSetLine("DB_TYPE", repoVersion[0])
 	} else {
+		config.AddOrSetLine("DB_REPOSITORY", "mariadb")
 		config.AddOrSetLine("DB_VERSION", defVersions.Db)
-		config.AddOrSetLine("DB_TYPE", dbType)
 	}
 
 	config.AddOrSetLine("DB_ROOT_PASSWORD", getOption("DB_ROOT_PASSWORD", generalConf, projectConfig))
