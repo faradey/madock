@@ -147,8 +147,6 @@ func makeDockerfile() {
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
-
-	GenerateSslCert(ctxPath, false)
 	/* END Create nginx Dockerfile configuration */
 }
 
