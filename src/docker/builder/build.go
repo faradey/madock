@@ -2,11 +2,13 @@ package builder
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/helper"
 	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"strings"
+	"time"
 
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
@@ -14,18 +16,13 @@ import (
 	"github.com/faradey/madock/src/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/configs/aruntime/project"
 	"github.com/faradey/madock/src/paths"
+	"github.com/gosimple/hashdir"
 )
 
 func UpWithBuild() {
 	DownNginx()
 	UpNginx()
 	upProjectWithBuild(attr.Options.WithChown)
-}
-
-func PrepareConfigs() {
-	projectName := configs.GetProjectName()
-	nginx.MakeConf()
-	project.MakeConf(projectName)
 }
 
 func Down(withVolumes bool) {
@@ -170,25 +167,42 @@ func Stop() {
 }
 
 func UpNginx() {
-	/*PrepareConfigs()
-	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "-d")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {*/
 	UpNginxWithBuild()
-	/*}*/
 }
 
 func UpNginxWithBuild() {
-	PrepareConfigs()
-	dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
-	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
+	projectName := configs.GetProjectName()
+	project.MakeConf(projectName)
+	projectConf := configs.GetCurrentProjectConfig()
+	dirHash, err := hashdir.Make(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx", "md5")
+	dockerComposeHash, err := helper.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "md5")
+	dockerComposeOverHash, err := helper.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.override.yml", "md5")
+	dirHash = dirHash + dockerComposeHash + dockerComposeOverHash
+	doNeedRunAruntime := true
+	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/docker-compose.yml"); !os.IsNotExist(err) {
+		duration := time.Millisecond * 20
+		time.Sleep(duration)
+		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
+		result, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(result) > 100 {
+			doNeedRunAruntime = false
+		}
+	}
+	if err != nil || dirHash != projectConf["CACHE_HASH"] || doNeedRunAruntime {
+		nginx.MakeConf()
+		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+		configs.SetParam(envFile, "CACHE_HASH", dirHash)
+		dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
+		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
