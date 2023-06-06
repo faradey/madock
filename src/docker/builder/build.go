@@ -75,6 +75,8 @@ func Down(withVolumes bool) {
 func Start(withChown bool) {
 	projectName := configs.GetProjectName()
 	UpNginx()
+	duration := time.Millisecond * 20
+	time.Sleep(duration)
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"compose",
