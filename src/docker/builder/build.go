@@ -195,6 +195,8 @@ func UpNginxWithBuild() {
 	if err != nil || dirHash != projectConf["CACHE_HASH"] || doNeedRunAruntime {
 		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 		nginx.GenerateSslCert(ctxPath, false)
+		duration := time.Millisecond * 20
+		time.Sleep(duration)
 		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 		configs.SetParam(envFile, "CACHE_HASH", dirHash)
 		dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
