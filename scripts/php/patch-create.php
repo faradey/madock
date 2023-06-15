@@ -59,7 +59,7 @@ if(file_exists($filePatch)){
                         if(!file_exists($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1])){
                             mkdir($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1], 0755, true);
                         }
-                        if(is_dir($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2])){
+                        if(!empty($moduleRoot[2]) && is_dir($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2])){
                             exec("diff -u -r -N ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2]. "/ ".$patchContainerPath."/".$composerModuleNameDir."/".$moduleRoot[2] . "/ > " .$patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $output, $responseCode);
                         } else {
                             $moduleRoot[2] = trim($moduleRoot[2], "/");
