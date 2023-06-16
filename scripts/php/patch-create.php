@@ -5,7 +5,7 @@ $siteRootPath = "/var/www/html";
 $vendorPath = $siteRootPath."/vendor";
 $patchMagentoPath = $siteRootPath."/patches/composer";
 $filePatch = $siteRootPath."/".trim($argv[1],"/");
-$patchName = $argv[2];
+$patchName = $argv[2]??"";
 $patchTitle = $argv[3]?:$patchName;
 $force = $argv[4]??"";
 
@@ -14,6 +14,12 @@ if(file_exists($filePatch)){
     if($moduleRoot){
         $moduleRoot = explode("/", trim($moduleRoot, "/"), 3);
         $moduleComposerPath = $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/composer.json";
+        if(empty($patchName)) {
+            $patchName = $moduleRoot[0]."_".$moduleRoot[1].".patch";
+        }
+        if(empty($patchTitle)) {
+            $patchTitle = "Fix ".$moduleRoot[0]."/".$moduleRoot[1]." module";
+        }
         if(file_exists($moduleComposerPath)){
             $composerJsonData = file_get_contents($moduleComposerPath);
             $jsonData = json_decode($composerJsonData, true);
@@ -31,7 +37,6 @@ if(file_exists($filePatch)){
             
                 $output = null;
                 $responseCode = 0;
-
                 exec("cd ".$siteRootPath." && composer install --no-plugins --ignore-platform-reqs", $output, $responseCode);
                 if($responseCode != 0){
                     recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
@@ -59,8 +64,8 @@ if(file_exists($filePatch)){
                         if(!file_exists($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1])){
                             mkdir($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1], 0755, true);
                         }
-                        if(!empty($moduleRoot[2]) && is_dir($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2])){
-                            exec("diff -u -r -N ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2]. "/ ".$patchContainerPath."/".$composerModuleNameDir."/".$moduleRoot[2] . "/ > " .$patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $output, $responseCode);
+                        if(empty($moduleRoot[2]) && is_dir($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1])){
+                            exec("diff -u -r -N ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]. " ".$patchContainerPath."/".$composerModuleNameDir . " > " .$patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $output, $responseCode);
                         } else {
                             $moduleRoot[2] = trim($moduleRoot[2], "/");
                             exec("diff -u ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2]. " ".$patchContainerPath."/".$composerModuleNameDir."/".$moduleRoot[2] . " > ".$patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $output, $responseCode);
@@ -126,12 +131,12 @@ function recurseCopy(
     $directory = opendir($sourceDirectory);
 
     if (is_dir($destinationDirectory) === false) {
-        mkdir($destinationDirectory);
+        mkdir($destinationDirectory, 0755, true);
     }
 
     if ($childFolder !== '') {
         if (is_dir($destinationDirectory."/".$childFolder) === false) {
-            mkdir($destinationDirectory."/".$childFolder);
+            mkdir($destinationDirectory."/".$childFolder, 0755, true);
         }
 
         while (($file = readdir($directory)) !== false) {

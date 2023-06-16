@@ -16,9 +16,5 @@ func PatchCreate() {
 		log.Fatal("The --file option is incorrect or not specified.")
 	}
 
-	if patchName == "" {
-		log.Fatal("The --name option is incorrect or not specified.")
-	}
-
 	scripts.CreatePatch(filePath, patchName, title, force)
 }
