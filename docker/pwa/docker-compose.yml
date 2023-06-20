@@ -11,6 +11,7 @@ services:
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:cached
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      - "{{{PWA_MAGENTO_BACKEND_URL}}}host.docker.internal"
 
   nginx:
     build:

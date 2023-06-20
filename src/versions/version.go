@@ -12,6 +12,7 @@ type ToolsVersions struct {
 	RabbitMQ,
 	Xdebug,
 	Hosts,
+	PwaBackendUrl,
 	Magento,
 	NodeJs,
 	Yarn string
