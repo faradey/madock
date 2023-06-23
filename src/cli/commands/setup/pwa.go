@@ -13,15 +13,22 @@ func PWA(projectName string, projectConfig map[string]string, continueSetup bool
 		NodeJs(&toolsDefVersions.NodeJs)
 		Yarn(&toolsDefVersions.Yarn)
 		Hosts(projectName, &toolsDefVersions.Hosts, projectConfig)
-		setMagentoBackendHost(&toolsDefVersions.Hosts)
+		setMagentoBackendHost(&toolsDefVersions.PwaBackendUrl, projectConfig)
 		projects.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
 		fmtc.SuccessLn("\n" + "Finish set up environment")
 	}
 }
 
-func setMagentoBackendHost(defVersion *string) {
+func setMagentoBackendHost(defVersion *string, projectConfig map[string]string) {
 	fmtc.TitleLn("BACKEND URL")
 	fmt.Println("Input format: https://example.com/")
+	host := ""
+	if val, ok := projectConfig["PWA_BACKEND_URL"]; ok && val != "" {
+		host = val
+		*defVersion = host
+		fmt.Println("Recommended host: " + host)
+	}
+
 	fmt.Print("> ")
 	selected, _ := Waiter()
 	if selected != "" {
