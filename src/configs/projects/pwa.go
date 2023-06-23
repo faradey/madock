@@ -10,4 +10,5 @@ func PWA(config *configs.ConfigLines, defVersions versions.ToolsVersions, genera
 	config.AddOrSetLine("NODEJS_VERSION", defVersions.NodeJs)
 	config.AddOrSetLine("YARN_ENABLED", "true")
 	config.AddOrSetLine("YARN_VERSION", defVersions.Yarn)
+	config.AddOrSetLine("PWA_BACKEND_URL", defVersions.PwaBackendUrl)
 }
