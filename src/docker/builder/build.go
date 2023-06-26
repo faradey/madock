@@ -264,7 +264,7 @@ func Magento(flag string) {
 
 func PWA(flag string) {
 	projectName := configs.GetProjectName()
-	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "run", "--service-ports", "nodejs", "bash", "-c", "cd /var/www/html && "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-nodejs-1", "bash", "-c", "cd /var/www/html && "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

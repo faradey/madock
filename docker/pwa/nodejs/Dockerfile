@@ -8,3 +8,5 @@ RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 RUN yarn set version {{{YARN_VERSION}}}
 
 WORKDIR /var/www/html
+
+RUN chown {{{UID}}}:{{{GUID}}} /var/www

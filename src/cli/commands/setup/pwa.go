@@ -21,7 +21,7 @@ func PWA(projectName string, projectConfig map[string]string, continueSetup bool
 
 func setMagentoBackendHost(defVersion *string, projectConfig map[string]string) {
 	fmtc.TitleLn("BACKEND URL")
-	fmt.Println("Input format: https://example.com/")
+	fmt.Println("Input format: example.com")
 	host := ""
 	if val, ok := projectConfig["PWA_BACKEND_URL"]; ok && val != "" {
 		host = val
