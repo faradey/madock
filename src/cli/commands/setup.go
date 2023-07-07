@@ -132,7 +132,7 @@ func installMagento(projectName, magentoVer string) {
 func setupPhp(defVersion *string) {
 	setTitleAndRecommended("PHP", defVersion)
 
-	availableVersions := []string{"Custom", "8.1", "8.0", "7.4", "7.3", "7.2", "7.1", "7.0"}
+	availableVersions := []string{"Custom", "8.2", "8.1", "8.0", "7.4", "7.3", "7.2", "7.1", "7.0"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)
