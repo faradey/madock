@@ -1,15 +1,13 @@
 package paths
 
 import (
+	"github.com/faradey/madock/src/helper"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/faradey/madock/src/helper"
 )
 
 func GetExecDirPath() string {
@@ -145,8 +143,6 @@ func GetActiveProjects() []string {
 	projects := GetDirs(GetExecDirPath() + "/aruntime/projects")
 	for _, projectName := range projects {
 		if _, err := os.Stat(GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"); !os.IsNotExist(err) {
-			duration := time.Millisecond * 20
-			time.Sleep(duration)
 			cmd := exec.Command("docker", "compose", "-f", GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "ps", "--format", "json")
 			result, err := cmd.CombinedOutput()
 			if err != nil {

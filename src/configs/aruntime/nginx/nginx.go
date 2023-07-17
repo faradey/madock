@@ -80,7 +80,7 @@ func makeProxy() {
 
 	str := string(b)
 	var onlyHostsGlobal []string
-	projectsNames := paths.GetActiveProjects()
+	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 	if !helper.IsContain(projectsNames, configs.GetProjectName()) {
 		projectsNames = append(projectsNames, configs.GetProjectName())
 	}

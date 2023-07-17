@@ -2,21 +2,19 @@ package builder
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/helper"
-	"log"
-	"os"
-	"os/exec"
-	"os/user"
-	"strings"
-	"time"
-
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/configs/aruntime/project"
+	"github.com/faradey/madock/src/helper"
 	"github.com/faradey/madock/src/paths"
 	"github.com/gosimple/hashdir"
+	"log"
+	"os"
+	"os/exec"
+	"os/user"
+	"strings"
 )
 
 func UpWithBuild() {
@@ -75,8 +73,6 @@ func Down(withVolumes bool) {
 func Start(withChown bool) {
 	projectName := configs.GetProjectName()
 	UpNginx()
-	duration := time.Millisecond * 20
-	time.Sleep(duration)
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"compose",
@@ -183,8 +179,6 @@ func UpNginxWithBuild() {
 	dirHash = dirHash + dockerComposeHash + dockerComposeOverHash
 	doNeedRunAruntime := true
 	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/docker-compose.yml"); !os.IsNotExist(err) {
-		duration := time.Millisecond * 20
-		time.Sleep(duration)
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
 		result, err := cmd.CombinedOutput()
 		if err != nil {
@@ -197,8 +191,6 @@ func UpNginxWithBuild() {
 	if err != nil || dirHash != projectConf["CACHE_HASH"] || doNeedRunAruntime {
 		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 		nginx.GenerateSslCert(ctxPath, false)
-		duration := time.Millisecond * 20
-		time.Sleep(duration)
 		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 		configs.SetParam(envFile, "CACHE_HASH", dirHash)
 		dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
