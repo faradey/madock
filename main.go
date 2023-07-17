@@ -49,6 +49,10 @@ func main() {
 			commands.DebugEnable()
 		case "debug:disable":
 			commands.DebugDisable()
+		case "debug:profile:enable":
+			commands.DebugProfileEnable()
+		case "debug:profile:disable":
+			commands.DebugProfileDisable()
 		case "info":
 			commands.Info()
 		case "help":

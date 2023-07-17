@@ -97,9 +97,21 @@ func DebugEnable() {
 	builder.UpWithBuild()
 }
 
+func DebugProfileEnable() {
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
+	configs.SetParam(configPath, "XDEBUG_MODE", "profile")
+	builder.UpWithBuild()
+}
+
 func DebugDisable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_ENABLED", "false")
+	builder.UpWithBuild()
+}
+
+func DebugProfileDisable() {
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
+	configs.SetParam(configPath, "XDEBUG_MODE", "debug")
 	builder.UpWithBuild()
 }
 
