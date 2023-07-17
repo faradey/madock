@@ -32,6 +32,8 @@ func Help() {
 	describeByLevel("db:info", "Information about credentials and remote host and port", 0)
 	describeByLevel("debug:enable", "Enable xdebug", 0)
 	describeByLevel("debug:disable", "Disable xdebug", 0)
+	describeByLevel("debug:profile:enable", "Enable xdebug profiling", 0)
+	describeByLevel("debug:profile:disable", "Disable xdebug profiling", 0)
 	describeByLevel("info", "Show information about third-parties modules (name, current version, latest version, status)", 0)
 	describeByLevel("help", "Display help for commands", 0)
 	describeByLevel("logs", "View logs of a container", 0)

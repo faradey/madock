@@ -130,6 +130,12 @@ This command shows you the following items:
 
 * `debug:disable`   Disable xdebug
                      
+
+* `debug:profile:enable`   Enable xdebug profiling
+
+
+* `debug:profile:disable`   Disable xdebug profiling
+                     
    
 * `info`   Show information about third-parties modules (name, current version, latest version, status)             
     
