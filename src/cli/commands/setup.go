@@ -172,7 +172,7 @@ func setupSearchEngine(defVersion *string) {
 func setupElastic(defVersion *string) {
 	setTitleAndRecommended("Elasticsearch", defVersion)
 
-	availableVersions := []string{"Custom", "8.4.3", "7.17.5", "7.16.3", "7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
+	availableVersions := []string{"Custom", "8.5.3", "8.4.3", "7.17.5", "7.16.3", "7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)

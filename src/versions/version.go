@@ -88,7 +88,9 @@ func GetDBVersion(mageVer string) string {
 }
 
 func GetElasticVersion(mageVer string) string {
-	if mageVer >= "2.4.6" {
+	if mageVer >= "2.4.6-p1" {
+		return "8.5.3"
+	} else if mageVer >= "2.4.6" {
 		return "8.4.3"
 	} else if mageVer >= "2.4.5" {
 		return "7.17.5"

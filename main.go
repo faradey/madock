@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 var appVersion string = "1.8.0"
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	if len(os.Args) > 1 {
 		migration.Apply(appVersion)
 		command := strings.ToLower(os.Args[1])
