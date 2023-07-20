@@ -141,14 +141,14 @@ func MakeDirsByPath(val string) string {
 func GetActiveProjects() []string {
 	var activeProjects []string
 	projects := GetDirs(GetExecDirPath() + "/aruntime/projects")
-	for _, projectName := range projects {
-		if _, err := os.Stat(GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"); !os.IsNotExist(err) {
-			cmd := exec.Command("docker", "compose", "-f", GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "ps", "--format", "json")
-			result, err := cmd.CombinedOutput()
-			if err != nil {
-				log.Fatal(err)
-			}
-			if len(result) > 100 {
+	cmd := exec.Command("docker", "ps", "--format", "json")
+	result, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		resultString := string(result)
+		for _, projectName := range projects {
+			if strings.Contains(resultString, projectName+"-") {
 				activeProjects = append(activeProjects, projectName)
 			}
 		}
