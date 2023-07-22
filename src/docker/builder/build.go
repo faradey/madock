@@ -443,8 +443,12 @@ func InstallMagento(projectName, magentoVer string) {
 				"--elasticsearch-index-prefix=magento2 " +
 				"--elasticsearch-timeout=15 "
 		} else if searchEngine == "OpenSearch" {
-			installCommand += "--search-engine=elasticsearch7 " +
-				"--elasticsearch-host=opensearch " +
+			if magentoVer >= "2.4.6" {
+				installCommand += "--search-engine=opensearch "
+			} else {
+				installCommand += "--search-engine=elasticsearch7 "
+			}
+			installCommand += "--elasticsearch-host=opensearch " +
 				"--elasticsearch-port=9200 " +
 				"--elasticsearch-index-prefix=magento2 " +
 				"--elasticsearch-timeout=15 "
