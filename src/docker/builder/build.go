@@ -444,14 +444,18 @@ func InstallMagento(projectName, magentoVer string) {
 				"--elasticsearch-timeout=15 "
 		} else if searchEngine == "OpenSearch" {
 			if magentoVer >= "2.4.6" {
-				installCommand += "--search-engine=opensearch "
+				installCommand += "--search-engine=opensearch " +
+					"--opensearch-host=opensearch " +
+					"--opensearch-port=9200 " +
+					"--opensearch-index-prefix=magento2 " +
+					"--opensearch-timeout=15 "
 			} else {
-				installCommand += "--search-engine=elasticsearch7 "
+				installCommand += "--search-engine=elasticsearch7 " +
+					"--elasticsearch-host=opensearch " +
+					"--elasticsearch-port=9200 " +
+					"--elasticsearch-index-prefix=magento2 " +
+					"--elasticsearch-timeout=15 "
 			}
-			installCommand += "--elasticsearch-host=opensearch " +
-				"--elasticsearch-port=9200 " +
-				"--elasticsearch-index-prefix=magento2 " +
-				"--elasticsearch-timeout=15 "
 		}
 
 		if magentoVer >= "2.4.6" {
@@ -460,6 +464,7 @@ func InstallMagento(projectName, magentoVer string) {
 		installCommand += "&& bin/magento module:disable Magento_TwoFactorAuth "
 	}
 	installCommand += " && bin/magento s:up && bin/magento c:c && bin/magento i:rei | bin/magento c:f"
+	fmt.Println(installCommand)
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && "+installCommand)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
