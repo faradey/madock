@@ -148,7 +148,7 @@ func GetActiveProjects() []string {
 	} else {
 		resultString := string(result)
 		for _, projectName := range projects {
-			if strings.Contains(resultString, projectName+"-") {
+			if strings.Contains(resultString, strings.ToLower(projectName)+"-") {
 				activeProjects = append(activeProjects, projectName)
 			}
 		}
