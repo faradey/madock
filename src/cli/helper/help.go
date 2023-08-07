@@ -32,7 +32,6 @@ func Help() {
 	describeByLevel("--name", "Name of the DB export file.", 1)
 	describeByLevel("--service-name", "DB container name. Optional. Default container: db. Example: db2", 1)
 	describeByLevel("db:info", "Information about credentials and remote host and port", 0)
-	describeByLevel("--service-name", "DB container name. Optional. Default container: db. Example: db2", 1)
 	describeByLevel("debug:enable", "Enable xdebug", 0)
 	describeByLevel("debug:disable", "Disable xdebug", 0)
 	describeByLevel("debug:profile:enable", "Enable xdebug profiling", 0)

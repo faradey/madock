@@ -127,9 +127,7 @@ This command shows you the following items:
 
 
 * `db:info`      Information about credentials and remote host and port
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service-name`  DB container name. Optional. Default container: db. Example: db2
-                     
+ 
    
 * `debug:enable`   Enable xdebug
 
