@@ -116,13 +116,19 @@ This command shows you the following items:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`-f`  Forse mode
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service-name`  DB container name. Optional. Default container: db. Example: db2
+
 
 * `db:export`      Export database
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name`  Name of the DB export file
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service-name`  DB container name. Optional. Default container: db. Example: db2
+
 
 * `db:info`      Information about credentials and remote host and port
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service-name`  DB container name. Optional. Default container: db. Example: db2
                      
    
 * `debug:enable`   Enable xdebug
