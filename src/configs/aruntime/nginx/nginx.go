@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/faradey/madock/src/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper"
 	"log"
 	"os"
@@ -71,14 +72,10 @@ func makeProxy() {
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
 	portsConfig := configs.ParseFile(portsFile)
 	/* Create nginx default configuration for Magento2 */
-	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/conf/default-proxy.conf"
+	nginxDefFile := ""
+	str := ""
 	allFileData := "worker_processes 2;\nworker_priority -10;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\n"
-	b, err := os.ReadFile(nginxDefFile)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	str := string(b)
 	var onlyHostsGlobal []string
 	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 	if !helper.IsContain(projectsNames, configs.GetProjectName()) {
@@ -87,6 +84,13 @@ func makeProxy() {
 	for _, name := range projectsNames {
 		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
 			if _, err = os.Stat(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped"); os.IsNotExist(err) {
+				nginxDefFile = project.GetDockerConfigFile(name, "/docker/nginx/conf/default-proxy.conf")
+				b, err := os.ReadFile(nginxDefFile)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				str = string(b)
 				port, err := strconv.Atoi(portsConfig[name])
 				if err != nil {
 					log.Fatal(err)
@@ -124,7 +128,7 @@ func makeProxy() {
 	allFileData += "\nserver {\n    listen       80  default_server;\n listen 443 default_server ssl;\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
 	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
-	err = os.WriteFile(nginxFile, []byte(allFileData), 0755)
+	err := os.WriteFile(nginxFile, []byte(allFileData), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
