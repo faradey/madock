@@ -97,6 +97,7 @@ func listFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 				subdirName != "sitemap" &&
 				subdirName != "tmp" &&
 				subdirName != "trashcan" &&
+				subdirName != "import" &&
 				!strings.Contains(subdirName+"/", "/cache/") &&
 				!strings.Contains(subdirName, ".thumb") {
 				if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
