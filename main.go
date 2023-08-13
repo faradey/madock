@@ -57,6 +57,8 @@ func main() {
 			commands.DebugProfileDisable()
 		case "info":
 			commands.Info()
+		case "install":
+			commands.InstallMagento()
 		case "help":
 			helper.Help()
 		case "logs":
