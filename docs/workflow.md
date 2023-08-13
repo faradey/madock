@@ -144,6 +144,9 @@ This command shows you the following items:
 * `info`   Show information about third-parties modules (name, current version, latest version, status)             
     
     
+* `install`   Install Magento. It is a synonym for `madock magento setup:install` with additional actions.            
+    
+    
 * `help`    Displays help for commands
                       
   

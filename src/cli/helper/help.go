@@ -37,6 +37,7 @@ func Help() {
 	describeByLevel("debug:profile:enable", "Enable xdebug profiling", 0)
 	describeByLevel("debug:profile:disable", "Disable xdebug profiling", 0)
 	describeByLevel("info", "Show information about third-parties modules (name, current version, latest version, status)", 0)
+	describeByLevel("install", "Install Magento. It is a synonym for `madock magento setup:install` with additional actions.", 0)
 	describeByLevel("help", "Display help for commands", 0)
 	describeByLevel("logs", "View logs of a container", 0)
 	describeByLevel("[name of container]", "Container name. Optional. Default container: php. Example: php", 1)
