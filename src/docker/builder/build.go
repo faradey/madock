@@ -398,12 +398,12 @@ func DownloadMagento(projectName, edition, version string) {
 		"bash",
 		"-c",
 		"cd /var/www/html " +
-			"&& mkdir /var/www/html/download-magento123456789 " +
+			"&& rm -r -f /var/www/html/download-magento123456789 " +
 			"&& mkdir /var/www/html/download-magento123456789 " +
 			"&& composer create-project --repository-url=https://repo.magento.com/ magento/project-" + edition + "-edition:" + version + " ./download-magento123456789 " +
 			"&& shopt -s dotglob " +
 			"&& mv  -v ./download-magento123456789/* ./ " +
-			"&& rmdir ./download-magento123456789 " +
+			"&& rm -r -f ./download-magento123456789 " +
 			"&& composer install" + sampleData,
 	}
 	cmd := exec.Command("docker", command...)
