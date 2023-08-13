@@ -43,6 +43,7 @@ func Help() {
 	describeByLevel("[name of container]", "Container name. Optional. Default container: php. Example: php", 1)
 	describeByLevel("magento", "Execute Magento command inside php container", 0)
 	describeByLevel("m", "The short alias of `magento` command", 0)
+	describeByLevel("n98", "Execute n98 command inside php container. For example: `madock n98 sys:info`", 0)
 	describeByLevel("node", "Execute NodeJs command inside php container", 0)
 	describeByLevel("patch:create", "Create patch. The patch can be used with the composer plugin cweagans/composer-patches", 0)
 	describeByLevel("--file", "Path of changed file. For example: vendor/magento/module-analytics/Cron/CollectData.php", 1)
