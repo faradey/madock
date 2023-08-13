@@ -102,7 +102,7 @@ func Setup() {
 	}
 
 	if attr.Options.Install {
-		installMagento(projectName, toolsDefVersions.Magento)
+		builder.InstallMagento(projectName, toolsDefVersions.Magento)
 	}
 }
 
@@ -125,8 +125,14 @@ func downloadMagento(projectName, mageVersion string) {
 	builder.DownloadMagento(projectName, edition, mageVersion)
 }
 
-func installMagento(projectName, magentoVer string) {
-	builder.InstallMagento(projectName, magentoVer)
+func InstallMagento() {
+	projectName := configs.GetProjectName()
+	vers := versions.GetVersions("")
+	if vers.Magento == "" {
+		fmtc.ErrorLn("File composer.json is not exist")
+		return
+	}
+	builder.InstallMagento(projectName, vers.Magento)
 }
 
 func setupPhp(defVersion *string) {
