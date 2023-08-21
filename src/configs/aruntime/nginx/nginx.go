@@ -98,8 +98,8 @@ func makeProxy() {
 				}
 				portRanged := (port - 1) * 20
 				strReplaced := strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(17000+portRanged), -1)
-				strReplaced = strings.Replace(str, "{{{NGINX_UNSECURE_PORT}}}", strconv.Itoa(17000+portRanged), -1)
-				strReplaced = strings.Replace(str, "{{{NGINX_SECURE_PORT}}}", strconv.Itoa(17000+portRanged), -1)
+				strReplaced = strings.Replace(strReplaced, "{{{NGINX_UNSECURE_PORT}}}", generalConfig["NGINX_UNSECURE_PORT"], -1)
+				strReplaced = strings.Replace(strReplaced, "{{{NGINX_SECURE_PORT}}}", generalConfig["NGINX_SECURE_PORT"], -1)
 				for i := 1; i < 20; i++ {
 					strReplaced = strings.Replace(strReplaced, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 				}
