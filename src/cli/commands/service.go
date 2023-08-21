@@ -9,11 +9,11 @@ func ServiceList() {
 }
 
 func ServiceEnable() {
-	service.ServiceEnable()
+	service.Enable()
 	Rebuild()
 }
 
 func ServiceDisable() {
-	service.ServiceDisable()
+	service.Disable()
 	Rebuild()
 }
