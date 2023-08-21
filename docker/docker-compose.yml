@@ -168,8 +168,6 @@ services:
       - "{{{NGINX_PROJECT_PORT+7}}}:80"
     profiles:
       - phpmyadmin2{{{PHPMYADMIN2_ENABLED}}}
-    depends_on:
-      - db
 
   kibana:
     platform: linux/x86_64
