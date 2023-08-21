@@ -50,6 +50,10 @@ func Down(withVolumes bool) {
 			"opensearchdashboardtrue",
 			"--profile",
 			"phpmyadmintrue",
+			"--profile",
+			"db2true",
+			"--profile",
+			"phpmyadmin2true",
 		}
 
 		profilesOn = append(profilesOn, "down")
@@ -96,6 +100,10 @@ func Start(withChown bool) {
 		"opensearchdashboardtrue",
 		"--profile",
 		"phpmyadmintrue",
+		"--profile",
+		"db2true",
+		"--profile",
+		"phpmyadmin2true",
 		"start",
 	}
 	cmd := exec.Command("docker", profilesOn...)
@@ -153,6 +161,10 @@ func Stop() {
 		"opensearchdashboardtrue",
 		"--profile",
 		"phpmyadmintrue",
+		"--profile",
+		"db2true",
+		"--profile",
+		"phpmyadmin2true",
 		"stop",
 	}
 	cmd := exec.Command("docker", profilesOn...)
@@ -287,6 +299,10 @@ func upProjectWithBuild(withChown bool) {
 		"opensearchdashboardtrue",
 		"--profile",
 		"phpmyadmintrue",
+		"--profile",
+		"db2true",
+		"--profile",
+		"phpmyadmin2true",
 		"up",
 		"--build",
 		"--force-recreate",
