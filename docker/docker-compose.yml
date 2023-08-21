@@ -58,6 +58,21 @@ services:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
 
+  db2:
+    command:
+      --default-authentication-plugin=mysql_native_password
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    ports:
+      - "{{{NGINX_PROJECT_PORT+6}}}:3306"
+    restart: on-failure:3
+    volumes:
+      - dbdata2:/var/lib/mysql
+      - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+    profiles:
+      - db2{{{DB2_ENABLED}}}
+
   elasticsearch:
     build:
       context: ctx
@@ -139,6 +154,21 @@ services:
     depends_on:
       - db
 
+  phpmyadmin2:
+    image: {{{PHPMYADMIN2_REPOSITORY}}}:{{{PHPMYADMIN2_VERSION}}}
+    environment:
+      PMA_HOST: "db"
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin2/"
+      PMA_USER: root
+      PMA_PASSWORD: {{{DB2_ROOT_PASSWORD}}}
+      UPLOAD_LIMIT: 2G
+    ports:
+      - "{{{NGINX_PROJECT_PORT+7}}}:80"
+    profiles:
+      - phpmyadmin2{{{PHPMYADMIN2_ENABLED}}}
+
   kibana:
     platform: linux/x86_64
     image: {{{KIBANA_REPOSITORY}}}:{{{ELASTICSEARCH_VERSION}}}
@@ -168,5 +198,6 @@ services:
 
 volumes:
   dbdata:
+  dbdata2:
   elasticsearch_vlm_{{{ELASTICSEARCH_VERSION}}}:
   opensearch_vlm_{{{OPENSEARCH_VERSION}}}:
