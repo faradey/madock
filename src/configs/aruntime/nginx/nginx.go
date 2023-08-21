@@ -71,6 +71,7 @@ func setPorts() {
 func makeProxy() {
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
 	portsConfig := configs.ParseFile(portsFile)
+	generalConfig := configs.GetGeneralConfig()
 	/* Create nginx default configuration for Magento2 */
 	nginxDefFile := ""
 	str := ""
@@ -97,6 +98,8 @@ func makeProxy() {
 				}
 				portRanged := (port - 1) * 20
 				strReplaced := strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(17000+portRanged), -1)
+				strReplaced = strings.Replace(str, "{{{NGINX_UNSECURE_PORT}}}", strconv.Itoa(17000+portRanged), -1)
+				strReplaced = strings.Replace(str, "{{{NGINX_SECURE_PORT}}}", strconv.Itoa(17000+portRanged), -1)
 				for i := 1; i < 20; i++ {
 					strReplaced = strings.Replace(strReplaced, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 				}
@@ -125,7 +128,7 @@ func makeProxy() {
 		}
 	}
 
-	allFileData += "\nserver {\n    listen       80  default_server;\n listen 443 default_server ssl;\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
+	allFileData += "\nserver {\n    listen       " + generalConfig["NGINX_UNSECURE_PORT"] + "  default_server;\n listen " + generalConfig["NGINX_SECURE_PORT"] + " default_server ssl;\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
 	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
 	err := os.WriteFile(nginxFile, []byte(allFileData), 0755)
