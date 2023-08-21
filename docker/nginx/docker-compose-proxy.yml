@@ -9,7 +9,7 @@ services:
       - ./ctx/:/sslcert/:delegated
     ports:
       - {{{INTERFACE_IP}}}{{{NGINX_UNSECURE_PORT}}}:80
-      - {{{INTERFACE_IP}}}{{{NGINX_SECURE_PORT}}}443:443
+      - {{{INTERFACE_IP}}}{{{NGINX_SECURE_PORT}}}:443
       - {{{INTERFACE_IP}}}35729:35729
     extra_hosts:
       - "host.docker.internal:host-gateway"
