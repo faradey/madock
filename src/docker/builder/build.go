@@ -200,7 +200,7 @@ func UpNginxWithBuild() {
 			doNeedRunAruntime = false
 		}
 	}
-	if err != nil || dirHash != projectConf["CACHE_HASH"] || doNeedRunAruntime {
+	if (err != nil || dirHash != projectConf["CACHE_HASH"] || doNeedRunAruntime) && projectConf["PROXY_ENABLED"] == "true" {
 		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 		nginx.GenerateSslCert(ctxPath, false)
 		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
