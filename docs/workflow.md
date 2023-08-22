@@ -226,11 +226,13 @@ This command shows you the following items:
 * `service:enable`   Enable the service. For example: `madock service:enable phpmyadmin`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[service name]`  Service name
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--global`  Enable the service globally
 
 
 * `service:disable`   Disable the service. For example: `madock service:disable phpmyadmin` 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[service name]`  Service name
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--global`  Disable the service globally
                         
 
 * `setup`   Initial the project setup
