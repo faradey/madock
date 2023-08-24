@@ -6,13 +6,13 @@ services:
       dockerfile: php.Dockerfile
     volumes: &appvolumes
       - ./src:/var/www/html:cached
-      - ./composer:/var/www/composer:cached
+      - ./composer:/var/www/.composer:cached
       - ./ssh/id_rsa:/var/www/.ssh/id_rsa:ro
       - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:cached
       - ./ctx/scripts/:/var/www/scripts/:cached
     environment:
-    - COMPOSER_HOME=/var/www/composer
+    - COMPOSER_HOME=/var/www/.composer
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
