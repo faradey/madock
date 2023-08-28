@@ -36,6 +36,10 @@ func StartMagento2(withChown bool, projectConfig map[string]string) {
 		"opensearchdashboardtrue",
 		"--profile",
 		"phpmyadmintrue",
+		"--profile",
+		"db2true",
+		"--profile",
+		"phpmyadmin2true",
 		"start",
 	}
 	cmd := exec.Command("docker", profilesOn...)
@@ -90,6 +94,10 @@ func StopMagento2() {
 		"opensearchdashboardtrue",
 		"--profile",
 		"phpmyadmintrue",
+		"--profile",
+		"db2true",
+		"--profile",
+		"phpmyadmin2true",
 		"stop",
 	}
 	cmd := exec.Command("docker", profilesOn...)

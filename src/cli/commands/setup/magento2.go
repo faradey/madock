@@ -55,15 +55,15 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 	builder.StartMagento2(attr.Options.WithChown, projectConfig)
 
 	if attr.Options.Download {
-		downloadMagento(projectName, mageVersion)
+		DownloadMagento(projectName, mageVersion)
 	}
 
 	if attr.Options.Install {
-		installMagento(projectName, toolsDefVersions.Magento)
+		InstallMagento(projectName, toolsDefVersions.Magento)
 	}
 }
 
-func downloadMagento(projectName, mageVersion string) {
+func DownloadMagento(projectName, mageVersion string) {
 	fmt.Println("")
 	fmtc.TitleLn("Specify Magento version: ")
 	fmt.Println("1) Community (default)")
@@ -82,6 +82,6 @@ func downloadMagento(projectName, mageVersion string) {
 	builder.DownloadMagento(projectName, edition, mageVersion)
 }
 
-func installMagento(projectName, magentoVer string) {
+func InstallMagento(projectName, magentoVer string) {
 	builder.InstallMagento(projectName, magentoVer)
 }
