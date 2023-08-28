@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/versions/magento2"
 	"strings"
 
 	"github.com/faradey/madock/src/cli/attr"
@@ -192,4 +193,9 @@ func IsNotDefine() {
 
 func Ssl() {
 	builder.SslRebuild()
+}
+
+func InstallMagento() {
+	toolsDefVersions := magento2.GetVersions("")
+	builder.InstallMagento(configs.GetProjectName(), toolsDefVersions.Magento)
 }
