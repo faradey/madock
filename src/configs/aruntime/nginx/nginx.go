@@ -85,7 +85,7 @@ func makeProxy() {
 	for _, name := range projectsNames {
 		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
 			if _, err = os.Stat(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped"); os.IsNotExist(err) {
-				nginxDefFile = project.GetDockerConfigFile(name, "/docker/general/nginx/conf/default-proxy.conf")
+				nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
 				b, err := os.ReadFile(nginxDefFile)
 				if err != nil {
 					log.Fatal(err)
