@@ -26,7 +26,6 @@ try {
     $result = $stmt->setFetchMode(PDO::FETCH_ASSOC);
     $data = $stmt->fetchAll();
     $prefixes = [];
-    $domainValues = ["hosts" => []];
     if(!empty($data)){
         $prefix = str_replace("core_config_data", "", $data[0]["table_name"]);
         if(empty($prefixes[$prefix])){
@@ -96,54 +95,64 @@ try {
 
         $stmt = $conn->prepare("SELECT * FROM ".$tablePrefix."core_config_data WHERE 
         path = 'web/unsecure/base_url'
-         OR path = 'web/secure/base_url'
-         OR path = 'web/secure/base_static_url'
          OR path = 'web/unsecure/base_static_url'
-         OR path = 'web/secure/base_media_url'
          OR path = 'web/unsecure/base_media_url'
-         OR path = 'web/secure/base_link_url'
          OR path = 'web/unsecure/base_link_url'
         ;");
+        $stmt2 = $conn->prepare("SELECT * FROM ".$tablePrefix."core_config_data WHERE
+                path = 'web/secure/base_url'
+                 OR path = 'web/secure/base_static_url'
+                 OR path = 'web/secure/base_media_url'
+                 OR path = 'web/secure/base_link_url'
+                ;");
         $stmt->execute();
-        $data = $stmt->fetchAll();
+        $stmt2->execute();
+        $datas[0] = $stmt->fetchAll();
+        $datas[1] = $stmt2->fetchAll();
         $hosts = [];
         $domains = [];
 
-        foreach ($data as $k => $v){
-            if(!empty($v['value'])){
-                $val = preg_replace("/^(.+?)\.[^\.]+$/i", "$1".$projectConfig["DEFAULT_HOST_FIRST_LEVEL"], $v['value'])."/";
-                if(in_array($val, $domainValues["hosts"])) {
-                    $val = trim($v['value'], "/").$projectConfig["DEFAULT_HOST_FIRST_LEVEL"]."/";
-                } else {
-                    $domainValues["hosts"][] = $val;
-                }
+        foreach ($datas as $data){
+            $domainValues = ["hosts" => []];
+            foreach ($data as $k => $v){
+                if(!empty($v['value'])){
+                    $tempPath = implode("_", array_slice(explode("/", $v['path']), 0, 2));
+                    $urlType = array_slice(explode("/", $v['path']), 2, 1);
+                    $val = trim(preg_replace("/^(.+?)\.[^\.]+?(|\/.+)$/i", "$1".$projectConfig["DEFAULT_HOST_FIRST_LEVEL"]."$2", $v['value']), "/")."/";
+                    if(in_array($val, $domainValues["hosts"])) {
+                        $val = trim($v['value'], "/").$projectConfig["DEFAULT_HOST_FIRST_LEVEL"]."/";
+                    } else {
+                        $domainValues["hosts"][] = $val;
+                    }
+                    if(empty($domainValues[$v['scope'].$v['scope_id'].$tempPath])) {
+                        $domainValues[$v['scope'].$v['scope_id'].$tempPath] = $val;
+                    }
 
-                if(empty($domainValues[$v['scope'].$v['scope_id']])){
-                    $domainValues[$v['scope'].$v['scope_id']] = $val;
+                    $val = $domainValues[$v['scope'].$v['scope_id'].$tempPath];
+                    if($urlType[0] != "base_url"){
+                        $val = "";
+                    }
+                    $domain = "";
+                    $scopeId = $v['scope_id'];
+                    if($v['scope'] == "default") {
+                        setUrls($domain, $val, $v["path"], "default", null, $env, $hosts, $domains, $defaultHost, $defaultWebsiteCode);
+                        $env["system"]["default"]["web"]["secure"]["use_in_frontend"] = 1;
+                        $env["system"]["default"]["web"]["secure"]["use_in_adminhtml"] = 1;
+                    } elseif($v['scope'] == "websites") {
+                        $scopeCode = $storeWebsites[$scopeId];
+                        if(!$scopeCode){continue;}
+                        setUrls($domain, $val, $v["path"], "websites", $scopeCode, $env, $hosts, $domains, $defaultHost, $defaultWebsiteCode);
+                        $env["system"]["websites"][$scopeCode]["web"]["secure"]["use_in_frontend"] = 1;
+                        $env["system"]["websites"][$scopeCode]["web"]["secure"]["use_in_adminhtml"] = 1;
+                    } elseif($v['scope'] == "stores") {
+                        $scopeCode = $stores[$scopeId]??null;
+                        if(!$scopeCode){continue;}
+                        setUrls($domain, $val, $v["path"], "stores", $scopeCode, $env, $hosts, $domains, $defaultHost, $defaultWebsiteCode);
+                        $env["system"]["stores"][$scopeCode]["web"]["secure"]["use_in_frontend"] = 1;
+                        $env["system"]["stores"][$scopeCode]["web"]["secure"]["use_in_adminhtml"] = 1;
+                    }
+                    $env["downloadable_domains"][] = $domain;
                 }
-
-                $val = $domainValues[$v['scope'].$v['scope_id']];
-                
-                $domain = "";
-                $scopeId = $v['scope_id'];
-                if($v['scope'] == "default"){
-                    setUrls($domain, $val, $v["path"], "default", null, $env, $hosts, $domains, $defaultHost, $defaultWebsiteCode);
-                    $env["system"]["default"]["web"]["secure"]["use_in_frontend"] = 1;
-                    $env["system"]["default"]["web"]["secure"]["use_in_adminhtml"] = 1;
-                } elseif($v['scope'] == "websites"){
-                    $scopeCode = $storeWebsites[$scopeId];
-                    if(!$scopeCode){continue;}
-                    setUrls($domain, $val, $v["path"], "websites", $scopeCode, $env, $hosts, $domains, $defaultHost, $defaultWebsiteCode);
-                    $env["system"]["websites"][$scopeCode]["web"]["secure"]["use_in_frontend"] = 1;
-                    $env["system"]["websites"][$scopeCode]["web"]["secure"]["use_in_adminhtml"] = 1;
-                } elseif($v['scope'] == "stores"){
-                    $scopeCode = $stores[$scopeId]??null;
-                    if(!$scopeCode){continue;}
-                    setUrls($domain, $val, $v["path"], "stores", $scopeCode, $env, $hosts, $domains, $defaultHost, $defaultWebsiteCode);
-                    $env["system"]["stores"][$scopeCode]["web"]["secure"]["use_in_frontend"] = 1;
-                    $env["system"]["stores"][$scopeCode]["web"]["secure"]["use_in_adminhtml"] = 1;
-                }
-                $env["downloadable_domains"][] = $domain;
             }
         }
 
@@ -233,10 +242,15 @@ try {
 
   function setUrls(&$domain, $val, $path, $scope, $scopeCode, &$env, &$hosts, &$domains, $defaultHost, $defaultWebsiteCode) {
     $types = ['base_url', 'base_static_url', 'base_media_url', 'base_link_url'];
-    
+    $typesPaths = ['base_static_url' => "/static/", 'base_media_url' => "/media/", 'base_link_url' => ""];
+
     foreach($types as $type) {
         if($path == "web/unsecure/".$type) {
             if($scope == "default") {
+                if(empty($val)){
+                    $env["system"][$scope]["web"]["unsecure"][$type] = '{{unsecure_base_url}}'.$typesPaths[$type];
+                    continue;
+                }
                 if(!empty($defaultHost)){
                     $val = "https://".$defaultHost."/";
                 }
@@ -245,6 +259,10 @@ try {
                 }
                 $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope]["web"]["unsecure"][$type]), "/"));
             } else {
+                if(empty($val)){
+                    $env["system"][$scope][$scopeCode]["web"]["unsecure"][$type] = '{{unsecure_base_url}}'.$typesPaths[$type];
+                    continue;
+                }
                 if($scope == "websites" && $defaultWebsiteCode == $scopeCode && !empty($defaultHost)){
                     $val = "https://".$defaultHost."/";
                 }
@@ -255,6 +273,10 @@ try {
             }
         } elseif($path == "web/secure/".$type) {
             if($scope == "default") {
+                if(empty($val)){
+                    $env["system"][$scope]["web"]["secure"][$type] = '{{secure_base_url}}'.$typesPaths[$type];
+                    continue;
+                }
                 if(!empty($defaultHost)){
                     $val = "https://".$defaultHost."/";
                 }
@@ -263,18 +285,22 @@ try {
                 }
                 $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope]["web"]["unsecure"][$type]), "/"));
             } else {
+                if(empty($val)){
+                    $env["system"][$scope][$scopeCode]["web"]["secure"][$type] = '{{secure_base_url}}'.$typesPaths[$type];
+                    continue;
+                }
                 if($scope == "websites" && $defaultWebsiteCode == $scopeCode && !empty($defaultHost)){
                     $val = "https://".$defaultHost."/";
                 }
                 if(empty($env["system"][$scope][$scopeCode]["web"]["secure"][$type])){
                     $env["system"][$scope][$scopeCode]["web"]["secure"][$type] = $val;
                 }
-                $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope][$scopeCode]["web"]["unsecure"][$type]), "/"));
+                $domain = str_replace(["https://", "http://"], "", trim(strtolower($env["system"][$scope][$scopeCode]["web"]["secure"][$type]), "/"));
             }
         }
     }
 
-    if($scope != "stores"){
+    if($scope != "stores" && !empty($domain)){
         $hosts[] = $domain.":".($scopeCode??$defaultWebsiteCode);
         $domains[] = $domain;
     }

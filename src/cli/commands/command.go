@@ -32,20 +32,25 @@ func RemoteSyncFile() {
 
 func Proxy(flag string) {
 	if !configs.IsHasNotConfig() {
-		if flag == "prune" {
-			builder.DownNginx()
-		} else if flag == "stop" {
-			builder.StopNginx()
-		} else if flag == "restart" {
-			builder.StopNginx()
-			builder.UpNginx()
-		} else if flag == "start" {
-			builder.UpNginx()
-		} else if flag == "rebuild" {
-			builder.DownNginx()
-			builder.UpNginx()
+		projectConfig := configs.GetCurrentProjectConfig()
+		if projectConfig["PROXY_ENABLED"] == "true" {
+			if flag == "prune" {
+				builder.DownNginx()
+			} else if flag == "stop" {
+				builder.StopNginx()
+			} else if flag == "restart" {
+				builder.StopNginx()
+				builder.UpNginx()
+			} else if flag == "start" {
+				builder.UpNginx()
+			} else if flag == "rebuild" {
+				builder.DownNginx()
+				builder.UpNginx()
+			}
+			fmtc.SuccessLn("Done")
+		} else {
+			fmtc.WarningLn("Proxy service is disabled. Run 'madock service:enable proxy' to enable it")
 		}
-		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")
 		fmtc.ToDoLn("Run madock setup")
@@ -101,9 +106,21 @@ func DebugEnable() {
 	builder.UpWithBuild()
 }
 
+func DebugProfileEnable() {
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
+	configs.SetParam(configPath, "XDEBUG_MODE", "profile")
+	builder.UpWithBuild()
+}
+
 func DebugDisable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_ENABLED", "false")
+	builder.UpWithBuild()
+}
+
+func DebugProfileDisable() {
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
+	configs.SetParam(configPath, "XDEBUG_MODE", "debug")
 	builder.UpWithBuild()
 }
 
@@ -151,6 +168,10 @@ func ShowEnv() {
 	for _, ln := range lines {
 		fmt.Println(ln)
 	}
+}
+
+func N98(flag string) {
+	builder.N98(flag)
 }
 
 func Node(flag string) {

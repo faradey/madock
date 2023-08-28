@@ -23,6 +23,10 @@ func DbImport() {
 	if attr.Options.Force {
 		option = "-f"
 	}
+	dbServiceName := "db"
+	if attr.Options.DBServiceName != "" {
+		dbServiceName = attr.Options.DBServiceName
+	}
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
 
@@ -74,13 +78,14 @@ func DbImport() {
 	}
 	defer selectedFile.Close()
 
+	containerName := strings.ToLower(projectName) + "-" + dbServiceName + "-1"
 	var cmd, cmdFKeys *exec.Cmd
-	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConfig["DB_DATABASE"])
+	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", containerName, "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", dbServiceName, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConfig["DB_DATABASE"])
 	cmdFKeys.Run()
 	if option != "" {
-		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
+		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", containerName, "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", dbServiceName, "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
 	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
+		cmd = exec.Command("docker", "exec", "-i", "-u", "mysql", containerName, "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", dbServiceName, "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
 	}
 
 	if ext == "gz" {
@@ -94,8 +99,9 @@ func DbImport() {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	fmt.Println("Restoring database...")
 	err = cmd.Run()
-	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", "db", "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConfig["DB_DATABASE"])
+	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", containerName, "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", dbServiceName, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConfig["DB_DATABASE"])
 	cmdFKeys.Run()
 	if err != nil {
 		log.Fatal(err)
@@ -110,6 +116,14 @@ func DbExport() {
 	if len(name) > 0 {
 		name += "_"
 	}
+
+	dbServiceName := "db"
+	if attr.Options.DBServiceName != "" {
+		dbServiceName = attr.Options.DBServiceName
+	}
+
+	containerName := strings.ToLower(projectName) + "-" + dbServiceName + "-1"
+
 	dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
 	selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
 	if err != nil {
@@ -118,7 +132,7 @@ func DbExport() {
 	defer selectedFile.Close()
 	writer := gzip.NewWriter(selectedFile)
 	defer writer.Close()
-	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", strings.ToLower(projectName)+"-db-1", "mysqldump", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-v", "-h", "db", projectConfig["DB_DATABASE"])
+	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", containerName, "bash", "-c", "mysqldump -u root -p"+projectConfig["DB_ROOT_PASSWORD"]+" -v -h "+dbServiceName+" "+projectConfig["DB_DATABASE"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = writer

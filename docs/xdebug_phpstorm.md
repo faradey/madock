@@ -23,7 +23,7 @@ madock debug:enable
 
    **NOTE**: Be sure to activate that only after setting the right debug port. Changes in Debug port are ignored once the listener has started.
 
-	
+4. If you are using profiling, you can find the profile files in the <project>/var folder
 	
 	
 	

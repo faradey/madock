@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/faradey/madock/src/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper"
 	"log"
 	"os"
@@ -70,29 +71,35 @@ func setPorts() {
 func makeProxy() {
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
 	portsConfig := configs.ParseFile(portsFile)
+	generalConfig := configs.GetGeneralConfig()
 	/* Create nginx default configuration for Magento2 */
-	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/conf/default-proxy.conf"
+	nginxDefFile := ""
+	str := ""
 	allFileData := "worker_processes 2;\nworker_priority -10;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\n"
-	b, err := os.ReadFile(nginxDefFile)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	str := string(b)
 	var onlyHostsGlobal []string
-	projectsNames := paths.GetActiveProjects()
+	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 	if !helper.IsContain(projectsNames, configs.GetProjectName()) {
 		projectsNames = append(projectsNames, configs.GetProjectName())
 	}
 	for _, name := range projectsNames {
 		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
 			if _, err = os.Stat(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped"); os.IsNotExist(err) {
+				nginxDefFile = project.GetDockerConfigFile(name, "/docker/general/nginx/conf/default-proxy.conf")
+				b, err := os.ReadFile(nginxDefFile)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				str = string(b)
 				port, err := strconv.Atoi(portsConfig[name])
 				if err != nil {
 					log.Fatal(err)
 				}
 				portRanged := (port - 1) * 20
 				strReplaced := strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(17000+portRanged), -1)
+				strReplaced = strings.Replace(strReplaced, "{{{NGINX_UNSECURE_PORT}}}", generalConfig["NGINX_UNSECURE_PORT"], -1)
+				strReplaced = strings.Replace(strReplaced, "{{{NGINX_SECURE_PORT}}}", generalConfig["NGINX_SECURE_PORT"], -1)
 				for i := 1; i < 20; i++ {
 					strReplaced = strings.Replace(strReplaced, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 				}
@@ -120,10 +127,11 @@ func makeProxy() {
 			}
 		}
 	}
-	allFileData += "\nserver {\n    listen       80  default_server;\n listen 443 default_server ssl;\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
+
+	allFileData += "\nserver {\n    listen       " + generalConfig["NGINX_UNSECURE_PORT"] + "  default_server;\n listen " + generalConfig["NGINX_SECURE_PORT"] + " default_server ssl;\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
 	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
-	err = os.WriteFile(nginxFile, []byte(allFileData), 0755)
+	err := os.WriteFile(nginxFile, []byte(allFileData), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -146,8 +154,6 @@ func makeDockerfile() {
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
-
-	GenerateSslCert(ctxPath, false)
 	/* END Create nginx Dockerfile configuration */
 }
 

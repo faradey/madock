@@ -62,7 +62,7 @@ func makeScriptsConf(projectName string) {
 }
 
 func makeKibanaConf(projectName string) {
-	file := getDockerConfigFile(projectName, "kibana/kibana.yml")
+	file := GetDockerConfigFile(projectName, "kibana/kibana.yml")
 
 	b, err := os.ReadFile(file)
 	if err != nil {
@@ -79,7 +79,7 @@ func makeKibanaConf(projectName string) {
 }
 
 func makeNginxDockerfile(projectName string) {
-	dockerDefFile := getDockerConfigFile(projectName, "nginx/Dockerfile")
+	dockerDefFile := GetDockerConfigFile(projectName, "nginx/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -97,7 +97,7 @@ func makeNginxDockerfile(projectName string) {
 
 func makeNginxConf(projectName string) {
 	projectConf := configs.GetCurrentProjectConfig()
-	defFile := getDockerConfigFile(projectName, "nginx/conf/default.conf")
+	defFile := GetDockerConfigFile(projectName, "nginx/conf/default.conf")
 
 	b, err := os.ReadFile(defFile)
 	if err != nil {
@@ -140,7 +140,7 @@ func makeNginxConf(projectName string) {
 }
 
 func makePhpDockerfile(projectName string) {
-	dockerDefFile := getDockerConfigFile(projectName, "php/Dockerfile")
+	dockerDefFile := GetDockerConfigFile(projectName, "php/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -155,7 +155,7 @@ func makePhpDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	dockerDefFile = getDockerConfigFile(projectName, "php/DockerfileWithoutXdebug")
+	dockerDefFile = GetDockerConfigFile(projectName, "php/DockerfileWithoutXdebug")
 
 	b, err = os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -175,8 +175,8 @@ func makeDockerCompose(projectName string) {
 	overrideFile := runtime.GOOS
 	projectConf := configs.GetCurrentProjectConfig()
 
-	dockerDefFile := getDockerConfigFile(projectName, "docker-compose.yml")
-	dockerDefFileForOS := getDockerConfigFile(projectName, "docker-compose."+overrideFile+".yml")
+	dockerDefFile := GetDockerConfigFile(projectName, "docker-compose.yml")
+	dockerDefFileForOS := GetDockerConfigFile(projectName, "docker-compose."+overrideFile+".yml")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -252,7 +252,7 @@ func makeDockerCompose(projectName string) {
 }
 
 func makeDBDockerfile(projectName string) {
-	dockerDefFile := getDockerConfigFile(projectName, "/db/Dockerfile")
+	dockerDefFile := GetDockerConfigFile(projectName, "/db/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -267,7 +267,7 @@ func makeDBDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	myCnfFile := getDockerConfigFile(projectName, "db/my.cnf")
+	myCnfFile := GetDockerConfigFile(projectName, "db/my.cnf")
 	if _, err := os.Stat(myCnfFile); os.IsNotExist(err) {
 		log.Fatal(err)
 	}
@@ -288,7 +288,7 @@ func makeDBDockerfile(projectName string) {
 }
 
 func makeElasticDockerfile(projectName string) {
-	dockerDefFile := getDockerConfigFile(projectName, "elasticsearch/Dockerfile")
+	dockerDefFile := GetDockerConfigFile(projectName, "elasticsearch/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -305,7 +305,7 @@ func makeElasticDockerfile(projectName string) {
 }
 
 func makeOpenSearchDockerfile(projectName string) {
-	dockerDefFile := getDockerConfigFile(projectName, "opensearch/Dockerfile")
+	dockerDefFile := GetDockerConfigFile(projectName, "opensearch/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -322,7 +322,7 @@ func makeOpenSearchDockerfile(projectName string) {
 }
 
 func makeRedisDockerfile(projectName string) {
-	dockerDefFile := getDockerConfigFile(projectName, "redis/Dockerfile")
+	dockerDefFile := GetDockerConfigFile(projectName, "redis/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -339,7 +339,7 @@ func makeRedisDockerfile(projectName string) {
 }
 
 func makeNodeJsDockerfile(projectName string) {
-	dockerDefFile := getDockerConfigFile(projectName, "nodejs/Dockerfile")
+	dockerDefFile := GetDockerConfigFile(projectName, "nodejs/Dockerfile")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -355,7 +355,7 @@ func makeNodeJsDockerfile(projectName string) {
 	}
 }
 
-func getDockerConfigFile(projectName, path string) string {
+func GetDockerConfigFile(projectName, path string) string {
 	projectConf := configs.GetCurrentProjectConfig()
 	dockerDefFile := paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + strings.Trim(path, "/")
 	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {

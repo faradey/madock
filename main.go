@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 var appVersion string = "1.8.0"
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	if len(os.Args) > 1 {
 		migration.Apply(appVersion)
 		command := strings.ToLower(os.Args[1])
@@ -49,14 +51,22 @@ func main() {
 			commands.DebugEnable()
 		case "debug:disable":
 			commands.DebugDisable()
+		case "debug:profile:enable":
+			commands.DebugProfileEnable()
+		case "debug:profile:disable":
+			commands.DebugProfileDisable()
 		case "info":
 			commands.Info()
+		case "install":
+			commands.InstallMagento()
 		case "help":
 			helper.Help()
 		case "logs":
 			commands.Logs()
 		case "magento", "m":
 			commands.Magento(strings.Join(os.Args[2:], " "))
+		case "n98":
+			commands.N98(strings.Join(os.Args[2:], " "))
 		case "node":
 			commands.Node(strings.Join(os.Args[2:], " "))
 		case "patch:create":

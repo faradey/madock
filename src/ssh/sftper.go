@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/configs"
@@ -16,7 +18,6 @@ import (
 	"github.com/pkg/sftp"
 )
 
-var countGoroutine int
 var sc []*sftp.Client
 
 func SyncMedia(remoteDir string) {
@@ -44,9 +45,12 @@ func SyncMedia(remoteDir string) {
 	}
 
 	fmt.Println("\n" + "Synchronization is started")
-	countGoroutine = 0
-	ch := make(chan bool, 150)
-	listFiles(ch, remoteDir+"/pub/media/", "", 0)
+	ch := make(chan bool, 15)
+	var chDownload sync.WaitGroup
+	go listFiles(&chDownload, ch, remoteDir+"/pub/media/", "", 0)
+	time.Sleep(3 * time.Second)
+	chDownload.Wait()
+	fmt.Println("\n" + "Synchronization is completed")
 }
 
 func SyncFile(remoteDir string) {
@@ -72,8 +76,9 @@ func SyncFile(remoteDir string) {
 	downloadFile(sc, strings.TrimRight(remoteDir, "/")+"/"+path, strings.TrimRight(paths.GetRunDirPath(), "/")+"/"+path)
 }
 
-func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) {
-	remainder := countGoroutine % len(sc)
+func listFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir string, indx int) (err error) {
+	chDownload.Add(1)
+	remainder := indx % len(sc)
 	scp := sc[remainder]
 	projectPath := paths.GetRunDirPath()
 	files, err := scp.ReadDir(remoteDir + subdir)
@@ -81,8 +86,6 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 		log.Fatal(err)
 	}
 
-	countDownload := 0
-	chDownload := make(chan bool, 150)
 	var name string
 	for indx, f := range files {
 		name = f.Name()
@@ -94,65 +97,30 @@ func listFiles(ch chan bool, remoteDir, subdir string, isFirst int) (err error) 
 				subdirName != "sitemap" &&
 				subdirName != "tmp" &&
 				subdirName != "trashcan" &&
+				subdirName != "import" &&
 				!strings.Contains(subdirName+"/", "/cache/") &&
 				!strings.Contains(subdirName, ".thumb") {
 				if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
 					os.Mkdir(projectPath+"/pub/media/"+subdirName, 0775)
 				}
-
-				if countGoroutine <= 5 || isFirst == 0 {
-					countGoroutine++
-					go listFiles(ch, remoteDir, subdirName+"/", isFirst+1)
-				} else {
-					countGoroutine++
-					listFiles(ch, remoteDir, subdirName+"/", isFirst+1)
-				}
+				go listFiles(chDownload, ch, remoteDir, subdirName+"/", indx)
 			}
 		} else if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
 			ext := strings.ToLower(filepath.Ext(name))
 			if !attr.Options.ImagesOnly || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
 				remainderDownload := indx % len(sc)
 				scpDownload := sc[remainderDownload]
-				countDownload++
-				countGoroutine++
+				chDownload.Add(1)
+				ch <- true
 				go func() {
 					downloadFile(scpDownload, remoteDir+subdirName, projectPath+"/pub/media/"+subdirName)
-					ch <- true
-					chDownload <- true
+					chDownload.Done()
+					<-ch
 				}()
-
-				if countDownload > 3 {
-					loopinfor := true
-					for loopinfor {
-						select {
-						case _ = <-chDownload:
-							countDownload--
-							if 4 > countDownload {
-								loopinfor = false
-							}
-						}
-					}
-				}
 			}
 		}
 	}
-
-	if isFirst == 0 {
-		loop := true
-		for loop {
-			select {
-			case _ = <-ch:
-				countGoroutine--
-				if 0 >= countGoroutine {
-					loop = false
-				}
-			}
-		}
-		fmt.Println("\n" + "Synchronization is completed")
-	} else {
-		ch <- true
-	}
-
+	chDownload.Done()
 	return
 }
 

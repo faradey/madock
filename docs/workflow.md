@@ -84,13 +84,13 @@ This command shows you the following items:
 * `c:f`  Cleaning up static and generated files
 
 
-* `cli`  Execute any commands inside php container. If you want to run several commands you can cover them in the quotes
+* `cli`  Execute any commands inside php container. If you want to run several commands you can cover them in the quotes. For example: `madock cli "php bin/magento setup:upgrade && php bin/magento setup:di:compile"`
 
 
 * `cloud`  Executing commands to work with Magento Cloud. Also, can be used the long command: magento-cloud)
 
 
-* `composer`  Execute composer inside php container
+* `composer`  Execute composer inside php container. For example: `madock composer install`
             
             
 * `compress`  Compress a project to archive
@@ -99,7 +99,7 @@ This command shows you the following items:
 * `config:list`  List all project environment settings
 
 
-* `config:set`  Set a new value for parameter
+* `config:set`  Set a new value for parameter. For example: `madock config:set --name=HOSTS --value="website1.test:base website2.test:websitecode"`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name`     Parameter name
 
@@ -116,39 +116,56 @@ This command shows you the following items:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`-f`  Forse mode
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service-name`  DB container name. Optional. Default container: db. Example: db2
 
-* `db:export`      Export database
+
+* `db:export`      Export database. For example: `madock db:export --name=fromdevsite`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name`  Name of the DB export file
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service-name`  DB container name. Optional. Default container: db. Example: db2
+
 
 * `db:info`      Information about credentials and remote host and port
-                     
+ 
    
 * `debug:enable`   Enable xdebug
 
 
 * `debug:disable`   Disable xdebug
                      
+
+* `debug:profile:enable`   Enable xdebug profiling
+
+
+* `debug:profile:disable`   Disable xdebug profiling
+                     
    
 * `info`   Show information about third-parties modules (name, current version, latest version, status)             
+    
+    
+* `install`   Install Magento. It is a synonym for `madock magento setup:install` with additional actions.            
     
     
 * `help`    Displays help for commands
                       
   
-* `logs`    View logs of the container
+* `logs`    View logs of the container. For example: `madock logs php`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[name of container]`     Container name. Optional. Default container: php. Example: php
                         
 
-* `magento` or `m` Execute Magento command inside php container.
+* `magento` or `m`   Execute Magento command inside php container. For example: `madock m setup:upgrade`
                         
 
-* `node`    Execute NodeJs command inside php container
+* `n98`   Execute n98 command inside php container. For example: `madock n98 sys:info`
+                        
                         
 
-* `patch:create`   Create patch. The patch can be used with the composer plugin cweagans/composer-patches
+* `node`    Execute NodeJs command inside php container. For example: `madock node grunt exec:<theme>`
+                        
+
+* `patch:create`   Create patch. The patch can be used with the composer plugin cweagans/composer-patches. For example: `madock patch:create --file=vendor/magento/module-analytics/Cron/CollectData.php --name=collect-data-cron.patch --title="Collect data cron patch" --force`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--file`     Path of changed file. For example: vendor/magento/module-analytics/Cron/CollectData.php
 
@@ -176,7 +193,7 @@ This command shows you the following items:
 * `proxy:prune`   Prune a proxy server
                         
 
-* `prune`   Stop and delete running project containers
+* `prune`   Stop and delete running project containers. For example: `madock prune --with-volumes`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--with-volumes`   Remove volumes, too
                         
@@ -184,18 +201,18 @@ This command shows you the following items:
 * `rebuild` Recreation of all containers in the project. All containers are re-created and the images from the Dockerfile are rebuilt
                         
 
-* `remote:sync:media`  Synchronization media files from remote host
+* `remote:sync:media`  Synchronization media files from remote host. For example: `madock remote:sync:media --images-only --compress`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--images-only`   Synchronization images only
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--compress`      Apply lossy compression. Images will have weight equals 30% of original
 
-* `remote:sync:db`  Create and download dump of DB from remote host
+* `remote:sync:db`  Create and download dump of DB from remote host. For example: `madock remote:sync:db --name=local`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name`  Name of the DB export file
 
 
-* `remote:sync:file`  Create and download dump of DB from remote host 
+* `remote:sync:file`  Create and download dump of DB from remote host
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--path`   Path to file on server (from Magento root)
                         
@@ -206,14 +223,16 @@ This command shows you the following items:
 * `service:list`   Show all services
 
 
-* `service:enable`   Enable the service
+* `service:enable`   Enable the service. For example: `madock service:enable phpmyadmin`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[service name]`  Service name
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--global`  Enable the service globally
 
 
-* `service:disable`   Disable the service  
+* `service:disable`   Disable the service. For example: `madock service:disable phpmyadmin` 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[service name]`  Service name
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--global`  Disable the service globally
                         
 
 * `setup`   Initial the project setup

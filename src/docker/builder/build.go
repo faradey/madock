@@ -2,30 +2,25 @@ package builder
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"os/exec"
-	"os/user"
-	"strings"
-
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/configs/aruntime/project"
+	"github.com/faradey/madock/src/helper"
 	"github.com/faradey/madock/src/paths"
+	"github.com/gosimple/hashdir"
+	"log"
+	"os"
+	"os/exec"
+	"os/user"
+	"strings"
 )
 
 func UpWithBuild() {
 	DownNginx()
 	UpNginx()
 	upProjectWithBuild(attr.Options.WithChown)
-}
-
-func PrepareConfigs() {
-	projectName := configs.GetProjectName()
-	nginx.MakeConf()
-	project.MakeConf(projectName)
 }
 
 func Down(withVolumes bool) {
@@ -53,6 +48,10 @@ func Down(withVolumes bool) {
 			"opensearchdashboardtrue",
 			"--profile",
 			"phpmyadmintrue",
+			"--profile",
+			"db2true",
+			"--profile",
+			"phpmyadmin2true",
 		}
 
 		profilesOn = append(profilesOn, "down")
@@ -74,25 +73,42 @@ func Down(withVolumes bool) {
 }
 
 func UpNginx() {
-	/*PrepareConfigs()
-	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "-d")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {*/
 	UpNginxWithBuild()
-	/*}*/
 }
 
 func UpNginxWithBuild() {
-	PrepareConfigs()
-	dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
-	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
+	projectName := configs.GetProjectName()
+	nginx.MakeConf()
+	project.MakeConf(projectName)
+	projectConf := configs.GetCurrentProjectConfig()
+	dirHash, err := hashdir.Make(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx", "md5")
+	dockerComposeHash, err := helper.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "md5")
+	dockerComposeOverHash, err := helper.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.override.yml", "md5")
+	dirHash = dirHash + dockerComposeHash + dockerComposeOverHash
+	doNeedRunAruntime := true
+	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/docker-compose.yml"); !os.IsNotExist(err) {
+		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
+		result, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(result) > 100 {
+			doNeedRunAruntime = false
+		}
+	}
+	if (err != nil || dirHash != projectConf["CACHE_HASH"] || doNeedRunAruntime) && projectConf["PROXY_ENABLED"] == "true" {
+		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
+		nginx.GenerateSslCert(ctxPath, false)
+		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+		configs.SetParam(envFile, "CACHE_HASH", dirHash)
+		dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
+		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -177,6 +193,10 @@ func upProjectWithBuild(withChown bool) {
 		"opensearchdashboardtrue",
 		"--profile",
 		"phpmyadmintrue",
+		"--profile",
+		"db2true",
+		"--profile",
+		"phpmyadmin2true",
 		"up",
 		"--build",
 		"--force-recreate",
@@ -300,11 +320,12 @@ func DownloadMagento(projectName, edition, version string) {
 		"bash",
 		"-c",
 		"cd /var/www/html " +
-			"&& mkdir /var/www/html/download-magento " +
-			"&& composer create-project --repository-url=https://repo.magento.com/ magento/project-" + edition + "-edition:" + version + " ./download-magento " +
+			"&& rm -r -f /var/www/html/download-magento123456789 " +
+			"&& mkdir /var/www/html/download-magento123456789 " +
+			"&& composer create-project --repository-url=https://repo.magento.com/ magento/project-" + edition + "-edition:" + version + " ./download-magento123456789 " +
 			"&& shopt -s dotglob " +
-			"&& mv  -v ./download-magento/* ./ " +
-			"&& rmdir ./download-magento " +
+			"&& mv  -v ./download-magento123456789/* ./ " +
+			"&& rm -r -f ./download-magento123456789 " +
 			"&& composer install" + sampleData,
 	}
 	cmd := exec.Command("docker", command...)
@@ -345,11 +366,19 @@ func InstallMagento(projectName, magentoVer string) {
 				"--elasticsearch-index-prefix=magento2 " +
 				"--elasticsearch-timeout=15 "
 		} else if searchEngine == "OpenSearch" {
-			installCommand += "--search-engine=elasticsearch7 " +
-				"--elasticsearch-host=opensearch " +
-				"--elasticsearch-port=9200 " +
-				"--elasticsearch-index-prefix=magento2 " +
-				"--elasticsearch-timeout=15 "
+			if magentoVer >= "2.4.6" {
+				installCommand += "--search-engine=opensearch " +
+					"--opensearch-host=opensearch " +
+					"--opensearch-port=9200 " +
+					"--opensearch-index-prefix=magento2 " +
+					"--opensearch-timeout=15 "
+			} else {
+				installCommand += "--search-engine=elasticsearch7 " +
+					"--elasticsearch-host=opensearch " +
+					"--elasticsearch-port=9200 " +
+					"--elasticsearch-index-prefix=magento2 " +
+					"--elasticsearch-timeout=15 "
+			}
 		}
 
 		if magentoVer >= "2.4.6" {
@@ -358,6 +387,7 @@ func InstallMagento(projectName, magentoVer string) {
 		installCommand += "&& bin/magento module:disable Magento_TwoFactorAuth "
 	}
 	installCommand += " && bin/magento s:up && bin/magento c:c && bin/magento i:rei | bin/magento c:f"
+	fmt.Println(installCommand)
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && "+installCommand)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -418,6 +448,18 @@ func Bash(containerName string) {
 func CleanCache() {
 	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && rm -f pub/static/deployed_version.txt && rm -Rf pub/static/frontend && rm -Rf pub/static/adminhtml && rm -Rf var/view_preprocessed/pub && rm -Rf generated/code && php bin/magento c:f")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func N98(flag string) {
+	projectName := configs.GetProjectName()
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && /var/www/n98magerun/n98-magerun2.phar "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
