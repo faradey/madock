@@ -94,6 +94,7 @@ func makeProxy() {
 				str = string(b)
 				port, err := strconv.Atoi(portsConfig[name])
 				if err != nil {
+					fmt.Println("Project name is " + name)
 					log.Fatal(err)
 				}
 				portRanged := (port - 1) * 20

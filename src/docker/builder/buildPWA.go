@@ -33,8 +33,9 @@ func StartPWA(withChown bool) {
 		upProjectWithBuild(attr.Options.WithChown)
 	} else if withChown {
 		projectName := configs.GetProjectName()
+		projectConfig := configs.GetCurrentProjectConfig()
 		usr, _ := user.Current()
-		cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-nodejs-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" /var/www/html")
+		cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-nodejs-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConfig["WORKDIR"])
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
