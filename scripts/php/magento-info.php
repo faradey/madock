@@ -1,5 +1,5 @@
 <?php
-$siteRootPath = "/var/www/html";
+$siteRootPath = $argv[1];
 $configPath = $siteRootPath."/app/etc/config.php";
 $composerJson = $siteRootPath."/composer.json";
 $composerLock = $siteRootPath."/composer.lock";
