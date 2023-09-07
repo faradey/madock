@@ -21,7 +21,7 @@ func ProjectRemove() {
 		log.Fatalln(err)
 	}
 	result := strings.ToLower(strings.TrimSpace(string(sentence)))
-	if result == "y" {
+	if result == "y" && len(configs.GetProjectName()) > 0 {
 		builder.Down(true)
 		err := os.RemoveAll(paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/")
 		if err != nil {
