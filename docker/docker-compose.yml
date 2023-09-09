@@ -93,7 +93,6 @@ services:
       - "ES_JAVA_OPTS=-Xms800m -Xmx800m"
       - "cluster.routing.allocation.disk.threshold_enabled=false"
       - "index.blocks.read_only_allow_delete"
-    restart: on-failure:3
     volumes:
       - elasticsearch_vlm_{{{ELASTICSEARCH_VERSION}}}:/usr/share/elasticsearch/data
     profiles:
