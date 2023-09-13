@@ -23,6 +23,9 @@ RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     lsof \
     openssl \
     msmtp \
+    libssh2-1-dev \
+    libssh2-1 \
+    php-ssh2 \
     && locale-gen en_US.UTF-8 \
     && LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
 
