@@ -25,7 +25,6 @@ RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     msmtp \
     libssh2-1-dev \
     libssh2-1 \
-    php-ssh2 \
     && locale-gen en_US.UTF-8 \
     && LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
 
@@ -54,7 +53,8 @@ RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
     php{{{PHP_VERSION}}}-simplexml \
     php{{{PHP_VERSION}}}-sockets \
     php{{{PHP_VERSION}}}-tokenizer \
-    php{{{PHP_VERSION}}}-xmlwriter
+    php{{{PHP_VERSION}}}-xmlwriter \
+    php{{{PHP_VERSION}}}-ssh2
 
 RUN if [ "{{{PHP_VERSION}}}" < "8.0" ]; then apt-get install -y php{{{PHP_VERSION}}}-json; fi
 
