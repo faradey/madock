@@ -51,7 +51,12 @@ func DbDump(conn *ssh.Client, remoteDir, name string) {
 	fmt.Println("Dumping and downloading DB is started")
 	result := RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
 	nOpenBrace := strings.Index(result, "{")
-	result = result[nOpenBrace:]
+	if nOpenBrace != -1 {
+		result = result[nOpenBrace:]
+	} else {
+		fmt.Println(result)
+		log.Fatal("Failed to get database authentication data")
+	}
 	if len(result) > 2 {
 		dbAuthData := RemoteDbStruct{}
 		err := json.Unmarshal([]byte(result), &dbAuthData)
