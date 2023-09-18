@@ -124,6 +124,7 @@ RUN chown {{{UID}}}:{{{GUID}}} /var/www/scripts/php
 RUN chown {{{UID}}}:{{{GUID}}} /var/www/.composer
 RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
 RUN chown {{{UID}}}:{{{GUID}}} /var/www/n98magerun
+RUN mkdir -p /var/www/html/pub/media/catalog/product/cache && chown {{{UID}}}:{{{GUID}}} /var/www/html/pub/media/catalog/product/cache
 RUN if [ "{{{MAGENTOCLOUD_ENABLED}}}" = "true" ]; then chown {{{UID}}}:{{{GUID}}} /usr/bin/magento-cloud; fi
 RUN if [ "{{{N98MAGERUN_ENABLED}}}" = "true" ]; then cd /var/www/n98magerun && curl -sS -O https://files.magerun.net/n98-magerun2.phar && chown {{{UID}}}:{{{GUID}}} /var/www/n98magerun/n98-magerun2.phar && chmod +x /var/www/n98magerun/n98-magerun2.phar; fi
 WORKDIR {{{WORKDIR}}}

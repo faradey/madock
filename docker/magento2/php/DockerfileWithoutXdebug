@@ -59,5 +59,6 @@ RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
 WORKDIR {{{WORKDIR}}}
 RUN chown {{{UID}}}:{{{GUID}}} {{{WORKDIR}}}
+RUN mkdir -p /var/www/html/pub/media/catalog/product/cache && chown {{{UID}}}:{{{GUID}}} /var/www/html/pub/media/catalog/product/cache
 
 CMD "php-fpm{{{PHP_VERSION}}}"
