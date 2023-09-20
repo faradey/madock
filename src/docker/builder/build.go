@@ -225,7 +225,7 @@ func upProjectWithBuild(withChown bool) {
 
 	if withChown {
 		usr, _ := user.Current()
-		cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConfig["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/composer")
+		cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConfig["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
