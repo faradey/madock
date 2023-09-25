@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -116,6 +117,10 @@ func ReplaceConfigValue(str string) string {
 		log.Fatal(err)
 	}
 
+	r := regexp.MustCompile("(?ism)<<<iftrue>>>(.*)<<<endif>>>")
+	str = r.ReplaceAllString(str, "$1")
+	r = regexp.MustCompile("(?ism)<<<iffalse>>>.*<<<endif>>>")
+	str = r.ReplaceAllString(str, "")
 	return str
 }
 
