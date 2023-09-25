@@ -29,6 +29,8 @@ services:
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    profiles:
+      - xdebug{{{XDEBUG_ENABLED}}}
     depends_on:
       - php
 

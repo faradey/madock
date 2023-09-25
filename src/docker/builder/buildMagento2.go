@@ -40,6 +40,8 @@ func StartMagento2(withChown bool, projectConfig map[string]string) {
 		"db2true",
 		"--profile",
 		"phpmyadmin2true",
+		"--profile",
+		"xdebugtrue",
 		"start",
 	}
 	cmd := exec.Command("docker", profilesOn...)
@@ -98,6 +100,8 @@ func StopMagento2() {
 		"db2true",
 		"--profile",
 		"phpmyadmin2true",
+		"--profile",
+		"xdebugtrue",
 		"stop",
 	}
 	cmd := exec.Command("docker", profilesOn...)

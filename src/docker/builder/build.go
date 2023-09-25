@@ -52,6 +52,8 @@ func Down(withVolumes bool) {
 			"db2true",
 			"--profile",
 			"phpmyadmin2true",
+			"--profile",
+			"xdebugtrue",
 		}
 
 		profilesOn = append(profilesOn, "down")
@@ -197,6 +199,8 @@ func upProjectWithBuild(withChown bool) {
 		"db2true",
 		"--profile",
 		"phpmyadmin2true",
+		"--profile",
+		"xdebugtrue",
 		"up",
 		"--build",
 		"--force-recreate",
