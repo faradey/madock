@@ -104,25 +104,25 @@ func Uncompress() {
 func DebugEnable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_ENABLED", "true")
-	builder.UpWithBuild()
+	Rebuild()
 }
 
 func DebugProfileEnable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_MODE", "profile")
-	builder.UpWithBuild()
+	Rebuild()
 }
 
 func DebugDisable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_ENABLED", "false")
-	builder.UpWithBuild()
+	Rebuild()
 }
 
 func DebugProfileDisable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_MODE", "debug")
-	builder.UpWithBuild()
+	Rebuild()
 }
 
 func Info() {
