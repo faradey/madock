@@ -65,6 +65,10 @@ func main() {
 			commands.Logs()
 		case "magento", "m":
 			commands.Magento(strings.Join(os.Args[2:], " "))
+		case "mftf":
+			commands.Mftf(strings.Join(os.Args[2:], " "))
+		case "mftf:init":
+			commands.MftfInit()
 		case "n98":
 			commands.N98(strings.Join(os.Args[2:], " "))
 		case "node":

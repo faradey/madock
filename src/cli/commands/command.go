@@ -199,3 +199,11 @@ func InstallMagento() {
 	toolsDefVersions := magento2.GetVersions("")
 	builder.InstallMagento(configs.GetProjectName(), toolsDefVersions.Magento)
 }
+
+func MftfInit() {
+	builder.MftfInit()
+}
+
+func Mftf(flag string) {
+	builder.Mftf(flag)
+}
