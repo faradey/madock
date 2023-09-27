@@ -110,24 +110,29 @@ WORKDIR /var/www
 RUN if [ "{{{MAGENTOCLOUD_ENABLED}}}" = "true" ]; then curl -sS https://accounts.magento.cloud/cli/installer | php \
     && cp -r /root/.magento-cloud/ /var/www/ && chown -R {{{UID}}}:{{{GUID}}} /var/www/.magento-cloud && ln -s /var/www/.magento-cloud/bin/magento-cloud /usr/bin/magento-cloud; fi
 
-RUN apt-get install cron
-RUN mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/n98magerun/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
+RUN apt-get install cron \
+    && mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/n98magerun/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
 RUN if [ "{{{NODEJS_ENABLED}}}" = "true" ]; then mkdir /var/www/.npm && chown {{{UID}}}:{{{GUID}}} /var/www/.npm && apt install nodejs npm -y && apt install chromium-bsu -y && npm install -g grunt-cli && npm install -g bower && npm install -g livereload; fi
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
-
-RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
-RUN chown -R {{{UID}}}:{{{GUID}}} /var/www/.ssh
-RUN chown {{{UID}}}:{{{GUID}}} /var/www/patches
-RUN chown {{{UID}}}:{{{GUID}}} /var/www/scripts/php
-RUN chown {{{UID}}}:{{{GUID}}} /var/www/.composer
-RUN chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
-RUN chown {{{UID}}}:{{{GUID}}} /var/www/n98magerun
-RUN mkdir -p /var/www/html/pub/media/catalog/product/cache && chown {{{UID}}}:{{{GUID}}} /var/www/html/pub/media/catalog/product/cache
+RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data \
+    && chown -R {{{UID}}}:{{{GUID}}} /var/www/.ssh \
+    && chown {{{UID}}}:{{{GUID}}} /var/www/patches \
+    && chown {{{UID}}}:{{{GUID}}} /var/www/scripts/php \
+    && chown {{{UID}}}:{{{GUID}}} /var/www/.composer \
+    && chown {{{UID}}}:{{{GUID}}} /usr/bin/composer \
+    && chown {{{UID}}}:{{{GUID}}} /var/www/n98magerun \
+    && mkdir -p /var/www/html/pub/media/catalog/product/cache && chown {{{UID}}}:{{{GUID}}} /var/www/html/pub/media/catalog/product/cache
 RUN if [ "{{{MAGENTOCLOUD_ENABLED}}}" = "true" ]; then chown {{{UID}}}:{{{GUID}}} /usr/bin/magento-cloud; fi
 RUN if [ "{{{N98MAGERUN_ENABLED}}}" = "true" ]; then cd /var/www/n98magerun && curl -sS -O https://files.magerun.net/n98-magerun2.phar && chown {{{UID}}}:{{{GUID}}} /var/www/n98magerun/n98-magerun2.phar && chmod +x /var/www/n98magerun/n98-magerun2.phar; fi
 WORKDIR {{{WORKDIR}}}
+<<<if{{{MFTF_ENABLED}}}>>>
+RUN apt-get update && apt-get install -y default-jre default-jdk
+RUN apt-get install -y allure
+RUN curl -O http://selenium-release.storage.googleapis.com/3.14/selenium-server-standalone-3.14.0.jar
+RUN java -Dwebdriver.chrome.driver=chromedriver -jar selenium-server-standalone-3.14.0.jar
+<<<endif>>>
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
 EXPOSE 9001 9003 35729
 CMD "php-fpm{{{PHP_VERSION}}}"
