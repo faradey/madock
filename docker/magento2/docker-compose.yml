@@ -12,6 +12,7 @@ services:
       - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:cached
       - ./ctx/scripts/:/var/www/scripts/:cached
+      <<<if{{{MFTF_ENABLED}}}>>>- ./ctx/mftf/mftf_runner.sh:/var/www/mftf_runner.sh:cached<<<endif>>>
     environment:
     - COMPOSER_HOME=/var/www/.composer
     extra_hosts:

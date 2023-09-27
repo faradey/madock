@@ -370,3 +370,28 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 
 	return dockerDefFile
 }
+
+func processOtherCTXFiles(projectName string) {
+	filesNames := []string{
+		"mftf/mftf_runner.sh",
+	}
+	var b []byte
+	var err error
+	var file string
+	for _, fileName := range filesNames {
+		file = GetDockerConfigFile(projectName, fileName, "")
+		b, err = os.ReadFile(file)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		str := string(b)
+		str = configs.ReplaceConfigValue(str)
+		paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + strings.Split(fileName, "/")[0] + "/")
+		destinationFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + fileName
+		err = os.WriteFile(destinationFile, []byte(str), 0755)
+		if err != nil {
+			log.Fatalf("Unable to write file: %v", err)
+		}
+	}
+}
