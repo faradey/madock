@@ -117,9 +117,9 @@ func ReplaceConfigValue(str string) string {
 		log.Fatal(err)
 	}
 
-	r := regexp.MustCompile("(?ism)<<<iftrue>>>(.*)<<<endif>>>")
+	r := regexp.MustCompile("(?ism)<<<iftrue>>>(.*?)<<<endif>>>")
 	str = r.ReplaceAllString(str, "$1")
-	r = regexp.MustCompile("(?ism)<<<iffalse>>>.*<<<endif>>>")
+	r = regexp.MustCompile("(?ism)<<<iffalse>>>.*?<<<endif>>>")
 	str = r.ReplaceAllString(str, "")
 	return str
 }
