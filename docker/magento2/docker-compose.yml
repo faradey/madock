@@ -4,13 +4,11 @@ services:
     build:
       context: ctx
       dockerfile: php.Dockerfile
-    volumes: &appvolumes
+    volumes:
       - ./src:/var/www/html:cached
-      - catalogproductcache:/var/www/html/pub/media/catalog/product/cache
       - ./composer:/var/www/.composer:cached
       - ./ssh/id_rsa:/var/www/.ssh/id_rsa:ro
       - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
-      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:cached
       - ./ctx/scripts/:/var/www/scripts/:cached
     environment:
     - COMPOSER_HOME=/var/www/.composer
@@ -25,8 +23,6 @@ services:
       dockerfile: php.DockerfileWithoutXdebug
     volumes:
       - ./src:/var/www/html:delegated
-      - catalogproductcache:/var/www/html/pub/media/catalog/product/cache
-      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
     profiles:
@@ -43,7 +39,6 @@ services:
       - "{{{NGINX_PROJECT_PORT_SSL}}}:443"
     volumes:
       - ./src:/var/www/html:delegated
-      - catalogproductcache:/var/www/html/pub/media/catalog/product/cache
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -62,6 +57,7 @@ services:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
 
+<<<if{{{DB2_ENABLED}}}>>>
   db2:
     command:
       --default-authentication-plugin=mysql_native_password
@@ -73,9 +69,9 @@ services:
     volumes:
       - dbdata2:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
-    profiles:
-      - db2{{{DB2_ENABLED}}}
+<<<endif>>>
 
+<<<if{{{ELASTICSEARCH_ENABLED}}}>>>
   elasticsearch:
     build:
       context: ctx
@@ -98,9 +94,9 @@ services:
       - "index.blocks.read_only_allow_delete"
     volumes:
       - elasticsearch_vlm_{{{ELASTICSEARCH_VERSION}}}:/usr/share/elasticsearch/data
-    profiles:
-      - elasticsearch{{{ELASTICSEARCH_ENABLED}}}
-
+<<<endif>>>
+  
+<<<if{{{OPENSEARCH_ENABLED}}}>>>
   opensearch:
     build:
       context: ctx
@@ -124,21 +120,21 @@ services:
       - "index.blocks.read_only_allow_delete"
     volumes:
       - opensearch_vlm_{{{OPENSEARCH_VERSION}}}:/usr/share/opensearch/data
-    profiles:
-      - opensearch{{{OPENSEARCH_ENABLED}}}
+<<<endif>>>
 
+<<<if{{{REDIS_ENABLED}}}>>>
   redisdb:
     build:
       context: ctx
       dockerfile: redis.Dockerfile
-    profiles:
-      - redisdb{{{REDIS_ENABLED}}}
+<<<endif>>>
 
+<<<if{{{RABBITMQ_ENABLED}}}>>>
   rabbitmq:
     image: {{{RABBITMQ_REPOSITORY}}}:{{{RABBITMQ_VERSION}}}
-    profiles:
-      - rabbitmq{{{RABBITMQ_ENABLED}}}
+<<<endif>>>
 
+<<<if{{{PHPMYADMIN_ENABLED}}}>>>
   phpmyadmin:
     image: {{{PHPMYADMIN_REPOSITORY}}}:{{{PHPMYADMIN_VERSION}}}
     environment:
@@ -151,11 +147,11 @@ services:
       UPLOAD_LIMIT: 2G
     ports:
       - "{{{NGINX_PROJECT_PORT+2}}}:80"
-    profiles:
-      - phpmyadmin{{{PHPMYADMIN_ENABLED}}}
     depends_on:
       - db
+<<<endif>>>
 
+<<<if{{{PHPMYADMIN2_ENABLED}}}>>>
   phpmyadmin2:
     image: {{{PHPMYADMIN2_REPOSITORY}}}:{{{PHPMYADMIN2_VERSION}}}
     environment:
@@ -168,9 +164,9 @@ services:
       UPLOAD_LIMIT: 2G
     ports:
       - "{{{NGINX_PROJECT_PORT+7}}}:80"
-    profiles:
-      - phpmyadmin2{{{PHPMYADMIN2_ENABLED}}}
+<<<endif>>>
 
+<<<if{{{KIBANA_ENABLED}}}>>>
   kibana:
     platform: linux/x86_64
     image: {{{KIBANA_REPOSITORY}}}:{{{ELASTICSEARCH_VERSION}}}
@@ -179,11 +175,11 @@ services:
       ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
     ports:
       - "{{{NGINX_PROJECT_PORT+3}}}:5601"
-    profiles:
-      - kibana{{{KIBANA_ENABLED}}}
     depends_on:
       - elasticsearch
+<<<endif>>>
 
+<<<if{{{OPENSEARCHDASHBOARD_ENABLED}}}>>>
   opensearchdashboard:
     platform: linux/x86_64
     image: {{{OPENSEARCH_REPOSITORY}}}:{{{OPENSEARCH_VERSION}}}
@@ -193,14 +189,12 @@ services:
       DISABLE_SECURITY_DASHBOARDS_PLUGIN: 'true'
     ports:
       - "{{{NGINX_PROJECT_PORT+3}}}:5601"
-    profiles:
-      - opensearchdashboard{{{OPENSEARCHDASHBOARD_ENABLED}}}
     depends_on:
       - opensearch
+<<<endif>>>
 
 volumes:
   dbdata:
-  dbdata2:
-  elasticsearch_vlm_{{{ELASTICSEARCH_VERSION}}}:
-  opensearch_vlm_{{{OPENSEARCH_VERSION}}}:
-  catalogproductcache:
+  <<<if{{{DB2_ENABLED}}}>>>dbdata2:<<<endif>>>
+  <<<if{{{ELASTICSEARCH_ENABLED}}}>>>elasticsearch_vlm_{{{ELASTICSEARCH_VERSION}}}:<<<endif>>>
+  <<<if{{{OPENSEARCH_ENABLED}}}>>>opensearch_vlm_{{{OPENSEARCH_VERSION}}}:<<<endif>>>
