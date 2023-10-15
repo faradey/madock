@@ -196,7 +196,9 @@ This command shows you the following items:
 * `prune`   Stop and delete running project containers. For example: `madock prune --with-volumes`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--with-volumes`   Remove volumes, too
-                        
+
+* `pwa`    Execute PWA command inside node container. For example: `madock pwa yarn watch`
+
 
 * `rebuild` Recreation of all containers in the project. All containers are re-created and the images from the Dockerfile are rebuilt
                         

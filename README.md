@@ -3,7 +3,7 @@ Local development environment based on Docker for Magento
 
 ## Description
 `madock` is a local Docker-based environment that allows you to run Magento2 projects.
-This project is written on Golang and it is distributed under a MIT License.
+This project is written on Golang, and it is distributed under a MIT License.
 
 ## Key Features
 * Automatic project setup
@@ -19,10 +19,12 @@ This project is written on Golang and it is distributed under a MIT License.
 * MailHog (email testing tool for developers)
 * Magento Cloud
 * Composer patches
+* PWA Studio as a separate service.
 
 ## Tested on
 * Linux (Ubuntu 20.04)
-* macOS (Monterey)
+  * macOS (Monterey, Sonoma)
+* Windows (10, 11)
 
 ## Video
 
@@ -31,6 +33,11 @@ This project is written on Golang and it is distributed under a MIT License.
 ## Installation
 
 You need 5 things on your local machine: `git`, `docker`, `docker-compose`, `golang` and `madock`
+
+_The new version 2 is not backwards compatible with version 1. 
+If you have problems with version 2, you can use version 1.x temporarily as it is more stable. 
+Version 1 does not receive any more improvements. 
+To use version 1 you should switch to [master-1.x.x](https://github.com/faradey/madock/tree/master-1.x.x) branch_
 
 Follow the installation steps for your system.
 <details>

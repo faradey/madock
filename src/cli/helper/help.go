@@ -58,6 +58,7 @@ func Help() {
 	describeByLevel("proxy:prune", "Prune a proxy server", 0)
 	describeByLevel("prune", "Stop and delete running project containers and networks", 0)
 	describeByLevel("--with-volumes", "Remove volumes, too", 1)
+	describeByLevel("pwa", "Execute PWA command inside node container. For example: `madock pwa yarn watch`", 0)
 	describeByLevel("rebuild", "Recreation of all containers in the project. All containers are re-created and the images from the Dockerfile are rebuilt", 0)
 	describeByLevel("remote:sync:media", "Synchronization media files from remote host", 0)
 	describeByLevel("--images-only", "Synchronization images only", 1)
