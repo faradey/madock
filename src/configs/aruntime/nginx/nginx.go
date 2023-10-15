@@ -85,7 +85,7 @@ func makeProxy() {
 	for _, name := range projectsNames {
 		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
 			if _, err = os.Stat(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped"); os.IsNotExist(err) {
-				nginxDefFile = project.GetDockerConfigFile(name, "/docker/nginx/conf/default-proxy.conf")
+				nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
 				b, err := os.ReadFile(nginxDefFile)
 				if err != nil {
 					log.Fatal(err)
@@ -94,6 +94,7 @@ func makeProxy() {
 				str = string(b)
 				port, err := strconv.Atoi(portsConfig[name])
 				if err != nil {
+					fmt.Println("Project name is " + name)
 					log.Fatal(err)
 				}
 				portRanged := (port - 1) * 20
@@ -141,7 +142,7 @@ func makeProxy() {
 func makeDockerfile() {
 	/* Create nginx Dockerfile configuration */
 	ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
-	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/proxy.Dockerfile"
+	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/proxy.Dockerfile"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
 		log.Fatal(err)
@@ -160,7 +161,7 @@ func makeDockerfile() {
 func makeDockerCompose() {
 	/* Copy nginx docker-compose configuration */
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
-	nginxDefFile := paths.GetExecDirPath() + "/docker/nginx/docker-compose-proxy.yml"
+	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/docker-compose-proxy.yml"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
 		log.Fatal(err)

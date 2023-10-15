@@ -10,8 +10,13 @@ import (
 
 func Start() {
 	if !configs.IsHasNotConfig() {
+		projectConfig := configs.GetCurrentProjectConfig()
 		fmtc.SuccessLn("Start containers in detached mode")
-		builder.Start(attr.Options.WithChown)
+		if projectConfig["PLATFORM"] == "magento2" {
+			builder.StartMagento2(attr.Options.WithChown, projectConfig)
+		} else if projectConfig["PLATFORM"] == "pwa" {
+			builder.StartPWA(attr.Options.WithChown)
+		}
 		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")
@@ -20,7 +25,12 @@ func Start() {
 }
 
 func Stop() {
-	builder.Stop()
+	projectConfig := configs.GetCurrentProjectConfig()
+	if projectConfig["PLATFORM"] == "magento2" {
+		builder.StopMagento2()
+	} else if projectConfig["PLATFORM"] == "pwa" {
+		builder.StopPWA()
+	}
 	if len(paths.GetActiveProjects()) == 0 {
 		Proxy("stop")
 	}

@@ -1,13 +1,13 @@
 <?php
 $patchContainerPath = "/var/www/patches";
-$siteRootPath = "/var/www/html";
+$siteRootPath = $argv[1];
 
 $vendorPath = $siteRootPath."/vendor";
 $patchMagentoPath = $siteRootPath."/patches/composer";
-$filePatch = $siteRootPath."/".trim($argv[1],"/");
-$patchName = $argv[2]??"";
-$patchTitle = $argv[3]?:$patchName;
-$force = $argv[4]??"";
+$filePatch = $siteRootPath."/".trim($argv[2],"/");
+$patchName = $argv[3]??"";
+$patchTitle = $argv[4]?:$patchName;
+$force = $argv[5]??"";
 
 if(file_exists($filePatch)){
     $moduleRoot = explode("vendor", $filePatch, 2)[1]??null;

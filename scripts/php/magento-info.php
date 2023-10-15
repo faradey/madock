@@ -1,8 +1,8 @@
 <?php
-$siteRootPath = "/var/www/html";
+$siteRootPath = $argv[1];
 $configPath = $siteRootPath."/app/etc/config.php";
 $composerJson = $siteRootPath."/composer.json";
-$composerLock = $siteRootPath."/composer.lock";
+$composerLockJson = $siteRootPath."/composer.lock";
 
 $appCodePath = $siteRootPath."/app/code";
 $vendorPath = $siteRootPath."/vendor";
@@ -13,6 +13,8 @@ if(file_exists($configPath)){
     $psr4 = include_once($vendorPath."/composer/autoload_psr4.php");
     $composer = file_get_contents($composerJson);
     $composer = json_decode($composer, true);
+    $composerLock = file_get_contents($composerLockJson);
+    $composerLock = json_decode($composerLock, true);
     print("Magento Version\n");
     if(!empty($composer['require']['magento/product-enterprise-edition'])){
         $magentoVersion = "Enterprise edition ".$composer['require']['magento/product-enterprise-edition'];
@@ -32,7 +34,7 @@ if(file_exists($configPath)){
             if($modulePath && file_exists($modulePath."/composer.json")) {
                 $composerData = file_get_contents($modulePath."/composer.json");
                 $composerData = json_decode($composerData, true);
-                if(empty($composer['require'][$composerData['name']])){
+                if(empty($composer['require'][$composerData['name']]) && !searchInLock($composerLock['packages'], $composerData['name'])){
                     continue;
                 }
                 $version = $composerData['version']??$version;
@@ -68,6 +70,16 @@ if(file_exists($configPath)){
             print($moduleName.", ".$version.", ".$latestVersion.", ".($isActive==1?"enabled":"disabled")."\n");
         }
     }
+}
+
+function searchInLock($packages, $name) {
+    foreach($packages as $package) {
+        if($package['name'] == $name) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function prepareLatest($latests) {

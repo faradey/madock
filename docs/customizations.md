@@ -21,5 +21,5 @@ Default list of properties that can be customised:
 
 Default list of properties that can be customised:
 
-* [docker/docker-compose.yml](../docker/docker-compose.yml)
+* [docker/docker-compose.yml](../docker/magento2/docker-compose.yml)
 * etc.

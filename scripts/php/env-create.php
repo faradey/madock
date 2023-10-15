@@ -1,8 +1,7 @@
 <?php
-$siteRootPath = "/var/www/html";
-
-$envPath = $siteRootPath."/app/etc/env.php";
 $projectConfig = json_decode($argv[1], true);
+$siteRootPath = $projectConfig["WORKDIR"];
+$envPath = $siteRootPath."/app/etc/env.php";
 $defaultHost = $argv[2]??null;
 $env = [];
 if(file_exists($envPath)){

@@ -13,6 +13,7 @@ import (
 
 func Cron(flag, manual bool) {
 	projectName := configs.GetProjectName()
+	projectConfig := configs.GetCurrentProjectConfig()
 	var cmd *exec.Cmd
 	var bOut io.Writer
 	var bErr io.Writer
@@ -30,7 +31,7 @@ func Cron(flag, manual bool) {
 			}
 		}
 
-		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:remove && php bin/magento cron:install && php bin/magento cron:run")
+		cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && php bin/magento cron:remove && php bin/magento cron:install && php bin/magento cron:run")
 		cmdSub.Stdout = os.Stdout
 		cmdSub.Stderr = os.Stderr
 		err = cmdSub.Run()
@@ -43,7 +44,7 @@ func Cron(flag, manual bool) {
 		cmd.Stderr = bErr
 		err := cmd.Run()
 		if err == nil {
-			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && php bin/magento cron:remove")
+			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && php bin/magento cron:remove")
 			cmdSub.Stdout = bOut
 			cmdSub.Stderr = bErr
 			err := cmdSub.Run()

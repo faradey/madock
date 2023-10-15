@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/versions/magento2"
 	"strings"
 
 	"github.com/faradey/madock/src/cli/attr"
@@ -74,6 +75,10 @@ func Magento(flag string) {
 	builder.Magento(flag)
 }
 
+func PWA(flag string) {
+	builder.PWA(flag)
+}
+
 func Cloud(flag string) {
 	projectConfig := configs.GetCurrentProjectConfig()
 	flag = strings.Replace(flag, "$project", projectConfig["MAGENTOCLOUD_PROJECT_NAME"], -1)
@@ -99,25 +104,25 @@ func Uncompress() {
 func DebugEnable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_ENABLED", "true")
-	builder.UpWithBuild()
+	Rebuild()
 }
 
 func DebugProfileEnable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_MODE", "profile")
-	builder.UpWithBuild()
+	Rebuild()
 }
 
 func DebugDisable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_ENABLED", "false")
-	builder.UpWithBuild()
+	Rebuild()
 }
 
 func DebugProfileDisable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_MODE", "debug")
-	builder.UpWithBuild()
+	Rebuild()
 }
 
 func Info() {
@@ -134,6 +139,10 @@ func CronDisable() {
 
 func Bash() {
 	containerName := "php"
+	projectConf := configs.GetCurrentProjectConfig()
+	if projectConf["PLATFORM"] == "pwa" {
+		containerName = "nodejs"
+	}
 	if len(attr.Options.Args) > 0 && attr.Options.Args[0] != "" {
 		containerName = attr.Options.Args[0]
 	}
@@ -184,4 +193,9 @@ func IsNotDefine() {
 
 func Ssl() {
 	builder.SslRebuild()
+}
+
+func InstallMagento() {
+	toolsDefVersions := magento2.GetVersions("")
+	builder.InstallMagento(configs.GetProjectName(), toolsDefVersions.Magento)
 }

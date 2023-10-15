@@ -95,6 +95,8 @@ func main() {
 			commands.RemoteSyncFile()
 		case "restart":
 			commands.Restart()
+		case "pwa":
+			commands.PWA(strings.Join(os.Args[2:], " "))
 		case "service:list":
 			commands.ServiceList()
 		case "service:enable":
