@@ -509,3 +509,16 @@ func SslRebuild() {
 	ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 	nginx.GenerateSslCert(ctxPath, true)
 }
+
+func Shopify(flag string) {
+	projectName := configs.GetProjectName()
+	projectConfig := configs.GetCurrentProjectConfig()
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && "+flag)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}

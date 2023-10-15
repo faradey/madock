@@ -15,7 +15,7 @@ func Platform() string {
 	defVersion := "magento2"
 	setTitleAndRecommended("Platform", &defVersion)
 
-	availableVersions := []string{"", "magento2", "pwa"}
+	availableVersions := []string{"", "magento2", "pwa", "shopify"}
 
 	prepareVersions(availableVersions)
 	invitation(&defVersion)
@@ -26,7 +26,7 @@ func Platform() string {
 func Php(defVersion *string) {
 	setTitleAndRecommended("PHP", defVersion)
 
-	availableVersions := []string{"Custom", "8.1", "8.0", "7.4", "7.3", "7.2", "7.1", "7.0"}
+	availableVersions := []string{"Custom", "8.2", "8.1", "8.0", "7.4", "7.3", "7.2", "7.1", "7.0"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)
@@ -36,7 +36,7 @@ func Php(defVersion *string) {
 func Db(defVersion *string) {
 	setTitleAndRecommended("DB", defVersion)
 
-	availableVersions := []string{"Custom", "10.6", "10.4", "10.3", "10.2", "10.1", "10.0"}
+	availableVersions := []string{"Custom", "11.1", "10.6", "10.4", "10.3", "10.2", "10.1", "10.0"}
 
 	prepareVersions(availableVersions)
 	invitation(defVersion)

@@ -1,0 +1,107 @@
+version: "3.7"
+services:
+  php:
+    build:
+      context: ctx
+      dockerfile: php.Dockerfile
+    volumes:
+      - ./src:/var/www/html:cached
+      - ./composer:/var/www/.composer:cached
+      - ./ssh/id_rsa:/var/www/.ssh/id_rsa:ro
+      - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
+      - ./ctx/scripts/:/var/www/scripts/:cached
+    environment:
+    - COMPOSER_HOME=/var/www/.composer
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "{{{NGINX_PROJECT_PORT+5}}}:35729"
+
+  nginx:
+    build:
+      context: ctx
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "{{{NGINX_PROJECT_PORT}}}:80"
+      - "{{{NGINX_PROJECT_PORT_SSL}}}:443"
+    volumes:
+      - ./src:/var/www/html:delegated
+      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - php
+
+  db:
+    command: 
+      --default-authentication-plugin=mysql_native_password
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    ports:
+      - "{{{NGINX_PROJECT_PORT+4}}}:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+
+<<<if{{{DB2_ENABLED}}}>>>
+  db2:
+    command:
+      --default-authentication-plugin=mysql_native_password
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    ports:
+      - "{{{NGINX_PROJECT_PORT+6}}}:3306"
+    volumes:
+      - dbdata2:/var/lib/mysql
+      - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+<<<endif>>>
+
+<<<if{{{REDIS_ENABLED}}}>>>
+  redisdb:
+    build:
+      context: ctx
+      dockerfile: redis.Dockerfile
+<<<endif>>>
+
+<<<if{{{RABBITMQ_ENABLED}}}>>>
+  rabbitmq:
+    image: {{{RABBITMQ_REPOSITORY}}}:{{{RABBITMQ_VERSION}}}
+<<<endif>>>
+
+<<<if{{{PHPMYADMIN_ENABLED}}}>>>
+  phpmyadmin:
+    image: {{{PHPMYADMIN_REPOSITORY}}}:{{{PHPMYADMIN_VERSION}}}
+    environment:
+      PMA_HOST: "db"
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin/"
+      PMA_USER: root
+      PMA_PASSWORD: {{{DB_ROOT_PASSWORD}}}
+      UPLOAD_LIMIT: 2G
+    ports:
+      - "{{{NGINX_PROJECT_PORT+2}}}:80"
+    depends_on:
+      - db
+<<<endif>>>
+
+<<<if{{{PHPMYADMIN2_ENABLED}}}>>>
+  phpmyadmin2:
+    image: {{{PHPMYADMIN2_REPOSITORY}}}:{{{PHPMYADMIN2_VERSION}}}
+    environment:
+      PMA_HOST: "db"
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin2/"
+      PMA_USER: root
+      PMA_PASSWORD: {{{DB2_ROOT_PASSWORD}}}
+      UPLOAD_LIMIT: 2G
+    ports:
+      - "{{{NGINX_PROJECT_PORT+7}}}:80"
+<<<endif>>>
+
+volumes:
+  dbdata:
+  <<<if{{{DB2_ENABLED}}}>>>dbdata2:<<<endif>>>

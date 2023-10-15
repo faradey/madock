@@ -199,3 +199,7 @@ func InstallMagento() {
 	toolsDefVersions := magento2.GetVersions("")
 	builder.InstallMagento(configs.GetProjectName(), toolsDefVersions.Magento)
 }
+
+func Shopify(flag string) {
+	builder.Shopify(flag)
+}

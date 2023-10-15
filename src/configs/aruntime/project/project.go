@@ -35,6 +35,8 @@ func MakeConf(projectName string) {
 		MakeConfMagento2(projectName)
 	} else if projectConfig["PLATFORM"] == "pwa" {
 		MakeConfPWA(projectName)
+	} else if projectConfig["PLATFORM"] == "shopify" {
+		MakeConfShopify(projectName)
 	}
 }
 
@@ -155,19 +157,21 @@ func makePhpDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	dockerDefFile = GetDockerConfigFile(projectName, "php/DockerfileWithoutXdebug", "")
+	projectConf := configs.GetCurrentProjectConfig()
+	if _, err := os.Stat(paths.GetExecDirPath() + "/docker/" + projectConf["PLATFORM"] + "/php/DockerfileWithoutXdebug"); !os.IsNotExist(err) {
+		dockerDefFile = GetDockerConfigFile(projectName, "php/DockerfileWithoutXdebug", "")
+		b, err = os.ReadFile(dockerDefFile)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	b, err = os.ReadFile(dockerDefFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	str = string(b)
-	str = configs.ReplaceConfigValue(str)
-	nginxFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.DockerfileWithoutXdebug"
-	err = os.WriteFile(nginxFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
+		str = string(b)
+		str = configs.ReplaceConfigValue(str)
+		nginxFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.DockerfileWithoutXdebug"
+		err = os.WriteFile(nginxFile, []byte(str), 0755)
+		if err != nil {
+			log.Fatalf("Unable to write file: %v", err)
+		}
 	}
 }
 
@@ -348,8 +352,8 @@ func makeNodeJsDockerfile(projectName string) {
 
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nodejs.Dockerfile"
-	err = os.WriteFile(nginxFile, []byte(str), 0755)
+	nodeJsFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nodejs.Dockerfile"
+	err = os.WriteFile(nodeJsFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}

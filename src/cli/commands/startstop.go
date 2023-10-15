@@ -16,6 +16,8 @@ func Start() {
 			builder.StartMagento2(attr.Options.WithChown, projectConfig)
 		} else if projectConfig["PLATFORM"] == "pwa" {
 			builder.StartPWA(attr.Options.WithChown)
+		} else if projectConfig["PLATFORM"] == "shopify" {
+			builder.StartShopify(attr.Options.WithChown, projectConfig)
 		}
 		fmtc.SuccessLn("Done")
 	} else {
@@ -30,6 +32,8 @@ func Stop() {
 		builder.StopMagento2()
 	} else if projectConfig["PLATFORM"] == "pwa" {
 		builder.StopPWA()
+	} else if projectConfig["PLATFORM"] == "shopify" {
+		builder.StopShopify()
 	}
 	if len(paths.GetActiveProjects()) == 0 {
 		Proxy("stop")
