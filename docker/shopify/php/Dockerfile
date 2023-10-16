@@ -64,18 +64,6 @@ RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{PHP_VERSION}}}-fpm.pid/" /etc/p
     && sed -i "s/listen = .*/listen = 9000/" /etc/php/{{{PHP_VERSION}}}/fpm/pool.d/www.conf \
     && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/{{{PHP_VERSION}}}/fpm/pool.d/www.conf
 
-RUN if [ "{{{IONCUBE_ENABLED}}}" = "true" ]; then set -eux && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
-    && curl -o ioncube.tar.gz http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_{{{OSARCH}}}.tar.gz \
-    && tar xvfz ioncube.tar.gz \
-    && cd ioncube \
-    && cp ioncube_loader_lin_{{{PHP_VERSION}}}.so ${EXTENSION_DIR}/ioncube.so \
-    && cd ../ \
-    && rm -rf ioncube \
-    && rm -rf ioncube.tar.gz \
-    && echo "zend_extension=ioncube.so" >> /etc/php/{{{PHP_VERSION}}}/mods-available/ioncube.ini \
-    && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/ioncube.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/10-ioncube.ini \
-    && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/ioncube.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/10-ioncube.ini; fi
-
 RUN is_composer_version_one="" \
     && if [ "{{{PHP_COMPOSER_VERSION}}}" = "2" ]; then is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]; then  is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
     && if [ -z "${is_composer_version_one}" ]; then php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version={{{PHP_COMPOSER_VERSION}}}; fi
@@ -107,30 +95,26 @@ RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /
 
 WORKDIR /var/www
 
-RUN if [ "{{{MAGENTOCLOUD_ENABLED}}}" = "true" ]; then curl -sS https://accounts.magento.cloud/cli/installer | php \
-    && cp -r /root/.magento-cloud/ /var/www/ && chown -R {{{UID}}}:{{{GUID}}} /var/www/.magento-cloud && ln -s /var/www/.magento-cloud/bin/magento-cloud /usr/bin/magento-cloud; fi
-
 RUN apt-get install cron
-RUN mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/n98magerun/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
-RUN if [ "{{{NODEJS_ENABLED}}}" = "true" ]; then mkdir /var/www/.npm && chown {{{UID}}}:{{{GUID}}} /var/www/.npm && apt install nodejs npm -y && apt install chromium-bsu -y && npm install -g grunt-cli && npm install -g bower && npm install -g livereload; fi
+RUN curl -sL https://deb.nodesource.com/setup_{{{NODEJS_MAJOR_VERSION}}}.x | bash -
+RUN mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
+RUN mkdir /var/www/.npm && chown {{{UID}}}:{{{GUID}}} /var/www/.npm && apt install nodejs -y
+ENV YARN_VERSION=1.22.19
+
+RUN set -ex && for key in 6A010C5166006599AA17F08146C2130DFD2497F5 ; do gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys "$key" || gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key" ; done && curl -fsSLO --compressed "https://yarnpkg.com/downloads/$YARN_VERSION/yarn-v$YARN_VERSION.tar.gz" && curl -fsSLO --compressed "https://yarnpkg.com/downloads/$YARN_VERSION/yarn-v$YARN_VERSION.tar.gz.asc" && gpg --batch --verify yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz && mkdir -p /opt && tar -xzf yarn-v$YARN_VERSION.tar.gz -C /opt/ && ln -s /opt/yarn-v$YARN_VERSION/bin/yarn /usr/local/bin/yarn && ln -s /opt/yarn-v$YARN_VERSION/bin/yarnpkg /usr/local/bin/yarnpkg && rm yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz && yarn --version
+RUN yarn set version {{{YARN_VERSION}}}
+
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
 RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data \
+    && chown -R {{{UID}}}:{{{GUID}}} /var/www \
     && chown -R {{{UID}}}:{{{GUID}}} /var/www/.ssh \
     && chown {{{UID}}}:{{{GUID}}} /var/www/patches \
     && chown {{{UID}}}:{{{GUID}}} /var/www/scripts/php \
     && chown {{{UID}}}:{{{GUID}}} /var/www/.composer \
-    && chown {{{UID}}}:{{{GUID}}} /usr/bin/composer \
-    && chown {{{UID}}}:{{{GUID}}} /var/www/n98magerun
-RUN if [ "{{{MAGENTOCLOUD_ENABLED}}}" = "true" ]; then chown {{{UID}}}:{{{GUID}}} /usr/bin/magento-cloud; fi
-RUN if [ "{{{N98MAGERUN_ENABLED}}}" = "true" ]; then cd /var/www/n98magerun && curl -sS -O https://files.magerun.net/n98-magerun2.phar && chown {{{UID}}}:{{{GUID}}} /var/www/n98magerun/n98-magerun2.phar && chmod +x /var/www/n98magerun/n98-magerun2.phar; fi
-
-RUN mkdir /var/yarn && chown {{{UID}}}:{{{GUID}}} /var/yarn
-WORKDIR /var/yarn
-
-RUN yarn set version {{{YARN_VERSION}}}
+    && chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
 
 WORKDIR {{{WORKDIR}}}
 

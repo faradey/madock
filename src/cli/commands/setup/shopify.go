@@ -19,6 +19,8 @@ func Shopify(projectName string, projectConfig map[string]string, continueSetup 
 		Php(&toolsDefVersions.Php)
 		Db(&toolsDefVersions.Db)
 		Composer(&toolsDefVersions.Composer)
+		NodeJs(&toolsDefVersions.NodeJs)
+		Yarn(&toolsDefVersions.Yarn)
 
 		Redis(&toolsDefVersions.Redis)
 		RabbitMQ(&toolsDefVersions.RabbitMQ)

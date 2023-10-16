@@ -13,5 +13,7 @@ func GetVersions() versions.ToolsVersions {
 		Redis:    "7.2.1",
 		RabbitMQ: "3.9.29",
 		Xdebug:   "3.2.2",
+		NodeJs:   "18.15.0",
+		Yarn:     "3.6.4",
 	}
 }

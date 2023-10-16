@@ -21,6 +21,8 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 		Magento2(config, defVersions, generalConf, projectConfig)
 	} else if projectConfig["PLATFORM"] == "pwa" {
 		PWA(config, defVersions, generalConf, projectConfig)
+	} else if projectConfig["PLATFORM"] == "shopify" {
+		Shopify(config, defVersions, generalConf, projectConfig)
 	}
 
 	if !config.IsEnv {
