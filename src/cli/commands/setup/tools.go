@@ -110,9 +110,9 @@ func Hosts(projectName string, defVersion *string, projectConfig map[string]stri
 	fmtc.TitleLn("Hosts")
 	fmt.Println("Input format: a.example.com:x_website_code b.example.com:y_website_code")
 	fmt.Println("Recommended host: " + host)
-	availableVersions := []string{projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base", "loc." + projectName + ".com:base"}
+	availableVersions := []string{"Custom", projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base", "loc." + projectName + ".com:base"}
 	prepareVersions(availableVersions)
-	fmt.Println("Choose one of the suggested options or enter your hostname")
+	fmt.Println("Choose one of the suggested options")
 	fmt.Print("> ")
 	selected, _ := Waiter()
 	if selected == "" && host != "" {
