@@ -112,21 +112,8 @@ func Hosts(projectName string, defVersion *string, projectConfig map[string]stri
 	fmt.Println("Recommended host: " + host)
 	availableVersions := []string{"Custom", projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base", "loc." + projectName + ".com:base"}
 	prepareVersions(availableVersions)
-	fmt.Println("Choose one of the suggested options")
-	fmt.Print("> ")
-	selected, _ := Waiter()
-	if selected == "" && host != "" {
-		*defVersion = host
-		fmtc.SuccessLn("Your choice: " + *defVersion)
-	} else if selected != "" {
-		selectedInt, err := strconv.Atoi(selected)
-		if err == nil && len(availableVersions) >= selectedInt {
-			*defVersion = availableVersions[selectedInt-1]
-		} else {
-			*defVersion = selected
-		}
-		fmtc.SuccessLn("Your choice: " + *defVersion)
-	}
+	invitation(defVersion)
+	waiterAndProceed(defVersion, availableVersions)
 }
 
 func NodeJs(defVersion *string) {
@@ -208,7 +195,12 @@ func setSelectedVersion(defVersion *string, availableVersions []string, selected
 	} else if selected == "0" {
 		*defVersion = repoAndVersion
 	} else if selected != "" && err == nil && len(availableVersions) >= selectedInt {
-		*defVersion = availableVersions[selectedInt]
+		version := strings.Split(availableVersions[selectedInt], " ")
+		if len(version) > 1 {
+			*defVersion = version[0]
+		} else {
+			*defVersion = availableVersions[selectedInt]
+		}
 		fmtc.SuccessLn("Your choice: " + *defVersion)
 	} else {
 		fmtc.WarningLn("Choose one of the options offered")
