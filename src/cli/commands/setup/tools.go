@@ -194,6 +194,7 @@ func setSelectedVersion(defVersion *string, availableVersions []string, selected
 		fmtc.SuccessLn("Your choice: " + *defVersion)
 	} else if selected == "0" {
 		*defVersion = repoAndVersion
+		fmtc.SuccessLn("Your choice: " + *defVersion)
 	} else if selected != "" && err == nil && len(availableVersions) >= selectedInt {
 		version := strings.Split(availableVersions[selectedInt], " ")
 		if len(version) > 1 {

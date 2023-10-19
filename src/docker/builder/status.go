@@ -27,20 +27,26 @@ func Status() {
 		log.Fatal(err)
 	}
 
-	statusData := []StatusInfoStruct{}
-	err = json.Unmarshal([]byte(result), &statusData)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmtc.TitleLn("Services:")
-	for _, val := range statusData {
-		row := fmt.Sprintf("%s %s", val.Service, val.State)
-		if val.State == "running" {
-			fmtc.SuccessLn(row)
-		} else {
-			fmtc.WarningLn(row)
+	if len(result) > 0 {
+		result = parseJson(result)
+		statusData := []StatusInfoStruct{}
+		err = json.Unmarshal(result, &statusData)
+		if err != nil {
+			fmt.Println(err)
 		}
+		fmtc.TitleLn("Services:")
+		for _, val := range statusData {
+			row := fmt.Sprintf("%s %s", val.Service, val.State)
+			if val.State == "running" {
+				fmtc.SuccessLn(row)
+			} else {
+				fmtc.WarningLn(row)
+			}
+		}
+	} else {
+		fmtc.WarningLn("No services found")
 	}
+
 	fmtc.TitleLn("Proxy:")
 	cmd = exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
 	result, err = cmd.CombinedOutput()
@@ -48,19 +54,25 @@ func Status() {
 		log.Fatal(err)
 	}
 
-	statusData = []StatusInfoStruct{}
-	err = json.Unmarshal([]byte(result), &statusData)
-	if err != nil {
-		fmt.Println(err)
-	}
-	for _, val := range statusData {
-		row := fmt.Sprintf(" %s %s", val.Service, val.State)
-		if val.State == "running" {
-			fmtc.SuccessLn(row)
-		} else {
-			fmtc.WarningLn(row)
+	if len(result) > 0 {
+		result = parseJson(result)
+		statusData := []StatusInfoStruct{}
+		err = json.Unmarshal(result, &statusData)
+		if err != nil {
+			fmt.Println(err)
 		}
+		for _, val := range statusData {
+			row := fmt.Sprintf(" %s %s", val.Service, val.State)
+			if val.State == "running" {
+				fmtc.SuccessLn(row)
+			} else {
+				fmtc.WarningLn(row)
+			}
+		}
+	} else {
+		fmtc.WarningLn("No services found")
 	}
+
 	fmtc.TitleLn("Tools:")
 	projectConfig := configs.GetCurrentProjectConfig()
 
@@ -75,4 +87,14 @@ func Status() {
 	} else {
 		fmtc.WarningLn(" Debugger is disabled")
 	}
+}
+
+func parseJson(data []byte) []byte {
+	str := strings.TrimSpace(string(data))
+	if strings.Contains(str, "}{") || strings.Contains(str, "}\n{") {
+		str = strings.ReplaceAll(str, "}\n{", "}{")
+		str = "[" + strings.ReplaceAll(str, "}{", "},{") + "]"
+	}
+
+	return []byte(str)
 }
