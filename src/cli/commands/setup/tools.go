@@ -110,6 +110,7 @@ func Hosts(projectName string, defVersion *string, projectConfig map[string]stri
 	fmtc.TitleLn("Hosts")
 	fmt.Println("Input format: a.example.com:x_website_code b.example.com:y_website_code")
 	fmt.Println("Recommended host: " + host)
+	*defVersion = host
 	availableVersions := []string{"Custom", projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base", "loc." + projectName + ".com:base"}
 	prepareVersions(availableVersions)
 	invitation(defVersion)
@@ -197,11 +198,7 @@ func setSelectedVersion(defVersion *string, availableVersions []string, selected
 		fmtc.SuccessLn("Your choice: " + *defVersion)
 	} else if selected != "" && err == nil && len(availableVersions) >= selectedInt {
 		version := strings.Split(availableVersions[selectedInt], " ")
-		if len(version) > 1 {
-			*defVersion = version[0]
-		} else {
-			*defVersion = availableVersions[selectedInt]
-		}
+		*defVersion = version[0]
 		fmtc.SuccessLn("Your choice: " + *defVersion)
 	} else {
 		fmtc.WarningLn("Choose one of the options offered")
