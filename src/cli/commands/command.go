@@ -203,3 +203,7 @@ func InstallMagento() {
 func Shopify(flag string) {
 	builder.Shopify(flag)
 }
+
+func ShopifyWeb(flag string) {
+	builder.ShopifyWeb(flag)
+}

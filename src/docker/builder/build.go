@@ -522,3 +522,16 @@ func Shopify(flag string) {
 		log.Fatal(err)
 	}
 }
+
+func ShopifyWeb(flag string) {
+	projectName := configs.GetProjectName()
+	projectConfig := configs.GetCurrentProjectConfig()
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+"/web && "+flag)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
