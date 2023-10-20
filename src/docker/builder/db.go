@@ -151,6 +151,7 @@ func DbInfo() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmtc.SuccessLn("host: db")
 	fmtc.SuccessLn("name: " + projectConfig["DB_DATABASE"])
 	fmtc.SuccessLn("user: " + projectConfig["DB_USER"])
 	fmtc.SuccessLn("password: " + projectConfig["DB_PASSWORD"])
