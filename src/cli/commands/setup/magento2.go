@@ -21,6 +21,9 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 		mageVersion, _ = Waiter()
 		if mageVersion != "" {
 			toolsDefVersions = magento2.GetVersions(mageVersion)
+		} else {
+			Magento2(projectName, projectConfig, continueSetup)
+			return
 		}
 	}
 
