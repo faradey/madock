@@ -126,10 +126,6 @@ RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data \
 RUN if [ "{{{MAGENTOCLOUD_ENABLED}}}" = "true" ]; then chown {{{UID}}}:{{{GUID}}} /usr/bin/magento-cloud; fi
 RUN if [ "{{{N98MAGERUN_ENABLED}}}" = "true" ]; then cd /var/www/n98magerun && curl -sS -O https://files.magerun.net/n98-magerun2.phar && chown {{{UID}}}:{{{GUID}}} /var/www/n98magerun/n98-magerun2.phar && chmod +x /var/www/n98magerun/n98-magerun2.phar; fi
 WORKDIR {{{WORKDIR}}}
-<<<if{{{MFTF_ENABLED}}}>>>
-RUN apt-get update && apt-get install -y default-jre default-jdk && apt-get install -y allure \
-    && curl -O http://selenium-release.storage.googleapis.com/3.14/selenium-server-standalone-3.14.0.jar
-<<<endif>>>
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 

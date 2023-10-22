@@ -373,7 +373,7 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 
 func processOtherCTXFiles(projectName string) {
 	filesNames := []string{
-		"mftf/mftf_runner.sh",
+		/*"mftf/mftf_runner.sh",*/
 	}
 	var b []byte
 	var err error

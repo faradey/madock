@@ -10,7 +10,6 @@ services:
       - ./ssh/id_rsa:/var/www/.ssh/id_rsa:ro
       - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
       - ./ctx/scripts/:/var/www/scripts/:cached
-      <<<if{{{MFTF_ENABLED}}}>>>- ./ctx/mftf/mftf_runner.sh:/var/www/mftf_runner.sh:cached<<<endif>>>
     environment:
     - COMPOSER_HOME=/var/www/.composer
     extra_hosts:
@@ -192,6 +191,18 @@ services:
       - "{{{NGINX_PROJECT_PORT+3}}}:5601"
     depends_on:
       - opensearch
+<<<endif>>>
+  
+<<<if{{{MFTF_ENABLED}}}>>>
+  selenium:
+    image: selenium/standalone-chrome:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+        - "{{{NGINX_PROJECT_PORT+8}}}:7900"
+    shm_size: '2g'
+    depends_on:
+      - php
 <<<endif>>>
 
 volumes:
