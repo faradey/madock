@@ -121,6 +121,19 @@ func ReplaceConfigValue(str string) string {
 	str = r.ReplaceAllString(str, "$1")
 	r = regexp.MustCompile("(?ism)<<<iffalse>>>.*?<<<endif>>>")
 	str = r.ReplaceAllString(str, "")
+
+	var onlyHosts []string
+
+	hosts := strings.Split(projectConf["HOSTS"], " ")
+	if len(hosts) > 0 {
+		for _, hostAndStore := range hosts {
+			onlyHosts = append(onlyHosts, "- \""+strings.Split(hostAndStore, ":")[0]+":172.17.0.1\"")
+		}
+
+		if len(onlyHosts) > 0 {
+			str = strings.Replace(str, "{{{HOST_GATEWAYS}}}", strings.Join(onlyHosts, "\n"), -1)
+		}
+	}
 	return str
 }
 
