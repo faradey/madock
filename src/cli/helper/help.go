@@ -43,6 +43,8 @@ func Help() {
 	describeByLevel("[name of container]", "Container name. Optional. Default container: php. Example: php", 1)
 	describeByLevel("magento", "Execute Magento command inside php container", 0)
 	describeByLevel("m", "The short alias of `magento` command", 0)
+	describeByLevel("mftf", "Execute MFTF command inside php container. For example: `madock mftf generate:tests`", 0)
+	describeByLevel("mftf:init", "Init MFTF configuration. For example: `madock mftf:init`", 0)
 	describeByLevel("n98", "Execute n98 command inside php container. For example: `madock n98 sys:info`", 0)
 	describeByLevel("node", "Execute NodeJs command inside php container", 0)
 	describeByLevel("patch:create", "Create patch. The patch can be used with the composer plugin cweagans/composer-patches", 0)

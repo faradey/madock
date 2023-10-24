@@ -156,6 +156,12 @@ This command shows you the following items:
                         
 
 * `magento` or `m`   Execute Magento command inside php container. For example: `madock m setup:upgrade`
+        
+                
+* `mftf`   Execute MFTF command inside php container. For example: `madock mftf generate:tests`
+                        
+
+* `mftf:init`   Init MFTF configuration. For example: `madock mftf:init`
                         
 
 * `n98`   Execute n98 command inside php container. For example: `madock n98 sys:info`

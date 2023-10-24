@@ -24,7 +24,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 
 ## Tested on
 * Linux (Ubuntu 20.04)
-  * macOS (Monterey, Sonoma)
+* macOS (Monterey, Sonoma)
 * Windows (10, 11)
 
 ## Video
