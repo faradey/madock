@@ -20,6 +20,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Magento Cloud
 * Composer patches
 * PWA Studio as a separate service.
+* Magento Functional Testing Framework (MFTF). Learn more about [MFTF](docs/mftf.md)
 
 ## Tested on
 * Linux (Ubuntu 20.04)
