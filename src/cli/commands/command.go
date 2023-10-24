@@ -200,6 +200,14 @@ func InstallMagento() {
 	builder.InstallMagento(configs.GetProjectName(), toolsDefVersions.Magento)
 }
 
+func MftfInit() {
+	builder.MftfInit()
+}
+
+func Mftf(flag string) {
+	builder.Mftf(flag)
+}
+
 func Shopify(flag string) {
 	builder.Shopify(flag)
 }

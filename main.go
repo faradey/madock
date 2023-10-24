@@ -8,10 +8,11 @@ import (
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/commands"
 	"github.com/faradey/madock/src/cli/helper"
+	cliHelper "github.com/faradey/madock/src/helper"
 	"github.com/faradey/madock/src/migration"
 )
 
-var appVersion string = "1.8.0"
+var appVersion string = "2.0.1"
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -26,11 +27,11 @@ func main() {
 		case "c:f":
 			commands.CleanCache()
 		case "magento-cloud", "cloud":
-			commands.Cloud(strings.Join(os.Args[2:], " "))
+			commands.Cloud(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 		case "cli":
-			commands.Cli(strings.Join(os.Args[2:], " "))
+			commands.Cli(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 		case "composer":
-			commands.Composer(strings.Join(os.Args[2:], " "))
+			commands.Composer(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 		case "compress":
 			commands.Compress()
 		case "config:list":
@@ -64,11 +65,15 @@ func main() {
 		case "logs":
 			commands.Logs()
 		case "magento", "m":
-			commands.Magento(strings.Join(os.Args[2:], " "))
+			commands.Magento(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
+		case "mftf":
+			commands.Mftf(strings.Join(os.Args[2:], " "))
+		case "mftf:init":
+			commands.MftfInit()
 		case "n98":
-			commands.N98(strings.Join(os.Args[2:], " "))
+			commands.N98(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 		case "node":
-			commands.Node(strings.Join(os.Args[2:], " "))
+			commands.Node(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 		case "patch:create":
 			commands.PatchCreate()
 		case "project:remove":
@@ -96,7 +101,7 @@ func main() {
 		case "restart":
 			commands.Restart()
 		case "pwa":
-			commands.PWA(strings.Join(os.Args[2:], " "))
+			commands.PWA(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 		case "service:list":
 			commands.ServiceList()
 		case "service:enable":

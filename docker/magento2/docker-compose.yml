@@ -14,6 +14,7 @@ services:
     - COMPOSER_HOME=/var/www/.composer
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      {{{HOST_GATEWAYS}}}
     ports:
       - "{{{NGINX_PROJECT_PORT+5}}}:35729"
 
@@ -42,6 +43,7 @@ services:
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      {{{HOST_GATEWAYS}}}
     depends_on:
       - php
 
@@ -191,6 +193,19 @@ services:
       - "{{{NGINX_PROJECT_PORT+3}}}:5601"
     depends_on:
       - opensearch
+<<<endif>>>
+  
+<<<if{{{MFTF_ENABLED}}}>>>
+  selenium:
+    image: selenium/standalone-chrome:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{HOST_GATEWAYS}}}
+    ports:
+        - "{{{NGINX_PROJECT_PORT+8}}}:7900"
+    shm_size: '2g'
+    depends_on:
+      - php
 <<<endif>>>
 
 volumes:

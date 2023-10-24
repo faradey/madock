@@ -8,4 +8,5 @@ func MakeConfMagento2(projectName string) {
 	makeRedisDockerfile(projectName)
 	makeKibanaConf(projectName)
 	makeScriptsConf(projectName)
+	processOtherCTXFiles(projectName)
 }
