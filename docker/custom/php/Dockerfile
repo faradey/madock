@@ -118,7 +118,7 @@ RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data \
     && chown {{{UID}}}:{{{GUID}}} /var/www/patches \
     && chown {{{UID}}}:{{{GUID}}} /var/www/scripts/php \
     && chown {{{UID}}}:{{{GUID}}} /var/www/.composer \
-    && chown {{{UID}}}:{{{GUID}}} /usr/bin/composer \
+    && chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
 WORKDIR {{{WORKDIR}}}
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
