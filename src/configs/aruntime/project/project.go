@@ -35,6 +35,8 @@ func MakeConf(projectName string) {
 		MakeConfMagento2(projectName)
 	} else if projectConfig["PLATFORM"] == "pwa" {
 		MakeConfPWA(projectName)
+	} else if projectConfig["PLATFORM"] == "custom" {
+		MakeConfCustom(projectName)
 	}
 }
 
