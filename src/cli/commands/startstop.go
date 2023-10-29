@@ -18,6 +18,8 @@ func Start() {
 			builder.StartPWA(attr.Options.WithChown)
 		} else if projectConfig["PLATFORM"] == "shopify" {
 			builder.StartShopify(attr.Options.WithChown, projectConfig)
+		} else if projectConfig["PLATFORM"] == "custom" {
+			builder.StartCustom(attr.Options.WithChown, projectConfig)
 		}
 		fmtc.SuccessLn("Done")
 	} else {
@@ -34,6 +36,8 @@ func Stop() {
 		builder.StopPWA()
 	} else if projectConfig["PLATFORM"] == "shopify" {
 		builder.StopShopify()
+	} else if projectConfig["PLATFORM"] == "custom" {
+		builder.StopCustom()
 	}
 	if len(paths.GetActiveProjects()) == 0 {
 		Proxy("stop")

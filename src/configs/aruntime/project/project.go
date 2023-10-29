@@ -37,6 +37,8 @@ func MakeConf(projectName string) {
 		MakeConfPWA(projectName)
 	} else if projectConfig["PLATFORM"] == "shopify" {
 		MakeConfShopify(projectName)
+	} else if projectConfig["PLATFORM"] == "custom" {
+		MakeConfCustom(projectName)
 	}
 }
 

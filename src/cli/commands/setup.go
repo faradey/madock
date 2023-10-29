@@ -62,6 +62,8 @@ func Setup() {
 		setup.PWA(projectName, projectConfig, continueSetup)
 	} else if platform == "shopify" {
 		setup.Shopify(projectName, projectConfig, continueSetup)
+	} else if platform == "custom" {
+		setup.Custom(projectName, projectConfig, continueSetup)
 	}
 }
 
