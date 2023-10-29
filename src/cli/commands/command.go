@@ -215,3 +215,7 @@ func Shopify(flag string) {
 func ShopifyWeb(flag string) {
 	builder.ShopifyWeb(flag)
 }
+
+func ShopifyWebFrontend(flag string) {
+	builder.ShopifyWeb(flag)
+}
