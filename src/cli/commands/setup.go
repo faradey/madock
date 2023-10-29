@@ -60,6 +60,8 @@ func Setup() {
 		setup.Magento2(projectName, projectConfig, continueSetup)
 	} else if platform == "pwa" {
 		setup.PWA(projectName, projectConfig, continueSetup)
+	} else if platform == "custom" {
+		setup.Custom(projectName, projectConfig, continueSetup)
 	}
 }
 
