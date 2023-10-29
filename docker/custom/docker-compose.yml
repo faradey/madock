@@ -194,19 +194,6 @@ services:
     depends_on:
       - opensearch
 <<<endif>>>
-  
-<<<if{{{MFTF_ENABLED}}}>>>
-  selenium:
-    image: selenium/standalone-chrome:latest
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-      {{{HOST_GATEWAYS}}}
-    ports:
-        - "{{{NGINX_PROJECT_PORT+8}}}:7900"
-    shm_size: '2g'
-    depends_on:
-      - php
-<<<endif>>>
 
 volumes:
   dbdata:
