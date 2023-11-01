@@ -27,6 +27,8 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 		}
 	}
 
+	edition := "community"
+
 	if continueSetup {
 		fmt.Println("")
 		fmtc.Title("Your Magento version is " + toolsDefVersions.Magento)
@@ -52,13 +54,31 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 		fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
+
+		if attr.Options.Download {
+			fmt.Println("")
+			fmtc.TitleLn("Specify Magento version: ")
+			fmt.Println("1) Community (default)")
+			fmt.Println("2) Enterprise")
+			edition, _ = Waiter()
+			edition = strings.TrimSpace(edition)
+			if edition != "1" && edition != "2" && edition != "" {
+				fmtc.ErrorLn("The specified edition '" + edition + "' is incorrect.")
+				return
+			}
+			if edition == "1" || edition == "" {
+				edition = "community"
+			} else if edition == "2" {
+				edition = "enterprise"
+			}
+		}
 	}
 
 	builder.Down(attr.Options.WithVolumes)
 	builder.StartMagento2(attr.Options.WithChown, projectConfig)
 
 	if attr.Options.Download {
-		DownloadMagento(projectName, mageVersion)
+		DownloadMagento(projectName, mageVersion, edition)
 	}
 
 	if attr.Options.Install {
@@ -66,22 +86,7 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 	}
 }
 
-func DownloadMagento(projectName, mageVersion string) {
-	fmt.Println("")
-	fmtc.TitleLn("Specify Magento version: ")
-	fmt.Println("1) Community (default)")
-	fmt.Println("2) Enterprise")
-	edition, _ := Waiter()
-	edition = strings.TrimSpace(edition)
-	if edition != "1" && edition != "2" && edition != "" {
-		fmtc.ErrorLn("The specified edition '" + edition + "' is incorrect.")
-		return
-	}
-	if edition == "1" || edition == "" {
-		edition = "community"
-	} else if edition == "2" {
-		edition = "enterprise"
-	}
+func DownloadMagento(projectName, mageVersion, edition string) {
 	builder.DownloadMagento(projectName, edition, mageVersion)
 }
 
