@@ -229,7 +229,7 @@ func upProjectWithBuild(withChown bool) {
 
 	if withChown {
 		usr, _ := user.Current()
-		cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConfig["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
+		cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConfig["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -277,7 +277,7 @@ func StopNginx() {
 func Magento(flag string) {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && php bin/magento "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && php bin/magento "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -290,7 +290,7 @@ func Magento(flag string) {
 func Mftf(flag string) {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && php vendor/bin/mftf "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && php vendor/bin/mftf "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -303,7 +303,7 @@ func Mftf(flag string) {
 func PWA(flag string) {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-nodejs-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-nodejs-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -316,7 +316,7 @@ func PWA(flag string) {
 func Cloud(flag string) {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && magento-cloud "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && magento-cloud "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -337,7 +337,7 @@ func DownloadMagento(projectName, edition, version string) {
 		"-it",
 		"-u",
 		"www-data",
-		strings.ToLower(projectName) + "-php-1",
+		strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"]) + "_" + strings.ToLower(projectName) + "-php-1",
 		"bash",
 		"-c",
 		"cd " + projectConfig["WORKDIR"] + " " +
@@ -409,7 +409,7 @@ func InstallMagento(projectName, magentoVer string) {
 	}
 	installCommand += " && bin/magento s:up && bin/magento c:c && bin/magento i:rei | bin/magento c:f"
 	fmt.Println(installCommand)
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && "+installCommand)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && "+installCommand)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -432,7 +432,7 @@ func Cli(flag string) {
 	if projectConfig["PLATFORM"] == "pwa" {
 		containerSlug = "nodejs"
 	}
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-"+containerSlug+"-1", "bash", "-c", flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-"+containerSlug+"-1", "bash", "-c", flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -445,7 +445,7 @@ func Cli(flag string) {
 func Composer(flag string) {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && composer "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && composer "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -457,7 +457,8 @@ func Composer(flag string) {
 
 func Bash(containerName string) {
 	projectName := configs.GetProjectName()
-	cmd := exec.Command("docker", "exec", "-it", strings.ToLower(projectName)+"-"+containerName+"-1", "bash")
+	projectConfig := configs.GetCurrentProjectConfig()
+	cmd := exec.Command("docker", "exec", "-it", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-"+containerName+"-1", "bash")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -470,7 +471,7 @@ func Bash(containerName string) {
 func CleanCache() {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && rm -f pub/static/deployed_version.txt && rm -Rf pub/static/frontend && rm -Rf pub/static/adminhtml && rm -Rf var/view_preprocessed/pub && rm -Rf generated/code && php bin/magento c:f")
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && rm -f pub/static/deployed_version.txt && rm -Rf pub/static/frontend && rm -Rf pub/static/adminhtml && rm -Rf var/view_preprocessed/pub && rm -Rf generated/code && php bin/magento c:f")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -483,7 +484,7 @@ func CleanCache() {
 func N98(flag string) {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && /var/www/n98magerun/n98-magerun2.phar "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && /var/www/n98magerun/n98-magerun2.phar "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -496,7 +497,7 @@ func N98(flag string) {
 func Node(flag string) {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -508,7 +509,8 @@ func Node(flag string) {
 
 func Logs(flag string) {
 	projectName := configs.GetProjectName()
-	cmd := exec.Command("docker", "logs", strings.ToLower(projectName)+"-"+flag+"-1")
+	projectConfig := configs.GetCurrentProjectConfig()
+	cmd := exec.Command("docker", "logs", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-"+flag+"-1")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

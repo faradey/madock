@@ -12,8 +12,8 @@ import (
 func MagentoInfo() {
 	containerName := "php"
 	projectName := configs.GetProjectName()
-	projectConf := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", strings.ToLower(projectName)+"-"+containerName+"-1", "php", "/var/www/scripts/php/magento-info.php", projectConf["WORKDIR"])
+	projectConfig := configs.GetCurrentProjectConfig()
+	cmd := exec.Command("docker", "exec", "-it", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+"_"+strings.ToLower(projectName)+"-"+containerName+"-1", "php", "/var/www/scripts/php/magento-info.php", projectConfig["WORKDIR"])
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
