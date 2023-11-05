@@ -78,7 +78,7 @@ func DbImport() {
 	}
 	defer selectedFile.Close()
 
-	containerName := strings.ToLower(projectName) + "-" + dbServiceName + "-1"
+	containerName := strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + dbServiceName + "-1"
 	var cmd, cmdFKeys *exec.Cmd
 	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", "mysql", containerName, "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", dbServiceName, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConfig["DB_DATABASE"])
 	cmdFKeys.Run()
@@ -122,7 +122,7 @@ func DbExport() {
 		dbServiceName = attr.Options.DBServiceName
 	}
 
-	containerName := strings.ToLower(projectName) + "-" + dbServiceName + "-1"
+	containerName := strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + dbServiceName + "-1"
 
 	dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
 	selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
