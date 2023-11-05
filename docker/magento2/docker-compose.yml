@@ -1,4 +1,5 @@
-version: "3.7"
+version: "3.8"
+name: {{{CONTAINER_NAME_PREFIX}}}{{{PROJECT_NAME}}}
 services:
   php:
     build:
