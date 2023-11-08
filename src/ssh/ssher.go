@@ -3,6 +3,7 @@ package ssh
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/faradey/madock/src/cli/attr"
 	"log"
 	"os"
 	"strings"
@@ -69,7 +70,14 @@ func DbDump(conn *ssh.Client, remoteDir, name string) {
 			name += "_"
 		}
 		dumpName := "remote_" + name + curDateTime + ".sql.gz"
-		result = RunCommand(conn, "mysqldump -u \""+dbAuthData.Username+"\" -p\""+dbAuthData.Password+"\" -h "+dbAuthData.Host+" --quick --lock-tables=false --no-tablespaces --triggers "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+"/tmp/"+dumpName)
+
+		ignoreTablesStr := ""
+		ignoreTables := attr.Options.IgnoreTable
+		if len(ignoreTables) > 0 {
+			ignoreTablesStr = strings.Join(ignoreTables, " --ignore-table=")
+		}
+
+		result = RunCommand(conn, "mysqldump -u \""+dbAuthData.Username+"\" -p\""+dbAuthData.Password+"\" -h "+dbAuthData.Host+" --quick --lock-tables=false --no-tablespaces --triggers"+ignoreTablesStr+" "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+"/tmp/"+dumpName)
 		sc, err := sftp.NewClient(conn)
 		if err != nil {
 			log.Fatal(err)

@@ -117,6 +117,12 @@ func DbExport() {
 		name += "_"
 	}
 
+	ignoreTablesStr := ""
+	ignoreTables := attr.Options.IgnoreTable
+	if len(ignoreTables) > 0 {
+		ignoreTablesStr = strings.Join(ignoreTables, " --ignore-table=")
+	}
+
 	dbServiceName := "db"
 	if attr.Options.DBServiceName != "" {
 		dbServiceName = attr.Options.DBServiceName
@@ -132,7 +138,7 @@ func DbExport() {
 	defer selectedFile.Close()
 	writer := gzip.NewWriter(selectedFile)
 	defer writer.Close()
-	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", containerName, "bash", "-c", "mysqldump -u root -p"+projectConfig["DB_ROOT_PASSWORD"]+" -v -h "+dbServiceName+" "+projectConfig["DB_DATABASE"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
+	cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", containerName, "bash", "-c", "mysqldump -u root -p"+projectConfig["DB_ROOT_PASSWORD"]+" -v -h "+dbServiceName+ignoreTablesStr+" "+projectConfig["DB_DATABASE"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = writer
