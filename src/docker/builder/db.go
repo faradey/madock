@@ -120,7 +120,7 @@ func DbExport() {
 	ignoreTablesStr := ""
 	ignoreTables := attr.Options.IgnoreTable
 	if len(ignoreTables) > 0 {
-		ignoreTablesStr = strings.Join(ignoreTables, " --ignore-table=")
+		ignoreTablesStr = " --ignore-table=" + projectConfig["DB_DATABASE"] + "." + strings.Join(ignoreTables, " --ignore-table="+projectConfig["DB_DATABASE"]+".")
 	}
 
 	dbServiceName := "db"
