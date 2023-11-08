@@ -74,7 +74,7 @@ func DbDump(conn *ssh.Client, remoteDir, name string) {
 		ignoreTablesStr := ""
 		ignoreTables := attr.Options.IgnoreTable
 		if len(ignoreTables) > 0 {
-			ignoreTablesStr = strings.Join(ignoreTables, " --ignore-table=")
+			ignoreTablesStr = " --ignore-table=" + dbAuthData.Dbname + "." + strings.Join(ignoreTables, " --ignore-table="+dbAuthData.Dbname+".")
 		}
 
 		result = RunCommand(conn, "mysqldump -u \""+dbAuthData.Username+"\" -p\""+dbAuthData.Password+"\" -h "+dbAuthData.Host+" --quick --lock-tables=false --no-tablespaces --triggers"+ignoreTablesStr+" "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+"/tmp/"+dumpName)
