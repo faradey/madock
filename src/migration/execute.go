@@ -7,5 +7,7 @@ func Execute(oldAppVersion string) {
 		versions.V140()
 	} else if oldAppVersion < "1.8.0" {
 		versions.V180()
+	} else if oldAppVersion < "2.1.0" {
+		versions.V210()
 	}
 }

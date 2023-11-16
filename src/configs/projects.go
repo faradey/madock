@@ -31,13 +31,19 @@ func GetCurrentProjectConfig() map[string]string {
 }
 
 func GetProjectConfig(projectName string) map[string]string {
+	config := GetProjectConfigOnly(projectName)
+	ConfigMapping(GetGeneralConfig(), config)
+
+	return config
+}
+
+func GetProjectConfigOnly(projectName string) map[string]string {
 	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
 	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
 		log.Fatal(err)
 	}
 
 	config := ParseFile(configPath)
-	ConfigMapping(GetGeneralConfig(), config)
 
 	return config
 }
