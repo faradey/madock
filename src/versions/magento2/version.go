@@ -30,6 +30,8 @@ func GetVersions(ver string) versions.ToolsVersions {
 		RabbitMQ:     GetRabbitMQVersion(mageVersion),
 		Xdebug:       GetXdebugVersion(phpVer),
 		Magento:      mageVersion,
+		NodeJs:       "18.15.0",
+		Yarn:         "3.6.4",
 	}
 }
 

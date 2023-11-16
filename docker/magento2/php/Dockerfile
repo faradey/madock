@@ -112,7 +112,8 @@ RUN if [ "{{{MAGENTOCLOUD_ENABLED}}}" = "true" ]; then curl -sS https://accounts
 
 RUN apt-get install cron \
     && mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/n98magerun/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
-RUN if [ "{{{NODEJS_ENABLED}}}" = "true" ]; then mkdir /var/www/.npm && chown {{{UID}}}:{{{GUID}}} /var/www/.npm && apt install nodejs npm -y && apt install chromium-bsu -y && npm install -g grunt-cli && npm install -g bower && npm install -g livereload; fi
+<<<if{{{NODEJS_ENABLED}}}>>>RUN curl -sL https://deb.nodesource.com/setup_{{{NODEJS_MAJOR_VERSION}}}.x | bash -<<<endif>>>
+<<<if{{{NODEJS_ENABLED}}}>>>RUN mkdir /var/www/.npm && chown {{{UID}}}:{{{GUID}}} /var/www/.npm && apt install nodejs -y && apt install chromium-bsu -y && npm install -g grunt-cli && npm install -g bower && npm install -g livereload<<<endif>>>
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 

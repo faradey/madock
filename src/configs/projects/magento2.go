@@ -22,6 +22,15 @@ func Magento2(config *configs.ConfigLines, defVersions versions.ToolsVersions, g
 		config.AddEmptyLine()
 	}
 
+	nodeMajorVersion := strings.Split(configs.GetOption("NODEJS_VERSION", generalConf, projectConfig), ".")
+	if len(nodeMajorVersion) > 0 {
+		config.AddOrSetLine("NODEJS_MAJOR_VERSION", nodeMajorVersion[0])
+	}
+
+	if !config.IsEnv {
+		config.AddEmptyLine()
+	}
+
 	repoVersion := strings.Split(defVersions.Db, ":")
 	if len(repoVersion) > 1 {
 		config.AddOrSetLine("DB_REPOSITORY", repoVersion[0])
