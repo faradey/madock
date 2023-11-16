@@ -16,9 +16,12 @@ func V210() {
 		if _, err := os.Stat(execPath + dir + "/env.txt"); !os.IsNotExist(err) {
 			projectName = dir
 			projectConf := configs.GetProjectConfigOnly(projectName)
+			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 			if _, ok := projectConf["UBUNTU_VERSION"]; !ok {
-				envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 				configs.SetParam(envFile, "UBUNTU_VERSION", "20.04")
+			}
+			if _, ok := projectConf["CONTAINER_NAME_PREFIX"]; !ok {
+				configs.SetParam(envFile, "CONTAINER_NAME_PREFIX", "")
 			}
 		}
 	}
