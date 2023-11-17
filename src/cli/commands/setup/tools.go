@@ -155,7 +155,7 @@ func prepareVersions(availableVersions []string) {
 
 func invitation(ver *string) {
 	if *ver != "" {
-		fmt.Println("Enter the item number or press Enter to select the recommended version")
+		fmt.Println("Enter the item number or press Enter to select the recommended item")
 	} else {
 		fmt.Println("Enter the item number")
 	}
@@ -176,7 +176,7 @@ func Waiter() (selected, repoAndVersion string) {
 	}
 	selected = strings.TrimSpace(string(sentence))
 	if selected == "0" {
-		fmt.Println("Enter the version")
+		fmt.Println("Enter the custom value")
 		fmt.Print("> ")
 		buf = bufio.NewReader(os.Stdin)
 		sentence, err = buf.ReadBytes('\n')
