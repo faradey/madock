@@ -1,13 +1,25 @@
 # madock
-Local development environment based on Docker for Magento
+Local development environment based on Docker
+
+Supported platforms: Magento2, PWA, Shopify, Custom PHP projects.
+
+[![GoDoc](https://godoc.org/github.com/faradey/madock?status.svg)](https://godoc.org/github.com/faradey/madock)
+[![Go Report Card](https://goreportcard.com/badge/github.com/faradey/madock)](https://goreportcard.com/report/github.com/faradey/madock)
+[![GitHub release](https://img.shields.io/github/release/faradey/madock.svg)](https://github.com/faradey/madock/releases)
+[![GitHub license](https://img.shields.io/github/license/faradey/madock.svg)](https://opensource.org/license/mit/)
+[![GitHub issues](https://img.shields.io/github/issues/faradey/madock.svg)](https://github.com/faradey/madock/issues)
 
 ## Description
-`madock` is a local Docker-based environment that allows you to run Magento2 projects.
+`madock` is a local Docker-based environment that allows you to run PHP projects.
 This project is written on Golang, and it is distributed under a MIT License.
 
 ## Key Features
 * Automatic project setup
 * Two or more projects can work simultaneously
+* **Magento** as a separate service. Works by default
+* **PWA Studio** as a separate service
+* **Shopify** as a separate service
+* **Custom PHP project** as a separate service
 * Cron support
 * Flexible configuration for each project
 * Database import and export in two clicks
@@ -19,7 +31,6 @@ This project is written on Golang, and it is distributed under a MIT License.
 * MailHog (email testing tool for developers)
 * Magento Cloud
 * Composer patches
-* PWA Studio as a separate service.
 * Magento Functional Testing Framework (MFTF). Learn [more](docs/mftf.md)
 
 ## Tested on

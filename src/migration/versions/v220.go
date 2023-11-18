@@ -7,7 +7,7 @@ import (
 	"github.com/faradey/madock/src/paths"
 )
 
-func V210() {
+func V220() {
 	execProjectsDirs := paths.GetDirs(paths.GetExecDirPath() + "/projects")
 	execPath := paths.GetExecDirPath() + "/projects/"
 	projectName := ""
