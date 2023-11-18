@@ -205,21 +205,28 @@ func GenerateSslCert(ctxPath string, force bool) {
 	if val, ok := generalConfig["SSL"]; force || (ok && val == "true") {
 		projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 		var commands []string
-		var i int = 0
+		i := 0
 		for _, name := range projectsNames {
-			if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
-				projectConf := configs.GetProjectConfig(name)
-				if val, ok := projectConf["HOSTS"]; ok {
-					var onlyHost string
-					hosts := strings.Split(val, " ")
-					if len(hosts) > 0 {
-						for _, hostAndStore := range hosts {
-							onlyHost = strings.Split(hostAndStore, ":")[0]
-							commands = append(commands, "DNS."+strconv.Itoa(i+2)+" = "+onlyHost)
-							i++
-						}
-					}
-				}
+			if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); os.IsNotExist(err) {
+				continue
+			}
+
+			projectConf := configs.GetProjectConfig(name)
+			val := ""
+			if val, ok = projectConf["HOSTS"]; !ok {
+				continue
+			}
+
+			var onlyHost string
+			hosts := strings.Split(val, " ")
+			if len(hosts) == 0 {
+				continue
+			}
+
+			for _, hostAndStore := range hosts {
+				onlyHost = strings.Split(hostAndStore, ":")[0]
+				commands = append(commands, "DNS."+strconv.Itoa(i+2)+" = "+onlyHost)
+				i++
 			}
 		}
 
