@@ -118,9 +118,9 @@ func main() {
 		commands.SetupEnv()
 	case "shopify", "sy":
 		commands.Shopify(strings.Join(os.Args[2:], " "))
-	case "shopify:web", "syw":
+	case "shopify:web", "sy:w":
 		commands.ShopifyWeb(strings.Join(os.Args[2:], " "))
-	case "shopify:web:frontend", "sywf":
+	case "shopify:web:frontend", "sy:w:f":
 		commands.ShopifyWebFrontend(strings.Join(os.Args[2:], " "))
 	case "ssl:rebuild":
 		commands.Ssl()

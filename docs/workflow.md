@@ -125,6 +125,8 @@ This command shows you the following items:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service-name`  DB container name. Optional. Default container: db. Example: db2
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--ignore-table`  Ignore the table when exporting. The specified table will not be included in the backup file. To specify multiple tables, specify this option multiple times.
+
 
 * `db:info`      Information about credentials and remote host and port
  
@@ -219,6 +221,8 @@ This command shows you the following items:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name`  Name of the DB export file
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--ignore-table`  Ignore the table when exporting. The specified table will not be included in the backup file. To specify multiple tables, specify this option multiple times.
+
 
 * `remote:sync:file`  Create and download dump of DB from remote host
 
@@ -256,7 +260,16 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`-f`   Force re-create the file
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--host`   Default host
-                        
+
+
+* `shopify` or `sy`   Execute the Shopify command inside the php container. For example: `madock shopify yarn create @shopify/app --template php`
+
+
+* `shopify:web` or `sy:w`   Execute the Shopify command inside the php container in 'web' folder. For example: `madock shopify:web composer install`
+
+
+* `shopify:web:frontend` or `sy:w:f`   Execute the Shopify command inside the php container in 'web/frontend' folder. For example: `madock shopify:web:frontend SHOPIFY_API_KEY=REPLACE_ME yarn build`
+
 
 * `ssl:rebuild`   Rebuild SSL Certificates  
                         
