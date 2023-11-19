@@ -2,7 +2,7 @@ package debug
 
 import (
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/controller/def/rebuild"
+	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/paths"
 )
 

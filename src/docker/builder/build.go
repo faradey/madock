@@ -7,7 +7,7 @@ import (
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/configs/aruntime/project"
-	"github.com/faradey/madock/src/controller/def/cron"
+	"github.com/faradey/madock/src/controller/general/cron"
 	"github.com/faradey/madock/src/helper"
 	"github.com/faradey/madock/src/paths"
 	"github.com/gosimple/hashdir"

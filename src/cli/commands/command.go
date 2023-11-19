@@ -4,7 +4,7 @@ import (
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/controller/def/proxy"
+	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/docker/scripts"
 	"github.com/faradey/madock/src/paths"

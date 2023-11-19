@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/faradey/madock/src/controller/def/rebuild"
+	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/docker/service"
 )
 
