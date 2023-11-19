@@ -274,32 +274,6 @@ func StopNginx() {
 	}
 }
 
-func Magento(flag string) {
-	projectName := configs.GetProjectName()
-	projectConf := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConf["WORKDIR"]+" && php bin/magento "+flag)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func Mftf(flag string) {
-	projectName := configs.GetProjectName()
-	projectConf := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConf["WORKDIR"]+" && php vendor/bin/mftf "+flag)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func PWA(flag string) {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()

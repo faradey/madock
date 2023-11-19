@@ -16,7 +16,9 @@ import (
 	"github.com/faradey/madock/src/controller/general/logs"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/rebuild"
+	"github.com/faradey/madock/src/controller/magento"
 	"github.com/faradey/madock/src/controller/magento/cloud"
+	"github.com/faradey/madock/src/controller/magento/mftf"
 	"github.com/faradey/madock/src/migration"
 	"log"
 	"os"
@@ -84,11 +86,11 @@ func main() {
 	case "logs":
 		logs.Execute()
 	case "magento", "m":
-		commands.Magento(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
+		magento.Execute()
 	case "mftf":
-		commands.Mftf(strings.Join(os.Args[2:], " "))
+		mftf.Execute()
 	case "mftf:init":
-		commands.MftfInit()
+		mftf.Init()
 	case "n98":
 		commands.N98(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 	case "node":

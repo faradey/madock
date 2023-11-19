@@ -2,12 +2,21 @@ package help
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/cli/attr"
+	"github.com/jessevdk/go-flags"
+	"log"
+	"os"
 
 	"github.com/faradey/madock/src/cli/fmtc"
 )
 
+type ArgsStruct struct {
+	attr.Arguments
+}
+
 func Execute() {
-	/* 16 commands */
+	getArgs()
+
 	fmtc.WarningLn("Usage:")
 	tab()
 	fmt.Println("command [arguments]")
@@ -132,4 +141,19 @@ func tab() {
 
 func tabln() {
 	fmt.Println("	")
+}
+
+func getArgs() *ArgsStruct {
+	args := new(ArgsStruct)
+	if len(os.Args) > 2 {
+		argsOrigin := os.Args[2:]
+		var err error
+		_, err = flags.ParseArgs(args, argsOrigin)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return args
 }

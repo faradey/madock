@@ -39,10 +39,6 @@ func Prune() {
 	}
 }
 
-func Magento(flag string) {
-	builder.Magento(flag)
-}
-
 func PWA(flag string) {
 	builder.PWA(flag)
 }
@@ -61,14 +57,6 @@ func IsNotDefine() {
 
 func Ssl() {
 	builder.SslRebuild()
-}
-
-func MftfInit() {
-	builder.MftfInit()
-}
-
-func Mftf(flag string) {
-	builder.Mftf(flag)
 }
 
 func Shopify(flag string) {
