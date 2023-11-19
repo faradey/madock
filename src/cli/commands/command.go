@@ -79,12 +79,6 @@ func PWA(flag string) {
 	builder.PWA(flag)
 }
 
-func Cloud(flag string) {
-	projectConfig := configs.GetCurrentProjectConfig()
-	flag = strings.Replace(flag, "$project", projectConfig["MAGENTOCLOUD_PROJECT_NAME"], -1)
-	builder.Cloud(flag)
-}
-
 func Cli(flag string) {
 	builder.Cli(flag)
 }

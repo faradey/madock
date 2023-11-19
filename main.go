@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/faradey/madock/src/controller/def/bash"
 	"github.com/faradey/madock/src/controller/def/clean_cache"
+	"github.com/faradey/madock/src/controller/magento/cloud"
 	"github.com/faradey/madock/src/migration"
 	"log"
 	"os"
@@ -33,7 +34,7 @@ func main() {
 	case "c:f":
 		clean_cache.CleanCache()
 	case "magento-cloud", "cloud":
-		commands.Cloud(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
+		cloud.Cloud()
 	case "cli":
 		commands.Cli(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 	case "composer":

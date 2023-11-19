@@ -314,16 +314,7 @@ func PWA(flag string) {
 }
 
 func Cloud(flag string) {
-	projectName := configs.GetProjectName()
-	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && magento-cloud "+flag)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
+
 }
 
 func DownloadMagento(projectName, edition, version string) {
