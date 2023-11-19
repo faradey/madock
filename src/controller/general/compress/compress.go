@@ -3,13 +3,22 @@ package compress
 import (
 	"archive/zip"
 	"fmt"
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/paths"
+	"github.com/jessevdk/go-flags"
+	"log"
 	"os"
 )
+
+type ArgsStruct struct {
+	attr.Arguments
+}
 
 var archiveName string = "madock_compressed_project.zip"
 
 func Zip() {
+	getArgs()
+
 	baseFolder := paths.GetRunDirPath() + "/"
 	//fmt.Println(baseFolder + "/" + archiveName)
 	//return
@@ -98,4 +107,19 @@ func removeFiles(basePath string) {
 			os.RemoveAll(newBase)
 		}
 	}
+}
+
+func getArgs() *ArgsStruct {
+	args := new(ArgsStruct)
+	if len(os.Args) > 2 {
+		argsOrigin := os.Args[2:]
+		var err error
+		_, err = flags.ParseArgs(args, argsOrigin)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return args
 }

@@ -1,16 +1,24 @@
 package cloud
 
 import (
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	cliHelper "github.com/faradey/madock/src/helper"
+	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
 )
 
+type ArgsStruct struct {
+	attr.Arguments
+}
+
 func Cloud() {
+	getArgs()
+
 	projectConf := configs.GetCurrentProjectConfig()
 	if projectConf["PLATFORM"] == "magento2" {
 		flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])
@@ -28,4 +36,19 @@ func Cloud() {
 	} else {
 		fmtc.Warning("This command is not supported for " + projectConf["PLATFORM"])
 	}
+}
+
+func getArgs() *ArgsStruct {
+	args := new(ArgsStruct)
+	if len(os.Args) > 2 {
+		argsOrigin := os.Args[2:]
+		var err error
+		_, err = flags.ParseArgs(args, argsOrigin)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return args
 }

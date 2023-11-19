@@ -10,6 +10,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/cron"
 	"github.com/faradey/madock/src/controller/general/db"
 	"github.com/faradey/madock/src/controller/general/debug"
+	"github.com/faradey/madock/src/controller/general/help"
 	"github.com/faradey/madock/src/controller/general/info"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/rebuild"
@@ -21,7 +22,6 @@ import (
 
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/commands"
-	"github.com/faradey/madock/src/cli/helper"
 	cliHelper "github.com/faradey/madock/src/helper"
 )
 
@@ -31,7 +31,7 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	migration.Apply(appVersion)
 	if len(os.Args) <= 1 {
-		helper.Help()
+		help.Execute()
 		return
 	}
 
@@ -78,7 +78,7 @@ func main() {
 	case "install":
 		commands.InstallMagento()
 	case "help":
-		helper.Help()
+		help.Execute()
 	case "logs":
 		commands.Logs()
 	case "magento", "m":

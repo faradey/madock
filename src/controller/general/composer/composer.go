@@ -15,7 +15,7 @@ func Composer() {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 
-	service, user, workdir := cliHelper.GetUserServiceWorkdir("php", "www-data", projectConf["WORKDIR"])
+	service, user, workdir := cliHelper.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["WORKDIR"])
 
 	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash", "-c", "cd "+workdir+" && composer "+flag)
 	cmd.Stdin = os.Stdin

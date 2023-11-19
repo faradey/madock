@@ -12,6 +12,8 @@ import (
 )
 
 func Unzip() {
+	getArgs()
+
 	isOk := false
 	basePath := paths.GetRunDirPath() + "/"
 	r, err := zip.OpenReader(basePath + archiveName)

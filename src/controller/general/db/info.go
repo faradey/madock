@@ -1,14 +1,23 @@
 package db
 
 import (
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/paths"
+	"github.com/jessevdk/go-flags"
 	"log"
+	"os"
 	"strconv"
 )
 
+type ArgsInfoStruct struct {
+	attr.Arguments
+}
+
 func Info() {
+	getInfoArgs()
+
 	projectConf := configs.GetCurrentProjectConfig()
 	if projectConf["PLATFORM"] != "pwa" {
 		portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
@@ -26,4 +35,19 @@ func Info() {
 	} else {
 		fmtc.Warning("This command is not supported for " + projectConf["PLATFORM"])
 	}
+}
+
+func getInfoArgs() *ArgsInfoStruct {
+	args := new(ArgsInfoStruct)
+	if len(os.Args) > 2 {
+		argsOrigin := os.Args[2:]
+		var err error
+		_, err = flags.ParseArgs(args, argsOrigin)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return args
 }

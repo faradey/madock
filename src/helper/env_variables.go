@@ -4,7 +4,7 @@ import (
 	"os"
 )
 
-func GetUserServiceWorkdir(service, user, workdir string) (string, string, string) {
+func GetEnvForUserServiceWorkdir(service, user, workdir string) (string, string, string) {
 	if os.Getenv("MADOCK_SERVICE_NAME") != "" {
 		service = os.Getenv("MADOCK_SERVICE_NAME")
 	}

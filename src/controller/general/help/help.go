@@ -1,4 +1,4 @@
-package helper
+package help
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/faradey/madock/src/cli/fmtc"
 )
 
-func Help() {
+func Execute() {
 	/* 16 commands */
 	fmtc.WarningLn("Usage:")
 	tab()

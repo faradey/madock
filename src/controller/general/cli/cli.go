@@ -18,7 +18,7 @@ func Cli() {
 		service = "nodejs"
 	}
 
-	service, user, workdir := cliHelper.GetUserServiceWorkdir(service, "www-data", "")
+	service, user, workdir := cliHelper.GetEnvForUserServiceWorkdir(service, "www-data", "")
 
 	if workdir != "" {
 		workdir = "cd " + workdir + " && "
