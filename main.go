@@ -19,6 +19,7 @@ import (
 	"github.com/faradey/madock/src/controller/magento"
 	"github.com/faradey/madock/src/controller/magento/cloud"
 	"github.com/faradey/madock/src/controller/magento/mftf"
+	"github.com/faradey/madock/src/controller/magento/n98"
 	"github.com/faradey/madock/src/migration"
 	"log"
 	"os"
@@ -92,7 +93,7 @@ func main() {
 	case "mftf:init":
 		mftf.Init()
 	case "n98":
-		commands.N98(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
+		n98.Execute()
 	case "node":
 		commands.Node(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 	case "patch:create":

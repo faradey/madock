@@ -43,10 +43,6 @@ func PWA(flag string) {
 	builder.PWA(flag)
 }
 
-func N98(flag string) {
-	builder.N98(flag)
-}
-
 func Node(flag string) {
 	builder.Node(flag)
 }

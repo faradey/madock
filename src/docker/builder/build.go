@@ -320,19 +320,6 @@ func DownloadMagento(projectName, edition, version string) {
 	}
 }
 
-func N98(flag string) {
-	projectName := configs.GetProjectName()
-	projectConf := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConf["WORKDIR"]+" && /var/www/n98magerun/n98-magerun2.phar "+flag)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func Node(flag string) {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
