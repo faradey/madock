@@ -35,12 +35,6 @@ var Options struct {
 	IgnoreTable   []string `long:"ignore-table" description:"Ignore db table"`
 }
 
-type NewArgs func() *Arguments
-
-type ArgumentsInterface interface {
-	NewArgs() *Arguments
-}
-
 func ParseAttributes() {
 	if len(os.Args) > 2 {
 		args := os.Args[2:]
