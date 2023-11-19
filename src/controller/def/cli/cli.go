@@ -18,9 +18,13 @@ func Cli() {
 		service = "nodejs"
 	}
 
-	service, user, workdir := cliHelper.GetUserServiceWorkdir(service, "www-data", projectConfig["WORKDIR"])
+	service, user, workdir := cliHelper.GetUserServiceWorkdir(service, "www-data", "")
 
-	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash", "-c", "cd "+workdir+" && "+flag)
+	if workdir != "" {
+		workdir = "cd " + workdir + " && "
+	}
+
+	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash", "-c", workdir+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
