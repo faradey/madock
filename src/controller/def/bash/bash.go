@@ -3,10 +3,11 @@ package bash
 import (
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/service"
 	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
+	"os/exec"
+	"strings"
 )
 
 type ArgsStruct struct {
@@ -33,7 +34,16 @@ func Bash() {
 		user = args.User
 	}
 
-	service.Bash(containerName, user)
+	projectName := configs.GetProjectName()
+	projectConfig := configs.GetCurrentProjectConfig()
+	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+containerName+"-1", "bash")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getArgs() *ArgsStruct {
