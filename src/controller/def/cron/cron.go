@@ -1,24 +1,31 @@
-package builder
+package cron
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/configs"
+	cliHelper "github.com/faradey/madock/src/helper"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/faradey/madock/src/configs"
 )
 
-func Cron(flag, manual bool) {
+func RunCron(flag, manual bool) {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
+	service := "php"
+	if projectConfig["PLATFORM"] == "pwa" {
+		service = "nodejs"
+	}
+
+	service, user, _ := cliHelper.GetUserServiceWorkdir(service, "root", "")
+
 	var cmd *exec.Cmd
 	var bOut io.Writer
 	var bErr io.Writer
 	if flag {
-		cmd = exec.Command("docker", "exec", "-i", "-u", "root", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "service", "cron", "start")
+		cmd = exec.Command("docker", "exec", "-i", "-u", user, strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "service", "cron", "start")
 		cmd.Stdout = bOut
 		cmd.Stderr = bErr
 		err := cmd.Run()
@@ -71,4 +78,12 @@ func Cron(flag, manual bool) {
 			}
 		}
 	}
+}
+
+func Enable() {
+	RunCron(true, true)
+}
+
+func Disable() {
+	RunCron(false, true)
 }

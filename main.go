@@ -1,10 +1,14 @@
 package main
 
 import (
+	"github.com/faradey/madock/src/compress"
 	"github.com/faradey/madock/src/controller/def/bash"
 	"github.com/faradey/madock/src/controller/def/clean_cache"
 	"github.com/faradey/madock/src/controller/def/cli"
 	"github.com/faradey/madock/src/controller/def/composer"
+	"github.com/faradey/madock/src/controller/def/config"
+	"github.com/faradey/madock/src/controller/def/cron"
+	"github.com/faradey/madock/src/controller/def/db"
 	"github.com/faradey/madock/src/controller/magento/cloud"
 	"github.com/faradey/madock/src/migration"
 	"log"
@@ -42,21 +46,21 @@ func main() {
 	case "composer":
 		composer.Composer()
 	case "compress":
-		commands.Compress()
+		compress.Zip()
 	case "config:list":
-		commands.ShowEnv()
+		config.ShowEnv()
 	case "config:set":
-		commands.SetEnvOption()
+		config.SetEnvOption()
 	case "cron:enable":
-		commands.CronEnable()
+		cron.Enable()
 	case "cron:disable":
-		commands.CronDisable()
+		cron.Disable()
 	case "db:import":
-		commands.DBImport()
+		db.DBImport()
 	case "db:export":
-		commands.DBExport()
+		db.DBExport()
 	case "db:info":
-		commands.DBInfo()
+		db.DBInfo()
 	case "debug:enable":
 		commands.DebugEnable()
 	case "debug:disable":
@@ -136,7 +140,7 @@ func main() {
 	case "stop":
 		commands.Stop()
 	case "uncompress":
-		commands.Uncompress()
+		compress.Unzip()
 	default:
 		commands.IsNotDefine()
 	}

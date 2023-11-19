@@ -4,6 +4,7 @@ import (
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/controller/def/cron"
 	"github.com/faradey/madock/src/paths"
 	"log"
 	"os"
@@ -58,9 +59,9 @@ func StartShopify(withChown bool, projectConfig map[string]string) {
 		}
 
 		if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
-			Cron(true, false)
+			cron.RunCron(true, false)
 		} else {
-			Cron(false, false)
+			cron.RunCron(false, false)
 		}
 	}
 }

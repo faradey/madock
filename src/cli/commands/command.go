@@ -1,18 +1,14 @@
 package commands
 
 import (
-	"fmt"
-	"github.com/faradey/madock/src/versions/magento2"
-	"strings"
-
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
-	"github.com/faradey/madock/src/compress"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/docker/scripts"
 	"github.com/faradey/madock/src/paths"
 	"github.com/faradey/madock/src/ssh"
+	"github.com/faradey/madock/src/versions/magento2"
 )
 
 func RemoteSyncDb() {
@@ -79,14 +75,6 @@ func PWA(flag string) {
 	builder.PWA(flag)
 }
 
-func Compress() {
-	compress.Zip()
-}
-
-func Uncompress() {
-	compress.Unzip()
-}
-
 func DebugEnable() {
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
 	configs.SetParam(configPath, "XDEBUG_ENABLED", "true")
@@ -113,31 +101,6 @@ func DebugProfileDisable() {
 
 func Info() {
 	scripts.MagentoInfo()
-}
-
-func CronEnable() {
-	builder.Cron(true, true)
-}
-
-func CronDisable() {
-	builder.Cron(false, true)
-}
-
-func SetEnvOption() {
-	name := strings.ToUpper(attr.Options.Name)
-	val := attr.Options.Value
-	if len(name) > 0 && configs.IsOption(name) {
-		configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-		configs.SetParam(configPath, name, val)
-	}
-}
-
-func ShowEnv() {
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-	lines := configs.GetAllLines(configPath)
-	for _, ln := range lines {
-		fmt.Println(ln)
-	}
 }
 
 func N98(flag string) {
