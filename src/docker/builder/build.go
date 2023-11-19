@@ -455,19 +455,6 @@ func Composer(flag string) {
 	}
 }
 
-func CleanCache() {
-	projectName := configs.GetProjectName()
-	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConfig["WORKDIR"]+" && rm -f pub/static/deployed_version.txt && rm -Rf pub/static/frontend && rm -Rf pub/static/adminhtml && rm -Rf var/view_preprocessed/pub && rm -Rf generated/code && php bin/magento c:f")
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func N98(flag string) {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()

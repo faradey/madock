@@ -137,10 +137,6 @@ func CronDisable() {
 	builder.Cron(false, true)
 }
 
-func CleanCache() {
-	builder.CleanCache()
-}
-
 func SetEnvOption() {
 	name := strings.ToUpper(attr.Options.Name)
 	val := attr.Options.Value
