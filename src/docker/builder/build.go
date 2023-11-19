@@ -313,10 +313,6 @@ func PWA(flag string) {
 	}
 }
 
-func Cloud(flag string) {
-
-}
-
 func DownloadMagento(projectName, edition, version string) {
 	projectConfig := configs.GetCurrentProjectConfig()
 	sampleData := ""
@@ -413,24 +409,6 @@ func InstallMagento(projectName, magentoVer string) {
 	fmtc.SuccessLn("[SUCCESS]: Magento Admin URI: /" + projectConfig["MAGENTO_ADMIN_FRONTNAME"])
 	fmtc.SuccessLn("[SUCCESS]: Magento Admin User: " + projectConfig["MAGENTO_ADMIN_USER"])
 	fmtc.SuccessLn("[SUCCESS]: Magento Admin Password: " + projectConfig["MAGENTO_ADMIN_PASSWORD"])
-}
-
-func Cli(flag string) {
-	projectName := configs.GetProjectName()
-	// get project config
-	projectConfig := configs.GetCurrentProjectConfig()
-	containerSlug := "php"
-	if projectConfig["PLATFORM"] == "pwa" {
-		containerSlug = "nodejs"
-	}
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+containerSlug+"-1", "bash", "-c", flag)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func Composer(flag string) {

@@ -79,10 +79,6 @@ func PWA(flag string) {
 	builder.PWA(flag)
 }
 
-func Cli(flag string) {
-	builder.Cli(flag)
-}
-
 func Composer(flag string) {
 	builder.Composer(flag)
 }
