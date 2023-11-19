@@ -8,7 +8,6 @@ import (
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/paths"
 	"github.com/faradey/madock/src/ssh"
-	"github.com/faradey/madock/src/versions/magento2"
 )
 
 func RemoteSyncDb() {
@@ -70,11 +69,6 @@ func IsNotDefine() {
 
 func Ssl() {
 	builder.SslRebuild()
-}
-
-func InstallMagento() {
-	toolsDefVersions := magento2.GetVersions("")
-	builder.InstallMagento(configs.GetProjectName(), toolsDefVersions.Magento)
 }
 
 func MftfInit() {

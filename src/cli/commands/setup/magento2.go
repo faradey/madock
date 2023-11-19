@@ -5,6 +5,7 @@ import (
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs/projects"
+	"github.com/faradey/madock/src/controller/general/install"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/paths"
 	"github.com/faradey/madock/src/versions/magento2"
@@ -82,14 +83,10 @@ func Magento2(projectName string, projectConf map[string]string, continueSetup b
 	}
 
 	if attr.Options.Install {
-		InstallMagento(projectName, toolsDefVersions.Magento)
+		install.Magento(projectName, toolsDefVersions.Magento)
 	}
 }
 
 func DownloadMagento(projectName, mageVersion, edition string) {
 	builder.DownloadMagento(projectName, edition, mageVersion)
-}
-
-func InstallMagento(projectName, magentoVer string) {
-	builder.InstallMagento(projectName, magentoVer)
 }

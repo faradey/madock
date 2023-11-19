@@ -12,6 +12,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/debug"
 	"github.com/faradey/madock/src/controller/general/help"
 	"github.com/faradey/madock/src/controller/general/info"
+	"github.com/faradey/madock/src/controller/general/install"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/controller/magento/cloud"
@@ -76,7 +77,7 @@ func main() {
 	case "info":
 		info.Info()
 	case "install":
-		commands.InstallMagento()
+		install.Execute()
 	case "help":
 		help.Execute()
 	case "logs":
