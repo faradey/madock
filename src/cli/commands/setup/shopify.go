@@ -10,7 +10,7 @@ import (
 	"github.com/faradey/madock/src/versions/shopify"
 )
 
-func Shopify(projectName string, projectConfig map[string]string, continueSetup bool) {
+func Shopify(projectName string, projectConf map[string]string, continueSetup bool) {
 	toolsDefVersions := shopify.GetVersions()
 
 	if continueSetup {
@@ -24,9 +24,9 @@ func Shopify(projectName string, projectConfig map[string]string, continueSetup 
 
 		Redis(&toolsDefVersions.Redis)
 		RabbitMQ(&toolsDefVersions.RabbitMQ)
-		Hosts(projectName, &toolsDefVersions.Hosts, projectConfig)
+		Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
 
-		projects.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
+		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
 		fmtc.SuccessLn("\n" + "Finish set up environment")
@@ -36,5 +36,5 @@ func Shopify(projectName string, projectConfig map[string]string, continueSetup 
 	}
 
 	builder.Down(attr.Options.WithVolumes)
-	builder.StartShopify(attr.Options.WithChown, projectConfig)
+	builder.StartShopify(attr.Options.WithChown, projectConf)
 }

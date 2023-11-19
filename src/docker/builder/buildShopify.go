@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func StartShopify(withChown bool, projectConfig map[string]string) {
+func StartShopify(withChown bool, projectConf map[string]string) {
 	projectName := configs.GetProjectName()
 	UpNginx()
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
@@ -48,7 +48,7 @@ func StartShopify(withChown bool, projectConfig map[string]string) {
 		if withChown {
 			projectName := configs.GetProjectName()
 			usr, _ := user.Current()
-			cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConfig["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
+			cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -58,7 +58,7 @@ func StartShopify(withChown bool, projectConfig map[string]string) {
 			}
 		}
 
-		if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
+		if val, ok := projectConf["CRON_ENABLED"]; ok && val == "true" {
 			cron.RunCron(true, false)
 		} else {
 			cron.RunCron(false, false)

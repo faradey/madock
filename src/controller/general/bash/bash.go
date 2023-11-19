@@ -19,15 +19,15 @@ type ArgsStruct struct {
 func Bash() {
 	args := getArgs()
 
-	containerName := "php"
+	service := "php"
 	user := "root"
 	projectConf := configs.GetCurrentProjectConfig()
 	if projectConf["PLATFORM"] == "pwa" {
-		containerName = "nodejs"
+		service = "nodejs"
 	}
 
 	if args.Service != "" {
-		containerName = args.Service
+		service = args.Service
 	}
 
 	if args.User != "" {
@@ -35,8 +35,7 @@ func Bash() {
 	}
 
 	projectName := configs.GetProjectName()
-	projectConfig := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+containerName+"-1", "bash")
+	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

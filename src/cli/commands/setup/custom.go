@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func Custom(projectName string, projectConfig map[string]string, continueSetup bool) {
+func Custom(projectName string, projectConf map[string]string, continueSetup bool) {
 	toolsDefVersions := custom.GetVersions()
 
 	if continueSetup {
@@ -29,9 +29,9 @@ func Custom(projectName string, projectConfig map[string]string, continueSetup b
 
 		Redis(&toolsDefVersions.Redis)
 		RabbitMQ(&toolsDefVersions.RabbitMQ)
-		HostsCustom(projectName, &toolsDefVersions.Hosts, projectConfig)
+		HostsCustom(projectName, &toolsDefVersions.Hosts, projectConf)
 
-		projects.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
+		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
 		fmtc.SuccessLn("\n" + "Finish set up environment")
@@ -41,19 +41,19 @@ func Custom(projectName string, projectConfig map[string]string, continueSetup b
 	}
 
 	builder.Down(attr.Options.WithVolumes)
-	builder.StartCustom(attr.Options.WithChown, projectConfig)
+	builder.StartCustom(attr.Options.WithChown, projectConf)
 }
 
-func HostsCustom(projectName string, defVersion *string, projectConfig map[string]string) {
-	host := strings.ToLower(projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"])
-	if val, ok := projectConfig["HOSTS"]; ok && val != "" {
+func HostsCustom(projectName string, defVersion *string, projectConf map[string]string) {
+	host := strings.ToLower(projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"])
+	if val, ok := projectConf["HOSTS"]; ok && val != "" {
 		host = val
 	}
 	fmtc.TitleLn("Hosts")
 	fmt.Println("Input format: a.example.com b.example.com")
 	fmt.Println("Recommended host: " + host)
 	*defVersion = host
-	availableVersions := []string{"Custom", projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"], "loc." + projectName + ".com"}
+	availableVersions := []string{"Custom", projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"], "loc." + projectName + ".com"}
 	prepareVersions(availableVersions)
 	invitation(defVersion)
 	waiterAndProceed(defVersion, availableVersions)

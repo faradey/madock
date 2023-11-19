@@ -7,16 +7,16 @@ import (
 	"strings"
 )
 
-func Shopify(config *configs.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConfig map[string]string) {
+func Shopify(config *configs.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	var dbType = "MariaDB"
 	config.AddOrSetLine("PHP_VERSION", defVersions.Php)
 	config.AddOrSetLine("PHP_COMPOSER_VERSION", defVersions.Composer)
-	config.AddOrSetLine("PHP_TZ", configs.GetOption("PHP_TZ", generalConf, projectConfig))
+	config.AddOrSetLine("PHP_TZ", configs.GetOption("PHP_TZ", generalConf, projectConf))
 	config.AddOrSetLine("XDEBUG_VERSION", magento2.GetXdebugVersion(defVersions.Php))
 	config.AddOrSetLine("XDEBUG_REMOTE_HOST", "host.docker.internal")
-	config.AddOrSetLine("XDEBUG_IDE_KEY", configs.GetOption("XDEBUG_IDE_KEY", generalConf, projectConfig))
-	config.AddOrSetLine("XDEBUG_ENABLED", configs.GetOption("XDEBUG_ENABLED", generalConf, projectConfig))
-	config.AddOrSetLine("IONCUBE_ENABLED", configs.GetOption("IONCUBE_ENABLED", generalConf, projectConfig))
+	config.AddOrSetLine("XDEBUG_IDE_KEY", configs.GetOption("XDEBUG_IDE_KEY", generalConf, projectConf))
+	config.AddOrSetLine("XDEBUG_ENABLED", configs.GetOption("XDEBUG_ENABLED", generalConf, projectConf))
+	config.AddOrSetLine("IONCUBE_ENABLED", configs.GetOption("IONCUBE_ENABLED", generalConf, projectConf))
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
@@ -32,10 +32,10 @@ func Shopify(config *configs.ConfigLines, defVersions versions.ToolsVersions, ge
 		config.AddOrSetLine("DB_TYPE", dbType)
 	}
 
-	config.AddOrSetLine("DB_ROOT_PASSWORD", configs.GetOption("DB_ROOT_PASSWORD", generalConf, projectConfig))
-	config.AddOrSetLine("DB_USER", configs.GetOption("DB_USER", generalConf, projectConfig))
-	config.AddOrSetLine("DB_PASSWORD", configs.GetOption("DB_PASSWORD", generalConf, projectConfig))
-	config.AddOrSetLine("DB_DATABASE", configs.GetOption("DB_DATABASE", generalConf, projectConfig))
+	config.AddOrSetLine("DB_ROOT_PASSWORD", configs.GetOption("DB_ROOT_PASSWORD", generalConf, projectConf))
+	config.AddOrSetLine("DB_USER", configs.GetOption("DB_USER", generalConf, projectConf))
+	config.AddOrSetLine("DB_PASSWORD", configs.GetOption("DB_PASSWORD", generalConf, projectConf))
+	config.AddOrSetLine("DB_DATABASE", configs.GetOption("DB_DATABASE", generalConf, projectConf))
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
@@ -45,7 +45,7 @@ func Shopify(config *configs.ConfigLines, defVersions versions.ToolsVersions, ge
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("REDIS_ENABLED", configs.GetOption("REDIS_ENABLED", generalConf, projectConfig))
+	config.AddOrSetLine("REDIS_ENABLED", configs.GetOption("REDIS_ENABLED", generalConf, projectConf))
 	repoVersion = strings.Split(defVersions.Redis, ":")
 	if len(repoVersion) > 1 {
 		config.AddOrSetLine("REDIS_REPOSITORY", repoVersion[0])
@@ -69,7 +69,7 @@ func Shopify(config *configs.ConfigLines, defVersions versions.ToolsVersions, ge
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("RABBITMQ_ENABLED", configs.GetOption("RABBITMQ_ENABLED", generalConf, projectConfig))
+	config.AddOrSetLine("RABBITMQ_ENABLED", configs.GetOption("RABBITMQ_ENABLED", generalConf, projectConf))
 	repoVersion = strings.Split(defVersions.RabbitMQ, ":")
 	if len(repoVersion) > 1 {
 		config.AddOrSetLine("RABBITMQ_REPOSITORY", repoVersion[0])

@@ -11,7 +11,7 @@ import (
 
 var generalConfig map[string]string
 var projectConfig map[string]string
-var projectConfigOnly map[string]string
+var nameOfProject string
 
 func GetGeneralConfig() map[string]string {
 	if len(generalConfig) == 0 {
@@ -32,29 +32,28 @@ func GetGeneralConfig() map[string]string {
 }
 
 func GetCurrentProjectConfig() map[string]string {
-	return GetProjectConfig(GetProjectName())
-}
-
-func GetProjectConfig(projectName string) map[string]string {
 	if len(projectConfig) == 0 {
-		projectConfig = GetProjectConfigOnly(projectName)
-		ConfigMapping(GetGeneralConfig(), projectConfig)
+		projectConfig = GetProjectConfig(GetProjectName())
 	}
 
 	return projectConfig
 }
 
-func GetProjectConfigOnly(projectName string) map[string]string {
-	if len(projectConfigOnly) == 0 {
-		configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
-		if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
-			log.Fatal(err)
-		}
+func GetProjectConfig(projectName string) map[string]string {
 
-		projectConfigOnly = ParseFile(configPath)
+	config := GetProjectConfigOnly(projectName)
+	ConfigMapping(GetGeneralConfig(), config)
+
+	return config
+}
+
+func GetProjectConfigOnly(projectName string) map[string]string {
+	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
+	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
+		log.Fatal(err)
 	}
 
-	return projectConfigOnly
+	return ParseFile(configPath)
 }
 
 func GetOption(name string, generalConf, projectConf map[string]string) string {
@@ -79,23 +78,23 @@ func PrepareDirsForProject(projectName string) {
 func GetProjectName() string {
 	suffix := ""
 	envFile := ""
-	name := ""
-
-	for i := 2; i < 1000; i++ {
-		name = paths.GetRunDirName() + suffix
-		envFile = paths.GetExecDirPath() + "/projects/" + name + "/env.txt"
-		if _, err := os.Stat(envFile); !os.IsNotExist(err) {
-			projectConf := GetProjectConfig(name)
-			val, ok := projectConf["PATH"]
-			if ok && val != paths.GetRunDirPath() {
-				suffix = "-" + strconv.Itoa(i)
+	if nameOfProject == "" {
+		for i := 2; i < 1000; i++ {
+			nameOfProject = paths.GetRunDirName() + suffix
+			envFile = paths.GetExecDirPath() + "/projects/" + nameOfProject + "/env.txt"
+			if _, err := os.Stat(envFile); !os.IsNotExist(err) {
+				projectConf := GetProjectConfigOnly(nameOfProject)
+				val, ok := projectConf["PATH"]
+				if ok && val != paths.GetRunDirPath() {
+					suffix = "-" + strconv.Itoa(i)
+				} else {
+					break
+				}
 			} else {
 				break
 			}
-		} else {
-			break
 		}
 	}
 
-	return name
+	return nameOfProject
 }

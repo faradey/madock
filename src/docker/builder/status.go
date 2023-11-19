@@ -74,15 +74,15 @@ func Status() {
 	}
 
 	fmtc.TitleLn("Tools:")
-	projectConfig := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetCurrentProjectConfig()
 
-	if strings.ToLower(projectConfig["CRON_ENABLED"]) == "true" {
+	if strings.ToLower(projectConf["CRON_ENABLED"]) == "true" {
 		fmtc.SuccessLn(" Cron is running")
 	} else {
 		fmtc.WarningLn(" Cron is not running")
 	}
 
-	if strings.ToLower(projectConfig["XDEBUG_ENABLED"]) == "true" {
+	if strings.ToLower(projectConf["XDEBUG_ENABLED"]) == "true" {
 		fmtc.SuccessLn(" Debugger is enabled")
 	} else {
 		fmtc.WarningLn(" Debugger is disabled")

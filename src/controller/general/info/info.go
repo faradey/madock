@@ -1,4 +1,4 @@
-package clean_cache
+package info
 
 import (
 	"github.com/faradey/madock/src/cli/attr"
@@ -13,23 +13,20 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
-	User string `long:"user" short:"u" description:"User"`
 }
 
-func CleanCache() {
-	args := getArgs()
+func Info() {
+	getArgs()
 
-	user := "www-data"
-
-	if args.User != "" {
-		user = args.User
+	service := "php"
+	projectConf := configs.GetCurrentProjectConfig()
+	if projectConf["PLATFORM"] == "pwa" {
+		service = "nodejs"
 	}
 
-	projectName := configs.GetProjectName()
-	projectConf := configs.GetCurrentProjectConfig()
-
 	if projectConf["PLATFORM"] == "magento2" {
-		cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConf["WORKDIR"]+" && rm -f pub/static/deployed_version.txt && rm -Rf pub/static/frontend && rm -Rf pub/static/adminhtml && rm -Rf var/view_preprocessed/pub && rm -Rf generated/code && php bin/magento c:f")
+		projectName := configs.GetProjectName()
+		cmd := exec.Command("docker", "exec", "-it", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "php", "/var/www/scripts/php/magento-info.php", projectConf["WORKDIR"])
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

@@ -11,16 +11,16 @@ import (
 
 func Start() {
 	if !configs.IsHasNotConfig() {
-		projectConfig := configs.GetCurrentProjectConfig()
+		projectConf := configs.GetCurrentProjectConfig()
 		fmtc.SuccessLn("Start containers in detached mode")
-		if projectConfig["PLATFORM"] == "magento2" {
-			builder.StartMagento2(attr.Options.WithChown, projectConfig)
-		} else if projectConfig["PLATFORM"] == "pwa" {
+		if projectConf["PLATFORM"] == "magento2" {
+			builder.StartMagento2(attr.Options.WithChown, projectConf)
+		} else if projectConf["PLATFORM"] == "pwa" {
 			builder.StartPWA(attr.Options.WithChown)
-		} else if projectConfig["PLATFORM"] == "shopify" {
-			builder.StartShopify(attr.Options.WithChown, projectConfig)
-		} else if projectConfig["PLATFORM"] == "custom" {
-			builder.StartCustom(attr.Options.WithChown, projectConfig)
+		} else if projectConf["PLATFORM"] == "shopify" {
+			builder.StartShopify(attr.Options.WithChown, projectConf)
+		} else if projectConf["PLATFORM"] == "custom" {
+			builder.StartCustom(attr.Options.WithChown, projectConf)
 		}
 		fmtc.SuccessLn("Done")
 	} else {
@@ -30,14 +30,14 @@ func Start() {
 }
 
 func Stop() {
-	projectConfig := configs.GetCurrentProjectConfig()
-	if projectConfig["PLATFORM"] == "magento2" {
+	projectConf := configs.GetCurrentProjectConfig()
+	if projectConf["PLATFORM"] == "magento2" {
 		builder.StopMagento2()
-	} else if projectConfig["PLATFORM"] == "pwa" {
+	} else if projectConf["PLATFORM"] == "pwa" {
 		builder.StopPWA()
-	} else if projectConfig["PLATFORM"] == "shopify" {
+	} else if projectConf["PLATFORM"] == "shopify" {
 		builder.StopShopify()
-	} else if projectConfig["PLATFORM"] == "custom" {
+	} else if projectConf["PLATFORM"] == "custom" {
 		builder.StopCustom()
 	}
 	if len(paths.GetActiveProjects()) == 0 {

@@ -7,23 +7,23 @@ import (
 	"github.com/faradey/madock/src/versions/pwa"
 )
 
-func PWA(projectName string, projectConfig map[string]string, continueSetup bool) {
+func PWA(projectName string, projectConf map[string]string, continueSetup bool) {
 	if continueSetup {
 		toolsDefVersions := pwa.GetVersions()
 		NodeJs(&toolsDefVersions.NodeJs)
 		Yarn(&toolsDefVersions.Yarn)
-		Hosts(projectName, &toolsDefVersions.Hosts, projectConfig)
-		setMagentoBackendHost(&toolsDefVersions.PwaBackendUrl, projectConfig)
-		projects.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
+		Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+		setMagentoBackendHost(&toolsDefVersions.PwaBackendUrl, projectConf)
+		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
 		fmtc.SuccessLn("\n" + "Finish set up environment")
 	}
 }
 
-func setMagentoBackendHost(defVersion *string, projectConfig map[string]string) {
+func setMagentoBackendHost(defVersion *string, projectConf map[string]string) {
 	fmtc.TitleLn("BACKEND URL")
 	fmt.Println("Input format: example.com")
 	host := ""
-	if val, ok := projectConfig["PWA_BACKEND_URL"]; ok && val != "" {
+	if val, ok := projectConf["PWA_BACKEND_URL"]; ok && val != "" {
 		host = val
 		*defVersion = host
 		fmt.Println("Recommended host: " + host)

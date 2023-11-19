@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func StartMagento2(withChown bool, projectConfig map[string]string) {
+func StartMagento2(withChown bool, projectConf map[string]string) {
 	projectName := configs.GetProjectName()
 	UpNginx()
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
@@ -56,7 +56,7 @@ func StartMagento2(withChown bool, projectConfig map[string]string) {
 		if withChown {
 			projectName := configs.GetProjectName()
 			usr, _ := user.Current()
-			cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConfig["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
+			cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -66,7 +66,7 @@ func StartMagento2(withChown bool, projectConfig map[string]string) {
 			}
 		}
 
-		if val, ok := projectConfig["CRON_ENABLED"]; ok && val == "true" {
+		if val, ok := projectConf["CRON_ENABLED"]; ok && val == "true" {
 			cron.RunCron(true, false)
 		} else {
 			cron.RunCron(false, false)
@@ -116,9 +116,9 @@ func StopMagento2() {
 
 func MftfInit() {
 	projectName := configs.GetProjectName()
-	projectConfig := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetCurrentProjectConfig()
 
-	cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && bin/magento config:set cms/wysiwyg/enabled disabled && bin/magento config:set admin/security/admin_account_sharing 1 && bin/magento config:set admin/security/use_form_key 0 && bin/magento config:set web/seo/use_rewrites 1 && bin/magento config:set twofactorauth/general/force_providers google && bin/magento config:set twofactorauth/google/otp_window 60 && bin/magento security:tfa:google:set-secret "+projectConfig["MFTF_ADMIN_USER"]+" "+projectConfig["MFTF_OTP_SHARED_SECRET"]+" && bin/magento cache:clean config full_page")
+	cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd /var/www/html && bin/magento config:set cms/wysiwyg/enabled disabled && bin/magento config:set admin/security/admin_account_sharing 1 && bin/magento config:set admin/security/use_form_key 0 && bin/magento config:set web/seo/use_rewrites 1 && bin/magento config:set twofactorauth/general/force_providers google && bin/magento config:set twofactorauth/google/otp_window 60 && bin/magento security:tfa:google:set-secret "+projectConf["MFTF_ADMIN_USER"]+" "+projectConf["MFTF_OTP_SHARED_SECRET"]+" && bin/magento cache:clean config full_page")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

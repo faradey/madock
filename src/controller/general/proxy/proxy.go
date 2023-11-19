@@ -8,8 +8,8 @@ import (
 
 func Execute(flag string) {
 	if !configs.IsHasNotConfig() {
-		projectConfig := configs.GetCurrentProjectConfig()
-		if projectConfig["PROXY_ENABLED"] == "true" {
+		projectConf := configs.GetCurrentProjectConfig()
+		if projectConf["PROXY_ENABLED"] == "true" {
 			if flag == "prune" {
 				builder.DownNginx()
 			} else if flag == "stop" {

@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func Magento2(projectName string, projectConfig map[string]string, continueSetup bool) {
+func Magento2(projectName string, projectConf map[string]string, continueSetup bool) {
 	toolsDefVersions := magento2.GetVersions("")
 
 	mageVersion := ""
@@ -22,7 +22,7 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 		if mageVersion != "" {
 			toolsDefVersions = magento2.GetVersions(mageVersion)
 		} else {
-			Magento2(projectName, projectConfig, continueSetup)
+			Magento2(projectName, projectConf, continueSetup)
 			return
 		}
 	}
@@ -45,9 +45,9 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 
 		Redis(&toolsDefVersions.Redis)
 		RabbitMQ(&toolsDefVersions.RabbitMQ)
-		Hosts(projectName, &toolsDefVersions.Hosts, projectConfig)
+		Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
 
-		projects.SetEnvForProject(projectName, toolsDefVersions, projectConfig)
+		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
 		fmtc.SuccessLn("\n" + "Finish set up environment")
@@ -75,7 +75,7 @@ func Magento2(projectName string, projectConfig map[string]string, continueSetup
 	}
 
 	builder.Down(attr.Options.WithVolumes)
-	builder.StartMagento2(attr.Options.WithChown, projectConfig)
+	builder.StartMagento2(attr.Options.WithChown, projectConf)
 
 	if attr.Options.Download {
 		DownloadMagento(projectName, mageVersion, edition)

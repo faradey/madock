@@ -25,8 +25,8 @@ type ArgsExportStruct struct {
 func Export() {
 
 	projectName := configs.GetProjectName()
-	projectConfig := configs.GetCurrentProjectConfig()
-	if projectConfig["PLATFORM"] != "pwa" {
+	projectConf := configs.GetCurrentProjectConfig()
+	if projectConf["PLATFORM"] != "pwa" {
 		args := getExportArgs()
 
 		name := strings.TrimSpace(args.Name)
@@ -37,7 +37,7 @@ func Export() {
 		ignoreTablesStr := ""
 		ignoreTables := args.IgnoreTable
 		if len(ignoreTables) > 0 {
-			ignoreTablesStr = " --ignore-table=" + projectConfig["DB_DATABASE"] + "." + strings.Join(ignoreTables, " --ignore-table="+projectConfig["DB_DATABASE"]+".")
+			ignoreTablesStr = " --ignore-table=" + projectConf["DB_DATABASE"] + "." + strings.Join(ignoreTables, " --ignore-table="+projectConf["DB_DATABASE"]+".")
 		}
 
 		service := "db"
@@ -50,7 +50,7 @@ func Export() {
 			user = args.User
 		}
 
-		containerName := strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1"
+		containerName := strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1"
 
 		dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
 		selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
@@ -60,7 +60,7 @@ func Export() {
 		defer selectedFile.Close()
 		writer := gzip.NewWriter(selectedFile)
 		defer writer.Close()
-		cmd := exec.Command("docker", "exec", "-i", "-u", user, containerName, "bash", "-c", "mysqldump -u root -p"+projectConfig["DB_ROOT_PASSWORD"]+" -v -h "+service+ignoreTablesStr+" "+projectConfig["DB_DATABASE"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
+		cmd := exec.Command("docker", "exec", "-i", "-u", user, containerName, "bash", "-c", "mysqldump -u root -p"+projectConf["DB_ROOT_PASSWORD"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["DB_DATABASE"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = writer
@@ -70,7 +70,7 @@ func Export() {
 		}
 		fmt.Println("Database export completed successfully")
 	} else {
-		fmt.Println("This command is not supported for " + projectConfig["PLATFORM"])
+		fmt.Println("This command is not supported for " + projectConf["PLATFORM"])
 	}
 }
 

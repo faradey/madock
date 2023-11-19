@@ -46,24 +46,24 @@ func Setup() {
 	fmtc.SuccessLn("Start set up environment")
 
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
-	var projectConfig map[string]string
+	var projectConf map[string]string
 	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
-		projectConfig = configs.GetProjectConfig(projectName)
+		projectConf = configs.GetProjectConfig(projectName)
 	} else {
-		projectConfig = configs.GetGeneralConfig()
+		projectConf = configs.GetGeneralConfig()
 	}
 
 	fmt.Println("")
 	fmtc.Title("Specify Platform: ")
 	platform := setup.Platform()
 	if platform == "magento2" {
-		setup.Magento2(projectName, projectConfig, continueSetup)
+		setup.Magento2(projectName, projectConf, continueSetup)
 	} else if platform == "pwa" {
-		setup.PWA(projectName, projectConfig, continueSetup)
+		setup.PWA(projectName, projectConf, continueSetup)
 	} else if platform == "shopify" {
-		setup.Shopify(projectName, projectConfig, continueSetup)
+		setup.Shopify(projectName, projectConf, continueSetup)
 	} else if platform == "custom" {
-		setup.Custom(projectName, projectConfig, continueSetup)
+		setup.Custom(projectName, projectConf, continueSetup)
 	}
 }
 

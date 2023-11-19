@@ -22,13 +22,13 @@ var sc []*sftp.Client
 
 func SyncMedia(remoteDir string) {
 	var err error
-	projectConfig := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetCurrentProjectConfig()
 	maxProcs := helper.MaxParallelism() - 1
 	var scTemp *sftp.Client
 	isFirstConnect := false
 	paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
 	for maxProcs > 0 {
-		conn := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
+		conn := Connect(projectConf["SSH_AUTH_TYPE"], projectConf["SSH_KEY_PATH"], projectConf["SSH_PASSWORD"], projectConf["SSH_HOST"], projectConf["SSH_PORT"], projectConf["SSH_USERNAME"])
 		if !isFirstConnect {
 			fmt.Println("")
 			fmt.Println("Server connection...")
@@ -59,9 +59,9 @@ func SyncFile(remoteDir string) {
 	if path == "" {
 		log.Fatal("")
 	}
-	projectConfig := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetCurrentProjectConfig()
 	var sc *sftp.Client
-	conn := Connect(projectConfig["SSH_AUTH_TYPE"], projectConfig["SSH_KEY_PATH"], projectConfig["SSH_PASSWORD"], projectConfig["SSH_HOST"], projectConfig["SSH_PORT"], projectConfig["SSH_USERNAME"])
+	conn := Connect(projectConf["SSH_AUTH_TYPE"], projectConf["SSH_KEY_PATH"], projectConf["SSH_PASSWORD"], projectConf["SSH_HOST"], projectConf["SSH_PORT"], projectConf["SSH_USERNAME"])
 	fmt.Println("")
 	fmt.Println("Server connection...")
 	defer Disconnect(conn)

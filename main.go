@@ -10,6 +10,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/cron"
 	"github.com/faradey/madock/src/controller/general/db"
 	"github.com/faradey/madock/src/controller/general/debug"
+	"github.com/faradey/madock/src/controller/general/info"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/controller/magento/cloud"
@@ -73,7 +74,7 @@ func main() {
 	case "debug:profile:disable":
 		debug.ProfileDisable()
 	case "info":
-		commands.Info()
+		info.Info()
 	case "install":
 		commands.InstallMagento()
 	case "help":

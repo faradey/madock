@@ -25,9 +25,9 @@ type ArgsStruct struct {
 
 func Import() {
 	projectName := configs.GetProjectName()
-	projectConfig := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetCurrentProjectConfig()
 
-	if projectConfig["PLATFORM"] != "pwa" {
+	if projectConf["PLATFORM"] != "pwa" {
 		args := getArgs()
 
 		option := ""
@@ -92,14 +92,14 @@ func Import() {
 		}
 		defer selectedFile.Close()
 
-		containerName := strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1"
+		containerName := strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1"
 		var cmd, cmdFKeys *exec.Cmd
-		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConfig["DB_DATABASE"])
+		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["DB_ROOT_PASSWORD"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["DB_DATABASE"])
 		cmdFKeys.Run()
 		if option != "" {
-			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", option, "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", service, "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
+			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", option, "-u", "root", "-p"+projectConf["DB_ROOT_PASSWORD"], "-h", service, "--max-allowed-packet", "256M", projectConf["DB_DATABASE"])
 		} else {
-			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", service, "--max-allowed-packet", "256M", projectConfig["DB_DATABASE"])
+			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["DB_ROOT_PASSWORD"], "-h", service, "--max-allowed-packet", "256M", projectConf["DB_DATABASE"])
 		}
 
 		if ext == "gz" {
@@ -115,14 +115,14 @@ func Import() {
 		cmd.Stderr = os.Stderr
 		fmt.Println("Restoring database...")
 		err = cmd.Run()
-		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConfig["DB_ROOT_PASSWORD"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConfig["DB_DATABASE"])
+		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["DB_ROOT_PASSWORD"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["DB_DATABASE"])
 		cmdFKeys.Run()
 		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println("Database import completed successfully")
 	} else {
-		fmt.Println("This command is not supported for " + projectConfig["PLATFORM"])
+		fmt.Println("This command is not supported for " + projectConf["PLATFORM"])
 	}
 }
 

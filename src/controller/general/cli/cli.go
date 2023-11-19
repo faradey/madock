@@ -12,9 +12,9 @@ import (
 func Cli() {
 	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])
 	projectName := configs.GetProjectName()
-	projectConfig := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetCurrentProjectConfig()
 	service := "php"
-	if projectConfig["PLATFORM"] == "pwa" {
+	if projectConf["PLATFORM"] == "pwa" {
 		service = "nodejs"
 	}
 
@@ -24,7 +24,7 @@ func Cli() {
 		workdir = "cd " + workdir + " && "
 	}
 
-	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash", "-c", workdir+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash", "-c", workdir+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

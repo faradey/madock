@@ -102,16 +102,16 @@ func RabbitMQ(defVersion *string) {
 	waiterAndProceed(defVersion, availableVersions)
 }
 
-func Hosts(projectName string, defVersion *string, projectConfig map[string]string) {
-	host := strings.ToLower(projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base")
-	if val, ok := projectConfig["HOSTS"]; ok && val != "" {
+func Hosts(projectName string, defVersion *string, projectConf map[string]string) {
+	host := strings.ToLower(projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"] + ":base")
+	if val, ok := projectConf["HOSTS"]; ok && val != "" {
 		host = val
 	}
 	fmtc.TitleLn("Hosts")
 	fmt.Println("Input format: a.example.com:x_website_code b.example.com:y_website_code")
 	fmt.Println("Recommended host: " + host)
 	*defVersion = host
-	availableVersions := []string{"Custom", projectName + projectConfig["DEFAULT_HOST_FIRST_LEVEL"] + ":base", "loc." + projectName + ".com:base"}
+	availableVersions := []string{"Custom", projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"] + ":base", "loc." + projectName + ".com:base"}
 	prepareVersions(availableVersions)
 	invitation(defVersion)
 	waiterAndProceed(defVersion, availableVersions)

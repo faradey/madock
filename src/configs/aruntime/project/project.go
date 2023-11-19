@@ -15,7 +15,7 @@ import (
 
 func MakeConf(projectName string) {
 	// get project config
-	projectConfig := configs.GetProjectConfig(projectName)
+	projectConf := configs.GetProjectConfig(projectName)
 	src := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/src"
 	if _, err := os.Lstat(src); err == nil {
 		if err := os.Remove(src); err != nil {
@@ -31,13 +31,13 @@ func MakeConf(projectName string) {
 	makeNginxDockerfile(projectName)
 	makeNginxConf(projectName)
 	makeDockerCompose(projectName)
-	if projectConfig["PLATFORM"] == "magento2" {
+	if projectConf["PLATFORM"] == "magento2" {
 		MakeConfMagento2(projectName)
-	} else if projectConfig["PLATFORM"] == "pwa" {
+	} else if projectConf["PLATFORM"] == "pwa" {
 		MakeConfPWA(projectName)
-	} else if projectConfig["PLATFORM"] == "shopify" {
+	} else if projectConf["PLATFORM"] == "shopify" {
 		MakeConfShopify(projectName)
-	} else if projectConfig["PLATFORM"] == "custom" {
+	} else if projectConf["PLATFORM"] == "custom" {
 		MakeConfCustom(projectName)
 	}
 }
