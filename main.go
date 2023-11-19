@@ -14,6 +14,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/info"
 	"github.com/faradey/madock/src/controller/general/install"
 	"github.com/faradey/madock/src/controller/general/logs"
+	"github.com/faradey/madock/src/controller/general/node"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/controller/magento"
@@ -95,7 +96,7 @@ func main() {
 	case "n98":
 		n98.Execute()
 	case "node":
-		commands.Node(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
+		node.Execute()
 	case "patch:create":
 		commands.PatchCreate()
 	case "project:remove":

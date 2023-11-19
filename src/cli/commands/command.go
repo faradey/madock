@@ -43,10 +43,6 @@ func PWA(flag string) {
 	builder.PWA(flag)
 }
 
-func Node(flag string) {
-	builder.Node(flag)
-}
-
 func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }
