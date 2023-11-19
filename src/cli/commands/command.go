@@ -79,10 +79,6 @@ func PWA(flag string) {
 	builder.PWA(flag)
 }
 
-func Composer(flag string) {
-	builder.Composer(flag)
-}
-
 func Compress() {
 	compress.Zip()
 }

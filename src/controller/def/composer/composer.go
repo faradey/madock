@@ -1,4 +1,4 @@
-package cli
+package composer
 
 import (
 	"github.com/faradey/madock/src/configs"
@@ -9,18 +9,15 @@ import (
 	"strings"
 )
 
-func Cli() {
+func Composer() {
 	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])
+
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
-	service := "php"
-	if projectConfig["PLATFORM"] == "pwa" {
-		service = "nodejs"
-	}
 
-	service, user, workdir := cliHelper.GetUserServiceWorkdir(service, "www-data", projectConfig["WORKDIR"])
+	service, user, workdir := cliHelper.GetUserServiceWorkdir("php", "www-data", projectConfig["WORKDIR"])
 
-	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash", "-c", "cd "+workdir+" && "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash", "-c", "cd "+workdir+" && composer "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

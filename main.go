@@ -4,6 +4,7 @@ import (
 	"github.com/faradey/madock/src/controller/def/bash"
 	"github.com/faradey/madock/src/controller/def/clean_cache"
 	"github.com/faradey/madock/src/controller/def/cli"
+	"github.com/faradey/madock/src/controller/def/composer"
 	"github.com/faradey/madock/src/controller/magento/cloud"
 	"github.com/faradey/madock/src/migration"
 	"log"
@@ -39,7 +40,7 @@ func main() {
 	case "cli":
 		cli.Cli()
 	case "composer":
-		commands.Composer(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
+		composer.Composer()
 	case "compress":
 		commands.Compress()
 	case "config:list":
