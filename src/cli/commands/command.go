@@ -55,14 +55,6 @@ func Node(flag string) {
 	builder.Node(flag)
 }
 
-func Logs() {
-	containerName := "php"
-	if len(attr.Options.Args) > 0 && attr.Options.Args[0] != "" {
-		containerName = attr.Options.Args[0]
-	}
-	builder.Logs(containerName)
-}
-
 func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }

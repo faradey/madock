@@ -19,7 +19,7 @@ import (
 type ArgsStruct struct {
 	attr.Arguments
 	Force         bool   `long:"force" short:"f" description:"Install Magento"`
-	DBServiceName string `long:"service-name" description:"DB service name"`
+	DBServiceName string `long:"service" short:"s" description:"DB service name. For example: db"`
 	User          string `long:"user" short:"u" description:"User"`
 }
 

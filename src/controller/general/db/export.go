@@ -16,8 +16,8 @@ import (
 
 type ArgsExportStruct struct {
 	attr.Arguments
-	Name          string   `long:"name" description:"Name of the archive file"`
-	DBServiceName string   `long:"service-name" description:"DB service name"`
+	Name          string   `long:"name" short:"n" description:"Name of the archive file"`
+	DBServiceName string   `long:"service" short:"s" description:"DB service name. For example: db"`
 	IgnoreTable   []string `long:"ignore-table" description:"Ignore db table"`
 	User          string   `long:"user" short:"u" description:"User"`
 }

@@ -17,7 +17,7 @@ type ArgsStruct struct {
 	attr.Arguments
 }
 
-func RunCron(flag, manual bool) {
+func Execute(flag, manual bool) {
 	getArgs()
 
 	projectName := configs.GetProjectName()
@@ -93,11 +93,11 @@ func RunCron(flag, manual bool) {
 }
 
 func Enable() {
-	RunCron(true, true)
+	Execute(true, true)
 }
 
 func Disable() {
-	RunCron(false, true)
+	Execute(false, true)
 }
 
 func getArgs() *ArgsStruct {

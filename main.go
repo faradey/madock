@@ -13,6 +13,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/help"
 	"github.com/faradey/madock/src/controller/general/info"
 	"github.com/faradey/madock/src/controller/general/install"
+	"github.com/faradey/madock/src/controller/general/logs"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/controller/magento/cloud"
@@ -81,7 +82,7 @@ func main() {
 	case "help":
 		help.Execute()
 	case "logs":
-		commands.Logs()
+		logs.Execute()
 	case "magento", "m":
 		commands.Magento(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 	case "mftf":

@@ -67,9 +67,9 @@ func StartMagento2(withChown bool, projectConf map[string]string) {
 		}
 
 		if val, ok := projectConf["CRON_ENABLED"]; ok && val == "true" {
-			cron.RunCron(true, false)
+			cron.Execute(true, false)
 		} else {
-			cron.RunCron(false, false)
+			cron.Execute(false, false)
 		}
 	}
 }
