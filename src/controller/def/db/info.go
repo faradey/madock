@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func DBInfo() {
+func Info() {
 	projectConfig := configs.GetCurrentProjectConfig()
 	if projectConfig["PLATFORM"] != "pwa" {
 		portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"

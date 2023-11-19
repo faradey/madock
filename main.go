@@ -9,6 +9,9 @@ import (
 	"github.com/faradey/madock/src/controller/def/config"
 	"github.com/faradey/madock/src/controller/def/cron"
 	"github.com/faradey/madock/src/controller/def/db"
+	"github.com/faradey/madock/src/controller/def/debug"
+	"github.com/faradey/madock/src/controller/def/proxy"
+	"github.com/faradey/madock/src/controller/def/rebuild"
 	"github.com/faradey/madock/src/controller/magento/cloud"
 	"github.com/faradey/madock/src/migration"
 	"log"
@@ -56,19 +59,19 @@ func main() {
 	case "cron:disable":
 		cron.Disable()
 	case "db:import":
-		db.DBImport()
+		db.Import()
 	case "db:export":
-		db.DBExport()
+		db.Export()
 	case "db:info":
-		db.DBInfo()
+		db.Info()
 	case "debug:enable":
-		commands.DebugEnable()
+		debug.Enable()
 	case "debug:disable":
-		commands.DebugDisable()
+		debug.Disable()
 	case "debug:profile:enable":
-		commands.DebugProfileEnable()
+		debug.ProfileEnable()
 	case "debug:profile:disable":
-		commands.DebugProfileDisable()
+		debug.ProfileDisable()
 	case "info":
 		commands.Info()
 	case "install":
@@ -92,19 +95,19 @@ func main() {
 	case "project:remove":
 		commands.ProjectRemove()
 	case "proxy:start":
-		commands.Proxy("start")
+		proxy.Execute("start")
 	case "proxy:stop":
-		commands.Proxy("stop")
+		proxy.Execute("stop")
 	case "proxy:restart":
-		commands.Proxy("restart")
+		proxy.Execute("restart")
 	case "proxy:rebuild":
-		commands.Proxy("rebuild")
+		proxy.Execute("rebuild")
 	case "proxy:prune":
-		commands.Proxy("prune")
+		proxy.Execute("prune")
 	case "prune":
 		commands.Prune()
 	case "rebuild":
-		commands.Rebuild()
+		rebuild.Execute()
 	case "remote:sync:db":
 		commands.RemoteSyncDb()
 	case "remote:sync:media":

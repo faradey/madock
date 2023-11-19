@@ -4,6 +4,7 @@ import (
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/controller/def/proxy"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/docker/scripts"
 	"github.com/faradey/madock/src/paths"
@@ -27,38 +28,11 @@ func RemoteSyncFile() {
 	ssh.SyncFile(projectConfig["SSH_SITE_ROOT_PATH"])
 }
 
-func Proxy(flag string) {
-	if !configs.IsHasNotConfig() {
-		projectConfig := configs.GetCurrentProjectConfig()
-		if projectConfig["PROXY_ENABLED"] == "true" {
-			if flag == "prune" {
-				builder.DownNginx()
-			} else if flag == "stop" {
-				builder.StopNginx()
-			} else if flag == "restart" {
-				builder.StopNginx()
-				builder.UpNginx()
-			} else if flag == "start" {
-				builder.UpNginx()
-			} else if flag == "rebuild" {
-				builder.DownNginx()
-				builder.UpNginx()
-			}
-			fmtc.SuccessLn("Done")
-		} else {
-			fmtc.WarningLn("Proxy service is disabled. Run 'madock service:enable proxy' to enable it")
-		}
-	} else {
-		fmtc.WarningLn("Set up the project")
-		fmtc.ToDoLn("Run madock setup")
-	}
-}
-
 func Prune() {
 	if !configs.IsHasNotConfig() {
 		builder.Down(attr.Options.WithVolumes)
 		if len(paths.GetActiveProjects()) == 0 {
-			Proxy("prune")
+			proxy.Execute("prune")
 		}
 		fmtc.SuccessLn("Done")
 	} else {
@@ -73,30 +47,6 @@ func Magento(flag string) {
 
 func PWA(flag string) {
 	builder.PWA(flag)
-}
-
-func DebugEnable() {
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-	configs.SetParam(configPath, "XDEBUG_ENABLED", "true")
-	Rebuild()
-}
-
-func DebugProfileEnable() {
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-	configs.SetParam(configPath, "XDEBUG_MODE", "profile")
-	Rebuild()
-}
-
-func DebugDisable() {
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-	configs.SetParam(configPath, "XDEBUG_ENABLED", "false")
-	Rebuild()
-}
-
-func DebugProfileDisable() {
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-	configs.SetParam(configPath, "XDEBUG_MODE", "debug")
-	Rebuild()
 }
 
 func Info() {

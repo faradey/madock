@@ -23,7 +23,7 @@ type ArgsStruct struct {
 	User          string `long:"user" short:"u" description:"User"`
 }
 
-func DBImport() {
+func Import() {
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
 

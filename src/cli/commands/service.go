@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/faradey/madock/src/controller/def/rebuild"
 	"github.com/faradey/madock/src/docker/service"
 )
 
@@ -10,10 +11,10 @@ func ServiceList() {
 
 func ServiceEnable() {
 	service.Enable()
-	Rebuild()
+	rebuild.Execute()
 }
 
 func ServiceDisable() {
 	service.Disable()
-	Rebuild()
+	rebuild.Execute()
 }

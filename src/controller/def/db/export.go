@@ -22,7 +22,7 @@ type ArgsExportStruct struct {
 	User          string   `long:"user" short:"u" description:"User"`
 }
 
-func DBExport() {
+func Export() {
 
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
