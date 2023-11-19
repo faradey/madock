@@ -9,19 +9,24 @@ import (
 	"github.com/faradey/madock/src/paths"
 )
 
-func GetGeneralConfig() map[string]string {
-	configPath := paths.GetExecDirPath() + "/projects/config.txt"
-	generalConfig := make(map[string]string)
-	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
-		generalConfig = ParseFile(configPath)
-	}
+var generalConfig map[string]string
+var projectConfig map[string]string
+var projectConfigOnly map[string]string
 
-	configPath = paths.GetExecDirPath() + "/config.txt"
-	origGeneralConfig := make(map[string]string)
-	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
-		origGeneralConfig = ParseFile(configPath)
+func GetGeneralConfig() map[string]string {
+	if len(generalConfig) == 0 {
+		configPath := paths.GetExecDirPath() + "/projects/config.txt"
+		if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
+			generalConfig = ParseFile(configPath)
+		}
+
+		configPath = paths.GetExecDirPath() + "/config.txt"
+		origGeneralConfig := make(map[string]string)
+		if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
+			origGeneralConfig = ParseFile(configPath)
+		}
+		GeneralConfigMapping(origGeneralConfig, generalConfig)
 	}
-	GeneralConfigMapping(origGeneralConfig, generalConfig)
 
 	return generalConfig
 }
@@ -31,31 +36,36 @@ func GetCurrentProjectConfig() map[string]string {
 }
 
 func GetProjectConfig(projectName string) map[string]string {
-	config := GetProjectConfigOnly(projectName)
-	ConfigMapping(GetGeneralConfig(), config)
+	if len(projectConfig) == 0 {
+		projectConfig = GetProjectConfigOnly(projectName)
+		ConfigMapping(GetGeneralConfig(), projectConfig)
+	}
 
-	return config
+	return projectConfig
 }
 
 func GetProjectConfigOnly(projectName string) map[string]string {
-	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
-	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
-		log.Fatal(err)
+	if len(projectConfigOnly) == 0 {
+		configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
+		if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
+			log.Fatal(err)
+		}
+
+		projectConfigOnly = ParseFile(configPath)
 	}
 
-	config := ParseFile(configPath)
-
-	return config
+	return projectConfigOnly
 }
 
-func GetOption(name string, generalConfig, projectConfig map[string]string) string {
-	if val, ok := projectConfig[name]; ok && val != "" {
+func GetOption(name string, generalConf, projectConf map[string]string) string {
+	if val, ok := projectConf[name]; ok && val != "" {
 		return strings.TrimSpace(val)
 	}
 
-	if val, ok := generalConfig[name]; ok && val != "" {
-		return strings.TrimSpace(generalConfig[name])
+	if val, ok := generalConf[name]; ok && val != "" {
+		return strings.TrimSpace(val)
 	}
+
 	return ""
 }
 

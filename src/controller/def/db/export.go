@@ -23,50 +23,55 @@ type ArgsExportStruct struct {
 }
 
 func DBExport() {
-	args := getExportArgs()
 
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetCurrentProjectConfig()
-	name := strings.TrimSpace(args.Name)
-	if len(name) > 0 {
-		name += "_"
-	}
+	if projectConfig["PLATFORM"] != "pwa" {
+		args := getExportArgs()
 
-	ignoreTablesStr := ""
-	ignoreTables := args.IgnoreTable
-	if len(ignoreTables) > 0 {
-		ignoreTablesStr = " --ignore-table=" + projectConfig["DB_DATABASE"] + "." + strings.Join(ignoreTables, " --ignore-table="+projectConfig["DB_DATABASE"]+".")
-	}
+		name := strings.TrimSpace(args.Name)
+		if len(name) > 0 {
+			name += "_"
+		}
 
-	service := "db"
-	if args.DBServiceName != "" {
-		service = args.DBServiceName
-	}
+		ignoreTablesStr := ""
+		ignoreTables := args.IgnoreTable
+		if len(ignoreTables) > 0 {
+			ignoreTablesStr = " --ignore-table=" + projectConfig["DB_DATABASE"] + "." + strings.Join(ignoreTables, " --ignore-table="+projectConfig["DB_DATABASE"]+".")
+		}
 
-	user := "mysql"
-	if args.User != "" {
-		user = args.User
-	}
+		service := "db"
+		if args.DBServiceName != "" {
+			service = args.DBServiceName
+		}
 
-	containerName := strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1"
+		user := "mysql"
+		if args.User != "" {
+			user = args.User
+		}
 
-	dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
-	selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
-	if err != nil {
-		log.Fatal(err)
+		containerName := strings.ToLower(projectConfig["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1"
+
+		dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
+		selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer selectedFile.Close()
+		writer := gzip.NewWriter(selectedFile)
+		defer writer.Close()
+		cmd := exec.Command("docker", "exec", "-i", "-u", user, containerName, "bash", "-c", "mysqldump -u root -p"+projectConfig["DB_ROOT_PASSWORD"]+" -v -h "+service+ignoreTablesStr+" "+projectConfig["DB_DATABASE"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = writer
+		err = cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Database export completed successfully")
+	} else {
+		fmt.Println("This command is not supported for " + projectConfig["PLATFORM"])
 	}
-	defer selectedFile.Close()
-	writer := gzip.NewWriter(selectedFile)
-	defer writer.Close()
-	cmd := exec.Command("docker", "exec", "-i", "-u", user, containerName, "bash", "-c", "mysqldump -u root -p"+projectConfig["DB_ROOT_PASSWORD"]+" -v -h "+service+ignoreTablesStr+" "+projectConfig["DB_DATABASE"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = writer
-	err = cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Database export completed successfully")
 }
 
 func getExportArgs() *ArgsExportStruct {
