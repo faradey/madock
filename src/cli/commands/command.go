@@ -137,19 +137,6 @@ func CronDisable() {
 	builder.Cron(false, true)
 }
 
-func Bash() {
-	containerName := "php"
-	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["PLATFORM"] == "pwa" {
-		containerName = "nodejs"
-	}
-	if len(attr.Options.Args) > 0 && attr.Options.Args[0] != "" {
-		containerName = attr.Options.Args[0]
-	}
-
-	builder.Bash(containerName)
-}
-
 func CleanCache() {
 	builder.CleanCache()
 }

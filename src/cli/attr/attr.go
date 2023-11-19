@@ -6,6 +6,14 @@ import (
 	flags "github.com/jessevdk/go-flags"
 )
 
+type Arguments struct {
+}
+
+type ArgumentsWithArgs struct {
+	Arguments
+	Args []string
+}
+
 var Options struct {
 	Path          string `long:"path" description:"Path to file on server (from Magento root)"`
 	Global        bool   `long:"global" description:"Global"`
@@ -25,6 +33,12 @@ var Options struct {
 	SampleData    bool     `long:"sample-data" description:"sample-data"`
 	DBServiceName string   `long:"service-name" description:"DB service name"`
 	IgnoreTable   []string `long:"ignore-table" description:"Ignore db table"`
+}
+
+type NewArgs func() *Arguments
+
+type ArgumentsInterface interface {
+	NewArgs() *Arguments
 }
 
 func ParseAttributes() {

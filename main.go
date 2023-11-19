@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/faradey/madock/src/controller/def/bash"
 	"github.com/faradey/madock/src/migration"
 	"log"
 	"os"
@@ -27,7 +28,7 @@ func main() {
 
 	switch command {
 	case "bash":
-		commands.Bash()
+		bash.Bash()
 	case "c:f":
 		commands.CleanCache()
 	case "magento-cloud", "cloud":
@@ -136,3 +137,7 @@ func main() {
 		commands.IsNotDefine()
 	}
 }
+
+//TODO check opensearchdashboard in browser
+//TODO check rabbitMQ in browser
+//TODO check redis in browser
