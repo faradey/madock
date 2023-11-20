@@ -1,18 +1,26 @@
-package commands
+package project_remove
 
 import (
 	"bufio"
 	"fmt"
+	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/paths"
+	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
 	"strings"
 )
 
-func ProjectRemove() {
+type ArgsStruct struct {
+	attr.Arguments
+}
+
+func Execute() {
+	getArgs()
+
 	fmt.Println("Are you sure? (y/n)")
 	fmt.Print("> ")
 	buf := bufio.NewReader(os.Stdin)
@@ -57,4 +65,19 @@ func ProjectRemove() {
 			fmtc.WarningLn("The project was not removed. The entered value does not match the project name.")
 		}
 	}
+}
+
+func getArgs() *ArgsStruct {
+	args := new(ArgsStruct)
+	if len(os.Args) > 2 {
+		argsOrigin := os.Args[2:]
+		var err error
+		_, err = flags.ParseArgs(args, argsOrigin)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return args
 }
