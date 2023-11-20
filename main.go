@@ -20,9 +20,9 @@ import (
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/prune"
 	"github.com/faradey/madock/src/controller/general/rebuild"
-	"github.com/faradey/madock/src/controller/general/remote_sync_db"
-	"github.com/faradey/madock/src/controller/general/remote_sync_file"
-	"github.com/faradey/madock/src/controller/general/remote_sync_media"
+	db2 "github.com/faradey/madock/src/controller/general/remote_sync/db"
+	"github.com/faradey/madock/src/controller/general/remote_sync/file"
+	"github.com/faradey/madock/src/controller/general/remote_sync/media"
 	"github.com/faradey/madock/src/controller/general/restart"
 	"github.com/faradey/madock/src/controller/general/start"
 	"github.com/faradey/madock/src/controller/general/stop"
@@ -125,11 +125,11 @@ func main() {
 	case "rebuild":
 		rebuild.Execute()
 	case "remote:sync:db":
-		remote_sync_db.Execute()
+		db2.Execute()
 	case "remote:sync:media":
-		remote_sync_media.Execute()
+		media.Execute()
 	case "remote:sync:file":
-		remote_sync_file.Execute()
+		file.Execute()
 	case "restart":
 		restart.Execute()
 	case "pwa":

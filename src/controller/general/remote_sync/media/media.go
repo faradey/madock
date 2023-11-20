@@ -1,4 +1,4 @@
-package remote_sync_media
+package media
 
 import (
 	"github.com/faradey/madock/src/configs"

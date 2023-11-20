@@ -1,4 +1,4 @@
-package remote_sync_db
+package db
 
 import (
 	"github.com/faradey/madock/src/cli/attr"

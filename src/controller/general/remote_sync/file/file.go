@@ -1,4 +1,4 @@
-package remote_sync_file
+package file
 
 import (
 	"github.com/faradey/madock/src/configs"
