@@ -47,6 +47,7 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 }
 
 func DbDump(conn *ssh.Client, remoteDir, name string) {
+	//TODO add options --db-user --db-password --db-name --db-host --db-port
 	defer conn.Close()
 	fmt.Println("")
 	fmt.Println("Dumping and downloading DB is started")

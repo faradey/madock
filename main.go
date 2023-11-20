@@ -20,6 +20,12 @@ import (
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/prune"
 	"github.com/faradey/madock/src/controller/general/rebuild"
+	"github.com/faradey/madock/src/controller/general/remote_sync_db"
+	"github.com/faradey/madock/src/controller/general/remote_sync_file"
+	"github.com/faradey/madock/src/controller/general/remote_sync_media"
+	"github.com/faradey/madock/src/controller/general/restart"
+	"github.com/faradey/madock/src/controller/general/start"
+	"github.com/faradey/madock/src/controller/general/stop"
 	"github.com/faradey/madock/src/controller/magento"
 	"github.com/faradey/madock/src/controller/magento/cloud"
 	"github.com/faradey/madock/src/controller/magento/mftf"
@@ -119,13 +125,13 @@ func main() {
 	case "rebuild":
 		rebuild.Execute()
 	case "remote:sync:db":
-		commands.RemoteSyncDb()
+		remote_sync_db.Execute()
 	case "remote:sync:media":
-		commands.RemoteSyncMedia()
+		remote_sync_media.Execute()
 	case "remote:sync:file":
-		commands.RemoteSyncFile()
+		remote_sync_file.Execute()
 	case "restart":
-		commands.Restart()
+		restart.Execute()
 	case "pwa":
 		commands.PWA(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
 	case "service:list":
@@ -147,11 +153,11 @@ func main() {
 	case "ssl:rebuild":
 		commands.Ssl()
 	case "start":
-		commands.Start()
+		start.Execute()
 	case "status":
 		commands.Status()
 	case "stop":
-		commands.Stop()
+		stop.Execute()
 	case "uncompress":
 		compress.Unzip()
 	default:
