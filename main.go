@@ -15,6 +15,8 @@ import (
 	"github.com/faradey/madock/src/controller/general/install"
 	"github.com/faradey/madock/src/controller/general/logs"
 	"github.com/faradey/madock/src/controller/general/node"
+	"github.com/faradey/madock/src/controller/general/patch"
+	"github.com/faradey/madock/src/controller/general/project_remove"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/controller/magento"
@@ -98,9 +100,9 @@ func main() {
 	case "node":
 		node.Execute()
 	case "patch:create":
-		commands.PatchCreate()
+		patch.Create()
 	case "project:remove":
-		commands.ProjectRemove()
+		project_remove.Execute()
 	case "proxy:start":
 		proxy.Execute("start")
 	case "proxy:stop":
