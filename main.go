@@ -30,6 +30,7 @@ import (
 	"github.com/faradey/madock/src/controller/magento/cloud"
 	"github.com/faradey/madock/src/controller/magento/mftf"
 	"github.com/faradey/madock/src/controller/magento/n98"
+	"github.com/faradey/madock/src/controller/pwa"
 	"github.com/faradey/madock/src/migration"
 	"log"
 	"os"
@@ -37,7 +38,6 @@ import (
 
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/commands"
-	cliHelper "github.com/faradey/madock/src/helper"
 )
 
 var appVersion string = "2.2.0"
@@ -133,7 +133,7 @@ func main() {
 	case "restart":
 		restart.Execute()
 	case "pwa":
-		commands.PWA(cliHelper.NormalizeCliCommandWithJoin(os.Args[2:]))
+		pwa.Execute()
 	case "service:list":
 		commands.ServiceList()
 	case "service:enable":

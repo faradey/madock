@@ -274,19 +274,6 @@ func StopNginx() {
 	}
 }
 
-func PWA(flag string) {
-	projectName := configs.GetProjectName()
-	projectConf := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-nodejs-1", "bash", "-c", "cd "+projectConf["WORKDIR"]+" && "+flag)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func DownloadMagento(projectName, edition, version string) {
 	projectConf := configs.GetCurrentProjectConfig()
 	sampleData := ""

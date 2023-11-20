@@ -5,10 +5,6 @@ import (
 	"github.com/faradey/madock/src/docker/builder"
 )
 
-func PWA(flag string) {
-	builder.PWA(flag)
-}
-
 func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }
