@@ -4,9 +4,7 @@ import (
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/docker/builder"
-	"github.com/faradey/madock/src/paths"
 	"github.com/faradey/madock/src/ssh"
 )
 
@@ -24,19 +22,6 @@ func RemoteSyncMedia() {
 func RemoteSyncFile() {
 	projectConf := configs.GetCurrentProjectConfig()
 	ssh.SyncFile(projectConf["SSH_SITE_ROOT_PATH"])
-}
-
-func Prune() {
-	if !configs.IsHasNotConfig() {
-		builder.Down(attr.Options.WithVolumes)
-		if len(paths.GetActiveProjects()) == 0 {
-			proxy.Execute("prune")
-		}
-		fmtc.SuccessLn("Done")
-	} else {
-		fmtc.WarningLn("Set up the project")
-		fmtc.ToDoLn("Run madock setup")
-	}
 }
 
 func PWA(flag string) {

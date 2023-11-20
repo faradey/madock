@@ -18,6 +18,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/patch"
 	"github.com/faradey/madock/src/controller/general/project_remove"
 	"github.com/faradey/madock/src/controller/general/proxy"
+	"github.com/faradey/madock/src/controller/general/prune"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/controller/magento"
 	"github.com/faradey/madock/src/controller/magento/cloud"
@@ -114,7 +115,7 @@ func main() {
 	case "proxy:prune":
 		proxy.Execute("prune")
 	case "prune":
-		commands.Prune()
+		prune.Execute()
 	case "rebuild":
 		rebuild.Execute()
 	case "remote:sync:db":
