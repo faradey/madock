@@ -24,6 +24,9 @@ import (
 	"github.com/faradey/madock/src/controller/general/remote_sync/file"
 	"github.com/faradey/madock/src/controller/general/remote_sync/media"
 	"github.com/faradey/madock/src/controller/general/restart"
+	"github.com/faradey/madock/src/controller/general/service/disable"
+	"github.com/faradey/madock/src/controller/general/service/enable"
+	"github.com/faradey/madock/src/controller/general/service/list"
 	"github.com/faradey/madock/src/controller/general/start"
 	"github.com/faradey/madock/src/controller/general/stop"
 	"github.com/faradey/madock/src/controller/magento"
@@ -135,11 +138,11 @@ func main() {
 	case "pwa":
 		pwa.Execute()
 	case "service:list":
-		commands.ServiceList()
+		list.Execute()
 	case "service:enable":
-		commands.ServiceEnable()
+		enable.Execute()
 	case "service:disable":
-		commands.ServiceDisable()
+		disable.Execute()
 	case "setup":
 		commands.Setup()
 	case "setup:env":

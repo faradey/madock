@@ -1,14 +1,13 @@
-package service
+package list
 
 import (
-	"sort"
-	"strings"
-
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
+	"sort"
+	"strings"
 )
 
-func ServiceList() {
+func Execute() {
 	configData := configs.GetCurrentProjectConfig()
 	keys := make([]string, 0, len(configData))
 	for k := range configData {
