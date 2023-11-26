@@ -1,25 +1,24 @@
-package builder
+package status
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/faradey/madock/src/cli/fmtc"
+	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os/exec"
 	"strings"
-
-	"github.com/faradey/madock/src/cli/fmtc"
-	"github.com/faradey/madock/src/configs"
 )
 
-type StatusInfoStruct struct {
+type InfoStruct struct {
 	Name    string `json:"Name"`
 	Project string `json:"Project"`
 	Service string `json:"Service"`
 	State   string `json:"State"`
 }
 
-func Status() {
+func Execute() {
 	projectName := configs.GetProjectName()
 	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "ps", "--format", "json")
 	result, err := cmd.CombinedOutput()
@@ -29,7 +28,7 @@ func Status() {
 
 	if len(result) > 0 {
 		result = parseJson(result)
-		statusData := []StatusInfoStruct{}
+		var statusData []InfoStruct
 		err = json.Unmarshal(result, &statusData)
 		if err != nil {
 			fmt.Println(err)
@@ -56,7 +55,7 @@ func Status() {
 
 	if len(result) > 0 {
 		result = parseJson(result)
-		statusData := []StatusInfoStruct{}
+		var statusData []InfoStruct
 		err = json.Unmarshal(result, &statusData)
 		if err != nil {
 			fmt.Println(err)

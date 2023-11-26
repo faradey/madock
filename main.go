@@ -13,6 +13,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/help"
 	"github.com/faradey/madock/src/controller/general/info"
 	"github.com/faradey/madock/src/controller/general/install"
+	"github.com/faradey/madock/src/controller/general/isnotdefine"
 	"github.com/faradey/madock/src/controller/general/logs"
 	"github.com/faradey/madock/src/controller/general/node"
 	"github.com/faradey/madock/src/controller/general/patch"
@@ -31,19 +32,22 @@ import (
 	"github.com/faradey/madock/src/controller/general/setup/env"
 	"github.com/faradey/madock/src/controller/general/ssl"
 	"github.com/faradey/madock/src/controller/general/start"
+	"github.com/faradey/madock/src/controller/general/status"
 	"github.com/faradey/madock/src/controller/general/stop"
 	"github.com/faradey/madock/src/controller/magento"
 	"github.com/faradey/madock/src/controller/magento/cloud"
 	"github.com/faradey/madock/src/controller/magento/mftf"
 	"github.com/faradey/madock/src/controller/magento/n98"
 	"github.com/faradey/madock/src/controller/pwa"
+	"github.com/faradey/madock/src/controller/shopify"
+	"github.com/faradey/madock/src/controller/shopify/frontend"
+	"github.com/faradey/madock/src/controller/shopify/web"
 	"github.com/faradey/madock/src/migration"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/faradey/madock/src/cli/attr"
-	"github.com/faradey/madock/src/cli/commands"
 )
 
 var appVersion string = "2.2.0"
@@ -151,23 +155,23 @@ func main() {
 	case "setup:env":
 		env.Execute()
 	case "shopify", "sy":
-		commands.Shopify(strings.Join(os.Args[2:], " "))
+		shopify.Execute()
 	case "shopify:web", "sy:w":
-		commands.ShopifyWeb(strings.Join(os.Args[2:], " "))
+		web.Execute()
 	case "shopify:web:frontend", "sy:w:f":
-		commands.ShopifyWebFrontend(strings.Join(os.Args[2:], " "))
+		frontend.Execute()
 	case "ssl:rebuild":
 		ssl.Execute()
 	case "start":
 		start.Execute()
 	case "status":
-		commands.Status()
+		status.Execute()
 	case "stop":
 		stop.Execute()
 	case "uncompress":
 		compress.Unzip()
 	default:
-		commands.IsNotDefine()
+		isnotdefine.Execute()
 	}
 }
 
