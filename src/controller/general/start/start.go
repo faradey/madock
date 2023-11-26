@@ -12,7 +12,7 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
-	WithChown bool `long:"with-chown" description:"With Chown"`
+	WithChown bool `long:"with-chown" short:"c" description:"With Chown"`
 }
 
 func Execute() {

@@ -1,11 +1,5 @@
 package attr
 
-import (
-	"os"
-
-	flags "github.com/jessevdk/go-flags"
-)
-
 type Arguments struct {
 }
 
@@ -33,11 +27,4 @@ var Options struct {
 	SampleData    bool     `long:"sample-data" description:"sample-data"`
 	DBServiceName string   `long:"service-name" description:"DB service name"`
 	IgnoreTable   []string `long:"ignore-table" description:"Ignore db table"`
-}
-
-func ParseAttributes() {
-	if len(os.Args) > 2 {
-		args := os.Args[2:]
-		Options.Args, _ = flags.NewParser(&Options, flags.HelpFlag|0|flags.PassDoubleDash).ParseArgs(args)
-	}
 }

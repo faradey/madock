@@ -14,10 +14,11 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
+	WithChown bool `long:"with-chown" short:"c" description:"With Chown"`
 }
 
 func Execute() {
-	getArgs()
+	args := getArgs()
 
 	if !configs.IsHasNotConfig() {
 		fmtc.SuccessLn("Stop containers")
@@ -26,7 +27,7 @@ func Execute() {
 			proxy.Execute("stop")
 		}
 		fmtc.SuccessLn("Start containers in detached mode")
-		builder.UpWithBuild()
+		builder.UpWithBuild(args.WithChown)
 		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")

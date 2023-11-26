@@ -46,8 +46,6 @@ import (
 	"log"
 	"os"
 	"strings"
-
-	"github.com/faradey/madock/src/cli/attr"
 )
 
 var appVersion string = "2.2.0"
@@ -61,7 +59,6 @@ func main() {
 	}
 
 	command := strings.ToLower(os.Args[1])
-	attr.ParseAttributes()
 
 	switch command {
 	case "bash":

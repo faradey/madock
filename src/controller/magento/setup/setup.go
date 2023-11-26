@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func Execute(projectName string, projectConf map[string]string, continueSetup, doDownload, doInstall, withChown, withVolumes bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup, doDownload, doInstall, withChown, withVolumes, isSampleData bool) {
 	toolsDefVersions := magento2.GetVersions("")
 
 	mageVersion := ""
@@ -23,7 +23,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 		if mageVersion != "" {
 			toolsDefVersions = magento2.GetVersions(mageVersion)
 		} else {
-			Execute(projectName, projectConf, continueSetup, doDownload, doInstall, withChown, withVolumes)
+			Execute(projectName, projectConf, continueSetup, doDownload, doInstall, withChown, withVolumes, isSampleData)
 			return
 		}
 	}
@@ -81,7 +81,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 	}
 
 	if doDownload {
-		builder.DownloadMagento(projectName, edition, mageVersion)
+		builder.DownloadMagento(projectName, edition, mageVersion, isSampleData)
 	}
 
 	if doInstall {

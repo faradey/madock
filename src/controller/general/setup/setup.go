@@ -22,6 +22,7 @@ type ArgsStruct struct {
 	attr.Arguments
 	Download    bool `long:"download" short:"d" description:"Download code from repository"`
 	Install     bool `long:"install" short:"i" description:"Install service (Magento, PWA, Shopify SDK, etc.)"`
+	SampleData  bool `long:"sample-data" short:"s" description:"sample-data"`
 	WithChown   bool `long:"with-chown" short:"c" description:"With Chown"`
 	WithVolumes bool `long:"with-volumes" description:"With Volumes"`
 }
@@ -69,7 +70,7 @@ func Execute() {
 	fmtc.Title("Specify Platform: ")
 	platform := tools.Platform()
 	if platform == "magento2" {
-		setupMagento.Execute(projectName, projectConf, continueSetup, args.Download, args.Install, args.WithChown, args.WithVolumes)
+		setupMagento.Execute(projectName, projectConf, continueSetup, args.Download, args.Install, args.WithChown, args.WithVolumes, args.SampleData)
 	} else if platform == "pwa" {
 		setupPWA.Execute(projectName, projectConf, continueSetup, args.WithChown, args.WithVolumes)
 	} else if platform == "shopify" {

@@ -2,7 +2,6 @@ package builder
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/configs/aruntime/project"
@@ -17,10 +16,10 @@ import (
 	"strings"
 )
 
-func UpWithBuild() {
+func UpWithBuild(withChown bool) {
 	DownNginx()
 	UpNginx()
-	upProjectWithBuild(attr.Options.WithChown)
+	upProjectWithBuild(withChown)
 }
 
 func Down(withVolumes bool) {
@@ -274,10 +273,10 @@ func StopNginx() {
 	}
 }
 
-func DownloadMagento(projectName, edition, version string) {
+func DownloadMagento(projectName, edition, version string, isSampleData bool) {
 	projectConf := configs.GetCurrentProjectConfig()
 	sampleData := ""
-	if attr.Options.SampleData {
+	if isSampleData {
 		sampleData = " && bin/magento sampledata:deploy"
 	}
 	command := []string{
