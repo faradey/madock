@@ -3,13 +3,13 @@ package builder
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os/exec"
 	"strings"
 
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/paths"
 )
 
 type StatusInfoStruct struct {

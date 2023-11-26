@@ -1,14 +1,13 @@
 package configs
 
 import (
+	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 	"os/user"
 	"regexp"
 	"runtime"
 	"strings"
-
-	"github.com/faradey/madock/src/paths"
 )
 
 type ConfigLines struct {

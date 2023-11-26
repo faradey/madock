@@ -8,7 +8,7 @@ import (
 	"github.com/faradey/madock/src/configs/aruntime/project"
 	"github.com/faradey/madock/src/controller/general/cron"
 	"github.com/faradey/madock/src/helper"
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/helper/paths"
 	"github.com/gosimple/hashdir"
 	"log"
 	"os"

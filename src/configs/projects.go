@@ -1,12 +1,11 @@
 package configs
 
 import (
+	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/faradey/madock/src/paths"
 )
 
 var generalConfig map[string]string

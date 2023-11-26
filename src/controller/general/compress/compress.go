@@ -4,7 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"github.com/faradey/madock/src/cli/attr"
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"
 	"os"

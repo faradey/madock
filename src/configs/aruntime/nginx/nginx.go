@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper"
+	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 	"os/exec"
@@ -16,7 +17,6 @@ import (
 	"time"
 
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/paths"
 )
 
 func MakeConf() {

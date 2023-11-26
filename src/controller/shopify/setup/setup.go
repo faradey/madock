@@ -2,29 +2,29 @@ package setup
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs/projects"
 	"github.com/faradey/madock/src/docker/builder"
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/versions/shopify"
 )
 
-func Shopify(projectName string, projectConf map[string]string, continueSetup bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup, withVolumes, withChown bool) {
 	toolsDefVersions := shopify.GetVersions()
 
 	if continueSetup {
 		fmt.Println("")
 
-		Php(&toolsDefVersions.Php)
-		Db(&toolsDefVersions.Db)
-		Composer(&toolsDefVersions.Composer)
-		NodeJs(&toolsDefVersions.NodeJs)
-		Yarn(&toolsDefVersions.Yarn)
+		tools.Php(&toolsDefVersions.Php)
+		tools.Db(&toolsDefVersions.Db)
+		tools.Composer(&toolsDefVersions.Composer)
+		tools.NodeJs(&toolsDefVersions.NodeJs)
+		tools.Yarn(&toolsDefVersions.Yarn)
 
-		Redis(&toolsDefVersions.Redis)
-		RabbitMQ(&toolsDefVersions.RabbitMQ)
-		Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+		tools.Redis(&toolsDefVersions.Redis)
+		tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
+		tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
 
 		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
@@ -35,6 +35,6 @@ func Shopify(projectName string, projectConf map[string]string, continueSetup bo
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 	}
 
-	builder.Down(attr.Options.WithVolumes)
-	builder.StartShopify(attr.Options.WithChown, projectConf)
+	builder.Down(withVolumes)
+	builder.StartMagento2(withChown, projectConf)
 }

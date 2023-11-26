@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/faradey/madock/src/cli/attr"
+	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 	"strings"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"

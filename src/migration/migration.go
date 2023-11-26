@@ -1,10 +1,10 @@
 package migration
 
 import (
+	"github.com/faradey/madock/src/helper/paths"
 	"os"
 
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/paths"
 )
 
 var versionOptionName string = "MADOCK_VERSION"

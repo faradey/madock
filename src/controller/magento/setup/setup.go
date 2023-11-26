@@ -2,28 +2,28 @@ package setup
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs/projects"
 	"github.com/faradey/madock/src/controller/general/install"
 	"github.com/faradey/madock/src/docker/builder"
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/versions/magento2"
 	"strings"
 )
 
-func Magento2(projectName string, projectConf map[string]string, continueSetup bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup, doDownload, doInstall, withChown, withVolumes bool) {
 	toolsDefVersions := magento2.GetVersions("")
 
 	mageVersion := ""
 	if toolsDefVersions.Php == "" {
 		fmt.Println("")
 		fmtc.Title("Specify Magento version: ")
-		mageVersion, _ = Waiter()
+		mageVersion, _ = tools.Waiter()
 		if mageVersion != "" {
 			toolsDefVersions = magento2.GetVersions(mageVersion)
 		} else {
-			Magento2(projectName, projectConf, continueSetup)
+			Execute(projectName, projectConf, continueSetup, doDownload, doInstall, withChown, withVolumes)
 			return
 		}
 	}
@@ -34,19 +34,19 @@ func Magento2(projectName string, projectConf map[string]string, continueSetup b
 		fmt.Println("")
 		fmtc.Title("Your Magento version is " + toolsDefVersions.Magento)
 
-		Php(&toolsDefVersions.Php)
-		Db(&toolsDefVersions.Db)
-		Composer(&toolsDefVersions.Composer)
-		SearchEngine(&toolsDefVersions.SearchEngine)
+		tools.Php(&toolsDefVersions.Php)
+		tools.Db(&toolsDefVersions.Db)
+		tools.Composer(&toolsDefVersions.Composer)
+		tools.SearchEngine(&toolsDefVersions.SearchEngine)
 		if toolsDefVersions.SearchEngine == "Elasticsearch" {
-			Elastic(&toolsDefVersions.Elastic)
+			tools.Elastic(&toolsDefVersions.Elastic)
 		} else {
-			OpenSearch(&toolsDefVersions.OpenSearch)
+			tools.OpenSearch(&toolsDefVersions.OpenSearch)
 		}
 
-		Redis(&toolsDefVersions.Redis)
-		RabbitMQ(&toolsDefVersions.RabbitMQ)
-		Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+		tools.Redis(&toolsDefVersions.Redis)
+		tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
+		tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
 
 		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
@@ -56,12 +56,12 @@ func Magento2(projectName string, projectConf map[string]string, continueSetup b
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 
-		if attr.Options.Download {
+		if doDownload {
 			fmt.Println("")
 			fmtc.TitleLn("Specify Magento version: ")
 			fmt.Println("1) Community (default)")
 			fmt.Println("2) Enterprise")
-			edition, _ = Waiter()
+			edition, _ = tools.Waiter()
 			edition = strings.TrimSpace(edition)
 			if edition != "1" && edition != "2" && edition != "" {
 				fmtc.ErrorLn("The specified edition '" + edition + "' is incorrect.")
@@ -75,18 +75,16 @@ func Magento2(projectName string, projectConf map[string]string, continueSetup b
 		}
 	}
 
-	builder.Down(attr.Options.WithVolumes)
-	builder.StartMagento2(attr.Options.WithChown, projectConf)
-
-	if attr.Options.Download {
-		DownloadMagento(projectName, mageVersion, edition)
+	if doDownload || doInstall {
+		builder.Down(withVolumes)
+		builder.StartMagento2(withChown, projectConf)
 	}
 
-	if attr.Options.Install {
+	if doDownload {
+		builder.DownloadMagento(projectName, edition, mageVersion)
+	}
+
+	if doInstall {
 		install.Magento(projectName, toolsDefVersions.Magento)
 	}
-}
-
-func DownloadMagento(projectName, mageVersion, edition string) {
-	builder.DownloadMagento(projectName, edition, mageVersion)
 }

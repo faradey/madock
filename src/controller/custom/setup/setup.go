@@ -2,34 +2,34 @@ package setup
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs/projects"
 	"github.com/faradey/madock/src/docker/builder"
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/versions/custom"
 	"strings"
 )
 
-func Custom(projectName string, projectConf map[string]string, continueSetup bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup, withVolumes, withChown bool) {
 	toolsDefVersions := custom.GetVersions()
 
 	if continueSetup {
 		fmt.Println("")
 
-		Php(&toolsDefVersions.Php)
-		Db(&toolsDefVersions.Db)
-		Composer(&toolsDefVersions.Composer)
-		SearchEngine(&toolsDefVersions.SearchEngine)
+		tools.Php(&toolsDefVersions.Php)
+		tools.Db(&toolsDefVersions.Db)
+		tools.Composer(&toolsDefVersions.Composer)
+		tools.SearchEngine(&toolsDefVersions.SearchEngine)
 		if toolsDefVersions.SearchEngine == "Elasticsearch" {
-			Elastic(&toolsDefVersions.Elastic)
+			tools.Elastic(&toolsDefVersions.Elastic)
 		} else {
-			OpenSearch(&toolsDefVersions.OpenSearch)
+			tools.OpenSearch(&toolsDefVersions.OpenSearch)
 		}
 
-		Redis(&toolsDefVersions.Redis)
-		RabbitMQ(&toolsDefVersions.RabbitMQ)
-		HostsCustom(projectName, &toolsDefVersions.Hosts, projectConf)
+		tools.Redis(&toolsDefVersions.Redis)
+		tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
+		hostsCustom(projectName, &toolsDefVersions.Hosts, projectConf)
 
 		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
@@ -38,13 +38,13 @@ func Custom(projectName string, projectConf map[string]string, continueSetup boo
 		fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
-	}
 
-	builder.Down(attr.Options.WithVolumes)
-	builder.StartCustom(attr.Options.WithChown, projectConf)
+		builder.Down(withVolumes)
+		builder.StartMagento2(withChown, projectConf)
+	}
 }
 
-func HostsCustom(projectName string, defVersion *string, projectConf map[string]string) {
+func hostsCustom(projectName string, defVersion *string, projectConf map[string]string) {
 	host := strings.ToLower(projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"])
 	if val, ok := projectConf["HOSTS"]; ok && val != "" {
 		host = val
@@ -54,7 +54,7 @@ func HostsCustom(projectName string, defVersion *string, projectConf map[string]
 	fmt.Println("Recommended host: " + host)
 	*defVersion = host
 	availableVersions := []string{"Custom", projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"], "loc." + projectName + ".com"}
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	tools.PrepareVersions(availableVersions)
+	tools.Invitation(defVersion)
+	tools.WaiterAndProceed(defVersion, availableVersions)
 }

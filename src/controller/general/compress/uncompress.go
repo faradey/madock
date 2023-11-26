@@ -3,12 +3,11 @@ package compress
 import (
 	"archive/zip"
 	"fmt"
+	"github.com/faradey/madock/src/helper/paths"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/faradey/madock/src/paths"
 )
 
 func Unzip() {

@@ -27,6 +27,8 @@ import (
 	"github.com/faradey/madock/src/controller/general/service/disable"
 	"github.com/faradey/madock/src/controller/general/service/enable"
 	"github.com/faradey/madock/src/controller/general/service/list"
+	"github.com/faradey/madock/src/controller/general/setup"
+	"github.com/faradey/madock/src/controller/general/setup/env"
 	"github.com/faradey/madock/src/controller/general/start"
 	"github.com/faradey/madock/src/controller/general/stop"
 	"github.com/faradey/madock/src/controller/magento"
@@ -144,9 +146,9 @@ func main() {
 	case "service:disable":
 		disable.Execute()
 	case "setup":
-		commands.Setup()
+		setup.Execute()
 	case "setup:env":
-		commands.SetupEnv()
+		env.Execute()
 	case "shopify", "sy":
 		commands.Shopify(strings.Join(os.Args[2:], " "))
 	case "shopify:web", "sy:w":

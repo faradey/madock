@@ -3,6 +3,7 @@ package project
 import (
 	"bytes"
 	"fmt"
+	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 	"runtime"
@@ -10,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/paths"
 )
 
 func MakeConf(projectName string) {

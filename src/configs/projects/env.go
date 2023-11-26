@@ -2,7 +2,7 @@ package projects
 
 import (
 	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/versions"
 )
 

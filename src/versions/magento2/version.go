@@ -1,12 +1,11 @@
 package magento2
 
 import (
+	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/versions"
 	"os"
 	"regexp"
 	"strings"
-
-	"github.com/faradey/madock/src/paths"
 )
 
 func GetVersions(ver string) versions.ToolsVersions {

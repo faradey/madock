@@ -4,18 +4,23 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs/projects"
+	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/versions/pwa"
 )
 
-func PWA(projectName string, projectConf map[string]string, continueSetup bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup, withVolumes, withChown bool) {
 	if continueSetup {
 		toolsDefVersions := pwa.GetVersions()
-		NodeJs(&toolsDefVersions.NodeJs)
-		Yarn(&toolsDefVersions.Yarn)
-		Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+		tools.NodeJs(&toolsDefVersions.NodeJs)
+		tools.Yarn(&toolsDefVersions.Yarn)
+		tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
 		setMagentoBackendHost(&toolsDefVersions.PwaBackendUrl, projectConf)
 		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
 		fmtc.SuccessLn("\n" + "Finish set up environment")
+
+		builder.Down(withVolumes)
+		builder.StartMagento2(withChown, projectConf)
 	}
 }
 
@@ -30,7 +35,7 @@ func setMagentoBackendHost(defVersion *string, projectConf map[string]string) {
 	}
 
 	fmt.Print("> ")
-	selected, _ := Waiter()
+	selected, _ := tools.Waiter()
 	if selected != "" {
 		*defVersion = selected
 		fmtc.SuccessLn("Your choice: " + *defVersion)

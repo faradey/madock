@@ -24,7 +24,7 @@ var Options struct {
 	Args          []string
 	Download      bool     `long:"download" description:"Download Magento from repository"`
 	Install       bool     `long:"install" description:"Install Magento"`
-	Force         bool     `long:"forse" short:"f" description:"Force"`
+	Force         bool     `long:"force" short:"f" description:"Force"`
 	File          string   `long:"file" description:"File path"`
 	Title         string   `long:"title" description:"Title"`
 	Host          string   `long:"host" description:"Host"`

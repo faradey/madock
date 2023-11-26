@@ -1,10 +1,10 @@
-package setup
+package tools
 
 import (
 	"bufio"
 	"fmt"
 	"github.com/faradey/madock/src/cli/fmtc"
-	"github.com/faradey/madock/src/paths"
+	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 	"strconv"
@@ -17,9 +17,9 @@ func Platform() string {
 
 	availableVersions := []string{"", "magento2", "pwa", "custom", "shopify"}
 
-	prepareVersions(availableVersions)
-	invitation(&defVersion)
-	waiterAndProceed(&defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(&defVersion)
+	WaiterAndProceed(&defVersion, availableVersions)
 	return defVersion
 }
 
@@ -28,9 +28,9 @@ func Php(defVersion *string) {
 
 	availableVersions := []string{"Custom", "8.2", "8.1", "8.0", "7.4", "7.3", "7.2", "7.1", "7.0"}
 
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Db(defVersion *string) {
@@ -38,9 +38,9 @@ func Db(defVersion *string) {
 
 	availableVersions := []string{"Custom", "11.1", "10.6", "10.4", "10.3", "10.2", "10.1", "10.0"}
 
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Composer(defVersion *string) {
@@ -48,9 +48,9 @@ func Composer(defVersion *string) {
 
 	availableVersions := []string{"Custom", "1", "2"}
 
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func SearchEngine(defVersion *string) {
@@ -58,9 +58,9 @@ func SearchEngine(defVersion *string) {
 
 	availableVersions := []string{"", "OpenSearch", "Elasticsearch", "Do not use"}
 
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Elastic(defVersion *string) {
@@ -68,9 +68,9 @@ func Elastic(defVersion *string) {
 
 	availableVersions := []string{"Custom", "8.4.3", "7.17.5", "7.16.3", "7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
 
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func OpenSearch(defVersion *string) {
@@ -78,9 +78,9 @@ func OpenSearch(defVersion *string) {
 
 	availableVersions := []string{"Custom", "2.5.0", "1.2.0"}
 
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Redis(defVersion *string) {
@@ -88,18 +88,18 @@ func Redis(defVersion *string) {
 
 	availableVersions := []string{"Custom", "7.0 (Magento version > 2.4.6)", "6.2 (Magento version > 2.4.3-p3)", "6.0 (Magento version <= 2.4.3-p3)", "5.0 (Magento version <= 2.3.2)"}
 
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func RabbitMQ(defVersion *string) {
 	setTitleAndRecommended("RabbitMQ", defVersion)
 	availableVersions := []string{"Custom", "3.9 (Magento version > 2.4.3-p3)", "3.8 (Magento version <= 2.4.3-p3)", "3.7 (Magento version <= 2.3.4)"}
 
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Hosts(projectName string, defVersion *string, projectConf map[string]string) {
@@ -112,9 +112,9 @@ func Hosts(projectName string, defVersion *string, projectConf map[string]string
 	fmt.Println("Recommended host: " + host)
 	*defVersion = host
 	availableVersions := []string{"Custom", projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"] + ":base", "loc." + projectName + ".com:base"}
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func NodeJs(defVersion *string) {
@@ -122,9 +122,9 @@ func NodeJs(defVersion *string) {
 
 	availableVersions := []string{"Custom", "18.15.0", "16.20.0"}
 
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Yarn(defVersion *string) {
@@ -132,9 +132,9 @@ func Yarn(defVersion *string) {
 
 	availableVersions := []string{"Custom", "3.6.4", "1.22.19"}
 
-	prepareVersions(availableVersions)
-	invitation(defVersion)
-	waiterAndProceed(defVersion, availableVersions)
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func setTitleAndRecommended(title string, recommended *string) {
@@ -145,7 +145,7 @@ func setTitleAndRecommended(title string, recommended *string) {
 	}
 }
 
-func prepareVersions(availableVersions []string) {
+func PrepareVersions(availableVersions []string) {
 	for index, ver := range availableVersions {
 		if ver != "" {
 			fmt.Println(strconv.Itoa(index) + ") " + ver)
@@ -153,7 +153,7 @@ func prepareVersions(availableVersions []string) {
 	}
 }
 
-func invitation(ver *string) {
+func Invitation(ver *string) {
 	if *ver != "" {
 		fmt.Println("Enter the item number or press Enter to select the recommended item")
 	} else {
@@ -163,7 +163,7 @@ func invitation(ver *string) {
 	fmt.Print("> ")
 }
 
-func waiterAndProceed(defVersion *string, availableVersions []string) {
+func WaiterAndProceed(defVersion *string, availableVersions []string) {
 	selected, repoAndVersion := Waiter()
 	setSelectedVersion(defVersion, availableVersions, selected, repoAndVersion)
 }
@@ -202,7 +202,7 @@ func setSelectedVersion(defVersion *string, availableVersions []string, selected
 		fmtc.SuccessLn("Your choice: " + *defVersion)
 	} else {
 		fmtc.WarningLn("Choose one of the options offered")
-		waiterAndProceed(defVersion, availableVersions)
+		WaiterAndProceed(defVersion, availableVersions)
 	}
 }
 

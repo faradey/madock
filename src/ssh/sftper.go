@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/helper/paths"
 	"image/jpeg"
 	"io"
 	"log"
@@ -14,7 +15,6 @@ import (
 	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/helper"
-	"github.com/faradey/madock/src/paths"
 	"github.com/pkg/sftp"
 )
 
