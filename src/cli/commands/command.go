@@ -9,10 +9,6 @@ func IsNotDefine() {
 	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
 }
 
-func Ssl() {
-	builder.SslRebuild()
-}
-
 func Shopify(flag string) {
 	builder.Shopify(flag)
 }

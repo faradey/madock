@@ -307,11 +307,6 @@ func DownloadMagento(projectName, edition, version string) {
 	}
 }
 
-func SslRebuild() {
-	ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
-	nginx.GenerateSslCert(ctxPath, true)
-}
-
 func Shopify(flag string) {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()

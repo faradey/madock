@@ -29,6 +29,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/service/list"
 	"github.com/faradey/madock/src/controller/general/setup"
 	"github.com/faradey/madock/src/controller/general/setup/env"
+	"github.com/faradey/madock/src/controller/general/ssl"
 	"github.com/faradey/madock/src/controller/general/start"
 	"github.com/faradey/madock/src/controller/general/stop"
 	"github.com/faradey/madock/src/controller/magento"
@@ -156,7 +157,7 @@ func main() {
 	case "shopify:web:frontend", "sy:w:f":
 		commands.ShopifyWebFrontend(strings.Join(os.Args[2:], " "))
 	case "ssl:rebuild":
-		commands.Ssl()
+		ssl.Execute()
 	case "start":
 		start.Execute()
 	case "status":
