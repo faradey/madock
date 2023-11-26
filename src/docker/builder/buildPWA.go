@@ -1,7 +1,6 @@
 package builder
 
 import (
-	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/helper/paths"
@@ -30,7 +29,7 @@ func StartPWA(withChown bool) {
 	err := cmd.Run()
 	if err != nil {
 		fmtc.ToDoLn("Creating containers")
-		upProjectWithBuild(attr.Options.WithChown)
+		upProjectWithBuild(withChown)
 	} else if withChown {
 		projectName := configs.GetProjectName()
 		projectConf := configs.GetCurrentProjectConfig()
