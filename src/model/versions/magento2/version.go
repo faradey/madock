@@ -2,7 +2,7 @@ package magento2
 
 import (
 	"github.com/faradey/madock/src/helper/paths"
-	"github.com/faradey/madock/src/versions"
+	"github.com/faradey/madock/src/model/versions"
 	"os"
 	"regexp"
 	"strings"

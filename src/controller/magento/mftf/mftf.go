@@ -1,9 +1,9 @@
 package mftf
 
 import (
-	"github.com/faradey/madock/src/configs"
 	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	"github.com/faradey/madock/src/helper/configs"
 	"log"
 	"os"
 	"os/exec"

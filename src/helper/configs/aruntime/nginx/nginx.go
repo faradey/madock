@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/faradey/madock/src/configs/aruntime/project"
+	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper/finder"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
@@ -15,12 +16,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/faradey/madock/src/configs"
 )
 
 func MakeConf() {
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/docker/nginx")
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/docker/nginx")
 	setPorts()
 	makeProxy()
 	makeDockerfile()
@@ -42,7 +41,7 @@ func setPorts() {
 		_ = os.WriteFile(portsFile, []byte(lines), 0664)
 	}
 
-	portsConfig := configs.ParseFile(portsFile)
+	portsConfig := configs2.ParseFile(portsFile)
 	lines := ""
 	for projectName, port := range portsConfig {
 		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + projectName); !os.IsNotExist(err) {
@@ -54,7 +53,7 @@ func setPorts() {
 		_ = os.WriteFile(portsFile, []byte(lines), 0664)
 	}
 
-	if _, ok := portsConfig[configs.GetProjectName()]; !ok {
+	if _, ok := portsConfig[configs2.GetProjectName()]; !ok {
 		f, err := os.OpenFile(portsFile,
 			os.O_APPEND|os.O_WRONLY, 0664)
 		if err != nil {
@@ -62,7 +61,7 @@ func setPorts() {
 		}
 		defer f.Close()
 		maxPort := getMaxPort(portsConfig)
-		if _, err := f.WriteString(configs.GetProjectName() + "=" + strconv.Itoa(maxPort+1) + "\n"); err != nil {
+		if _, err := f.WriteString(configs2.GetProjectName() + "=" + strconv.Itoa(maxPort+1) + "\n"); err != nil {
 			log.Println(err)
 		}
 	}
@@ -70,8 +69,8 @@ func setPorts() {
 
 func makeProxy() {
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
-	portsConfig := configs.ParseFile(portsFile)
-	generalConfig := configs.GetGeneralConfig()
+	portsConfig := configs2.ParseFile(portsFile)
+	generalConfig := configs2.GetGeneralConfig()
 	/* Create nginx default configuration for Magento2 */
 	nginxDefFile := ""
 	str := ""
@@ -79,8 +78,8 @@ func makeProxy() {
 
 	var onlyHostsGlobal []string
 	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
-	if !finder.IsContain(projectsNames, configs.GetProjectName()) {
-		projectsNames = append(projectsNames, configs.GetProjectName())
+	if !finder.IsContain(projectsNames, configs2.GetProjectName()) {
+		projectsNames = append(projectsNames, configs2.GetProjectName())
 	}
 	for _, name := range projectsNames {
 		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
@@ -104,9 +103,9 @@ func makeProxy() {
 				for i := 1; i < 20; i++ {
 					strReplaced = strings.Replace(strReplaced, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 				}
-				strReplaced = configs.ReplaceConfigValue(strReplaced)
+				strReplaced = configs2.ReplaceConfigValue(strReplaced)
 				hostName := "loc." + name + ".com"
-				projectConf := configs.GetProjectConfig(name)
+				projectConf := configs2.GetProjectConfig(name)
 				if val, ok := projectConf["HOSTS"]; ok {
 					var onlyHosts []string
 					hosts := strings.Split(val, " ")
@@ -150,7 +149,7 @@ func makeDockerfile() {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 
 	err = os.WriteFile(ctxPath+"/Dockerfile", []byte(str), 0755)
 	if err != nil {
@@ -169,7 +168,7 @@ func makeDockerCompose() {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 
 	err = os.WriteFile(paths.GetExecDirPath()+"/aruntime/docker-compose.yml", []byte(str), 0755)
 	if err != nil {
@@ -201,7 +200,7 @@ func getMaxPort(conf map[string]string) int {
 }
 
 func GenerateSslCert(ctxPath string, force bool) {
-	generalConfig := configs.GetGeneralConfig()
+	generalConfig := configs2.GetGeneralConfig()
 	if val, ok := generalConfig["SSL"]; force || (ok && val == "true") {
 		projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 		var commands []string
@@ -211,7 +210,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 				continue
 			}
 
-			projectConf := configs.GetProjectConfig(name)
+			projectConf := configs2.GetProjectConfig(name)
 			val := ""
 			if val, ok = projectConf["HOSTS"]; !ok {
 				continue

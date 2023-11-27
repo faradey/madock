@@ -1,9 +1,9 @@
 package debug
 
 import (
-	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/helper/cli/attr"
+	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"
@@ -16,29 +16,29 @@ type ArgsStruct struct {
 
 func Enable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-	configs.SetParam(configPath, "XDEBUG_ENABLED", "true")
+	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+	configs2.SetParam(configPath, "XDEBUG_ENABLED", "true")
 	rebuild.Execute()
 }
 
 func Disable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-	configs.SetParam(configPath, "XDEBUG_ENABLED", "false")
+	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+	configs2.SetParam(configPath, "XDEBUG_ENABLED", "false")
 	rebuild.Execute()
 }
 
 func ProfileEnable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-	configs.SetParam(configPath, "XDEBUG_MODE", "profile")
+	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+	configs2.SetParam(configPath, "XDEBUG_MODE", "profile")
 	rebuild.Execute()
 }
 
 func ProfileDisable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-	configs.SetParam(configPath, "XDEBUG_MODE", "debug")
+	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+	configs2.SetParam(configPath, "XDEBUG_MODE", "debug")
 	rebuild.Execute()
 }
 

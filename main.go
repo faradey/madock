@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/faradey/madock/src/compress"
 	"github.com/faradey/madock/src/controller/general/bash"
 	"github.com/faradey/madock/src/controller/general/clean_cache"
 	"github.com/faradey/madock/src/controller/general/cli"
@@ -42,6 +41,7 @@ import (
 	"github.com/faradey/madock/src/controller/shopify"
 	"github.com/faradey/madock/src/controller/shopify/frontend"
 	"github.com/faradey/madock/src/controller/shopify/web"
+	"github.com/faradey/madock/src/helper/compress"
 	"github.com/faradey/madock/src/migration"
 	"log"
 	"os"

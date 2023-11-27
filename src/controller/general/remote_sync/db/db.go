@@ -3,10 +3,10 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/controller/general/remote_sync"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"github.com/pkg/sftp"

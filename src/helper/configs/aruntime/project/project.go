@@ -3,19 +3,18 @@ package project
 import (
 	"bytes"
 	"fmt"
+	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
-
-	"github.com/faradey/madock/src/configs"
 )
 
 func MakeConf(projectName string) {
 	// get project config
-	projectConf := configs.GetProjectConfig(projectName)
+	projectConf := configs2.GetProjectConfig(projectName)
 	src := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/src"
 	if _, err := os.Lstat(src); err == nil {
 		if err := os.Remove(src); err != nil {
@@ -73,7 +72,7 @@ func makeKibanaConf(projectName string) {
 		log.Fatal(err)
 	}
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 
 	filePath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/kibana.yml"
 	err = os.WriteFile(filePath, []byte(str), 0755)
@@ -90,7 +89,7 @@ func makeNginxDockerfile(projectName string) {
 		log.Fatal(err)
 	}
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/nginx.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
@@ -100,7 +99,7 @@ func makeNginxDockerfile(projectName string) {
 }
 
 func makeNginxConf(projectName string) {
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs2.GetCurrentProjectConfig()
 	defFile := GetDockerConfigFile(projectName, "nginx/conf/default.conf", "")
 
 	b, err := os.ReadFile(defFile)
@@ -109,7 +108,7 @@ func makeNginxConf(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 	hostName := "loc." + projectName + ".com"
 	hostNameWebsites := "loc." + projectName + ".com base;"
 	if val, ok := projectConf["HOSTS"]; ok {
@@ -152,14 +151,14 @@ func makePhpDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs2.GetCurrentProjectConfig()
 	if _, err := os.Stat(paths.GetExecDirPath() + "/docker/" + projectConf["PLATFORM"] + "/php/DockerfileWithoutXdebug"); !os.IsNotExist(err) {
 		dockerDefFile = GetDockerConfigFile(projectName, "php/DockerfileWithoutXdebug", "")
 		b, err = os.ReadFile(dockerDefFile)
@@ -168,7 +167,7 @@ func makePhpDockerfile(projectName string) {
 		}
 
 		str = string(b)
-		str = configs.ReplaceConfigValue(str)
+		str = configs2.ReplaceConfigValue(str)
 		nginxFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.DockerfileWithoutXdebug"
 		err = os.WriteFile(nginxFile, []byte(str), 0755)
 		if err != nil {
@@ -179,7 +178,7 @@ func makePhpDockerfile(projectName string) {
 
 func makeDockerCompose(projectName string) {
 	overrideFile := runtime.GOOS
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs2.GetCurrentProjectConfig()
 
 	dockerDefFile := GetDockerConfigFile(projectName, "docker-compose.yml", "")
 	dockerDefFileForOS := GetDockerConfigFile(projectName, "docker-compose."+overrideFile+".yml", "")
@@ -190,7 +189,7 @@ func makeDockerCompose(projectName string) {
 	}
 
 	str := string(b)
-	portsConfig := configs.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
+	portsConfig := configs2.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
 	portNumber, err := strconv.Atoi(portsConfig[projectName])
 	if err != nil {
 		log.Fatal(err)
@@ -204,7 +203,7 @@ func makeDockerCompose(projectName string) {
 			hostName = strings.Split(hosts[0], ":")[0]
 		}
 	}
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", hostName, -1)
 	str = strings.Replace(str, "{{{NGINX_PROJECT_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
 	str = strings.Replace(str, "{{{NGINX_PROJECT_PORT_SSL}}}", strconv.Itoa(portNumberRanged+17001), -1)
@@ -226,7 +225,7 @@ func makeDockerCompose(projectName string) {
 	}
 
 	str = string(b)
-	portsConfig = configs.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
+	portsConfig = configs2.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
 	portNumber, err = strconv.Atoi(portsConfig[projectName])
 	if err != nil {
 		log.Fatal(err)
@@ -234,14 +233,14 @@ func makeDockerCompose(projectName string) {
 
 	portNumberRanged = (portNumber - 1) * 20
 	hostName = "loc." + projectName + ".com"
-	projectConf = configs.GetCurrentProjectConfig()
+	projectConf = configs2.GetCurrentProjectConfig()
 	if val, ok := projectConf["HOSTS"]; ok {
 		hosts := strings.Split(val, " ")
 		if len(hosts) > 0 {
 			hostName = strings.Split(hosts[0], ":")[0]
 		}
 	}
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 	str = strings.Replace(str, "{{{HOST_NAME_DEFAULT}}}", hostName, -1)
 	str = strings.Replace(str, "{{{NGINX_PROJECT_PORT}}}", strconv.Itoa(portNumberRanged+17000), -1)
 	str = strings.Replace(str, "{{{NGINX_PROJECT_PORT_SSL}}}", strconv.Itoa(portNumberRanged+17001), -1)
@@ -266,7 +265,7 @@ func makeDBDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/db.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -283,7 +282,7 @@ func makeDBDockerfile(projectName string) {
 		log.Fatal(err)
 	}
 
-	if strings.ToLower(configs.GetCurrentProjectConfig()["DB_REPOSITORY"]) == "mariadb" && configs.GetCurrentProjectConfig()["DB_VERSION"] >= "10.4" {
+	if strings.ToLower(configs2.GetCurrentProjectConfig()["DB_REPOSITORY"]) == "mariadb" && configs2.GetCurrentProjectConfig()["DB_VERSION"] >= "10.4" {
 		b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
 	}
 
@@ -302,7 +301,7 @@ func makeElasticDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/elasticsearch.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -319,7 +318,7 @@ func makeOpenSearchDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/opensearch.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -336,7 +335,7 @@ func makeRedisDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/redis.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -353,7 +352,7 @@ func makeNodeJsDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(str)
 	nodeJsFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nodejs.Dockerfile"
 	err = os.WriteFile(nodeJsFile, []byte(str), 0755)
 	if err != nil {
@@ -362,7 +361,7 @@ func makeNodeJsDockerfile(projectName string) {
 }
 
 func GetDockerConfigFile(projectName, path, platform string) string {
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs2.GetCurrentProjectConfig()
 	if platform == "" {
 		platform = projectConf["PLATFORM"]
 	}
@@ -392,7 +391,7 @@ func processOtherCTXFiles(projectName string) {
 		}
 
 		str := string(b)
-		str = configs.ReplaceConfigValue(str)
+		str = configs2.ReplaceConfigValue(str)
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + strings.Split(fileName, "/")[0] + "/")
 		destinationFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + fileName
 		err = os.WriteFile(destinationFile, []byte(str), 0755)

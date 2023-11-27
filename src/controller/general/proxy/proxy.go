@@ -1,10 +1,10 @@
 package proxy
 
 import (
-	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
@@ -17,8 +17,8 @@ type ArgsStruct struct {
 func Execute(flag string) {
 	getArgs()
 
-	if !configs.IsHasNotConfig() {
-		projectConf := configs.GetCurrentProjectConfig()
+	if !configs2.IsHasNotConfig() {
+		projectConf := configs2.GetCurrentProjectConfig()
 		if projectConf["PROXY_ENABLED"] == "true" {
 			if flag == "prune" {
 				builder.DownNginx()

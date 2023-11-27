@@ -1,10 +1,9 @@
 package migration
 
 import (
+	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"os"
-
-	"github.com/faradey/madock/src/configs"
 )
 
 var versionOptionName string = "MADOCK_VERSION"
@@ -14,12 +13,12 @@ func Apply(newAppVersion string) {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		os.WriteFile(configPath, []byte(""), 0755)
 	}
-	config := configs.GetGeneralConfig()
+	config := configs2.GetGeneralConfig()
 	oldAppVersion := config[versionOptionName]
 	Execute(oldAppVersion)
 	saveNewVersion(newAppVersion)
 }
 
 func saveNewVersion(newAppVersion string) {
-	configs.SetParam(paths.GetExecDirPath()+"/projects/config.txt", versionOptionName, newAppVersion)
+	configs2.SetParam(paths.GetExecDirPath()+"/projects/config.txt", versionOptionName, newAppVersion)
 }

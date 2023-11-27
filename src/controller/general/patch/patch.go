@@ -1,11 +1,14 @@
 package patch
 
 import (
-	"github.com/faradey/madock/src/docker/scripts"
+	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/attr"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
+	"os/exec"
+	"strings"
 )
 
 type ArgsStruct struct {
@@ -28,7 +31,21 @@ func Create() {
 		log.Fatal("The --file option is incorrect or not specified.")
 	}
 
-	scripts.CreatePatch(filePath, patchName, title, force)
+	projectName := configs.GetProjectName()
+	projectConf := configs.GetCurrentProjectConfig()
+	isForce := ""
+	if force {
+		isForce = "f"
+	}
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["WORKDIR"])
+	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "php", "/var/www/scripts/php/patch-create.php", workdir, filePath, patchName, title, isForce)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getArgs() *ArgsStruct {

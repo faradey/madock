@@ -1,9 +1,9 @@
 package builder
 
 import (
-	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/controller/general/cron"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"

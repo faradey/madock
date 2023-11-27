@@ -1,14 +1,14 @@
 package projects
 
 import (
-	"github.com/faradey/madock/src/configs"
+	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
-	"github.com/faradey/madock/src/versions"
+	"github.com/faradey/madock/src/model/versions"
 )
 
 func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, projectConf map[string]string) {
-	generalConf := configs.GetGeneralConfig()
-	config := new(configs.ConfigLines)
+	generalConf := configs2.GetGeneralConfig()
+	config := new(configs2.ConfigLines)
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 	config.EnvFile = envFile
 	if len(projectConf) > 0 {
@@ -29,7 +29,7 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("CRON_ENABLED", configs.GetOption("CRON_ENABLED", generalConf, projectConf))
+	config.AddOrSetLine("CRON_ENABLED", configs2.GetOption("CRON_ENABLED", generalConf, projectConf))
 
 	if !config.IsEnv {
 		config.AddEmptyLine()
@@ -41,13 +41,13 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 		config.AddEmptyLine()
 	}
 
-	config.AddOrSetLine("SSH_AUTH_TYPE", configs.GetOption("SSH_AUTH_TYPE", generalConf, projectConf))
-	config.AddOrSetLine("SSH_HOST", configs.GetOption("SSH_HOST", generalConf, projectConf))
-	config.AddOrSetLine("SSH_PORT", configs.GetOption("SSH_PORT", generalConf, projectConf))
-	config.AddOrSetLine("SSH_USERNAME", configs.GetOption("SSH_USERNAME", generalConf, projectConf))
-	config.AddOrSetLine("SSH_KEY_PATH", configs.GetOption("SSH_KEY_PATH", generalConf, projectConf))
-	config.AddOrSetLine("SSH_PASSWORD", configs.GetOption("SSH_PASSWORD", generalConf, projectConf))
-	config.AddOrSetLine("SSH_SITE_ROOT_PATH", configs.GetOption("SSH_SITE_ROOT_PATH", generalConf, projectConf))
+	config.AddOrSetLine("SSH_AUTH_TYPE", configs2.GetOption("SSH_AUTH_TYPE", generalConf, projectConf))
+	config.AddOrSetLine("SSH_HOST", configs2.GetOption("SSH_HOST", generalConf, projectConf))
+	config.AddOrSetLine("SSH_PORT", configs2.GetOption("SSH_PORT", generalConf, projectConf))
+	config.AddOrSetLine("SSH_USERNAME", configs2.GetOption("SSH_USERNAME", generalConf, projectConf))
+	config.AddOrSetLine("SSH_KEY_PATH", configs2.GetOption("SSH_KEY_PATH", generalConf, projectConf))
+	config.AddOrSetLine("SSH_PASSWORD", configs2.GetOption("SSH_PASSWORD", generalConf, projectConf))
+	config.AddOrSetLine("SSH_SITE_ROOT_PATH", configs2.GetOption("SSH_SITE_ROOT_PATH", generalConf, projectConf))
 
 	if !config.IsEnv {
 		config.SaveLines()

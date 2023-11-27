@@ -1,11 +1,10 @@
 package versions
 
 import (
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"os"
 	"strings"
-
-	"github.com/faradey/madock/src/configs"
 )
 
 func V140() {

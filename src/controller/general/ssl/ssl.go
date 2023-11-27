@@ -1,7 +1,7 @@
 package ssl
 
 import (
-	"github.com/faradey/madock/src/configs/aruntime/nginx"
+	"github.com/faradey/madock/src/helper/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/helper/paths"
 )
 

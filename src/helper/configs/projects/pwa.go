@@ -1,8 +1,8 @@
 package projects
 
 import (
-	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/versions"
+	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/model/versions"
 )
 
 func PWA(config *configs.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {

@@ -1,10 +1,10 @@
 package disable
 
 import (
-	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/controller/general/service"
 	"github.com/faradey/madock/src/helper/cli/attr"
+	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"
@@ -25,14 +25,14 @@ func Execute() {
 			name = strings.ToLower(name)
 			if service.IsService(name) {
 				serviceName := strings.ToUpper(name) + "_ENABLED"
-				projectName := configs.GetProjectName()
+				projectName := configs2.GetProjectName()
 				envFile := ""
 				if !args.Global {
 					envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 				} else {
 					envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.txt"
 				}
-				configs.SetParam(envFile, serviceName, "false")
+				configs2.SetParam(envFile, serviceName, "false")
 			}
 		}
 	}

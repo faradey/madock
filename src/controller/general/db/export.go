@@ -3,8 +3,8 @@ package db
 import (
 	"compress/gzip"
 	"fmt"
-	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/helper/cli/attr"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"

@@ -2,8 +2,8 @@ package config
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/helper/cli/attr"
+	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"
@@ -18,8 +18,8 @@ type ArgsStruct struct {
 }
 
 func ShowEnv() {
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-	lines := configs.GetAllLines(configPath)
+	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+	lines := configs2.GetAllLines(configPath)
 	for _, ln := range lines {
 		fmt.Println(ln)
 	}
@@ -29,9 +29,9 @@ func SetEnvOption() {
 	args := getArgs()
 	name := strings.ToUpper(args.Name)
 	val := args.Value
-	if len(name) > 0 && configs.IsOption(name) {
-		configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/env.txt"
-		configs.SetParam(configPath, name, val)
+	if len(name) > 0 && configs2.IsOption(name) {
+		configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+		configs2.SetParam(configPath, name, val)
 	}
 }
 

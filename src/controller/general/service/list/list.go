@@ -1,8 +1,8 @@
 package list
 
 import (
-	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	"github.com/faradey/madock/src/helper/configs"
 	"sort"
 	"strings"
 )

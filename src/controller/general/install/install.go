@@ -2,9 +2,9 @@ package install
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
-	"github.com/faradey/madock/src/versions/magento2"
+	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/model/versions/magento2"
 	"log"
 	"os"
 	"os/exec"

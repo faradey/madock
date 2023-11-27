@@ -3,13 +3,13 @@ package setup
 import (
 	"bufio"
 	"fmt"
-	"github.com/faradey/madock/src/configs"
 	setupCustom "github.com/faradey/madock/src/controller/custom/setup"
 	setupMagento "github.com/faradey/madock/src/controller/magento/setup"
 	setupPWA "github.com/faradey/madock/src/controller/pwa/setup"
 	setupShopify "github.com/faradey/madock/src/controller/shopify/setup"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/jessevdk/go-flags"
@@ -30,8 +30,8 @@ type ArgsStruct struct {
 func Execute() {
 	args := getArgs()
 
-	projectName := configs.GetProjectName()
-	hasConfig := configs.IsHasConfig(projectName)
+	projectName := configs2.GetProjectName()
+	hasConfig := configs2.IsHasConfig(projectName)
 	continueSetup := true
 	if hasConfig {
 		fmtc.WarningLn("File env is already exist in project " + projectName)
@@ -61,9 +61,9 @@ func Execute() {
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 	var projectConf map[string]string
 	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
-		projectConf = configs.GetProjectConfig(projectName)
+		projectConf = configs2.GetProjectConfig(projectName)
 	} else {
-		projectConf = configs.GetGeneralConfig()
+		projectConf = configs2.GetGeneralConfig()
 	}
 
 	fmt.Println("")

@@ -2,10 +2,10 @@ package builder
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/configs/aruntime/nginx"
-	"github.com/faradey/madock/src/configs/aruntime/project"
 	"github.com/faradey/madock/src/controller/general/cron"
+	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/configs/aruntime/nginx"
+	"github.com/faradey/madock/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper/hash"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/gosimple/hashdir"
@@ -23,7 +23,7 @@ func UpWithBuild(withChown bool) {
 }
 
 func Down(withVolumes bool) {
-	projectName := configs.GetProjectName()
+	projectName := configs2.GetProjectName()
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
@@ -78,10 +78,10 @@ func UpNginx() {
 }
 
 func UpNginxWithBuild() {
-	projectName := configs.GetProjectName()
+	projectName := configs2.GetProjectName()
 	nginx.MakeConf()
 	project.MakeConf(projectName)
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs2.GetCurrentProjectConfig()
 	dirHash, err := hashdir.Make(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx", "md5")
 	dockerComposeHash, err := hash.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "md5")
 	dockerComposeOverHash, err := hash.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.override.yml", "md5")
@@ -101,7 +101,7 @@ func UpNginxWithBuild() {
 		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 		nginx.GenerateSslCert(ctxPath, false)
 		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
-		configs.SetParam(envFile, "CACHE_HASH", dirHash)
+		configs2.SetParam(envFile, "CACHE_HASH", dirHash)
 		dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 		cmd.Stdout = os.Stdout
@@ -114,7 +114,7 @@ func UpNginxWithBuild() {
 }
 
 func upProjectWithBuild(withChown bool) {
-	projectName := configs.GetProjectName()
+	projectName := configs2.GetProjectName()
 	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/.composer"); os.IsNotExist(err) {
 		err = os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
 		if err != nil {
@@ -218,7 +218,7 @@ func upProjectWithBuild(withChown bool) {
 		log.Fatal(err)
 	}
 
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs2.GetCurrentProjectConfig()
 
 	if val, ok := projectConf["CRON_ENABLED"]; ok && val == "true" {
 		cron.Execute(true, false)
@@ -274,7 +274,7 @@ func StopNginx() {
 }
 
 func DownloadMagento(projectName, edition, version string, isSampleData bool) {
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs2.GetCurrentProjectConfig()
 	sampleData := ""
 	if isSampleData {
 		sampleData = " && bin/magento sampledata:deploy"

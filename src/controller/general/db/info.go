@@ -1,9 +1,9 @@
 package db
 
 import (
-	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"
@@ -18,11 +18,11 @@ type ArgsInfoStruct struct {
 func Info() {
 	getInfoArgs()
 
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs2.GetCurrentProjectConfig()
 	if projectConf["PLATFORM"] != "pwa" {
 		portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
-		portsConfig := configs.ParseFile(portsFile)
-		port, err := strconv.Atoi(portsConfig[configs.GetProjectName()])
+		portsConfig := configs2.ParseFile(portsFile)
+		port, err := strconv.Atoi(portsConfig[configs2.GetProjectName()])
 		if err != nil {
 			log.Fatal(err)
 		}

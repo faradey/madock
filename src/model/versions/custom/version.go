@@ -1,7 +1,7 @@
 package custom
 
 import (
-	"github.com/faradey/madock/src/versions"
+	"github.com/faradey/madock/src/model/versions"
 )
 
 func GetVersions() versions.ToolsVersions {

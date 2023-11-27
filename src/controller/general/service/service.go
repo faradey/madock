@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/helper/configs"
 	"log"
 	"strings"
 )
