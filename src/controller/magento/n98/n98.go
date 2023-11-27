@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 func Execute() {
@@ -16,7 +15,7 @@ func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()
 
 	if projectConf["PLATFORM"] == "magento2" {
-		cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConf["WORKDIR"]+" && /var/www/n98magerun/n98-magerun2.phar "+flag)
+		cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && /var/www/n98magerun/n98-magerun2.phar "+flag)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

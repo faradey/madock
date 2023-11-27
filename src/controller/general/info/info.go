@@ -4,11 +4,11 @@ import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/docker"
 	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 type ArgsStruct struct {
@@ -26,7 +26,7 @@ func Info() {
 
 	if projectConf["PLATFORM"] == "magento2" {
 		projectName := configs.GetProjectName()
-		cmd := exec.Command("docker", "exec", "-it", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "php", "/var/www/scripts/php/magento-info.php", projectConf["WORKDIR"])
+		cmd := exec.Command("docker", "exec", "-it", docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/magento-info.php", projectConf["WORKDIR"])
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"
@@ -92,7 +93,7 @@ func Import() {
 		}
 		defer selectedFile.Close()
 
-		containerName := strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1"
+		containerName := docker.GetContainerName(projectConf, projectName, service)
 		var cmd, cmdFKeys *exec.Cmd
 		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["DB_ROOT_PASSWORD"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["DB_DATABASE"])
 		cmdFKeys.Run()

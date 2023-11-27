@@ -25,7 +25,7 @@ func Cloud() {
 		flag = strings.Replace(flag, "$project", projectConf["MAGENTOCLOUD_PROJECT_NAME"], -1)
 
 		projectName := configs.GetProjectName()
-		cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConf["WORKDIR"]+" && magento-cloud "+flag)
+		cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && magento-cloud "+flag)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

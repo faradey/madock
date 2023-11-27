@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/model/versions/magento2"
 	"log"
 	"os"
@@ -71,7 +72,7 @@ func Magento(projectName, magentoVer string) {
 	}
 	installCommand += " && bin/magento s:up && bin/magento c:c && bin/magento i:rei | bin/magento c:f"
 	fmt.Println(installCommand)
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "cd "+projectConf["WORKDIR"]+" && "+installCommand)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && "+installCommand)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

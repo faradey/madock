@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"
@@ -50,7 +51,7 @@ func Export() {
 			user = args.User
 		}
 
-		containerName := strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1"
+		containerName := docker.GetContainerName(projectConf, projectName, service)
 
 		dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
 		selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")

@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 type ArgsStruct struct {
@@ -29,7 +28,7 @@ func Execute() {
 	}
 
 	projectName := configs.GetProjectName()
-	cmd := exec.Command("docker", "logs", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1")
+	cmd := exec.Command("docker", "logs", docker.GetContainerName(projectConf, projectName, service))
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

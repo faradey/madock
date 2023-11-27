@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"strings"
 )
 
 func Execute(withChown bool, projectConf map[string]string) {
@@ -55,7 +54,7 @@ func Execute(withChown bool, projectConf map[string]string) {
 	} else {
 		if withChown {
 			usr, _ := user.Current()
-			cmd := exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-php-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
+			cmd = exec.Command("docker", "exec", "-it", "-u", "root", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr

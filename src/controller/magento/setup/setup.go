@@ -107,7 +107,7 @@ func DownloadMagento(projectName, edition, version string, isSampleData bool) {
 		"-it",
 		"-u",
 		user,
-		strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1",
+		docker.GetContainerName(projectConf, projectName, service),
 		"bash",
 		"-c",
 		"cd " + workdir + " " +

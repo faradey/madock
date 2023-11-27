@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 type ArgsStruct struct {
@@ -36,7 +35,7 @@ func Execute() {
 		projectName := configs.GetProjectName()
 		projectConf := configs.GetCurrentProjectConfig()
 		service, user, _ := cli.GetEnvForUserServiceWorkdir("php", "www-data", "")
-		cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "php", "/var/www/scripts/php/env-create.php", conf, host)
+		cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/env-create.php", conf, host)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

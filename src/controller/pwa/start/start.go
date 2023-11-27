@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"strings"
 )
 
 func Execute(withChown bool) {
@@ -34,7 +33,7 @@ func Execute(withChown bool) {
 	} else if withChown {
 		projectConf := configs.GetCurrentProjectConfig()
 		usr, _ := user.Current()
-		cmd = exec.Command("docker", "exec", "-it", "-u", "root", strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-nodejs-1", "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["WORKDIR"])
+		cmd = exec.Command("docker", "exec", "-it", "-u", "root", docker.GetContainerName(projectConf, projectName, "nodejs"), "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["WORKDIR"])
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

@@ -3,10 +3,10 @@ package composer
 import (
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/docker"
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 func Composer() {
@@ -17,7 +17,7 @@ func Composer() {
 
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["WORKDIR"])
 
-	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash", "-c", "cd "+workdir+" && composer "+flag)
+	cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash", "-c", "cd "+workdir+" && composer "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
