@@ -1,7 +1,10 @@
 package start
 
 import (
-	"github.com/faradey/madock/src/docker/builder"
+	startCustom "github.com/faradey/madock/src/controller/custom/start"
+	startMagento2 "github.com/faradey/madock/src/controller/magento/start"
+	startPwa "github.com/faradey/madock/src/controller/pwa/start"
+	builder2 "github.com/faradey/madock/src/controller/shopify/start"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
@@ -22,13 +25,13 @@ func Execute() {
 		projectConf := configs2.GetCurrentProjectConfig()
 		fmtc.SuccessLn("Start containers in detached mode")
 		if projectConf["PLATFORM"] == "magento2" {
-			builder.StartMagento2(args.WithChown, projectConf)
+			startMagento2.Execute(args.WithChown, projectConf)
 		} else if projectConf["PLATFORM"] == "pwa" {
-			builder.StartPWA(args.WithChown)
+			startPwa.Execute(args.WithChown)
 		} else if projectConf["PLATFORM"] == "shopify" {
-			builder.StartShopify(args.WithChown, projectConf)
+			builder2.Execute(args.WithChown, projectConf)
 		} else if projectConf["PLATFORM"] == "custom" {
-			builder.StartCustom(args.WithChown, projectConf)
+			startCustom.Execute(args.WithChown, projectConf)
 		}
 		fmtc.SuccessLn("Done")
 	} else {

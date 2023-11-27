@@ -1,8 +1,11 @@
 package stop
 
 import (
+	stopCustom "github.com/faradey/madock/src/controller/custom/stop"
 	"github.com/faradey/madock/src/controller/general/proxy"
-	"github.com/faradey/madock/src/docker/builder"
+	stopMagento2 "github.com/faradey/madock/src/controller/magento/stop"
+	stopPwa "github.com/faradey/madock/src/controller/pwa/stop"
+	stopShopify "github.com/faradey/madock/src/controller/shopify/stop"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
@@ -19,13 +22,13 @@ func Execute() {
 	getArgs()
 	projectConf := configs.GetCurrentProjectConfig()
 	if projectConf["PLATFORM"] == "magento2" {
-		builder.StopMagento2()
+		stopMagento2.Execute()
 	} else if projectConf["PLATFORM"] == "pwa" {
-		builder.StopPWA()
+		stopPwa.Execute()
 	} else if projectConf["PLATFORM"] == "shopify" {
-		builder.StopShopify()
+		stopShopify.Execute()
 	} else if projectConf["PLATFORM"] == "custom" {
-		builder.StopCustom()
+		stopCustom.Execute()
 	}
 	if len(paths.GetActiveProjects()) == 0 {
 		proxy.Execute("stop")

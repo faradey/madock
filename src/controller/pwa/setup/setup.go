@@ -2,9 +2,10 @@ package setup
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/controller/pwa/start"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs/projects"
+	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions/pwa"
 )
@@ -19,8 +20,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, w
 		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
 		fmtc.SuccessLn("\n" + "Finish set up environment")
 
-		builder.Down(withVolumes)
-		builder.StartMagento2(withChown, projectConf)
+		docker.Down(withVolumes)
+		start.Execute(withChown)
 	}
 }
 

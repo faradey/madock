@@ -2,9 +2,10 @@ package setup
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/controller/custom/start"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs/projects"
+	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions/custom"
@@ -39,8 +40,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, w
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 
-		builder.Down(withVolumes)
-		builder.StartMagento2(withChown, projectConf)
+		docker.Down(withVolumes)
+		start.Execute(withChown, projectConf)
 	}
 }
 

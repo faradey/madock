@@ -3,12 +3,18 @@ package setup
 import (
 	"fmt"
 	"github.com/faradey/madock/src/controller/general/install"
-	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/controller/magento/start"
+	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/projects"
+	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions/magento2"
+	"log"
+	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -76,15 +82,49 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 	}
 
 	if doDownload || doInstall {
-		builder.Down(withVolumes)
-		builder.StartMagento2(withChown, projectConf)
+		docker.Down(withVolumes)
+		start.Execute(withChown, projectConf)
 	}
 
 	if doDownload {
-		builder.DownloadMagento(projectName, edition, mageVersion, isSampleData)
+		DownloadMagento(projectName, edition, mageVersion, isSampleData)
 	}
 
 	if doInstall {
 		install.Magento(projectName, toolsDefVersions.Magento)
+	}
+}
+
+func DownloadMagento(projectName, edition, version string, isSampleData bool) {
+	projectConf := configs2.GetCurrentProjectConfig()
+	sampleData := ""
+	if isSampleData {
+		sampleData = " && bin/magento sampledata:deploy"
+	}
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["WORKDIR"])
+	command := []string{
+		"exec",
+		"-it",
+		"-u",
+		user,
+		strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1",
+		"bash",
+		"-c",
+		"cd " + workdir + " " +
+			"&& rm -r -f " + workdir + "/download-magento123456789 " +
+			"&& mkdir " + workdir + "/download-magento123456789 " +
+			"&& composer create-project --repository-url=https://repo.magento.com/ magento/project-" + edition + "-edition:" + version + " ./download-magento123456789 " +
+			"&& shopt -s dotglob " +
+			"&& mv  -v ./download-magento123456789/* ./ " +
+			"&& rm -r -f ./download-magento123456789 " +
+			"&& composer install" + sampleData,
+	}
+	cmd := exec.Command("docker", command...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
 	}
 }

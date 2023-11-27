@@ -1,4 +1,4 @@
-package builder
+package docker
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ import (
 func UpWithBuild(withChown bool) {
 	DownNginx()
 	UpNginx()
-	upProjectWithBuild(withChown)
+	UpProjectWithBuild(withChown)
 }
 
 func Down(withVolumes bool) {
@@ -113,7 +113,7 @@ func UpNginxWithBuild() {
 	}
 }
 
-func upProjectWithBuild(withChown bool) {
+func UpProjectWithBuild(withChown bool) {
 	projectName := configs2.GetProjectName()
 	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/.composer"); os.IsNotExist(err) {
 		err = os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
@@ -270,38 +270,5 @@ func StopNginx() {
 		if err != nil {
 			fmt.Println(err)
 		}
-	}
-}
-
-func DownloadMagento(projectName, edition, version string, isSampleData bool) {
-	projectConf := configs2.GetCurrentProjectConfig()
-	sampleData := ""
-	if isSampleData {
-		sampleData = " && bin/magento sampledata:deploy"
-	}
-	command := []string{
-		"exec",
-		"-it",
-		"-u",
-		"www-data",
-		strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-php-1",
-		"bash",
-		"-c",
-		"cd " + projectConf["WORKDIR"] + " " +
-			"&& rm -r -f " + projectConf["WORKDIR"] + "/download-magento123456789 " +
-			"&& mkdir " + projectConf["WORKDIR"] + "/download-magento123456789 " +
-			"&& composer create-project --repository-url=https://repo.magento.com/ magento/project-" + edition + "-edition:" + version + " ./download-magento123456789 " +
-			"&& shopt -s dotglob " +
-			"&& mv  -v ./download-magento123456789/* ./ " +
-			"&& rm -r -f ./download-magento123456789 " +
-			"&& composer install" + sampleData,
-	}
-	cmd := exec.Command("docker", command...)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
 	}
 }

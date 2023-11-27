@@ -2,10 +2,10 @@ package rebuild
 
 import (
 	"github.com/faradey/madock/src/controller/general/proxy"
-	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"
@@ -22,12 +22,12 @@ func Execute() {
 
 	if !configs.IsHasNotConfig() {
 		fmtc.SuccessLn("Stop containers")
-		builder.Down(false)
+		docker.Down(false)
 		if len(paths.GetActiveProjects()) == 0 {
 			proxy.Execute("stop")
 		}
 		fmtc.SuccessLn("Start containers in detached mode")
-		builder.UpWithBuild(args.WithChown)
+		docker.UpWithBuild(args.WithChown)
 		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")

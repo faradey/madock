@@ -1,10 +1,10 @@
 package proxy
 
 import (
-	"github.com/faradey/madock/src/docker/builder"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/docker"
 	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
@@ -21,17 +21,17 @@ func Execute(flag string) {
 		projectConf := configs2.GetCurrentProjectConfig()
 		if projectConf["PROXY_ENABLED"] == "true" {
 			if flag == "prune" {
-				builder.DownNginx()
+				docker.DownNginx()
 			} else if flag == "stop" {
-				builder.StopNginx()
+				docker.StopNginx()
 			} else if flag == "restart" {
-				builder.StopNginx()
-				builder.UpNginx()
+				docker.StopNginx()
+				docker.UpNginx()
 			} else if flag == "start" {
-				builder.UpNginx()
+				docker.UpNginx()
 			} else if flag == "rebuild" {
-				builder.DownNginx()
-				builder.UpNginx()
+				docker.DownNginx()
+				docker.UpNginx()
 			}
 			fmtc.SuccessLn("Done")
 		} else {
