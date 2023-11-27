@@ -1,9 +1,9 @@
 package info
 
 import (
-	"github.com/faradey/madock/src/cli/attr"
-	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
+	"github.com/faradey/madock/src/helper/cli/attr"
+	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/jessevdk/go-flags"
 	"log"
 	"os"

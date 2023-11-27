@@ -2,9 +2,9 @@ package setup
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs/projects"
 	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/versions/shopify"

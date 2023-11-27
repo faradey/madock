@@ -1,7 +1,7 @@
 package paths
 
 import (
-	"github.com/faradey/madock/src/helper"
+	"github.com/faradey/madock/src/helper/hash"
 	"log"
 	"os"
 	"os/exec"
@@ -51,7 +51,7 @@ func GetRunDirName() string {
 }
 
 func GetRunDirNameWithHash() string {
-	return filepath.Base(GetRunDirPath()) + "__" + strconv.Itoa(int(helper.Hash(GetRunDirPath())))
+	return filepath.Base(GetRunDirPath()) + "__" + strconv.Itoa(int(hash.Hash(GetRunDirPath())))
 }
 
 func GetDirs(path string) (dirs []string) {

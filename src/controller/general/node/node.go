@@ -2,7 +2,7 @@ package node
 
 import (
 	"github.com/faradey/madock/src/configs"
-	cliHelper "github.com/faradey/madock/src/helper"
+	"github.com/faradey/madock/src/helper/cli"
 	"log"
 	"os"
 	"os/exec"
@@ -10,7 +10,7 @@ import (
 )
 
 func Execute() {
-	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])
+	flag := cli.NormalizeCliCommandWithJoin(os.Args[2:])
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 	service := "php"
@@ -18,7 +18,7 @@ func Execute() {
 		service = "nodejs"
 	}
 
-	service, user, workdir := cliHelper.GetEnvForUserServiceWorkdir(service, "www-data", projectConf["WORKDIR"])
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", projectConf["WORKDIR"])
 
 	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash", "-c", "cd "+workdir+" && "+flag)
 	cmd.Stdin = os.Stdin

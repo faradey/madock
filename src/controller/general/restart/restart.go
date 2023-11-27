@@ -1,9 +1,9 @@
 package restart
 
 import (
-	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/controller/general/start"
 	"github.com/faradey/madock/src/controller/general/stop"
+	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/jessevdk/go-flags"
 	"log"
 	"os"

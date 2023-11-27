@@ -3,7 +3,7 @@ package tools
 import (
 	"bufio"
 	"fmt"
-	"github.com/faradey/madock/src/cli/fmtc"
+	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"

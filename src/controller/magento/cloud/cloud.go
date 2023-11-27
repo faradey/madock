@@ -1,10 +1,10 @@
 package cloud
 
 import (
-	"github.com/faradey/madock/src/cli/attr"
-	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
-	cliHelper "github.com/faradey/madock/src/helper"
+	cliHelper "github.com/faradey/madock/src/helper/cli"
+	"github.com/faradey/madock/src/helper/cli/attr"
+	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/jessevdk/go-flags"
 	"log"
 	"os"

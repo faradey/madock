@@ -1,8 +1,11 @@
-package ssh
+package remote_sync
 
 import (
 	"fmt"
 	"github.com/faradey/madock/src/helper/paths"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/terminal"
 	"image/jpeg"
 	"io"
 	"log"
@@ -10,73 +13,25 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
-
-	"github.com/faradey/madock/src/cli/attr"
-	"github.com/faradey/madock/src/configs"
-	"github.com/faradey/madock/src/helper"
-	"github.com/pkg/sftp"
+	"syscall"
 )
 
 var sc []*sftp.Client
 
-func SyncMedia(remoteDir string) {
-	var err error
-	projectConf := configs.GetCurrentProjectConfig()
-	maxProcs := helper.MaxParallelism() - 1
-	var scTemp *sftp.Client
-	isFirstConnect := false
-	paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
-	for maxProcs > 0 {
-		conn := Connect(projectConf["SSH_AUTH_TYPE"], projectConf["SSH_KEY_PATH"], projectConf["SSH_PASSWORD"], projectConf["SSH_HOST"], projectConf["SSH_PORT"], projectConf["SSH_USERNAME"])
-		if !isFirstConnect {
-			fmt.Println("")
-			fmt.Println("Server connection...")
-			isFirstConnect = true
-		}
-		defer Disconnect(conn)
-		scTemp, err = sftp.NewClient(conn)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer scTemp.Close()
-		sc = append(sc, scTemp)
-		maxProcs--
-	}
+var passwd string
 
-	fmt.Println("\n" + "Synchronization is started")
-	ch := make(chan bool, 15)
-	var chDownload sync.WaitGroup
-	go listFiles(&chDownload, ch, remoteDir+"/pub/media/", "", 0)
-	time.Sleep(3 * time.Second)
-	chDownload.Wait()
-	fmt.Println("\n" + "Synchronization is completed")
+type RemoteDbStruct struct {
+	Host           string `json:"host"`
+	Dbname         string `json:"dbname"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	Active         string `json:"active"`
+	Model          string `json:"model"`
+	Engine         string `json:"engine"`
+	InitStatements string `json:"initStatements"`
 }
 
-func SyncFile(remoteDir string) {
-	var err error
-	path := strings.Trim(attr.Options.Path, "/")
-	if path == "" {
-		log.Fatal("")
-	}
-	projectConf := configs.GetCurrentProjectConfig()
-	var sc *sftp.Client
-	conn := Connect(projectConf["SSH_AUTH_TYPE"], projectConf["SSH_KEY_PATH"], projectConf["SSH_PASSWORD"], projectConf["SSH_HOST"], projectConf["SSH_PORT"], projectConf["SSH_USERNAME"])
-	fmt.Println("")
-	fmt.Println("Server connection...")
-	defer Disconnect(conn)
-	sc, err = sftp.NewClient(conn)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sc.Close()
-
-	fmt.Println("\n" + "Synchronization is started")
-
-	downloadFile(sc, strings.TrimRight(remoteDir, "/")+"/"+path, strings.TrimRight(paths.GetRunDirPath(), "/")+"/"+path)
-}
-
-func listFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir string, indx int) (err error) {
+func ListFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir string, indx int, imagesOnly, compress bool) (err error) {
 	chDownload.Add(1)
 	remainder := indx % len(sc)
 	scp := sc[remainder]
@@ -103,17 +58,17 @@ func listFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 				if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
 					os.Mkdir(projectPath+"/pub/media/"+subdirName, 0775)
 				}
-				go listFiles(chDownload, ch, remoteDir, subdirName+"/", indx)
+				go ListFiles(chDownload, ch, remoteDir, subdirName+"/", indx, imagesOnly, compress)
 			}
 		} else if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
 			ext := strings.ToLower(filepath.Ext(name))
-			if !attr.Options.ImagesOnly || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
+			if !imagesOnly || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
 				remainderDownload := indx % len(sc)
 				scpDownload := sc[remainderDownload]
 				chDownload.Add(1)
 				ch <- true
 				go func() {
-					downloadFile(scpDownload, remoteDir+subdirName, projectPath+"/pub/media/"+subdirName)
+					DownloadFile(scpDownload, remoteDir+subdirName, projectPath+"/pub/media/"+subdirName, imagesOnly, compress)
 					chDownload.Done()
 					<-ch
 				}()
@@ -124,7 +79,7 @@ func listFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 	return
 }
 
-func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
+func DownloadFile(scp *sftp.Client, remoteFile, localFile string, imagesOnly, compress bool) (err error) {
 	ext := strings.ToLower(filepath.Ext(remoteFile))
 	// Note: SFTP To Go doesn't support O_RDWR mode
 	srcFile, err := scp.OpenFile(remoteFile, (os.O_RDONLY))
@@ -142,7 +97,7 @@ func downloadFile(scp *sftp.Client, remoteFile, localFile string) (err error) {
 	defer dstFile.Close()
 
 	isCompressed := false
-	isCompressedOk := attr.Options.Compress
+	isCompressedOk := compress
 	if isCompressedOk {
 		switch ext {
 		case ".jpg", ".jpeg":
@@ -189,4 +144,82 @@ func compressJpg(r io.Reader, w io.Writer) bool {
 		return false
 	}
 	return true
+}
+
+func Connect(authType, keyPath, pswrd, host, port, username string) *ssh.Client {
+	config := &ssh.ClientConfig{
+		User:            username,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	if authType == "password" {
+		config.Auth = []ssh.AuthMethod{
+			ssh.Password(pswrd),
+		}
+	} else {
+		config.Auth = []ssh.AuthMethod{
+			publicKey(keyPath),
+		}
+	}
+
+	conn, err := ssh.Dial("tcp", host+":"+port, config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return conn
+}
+
+func Disconnect(conn *ssh.Client) {
+	conn.Close()
+}
+
+func publicKey(path string) ssh.AuthMethod {
+	key, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	signer, err := ssh.ParsePrivateKey(key)
+	if err != nil {
+		if passwd == "" {
+			fmt.Print("Input your password for ssh key:")
+			var sentence []byte
+			sentence, err = terminal.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				log.Fatalln(err)
+			}
+			passwd = strings.TrimSpace(string(sentence))
+		}
+		signer, err = ssh.ParsePrivateKeyWithPassphrase(key, []byte(passwd))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return ssh.PublicKeys(signer)
+}
+
+func RunCommand(conn *ssh.Client, cmd string) string {
+	sess, err := conn.NewSession()
+	if err != nil {
+		panic(err)
+	}
+	defer sess.Close()
+	out, err := sess.CombinedOutput(cmd)
+	if err != nil {
+		fmt.Println(string(out))
+		log.Fatalf("cmd.Run() failed with %s\n", err)
+	}
+
+	return string(out)
+}
+
+func NewClient(conn *ssh.Client) *sftp.Client {
+	scTemp, err := sftp.NewClient(conn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	sc = append(sc, scTemp)
+
+	return scTemp
 }

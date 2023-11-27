@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/faradey/madock/src/configs/aruntime/project"
-	"github.com/faradey/madock/src/helper"
+	"github.com/faradey/madock/src/helper/finder"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
@@ -79,7 +79,7 @@ func makeProxy() {
 
 	var onlyHostsGlobal []string
 	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
-	if !helper.IsContain(projectsNames, configs.GetProjectName()) {
+	if !finder.IsContain(projectsNames, configs.GetProjectName()) {
 		projectsNames = append(projectsNames, configs.GetProjectName())
 	}
 	for _, name := range projectsNames {
@@ -114,7 +114,7 @@ func makeProxy() {
 						domain := ""
 						for _, hostAndStore := range hosts {
 							domain = strings.Split(hostAndStore, ":")[0]
-							if helper.IsContain(onlyHostsGlobal, domain) {
+							if finder.IsContain(onlyHostsGlobal, domain) {
 								log.Fatalln("Error. Duplicate domain " + domain)
 							}
 							onlyHosts = append(onlyHosts, domain)
@@ -192,7 +192,7 @@ func getMaxPort(conf map[string]string) int {
 	}
 
 	for i := 1; i < 1000; i++ {
-		if !helper.IsContainInt(ports, i) {
+		if !finder.IsContainInt(ports, i) {
 			return i - 1
 		}
 	}

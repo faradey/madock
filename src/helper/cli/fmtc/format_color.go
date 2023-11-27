@@ -2,7 +2,7 @@ package fmtc
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/cli/color"
+	"github.com/faradey/madock/src/helper/cli/color"
 )
 
 func Title(txt string) {

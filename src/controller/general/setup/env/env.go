@@ -2,9 +2,9 @@ package env
 
 import (
 	"encoding/json"
-	"github.com/faradey/madock/src/cli/attr"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/scripts"
+	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"

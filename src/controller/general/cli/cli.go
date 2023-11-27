@@ -2,7 +2,7 @@ package cli
 
 import (
 	"github.com/faradey/madock/src/configs"
-	cliHelper "github.com/faradey/madock/src/helper"
+	"github.com/faradey/madock/src/helper/cli"
 	"log"
 	"os"
 	"os/exec"
@@ -10,7 +10,7 @@ import (
 )
 
 func Cli() {
-	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])
+	flag := cli.NormalizeCliCommandWithJoin(os.Args[2:])
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 	service := "php"
@@ -18,7 +18,7 @@ func Cli() {
 		service = "nodejs"
 	}
 
-	service, user, workdir := cliHelper.GetEnvForUserServiceWorkdir(service, "www-data", "")
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", "")
 
 	if workdir != "" {
 		workdir = "cd " + workdir + " && "

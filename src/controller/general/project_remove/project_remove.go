@@ -3,10 +3,10 @@ package project_remove
 import (
 	"bufio"
 	"fmt"
-	"github.com/faradey/madock/src/cli/attr"
-	"github.com/faradey/madock/src/cli/fmtc"
 	"github.com/faradey/madock/src/configs"
 	"github.com/faradey/madock/src/docker/builder"
+	"github.com/faradey/madock/src/helper/cli/attr"
+	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/jessevdk/go-flags"
 	"log"

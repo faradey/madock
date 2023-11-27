@@ -6,7 +6,7 @@ import (
 	"github.com/faradey/madock/src/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/configs/aruntime/project"
 	"github.com/faradey/madock/src/controller/general/cron"
-	"github.com/faradey/madock/src/helper"
+	"github.com/faradey/madock/src/helper/hash"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/gosimple/hashdir"
 	"log"
@@ -83,8 +83,8 @@ func UpNginxWithBuild() {
 	project.MakeConf(projectName)
 	projectConf := configs.GetCurrentProjectConfig()
 	dirHash, err := hashdir.Make(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx", "md5")
-	dockerComposeHash, err := helper.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "md5")
-	dockerComposeOverHash, err := helper.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.override.yml", "md5")
+	dockerComposeHash, err := hash.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "md5")
+	dockerComposeOverHash, err := hash.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.override.yml", "md5")
 	dirHash = dirHash + dockerComposeHash + dockerComposeOverHash
 	doNeedRunAruntime := true
 	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/docker-compose.yml"); !os.IsNotExist(err) {

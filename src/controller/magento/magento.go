@@ -2,7 +2,7 @@ package magento
 
 import (
 	"github.com/faradey/madock/src/configs"
-	cliHelper "github.com/faradey/madock/src/helper"
+	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"log"
 	"os"
 	"os/exec"

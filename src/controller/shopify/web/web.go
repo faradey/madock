@@ -2,7 +2,7 @@ package web
 
 import (
 	"github.com/faradey/madock/src/configs"
-	cliHelper "github.com/faradey/madock/src/helper"
+	"github.com/faradey/madock/src/helper/cli"
 	"log"
 	"os"
 	"os/exec"
@@ -10,10 +10,10 @@ import (
 )
 
 func Execute() {
-	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])
+	flag := cli.NormalizeCliCommandWithJoin(os.Args[2:])
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
-	service, user, workdir := cliHelper.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["WORKDIR"])
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["WORKDIR"])
 	cmd := exec.Command("docker", "exec", "-it", "-u", user, strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"])+strings.ToLower(projectName)+"-"+service+"-1", "bash", "-c", "cd "+workdir+"/web && "+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
