@@ -1,103 +1,25 @@
 package cron
 
 import (
-	"fmt"
-	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/attr"
-	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/jessevdk/go-flags"
-	"io"
 	"log"
 	"os"
-	"os/exec"
 )
 
 type ArgsStruct struct {
 	attr.Arguments
 }
 
-func Execute(flag, manual bool) {
-	getArgs()
-
-	projectName := configs.GetProjectName()
-	projectConf := configs.GetCurrentProjectConfig()
-	service := "php"
-	if projectConf["PLATFORM"] == "pwa" {
-		service = "nodejs"
-	}
-
-	service, user, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
-
-	var cmd *exec.Cmd
-	var bOut io.Writer
-	var bErr io.Writer
-	if flag {
-		cmd = exec.Command("docker", "exec", "-i", "-u", user, docker.GetContainerName(projectConf, projectName, service), "service", "cron", "start")
-		cmd.Stdout = bOut
-		cmd.Stderr = bErr
-		err := cmd.Run()
-		if manual {
-			if err != nil {
-				fmt.Println(bErr)
-				log.Fatal(err)
-			} else {
-				fmt.Println("Cron was started")
-			}
-		}
-
-		if projectConf["PLATFORM"] == "magento2" {
-			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && php bin/magento cron:remove && php bin/magento cron:install && php bin/magento cron:run")
-			cmdSub.Stdout = os.Stdout
-			cmdSub.Stderr = os.Stderr
-			err = cmdSub.Run()
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "service", "cron", "status")
-		cmd.Stdout = bOut
-		cmd.Stderr = bErr
-		err := cmd.Run()
-		if err == nil {
-			if projectConf["PLATFORM"] == "magento2" {
-				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && php bin/magento cron:remove")
-				cmdSub.Stdout = bOut
-				cmdSub.Stderr = bErr
-				err := cmdSub.Run()
-				if manual {
-					if err != nil {
-						fmt.Println(bErr)
-						log.Fatal(err)
-					} else {
-						fmt.Println("Cron was removed from Magento")
-					}
-				}
-			}
-
-			cmd = exec.Command("docker", "exec", "-i", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "service", "cron", "stop")
-			cmd.Stdout = bOut
-			cmd.Stderr = bErr
-			err = cmd.Run()
-			if manual {
-				if err != nil {
-					fmt.Println(bErr)
-					log.Fatal(err)
-				} else {
-					fmt.Println("Cron was stopped from System (container)")
-				}
-			}
-		}
-	}
-}
-
 func Enable() {
-	Execute(true, true)
+	getArgs()
+	docker.CronExecute(true, true)
 }
 
 func Disable() {
-	Execute(false, true)
+	getArgs()
+	docker.CronExecute(false, true)
 }
 
 func getArgs() *ArgsStruct {

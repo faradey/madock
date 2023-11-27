@@ -2,13 +2,14 @@ package docker
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/controller/general/cron"
+	cliHelper "github.com/faradey/madock/src/helper/cli"
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper/hash"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/gosimple/hashdir"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -221,9 +222,9 @@ func UpProjectWithBuild(withChown bool) {
 	projectConf := configs2.GetCurrentProjectConfig()
 
 	if val, ok := projectConf["CRON_ENABLED"]; ok && val == "true" {
-		cron.Execute(true, false)
+		CronExecute(true, false)
 	} else {
-		cron.Execute(false, false)
+		CronExecute(false, false)
 	}
 
 	if withChown {
@@ -275,4 +276,77 @@ func StopNginx() {
 
 func GetContainerName(projectConf map[string]string, projectName, service string) string {
 	return strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1"
+}
+
+func CronExecute(flag, manual bool) {
+	projectName := configs2.GetProjectName()
+	projectConf := configs2.GetCurrentProjectConfig()
+	service := "php"
+	if projectConf["PLATFORM"] == "pwa" {
+		service = "nodejs"
+	}
+
+	service, user, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
+
+	var cmd *exec.Cmd
+	var bOut io.Writer
+	var bErr io.Writer
+	if flag {
+		cmd = exec.Command("docker", "exec", "-i", "-u", user, GetContainerName(projectConf, projectName, service), "service", "cron", "start")
+		cmd.Stdout = bOut
+		cmd.Stderr = bErr
+		err := cmd.Run()
+		if manual {
+			if err != nil {
+				fmt.Println(bErr)
+				log.Fatal(err)
+			} else {
+				fmt.Println("Cron was started")
+			}
+		}
+
+		if projectConf["PLATFORM"] == "magento2" {
+			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && php bin/magento cron:remove && php bin/magento cron:install && php bin/magento cron:run")
+			cmdSub.Stdout = os.Stdout
+			cmdSub.Stderr = os.Stderr
+			err = cmdSub.Run()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	} else {
+		cmd = exec.Command("docker", "exec", "-i", "-u", user, GetContainerName(projectConf, projectName, "php"), "service", "cron", "status")
+		cmd.Stdout = bOut
+		cmd.Stderr = bErr
+		err := cmd.Run()
+		if err == nil {
+			if projectConf["PLATFORM"] == "magento2" {
+				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && php bin/magento cron:remove")
+				cmdSub.Stdout = bOut
+				cmdSub.Stderr = bErr
+				err := cmdSub.Run()
+				if manual {
+					if err != nil {
+						fmt.Println(bErr)
+						log.Fatal(err)
+					} else {
+						fmt.Println("Cron was removed from Magento")
+					}
+				}
+			}
+
+			cmd = exec.Command("docker", "exec", "-i", "-u", user, GetContainerName(projectConf, projectName, "php"), "service", "cron", "stop")
+			cmd.Stdout = bOut
+			cmd.Stderr = bErr
+			err = cmd.Run()
+			if manual {
+				if err != nil {
+					fmt.Println(bErr)
+					log.Fatal(err)
+				} else {
+					fmt.Println("Cron was stopped from System (container)")
+				}
+			}
+		}
+	}
 }

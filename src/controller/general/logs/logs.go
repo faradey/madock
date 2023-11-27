@@ -3,6 +3,7 @@ package logs
 import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/docker"
 	"github.com/jessevdk/go-flags"
 	"log"
 	"os"

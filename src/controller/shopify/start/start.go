@@ -1,7 +1,6 @@
 package start
 
 import (
-	"github.com/faradey/madock/src/controller/general/cron"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -57,9 +56,9 @@ func Execute(withChown bool, projectConf map[string]string) {
 		}
 
 		if val, ok := projectConf["CRON_ENABLED"]; ok && val == "true" {
-			cron.Execute(true, false)
+			docker.CronExecute(true, false)
 		} else {
-			cron.Execute(false, false)
+			docker.CronExecute(false, false)
 		}
 	}
 }
