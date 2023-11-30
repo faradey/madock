@@ -14,6 +14,7 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
+	Force     bool `long:"force" short:"f" description:"Force"`
 	WithChown bool `long:"with-chown" short:"c" description:"With Chown"`
 }
 
@@ -22,7 +23,11 @@ func Execute() {
 
 	if !configs.IsHasNotConfig() {
 		fmtc.SuccessLn("Stop containers")
-		docker.Down(false)
+		if args.Force {
+			docker.Kill()
+		} else {
+			docker.Down(false)
+		}
 		if len(paths.GetActiveProjects()) == 0 {
 			proxy.Execute("stop")
 		}

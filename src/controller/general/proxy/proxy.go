@@ -12,25 +12,27 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
+	Force     bool `long:"force" short:"f" description:"Force"`
+	WithChown bool `long:"with-chown" short:"c" description:"With Chown"`
 }
 
 func Execute(flag string) {
-	getArgs()
+	args := getArgs()
 
 	if !configs2.IsHasNotConfig() {
 		projectConf := configs2.GetCurrentProjectConfig()
 		if projectConf["PROXY_ENABLED"] == "true" {
 			if flag == "prune" {
-				docker.DownNginx()
+				docker.DownNginx(args.Force)
 			} else if flag == "stop" {
-				docker.StopNginx()
+				docker.StopNginx(args.Force)
 			} else if flag == "restart" {
-				docker.StopNginx()
+				docker.StopNginx(args.Force)
 				docker.UpNginx()
 			} else if flag == "start" {
 				docker.UpNginx()
 			} else if flag == "rebuild" {
-				docker.DownNginx()
+				docker.DownNginx(args.Force)
 				docker.UpNginx()
 			}
 			fmtc.SuccessLn("Done")
