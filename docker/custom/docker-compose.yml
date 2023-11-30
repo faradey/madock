@@ -19,6 +19,7 @@ services:
     ports:
       - "{{{NGINX_PROJECT_PORT+5}}}:35729"
 
+<<<if{{{XDEBUG_ENABLED}}}>>>
   php_without_xdebug:
     build:
       context: ctx
@@ -27,10 +28,9 @@ services:
       - ./src:/var/www/html:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    profiles:
-      - xdebug{{{XDEBUG_ENABLED}}}
     depends_on:
       - php
+<<<endif>>>
 
   nginx:
     build:

@@ -17,18 +17,6 @@ func Execute() {
 		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
 		"-f",
 		composeFileOS,
-		"--profile",
-		"redisdbtrue",
-		"--profile",
-		"rabbitmqtrue",
-		"--profile",
-		"phpmyadmintrue",
-		"--profile",
-		"db2true",
-		"--profile",
-		"phpmyadmin2true",
-		"--profile",
-		"xdebugtrue",
 		"stop",
 	}
 	cmd := exec.Command("docker", profilesOn...)
