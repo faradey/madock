@@ -64,7 +64,7 @@ func main() {
 	case "bash":
 		bash.Bash()
 	case "c:f":
-		clean_cache.CleanCache()
+		clean_cache.Execute()
 	case "magento-cloud", "cloud":
 		cloud.Cloud()
 	case "cli":
