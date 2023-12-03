@@ -56,12 +56,18 @@ RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
     php{{{PHP_VERSION}}}-xmlwriter \
     php{{{PHP_VERSION}}}-ssh2
 
-RUN if [ "{{{PHP_VERSION}}}.0" > "7.1.99" ]; then pecl install mcrypt-1.0.6 \
+SHELL ["/bin/bash", "-c"]
+RUN IFS='.' read -r -a version_array <<< "{{{PHP_VERSION}}}" \
+    && major="${version_array[0]}" \
+    && minor="${version_array[1]}" \
+    && patch="${version_array[2]}"
+
+RUN if [ 10#${major} >= 7 && 10#${minor} >= 2 ]; then pecl install mcrypt-1.0.6 \
     && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
     && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{PHP_VERSION}}}/cli/conf.d/mcrypt.ini" \
     && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/mcrypt.ini"; fi \
-    && if [ "{{{PHP_VERSION}}}" < "7.2" ]; then apt-get install -y php{{{PHP_VERSION}}}-mcrypt; fi \
-    && if [ "{{{PHP_VERSION}}}" < "8.0" ]; then apt-get install -y php{{{PHP_VERSION}}}-json; fi
+    && if [ 10#${major} <= 7 && 10#${minor} < 2 ]; then apt-get install -y php{{{PHP_VERSION}}}-mcrypt; fi \
+    && if [ 10#${major} >= 8 ]; then apt-get install -y php{{{PHP_VERSION}}}-json; fi
 
 RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{PHP_VERSION}}}-fpm.pid/" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
     && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
