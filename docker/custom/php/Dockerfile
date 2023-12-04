@@ -110,7 +110,8 @@ RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /
     && sed -i 's/post_max_size = 8M/post_max_size = 80M/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
     && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 50M/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
     && sed -i 's/;max_input_vars = 1000/max_input_vars = 50000/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
-    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini
+    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
+    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/{{{PHP_VERSION}}}/cli/php.ini
 
 WORKDIR /var/www
 
