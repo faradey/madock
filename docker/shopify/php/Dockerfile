@@ -57,12 +57,14 @@ RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
     php{{{PHP_VERSION}}}-xmlwriter \
     php{{{PHP_VERSION}}}-ssh2
 
-RUN if [ "{{{PHP_VERSION}}}.0" > "7.1.99" ]; then pecl install mcrypt-1.0.6 \
+SHELL ["/bin/bash", "-c"]
+RUN IFS='.' read major minor patch <<< "{{{PHP_VERSION}}}" \
+    && if [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then pecl install mcrypt-1.0.6 \
     && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
     && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{PHP_VERSION}}}/cli/conf.d/mcrypt.ini" \
     && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/mcrypt.ini"; fi \
-    && if [ "{{{PHP_VERSION}}}" < "7.2" ]; then apt-get install -y php{{{PHP_VERSION}}}-mcrypt; fi \
-    && if [ "{{{PHP_VERSION}}}" < "8.0" ]; then apt-get install -y php{{{PHP_VERSION}}}-json; fi
+    && if [[ "${major}" < "7" || "${major}" = "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then apt-get install -y php{{{PHP_VERSION}}}-mcrypt; fi \
+    && if [[ "${major}" > "7" ]]; then apt-get install -y php{{{PHP_VERSION}}}-json; fi
 
 RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{PHP_VERSION}}}-fpm.pid/" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
     && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
@@ -71,10 +73,10 @@ RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{PHP_VERSION}}}-fpm.pid/" /etc/p
     && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/{{{PHP_VERSION}}}/fpm/pool.d/www.conf
 
 RUN is_composer_version_one="" \
-    && if [ "{{{PHP_COMPOSER_VERSION}}}" = "2" ]; then is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]; then  is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
-    && if [ -z "${is_composer_version_one}" ]; then php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version={{{PHP_COMPOSER_VERSION}}}; fi
+    && if [[ "{{{PHP_COMPOSER_VERSION}}}" = "2" ]]; then is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [[ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]]; then  is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
+    && if [[ -z "${is_composer_version_one}" ]]; then php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version={{{PHP_COMPOSER_VERSION}}}; fi
 
-RUN if [ "{{{XDEBUG_ENABLED}}}" = "true" ]; then pecl install -f xdebug-{{{XDEBUG_VERSION}}} \
+RUN if [[ "{{{XDEBUG_ENABLED}}}" = "true" ]]; then pecl install -f xdebug-{{{XDEBUG_VERSION}}} \
     && touch /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "zend_extension=xdebug.so" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
     && echo "xdebug.mode={{{XDEBUG_MODE}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
