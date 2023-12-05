@@ -81,7 +81,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 		}
 	}
 
-	if doDownload || doInstall {
+	if doDownload || doInstall || continueSetup {
 		docker.Down(withVolumes)
 		start.Execute(withChown, projectConf)
 	}
