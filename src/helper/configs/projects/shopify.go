@@ -12,6 +12,9 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 	config.AddOrSetLine("PHP_VERSION", defVersions.Php)
 	config.AddOrSetLine("PHP_COMPOSER_VERSION", defVersions.Composer)
 	config.AddOrSetLine("PHP_TZ", configs2.GetOption("PHP_TZ", generalConf, projectConf))
+	if _, ok := projectConf["PUBLIC_DIR"]; !ok {
+		config.AddOrSetLine("PUBLIC_DIR", "web/public")
+	}
 	config.AddOrSetLine("XDEBUG_VERSION", magento2.GetXdebugVersion(defVersions.Php))
 	config.AddOrSetLine("XDEBUG_REMOTE_HOST", "host.docker.internal")
 	config.AddOrSetLine("XDEBUG_IDE_KEY", configs2.GetOption("XDEBUG_IDE_KEY", generalConf, projectConf))

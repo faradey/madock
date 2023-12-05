@@ -23,6 +23,8 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 		PWA(config, defVersions, generalConf, projectConf)
 	} else if projectConf["PLATFORM"] == "shopify" {
 		Shopify(config, defVersions, generalConf, projectConf)
+	} else if projectConf["PLATFORM"] == "custom" {
+		Custom(config, defVersions, generalConf, projectConf)
 	}
 
 	if !config.IsEnv {
