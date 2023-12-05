@@ -62,8 +62,8 @@ RUN IFS='.' read major minor patch <<< "{{{PHP_VERSION}}}" \
     && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
     && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{PHP_VERSION}}}/cli/conf.d/mcrypt.ini" \
     && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/mcrypt.ini"; fi \
-    && if [[ "${major}" < "7" || "${major}" = "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then apt-get install -y php{{{PHP_VERSION}}}-mcrypt; fi \
-    && if [[ "${major}" > "7" ]]; then apt-get install -y php{{{PHP_VERSION}}}-json; fi
+    && if [[ "${major}" < "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then apt-get install -y php{{{PHP_VERSION}}}-mcrypt; fi \
+    && if [[ "${major}" < "7" ]]; then apt-get install -y php{{{PHP_VERSION}}}-json; fi
 
 RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{PHP_VERSION}}}-fpm.pid/" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
     && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
