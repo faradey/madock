@@ -9,5 +9,7 @@ func Execute(oldAppVersion string) {
 		versions.V180()
 	} else if oldAppVersion < "2.2.0" {
 		versions.V220()
+	} else if oldAppVersion < "2.3.0" {
+		versions.V230()
 	}
 }
