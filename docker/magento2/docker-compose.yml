@@ -158,7 +158,7 @@ services:
   phpmyadmin2:
     image: {{{PHPMYADMIN2_REPOSITORY}}}:{{{PHPMYADMIN2_VERSION}}}
     environment:
-      PMA_HOST: "db"
+      PMA_HOST: "db2"
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
       PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin2/"
