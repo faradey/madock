@@ -14,20 +14,33 @@ var nameOfProject string
 
 func GetGeneralConfig() map[string]string {
 	if len(generalConfig) == 0 {
-		configPath := paths.GetExecDirPath() + "/projects/config.txt"
-		if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
-			generalConfig = ParseFile(configPath)
-		}
+		generalConfig = GetProjectsGeneralConfig()
 
-		configPath = paths.GetExecDirPath() + "/config.txt"
-		origGeneralConfig := make(map[string]string)
-		if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
-			origGeneralConfig = ParseFile(configPath)
-		}
+		origGeneralConfig := GetOriginalGeneralConfig()
 		GeneralConfigMapping(origGeneralConfig, generalConfig)
 	}
 
 	return generalConfig
+}
+
+func GetOriginalGeneralConfig() map[string]string {
+	configPath := paths.GetExecDirPath() + "/config.txt"
+	origGeneralConfig := make(map[string]string)
+	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
+		origGeneralConfig = ParseFile(configPath)
+	}
+
+	return origGeneralConfig
+}
+
+func GetProjectsGeneralConfig() map[string]string {
+	generalProjectsConfig := make(map[string]string)
+	configPath := paths.GetExecDirPath() + "/projects/config.txt"
+	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
+		generalProjectsConfig = ParseFile(configPath)
+	}
+
+	return generalProjectsConfig
 }
 
 func GetCurrentProjectConfig() map[string]string {
