@@ -3,7 +3,6 @@ package versions
 import (
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
-	"os"
 )
 
 func V220() {
@@ -12,7 +11,7 @@ func V220() {
 	projectName := ""
 	envFile := ""
 	for _, dir := range execProjectsDirs {
-		if _, err := os.Stat(execPath + dir + "/env.txt"); !os.IsNotExist(err) {
+		if paths.IsFileExist(execPath + dir + "/env.txt") {
 			projectName = dir
 			projectConf := configs2.GetProjectConfigOnly(projectName)
 			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"

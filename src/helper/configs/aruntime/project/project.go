@@ -159,7 +159,7 @@ func makePhpDockerfile(projectName string) {
 	}
 
 	projectConf := configs2.GetCurrentProjectConfig()
-	if _, err := os.Stat(paths.GetExecDirPath() + "/docker/" + projectConf["PLATFORM"] + "/php/DockerfileWithoutXdebug"); !os.IsNotExist(err) {
+	if paths.IsFileExist(paths.GetExecDirPath() + "/docker/" + projectConf["PLATFORM"] + "/php/DockerfileWithoutXdebug") {
 		dockerDefFile = GetDockerConfigFile(projectName, "php/DockerfileWithoutXdebug", "")
 		b, err = os.ReadFile(dockerDefFile)
 		if err != nil {
@@ -273,7 +273,7 @@ func makeDBDockerfile(projectName string) {
 	}
 
 	myCnfFile := GetDockerConfigFile(projectName, "db/my.cnf", "")
-	if _, err := os.Stat(myCnfFile); os.IsNotExist(err) {
+	if !paths.IsFileExist(myCnfFile) {
 		log.Fatal(err)
 	}
 
@@ -366,9 +366,10 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 		platform = projectConf["PLATFORM"]
 	}
 	dockerDefFile := paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + strings.Trim(path, "/")
-	if _, err := os.Stat(dockerDefFile); os.IsNotExist(err) {
+	var err error
+	if !paths.IsFileExist(dockerDefFile) {
 		dockerDefFile = paths.GetExecDirPath() + "/docker/" + platform + "/" + strings.Trim(path, "/")
-		if _, err = os.Stat(dockerDefFile); os.IsNotExist(err) {
+		if !paths.IsFileExist(dockerDefFile) {
 			log.Fatal(err)
 		}
 	}

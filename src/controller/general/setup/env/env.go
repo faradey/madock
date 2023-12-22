@@ -23,7 +23,7 @@ func Execute() {
 	args := getArgs()
 
 	envFile := paths.GetRunDirPath() + "/app/etc/env.php"
-	if _, err := os.Stat(envFile); !os.IsNotExist(err) && !args.Force {
+	if paths.IsFileExist(envFile) && !args.Force {
 		log.Fatal("The env.php file is already exist.")
 	} else {
 		data, err := json.Marshal(configs.GetCurrentProjectConfig())

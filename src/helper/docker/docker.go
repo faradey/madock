@@ -26,7 +26,7 @@ func Down(withVolumes bool) {
 	projectName := configs2.GetProjectName()
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
-	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
+	if paths.IsFileExist(composeFile) {
 		profilesOn := []string{
 			"compose",
 			"-f",
@@ -57,7 +57,7 @@ func Kill() {
 	projectName := configs2.GetProjectName()
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
-	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
+	if paths.IsFileExist(composeFile) {
 		profilesOn := []string{
 			"compose",
 			"-f",
@@ -92,7 +92,7 @@ func UpNginxWithBuild() {
 	dockerComposeOverHash, err := hash.HashFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.override.yml", "md5")
 	dirHash = dirHash + dockerComposeHash + dockerComposeOverHash
 	doNeedRunAruntime := true
-	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/docker-compose.yml"); !os.IsNotExist(err) {
+	if paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/docker-compose.yml") {
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
 		result, err := cmd.CombinedOutput()
 		if err != nil {
@@ -120,7 +120,8 @@ func UpNginxWithBuild() {
 
 func UpProjectWithBuild(withChown bool) {
 	projectName := configs2.GetProjectName()
-	if _, err := os.Stat(paths.GetExecDirPath() + "/aruntime/.composer"); os.IsNotExist(err) {
+	var err error
+	if !paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/.composer") {
 		err = os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
 		if err != nil {
 			log.Fatal(err)
@@ -131,7 +132,7 @@ func UpProjectWithBuild(withChown bool) {
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		if _, err := os.Stat(composerGlobalDir + "/.composer"); os.IsNotExist(err) {
+		if !paths.IsFileExist(composerGlobalDir + "/.composer") {
 			paths.MakeDirsByPath(composerGlobalDir + "/.composer")
 		}
 	}
@@ -234,7 +235,7 @@ func dockerComposePull(composeFiles []string) {
 
 func DownNginx(force bool) {
 	composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
-	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
+	if paths.IsFileExist(composeFile) {
 		command := "down"
 		if force {
 			command = "kill"
@@ -251,7 +252,7 @@ func DownNginx(force bool) {
 
 func StopNginx(force bool) {
 	composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
-	if _, err := os.Stat(composeFile); !os.IsNotExist(err) {
+	if paths.IsFileExist(composeFile) {
 		command := "stop"
 		if force {
 			command = "kill"

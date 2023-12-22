@@ -55,12 +55,12 @@ func ListFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 				subdirName != "import" &&
 				!strings.Contains(subdirName+"/", "/cache") &&
 				!strings.Contains(subdirName, ".thumb") {
-				if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
+				if !paths.IsFileExist(projectPath + "/pub/media/" + subdirName) {
 					os.Mkdir(projectPath+"/pub/media/"+subdirName, 0775)
 				}
 				go ListFiles(chDownload, ch, remoteDir, subdirName+"/", indx, imagesOnly, compress)
 			}
-		} else if _, err := os.Stat(projectPath + "/pub/media/" + subdirName); os.IsNotExist(err) {
+		} else if !paths.IsFileExist(projectPath + "/pub/media/" + subdirName) {
 			ext := strings.ToLower(filepath.Ext(name))
 			if !imagesOnly || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
 				remainderDownload := indx % len(sc)

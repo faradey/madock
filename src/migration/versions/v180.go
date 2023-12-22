@@ -11,7 +11,7 @@ func V180() {
 	execPath := paths.GetExecDirPath() + "/projects/"
 	projectName := ""
 	for _, dir := range execProjectsDirs {
-		if _, err := os.Stat(execPath + dir + "/env.txt"); !os.IsNotExist(err) {
+		if paths.IsFileExist(execPath + dir + "/env.txt") {
 			projectName = dir
 			projectConf := configs2.GetProjectConfig(projectName)
 			if _, ok := projectConf["PATH"]; !ok {

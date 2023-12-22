@@ -60,7 +60,7 @@ func Execute() {
 
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 	var projectConf map[string]string
-	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
+	if paths.IsFileExist(envFile) {
 		projectConf = configs2.GetProjectConfig(projectName)
 	} else {
 		projectConf = configs2.GetGeneralConfig()

@@ -94,7 +94,7 @@ func GetProjectName() string {
 		for i := 2; i < 1000; i++ {
 			nameOfProject = paths.GetRunDirName() + suffix
 			envFile = paths.GetExecDirPath() + "/projects/" + nameOfProject + "/env.txt"
-			if _, err := os.Stat(envFile); !os.IsNotExist(err) {
+			if paths.IsFileExist(envFile) {
 				projectConf := GetProjectConfigOnly(nameOfProject)
 				val, ok := projectConf["PATH"]
 				if ok && val != paths.GetRunDirPath() {

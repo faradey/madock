@@ -33,7 +33,7 @@ func setPorts() {
 		projects = projectsAruntime
 	}
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
-	if _, err := os.Stat(portsFile); os.IsNotExist(err) {
+	if !paths.IsFileExist(portsFile) {
 		lines := ""
 		for port, line := range projects {
 			lines += line + "=" + strconv.Itoa(port+1) + "\n"
@@ -44,7 +44,7 @@ func setPorts() {
 	portsConfig := configs2.ParseFile(portsFile)
 	lines := ""
 	for projectName, port := range portsConfig {
-		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + projectName); !os.IsNotExist(err) {
+		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + projectName) {
 			lines += projectName + "=" + port + "\n"
 		}
 	}
@@ -82,8 +82,8 @@ func makeProxy() {
 		projectsNames = append(projectsNames, configs2.GetProjectName())
 	}
 	for _, name := range projectsNames {
-		if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); !os.IsNotExist(err) {
-			if _, err = os.Stat(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped"); os.IsNotExist(err) {
+		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/env.txt") {
+			if !paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped") {
 				nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
 				b, err := os.ReadFile(nginxDefFile)
 				if err != nil {
@@ -206,7 +206,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 		var commands []string
 		i := 0
 		for _, name := range projectsNames {
-			if _, err := os.Stat(paths.GetExecDirPath() + "/projects/" + name + "/env.txt"); os.IsNotExist(err) {
+			if !paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/env.txt") {
 				continue
 			}
 
@@ -257,7 +257,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 		}
 
 		doGenerateSsl := false
-		if _, err := os.Stat(ctxPath + "/madockCA.pem"); os.IsNotExist(err) {
+		if !paths.IsFileExist(ctxPath + "/madockCA.pem") {
 			doGenerateSsl = true
 		} else {
 			certificateCreatedTime, err := os.Stat(ctxPath + "/madockCA.pem")
@@ -335,7 +335,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 
 				if selected == "y" {
 					usr, _ := user.Current()
-					if _, err := os.Stat(usr.HomeDir + "/.pki/nssdb"); os.IsNotExist(err) {
+					if !paths.IsFileExist(usr.HomeDir + "/.pki/nssdb") {
 						paths.MakeDirsByPath(usr.HomeDir + "/.pki/nssdb")
 						err = os.WriteFile(ctxPath+"/certutil_db_passwd.txt", []byte(""), 0755)
 						if err != nil {

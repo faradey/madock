@@ -125,8 +125,9 @@ func MakeDirsByPath(val string) string {
 	trimVal := strings.Trim(val, "/")
 	if trimVal != "" {
 		dirs := strings.Split(trimVal, "/")
+		var err error
 		for i := 0; i < len(dirs); i++ {
-			if _, err := os.Stat("/" + strings.Join(dirs[:i+1], "/")); os.IsNotExist(err) {
+			if !IsFileExist("/" + strings.Join(dirs[:i+1], "/")) {
 				err = os.Mkdir("/"+strings.Join(dirs[:i+1], "/"), 0755)
 				if err != nil {
 					log.Fatal(err)
@@ -154,4 +155,12 @@ func GetActiveProjects() []string {
 		}
 	}
 	return activeProjects
+}
+
+func IsFileExist(path string) bool {
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		return true
+	}
+
+	return false
 }
