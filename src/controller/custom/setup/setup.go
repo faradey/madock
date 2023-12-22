@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/controller/custom/start"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/projects"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/paths"
@@ -32,7 +33,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, w
 		tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
 		hostsCustom(projectName, &toolsDefVersions.Hosts, projectConf)
 
-		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
+		projects.SetEnvForProject(projectName, toolsDefVersions, configs.GetProjectConfigOnly(projectName))
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
 		fmtc.SuccessLn("\n" + "Finish set up environment")

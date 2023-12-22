@@ -77,7 +77,7 @@ func Export() {
 
 func getExportArgs() *ArgsExportStruct {
 	args := new(ArgsExportStruct)
-	if len(os.Args) > 2 {
+	if attr.IsParseArgs && len(os.Args) > 2 {
 		argsOrigin := os.Args[2:]
 		var err error
 		_, err = flags.ParseArgs(args, argsOrigin)
@@ -87,5 +87,6 @@ func getExportArgs() *ArgsExportStruct {
 		}
 	}
 
+	attr.IsParseArgs = false
 	return args
 }

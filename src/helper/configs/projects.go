@@ -12,6 +12,12 @@ var generalConfig map[string]string
 var projectConfig map[string]string
 var nameOfProject string
 
+func CleanCache() {
+	generalConfig = nil
+	projectConfig = nil
+	nameOfProject = ""
+}
+
 func GetGeneralConfig() map[string]string {
 	if len(generalConfig) == 0 {
 		generalConfig = GetProjectsGeneralConfig()

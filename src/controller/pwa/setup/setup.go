@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/controller/pwa/start"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/projects"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/setup/tools"
@@ -17,7 +18,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, w
 		tools.Yarn(&toolsDefVersions.Yarn)
 		tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
 		setMagentoBackendHost(&toolsDefVersions.PwaBackendUrl, projectConf)
-		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
+		projects.SetEnvForProject(projectName, toolsDefVersions, configs.GetProjectConfigOnly(projectName))
 		fmtc.SuccessLn("\n" + "Finish set up environment")
 
 		docker.Down(withVolumes)

@@ -129,7 +129,7 @@ func Import() {
 
 func getArgs() *ArgsStruct {
 	args := new(ArgsStruct)
-	if len(os.Args) > 2 {
+	if attr.IsParseArgs && len(os.Args) > 2 {
 		argsOrigin := os.Args[2:]
 		var err error
 		_, err = flags.ParseArgs(args, argsOrigin)
@@ -139,5 +139,6 @@ func getArgs() *ArgsStruct {
 		}
 	}
 
+	attr.IsParseArgs = false
 	return args
 }

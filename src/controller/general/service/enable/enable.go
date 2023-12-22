@@ -1,12 +1,12 @@
 package enable
 
 import (
+	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/controller/general/service"
 	"github.com/faradey/madock/src/helper/cli/attr"
-	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
-	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
 	"strings"
@@ -14,7 +14,7 @@ import (
 
 type ArgsStruct struct {
 	attr.ArgumentsWithArgs
-	Global bool `long:"global" short:"g" description:"Global"`
+	Global bool `arg:"-g,--global" help:"Global"`
 }
 
 func Execute() {
@@ -25,14 +25,15 @@ func Execute() {
 			name = strings.ToLower(name)
 			if service.IsService(name) {
 				serviceName := strings.ToUpper(name) + "_ENABLED"
-				projectName := configs2.GetProjectName()
-				envFile := ""
-				if !args.Global {
-					envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
-				} else {
+				projectName := configs.GetProjectName()
+				envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+				configs.SetParam(envFile, serviceName, "true")
+
+				if args.Global {
 					envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.txt"
+					configs.SetParam(envFile, serviceName, "true")
 				}
-				configs2.SetParam(envFile, serviceName, "true")
+
 			}
 		}
 	}
@@ -42,15 +43,23 @@ func Execute() {
 
 func getArgs() *ArgsStruct {
 	args := new(ArgsStruct)
-	if len(os.Args) > 2 {
+	if attr.IsParseArgs && len(os.Args) > 2 {
 		argsOrigin := os.Args[2:]
-		var err error
-		_, err = flags.ParseArgs(args, argsOrigin)
+		p, err := arg.NewParser(arg.Config{
+			IgnoreEnv: true,
+		}, args)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = p.Parse(argsOrigin)
 
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
+	attr.IsParseArgs = false
 	return args
 }

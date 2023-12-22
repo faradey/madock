@@ -29,6 +29,7 @@ func SetParam(file, name, value string) {
 
 	if len(config.Lines) > 0 {
 		config.SaveLines()
+		CleanCache()
 	}
 }
 
@@ -52,5 +53,6 @@ func ChangeParamName(file string, names map[string]string) {
 
 	if len(config.Lines) > 0 {
 		config.SaveLines()
+		CleanCache()
 	}
 }

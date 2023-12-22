@@ -54,7 +54,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 		tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
 		tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
 
-		projects.SetEnvForProject(projectName, toolsDefVersions, projectConf)
+		projects.SetEnvForProject(projectName, toolsDefVersions, configs2.GetProjectConfigOnly(projectName))
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
 		fmtc.SuccessLn("\n" + "Finish set up environment")
