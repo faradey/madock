@@ -74,7 +74,7 @@ func makeProxy() {
 	/* Create nginx default configuration for Magento2 */
 	nginxDefFile := ""
 	str := ""
-	allFileData := "worker_processes 2;\nworker_priority -10;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\n"
+	allFileData := "worker_processes 2;\nworker_priority -10;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\nserver_names_hash_bucket_size  128;\nserver_names_hash_max_size 1024;\n"
 
 	var onlyHostsGlobal []string
 	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
