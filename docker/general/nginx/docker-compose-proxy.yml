@@ -15,8 +15,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
+  mailcatcher:
+    image: axllent/mailpit:latest
     ports:
       - 1025:1025
       - {{{INTERFACE_IP}}}8025:8025
