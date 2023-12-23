@@ -1,11 +1,11 @@
 package db
 
 import (
+	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
-	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
 	"strconv"
@@ -41,8 +41,15 @@ func getInfoArgs() *ArgsInfoStruct {
 	args := new(ArgsInfoStruct)
 	if attr.IsParseArgs && len(os.Args) > 2 {
 		argsOrigin := os.Args[2:]
-		var err error
-		_, err = flags.ParseArgs(args, argsOrigin)
+		p, err := arg.NewParser(arg.Config{
+			IgnoreEnv: true,
+		}, args)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = p.Parse(argsOrigin)
 
 		if err != nil {
 			log.Fatal(err)

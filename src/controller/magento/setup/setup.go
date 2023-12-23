@@ -18,7 +18,7 @@ import (
 	"strings"
 )
 
-func Execute(projectName string, projectConf map[string]string, continueSetup, doDownload, doInstall, withChown, withVolumes, isSampleData bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup, doDownload, doInstall, isSampleData bool) {
 	toolsDefVersions := magento2.GetVersions("")
 
 	mageVersion := ""
@@ -29,7 +29,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 		if mageVersion != "" {
 			toolsDefVersions = magento2.GetVersions(mageVersion)
 		} else {
-			Execute(projectName, projectConf, continueSetup, doDownload, doInstall, withChown, withVolumes, isSampleData)
+			Execute(projectName, projectConf, continueSetup, doDownload, doInstall, isSampleData)
 			return
 		}
 	}
@@ -82,8 +82,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 	}
 
 	if doDownload || doInstall || continueSetup {
-		docker.Down(withVolumes)
-		start.Execute(withChown, projectConf)
+		docker.Down(false)
+		start.Execute(false, projectConf)
 	}
 
 	if doDownload {

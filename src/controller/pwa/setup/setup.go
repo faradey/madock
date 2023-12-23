@@ -11,7 +11,7 @@ import (
 	"github.com/faradey/madock/src/model/versions/pwa"
 )
 
-func Execute(projectName string, projectConf map[string]string, continueSetup, withVolumes, withChown bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup bool) {
 	if continueSetup {
 		toolsDefVersions := pwa.GetVersions()
 		tools.NodeJs(&toolsDefVersions.NodeJs)
@@ -21,8 +21,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, w
 		projects.SetEnvForProject(projectName, toolsDefVersions, configs.GetProjectConfigOnly(projectName))
 		fmtc.SuccessLn("\n" + "Finish set up environment")
 
-		docker.Down(withVolumes)
-		start.Execute(withChown)
+		docker.Down(false)
+		start.Execute(false)
 	}
 }
 

@@ -1,6 +1,7 @@
 package start
 
 import (
+	"github.com/alexflint/go-arg"
 	startCustom "github.com/faradey/madock/src/controller/custom/start"
 	startMagento2 "github.com/faradey/madock/src/controller/magento/start"
 	startPwa "github.com/faradey/madock/src/controller/pwa/start"
@@ -8,14 +9,13 @@ import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
-	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
 )
 
 type ArgsStruct struct {
 	attr.Arguments
-	WithChown bool `long:"with-chown" short:"c" description:"With Chown"`
+	WithChown bool `arg:"-c,--with-chown" help:"With Chown"`
 }
 
 func Execute() {
@@ -44,8 +44,15 @@ func getArgs() *ArgsStruct {
 	args := new(ArgsStruct)
 	if attr.IsParseArgs && len(os.Args) > 2 {
 		argsOrigin := os.Args[2:]
-		var err error
-		_, err = flags.ParseArgs(args, argsOrigin)
+		p, err := arg.NewParser(arg.Config{
+			IgnoreEnv: true,
+		}, args)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = p.Parse(argsOrigin)
 
 		if err != nil {
 			log.Fatal(err)

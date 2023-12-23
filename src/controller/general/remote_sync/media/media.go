@@ -2,12 +2,12 @@ package media
 
 import (
 	"fmt"
+	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/controller/general/remote_sync"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/finder"
 	"github.com/faradey/madock/src/helper/paths"
-	"github.com/jessevdk/go-flags"
 	"github.com/pkg/sftp"
 	"log"
 	"os"
@@ -17,8 +17,8 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
-	ImagesOnly bool `long:"images-only" short:"i" description:"Sync images only"`
-	Compress   bool `long:"compress" short:"c" description:"Compress images"`
+	ImagesOnly bool `arg:"-i,--images-only" help:"Sync images only"`
+	Compress   bool `arg:"-c,--compress" help:"Compress images"`
 }
 
 func Execute() {
@@ -56,8 +56,15 @@ func getArgs() *ArgsStruct {
 	args := new(ArgsStruct)
 	if attr.IsParseArgs && len(os.Args) > 2 {
 		argsOrigin := os.Args[2:]
-		var err error
-		_, err = flags.ParseArgs(args, argsOrigin)
+		p, err := arg.NewParser(arg.Config{
+			IgnoreEnv: true,
+		}, args)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = p.Parse(argsOrigin)
 
 		if err != nil {
 			log.Fatal(err)

@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
+	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/paths"
-	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
 	"os/exec"
@@ -19,9 +19,9 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
-	Force         bool   `long:"force" short:"f" description:"Install Magento"`
-	DBServiceName string `long:"service" short:"s" description:"DB service name. For example: db"`
-	User          string `long:"user" short:"u" description:"User"`
+	Force         bool   `arg:"-f,--force" help:"Install Magento"`
+	DBServiceName string `arg:"-s,--service" help:"DB service name. For example: db"`
+	User          string `arg:"-u,--user" help:"User"`
 }
 
 func Import() {
@@ -131,8 +131,15 @@ func getArgs() *ArgsStruct {
 	args := new(ArgsStruct)
 	if attr.IsParseArgs && len(os.Args) > 2 {
 		argsOrigin := os.Args[2:]
-		var err error
-		_, err = flags.ParseArgs(args, argsOrigin)
+		p, err := arg.NewParser(arg.Config{
+			IgnoreEnv: true,
+		}, args)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = p.Parse(argsOrigin)
 
 		if err != nil {
 			log.Fatal(err)

@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func Execute(projectName string, projectConf map[string]string, continueSetup, withVolumes, withChown bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup bool) {
 	toolsDefVersions := custom.GetVersions()
 
 	if continueSetup {
@@ -41,8 +41,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, w
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
 
-		docker.Down(withVolumes)
-		start.Execute(withChown, projectConf)
+		docker.Down(false)
+		start.Execute(false, projectConf)
 	}
 }
 

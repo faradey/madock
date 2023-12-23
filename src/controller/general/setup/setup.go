@@ -3,6 +3,7 @@ package setup
 import (
 	"bufio"
 	"fmt"
+	"github.com/alexflint/go-arg"
 	setupCustom "github.com/faradey/madock/src/controller/custom/setup"
 	setupMagento "github.com/faradey/madock/src/controller/magento/setup"
 	setupPWA "github.com/faradey/madock/src/controller/pwa/setup"
@@ -12,7 +13,6 @@ import (
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
-	"github.com/jessevdk/go-flags"
 	"log"
 	"os"
 	"strings"
@@ -20,11 +20,9 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
-	Download    bool `long:"download" short:"d" description:"Download code from repository"`
-	Install     bool `long:"install" short:"i" description:"Install service (Magento, PWA, Shopify SDK, etc.)"`
-	SampleData  bool `long:"sample-data" short:"s" description:"sample-data"`
-	WithChown   bool `long:"with-chown" short:"c" description:"With Chown"`
-	WithVolumes bool `long:"with-volumes" description:"With Volumes"`
+	Download   bool `arg:"-d,--download" help:"Download code from repository"`
+	Install    bool `arg:"-i,--install" help:"Install service (Magento, PWA, Shopify SDK, etc.)"`
+	SampleData bool `arg:"-s,--sample-data" help:"Sample data"`
 }
 
 func Execute() {
@@ -70,13 +68,13 @@ func Execute() {
 	fmtc.Title("Specify Platform: ")
 	platform := tools.Platform()
 	if platform == "magento2" {
-		setupMagento.Execute(projectName, projectConf, continueSetup, args.Download, args.Install, args.WithChown, args.WithVolumes, args.SampleData)
+		setupMagento.Execute(projectName, projectConf, continueSetup, args.Download, args.Install, args.SampleData)
 	} else if platform == "pwa" {
-		setupPWA.Execute(projectName, projectConf, continueSetup, args.WithChown, args.WithVolumes)
+		setupPWA.Execute(projectName, projectConf, continueSetup)
 	} else if platform == "shopify" {
-		setupShopify.Execute(projectName, projectConf, continueSetup, args.WithChown, args.WithVolumes)
+		setupShopify.Execute(projectName, projectConf, continueSetup)
 	} else if platform == "custom" {
-		setupCustom.Execute(projectName, projectConf, continueSetup, args.WithChown, args.WithVolumes)
+		setupCustom.Execute(projectName, projectConf, continueSetup)
 	}
 }
 
@@ -84,8 +82,15 @@ func getArgs() *ArgsStruct {
 	args := new(ArgsStruct)
 	if attr.IsParseArgs && len(os.Args) > 2 {
 		argsOrigin := os.Args[2:]
-		var err error
-		_, err = flags.ParseArgs(args, argsOrigin)
+		p, err := arg.NewParser(arg.Config{
+			IgnoreEnv: true,
+		}, args)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = p.Parse(argsOrigin)
 
 		if err != nil {
 			log.Fatal(err)
