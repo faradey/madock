@@ -13,10 +13,11 @@
                 <secure>443</secure>
                 <internal>80</internal>
             </port>
-            <host>
-                <name>example.com</name>
-                <run_code>base</run_code>
-            </host>
+            <hosts>
+                <base>
+                    <name>example.com</name>
+                </base>
+            </hosts>
             <ssl>
                 <enabled>true</enabled>
             </ssl>

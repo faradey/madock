@@ -14,25 +14,23 @@ import (
 )
 
 func V240() {
-	//execProjectsDirs := paths.GetDirs(paths.GetExecDirPath() + "/projects")
 	execPath := paths.GetExecDirPath() + "/projects/"
-	//projectName := ""
+	execProjectsDirs := paths.GetDirs(execPath)
 	if paths.IsFileExist(execPath + "config.xml") {
 		err := os.Rename(execPath+"config.xml", execPath+"config.xml.old")
 		if err != nil {
-			return
+			log.Fatalln(err)
 		}
 	}
 
+	mapping, err := GetXmlMap(paths.GetExecDirPath() + "/src/migration/versions/v240/migration_v240_config_map.xml")
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+	mappingData := ComposeConfigMap(mapping["default"].(map[string]interface{}))
+
 	if paths.IsFileExist(execPath + "config.txt") {
-		mapping, err := getXmlMap(paths.GetExecDirPath() + "/src/migration/versions/v240/migration_v240_config_map.xml")
-
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		mappingData := composeConfigMap(mapping["default"].(map[string]interface{}))
-
 		configData := configs.GetProjectsGeneralConfig()
 
 		resultData := make(map[string]interface{})
@@ -41,10 +39,10 @@ func V240() {
 				resultData[key] = v
 			}
 		}
-		resultMapData := setXmlMap(resultData)
+		resultMapData := SetXmlMap(resultData)
 		w := &bytes.Buffer{}
 		w.WriteString(xml.Header)
-		err = MarshalXML(resultMapData, xml.NewEncoder(w), xml.StartElement{Name: xml.Name{Local: "default"}})
+		err = MarshalXML(resultMapData, xml.NewEncoder(w), "scopes/default")
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -54,23 +52,55 @@ func V240() {
 			log.Fatalln(err)
 		}
 	}
-	/*envFile := ""
-	for _, dir := range execProjectsDirs {
-		if paths.IsFileExist(execPath + dir + "/env.txt") {
-			if paths.IsFileExist(execPath + dir + "/config.xml") {
-				os.Rename(execPath+dir+"/config.xml", execPath+dir+"/config.xml.old")
+
+	for _, projectName := range execProjectsDirs {
+		if paths.IsFileExist(execPath + projectName + "/env.txt") {
+			if paths.IsFileExist(execPath + projectName + "/config.xml") {
+				err := os.Rename(execPath+projectName+"/config.xml", execPath+projectName+"/config.xml.old")
+				if err != nil {
+					log.Fatalln(err)
+				}
 			}
-			projectName = dir
-			projectConfOnly := configs.GetProjectConfigOnly(projectName)
-			projectConf := configs.GetProjectConfig(projectName)
-			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+
+			configData := configs.GetProjectConfigOnly(projectName)
+			resultData := make(map[string]interface{})
+			for key, value := range mappingData {
+				if v, ok := configData[value]; ok {
+					resultData[key] = v
+				}
+			}
+
+			if v, ok := configData["HOSTS"]; ok {
+				hosts := strings.Split(v, " ")
+				for _, host := range hosts {
+					splitHost := strings.Split(host, ":")
+					runCode := "base"
+					if len(splitHost) > 1 {
+						runCode = splitHost[1]
+					}
+					resultData["nginx/hosts/"+runCode] = splitHost[0]
+				}
+			}
+
+			resultMapData := SetXmlMap(resultData)
+			w := &bytes.Buffer{}
+			w.WriteString(xml.Header)
+			err = MarshalXML(resultMapData, xml.NewEncoder(w), "scopes/default")
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			err = os.WriteFile(execPath+projectName+"/config.xml", []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
-	}*/
+	}
 
 	log.Fatalln("Migration v240 is not implemented yet")
 }
 
-func getXmlMap(path string) (map[string]interface{}, error) {
+func GetXmlMap(path string) (map[string]interface{}, error) {
 	dataByte, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -84,7 +114,9 @@ func getXmlMap(path string) (map[string]interface{}, error) {
 	return result, nil
 }
 
-func setXmlMap(data map[string]interface{}) map[string]interface{} {
+func SetXmlMap(data map[string]interface{}) map[string]interface{} {
+
+	fmt.Println(data)
 	result := make(map[string]interface{})
 	for key, value := range data {
 		keys := strings.Split(key, "/")
@@ -95,9 +127,7 @@ func setXmlMap(data map[string]interface{}) map[string]interface{} {
 			if _, ok := result[keys[0]]; !ok {
 				result[keys[0]] = make(map[string]interface{})
 			}
-			m, _ := result[keys[0]].(map[string]interface{})
-			m[keys[1]] = value.(string)
-			result[keys[0]] = m
+			result[keys[0]].(map[string]interface{})[keys[1]] = value.(string)
 		case 3:
 			if _, ok := result[keys[0]]; !ok {
 				result[keys[0]] = make(map[string]interface{})
@@ -105,9 +135,7 @@ func setXmlMap(data map[string]interface{}) map[string]interface{} {
 			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
 				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
 			}
-			m := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})
-			m[keys[2]] = value.(string)
-			result[keys[0]] = m
+			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = value.(string)
 		case 4:
 			if _, ok := result[keys[0]]; !ok {
 				result[keys[0]] = make(map[string]interface{})
@@ -118,9 +146,7 @@ func setXmlMap(data map[string]interface{}) map[string]interface{} {
 			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]]; !ok {
 				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = make(map[string]interface{})
 			}
-			m := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})
-			m[keys[3]] = value.(string)
-			result[keys[0]] = m
+			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = value.(string)
 		case 5:
 			if _, ok := result[keys[0]]; !ok {
 				result[keys[0]] = make(map[string]interface{})
@@ -134,16 +160,14 @@ func setXmlMap(data map[string]interface{}) map[string]interface{} {
 			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]]; !ok {
 				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = make(map[string]interface{})
 			}
-			m := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})
-			m[keys[4]] = value.(string)
-			result[keys[0]] = m
+			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]] = value.(string)
 		}
 	}
 
 	return result
 }
 
-func composeConfigMap(rawData map[string]interface{}) map[string]string {
+func ComposeConfigMap(rawData map[string]interface{}) map[string]string {
 	data := make(map[string]string)
 	tempData := make(map[string]string)
 	for key, value := range rawData {
@@ -151,14 +175,13 @@ func composeConfigMap(rawData map[string]interface{}) map[string]string {
 		case string:
 			data[key] = value.(string)
 		case map[string]interface{}:
-			tempData = composeConfigMap(value.(map[string]interface{}))
+			tempData = ComposeConfigMap(value.(map[string]interface{}))
 			for k, v := range tempData {
 				data[key+"/"+k] = v
-
 			}
 		case []map[string]interface{}:
 			for arrKey, arrVal := range value.([]map[string]interface{}) {
-				tempData = composeConfigMap(arrVal)
+				tempData = ComposeConfigMap(arrVal)
 				for k, v := range tempData {
 					arrKeyStr := fmt.Sprintf("%d", arrKey)
 					data[key+"/"+arrKeyStr+"/"+k] = v
@@ -170,14 +193,23 @@ func composeConfigMap(rawData map[string]interface{}) map[string]string {
 	return data
 }
 
-func MarshalXML(s map[string]interface{}, e *xml.Encoder, start xml.StartElement) error {
+func MarshalXML(s map[string]interface{}, e *xml.Encoder, startTag string) error {
 	var err error
-	tokens := []xml.Token{start}
+	var tokens []xml.Token
+	var tokensEnd []xml.Token
+	startTags := strings.Split(startTag, "/")
+	for _, tag := range startTags {
+		tokens = append(tokens, xml.StartElement{Name: xml.Name{Local: tag}})
+		tokensEnd = append([]xml.Token{xml.EndElement{Name: xml.Name{Local: tag}}}, tokensEnd...)
+		if err != nil {
+			return err
+		}
+	}
 	tokens, err = getXMLTokens(s, e, tokens)
 	if err != nil {
 		return err
 	}
-	tokens = append(tokens, xml.EndElement{Name: start.Name})
+	tokens = append(tokens, tokensEnd...)
 
 	for _, t := range tokens {
 		err = e.EncodeToken(t)
