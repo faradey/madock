@@ -105,10 +105,8 @@ func setXmlMap(data map[string]interface{}) map[string]interface{} {
 			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
 				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
 			}
-			m := result[keys[0]].(map[string]interface{})
-			m2 := m[keys[1]].(map[string]interface{})
-			m2[keys[2]] = value.(string)
-			m[keys[1]] = m2
+			m := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})
+			m[keys[2]] = value.(string)
 			result[keys[0]] = m
 		case 4:
 			if _, ok := result[keys[0]]; !ok {
@@ -120,12 +118,8 @@ func setXmlMap(data map[string]interface{}) map[string]interface{} {
 			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]]; !ok {
 				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = make(map[string]interface{})
 			}
-			m := result[keys[0]].(map[string]interface{})
-			m2 := m[keys[1]].(map[string]interface{})
-			m3 := m2[keys[2]].(map[string]interface{})
-			m3[keys[3]] = value.(string)
-			m2[keys[2]] = m3
-			m[keys[1]] = m2
+			m := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})
+			m[keys[3]] = value.(string)
 			result[keys[0]] = m
 		case 5:
 			if _, ok := result[keys[0]]; !ok {
@@ -140,14 +134,8 @@ func setXmlMap(data map[string]interface{}) map[string]interface{} {
 			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]]; !ok {
 				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = make(map[string]interface{})
 			}
-			m := result[keys[0]].(map[string]interface{})
-			m2 := m[keys[1]].(map[string]interface{})
-			m3 := m2[keys[2]].(map[string]interface{})
-			m4 := m3[keys[3]].(map[string]interface{})
-			m4[keys[4]] = value.(string)
-			m3[keys[3]] = m4
-			m2[keys[2]] = m3
-			m[keys[1]] = m2
+			m := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})
+			m[keys[4]] = value.(string)
 			result[keys[0]] = m
 		}
 	}
