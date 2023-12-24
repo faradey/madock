@@ -26,11 +26,11 @@ func Execute() {
 			if service.IsService(name) {
 				serviceName := strings.ToUpper(name) + "_ENABLED"
 				projectName := configs.GetProjectName()
-				envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+				envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 				configs.SetParam(envFile, serviceName, "true")
 
 				if args.Global {
-					envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.txt"
+					envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
 					configs.SetParam(envFile, serviceName, "true")
 				}
 

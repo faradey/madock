@@ -82,7 +82,7 @@ func makeProxy() {
 		projectsNames = append(projectsNames, configs2.GetProjectName())
 	}
 	for _, name := range projectsNames {
-		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/env.txt") {
+		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
 			if !paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped") {
 				nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
 				b, err := os.ReadFile(nginxDefFile)
@@ -206,7 +206,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 		var commands []string
 		i := 0
 		for _, name := range projectsNames {
-			if !paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/env.txt") {
+			if !paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
 				continue
 			}
 

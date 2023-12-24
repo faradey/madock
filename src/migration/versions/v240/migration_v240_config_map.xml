@@ -2,6 +2,13 @@
 <default>
     <os>
         <version>UBUNTU_VERSION</version>
+        <arch>OSARCH</arch>
+        <user>
+            <uid>UID</uid>
+            <name>UNAME</name>
+            <guid>GUID</guid>
+            <ugroup>UGROUP</ugroup>
+        </user>
     </os>
     <nginx>
         <port>
@@ -15,6 +22,7 @@
         <rut_type>MAGENTO_RUN_TYPE</rut_type>
         <default_host_first_level>DEFAULT_HOST_FIRST_LEVEL</default_host_first_level>
         <interface_ip>INTERFACE_IP</interface_ip>
+        <host_gateways>HOST_GATEWAYS</host_gateways>
     </nginx>
     <platform>PLATFORM</platform>
     <workdir>WORKDIR</workdir>

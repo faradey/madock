@@ -105,7 +105,7 @@ func UpNginxWithBuild() {
 	if (err != nil || dirHash != projectConf["CACHE_HASH"] || doNeedRunAruntime) && projectConf["PROXY_ENABLED"] == "true" {
 		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 		nginx.GenerateSslCert(ctxPath, false)
-		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 		configs2.SetParam(envFile, "CACHE_HASH", dirHash)
 		dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")

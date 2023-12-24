@@ -1,10 +1,7 @@
 package configs
 
 import (
-	"bytes"
-	"encoding/xml"
 	"github.com/faradey/madock/src/helper/paths"
-	"github.com/go-xmlfmt/xmlfmt"
 	"log"
 	"os"
 	"os/user"
@@ -13,20 +10,42 @@ import (
 	"strings"
 )
 
-func Save(file string, data map[string]string) {
-	resultData := make(map[string]interface{})
-	for key, value := range data {
-		resultData[key] = value
-	}
-	resultMapData := SetXmlMap(resultData)
-	w := &bytes.Buffer{}
-	w.WriteString(xml.Header)
-	err := MarshalXML(resultMapData, xml.NewEncoder(w), "scopes/default")
-	if err != nil {
-		log.Fatalln(err)
-	}
+type ConfigLines struct {
+	Lines   []string
+	EnvFile string
+	IsEnv   bool
+}
 
-	err = os.WriteFile(file, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
+type ConfigLinesInterface interface {
+	AddLine(name, value string)
+	AddOrSetLine(name, value string)
+	AddEmptyLine()
+	AddRawLine(value string)
+	Save()
+}
+
+func (t *ConfigLines) AddLine(name, value string) {
+	t.Lines = append(t.Lines, name+"="+value)
+}
+
+func (t *ConfigLines) AddOrSetLine(name, value string) {
+	if !t.IsEnv {
+		t.Lines = append(t.Lines, name+"="+value)
+	} else {
+		SetParam(t.EnvFile, name, value)
+	}
+}
+
+func (t *ConfigLines) AddEmptyLine() {
+	t.Lines = append(t.Lines, "")
+}
+
+func (t *ConfigLines) AddRawLine(value string) {
+	t.Lines = append(t.Lines, value)
+}
+
+func (t *ConfigLines) Save() {
+	err := os.WriteFile(t.EnvFile, []byte(strings.Join(t.Lines, "\n")), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -34,7 +53,8 @@ func Save(file string, data map[string]string) {
 
 func IsHasConfig(projectName string) bool {
 	PrepareDirsForProject(projectName)
-	if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml") {
+	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
+	if paths.IsFileExist(envFile) {
 		return true
 	}
 
@@ -42,7 +62,8 @@ func IsHasConfig(projectName string) bool {
 }
 
 func IsHasNotConfig() bool {
-	if !paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + GetProjectName() + "/config.xml") {
+	envFile := paths.GetExecDirPath() + "/projects/" + GetProjectName() + "/env.txt"
+	if !paths.IsFileExist(envFile) {
 		return true
 	}
 	return false
@@ -102,7 +123,7 @@ func ReplaceConfigValue(str string) string {
 
 	var onlyHosts []string
 
-	hosts := projectConf["hosts"]
+	hosts := strings.Split(projectConf["HOSTS"], " ")
 	if len(hosts) > 0 {
 		for _, hostAndStore := range hosts {
 			onlyHosts = append(onlyHosts, "- \""+strings.Split(hostAndStore, ":")[0]+":172.17.0.1\"")
@@ -114,8 +135,11 @@ func ReplaceConfigValue(str string) string {
 }
 
 func IsOption(name string) bool {
-	for key := range GetCurrentProjectConfig() {
-		if key == name {
+	upperName := strings.ToUpper(name)
+	projectConf := GetCurrentProjectConfig()
+
+	for key := range projectConf {
+		if key == upperName {
 			return true
 		}
 	}

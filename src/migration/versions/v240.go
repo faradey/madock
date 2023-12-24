@@ -3,11 +3,10 @@ package versions
 import (
 	"bytes"
 	"encoding/xml"
-	"fmt"
-	"github.com/faradey/madock/src/helper/configs"
+	config2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/src/migration/versions/v240/configs"
 	"github.com/go-xmlfmt/xmlfmt"
-	"github.com/sbabiv/xml2map"
 	"log"
 	"os"
 	"strings"
@@ -23,15 +22,15 @@ func V240() {
 		}
 	}
 
-	mapping, err := GetXmlMap(paths.GetExecDirPath() + "/src/migration/versions/v240/migration_v240_config_map.xml")
+	mapping, err := config2.GetXmlMap(paths.GetExecDirPath() + "/src/migration/versions/v240/migration_v240_config_map.xml")
 
 	if err != nil {
 		log.Fatalln(err)
 	}
-	mappingData := ComposeConfigMap(mapping["default"].(map[string]interface{}))
+	mappingData := config2.ComposeConfigMap(mapping["default"].(map[string]interface{}))
 
 	if paths.IsFileExist(execPath + "config.txt") {
-		configData := configs.GetProjectsGeneralConfig()
+		configData := config2.GetProjectsGeneralConfig()
 
 		resultData := make(map[string]interface{})
 		for key, value := range mappingData {
@@ -39,10 +38,10 @@ func V240() {
 				resultData[key] = v
 			}
 		}
-		resultMapData := SetXmlMap(resultData)
+		resultMapData := config2.SetXmlMap(resultData)
 		w := &bytes.Buffer{}
 		w.WriteString(xml.Header)
-		err = MarshalXML(resultMapData, xml.NewEncoder(w), "scopes/default")
+		err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "scopes/default")
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -82,10 +81,10 @@ func V240() {
 				}
 			}
 
-			resultMapData := SetXmlMap(resultData)
+			resultMapData := config2.SetXmlMap(resultData)
 			w := &bytes.Buffer{}
 			w.WriteString(xml.Header)
-			err = MarshalXML(resultMapData, xml.NewEncoder(w), "scopes/default")
+			err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "scopes/default")
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -98,151 +97,4 @@ func V240() {
 	}
 
 	log.Fatalln("Migration v240 is not implemented yet")
-}
-
-func GetXmlMap(path string) (map[string]interface{}, error) {
-	dataByte, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	data := string(dataByte)
-	decoder := xml2map.NewDecoder(strings.NewReader(data))
-	result, err := decoder.Decode()
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-func SetXmlMap(data map[string]interface{}) map[string]interface{} {
-
-	fmt.Println(data)
-	result := make(map[string]interface{})
-	for key, value := range data {
-		keys := strings.Split(key, "/")
-		switch len(keys) {
-		case 1:
-			result[keys[0]] = value.(string)
-		case 2:
-			if _, ok := result[keys[0]]; !ok {
-				result[keys[0]] = make(map[string]interface{})
-			}
-			result[keys[0]].(map[string]interface{})[keys[1]] = value.(string)
-		case 3:
-			if _, ok := result[keys[0]]; !ok {
-				result[keys[0]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
-			}
-			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = value.(string)
-		case 4:
-			if _, ok := result[keys[0]]; !ok {
-				result[keys[0]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = make(map[string]interface{})
-			}
-			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = value.(string)
-		case 5:
-			if _, ok := result[keys[0]]; !ok {
-				result[keys[0]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = make(map[string]interface{})
-			}
-			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]] = value.(string)
-		}
-	}
-
-	return result
-}
-
-func ComposeConfigMap(rawData map[string]interface{}) map[string]string {
-	data := make(map[string]string)
-	tempData := make(map[string]string)
-	for key, value := range rawData {
-		switch value.(type) {
-		case string:
-			data[key] = value.(string)
-		case map[string]interface{}:
-			tempData = ComposeConfigMap(value.(map[string]interface{}))
-			for k, v := range tempData {
-				data[key+"/"+k] = v
-			}
-		case []map[string]interface{}:
-			for arrKey, arrVal := range value.([]map[string]interface{}) {
-				tempData = ComposeConfigMap(arrVal)
-				for k, v := range tempData {
-					arrKeyStr := fmt.Sprintf("%d", arrKey)
-					data[key+"/"+arrKeyStr+"/"+k] = v
-				}
-			}
-		}
-	}
-
-	return data
-}
-
-func MarshalXML(s map[string]interface{}, e *xml.Encoder, startTag string) error {
-	var err error
-	var tokens []xml.Token
-	var tokensEnd []xml.Token
-	startTags := strings.Split(startTag, "/")
-	for _, tag := range startTags {
-		tokens = append(tokens, xml.StartElement{Name: xml.Name{Local: tag}})
-		tokensEnd = append([]xml.Token{xml.EndElement{Name: xml.Name{Local: tag}}}, tokensEnd...)
-		if err != nil {
-			return err
-		}
-	}
-	tokens, err = getXMLTokens(s, e, tokens)
-	if err != nil {
-		return err
-	}
-	tokens = append(tokens, tokensEnd...)
-
-	for _, t := range tokens {
-		err = e.EncodeToken(t)
-		if err != nil {
-			return err
-		}
-	}
-
-	// flush to ensure tokens are written
-	err = e.Flush()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func getXMLTokens(s map[string]interface{}, e *xml.Encoder, tokens []xml.Token) ([]xml.Token, error) {
-	var err error
-	for key, value := range s {
-		t := xml.StartElement{Name: xml.Name{Local: key}}
-		tokens = append(tokens, t)
-		switch value.(type) {
-		case string:
-			tokens = append(tokens, xml.CharData(value.(string)))
-		case map[string]interface{}:
-			tokens, err = getXMLTokens(value.(map[string]interface{}), e, tokens)
-			if err != nil {
-				return nil, err
-			}
-		}
-		tokens = append(tokens, xml.EndElement{Name: t.Name})
-	}
-
-	return tokens, nil
 }

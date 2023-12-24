@@ -9,7 +9,7 @@ import (
 func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, projectConf map[string]string) {
 	generalConf := configs2.GetGeneralConfig()
 	config := new(configs2.ConfigLines)
-	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 	config.EnvFile = envFile
 	if len(projectConf) > 0 {
 		config.IsEnv = true
@@ -52,6 +52,6 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	config.AddOrSetLine("SSH_SITE_ROOT_PATH", configs2.GetOption("SSH_SITE_ROOT_PATH", generalConf, projectConf))
 
 	if !config.IsEnv {
-		config.SaveLines()
+		config.Save()
 	}
 }

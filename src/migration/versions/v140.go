@@ -1,8 +1,8 @@
 package versions
 
 import (
-	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/src/migration/versions/v240/configs"
 	"os"
 	"strings"
 )
@@ -21,12 +21,12 @@ func V140() {
 		"PHP_XDEBUG_IDE_KEY":     "XDEBUG_IDE_KEY",
 		"PHP_XDEBUG_REMOTE_HOST": "XDEBUG_REMOTE_HOST",
 	}
-	configs.ChangeParamName(paths.GetExecDirPath()+"/config.txt", mapNames)
-	configs.ChangeParamName(paths.GetExecDirPath()+"/projects/config.txt", mapNames)
+	ChangeParamName(paths.GetExecDirPath()+"/config.txt", mapNames)
+	ChangeParamName(paths.GetExecDirPath()+"/projects/config.txt", mapNames)
 	projectsPath := paths.GetExecDirPath() + "/projects"
 	dirs := paths.GetDirs(projectsPath)
 	for _, val := range dirs {
-		configs.ChangeParamName(projectsPath+"/"+val+"/env.txt", mapNames)
+		ChangeParamName(projectsPath+"/"+val+"/env.txt", mapNames)
 		dockerFiles := paths.GetFilesRecursively(projectsPath + "/" + val + "/docker")
 		if len(dockerFiles) > 0 {
 			for _, pth := range dockerFiles {
@@ -40,5 +40,29 @@ func V140() {
 				}
 			}
 		}
+	}
+}
+
+func ChangeParamName(file string, names map[string]string) {
+	confList := configs.GetAllLines(file)
+	config := new(configs.ConfigLines)
+	config.EnvFile = file
+
+	for _, line := range confList {
+		if strings.TrimSpace(line) == "" || strings.TrimSpace(line)[:1] == "#" {
+			config.AddRawLine(line)
+		} else {
+			opt := strings.Split(strings.TrimSpace(line), "=")
+			if newName, ok := names[opt[0]]; ok {
+				config.AddLine(newName, opt[1])
+			} else {
+				config.AddRawLine(line)
+			}
+		}
+	}
+
+	if len(config.Lines) > 0 {
+		config.Save()
+		configs.CleanCache()
 	}
 }

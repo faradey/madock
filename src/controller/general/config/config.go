@@ -18,10 +18,9 @@ type ArgsStruct struct {
 }
 
 func ShowEnv() {
-	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
-	lines := configs2.GetAllLines(configPath)
-	for _, ln := range lines {
-		fmt.Println(ln)
+	lines := configs2.GetProjectConfig(configs2.GetProjectName())
+	for key, line := range lines {
+		fmt.Println(key + " " + line)
 	}
 }
 
@@ -30,7 +29,7 @@ func SetEnvOption() {
 	name := strings.ToUpper(args.Name)
 	val := args.Value
 	if len(name) > 0 && configs2.IsOption(name) {
-		configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+		configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
 		configs2.SetParam(configPath, name, val)
 	}
 }

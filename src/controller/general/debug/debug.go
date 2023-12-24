@@ -16,28 +16,28 @@ type ArgsStruct struct {
 
 func Enable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
 	configs2.SetParam(configPath, "XDEBUG_ENABLED", "true")
 	rebuild.Execute()
 }
 
 func Disable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
 	configs2.SetParam(configPath, "XDEBUG_ENABLED", "false")
 	rebuild.Execute()
 }
 
 func ProfileEnable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
 	configs2.SetParam(configPath, "XDEBUG_MODE", "profile")
 	rebuild.Execute()
 }
 
 func ProfileDisable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/env.txt"
+	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
 	configs2.SetParam(configPath, "XDEBUG_MODE", "debug")
 	rebuild.Execute()
 }

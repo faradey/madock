@@ -9,7 +9,7 @@ import (
 var versionOptionName string = "MADOCK_VERSION"
 
 func Apply(newAppVersion string) {
-	configPath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.txt"
+	configPath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
 	if !paths.IsFileExist(configPath) {
 		os.WriteFile(configPath, []byte(""), 0755)
 	}
@@ -20,5 +20,5 @@ func Apply(newAppVersion string) {
 }
 
 func saveNewVersion(newAppVersion string) {
-	configs2.SetParam(paths.GetExecDirPath()+"/projects/config.txt", versionOptionName, newAppVersion)
+	configs2.SetParam(paths.GetExecDirPath()+"/projects/config.xml", versionOptionName, newAppVersion)
 }

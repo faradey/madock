@@ -56,7 +56,7 @@ func Execute() {
 
 	fmtc.SuccessLn("Start set up environment")
 
-	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
+	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 	var projectConf map[string]string
 	if paths.IsFileExist(envFile) {
 		projectConf = configs2.GetProjectConfig(projectName)

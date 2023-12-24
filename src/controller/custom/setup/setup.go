@@ -39,7 +39,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		fmtc.SuccessLn("\n" + "Finish set up environment")
 		fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
-		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt")
+		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
 		docker.Down(false)
 		start.Execute(false, projectConf)
