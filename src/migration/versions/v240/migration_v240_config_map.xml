@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <default>
     <os>
         <version>UBUNTU_VERSION</version>
@@ -146,4 +146,5 @@
     <container_name_prefix>CONTAINER_NAME_PREFIX</container_name_prefix>
     <cache_hash>CACHE_HASH</cache_hash>
     <path>PATH</path>
+    <madock_version>MADOCK_VERSION</madock_version>
 </default>
