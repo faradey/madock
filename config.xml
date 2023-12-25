@@ -6,6 +6,13 @@
         <os>
             <name>ubuntu</name>
             <version>22.04</version>
+            <arch></arch>
+            <user>
+                <uid></uid>
+                <name></name>
+                <guid></guid>
+                <ugroup></ugroup>
+            </user>
         </os>
         <nginx>
             <port>
@@ -24,6 +31,7 @@
             <rut_type>website</rut_type>
             <default_host_first_level>.test</default_host_first_level>
             <interface_ip></interface_ip>
+            <host_gateways></host_gateways>
         </nginx>
         <platform>magento2</platform>
         <workdir>/var/www/html</workdir>

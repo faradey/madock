@@ -1,12 +1,8 @@
 package configs
 
 import (
-	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
-	"os/user"
-	"regexp"
-	"runtime"
 	"strings"
 )
 
@@ -51,24 +47,6 @@ func (t *ConfigLines) Save() {
 	}
 }
 
-func IsHasConfig(projectName string) bool {
-	PrepareDirsForProject(projectName)
-	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
-	if paths.IsFileExist(envFile) {
-		return true
-	}
-
-	return false
-}
-
-func IsHasNotConfig() bool {
-	envFile := paths.GetExecDirPath() + "/projects/" + GetProjectName() + "/env.txt"
-	if !paths.IsFileExist(envFile) {
-		return true
-	}
-	return false
-}
-
 func GeneralConfigMapping(mainConf map[string]string, targetConf map[string]string) {
 	if len(mainConf) > 0 {
 		for index, val := range mainConf {
@@ -87,64 +65,4 @@ func ConfigMapping(mainConf map[string]string, targetConf map[string]string) {
 			}
 		}
 	}
-}
-
-func ReplaceConfigValue(str string) string {
-	projectConf := GetCurrentProjectConfig()
-	osArch := runtime.GOARCH
-	arches := map[string]string{"arm64": "aarch64"}
-
-	if arch, ok := arches[osArch]; ok {
-		osArch = arch
-	} else {
-		osArch = "x86-64"
-	}
-	for key, val := range projectConf {
-		str = strings.Replace(str, "{{{"+key+"}}}", val, -1)
-	}
-
-	str = strings.Replace(str, "{{{OSARCH}}}", osArch, -1)
-
-	usr, err := user.Current()
-	if err == nil {
-		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
-		str = strings.Replace(str, "{{{UNAME}}}", usr.Username, -1)
-		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
-		gr, _ := user.LookupGroupId(usr.Gid)
-		str = strings.Replace(str, "{{{UGROUP}}}", gr.Name, -1)
-	} else {
-		log.Fatal(err)
-	}
-
-	r := regexp.MustCompile("(?ism)<<<iftrue>>>(.*?)<<<endif>>>")
-	str = r.ReplaceAllString(str, "$1")
-	r = regexp.MustCompile("(?ism)<<<iffalse>>>.*?<<<endif>>>")
-	str = r.ReplaceAllString(str, "")
-
-	var onlyHosts []string
-
-	hosts := strings.Split(projectConf["HOSTS"], " ")
-	if len(hosts) > 0 {
-		for _, hostAndStore := range hosts {
-			onlyHosts = append(onlyHosts, "- \""+strings.Split(hostAndStore, ":")[0]+":172.17.0.1\"")
-		}
-	}
-
-	str = strings.Replace(str, "{{{HOST_GATEWAYS}}}", strings.Join(onlyHosts, "\n      "), -1)
-	return str
-}
-
-func IsOption(name string) bool {
-	upperName := strings.ToUpper(name)
-	projectConf := GetCurrentProjectConfig()
-
-	for key := range projectConf {
-		if key == upperName {
-			return true
-		}
-	}
-
-	log.Fatalln("The option \"" + name + "\" doesn't exist.")
-
-	return false
 }

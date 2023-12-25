@@ -99,7 +99,34 @@ func V240() {
 				log.Fatalln(err)
 			}
 		}
+
+		fixExtendedFiles(mappingData)
 	}
 
 	log.Fatalln("Migration v240 is not implemented yet")
+}
+
+func fixExtendedFiles(mapNames map[string]string) {
+	projectsPath := paths.GetExecDirPath() + "/projects"
+	dirs := paths.GetDirs(projectsPath)
+	for _, val := range dirs {
+		if val == "Soccertutor" {
+			dockerFiles := paths.GetFilesRecursively(projectsPath + "/" + val + "/docker")
+			if len(dockerFiles) > 0 {
+				for _, pth := range dockerFiles {
+					b, err := os.ReadFile(pth)
+					if err == nil {
+						str := string(b)
+						for to, from := range mapNames {
+							str = strings.Replace(str, "{{{"+from+"}}}", "{{{"+to+"}}}", -1)
+						}
+						err = os.WriteFile(pth, []byte(str), 0755)
+						if err != nil {
+							log.Fatalln(err)
+						}
+					}
+				}
+			}
+		}
+	}
 }
