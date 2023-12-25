@@ -13,11 +13,11 @@
                 <secure>443</secure>
                 <internal>80</internal>
             </port>
-            <hosts>
+            <!--<hosts>
                 <base>
                     <name>example.com</name>
                 </base>
-            </hosts>
+            </hosts>-->
             <ssl>
                 <enabled>true</enabled>
             </ssl>
@@ -58,6 +58,7 @@
             </phpmyadmin>
         </db>
         <db2>
+            <enabled>false</enabled>
             <repository>mariadb</repository>
             <root_password>password</root_password>
             <user>magento</user>
