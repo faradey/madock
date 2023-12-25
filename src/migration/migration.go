@@ -1,24 +1,40 @@
 package migration
 
 import (
-	configs2 "github.com/faradey/madock/src/helper/configs"
+	"fmt"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
+	configs2 "github.com/faradey/madock/src/migration/versions/v240/configs"
+	"log"
 	"os"
 )
 
-var versionOptionName string = "MADOCK_VERSION"
+var versionOptionName string = "madock_version"
 
 func Apply(newAppVersion string) {
-	configPath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
-	if !paths.IsFileExist(configPath) {
-		os.WriteFile(configPath, []byte(""), 0755)
+	oldAppVersion := ""
+	if newAppVersion > "2.4.0" {
+		configPath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
+		if !paths.IsFileExist(configPath) {
+			err := os.WriteFile(configPath, []byte(""), 0755)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}
+
+		config := configs.GetGeneralConfig()
+		oldAppVersion = config[versionOptionName]
+	} else {
+		config := configs2.GetGeneralConfig()
+		oldAppVersion = config["MADOCK_VERSION"]
 	}
-	config := configs2.GetGeneralConfig()
-	oldAppVersion := config[versionOptionName]
+
 	Execute(oldAppVersion)
 	saveNewVersion(newAppVersion)
 }
 
 func saveNewVersion(newAppVersion string) {
-	configs2.SetParam(paths.GetExecDirPath()+"/projects/config.xml", versionOptionName, newAppVersion)
+	fmt.Println(versionOptionName)
+	fmt.Println(newAppVersion)
+	configs.SetParam(paths.GetExecDirPath()+"/projects/config.xml", versionOptionName, newAppVersion)
 }

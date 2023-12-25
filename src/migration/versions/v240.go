@@ -39,6 +39,7 @@ func V240() {
 				resultData[key] = v
 			}
 		}
+
 		resultMapData := config2.SetXmlMap(resultData)
 		w := &bytes.Buffer{}
 		w.WriteString(xml.Header)
@@ -55,13 +56,6 @@ func V240() {
 
 	for _, projectName := range execProjectsDirs {
 		if paths.IsFileExist(execPath + projectName + "/env.txt") {
-			if paths.IsFileExist(execPath + projectName + "/config.xml") {
-				err := os.Rename(execPath+projectName+"/config.xml", execPath+projectName+"/config.xml.old")
-				if err != nil {
-					log.Fatalln(err)
-				}
-			}
-
 			configData := configs.GetProjectConfigOnly(projectName)
 			resultData := make(map[string]interface{})
 			for key, value := range mappingData {
@@ -103,6 +97,8 @@ func V240() {
 		fixExtendedFiles(mappingData)
 	}
 
+	fixSrcFiles(mappingData)
+
 	log.Fatalln("Migration v240 is not implemented yet")
 }
 
@@ -124,6 +120,29 @@ func fixExtendedFiles(mapNames map[string]string) {
 						if err != nil {
 							log.Fatalln(err)
 						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func fixSrcFiles(mapNames map[string]string) {
+	projectsPath := paths.GetExecDirPath() + "/src"
+	dockerFiles := paths.GetFilesRecursively(projectsPath)
+	if len(dockerFiles) > 0 {
+		for _, pth := range dockerFiles {
+			if !strings.Contains(pth, "migration") {
+				b, err := os.ReadFile(pth)
+				if err == nil {
+					str := string(b)
+					for to, from := range mapNames {
+						str = strings.Replace(str, "\""+from+"\"", "\""+to+"\"", -1)
+					}
+
+					err = os.WriteFile(pth, []byte(str), 0755)
+					if err != nil {
+						log.Fatalln(err)
 					}
 				}
 			}
