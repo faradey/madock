@@ -72,6 +72,7 @@
     <nodejs>
         <enabled>NODEJS_ENABLED</enabled>
         <version>NODEJS_VERSION</version>
+        <major_version>NODEJS_MAJOR_VERSION</major_version>
         <yarn>
             <enabled>YARN_ENABLED</enabled>
             <version>YARN_VERSION</version>

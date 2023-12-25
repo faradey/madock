@@ -6,7 +6,7 @@ import (
 )
 
 func Custom(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
-	if _, ok := projectConf["PUBLIC_DIR"]; !ok {
-		config.AddOrSetLine("PUBLIC_DIR", "web/public")
+	if _, ok := projectConf["public_dir"]; !ok {
+		config.Set("public_dir", "web/public")
 	}
 }

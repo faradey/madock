@@ -5,6 +5,6 @@ func SetParam(file, name, value string) {
 
 	confList[name] = value
 
-	Save(file, confList)
+	SaveInFile(file, confList)
 	CleanCache()
 }

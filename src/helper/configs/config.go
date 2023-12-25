@@ -13,7 +13,21 @@ import (
 	"strings"
 )
 
-func Save(file string, data map[string]string) {
+type ConfigLines struct {
+	Lines   map[string]string
+	EnvFile string
+}
+
+type ConfigLinesInterface interface {
+	Set(name, value string)
+	Save()
+}
+
+func (t *ConfigLines) Save() {
+	SaveInFile(t.EnvFile, t.Lines)
+}
+
+func SaveInFile(file string, data map[string]string) {
 	resultData := make(map[string]interface{})
 	for key, value := range data {
 		resultData[key] = value
@@ -30,6 +44,10 @@ func Save(file string, data map[string]string) {
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
+}
+
+func (t *ConfigLines) Set(name, value string) {
+	t.Lines[name] = value
 }
 
 func IsHasConfig(projectName string) bool {

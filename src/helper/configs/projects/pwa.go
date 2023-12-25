@@ -6,12 +6,12 @@ import (
 )
 
 func PWA(config *configs.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
-	config.AddOrSetLine("NODEJS_ENABLED", "true")
-	config.AddOrSetLine("NODEJS_VERSION", defVersions.NodeJs)
-	config.AddOrSetLine("YARN_ENABLED", "true")
-	config.AddOrSetLine("YARN_VERSION", defVersions.Yarn)
-	config.AddOrSetLine("PWA_BACKEND_URL", defVersions.PwaBackendUrl)
+	config.Set("NODEJS_ENABLED", "true")
+	config.Set("NODEJS_VERSION", defVersions.NodeJs)
+	config.Set("YARN_ENABLED", "true")
+	config.Set("YARN_VERSION", defVersions.Yarn)
+	config.Set("PWA_BACKEND_URL", defVersions.PwaBackendUrl)
 	if _, ok := projectConf["PUBLIC_DIR"]; !ok {
-		config.AddOrSetLine("PUBLIC_DIR", "")
+		config.Set("PUBLIC_DIR", "")
 	}
 }
