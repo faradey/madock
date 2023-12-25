@@ -112,6 +112,7 @@ func fixExtendedFiles(mapNames map[string]string) {
 					}
 					str = strings.Replace(str, " ubuntu:{{{", " {{{os/name}}}:{{{", -1)
 					str = strings.Replace(str, "{{{NGINX_PROJECT_PORT+", "{{{nginx/port/project+", -1)
+					str = strings.Replace(str, "{{{NGINX_PORT+", "{{{nginx/port/default+", -1)
 					str = strings.Replace(str, "{{{HOSTS}}}", "{{{hosts}}}", -1)
 					str = strings.Replace(str, "\"HOSTS\"", "\"hosts\"", -1)
 
