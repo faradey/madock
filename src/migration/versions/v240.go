@@ -93,7 +93,7 @@ func V240() {
 
 	//fixSrcFiles(mappingData)
 	//fixDockerFiles(mappingData)
-	fixScriptsFiles(mappingData)
+	//fixScriptsFiles(mappingData)
 }
 
 func fixExtendedFiles(mapNames map[string]string) {
