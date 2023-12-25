@@ -25,10 +25,10 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 	if len(repoVersion) > 1 {
 		config.Set("db/repository", repoVersion[0])
 		config.Set("db/version", repoVersion[1])
-		config.Set("DB_TYPE", repoVersion[0])
+		config.Set("db/type", repoVersion[0])
 	} else {
 		config.Set("db/version", defVersions.Db)
-		config.Set("DB_TYPE", dbType)
+		config.Set("db/type", dbType)
 	}
 
 	config.Set("db/root_password", configs2.GetOption("db/root_password", generalConf, projectConf))
