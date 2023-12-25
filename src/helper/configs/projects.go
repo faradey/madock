@@ -60,7 +60,6 @@ func GetCurrentProjectConfig() map[string]string {
 func GetProjectConfig(projectName string) map[string]string {
 	config := GetProjectConfigOnly(projectName)
 	ConfigMapping(GetGeneralConfig(), config)
-
 	return config
 }
 

@@ -94,7 +94,7 @@ func GeneralConfigMapping(mainConf map[string]string, targetConf map[string]stri
 }
 
 func ConfigMapping(mainConf map[string]string, targetConf map[string]string) {
-	if len(targetConf) > 0 && len(mainConf) > 0 {
+	if len(mainConf) > 0 {
 		for index, val := range mainConf {
 			if _, ok := targetConf[index]; !ok {
 				targetConf[index] = val
@@ -113,6 +113,7 @@ func ReplaceConfigValue(str string) string {
 	} else {
 		osArch = "x86-64"
 	}
+
 	for key, val := range projectConf {
 		str = strings.Replace(str, "{{{"+key+"}}}", val, -1)
 	}
