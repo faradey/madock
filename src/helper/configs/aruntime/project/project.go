@@ -127,9 +127,9 @@ func makeNginxConf(projectName string) {
 			hostNameWebsites = strings.Join(websitesHosts, "\n")
 		}
 	}
-	str = strings.Replace(str, "{{{host_names}}}", hostName, -1)
+	str = strings.Replace(str, "{{{nginx/host_names}}}", hostName, -1)
 	str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
-	str = strings.Replace(str, "{{{host_names_with_codes}}}", hostNameWebsites, -1)
+	str = strings.Replace(str, "{{{nginx/host_names_with_codes}}}", hostNameWebsites, -1)
 
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/nginx.conf"

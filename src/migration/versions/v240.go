@@ -94,7 +94,6 @@ func V240() {
 	//fixSrcFiles(mappingData)
 	//fixDockerFiles(mappingData)
 	fixScriptsFiles(mappingData)
-
 }
 
 func fixExtendedFiles(mapNames map[string]string) {
@@ -193,6 +192,7 @@ func fixDockerFiles(mapNames map[string]string) {
 				str = strings.Replace(str, "{{{NGINX_PROJECT_PORT+", "{{{nginx/port/project+", -1)
 				str = strings.Replace(str, "{{{HOSTS}}}", "{{{hosts}}}", -1)
 				str = strings.Replace(str, "\"HOSTS\"", "\"hosts\"", -1)
+				str = strings.Replace(str, "{{{NGINX_PORT+", "{{{nginx/port/default+", -1)
 
 				err = os.WriteFile(pth, []byte(str), 0755)
 				if err != nil {
