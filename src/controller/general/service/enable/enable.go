@@ -26,12 +26,13 @@ func Execute() {
 			if service.IsService(name) {
 				serviceName := strings.ToLower(name) + "/enabled"
 				projectName := configs.GetProjectName()
+				projectConfig := configs.GetProjectConfig(projectName)
 				envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
-				configs.SetParam(envFile, serviceName, "true")
+				configs.SetParam(envFile, serviceName, "true", projectConfig["activeScope"])
 
 				if args.Global {
 					envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
-					configs.SetParam(envFile, serviceName, "true")
+					configs.SetParam(envFile, serviceName, "true", "default")
 				}
 
 			}

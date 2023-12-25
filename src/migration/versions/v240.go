@@ -37,7 +37,7 @@ func V240() {
 		resultMapData := config2.SetXmlMap(resultData)
 		w := &bytes.Buffer{}
 		w.WriteString(xml.Header)
-		err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "scopes/default")
+		err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "config/scopes/default")
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -77,7 +77,7 @@ func V240() {
 			resultMapData := config2.SetXmlMap(resultData)
 			w := &bytes.Buffer{}
 			w.WriteString(xml.Header)
-			err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "scopes/default")
+			err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "config/scopes/default")
 			if err != nil {
 				log.Fatalln(err)
 			}

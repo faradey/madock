@@ -33,8 +33,8 @@ func GetOriginalGeneralConfig() map[string]string {
 	origGeneralConfig := make(map[string]string)
 	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
 		origGeneralConfig = ParseXmlFile(configPath)
+		origGeneralConfig = getConfigByScope(origGeneralConfig, "default")
 	}
-
 	return origGeneralConfig
 }
 
@@ -43,6 +43,7 @@ func GetProjectsGeneralConfig() map[string]string {
 	configPath := paths.GetExecDirPath() + "/projects/config.xml"
 	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
 		generalProjectsConfig = ParseXmlFile(configPath)
+		generalProjectsConfig = getConfigByScope(generalProjectsConfig, "default")
 	}
 
 	return generalProjectsConfig
@@ -69,14 +70,24 @@ func GetProjectConfigOnly(projectName string) map[string]string {
 		log.Fatal(err)
 	}
 
-	return ParseXmlFile(configPath)
+	config := ParseXmlFile(configPath)
+	activeConfig := make(map[string]string)
+	activeScope := "default"
+	defaultConfig := getConfigByScope(config, activeScope)
+	if v, ok := config["activeScope"]; ok {
+		activeScope = v
+		activeConfig = getConfigByScope(config, activeScope)
+	}
+
+	ConfigMapping(defaultConfig, activeConfig)
+	activeConfig["activeScope"] = activeScope
+	return activeConfig
 }
 
 func GetOption(name string, generalConf, projectConf map[string]string) string {
 	if val, ok := projectConf[name]; ok && val != "" {
 		return strings.TrimSpace(val)
-	}
-	if val, ok := generalConf[name]; ok && val != "" {
+	} else if val, ok := generalConf[name]; ok && val != "" {
 		return strings.TrimSpace(val)
 	}
 
@@ -88,6 +99,7 @@ func PrepareDirsForProject(projectName string) {
 	paths.MakeDirsByPath(projectPath)
 	paths.MakeDirsByPath(projectPath + "/docker")
 	paths.MakeDirsByPath(projectPath + "/docker/nginx")
+	paths.MakeDirsByPath(projectPath + "/docker/php")
 }
 
 func GetProjectName() string {
@@ -110,4 +122,18 @@ func GetProjectName() string {
 	}
 
 	return nameOfProject
+}
+
+func getConfigByScope(originConfig map[string]string, activeScope string) map[string]string {
+	config := make(map[string]string)
+	for key, val := range originConfig {
+		if strings.Index(key, "scopes/"+activeScope+"/") == 0 {
+			config[key[len("scopes/"+activeScope+"/"):]] = val
+		}
+		if key == "scopes/activeScope" {
+			config[key] = val
+		}
+	}
+
+	return config
 }

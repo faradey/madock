@@ -106,7 +106,7 @@ func UpNginxWithBuild() {
 		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 		nginx.GenerateSslCert(ctxPath, false)
 		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
-		configs2.SetParam(envFile, "cache_hash", dirHash)
+		configs2.SetParam(envFile, "cache_hash", dirHash, "default")
 		dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 		cmd.Stdout = os.Stdout

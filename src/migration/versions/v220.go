@@ -1,8 +1,8 @@
 package versions
 
 import (
-	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
+	configs2 "github.com/faradey/madock/src/migration/versions/v240/configs"
 )
 
 func V220() {

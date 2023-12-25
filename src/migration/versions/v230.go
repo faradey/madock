@@ -1,8 +1,8 @@
 package versions
 
 import (
-	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/src/migration/versions/v240/configs"
 )
 
 func V230() {
@@ -13,18 +13,18 @@ func V230() {
 	for _, dir := range execProjectsDirs {
 		if paths.IsFileExist(execPath + dir + "/env.txt") {
 			projectName = dir
-			projectConfOnly := configs2.GetProjectConfigOnly(projectName)
-			projectConf := configs2.GetProjectConfig(projectName)
+			projectConfOnly := configs.GetProjectConfigOnly(projectName)
+			projectConf := configs.GetProjectConfig(projectName)
 			envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/env.txt"
 			if _, ok := projectConfOnly["PUBLIC_DIR"]; !ok {
 				if projectConf["PLATFORM"] == "magento2" {
-					configs2.SetParam(envFile, "PUBLIC_DIR", "pub")
+					configs.SetParam(envFile, "PUBLIC_DIR", "pub")
 				} else if projectConf["PLATFORM"] == "pwa" {
-					configs2.SetParam(envFile, "PUBLIC_DIR", "")
+					configs.SetParam(envFile, "PUBLIC_DIR", "")
 				} else if projectConf["PLATFORM"] == "shopify" {
-					configs2.SetParam(envFile, "PUBLIC_DIR", "web/public")
+					configs.SetParam(envFile, "PUBLIC_DIR", "web/public")
 				} else if projectConf["PLATFORM"] == "custom" {
-					configs2.SetParam(envFile, "PUBLIC_DIR", "web/public")
+					configs.SetParam(envFile, "PUBLIC_DIR", "web/public")
 				}
 			}
 		}

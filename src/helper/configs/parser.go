@@ -16,8 +16,8 @@ func ParseXmlFile(path string) (conf map[string]string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	activeScope := "default"
-	mappingData := ComposeConfigMap(mapping["scopes"].(map[string]interface{})[activeScope].(map[string]interface{}))
+
+	mappingData := ComposeConfigMap(mapping["config"].(map[string]interface{}))
 
 	if conf == nil {
 		conf = make(map[string]string)

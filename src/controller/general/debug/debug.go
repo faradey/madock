@@ -4,7 +4,7 @@ import (
 	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/helper/cli/attr"
-	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
@@ -16,29 +16,29 @@ type ArgsStruct struct {
 
 func Enable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
-	configs2.SetParam(configPath, "php/xdebug/enabled", "true")
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
+	configs.SetParam(configPath, "php/xdebug/enabled", "true", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 
 func Disable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
-	configs2.SetParam(configPath, "php/xdebug/enabled", "false")
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
+	configs.SetParam(configPath, "php/xdebug/enabled", "false", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 
 func ProfileEnable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
-	configs2.SetParam(configPath, "php/xdebug/mode", "profile")
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
+	configs.SetParam(configPath, "php/xdebug/mode", "profile", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 
 func ProfileDisable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
-	configs2.SetParam(configPath, "php/xdebug/mode", "debug")
+	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
+	configs.SetParam(configPath, "php/xdebug/mode", "debug", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 

@@ -15,8 +15,9 @@ import (
 )
 
 type ConfigLines struct {
-	Lines   map[string]string
-	EnvFile string
+	Lines       map[string]string
+	EnvFile     string
+	ActiveScope string
 }
 
 type ConfigLinesInterface interface {
@@ -25,10 +26,10 @@ type ConfigLinesInterface interface {
 }
 
 func (t *ConfigLines) Save() {
-	SaveInFile(t.EnvFile, t.Lines)
+	SaveInFile(t.EnvFile, t.Lines, t.ActiveScope)
 }
 
-func SaveInFile(file string, data map[string]string) {
+func SaveInFile(file string, data map[string]string, activeScope string) {
 	resultData := make(map[string]interface{})
 	for key, value := range data {
 		resultData[key] = value
@@ -36,7 +37,7 @@ func SaveInFile(file string, data map[string]string) {
 	resultMapData := SetXmlMap(resultData)
 	w := &bytes.Buffer{}
 	w.WriteString(xml.Header)
-	err := MarshalXML(resultMapData, xml.NewEncoder(w), "scopes/default")
+	err := MarshalXML(resultMapData, xml.NewEncoder(w), "config/scopes/"+activeScope)
 	if err != nil {
 		log.Fatalln(err)
 	}
