@@ -29,6 +29,7 @@
         <network_number>NETWORK_NUMBER</network_number>
         <host_name_default>HOST_NAME_DEFAULT</host_name_default>
         <host_names>HOST_NAMES</host_names>
+        <host_names_with_codes>HOST_NAMES_WEBSITES</host_names_with_codes>
     </nginx>
     <platform>PLATFORM</platform>
     <workdir>WORKDIR</workdir>
@@ -164,4 +165,5 @@
     <cache_hash>CACHE_HASH</cache_hash>
     <path>PATH</path>
     <madock_version>MADOCK_VERSION</madock_version>
+    <project_name>PROJECT_NAME</project_name>
 </default>
