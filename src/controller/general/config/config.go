@@ -15,7 +15,6 @@ type ArgsStruct struct {
 	attr.Arguments
 	Name  string `arg:"-n,--name" help:"Parameter name"`
 	Value string `arg:"-v,--value" help:"Parameter value"`
-	Scope string `arg:"-s,--scope" help:"Scope name"`
 }
 
 func ShowEnv() {
@@ -27,12 +26,9 @@ func ShowEnv() {
 
 func SetEnvOption() {
 	args := getArgs()
-	name := strings.ToUpper(args.Name)
+	name := strings.ToLower(args.Name)
 	val := args.Value
-	activeScope := args.Scope
-	if len(activeScope) == 0 {
-		activeScope = "default"
-	}
+	activeScope := configs.GetCurrentProjectConfig()["activeScope"]
 	if len(name) > 0 && configs.IsOption(name) {
 		configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
 		configs.SetParam(configPath, name, val, activeScope)
