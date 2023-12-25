@@ -1,7 +1,6 @@
 package migration
 
 import (
-	"fmt"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	configs2 "github.com/faradey/madock/src/migration/versions/v240/configs"
@@ -34,7 +33,5 @@ func Apply(newAppVersion string) {
 }
 
 func saveNewVersion(newAppVersion string) {
-	fmt.Println(versionOptionName)
-	fmt.Println(newAppVersion)
 	configs.SetParam(paths.GetExecDirPath()+"/projects/config.xml", versionOptionName, newAppVersion)
 }

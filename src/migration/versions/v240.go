@@ -91,11 +91,10 @@ func V240() {
 		fixExtendedFiles(mappingData)
 	}
 
-	fixSrcFiles(mappingData)
-	fixDockerFiles(mappingData)
+	//fixSrcFiles(mappingData)
+	//fixDockerFiles(mappingData)
 	fixScriptsFiles(mappingData)
 
-	log.Fatalln("Migration v240 is not implemented yet")
 }
 
 func fixExtendedFiles(mapNames map[string]string) {

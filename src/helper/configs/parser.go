@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"bufio"
 	"encoding/xml"
 	"fmt"
 	"github.com/sbabiv/xml2map"
@@ -9,19 +10,63 @@ import (
 	"strings"
 )
 
-func ParseFile(path string) (conf map[string]string) {
+func ParseXmlFile(path string) (conf map[string]string) {
+	fmt.Println(path)
 	mapping, err := GetXmlMap(path)
 
 	if err != nil {
 		log.Fatalln(err)
 	}
-	mappingData := ComposeConfigMap(mapping["scopes"].(map[string]interface{}))
+	activeScope := "default"
+	mappingData := ComposeConfigMap(mapping["scopes"].(map[string]interface{})[activeScope].(map[string]interface{}))
+
+	if conf == nil {
+		conf = make(map[string]string)
+	}
 
 	for key, value := range mappingData {
 		conf[key] = value
 	}
 
 	return conf
+}
+
+func ParseFile(path string) (conf map[string]string) {
+	conf = make(map[string]string)
+	lines := getLines(path)
+
+	for _, line := range lines {
+		opt := strings.Split(strings.TrimSpace(line), "=")
+		if len(opt) > 1 {
+			conf[opt[0]] = opt[1]
+		} else if len(opt) > 0 {
+			conf[opt[0]] = ""
+		}
+	}
+
+	return conf
+}
+
+func getLines(path string) []string {
+	var rows []string
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(strings.TrimSpace(line)) > 0 && strings.TrimSpace(line)[:1] != "#" {
+			rows = append(rows, line)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	return rows
 }
 
 func GetXmlMap(path string) (map[string]interface{}, error) {

@@ -32,7 +32,7 @@ func GetOriginalGeneralConfig() map[string]string {
 	configPath := paths.GetExecDirPath() + "/config.xml"
 	origGeneralConfig := make(map[string]string)
 	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
-		origGeneralConfig = ParseFile(configPath)
+		origGeneralConfig = ParseXmlFile(configPath)
 	}
 
 	return origGeneralConfig
@@ -42,7 +42,7 @@ func GetProjectsGeneralConfig() map[string]string {
 	generalProjectsConfig := make(map[string]string)
 	configPath := paths.GetExecDirPath() + "/projects/config.xml"
 	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
-		generalProjectsConfig = ParseFile(configPath)
+		generalProjectsConfig = ParseXmlFile(configPath)
 	}
 
 	return generalProjectsConfig
@@ -69,7 +69,7 @@ func GetProjectConfigOnly(projectName string) map[string]string {
 		log.Fatal(err)
 	}
 
-	return ParseFile(configPath)
+	return ParseXmlFile(configPath)
 }
 
 func GetOption(name string, generalConf, projectConf map[string]string) string {
