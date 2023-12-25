@@ -1,9 +1,9 @@
-FROM ubuntu:{{{UBUNTU_VERSION}}}
+FROM {{{os/name}}}:{{{os/version}}}
 
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NOWARNINGS="yes"
 
-RUN ln -snf /usr/share/zoneinfo/{{{PHP_TZ}}} /etc/localtime && echo {{{PHP_TZ}}} > /etc/timezone
+RUN ln -snf /usr/share/zoneinfo/{{{php/timezone}}} /etc/localtime && echo {{{php/timezone}}} > /etc/timezone
 
 RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     curl \
@@ -29,103 +29,103 @@ RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     && locale-gen en_US.UTF-8 \
     && LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
 
-RUN apt-get update && apt-get install -y php{{{PHP_VERSION}}}-bcmath \
-    php{{{PHP_VERSION}}}-cli \
-    php{{{PHP_VERSION}}}-common \
-    php{{{PHP_VERSION}}}-curl \
-    php{{{PHP_VERSION}}}-dev \
-    php{{{PHP_VERSION}}}-fpm \
-    php{{{PHP_VERSION}}}-gd \
-    php{{{PHP_VERSION}}}-intl \
-    php{{{PHP_VERSION}}}-mbstring \
-    php{{{PHP_VERSION}}}-mysql \
-    php{{{PHP_VERSION}}}-opcache \
-    php{{{PHP_VERSION}}}-soap \
-    php{{{PHP_VERSION}}}-sqlite3 \
-    php{{{PHP_VERSION}}}-xml \
-    php{{{PHP_VERSION}}}-xmlrpc \
-    php{{{PHP_VERSION}}}-xsl \
-    php{{{PHP_VERSION}}}-zip \
-    php{{{PHP_VERSION}}}-imagick \
-    php{{{PHP_VERSION}}}-ctype \
-    php{{{PHP_VERSION}}}-dom \
-    php{{{PHP_VERSION}}}-fileinfo \
-    php{{{PHP_VERSION}}}-iconv \
-    php{{{PHP_VERSION}}}-simplexml \
-    php{{{PHP_VERSION}}}-sockets \
-    php{{{PHP_VERSION}}}-tokenizer \
-    php{{{PHP_VERSION}}}-xmlwriter \
-    php{{{PHP_VERSION}}}-ssh2
+RUN apt-get update && apt-get install -y php{{{php/version}}}-bcmath \
+    php{{{php/version}}}-cli \
+    php{{{php/version}}}-common \
+    php{{{php/version}}}-curl \
+    php{{{php/version}}}-dev \
+    php{{{php/version}}}-fpm \
+    php{{{php/version}}}-gd \
+    php{{{php/version}}}-intl \
+    php{{{php/version}}}-mbstring \
+    php{{{php/version}}}-mysql \
+    php{{{php/version}}}-opcache \
+    php{{{php/version}}}-soap \
+    php{{{php/version}}}-sqlite3 \
+    php{{{php/version}}}-xml \
+    php{{{php/version}}}-xmlrpc \
+    php{{{php/version}}}-xsl \
+    php{{{php/version}}}-zip \
+    php{{{php/version}}}-imagick \
+    php{{{php/version}}}-ctype \
+    php{{{php/version}}}-dom \
+    php{{{php/version}}}-fileinfo \
+    php{{{php/version}}}-iconv \
+    php{{{php/version}}}-simplexml \
+    php{{{php/version}}}-sockets \
+    php{{{php/version}}}-tokenizer \
+    php{{{php/version}}}-xmlwriter \
+    php{{{php/version}}}-ssh2
 
 SHELL ["/bin/bash", "-c"]
-RUN IFS='.' read major minor patch <<< "{{{PHP_VERSION}}}" \
+RUN IFS='.' read major minor patch <<< "{{{php/version}}}" \
     && if [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then pecl install mcrypt-1.0.6 \
     && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
-    && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{PHP_VERSION}}}/cli/conf.d/mcrypt.ini" \
-    && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/mcrypt.ini"; fi \
-    && if [[ "${major}" < "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then apt-get install -y php{{{PHP_VERSION}}}-mcrypt; fi \
-    && if [[ "${major}" < "7" ]]; then apt-get install -y php{{{PHP_VERSION}}}-json; fi
+    && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{php/version}}}/cli/conf.d/mcrypt.ini" \
+    && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{php/version}}}/fpm/conf.d/mcrypt.ini"; fi \
+    && if [[ "${major}" < "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then apt-get install -y php{{{php/version}}}-mcrypt; fi \
+    && if [[ "${major}" < "7" ]]; then apt-get install -y php{{{php/version}}}-json; fi
 
-RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{PHP_VERSION}}}-fpm.pid/" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
-    && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
-    && sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/{{{PHP_VERSION}}}/fpm/php-fpm.conf \
-    && sed -i "s/listen = .*/listen = 9000/" /etc/php/{{{PHP_VERSION}}}/fpm/pool.d/www.conf \
-    && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/{{{PHP_VERSION}}}/fpm/pool.d/www.conf
+RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{php/version}}}-fpm.pid/" /etc/php/{{{php/version}}}/fpm/php-fpm.conf \
+    && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/{{{php/version}}}/fpm/php-fpm.conf \
+    && sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/{{{php/version}}}/fpm/php-fpm.conf \
+    && sed -i "s/listen = .*/listen = 9000/" /etc/php/{{{php/version}}}/fpm/pool.d/www.conf \
+    && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/{{{php/version}}}/fpm/pool.d/www.conf
 
 RUN is_composer_version_one="" \
-    && if [[ "{{{PHP_COMPOSER_VERSION}}}" = "2" ]]; then is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [[ "{{{PHP_COMPOSER_VERSION}}}" = "1" ]]; then  is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
-    && if [[ -z "${is_composer_version_one}" ]]; then php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version={{{PHP_COMPOSER_VERSION}}}; fi
+    && if [[ "{{{php/composer/version}}}" = "2" ]]; then is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [[ "{{{php/composer/version}}}" = "1" ]]; then  is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
+    && if [[ -z "${is_composer_version_one}" ]]; then php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version={{{php/composer/version}}}; fi
 
-RUN if [[ "{{{XDEBUG_ENABLED}}}" = "true" ]]; then pecl install -f xdebug-{{{XDEBUG_VERSION}}} \
-    && touch /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "zend_extension=xdebug.so" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.mode={{{XDEBUG_MODE}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.output_dir={{{WORKDIR}}}/var" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.profiler_output_name=cachegrind.out.%t" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.remote_enable=1" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.start_with_request=on" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.remote_autostart=on" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.idekey={{{XDEBUG_IDE_KEY}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.client_host={{{XDEBUG_REMOTE_HOST}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.remote_host={{{XDEBUG_REMOTE_HOST}}}" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.remote_port=9003" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.client_port=9003" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.log=/var/www/var/log/xdebug.log" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && echo "xdebug.log_level=7" >> /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini \
-    && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/cli/conf.d/11-xdebug.ini \
-    && ln -s /etc/php/{{{PHP_VERSION}}}/mods-available/xdebug.ini /etc/php/{{{PHP_VERSION}}}/fpm/conf.d/11-xdebug.ini; fi
+RUN if [[ "{{{php/xdebug/enabled}}}" = "true" ]]; then pecl install -f xdebug-{{{php/xdebug/version}}} \
+    && touch /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "zend_extension=xdebug.so" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.mode={{{php/xdebug/mode}}}" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.output_dir={{{workdir}}}/var" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.profiler_output_name=cachegrind.out.%t" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.remote_enable=1" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.start_with_request=on" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.remote_autostart=on" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.idekey={{{php/xdebug/ide_key}}}" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.client_host={{{php/xdebug/remote_host}}}" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.remote_host={{{php/xdebug/remote_host}}}" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.remote_port=9003" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.client_port=9003" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.log=/var/www/var/log/xdebug.log" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.log_level=7" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && ln -s /etc/php/{{{php/version}}}/mods-available/xdebug.ini /etc/php/{{{php/version}}}/cli/conf.d/11-xdebug.ini \
+    && ln -s /etc/php/{{{php/version}}}/mods-available/xdebug.ini /etc/php/{{{php/version}}}/fpm/conf.d/11-xdebug.ini; fi
 
-RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
-    && sed -i 's/post_max_size = 8M/post_max_size = 80M/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
-    && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 50M/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
-    && sed -i 's/;max_input_vars = 1000/max_input_vars = 50000/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
-    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/{{{PHP_VERSION}}}/fpm/php.ini \
-    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/{{{PHP_VERSION}}}/cli/php.ini
+RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /etc/php/{{{php/version}}}/fpm/php.ini \
+    && sed -i 's/post_max_size = 8M/post_max_size = 80M/g' /etc/php/{{{php/version}}}/fpm/php.ini \
+    && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 50M/g' /etc/php/{{{php/version}}}/fpm/php.ini \
+    && sed -i 's/;max_input_vars = 1000/max_input_vars = 50000/g' /etc/php/{{{php/version}}}/fpm/php.ini \
+    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/{{{php/version}}}/fpm/php.ini \
+    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/{{{php/version}}}/cli/php.ini
 
 WORKDIR /var/www
 
 RUN apt-get install cron
-RUN curl -sL https://deb.nodesource.com/setup_{{{NODEJS_MAJOR_VERSION}}}.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_{{{nodejs/major_version}}}.x | bash -
 RUN mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
-RUN mkdir /var/www/.npm && chown {{{UID}}}:{{{GUID}}} /var/www/.npm && apt install nodejs -y
+RUN mkdir /var/www/.npm && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.npm && apt install nodejs -y
 ENV YARN_VERSION=1.22.19
 
 RUN set -ex && for key in 6A010C5166006599AA17F08146C2130DFD2497F5 ; do gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys "$key" || gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key" ; done && curl -fsSLO --compressed "https://yarnpkg.com/downloads/$YARN_VERSION/yarn-v$YARN_VERSION.tar.gz" && curl -fsSLO --compressed "https://yarnpkg.com/downloads/$YARN_VERSION/yarn-v$YARN_VERSION.tar.gz.asc" && gpg --batch --verify yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz && mkdir -p /opt && tar -xzf yarn-v$YARN_VERSION.tar.gz -C /opt/ && ln -s /opt/yarn-v$YARN_VERSION/bin/yarn /usr/local/bin/yarn && ln -s /opt/yarn-v$YARN_VERSION/bin/yarnpkg /usr/local/bin/yarnpkg && rm yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz && yarn --version
-RUN yarn set version {{{YARN_VERSION}}}
+RUN yarn set version {{{nodejs/yarn/version}}}
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
-RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data \
-    && chown -R {{{UID}}}:{{{GUID}}} /var/www \
-    && chown -R {{{UID}}}:{{{GUID}}} /var/www/.ssh \
-    && chown {{{UID}}}:{{{GUID}}} /var/www/patches \
-    && chown {{{UID}}}:{{{GUID}}} /var/www/scripts/php \
-    && chown {{{UID}}}:{{{GUID}}} /var/www/.composer \
-    && chown {{{UID}}}:{{{GUID}}} /usr/bin/composer
+RUN usermod -u {{{os/user/uid}}} -o www-data && groupmod -g {{{os/user/guid}}} -o www-data \
+    && chown -R {{{os/user/uid}}}:{{{os/user/guid}}} /var/www \
+    && chown -R {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.ssh \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/patches \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/scripts/php \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.composer \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /usr/bin/composer
 
-WORKDIR {{{WORKDIR}}}
+WORKDIR {{{workdir}}}
 
 EXPOSE 9001 9003 35729
-CMD "php-fpm{{{PHP_VERSION}}}"
+CMD "php-fpm{{{php/version}}}"

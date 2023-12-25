@@ -19,7 +19,7 @@ func Info() {
 	getInfoArgs()
 
 	projectConf := configs2.GetCurrentProjectConfig()
-	if projectConf["PLATFORM"] != "pwa" {
+	if projectConf["platform"] != "pwa" {
 		portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
 		portsConfig := configs2.ParseFile(portsFile)
 		port, err := strconv.Atoi(portsConfig[configs2.GetProjectName()])
@@ -27,13 +27,13 @@ func Info() {
 			log.Fatal(err)
 		}
 		fmtc.SuccessLn("host: db")
-		fmtc.SuccessLn("name: " + projectConf["DB_DATABASE"])
-		fmtc.SuccessLn("user: " + projectConf["DB_USER"])
-		fmtc.SuccessLn("password: " + projectConf["DB_PASSWORD"])
-		fmtc.SuccessLn("root password: " + projectConf["DB_ROOT_PASSWORD"])
+		fmtc.SuccessLn("name: " + projectConf["db/database"])
+		fmtc.SuccessLn("user: " + projectConf["db/user"])
+		fmtc.SuccessLn("password: " + projectConf["db/password"])
+		fmtc.SuccessLn("root password: " + projectConf["db/root_password"])
 		fmtc.SuccessLn("remote HOST:PORT: " + "localhost:" + strconv.Itoa(17000+((port-1)*20)+4))
 	} else {
-		fmtc.Warning("This command is not supported for " + projectConf["PLATFORM"])
+		fmtc.Warning("This command is not supported for " + projectConf["platform"])
 	}
 }
 

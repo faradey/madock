@@ -12,9 +12,12 @@
     </os>
     <nginx>
         <port>
+            <default>NGINX_PORT</default>
             <unsecure>NGINX_UNSECURE_PORT</unsecure>
             <secure>NGINX_SECURE_PORT</secure>
             <internal>NGINX_INTERNAL_PORT</internal>
+            <project>NGINX_PROJECT_PORT</project>
+            <project_ssl>NGINX_PROJECT_PORT_SSL</project_ssl>
         </port>
         <ssl>
             <enabled>SSL</enabled>
@@ -23,6 +26,9 @@
         <default_host_first_level>DEFAULT_HOST_FIRST_LEVEL</default_host_first_level>
         <interface_ip>INTERFACE_IP</interface_ip>
         <host_gateways>HOST_GATEWAYS</host_gateways>
+        <network_number>NETWORK_NUMBER</network_number>
+        <host_name_default>HOST_NAME_DEFAULT</host_name_default>
+        <host_names>HOST_NAMES</host_names>
     </nginx>
     <platform>PLATFORM</platform>
     <workdir>WORKDIR</workdir>
@@ -35,7 +41,7 @@
         <timezone>PHP_TZ</timezone>
         <xdebug>
             <version>XDEBUG_VERSION</version>
-            <XDEBUG_IDE_KEY>PHPSTORM</XDEBUG_IDE_KEY>
+            <ide_key>XDEBUG_IDE_KEY</ide_key>
             <remote_host>XDEBUG_REMOTE_HOST</remote_host>
             <enabled>XDEBUG_ENABLED</enabled>
             <mode>XDEBUG_MODE</mode>
@@ -46,19 +52,21 @@
     </php>
     <db>
         <repository>DB_REPOSITORY</repository>
+        <version>DB_VERSION</version>
         <root_password>DB_ROOT_PASSWORD</root_password>
         <user>DB_USER</user>
         <password>DB_PASSWORD</password>
         <database>DB_DATABASE</database>
         <phpmyadmin>
             <enabled>PHPMYADMIN_ENABLED</enabled>
-            <repository>PHPMYADMIN2_REPOSITORY</repository>
+            <repository>PHPMYADMIN_REPOSITORY</repository>
             <version>PHPMYADMIN_VERSION</version>
         </phpmyadmin>
     </db>
     <db2>
         <enabled>DB2_ENABLED</enabled>
-        <repository>DB2_REPOSITORY</repository>
+        <version>DB2_REPOSITORY</version>
+        <repository>DB2_VERSION</repository>
         <root_password>DB2_ROOT_PASSWORD</root_password>
         <user>DB2_USER</user>
         <password>DB2_PASSWORD</password>

@@ -1,4 +1,4 @@
-FROM {{{OPENSEARCH_REPOSITORY}}}:{{{OPENSEARCH_VERSION}}}
+FROM {{{search/opensearch/repository}}}:{{{search/opensearch/version}}}
 
 ENV cluster.name=docker-cluster
 ENV bootstrap.memory_lock=true

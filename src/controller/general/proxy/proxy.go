@@ -20,7 +20,7 @@ func Execute(flag string) {
 
 	if !configs2.IsHasNotConfig() {
 		projectConf := configs2.GetCurrentProjectConfig()
-		if projectConf["PROXY_ENABLED"] == "true" {
+		if projectConf["proxy/enabled"] == "true" {
 			if flag == "prune" {
 				docker.DownNginx(args.Force)
 			} else if flag == "stop" {

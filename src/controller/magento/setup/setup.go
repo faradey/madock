@@ -101,7 +101,7 @@ func DownloadMagento(projectName, edition, version string, isSampleData bool) {
 	if isSampleData {
 		sampleData = " && bin/magento sampledata:deploy"
 	}
-	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["WORKDIR"])
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 	command := []string{
 		"exec",
 		"-it",

@@ -9,9 +9,9 @@ services:
       - ./ctx/proxy.conf:/etc/nginx/nginx.conf:delegated
       - ./ctx/:/sslcert/:delegated
     ports:
-      - {{{INTERFACE_IP}}}{{{NGINX_UNSECURE_PORT}}}:80
-      - {{{INTERFACE_IP}}}{{{NGINX_SECURE_PORT}}}:443
-      - {{{INTERFACE_IP}}}35729:35729
+      - {{{nginx/interface_ip}}}{{{nginx/port/unsecure}}}:80
+      - {{{nginx/interface_ip}}}{{{nginx/port/secure}}}:443
+      - {{{nginx/interface_ip}}}35729:35729
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -19,4 +19,4 @@ services:
     image: axllent/mailpit:latest
     ports:
       - 1025:1025
-      - {{{INTERFACE_IP}}}8025:8025
+      - {{{nginx/interface_ip}}}8025:8025

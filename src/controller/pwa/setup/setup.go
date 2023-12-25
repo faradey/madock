@@ -30,7 +30,7 @@ func setMagentoBackendHost(defVersion *string, projectConf map[string]string) {
 	fmtc.TitleLn("BACKEND URL")
 	fmt.Println("Input format: example.com")
 	host := ""
-	if val, ok := projectConf["PWA_BACKEND_URL"]; ok && val != "" {
+	if val, ok := projectConf["pwa/backend_url"]; ok && val != "" {
 		host = val
 		*defVersion = host
 		fmt.Println("Recommended host: " + host)

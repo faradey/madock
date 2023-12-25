@@ -16,7 +16,7 @@ func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()
 
 	service := "nodejs"
-	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", projectConf["WORKDIR"])
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", projectConf["workdir"])
 
 	cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "nodejs"), "bash", "-c", "cd "+workdir+" && "+flag)
 	cmd.Stdin = os.Stdin

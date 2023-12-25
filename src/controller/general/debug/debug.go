@@ -17,28 +17,28 @@ type ArgsStruct struct {
 func Enable() {
 	getArgs()
 	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
-	configs2.SetParam(configPath, "XDEBUG_ENABLED", "true")
+	configs2.SetParam(configPath, "php/xdebug/enabled", "true")
 	rebuild.Execute()
 }
 
 func Disable() {
 	getArgs()
 	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
-	configs2.SetParam(configPath, "XDEBUG_ENABLED", "false")
+	configs2.SetParam(configPath, "php/xdebug/enabled", "false")
 	rebuild.Execute()
 }
 
 func ProfileEnable() {
 	getArgs()
 	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
-	configs2.SetParam(configPath, "XDEBUG_MODE", "profile")
+	configs2.SetParam(configPath, "php/xdebug/mode", "profile")
 	rebuild.Execute()
 }
 
 func ProfileDisable() {
 	getArgs()
 	configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
-	configs2.SetParam(configPath, "XDEBUG_MODE", "debug")
+	configs2.SetParam(configPath, "php/xdebug/mode", "debug")
 	rebuild.Execute()
 }
 

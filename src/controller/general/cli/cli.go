@@ -14,7 +14,7 @@ func Cli() {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 	service := "php"
-	if projectConf["PLATFORM"] == "pwa" {
+	if projectConf["platform"] == "pwa" {
 		service = "nodejs"
 	}
 

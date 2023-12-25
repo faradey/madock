@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
@@ -103,15 +104,21 @@ func RabbitMQ(defVersion *string) {
 }
 
 func Hosts(projectName string, defVersion *string, projectConf map[string]string) {
-	host := strings.ToLower(projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"] + ":base")
-	if val, ok := projectConf["HOSTS"]; ok && val != "" {
-		host = val
+	host := strings.ToLower(projectName + projectConf["nginx/default_host_first_level"] + ":base")
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		var hostItems []string
+		for _, hostItem := range hosts {
+			hostItems = append(hostItems, hostItem["name"]+":"+hostItem["code"])
+		}
+		host = strings.Join(hostItems, " ")
 	}
+
 	fmtc.TitleLn("Hosts")
 	fmt.Println("Input format: a.example.com:x_website_code b.example.com:y_website_code")
 	fmt.Println("Recommended host: " + host)
 	*defVersion = host
-	availableVersions := []string{"Custom", projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"] + ":base", "loc." + projectName + ".com:base"}
+	availableVersions := []string{"Custom", projectName + projectConf["nginx/default_host_first_level"] + ":base", "loc." + projectName + ".com:base"}
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)

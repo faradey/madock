@@ -1,8 +1,8 @@
-FROM {{{DB_REPOSITORY}}}:{{{DB_VERSION}}}
+FROM {{{db/repository}}}:{{{db/version}}}
 
-ENV MYSQL_ROOT_PASSWORD={{{DB_ROOT_PASSWORD}}}
-ENV MYSQL_DATABASE={{{DB_DATABASE}}}
-ENV MYSQL_USER={{{DB_USER}}}
-ENV MYSQL_PASSWORD={{{DB_PASSWORD}}}
+ENV MYSQL_ROOT_PASSWORD={{{db/root_password}}}
+ENV MYSQL_DATABASE={{{db/database}}}
+ENV MYSQL_USER={{{db/user}}}
+ENV MYSQL_PASSWORD={{{db/password}}}
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
-RUN usermod -u {{{UID}}} -o mysql && groupmod -g {{{GUID}}} -o mysql
+RUN usermod -u {{{os/user/uid}}} -o mysql && groupmod -g {{{os/user/guid}}} -o mysql

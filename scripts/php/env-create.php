@@ -1,6 +1,6 @@
 <?php
 $projectConfig = json_decode($argv[1], true);
-$siteRootPath = $projectConfig["WORKDIR"];
+$siteRootPath = $projectConfig["workdir"];
 $envPath = $siteRootPath."/app/etc/env.php";
 $defaultHost = $argv[2]??null;
 $env = [];
@@ -15,10 +15,10 @@ function getEnvPhp($envPath) {
 }
 
 try {
-    $conn = new PDO("mysql:host=db;dbname=".$projectConfig["DB_DATABASE"], $projectConfig["DB_USER"], $projectConfig["DB_PASSWORD"]);
+    $conn = new PDO("mysql:host=db;dbname=".$projectConfig["db/database"], $projectConfig["db/user"], $projectConfig["db/password"]);
     // set the PDO error mode to exception
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["DB_DATABASE"]."' AND table_name LIKE '%core_config_data' LIMIT 1;");
+    $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["db/database"]."' AND table_name LIKE '%core_config_data' LIMIT 1;");
     $stmt->execute();
 
     // set the resulting array to associative
@@ -32,7 +32,7 @@ try {
         }
         $prefixes[$prefix] += 1;
 
-        $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["DB_DATABASE"]."' AND table_name LIKE '%catalog_category_product' LIMIT 1;");
+        $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["db/database"]."' AND table_name LIKE '%catalog_category_product' LIMIT 1;");
         $stmt->execute();
         $data = $stmt->fetchAll();
         if(!empty($data)){
@@ -43,7 +43,7 @@ try {
             $prefixes[$prefix] += 1;
         }
 
-        $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["DB_DATABASE"]."' AND table_name LIKE '%admin_user' LIMIT 1;");
+        $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["db/database"]."' AND table_name LIKE '%admin_user' LIMIT 1;");
         $stmt->execute();
         $data = $stmt->fetchAll();
         if(!empty($data)){
@@ -54,7 +54,7 @@ try {
             $prefixes[$prefix] += 1;
         }
 
-        $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["DB_DATABASE"]."' AND table_name LIKE '%cron_schedule' LIMIT 1;");
+        $stmt = $conn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = '".$projectConfig["db/database"]."' AND table_name LIKE '%cron_schedule' LIMIT 1;");
         $stmt->execute();
         $data = $stmt->fetchAll();
         if(!empty($data)){
@@ -117,9 +117,9 @@ try {
                 if(!empty($v['value'])){
                     $tempPath = implode("_", array_slice(explode("/", $v['path']), 0, 2));
                     $urlType = array_slice(explode("/", $v['path']), 2, 1);
-                    $val = trim(preg_replace("/^(.+?)\.[^\.]+?(|\/.+)$/i", "$1".$projectConfig["DEFAULT_HOST_FIRST_LEVEL"]."$2", $v['value']), "/")."/";
+                    $val = trim(preg_replace("/^(.+?)\.[^\.]+?(|\/.+)$/i", "$1".$projectConfig["nginx/default_host_first_level"]."$2", $v['value']), "/")."/";
                     if(in_array($val, $domainValues["hosts"])) {
-                        $val = trim($v['value'], "/").$projectConfig["DEFAULT_HOST_FIRST_LEVEL"]."/";
+                        $val = trim($v['value'], "/").$projectConfig["nginx/default_host_first_level"]."/";
                     } else {
                         $domainValues["hosts"][] = $val;
                     }
@@ -157,7 +157,7 @@ try {
 
         $env["system"]["default"]["web"]["cookie"]["cookie_domain"] = "";
         $env["system"]["default"]["web"]["secure"]["offloader_header"] = "X-Forwarded-Proto";
-        $env["system"]["default"]["catalog"]["search"]["engine"] = "elasticsearch".$projectConfig["ELASTICSEARCH_VERSION"][0];
+        $env["system"]["default"]["catalog"]["search"]["engine"] = "elasticsearch".$projectConfig["search/elasticsearch/version"][0];
         $env["system"]["default"]["catalog"]["search"]["elasticsearch7_server_hostname"] = "elasticsearch";
         $env["system"]["default"]["catalog"]["search"]["elasticsearch7_server_port"] = "9200";
         $env["system"]["default"]["admin"]["security"]["password_lifetime"] = 0;
@@ -183,16 +183,16 @@ try {
 
         $env["downloadable_domains"] = array_unique($env["downloadable_domains"]);
         $env["db"]["connection"]["default"]["host"] = "db";
-        $env["db"]["connection"]["default"]["dbname"] = $projectConfig["DB_DATABASE"];
-        $env["db"]["connection"]["default"]["username"] = $projectConfig["DB_USER"];
-        $env["db"]["connection"]["default"]["password"] = $projectConfig["DB_PASSWORD"];
+        $env["db"]["connection"]["default"]["dbname"] = $projectConfig["db/database"];
+        $env["db"]["connection"]["default"]["username"] = $projectConfig["db/user"];
+        $env["db"]["connection"]["default"]["password"] = $projectConfig["db/password"];
         $env["db"]["connection"]["default"]["model"] = "mysql4";
         $env["db"]["connection"]["default"]["engine"] = "innodb";
         $env["db"]["connection"]["default"]["initStatements"] = "SET NAMES utf8;";
         $env["db"]["connection"]["default"]["active"] = 1;
         $env["db"]["table_prefix"] = $tablePrefix;
 
-        if($projectConfig["REDIS_ENABLED"] == "true"){
+        if($projectConfig["redis/enabled"] == "true"){
             $env["cache"]["frontend"]["default"]["backend"] = "Cm_Cache_Backend_Redis";
             $env["cache"]["frontend"]["default"]["backend_options"]["server"] = "redisdb";
             $env["cache"]["frontend"]["default"]["backend_options"]["port"] = "6379";
@@ -217,7 +217,7 @@ try {
             $env["cache"]["frontend"]["page_cache"]["backend_options"]["connect_retries"] = 1;
         }
 
-        if($projectConfig["RABBITMQ_ENABLED"] == "true"){
+        if($projectConfig["rabbitmq/enabled"] == "true"){
             $env["queue"]["amqp"]["host"] = "rabbitmq";
             $env["queue"]["amqp"]["port"] = "5672";
             $env["queue"]["amqp"]["user"] = "guest";

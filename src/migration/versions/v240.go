@@ -16,12 +16,6 @@ import (
 func V240() {
 	execPath := paths.GetExecDirPath() + "/projects/"
 	execProjectsDirs := paths.GetDirs(execPath)
-	if paths.IsFileExist(execPath + "config.xml") {
-		err := os.Rename(execPath+"config.xml", execPath+"config.xml.old")
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
 
 	mapping, err := config2.GetXmlMap(paths.GetExecDirPath() + "/src/migration/versions/v240/migration_v240_config_map.xml")
 
@@ -31,7 +25,7 @@ func V240() {
 	mappingData := config2.ComposeConfigMap(mapping["default"].(map[string]interface{}))
 
 	if paths.IsFileExist(execPath + "config.txt") {
-		configData := config2.GetProjectsGeneralConfig()
+		configData := configs.GetProjectsGeneralConfig()
 
 		resultData := make(map[string]interface{})
 		for key, value := range mappingData {
@@ -98,6 +92,8 @@ func V240() {
 	}
 
 	fixSrcFiles(mappingData)
+	fixDockerFiles(mappingData)
+	fixScriptsFiles(mappingData)
 
 	log.Fatalln("Migration v240 is not implemented yet")
 }
@@ -106,20 +102,24 @@ func fixExtendedFiles(mapNames map[string]string) {
 	projectsPath := paths.GetExecDirPath() + "/projects"
 	dirs := paths.GetDirs(projectsPath)
 	for _, val := range dirs {
-		if val == "Soccertutor" {
-			dockerFiles := paths.GetFilesRecursively(projectsPath + "/" + val + "/docker")
-			if len(dockerFiles) > 0 {
-				for _, pth := range dockerFiles {
-					b, err := os.ReadFile(pth)
-					if err == nil {
-						str := string(b)
-						for to, from := range mapNames {
-							str = strings.Replace(str, "{{{"+from+"}}}", "{{{"+to+"}}}", -1)
-						}
-						err = os.WriteFile(pth, []byte(str), 0755)
-						if err != nil {
-							log.Fatalln(err)
-						}
+		dockerFiles := paths.GetFilesRecursively(projectsPath + "/" + val + "/docker")
+		if len(dockerFiles) > 0 {
+			for _, pth := range dockerFiles {
+				b, err := os.ReadFile(pth)
+				if err == nil {
+					str := string(b)
+					for to, from := range mapNames {
+						str = strings.Replace(str, "\""+from+"\"", "\""+to+"\"", -1)
+						str = strings.Replace(str, "{{{"+from+"}}}", "{{{"+to+"}}}", -1)
+					}
+					str = strings.Replace(str, " ubuntu:{{{", " {{{os/name}}}:{{{", -1)
+					str = strings.Replace(str, "{{{NGINX_PROJECT_PORT+", "{{{nginx/port/project+", -1)
+					str = strings.Replace(str, "{{{HOSTS}}}", "{{{hosts}}}", -1)
+					str = strings.Replace(str, "\"HOSTS\"", "\"hosts\"", -1)
+
+					err = os.WriteFile(pth, []byte(str), 0755)
+					if err != nil {
+						log.Fatalln(err)
 					}
 				}
 			}
@@ -138,12 +138,66 @@ func fixSrcFiles(mapNames map[string]string) {
 					str := string(b)
 					for to, from := range mapNames {
 						str = strings.Replace(str, "\""+from+"\"", "\""+to+"\"", -1)
+						str = strings.Replace(str, "{{{"+from+"}}}", "{{{"+to+"}}}", -1)
 					}
+					str = strings.Replace(str, "{{{NGINX_PROJECT_PORT+", "{{{nginx/port/project+", -1)
+					str = strings.Replace(str, "{{{NGINX_PORT+", "{{{nginx/port/default+", -1)
+					str = strings.Replace(str, "{{{HOSTS}}}", "{{{hosts}}}", -1)
+					str = strings.Replace(str, "\"HOSTS\"", "\"hosts\"", -1)
 
 					err = os.WriteFile(pth, []byte(str), 0755)
 					if err != nil {
 						log.Fatalln(err)
 					}
+				}
+			}
+		}
+	}
+}
+
+func fixScriptsFiles(mapNames map[string]string) {
+	projectsPath := paths.GetExecDirPath() + "/scripts"
+	dockerFiles := paths.GetFilesRecursively(projectsPath)
+	if len(dockerFiles) > 0 {
+		for _, pth := range dockerFiles {
+			b, err := os.ReadFile(pth)
+			if err == nil {
+				str := string(b)
+				for to, from := range mapNames {
+					str = strings.Replace(str, "\""+from+"\"", "\""+to+"\"", -1)
+					str = strings.Replace(str, "{{{"+from+"}}}", "{{{"+to+"}}}", -1)
+				}
+				str = strings.Replace(str, "{{{HOSTS}}}", "{{{hosts}}}", -1)
+				str = strings.Replace(str, "\"HOSTS\"", "\"hosts\"", -1)
+
+				err = os.WriteFile(pth, []byte(str), 0755)
+				if err != nil {
+					log.Fatalln(err)
+				}
+			}
+		}
+	}
+}
+
+func fixDockerFiles(mapNames map[string]string) {
+	projectsPath := paths.GetExecDirPath() + "/docker"
+	dockerFiles := paths.GetFilesRecursively(projectsPath)
+	if len(dockerFiles) > 0 {
+		for _, pth := range dockerFiles {
+			b, err := os.ReadFile(pth)
+			if err == nil {
+				str := string(b)
+				for to, from := range mapNames {
+					str = strings.Replace(str, "{{{"+from+"}}}", "{{{"+to+"}}}", -1)
+				}
+				str = strings.Replace(str, " ubuntu:{{{", " {{{os/name}}}:{{{", -1)
+				str = strings.Replace(str, "{{{NGINX_PROJECT_PORT+", "{{{nginx/port/project+", -1)
+				str = strings.Replace(str, "{{{HOSTS}}}", "{{{hosts}}}", -1)
+				str = strings.Replace(str, "\"HOSTS\"", "\"hosts\"", -1)
+
+				err = os.WriteFile(pth, []byte(str), 0755)
+				if err != nil {
+					log.Fatalln(err)
 				}
 			}
 		}

@@ -20,6 +20,7 @@ func ParseFile(path string) (conf map[string]string) {
 	for key, value := range mappingData {
 		conf[key] = value
 	}
+
 	return conf
 }
 

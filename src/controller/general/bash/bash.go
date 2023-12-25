@@ -22,7 +22,7 @@ func Bash() {
 	service := "php"
 	user := "root"
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["PLATFORM"] == "pwa" {
+	if projectConf["platform"] == "pwa" {
 		service = "nodejs"
 	}
 

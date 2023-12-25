@@ -26,7 +26,7 @@ type ArgsExportStruct struct {
 func Export() {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["PLATFORM"] != "pwa" {
+	if projectConf["platform"] != "pwa" {
 		args := getExportArgs()
 
 		name := strings.TrimSpace(args.Name)
@@ -37,7 +37,7 @@ func Export() {
 		ignoreTablesStr := ""
 		ignoreTables := args.IgnoreTable
 		if len(ignoreTables) > 0 {
-			ignoreTablesStr = " --ignore-table=" + projectConf["DB_DATABASE"] + "." + strings.Join(ignoreTables, " --ignore-table="+projectConf["DB_DATABASE"]+".")
+			ignoreTablesStr = " --ignore-table=" + projectConf["db/database"] + "." + strings.Join(ignoreTables, " --ignore-table="+projectConf["db/database"]+".")
 		}
 
 		service := "db"
@@ -60,7 +60,7 @@ func Export() {
 		defer selectedFile.Close()
 		writer := gzip.NewWriter(selectedFile)
 		defer writer.Close()
-		cmd := exec.Command("docker", "exec", "-i", "-u", user, containerName, "bash", "-c", "mysqldump -u root -p"+projectConf["DB_ROOT_PASSWORD"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["DB_DATABASE"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
+		cmd := exec.Command("docker", "exec", "-i", "-u", user, containerName, "bash", "-c", "mysqldump -u root -p"+projectConf["db/root_password"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["db/database"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = writer
@@ -70,7 +70,7 @@ func Export() {
 		}
 		fmt.Println("Database export completed successfully")
 	} else {
-		fmt.Println("This command is not supported for " + projectConf["PLATFORM"])
+		fmt.Println("This command is not supported for " + projectConf["platform"])
 	}
 }
 

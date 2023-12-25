@@ -33,7 +33,7 @@ func Execute(withChown bool) {
 	} else if withChown {
 		projectConf := configs.GetCurrentProjectConfig()
 		usr, _ := user.Current()
-		cmd = exec.Command("docker", "exec", "-it", "-u", "root", docker.GetContainerName(projectConf, projectName, "nodejs"), "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["WORKDIR"])
+		cmd = exec.Command("docker", "exec", "-it", "-u", "root", docker.GetContainerName(projectConf, projectName, "nodejs"), "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["workdir"])
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

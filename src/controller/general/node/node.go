@@ -14,11 +14,11 @@ func Execute() {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 	service := "php"
-	if projectConf["PLATFORM"] == "pwa" {
+	if projectConf["platform"] == "pwa" {
 		service = "nodejs"
 	}
 
-	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", projectConf["WORKDIR"])
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", projectConf["workdir"])
 
 	cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash", "-c", "cd "+workdir+" && "+flag)
 	cmd.Stdin = os.Stdin

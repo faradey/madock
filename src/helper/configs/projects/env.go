@@ -12,29 +12,29 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 	config.EnvFile = envFile
 
-	config.Set("PATH", paths.GetRunDirPath())
-	config.Set("PLATFORM", defVersions.Platform)
-	if projectConf["PLATFORM"] == "magento2" {
+	config.Set("path", paths.GetRunDirPath())
+	config.Set("platform", defVersions.Platform)
+	if projectConf["platform"] == "magento2" {
 		Magento2(config, defVersions, generalConf, projectConf)
-	} else if projectConf["PLATFORM"] == "pwa" {
+	} else if projectConf["platform"] == "pwa" {
 		PWA(config, defVersions, generalConf, projectConf)
-	} else if projectConf["PLATFORM"] == "shopify" {
+	} else if projectConf["platform"] == "shopify" {
 		Shopify(config, defVersions, generalConf, projectConf)
-	} else if projectConf["PLATFORM"] == "custom" {
+	} else if projectConf["platform"] == "custom" {
 		Custom(config, defVersions, generalConf, projectConf)
 	}
 
-	config.Set("CRON_ENABLED", configs2.GetOption("CRON_ENABLED", generalConf, projectConf))
+	config.Set("cron/enabled", configs2.GetOption("cron/enabled", generalConf, projectConf))
 
-	config.Set("HOSTS", defVersions.Hosts)
+	config.Set("hosts", defVersions.Hosts)
 
-	config.Set("SSH_AUTH_TYPE", configs2.GetOption("SSH_AUTH_TYPE", generalConf, projectConf))
-	config.Set("SSH_HOST", configs2.GetOption("SSH_HOST", generalConf, projectConf))
-	config.Set("SSH_PORT", configs2.GetOption("SSH_PORT", generalConf, projectConf))
-	config.Set("SSH_USERNAME", configs2.GetOption("SSH_USERNAME", generalConf, projectConf))
-	config.Set("SSH_KEY_PATH", configs2.GetOption("SSH_KEY_PATH", generalConf, projectConf))
-	config.Set("SSH_PASSWORD", configs2.GetOption("SSH_PASSWORD", generalConf, projectConf))
-	config.Set("SSH_SITE_ROOT_PATH", configs2.GetOption("SSH_SITE_ROOT_PATH", generalConf, projectConf))
+	config.Set("ssh/auth_type", configs2.GetOption("ssh/auth_type", generalConf, projectConf))
+	config.Set("ssh/host", configs2.GetOption("ssh/host", generalConf, projectConf))
+	config.Set("ssh/port", configs2.GetOption("ssh/port", generalConf, projectConf))
+	config.Set("ssh/username", configs2.GetOption("ssh/username", generalConf, projectConf))
+	config.Set("ssh/key_path", configs2.GetOption("ssh/key_path", generalConf, projectConf))
+	config.Set("ssh/password", configs2.GetOption("ssh/password", generalConf, projectConf))
+	config.Set("ssh/site_root_path", configs2.GetOption("ssh/site_root_path", generalConf, projectConf))
 
 	config.Save()
 }

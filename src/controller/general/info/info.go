@@ -20,13 +20,13 @@ func Info() {
 
 	service := "php"
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["PLATFORM"] == "pwa" {
+	if projectConf["platform"] == "pwa" {
 		service = "nodejs"
 	}
 
-	if projectConf["PLATFORM"] == "magento2" {
+	if projectConf["platform"] == "magento2" {
 		projectName := configs.GetProjectName()
-		cmd := exec.Command("docker", "exec", "-it", docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/magento-info.php", projectConf["WORKDIR"])
+		cmd := exec.Command("docker", "exec", "-it", docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/magento-info.php", projectConf["workdir"])
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -35,7 +35,7 @@ func Info() {
 			log.Fatal(err)
 		}
 	} else {
-		fmtc.Warning("This command is not supported for " + projectConf["PLATFORM"])
+		fmtc.Warning("This command is not supported for " + projectConf["platform"])
 	}
 }
 

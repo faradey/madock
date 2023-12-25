@@ -30,9 +30,9 @@ func Execute() {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 
-	if projectConf["PLATFORM"] == "magento2" {
+	if projectConf["platform"] == "magento2" {
 		commands := []string{"rm -f pub/static/deployed_version.txt", "rm -Rf pub/static/frontend", "rm -Rf pub/static/adminhtml", "rm -Rf var/view_preprocessed/pub", "rm -Rf generated/code"}
-		cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && "+"php bin/magento c:f")
+		cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+"php bin/magento c:f")
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -47,7 +47,7 @@ func Execute() {
 			command := command
 			go func() {
 				defer waitGroup.Done()
-				cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && "+command)
+				cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+command)
 				cmd.Stdin = os.Stdin
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
@@ -60,7 +60,7 @@ func Execute() {
 		waitGroup.Wait()
 		fmt.Println("Cache cleared successfully")
 	} else {
-		fmtc.Warning("This command is not supported for " + projectConf["PLATFORM"])
+		fmtc.Warning("This command is not supported for " + projectConf["platform"])
 	}
 }
 

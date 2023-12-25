@@ -33,7 +33,7 @@ func Execute(withChown bool, projectConf map[string]string) {
 	} else {
 		if withChown {
 			usr, _ := user.Current()
-			cmd = exec.Command("docker", "exec", "-it", "-u", "root", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
+			cmd = exec.Command("docker", "exec", "-it", "-u", "root", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["workdir"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -43,7 +43,7 @@ func Execute(withChown bool, projectConf map[string]string) {
 			}
 		}
 
-		if val, ok := projectConf["CRON_ENABLED"]; ok && val == "true" {
+		if val, ok := projectConf["cron/enabled"]; ok && val == "true" {
 			docker.CronExecute(true, false)
 		} else {
 			docker.CronExecute(false, false)

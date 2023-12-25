@@ -15,8 +15,8 @@ func Execute() {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 
-	if projectConf["PLATFORM"] == "magento2" {
-		cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && /var/www/n98magerun/n98-magerun2.phar "+flag)
+	if projectConf["platform"] == "magento2" {
+		cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && /var/www/n98magerun/n98-magerun2.phar "+flag)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -25,6 +25,6 @@ func Execute() {
 			log.Fatal(err)
 		}
 	} else {
-		fmtc.Warning("This command is not supported for " + projectConf["PLATFORM"])
+		fmtc.Warning("This command is not supported for " + projectConf["platform"])
 	}
 }

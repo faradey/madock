@@ -16,7 +16,7 @@ func Execute() {
 	sort.Strings(keys)
 
 	for _, key := range keys {
-		serviceName := strings.SplitN(key, "_ENABLED", 2)
+		serviceName := strings.SplitN(key, "/enabled", 2)
 		if serviceName[0] != key {
 			fmtc.Title(strings.ToLower(serviceName[0]))
 			if configData[key] == "true" {

@@ -9,40 +9,43 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["PLATFORM"] == "magento2" {
+	if projectConf["platform"] == "magento2" {
 		toolsDefVersions := magento2.GetVersions("")
 		Magento(configs.GetProjectName(), toolsDefVersions.Magento)
 	} else {
-		fmtc.Warning("This command is not supported for " + projectConf["PLATFORM"])
+		fmtc.Warning("This command is not supported for " + projectConf["platform"])
 	}
 }
 
 func Magento(projectName, magentoVer string) {
 	projectConf := configs.GetCurrentProjectConfig()
-	host := strings.Split(strings.Split(projectConf["HOSTS"], " ")[0], ":")[0]
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
 	installCommand := "bin/magento setup:install " +
 		"--base-url=https://" + host + " " +
 		"--db-host=db " +
 		"--db-name=magento " +
 		"--db-user=magento " +
 		"--db-password=magento " +
-		"--admin-firstname=" + projectConf["MAGENTO_ADMIN_FIRST_NAME"] + " " +
-		"--admin-lastname=" + projectConf["MAGENTO_ADMIN_LAST_NAME"] + " " +
-		"--admin-email=" + projectConf["MAGENTO_ADMIN_EMAIL"] + " " +
-		"--admin-user=" + projectConf["MAGENTO_ADMIN_USER"] + " " +
-		"--admin-password=" + projectConf["MAGENTO_ADMIN_PASSWORD"] + " " +
-		"--backend-frontname=" + projectConf["MAGENTO_ADMIN_FRONTNAME"] + " " +
-		"--language=" + projectConf["MAGENTO_LOCALE"] + " " +
-		"--currency=" + projectConf["MAGENTO_CURRENCY"] + " " +
-		"--timezone=" + projectConf["MAGENTO_TIMEZONE"] + " " +
+		"--admin-firstname=" + projectConf["magento/admin_first_name"] + " " +
+		"--admin-lastname=" + projectConf["magento/admin_last_name"] + " " +
+		"--admin-email=" + projectConf["magento/admin_email"] + " " +
+		"--admin-user=" + projectConf["magento/admin_user"] + " " +
+		"--admin-password=" + projectConf["magento/admin_password"] + " " +
+		"--backend-frontname=" + projectConf["magento/admin_frontname"] + " " +
+		"--language=" + projectConf["magento/locale"] + " " +
+		"--currency=" + projectConf["magento/currency"] + " " +
+		"--timezone=" + projectConf["magento/timezone"] + " " +
 		"--use-rewrites=1 "
 	if magentoVer >= "2.3.7" {
-		searchEngine := projectConf["SEARCH_ENGINE"]
+		searchEngine := projectConf["search/engine"]
 		if searchEngine == "Elasticsearch" {
 			installCommand += "--search-engine=elasticsearch7 " +
 				"--elasticsearch-host=elasticsearch " +
@@ -72,7 +75,7 @@ func Magento(projectName, magentoVer string) {
 	}
 	installCommand += " && bin/magento s:up && bin/magento c:c && bin/magento i:rei | bin/magento c:f"
 	fmt.Println(installCommand)
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && "+installCommand)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -82,7 +85,7 @@ func Magento(projectName, magentoVer string) {
 	}
 	fmt.Println("")
 	fmtc.SuccessLn("[SUCCESS]: Magento installation complete.")
-	fmtc.SuccessLn("[SUCCESS]: Magento Admin URI: /" + projectConf["MAGENTO_ADMIN_FRONTNAME"])
-	fmtc.SuccessLn("[SUCCESS]: Magento Admin User: " + projectConf["MAGENTO_ADMIN_USER"])
-	fmtc.SuccessLn("[SUCCESS]: Magento Admin Password: " + projectConf["MAGENTO_ADMIN_PASSWORD"])
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin URI: /" + projectConf["magento/admin_frontname"])
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin User: " + projectConf["magento/admin_user"])
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin Password: " + projectConf["magento/admin_password"])
 }

@@ -102,11 +102,11 @@ func UpNginxWithBuild() {
 			doNeedRunAruntime = false
 		}
 	}
-	if (err != nil || dirHash != projectConf["CACHE_HASH"] || doNeedRunAruntime) && projectConf["PROXY_ENABLED"] == "true" {
+	if (err != nil || dirHash != projectConf["cache_hash"] || doNeedRunAruntime) && projectConf["proxy/enabled"] == "true" {
 		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 		nginx.GenerateSslCert(ctxPath, false)
 		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
-		configs2.SetParam(envFile, "CACHE_HASH", dirHash)
+		configs2.SetParam(envFile, "cache_hash", dirHash)
 		dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 		cmd.Stdout = os.Stdout
@@ -206,7 +206,7 @@ func UpProjectWithBuild(withChown bool) {
 
 	projectConf := configs2.GetCurrentProjectConfig()
 
-	if val, ok := projectConf["CRON_ENABLED"]; ok && val == "true" {
+	if val, ok := projectConf["cron/enabled"]; ok && val == "true" {
 		CronExecute(true, false)
 	} else {
 		CronExecute(false, false)
@@ -214,7 +214,7 @@ func UpProjectWithBuild(withChown bool) {
 
 	if withChown {
 		usr, _ := user.Current()
-		cmd := exec.Command("docker", "exec", "-it", "-u", "root", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["WORKDIR"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
+		cmd := exec.Command("docker", "exec", "-it", "-u", "root", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["workdir"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -268,14 +268,14 @@ func StopNginx(force bool) {
 }
 
 func GetContainerName(projectConf map[string]string, projectName, service string) string {
-	return strings.ToLower(projectConf["CONTAINER_NAME_PREFIX"]) + strings.ToLower(projectName) + "-" + service + "-1"
+	return strings.ToLower(projectConf["container_name_prefix"]) + strings.ToLower(projectName) + "-" + service + "-1"
 }
 
 func CronExecute(flag, manual bool) {
 	projectName := configs2.GetProjectName()
 	projectConf := configs2.GetCurrentProjectConfig()
 	service := "php"
-	if projectConf["PLATFORM"] == "pwa" {
+	if projectConf["platform"] == "pwa" {
 		service = "nodejs"
 	}
 
@@ -298,8 +298,8 @@ func CronExecute(flag, manual bool) {
 			}
 		}
 
-		if projectConf["PLATFORM"] == "magento2" {
-			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && php bin/magento cron:remove && php bin/magento cron:install && php bin/magento cron:run")
+		if projectConf["platform"] == "magento2" {
+			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove && php bin/magento cron:install && php bin/magento cron:run")
 			cmdSub.Stdout = os.Stdout
 			cmdSub.Stderr = os.Stderr
 			err = cmdSub.Run()
@@ -313,8 +313,8 @@ func CronExecute(flag, manual bool) {
 		cmd.Stderr = bErr
 		err := cmd.Run()
 		if err == nil {
-			if projectConf["PLATFORM"] == "magento2" {
-				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["WORKDIR"]+" && php bin/magento cron:remove")
+			if projectConf["platform"] == "magento2" {
+				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove")
 				cmdSub.Stdout = bOut
 				cmdSub.Stderr = bErr
 				err := cmdSub.Run()

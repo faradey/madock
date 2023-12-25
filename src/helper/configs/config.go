@@ -10,6 +10,7 @@ import (
 	"os/user"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -47,7 +48,22 @@ func SaveInFile(file string, data map[string]string) {
 }
 
 func (t *ConfigLines) Set(name, value string) {
-	t.Lines[name] = value
+	if name == "hosts" {
+		hosts := strings.Split(value, " ")
+		for key, host := range hosts {
+			splitHost := strings.Split(host, ":")
+			runCode := "base"
+			if key > 0 {
+				runCode += strconv.Itoa(key + 1)
+			}
+			if len(splitHost) > 1 {
+				runCode = splitHost[1]
+			}
+			t.Lines["nginx/hosts/"+runCode+"/name"] = splitHost[0]
+		}
+	} else {
+		t.Lines[name] = value
+	}
 }
 
 func IsHasConfig(projectName string) bool {

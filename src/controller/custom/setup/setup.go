@@ -47,15 +47,20 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 }
 
 func hostsCustom(projectName string, defVersion *string, projectConf map[string]string) {
-	host := strings.ToLower(projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"])
-	if val, ok := projectConf["HOSTS"]; ok && val != "" {
-		host = val
+	host := strings.ToLower(projectName + projectConf["nginx/default_host_first_level"])
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		var hostItems []string
+		for _, hostItem := range hosts {
+			hostItems = append(hostItems, hostItem["name"])
+		}
+		host = strings.Join(hostItems, " ")
 	}
 	fmtc.TitleLn("Hosts")
 	fmt.Println("Input format: a.example.com b.example.com")
 	fmt.Println("Recommended host: " + host)
 	*defVersion = host
-	availableVersions := []string{"Custom", projectName + projectConf["DEFAULT_HOST_FIRST_LEVEL"], "loc." + projectName + ".com"}
+	availableVersions := []string{"Custom", projectName + projectConf["nginx/default_host_first_level"], "loc." + projectName + ".com"}
 	tools.PrepareVersions(availableVersions)
 	tools.Invitation(defVersion)
 	tools.WaiterAndProceed(defVersion, availableVersions)

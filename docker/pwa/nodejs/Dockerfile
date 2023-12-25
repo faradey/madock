@@ -1,15 +1,15 @@
-FROM node:{{{NODEJS_VERSION}}}
+FROM node:{{{nodejs/version}}}
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
-RUN usermod -u {{{UID}}} -o node && groupmod -g {{{GUID}}} -o node
-RUN usermod -u {{{UID}}} -o www-data && groupmod -g {{{GUID}}} -o www-data
+RUN usermod -u {{{os/user/uid}}} -o node && groupmod -g {{{os/user/guid}}} -o node
+RUN usermod -u {{{os/user/uid}}} -o www-data && groupmod -g {{{os/user/guid}}} -o www-data
 
-RUN mkdir /var/yarn && chown {{{UID}}}:{{{GUID}}} /var/yarn
+RUN mkdir /var/yarn && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/yarn
 WORKDIR /var/yarn
 
-RUN yarn set version {{{YARN_VERSION}}}
+RUN yarn set version {{{nodejs/yarn/version}}}
 
-WORKDIR {{{WORKDIR}}}
+WORKDIR {{{workdir}}}
 
-RUN chown {{{UID}}}:{{{GUID}}} /var/www
+RUN chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www

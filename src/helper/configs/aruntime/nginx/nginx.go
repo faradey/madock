@@ -97,39 +97,37 @@ func makeProxy() {
 					log.Fatal(err)
 				}
 				portRanged := (port - 1) * 20
-				strReplaced := strings.Replace(str, "{{{NGINX_PORT}}}", strconv.Itoa(17000+portRanged), -1)
-				strReplaced = strings.Replace(strReplaced, "{{{NGINX_UNSECURE_PORT}}}", generalConfig["NGINX_UNSECURE_PORT"], -1)
-				strReplaced = strings.Replace(strReplaced, "{{{NGINX_SECURE_PORT}}}", generalConfig["NGINX_SECURE_PORT"], -1)
+				strReplaced := strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged), -1)
+				strReplaced = strings.Replace(strReplaced, "{{{nginx/port/unsecure}}}", generalConfig["nginx/port/unsecure"], -1)
+				strReplaced = strings.Replace(strReplaced, "{{{nginx/port/secure}}}", generalConfig["nginx/port/secure"], -1)
 				for i := 1; i < 20; i++ {
-					strReplaced = strings.Replace(strReplaced, "{{{NGINX_PORT+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
+					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/default+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 				}
 				strReplaced = configs2.ReplaceConfigValue(strReplaced)
 				hostName := "loc." + name + ".com"
 				projectConf := configs2.GetProjectConfig(name)
-				if val, ok := projectConf["HOSTS"]; ok {
+				hosts := configs2.GetHosts(projectConf)
+				if len(hosts) > 0 {
 					var onlyHosts []string
-					hosts := strings.Split(val, " ")
-					if len(hosts) > 0 {
-						domain := ""
-						for _, hostAndStore := range hosts {
-							domain = strings.Split(hostAndStore, ":")[0]
-							if finder.IsContain(onlyHostsGlobal, domain) {
-								log.Fatalln("Error. Duplicate domain " + domain)
-							}
-							onlyHosts = append(onlyHosts, domain)
-							onlyHostsGlobal = append(onlyHostsGlobal, domain)
+					domain := ""
+					for _, hostAndStore := range hosts {
+						domain = hostAndStore["name"]
+						if finder.IsContain(onlyHostsGlobal, domain) {
+							log.Fatalln("Error. Duplicate domain " + domain)
 						}
-						hostName = strings.Join(onlyHosts, "\n")
+						onlyHosts = append(onlyHosts, domain)
+						onlyHostsGlobal = append(onlyHostsGlobal, domain)
 					}
+					hostName = strings.Join(onlyHosts, "\n")
 				}
 
-				strReplaced = strings.Replace(strReplaced, "{{{HOST_NAMES}}}", hostName, -1)
+				strReplaced = strings.Replace(strReplaced, "{{{nginx/host_names}}}", hostName, -1)
 				allFileData += "\n" + strReplaced
 			}
 		}
 	}
 
-	allFileData += "\nserver {\n    listen       " + generalConfig["NGINX_UNSECURE_PORT"] + "  default_server;\n listen " + generalConfig["NGINX_SECURE_PORT"] + " default_server ssl;\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
+	allFileData += "\nserver {\n    listen       " + generalConfig["nginx/port/unsecure"] + "  default_server;\n listen " + generalConfig["nginx/port/secure"] + " default_server ssl;\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
 	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
 	err := os.WriteFile(nginxFile, []byte(allFileData), 0755)
@@ -201,7 +199,7 @@ func getMaxPort(conf map[string]string) int {
 
 func GenerateSslCert(ctxPath string, force bool) {
 	generalConfig := configs2.GetGeneralConfig()
-	if val, ok := generalConfig["SSL"]; force || (ok && val == "true") {
+	if val, ok := generalConfig["nginx/ssl/enabled"]; force || (ok && val == "true") {
 		projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
 		var commands []string
 		i := 0
@@ -211,20 +209,13 @@ func GenerateSslCert(ctxPath string, force bool) {
 			}
 
 			projectConf := configs2.GetProjectConfig(name)
-			val := ""
-			if val, ok = projectConf["HOSTS"]; !ok {
-				continue
-			}
-
-			var onlyHost string
-			hosts := strings.Split(val, " ")
+			hosts := configs2.GetHosts(projectConf)
 			if len(hosts) == 0 {
 				continue
 			}
 
 			for _, hostAndStore := range hosts {
-				onlyHost = strings.Split(hostAndStore, ":")[0]
-				commands = append(commands, "DNS."+strconv.Itoa(i+2)+" = "+onlyHost)
+				commands = append(commands, "DNS."+strconv.Itoa(i+2)+" = "+hostAndStore["name"])
 				i++
 			}
 		}

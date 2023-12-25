@@ -20,7 +20,7 @@ func Execute() {
 
 	service := "php"
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["PLATFORM"] == "pwa" {
+	if projectConf["platform"] == "pwa" {
 		service = "nodejs"
 	}
 

@@ -24,7 +24,7 @@ func Execute() {
 		for _, name := range args.Args {
 			name = strings.ToLower(name)
 			if service.IsService(name) {
-				serviceName := strings.ToUpper(name) + "_ENABLED"
+				serviceName := strings.ToLower(name) + "/enabled"
 				projectName := configs.GetProjectName()
 				envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 				configs.SetParam(envFile, serviceName, "true")

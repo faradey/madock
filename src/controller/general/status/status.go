@@ -75,13 +75,13 @@ func Execute() {
 	fmtc.TitleLn("Tools:")
 	projectConf := configs.GetCurrentProjectConfig()
 
-	if strings.ToLower(projectConf["CRON_ENABLED"]) == "true" {
+	if strings.ToLower(projectConf["cron/enabled"]) == "true" {
 		fmtc.SuccessLn(" Cron is running")
 	} else {
 		fmtc.WarningLn(" Cron is not running")
 	}
 
-	if strings.ToLower(projectConf["XDEBUG_ENABLED"]) == "true" {
+	if strings.ToLower(projectConf["php/xdebug/enabled"]) == "true" {
 		fmtc.SuccessLn(" Debugger is enabled")
 	} else {
 		fmtc.WarningLn(" Debugger is disabled")

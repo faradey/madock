@@ -24,13 +24,13 @@ func Execute() {
 	if !configs2.IsHasNotConfig() {
 		projectConf := configs2.GetCurrentProjectConfig()
 		fmtc.SuccessLn("Start containers in detached mode")
-		if projectConf["PLATFORM"] == "magento2" {
+		if projectConf["platform"] == "magento2" {
 			startMagento2.Execute(args.WithChown, projectConf)
-		} else if projectConf["PLATFORM"] == "pwa" {
+		} else if projectConf["platform"] == "pwa" {
 			startPwa.Execute(args.WithChown)
-		} else if projectConf["PLATFORM"] == "shopify" {
+		} else if projectConf["platform"] == "shopify" {
 			builder2.Execute(args.WithChown, projectConf)
-		} else if projectConf["PLATFORM"] == "custom" {
+		} else if projectConf["platform"] == "custom" {
 			startCustom.Execute(args.WithChown, projectConf)
 		}
 		fmtc.SuccessLn("Done")

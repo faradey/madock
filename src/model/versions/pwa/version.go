@@ -9,7 +9,7 @@ func GetVersions() versions.ToolsVersions {
 	projectConf := configs.GetGeneralConfig()
 	return versions.ToolsVersions{
 		Platform: "pwa",
-		NodeJs:   projectConf["NODE_VERSION"],
-		Yarn:     projectConf["YARN_VERSION"],
+		NodeJs:   projectConf["nodejs/version"],
+		Yarn:     projectConf["nodejs/yarn/version"],
 	}
 }

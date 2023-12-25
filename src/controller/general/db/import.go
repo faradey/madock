@@ -28,7 +28,7 @@ func Import() {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 
-	if projectConf["PLATFORM"] != "pwa" {
+	if projectConf["platform"] != "pwa" {
 		args := getArgs()
 
 		option := ""
@@ -95,12 +95,12 @@ func Import() {
 
 		containerName := docker.GetContainerName(projectConf, projectName, service)
 		var cmd, cmdFKeys *exec.Cmd
-		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["DB_ROOT_PASSWORD"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["DB_DATABASE"])
+		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["db/database"])
 		cmdFKeys.Run()
 		if option != "" {
-			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", option, "-u", "root", "-p"+projectConf["DB_ROOT_PASSWORD"], "-h", service, "--max-allowed-packet", "256M", projectConf["DB_DATABASE"])
+			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", option, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
 		} else {
-			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["DB_ROOT_PASSWORD"], "-h", service, "--max-allowed-packet", "256M", projectConf["DB_DATABASE"])
+			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
 		}
 
 		if ext == "gz" {
@@ -116,14 +116,14 @@ func Import() {
 		cmd.Stderr = os.Stderr
 		fmt.Println("Restoring database...")
 		err = cmd.Run()
-		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["DB_ROOT_PASSWORD"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["DB_DATABASE"])
+		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["db/database"])
 		cmdFKeys.Run()
 		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println("Database import completed successfully")
 	} else {
-		fmt.Println("This command is not supported for " + projectConf["PLATFORM"])
+		fmt.Println("This command is not supported for " + projectConf["platform"])
 	}
 }
 

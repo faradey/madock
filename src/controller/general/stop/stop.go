@@ -21,13 +21,13 @@ type ArgsStruct struct {
 func Execute() {
 	getArgs()
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["PLATFORM"] == "magento2" {
+	if projectConf["platform"] == "magento2" {
 		stopMagento2.Execute()
-	} else if projectConf["PLATFORM"] == "pwa" {
+	} else if projectConf["platform"] == "pwa" {
 		stopPwa.Execute()
-	} else if projectConf["PLATFORM"] == "shopify" {
+	} else if projectConf["platform"] == "shopify" {
 		stopShopify.Execute()
-	} else if projectConf["PLATFORM"] == "custom" {
+	} else if projectConf["platform"] == "custom" {
 		stopCustom.Execute()
 	}
 	if len(paths.GetActiveProjects()) == 0 {

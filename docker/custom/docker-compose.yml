@@ -1,5 +1,5 @@
 version: "3.8"
-name: {{{CONTAINER_NAME_PREFIX}}}{{{PROJECT_NAME}}}
+name: {{{container_name_prefix}}}{{{project_name}}}
 services:
   php:
     build:
@@ -15,11 +15,11 @@ services:
     - COMPOSER_HOME=/var/www/.composer
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{HOST_GATEWAYS}}}
+      {{{nginx/host_gateways}}}
     ports:
-      - "{{{NGINX_PROJECT_PORT+5}}}:35729"
+      - "{{{nginx/port/project+5}}}:35729"
 
-<<<if{{{XDEBUG_ENABLED}}}>>>
+<<<if{{{php/xdebug/enabled}}}>>>
   php_without_xdebug:
     build:
       context: ctx
@@ -37,14 +37,14 @@ services:
       context: ctx
       dockerfile: nginx.Dockerfile
     ports:
-      - "{{{NGINX_PROJECT_PORT}}}:80"
-      - "{{{NGINX_PROJECT_PORT_SSL}}}:443"
+      - "{{{nginx/port/project}}}:80"
+      - "{{{nginx/port/project_ssl}}}:443"
     volumes:
       - ./src:/var/www/html:delegated
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{HOST_GATEWAYS}}}
+      {{{nginx/host_gateways}}}
     depends_on:
       - php
 
@@ -55,12 +55,12 @@ services:
       context: ctx
       dockerfile: db.Dockerfile
     ports:
-      - "{{{NGINX_PROJECT_PORT+4}}}:3306"
+      - "{{{nginx/port/project+4}}}:3306"
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
 
-<<<if{{{DB2_ENABLED}}}>>>
+<<<if{{{db2/enabled}}}>>>
   db2:
     command:
       --default-authentication-plugin=mysql_native_password
@@ -68,13 +68,13 @@ services:
       context: ctx
       dockerfile: db.Dockerfile
     ports:
-      - "{{{NGINX_PROJECT_PORT+6}}}:3306"
+      - "{{{nginx/port/project+6}}}:3306"
     volumes:
       - dbdata2:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
 <<<endif>>>
 
-<<<if{{{ELASTICSEARCH_ENABLED}}}>>>
+<<<if{{{search/elasticsearch/enabled}}}>>>
   elasticsearch:
     build:
       context: ctx
@@ -96,10 +96,10 @@ services:
       - "cluster.routing.allocation.disk.threshold_enabled=false"
       - "index.blocks.read_only_allow_delete"
     volumes:
-      - elasticsearch_vlm_{{{ELASTICSEARCH_VERSION}}}:/usr/share/elasticsearch/data
+      - elasticsearch_vlm_{{{search/elasticsearch/version}}}:/usr/share/elasticsearch/data
 <<<endif>>>
   
-<<<if{{{OPENSEARCH_ENABLED}}}>>>
+<<<if{{{search/opensearch/enabled}}}>>>
   opensearch:
     build:
       context: ctx
@@ -122,82 +122,82 @@ services:
       - "cluster.routing.allocation.disk.threshold_enabled=false"
       - "index.blocks.read_only_allow_delete"
     volumes:
-      - opensearch_vlm_{{{OPENSEARCH_VERSION}}}:/usr/share/opensearch/data
+      - opensearch_vlm_{{{search/opensearch/version}}}:/usr/share/opensearch/data
 <<<endif>>>
 
-<<<if{{{REDIS_ENABLED}}}>>>
+<<<if{{{redis/enabled}}}>>>
   redisdb:
     build:
       context: ctx
       dockerfile: redis.Dockerfile
 <<<endif>>>
 
-<<<if{{{RABBITMQ_ENABLED}}}>>>
+<<<if{{{rabbitmq/enabled}}}>>>
   rabbitmq:
-    image: {{{RABBITMQ_REPOSITORY}}}:{{{RABBITMQ_VERSION}}}
+    image: {{{rabbitmq/repository}}}:{{{rabbitmq/version}}}
 <<<endif>>>
 
-<<<if{{{PHPMYADMIN_ENABLED}}}>>>
+<<<if{{{db/phpmyadmin/enabled}}}>>>
   phpmyadmin:
-    image: {{{PHPMYADMIN_REPOSITORY}}}:{{{PHPMYADMIN_VERSION}}}
+    image: {{{db/phpmyadmin/repository}}}:{{{db/phpmyadmin/version}}}
     environment:
       PMA_HOST: "db"
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
-      PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin/"
+      PMA_ABSOLUTE_URI: "http://{{{nginx/host_name_default}}}/phpmyadmin/"
       PMA_USER: root
-      PMA_PASSWORD: {{{DB_ROOT_PASSWORD}}}
+      PMA_PASSWORD: {{{db/root_password}}}
       UPLOAD_LIMIT: 2G
     ports:
-      - "{{{NGINX_PROJECT_PORT+2}}}:80"
+      - "{{{nginx/port/project+2}}}:80"
     depends_on:
       - db
 <<<endif>>>
 
-<<<if{{{PHPMYADMIN2_ENABLED}}}>>>
+<<<if{{{db2/phpmyadmin/enabled}}}>>>
   phpmyadmin2:
-    image: {{{PHPMYADMIN2_REPOSITORY}}}:{{{PHPMYADMIN2_VERSION}}}
+    image: {{{db/phpmyadmin/repository}}}:{{{db2/phpmyadmin/version}}}
     environment:
       PMA_HOST: "db"
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
-      PMA_ABSOLUTE_URI: "http://{{{HOST_NAME_DEFAULT}}}/phpmyadmin2/"
+      PMA_ABSOLUTE_URI: "http://{{{nginx/host_name_default}}}/phpmyadmin2/"
       PMA_USER: root
-      PMA_PASSWORD: {{{DB2_ROOT_PASSWORD}}}
+      PMA_PASSWORD: {{{db2/root_password}}}
       UPLOAD_LIMIT: 2G
     ports:
-      - "{{{NGINX_PROJECT_PORT+7}}}:80"
+      - "{{{nginx/port/project+7}}}:80"
 <<<endif>>>
 
-<<<if{{{KIBANA_ENABLED}}}>>>
+<<<if{{{search/elasticsearch/dashboard/enabled}}}>>>
   kibana:
     platform: linux/x86_64
-    image: {{{KIBANA_REPOSITORY}}}:{{{ELASTICSEARCH_VERSION}}}
+    image: {{{search/elasticsearch/dashboard/repository}}}:{{{search/elasticsearch/version}}}
     environment:
       SERVER_BASEPATH: /kibana
       ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
     ports:
-      - "{{{NGINX_PROJECT_PORT+3}}}:5601"
+      - "{{{nginx/port/project+3}}}:5601"
     depends_on:
       - elasticsearch
 <<<endif>>>
 
-<<<if{{{OPENSEARCHDASHBOARD_ENABLED}}}>>>
+<<<if{{{search/opensearch/dashboard/enabled}}}>>>
   opensearchdashboard:
     platform: linux/x86_64
-    image: {{{OPENSEARCH_REPOSITORY}}}:{{{OPENSEARCH_VERSION}}}
+    image: {{{search/opensearch/repository}}}:{{{search/opensearch/version}}}
     environment:
       SERVER_BASEPATH: /opensearch-dashboard
       OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
       DISABLE_SECURITY_DASHBOARDS_PLUGIN: 'true'
     ports:
-      - "{{{NGINX_PROJECT_PORT+3}}}:5601"
+      - "{{{nginx/port/project+3}}}:5601"
     depends_on:
       - opensearch
 <<<endif>>>
 
 volumes:
   dbdata:
-  <<<if{{{DB2_ENABLED}}}>>>dbdata2:<<<endif>>>
-  <<<if{{{ELASTICSEARCH_ENABLED}}}>>>elasticsearch_vlm_{{{ELASTICSEARCH_VERSION}}}:<<<endif>>>
-  <<<if{{{OPENSEARCH_ENABLED}}}>>>opensearch_vlm_{{{OPENSEARCH_VERSION}}}:<<<endif>>>
+  <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>
+  <<<if{{{search/elasticsearch/enabled}}}>>>elasticsearch_vlm_{{{search/elasticsearch/version}}}:<<<endif>>>
+  <<<if{{{search/opensearch/enabled}}}>>>opensearch_vlm_{{{search/opensearch/version}}}:<<<endif>>>

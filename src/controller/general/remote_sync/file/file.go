@@ -22,14 +22,14 @@ func Execute() {
 	args := getArgs()
 
 	projectConf := configs.GetCurrentProjectConfig()
-	remoteDir := projectConf["SSH_SITE_ROOT_PATH"]
+	remoteDir := projectConf["ssh/site_root_path"]
 	var err error
 	path := strings.Trim(args.Path, "/")
 	if path == "" {
 		log.Fatal("")
 	}
 	var sc *sftp.Client
-	conn := remote_sync.Connect(projectConf["SSH_AUTH_TYPE"], projectConf["SSH_KEY_PATH"], projectConf["SSH_PASSWORD"], projectConf["SSH_HOST"], projectConf["SSH_PORT"], projectConf["SSH_USERNAME"])
+	conn := remote_sync.Connect(projectConf["ssh/auth_type"], projectConf["ssh/key_path"], projectConf["ssh/password"], projectConf["ssh/host"], projectConf["ssh/port"], projectConf["ssh/username"])
 	fmt.Println("")
 	fmt.Println("Server connection...")
 	defer remote_sync.Disconnect(conn)
