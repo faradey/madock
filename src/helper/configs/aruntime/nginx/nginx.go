@@ -84,45 +84,59 @@ func makeProxy() {
 	for _, name := range projectsNames {
 		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
 			if !paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped") {
-				nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
-				b, err := os.ReadFile(nginxDefFile)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				str = string(b)
-				port, err := strconv.Atoi(portsConfig[name])
-				if err != nil {
-					fmt.Println("Project name is " + name)
-					log.Fatal(err)
-				}
-				portRanged := (port - 1) * 20
-				strReplaced := strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged), -1)
-				strReplaced = strings.Replace(strReplaced, "{{{nginx/port/unsecure}}}", generalConfig["nginx/port/unsecure"], -1)
-				strReplaced = strings.Replace(strReplaced, "{{{nginx/port/secure}}}", generalConfig["nginx/port/secure"], -1)
-				for i := 1; i < 20; i++ {
-					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/default+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
-				}
-				strReplaced = configs2.ReplaceConfigValue(strReplaced)
-				hostName := "loc." + name + ".com"
-				projectConf := configs2.GetProjectConfig(name)
-				hosts := configs2.GetHosts(projectConf)
-				if len(hosts) > 0 {
-					var onlyHosts []string
-					domain := ""
-					for _, hostAndStore := range hosts {
-						domain = hostAndStore["name"]
-						if finder.IsContain(onlyHostsGlobal, domain) {
-							log.Fatalln("Error. Duplicate domain " + domain)
-						}
-						onlyHosts = append(onlyHosts, domain)
-						onlyHostsGlobal = append(onlyHostsGlobal, domain)
+				if configs2.GetProjectName() == name || !paths.IsFileExist(paths.GetExecDirPath()+"/cache/"+name+"-proxy.conf") {
+					nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
+					b, err := os.ReadFile(nginxDefFile)
+					if err != nil {
+						log.Fatal(err)
 					}
-					hostName = strings.Join(onlyHosts, "\n")
-				}
 
-				strReplaced = strings.Replace(strReplaced, "{{{nginx/host_names}}}", hostName, -1)
-				allFileData += "\n" + strReplaced
+					str = string(b)
+					port, err := strconv.Atoi(portsConfig[name])
+					if err != nil {
+						fmt.Println("Project name is " + name)
+						log.Fatal(err)
+					}
+					portRanged := (port - 1) * 20
+					strReplaced := strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged), -1)
+					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/unsecure}}}", generalConfig["nginx/port/unsecure"], -1)
+					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/secure}}}", generalConfig["nginx/port/secure"], -1)
+					for i := 1; i < 20; i++ {
+						strReplaced = strings.Replace(strReplaced, "{{{nginx/port/default+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
+					}
+					strReplaced = configs2.ReplaceConfigValue(strReplaced)
+					hostName := "loc." + name + ".com"
+					projectConf := configs2.GetProjectConfig(name)
+					hosts := configs2.GetHosts(projectConf)
+					if len(hosts) > 0 {
+						var onlyHosts []string
+						domain := ""
+						for _, hostAndStore := range hosts {
+							domain = hostAndStore["name"]
+							if finder.IsContain(onlyHostsGlobal, domain) {
+								log.Fatalln("Error. Duplicate domain " + domain)
+							}
+							onlyHosts = append(onlyHosts, domain)
+							onlyHostsGlobal = append(onlyHostsGlobal, domain)
+						}
+						hostName = strings.Join(onlyHosts, "\n")
+					}
+
+					strReplaced = strings.Replace(strReplaced, "{{{nginx/host_names}}}", hostName, -1)
+
+					err = os.WriteFile(paths.GetExecDirPath()+"/cache/"+name+"-proxy.conf", []byte(strReplaced), 0755)
+					if err != nil {
+						log.Fatalln(err)
+					}
+
+					allFileData += "\n" + strReplaced
+				} else {
+					strReplaced, err := os.ReadFile(paths.GetExecDirPath() + "/cache/" + name + "-proxy.conf")
+					if err != nil {
+						log.Fatalln(err)
+					}
+					allFileData += "\n" + string(strReplaced)
+				}
 			}
 		}
 	}

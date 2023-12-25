@@ -91,6 +91,8 @@ func V240() {
 		fixExtendedFiles(mappingData)
 	}
 
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/cache")
+
 	//fixSrcFiles(mappingData)
 	//fixDockerFiles(mappingData)
 	//fixScriptsFiles(mappingData)
