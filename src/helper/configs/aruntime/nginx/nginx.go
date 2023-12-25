@@ -190,7 +190,6 @@ func makeDockerCompose() {
 }
 
 func getMaxPort(conf map[string]string) int {
-	max := 0
 	portInt := 0
 	var err error
 	var ports []int
@@ -208,7 +207,7 @@ func getMaxPort(conf map[string]string) int {
 		}
 	}
 
-	return max
+	return 0
 }
 
 func GenerateSslCert(ctxPath string, force bool) {

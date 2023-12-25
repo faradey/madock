@@ -10,6 +10,7 @@ import (
 	"os/user"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -163,12 +164,25 @@ func IsOption(name string) bool {
 
 func GetHosts(data map[string]string) []map[string]string {
 	var hosts []map[string]string
-	for key, val := range data {
-		if strings.Contains(key, "/hosts/") && val != "" {
+	sortedKeys := SortMap(data)
+	for _, key := range sortedKeys {
+		if strings.Contains(key, "/hosts/") && data[key] != "" {
 			items := strings.Split(key, "/")
-			hosts = append(hosts, map[string]string{"name": val, "code": items[len(items)-1]})
+			hosts = append(hosts, map[string]string{"name": data[key], "code": items[len(items)-1]})
 		}
 	}
 
 	return hosts
+}
+
+func SortMap(data map[string]string) []string {
+	keys := make([]string, 0, len(data))
+
+	for k := range data {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	return keys
 }

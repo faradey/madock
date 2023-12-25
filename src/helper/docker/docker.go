@@ -105,10 +105,18 @@ func UpNginxWithBuild() {
 
 	if (err != nil || dirHash != projectConf["cache_hash"] || doNeedRunAruntime) && projectConf["proxy/enabled"] == "true" {
 		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
-		nginx.GenerateSslCert(ctxPath, false)
+		if dirHash != projectConf["cache_hash"] {
+			nginx.GenerateSslCert(ctxPath, false)
+		}
 		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 		configs2.SetParam(envFile, "cache_hash", dirHash, "default")
-		dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
+		if !paths.IsFileExist(paths.GetExecDirPath() + "/cache/aruntime-pull-nginx-image") {
+			dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
+			err = os.WriteFile(paths.GetExecDirPath()+"/cache/aruntime-pull-nginx-image", []byte("1"), 0755)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -231,7 +239,10 @@ func dockerComposePull(composeFiles []string) {
 	cmd := exec.Command("docker", composeFiles...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func DownNginx(force bool) {
