@@ -9,6 +9,7 @@ import (
 	"github.com/go-xmlfmt/xmlfmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -71,9 +72,13 @@ func V240() {
 
 			if v, ok := configData["HOSTS"]; ok {
 				hosts := strings.Split(v, " ")
-				for _, host := range hosts {
+				runCode := ""
+				for key, host := range hosts {
 					splitHost := strings.Split(host, ":")
-					runCode := "base"
+					runCode = "base"
+					if key > 0 {
+						runCode += strconv.Itoa(key + 1)
+					}
 					if len(splitHost) > 1 {
 						runCode = splitHost[1]
 					}

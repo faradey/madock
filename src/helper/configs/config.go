@@ -82,15 +82,15 @@ func ReplaceConfigValue(str string) string {
 		str = strings.Replace(str, "{{{"+key+"}}}", val, -1)
 	}
 
-	str = strings.Replace(str, "{{{OSARCH}}}", osArch, -1)
+	str = strings.Replace(str, "{{{os/arch}}}", osArch, -1)
 
 	usr, err := user.Current()
 	if err == nil {
-		str = strings.Replace(str, "{{{UID}}}", usr.Uid, -1)
-		str = strings.Replace(str, "{{{UNAME}}}", usr.Username, -1)
-		str = strings.Replace(str, "{{{GUID}}}", usr.Gid, -1)
+		str = strings.Replace(str, "{{{os/user/uid}}}", usr.Uid, -1)
+		str = strings.Replace(str, "{{{os/user/name}}}", usr.Username, -1)
+		str = strings.Replace(str, "{{{os/user/guid}}}", usr.Gid, -1)
 		gr, _ := user.LookupGroupId(usr.Gid)
-		str = strings.Replace(str, "{{{UGROUP}}}", gr.Name, -1)
+		str = strings.Replace(str, "{{{os/user/ugroup}}}", gr.Name, -1)
 	} else {
 		log.Fatal(err)
 	}
@@ -102,14 +102,14 @@ func ReplaceConfigValue(str string) string {
 
 	var onlyHosts []string
 
-	hosts := projectConf["hosts"]
+	hosts := GetHosts(projectConf)
 	if len(hosts) > 0 {
-		for _, hostAndStore := range hosts {
-			onlyHosts = append(onlyHosts, "- \""+strings.Split(hostAndStore, ":")[0]+":172.17.0.1\"")
+		for _, host := range hosts {
+			onlyHosts = append(onlyHosts, "- \""+host["name"]+":172.17.0.1\"")
 		}
 	}
 
-	str = strings.Replace(str, "{{{HOST_GATEWAYS}}}", strings.Join(onlyHosts, "\n      "), -1)
+	str = strings.Replace(str, "{{{nginx/host_gateways}}}", strings.Join(onlyHosts, "\n      "), -1)
 	return str
 }
 
@@ -123,4 +123,16 @@ func IsOption(name string) bool {
 	log.Fatalln("The option \"" + name + "\" doesn't exist.")
 
 	return false
+}
+
+func GetHosts(data map[string]string) []map[string]string {
+	var hosts []map[string]string
+	for key, val := range data {
+		if strings.Contains(key, "/hosts/") && val != "" {
+			items := strings.Split(key, "/")
+			hosts = append(hosts, map[string]string{"name": val, "code": items[len(items)-1]})
+		}
+	}
+
+	return hosts
 }

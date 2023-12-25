@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli/attr"
-	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
@@ -18,7 +18,7 @@ type ArgsStruct struct {
 }
 
 func ShowEnv() {
-	lines := configs2.GetProjectConfig(configs2.GetProjectName())
+	lines := configs.GetProjectConfig(configs.GetProjectName())
 	for key, line := range lines {
 		fmt.Println(key + " " + line)
 	}
@@ -28,9 +28,9 @@ func SetEnvOption() {
 	args := getArgs()
 	name := strings.ToUpper(args.Name)
 	val := args.Value
-	if len(name) > 0 && configs2.IsOption(name) {
-		configPath := paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/config.xml"
-		configs2.SetParam(configPath, name, val)
+	if len(name) > 0 && configs.IsOption(name) {
+		configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
+		configs.SetParam(configPath, name, val)
 	}
 }
 
