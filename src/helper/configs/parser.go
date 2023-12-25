@@ -11,7 +11,6 @@ import (
 )
 
 func ParseXmlFile(path string) (conf map[string]string) {
-	fmt.Println(path)
 	mapping, err := GetXmlMap(path)
 
 	if err != nil {
