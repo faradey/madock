@@ -2,7 +2,6 @@ package configs
 
 import (
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -66,7 +65,7 @@ func GetProjectConfig(projectName string) map[string]string {
 func GetProjectConfigOnly(projectName string) map[string]string {
 	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
 	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
-		log.Fatal(err)
+		return make(map[string]string)
 	}
 
 	config := ParseXmlFile(configPath)

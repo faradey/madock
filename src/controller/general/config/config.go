@@ -28,7 +28,11 @@ func SetEnvOption() {
 	args := getArgs()
 	name := strings.ToLower(args.Name)
 	val := args.Value
-	activeScope := configs.GetCurrentProjectConfig()["activeScope"]
+	activeScope := "default"
+	projectConfig := configs.GetCurrentProjectConfig()
+	if _, ok := projectConfig["activeScope"]; ok {
+		activeScope = projectConfig["activeScope"]
+	}
 	if len(name) > 0 && configs.IsOption(name) {
 		configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
 		configs.SetParam(configPath, name, val, activeScope)

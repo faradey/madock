@@ -3,6 +3,7 @@ package configs
 import (
 	"bytes"
 	"encoding/xml"
+	"fmt"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/go-xmlfmt/xmlfmt"
 	"log"
@@ -40,6 +41,7 @@ func SaveInFile(file string, data map[string]string, activeScope string) {
 	w.WriteString(xml.Header)
 	err := MarshalXML(resultMapData, xml.NewEncoder(w), "config/scopes/"+activeScope)
 	if err != nil {
+		fmt.Println(activeScope)
 		log.Fatalln(err)
 	}
 
@@ -50,6 +52,9 @@ func SaveInFile(file string, data map[string]string, activeScope string) {
 }
 
 func (t *ConfigLines) Set(name, value string) {
+	if t.Lines == nil {
+		t.Lines = make(map[string]string)
+	}
 	if name == "hosts" {
 		hosts := strings.Split(value, " ")
 		for key, host := range hosts {

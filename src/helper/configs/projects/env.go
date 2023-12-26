@@ -11,7 +11,10 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	config := new(configs2.ConfigLines)
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 	config.EnvFile = envFile
-	config.ActiveScope = projectConf["activeScope"]
+	config.ActiveScope = "default"
+	if _, ok := projectConf["activeScope"]; ok {
+		config.ActiveScope = projectConf["activeScope"]
+	}
 
 	config.Set("path", paths.GetRunDirPath())
 	config.Set("platform", defVersions.Platform)
