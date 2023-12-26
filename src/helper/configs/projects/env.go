@@ -18,13 +18,18 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 
 	config.Set("path", paths.GetRunDirPath())
 	config.Set("platform", defVersions.Platform)
-	if projectConf["platform"] == "magento2" {
+	platform := defVersions.Platform
+	if _, ok := projectConf["platform"]; ok {
+		platform = projectConf["platform"]
+	}
+	switch platform {
+	case "magento2":
 		Magento2(config, defVersions, generalConf, projectConf)
-	} else if projectConf["platform"] == "pwa" {
+	case "pwa":
 		PWA(config, defVersions, generalConf, projectConf)
-	} else if projectConf["platform"] == "shopify" {
+	case "shopify":
 		Shopify(config, defVersions, generalConf, projectConf)
-	} else if projectConf["platform"] == "custom" {
+	case "custom":
 		Custom(config, defVersions, generalConf, projectConf)
 	}
 
