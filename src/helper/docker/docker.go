@@ -110,7 +110,7 @@ func UpNginxWithBuild() {
 		}
 		envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 		configs2.SetParam(envFile, "cache_hash", dirHash, "default")
-		if !paths.IsFileExist(paths.GetExecDirPath() + "/cache/aruntime-pull-nginx-image") {
+		if dirHash != projectConf["cache_hash"] || !paths.IsFileExist(paths.GetExecDirPath()+"/cache/aruntime-pull-nginx-image") {
 			dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
 			err = os.WriteFile(paths.GetExecDirPath()+"/cache/aruntime-pull-nginx-image", []byte("1"), 0755)
 			if err != nil {
