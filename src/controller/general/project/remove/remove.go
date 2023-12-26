@@ -1,4 +1,4 @@
-package project_remove
+package remove
 
 import (
 	"bufio"
