@@ -25,7 +25,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		tools.SearchEngine(&toolsDefVersions.SearchEngine)
 		if toolsDefVersions.SearchEngine == "Elasticsearch" {
 			tools.Elastic(&toolsDefVersions.Elastic)
-		} else {
+		} else if toolsDefVersions.SearchEngine == "OpenSearch" {
 			tools.OpenSearch(&toolsDefVersions.OpenSearch)
 		}
 
