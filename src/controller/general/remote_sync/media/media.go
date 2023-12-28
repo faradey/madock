@@ -17,21 +17,30 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
-	ImagesOnly bool `arg:"-i,--images-only" help:"Sync images only"`
-	Compress   bool `arg:"-c,--compress" help:"Compress images"`
+	ImagesOnly bool   `arg:"-i,--images-only" help:"Sync images only"`
+	Compress   bool   `arg:"-c,--compress" help:"Compress images"`
+	SshType    string `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
 }
 
 func Execute() {
 	args := getArgs()
 
 	projectConf := configs.GetCurrentProjectConfig()
-	remoteDir := projectConf["ssh/site_root_path"]
+
 	maxProcs := finder.MaxParallelism() - 1
 	var scTemp *sftp.Client
 	isFirstConnect := false
 	paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
+	sshType := "ssh"
+	if args.SshType != "" {
+		sshType += "_" + args.SshType
+	}
+	siteRootPath := projectConf[sshType+"/site_root_path"]
+	if _, ok := projectConf[sshType+"/site_root_path"]; !ok {
+		siteRootPath = projectConf["ssh/site_root_path"]
+	}
 	for maxProcs > 0 {
-		conn := remote_sync.Connect(projectConf["ssh/auth_type"], projectConf["ssh/key_path"], projectConf["ssh/password"], projectConf["ssh/host"], projectConf["ssh/port"], projectConf["ssh/username"])
+		conn := remote_sync.Connect(projectConf, sshType)
 		if !isFirstConnect {
 			fmt.Println("")
 			fmt.Println("Server connection...")
@@ -46,7 +55,7 @@ func Execute() {
 	fmt.Println("\n" + "Synchronization is started")
 	ch := make(chan bool, 15)
 	var chDownload sync.WaitGroup
-	go remote_sync.ListFiles(&chDownload, ch, remoteDir+"/pub/media/", "", 0, args.ImagesOnly, args.Compress)
+	go remote_sync.ListFiles(&chDownload, ch, siteRootPath+"/pub/media/", "", 0, args.ImagesOnly, args.Compress)
 	time.Sleep(3 * time.Second)
 	chDownload.Wait()
 	fmt.Println("\n" + "Synchronization is completed")

@@ -146,7 +146,38 @@ func compressJpg(r io.Reader, w io.Writer) bool {
 	return true
 }
 
-func Connect(authType, keyPath, pswrd, host, port, username string) *ssh.Client {
+func Connect(projectConf map[string]string, sshType string) *ssh.Client {
+
+	authType := projectConf[sshType+"/auth_type"]
+	if _, ok := projectConf[sshType+"/auth_type"]; !ok {
+		authType = projectConf["ssh/auth_type"]
+	}
+
+	username := projectConf[sshType+"/username"]
+	if _, ok := projectConf[sshType+"/username"]; !ok {
+		username = projectConf["ssh/username"]
+	}
+
+	port := projectConf[sshType+"/port"]
+	if _, ok := projectConf[sshType+"/port"]; !ok {
+		port = projectConf["ssh/port"]
+	}
+
+	host := projectConf[sshType+"/host"]
+	if _, ok := projectConf[sshType+"/host"]; !ok {
+		host = projectConf["ssh/host"]
+	}
+
+	password := projectConf[sshType+"/password"]
+	if _, ok := projectConf[sshType+"/password"]; !ok {
+		password = projectConf["ssh/password"]
+	}
+
+	keyPath := projectConf[sshType+"/key_path"]
+	if _, ok := projectConf[sshType+"/key_path"]; !ok {
+		keyPath = projectConf["ssh/key_path"]
+	}
+
 	config := &ssh.ClientConfig{
 		User:            username,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -154,7 +185,7 @@ func Connect(authType, keyPath, pswrd, host, port, username string) *ssh.Client 
 
 	if authType == "password" {
 		config.Auth = []ssh.AuthMethod{
-			ssh.Password(pswrd),
+			ssh.Password(password),
 		}
 	} else {
 		config.Auth = []ssh.AuthMethod{

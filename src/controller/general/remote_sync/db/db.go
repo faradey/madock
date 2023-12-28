@@ -20,15 +20,24 @@ type ArgsStruct struct {
 	attr.Arguments
 	Name        string   `arg:"-n,--name" help:"Name of the archive file"`
 	IgnoreTable []string `arg:"-i,--ignore-table" help:"Ignore db table"`
+	SshType     string   `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
 }
 
 func Execute() {
 	args := getArgs()
 
 	projectConf := configs.GetCurrentProjectConfig()
-	conn := remote_sync.Connect(projectConf["ssh/auth_type"], projectConf["ssh/key_path"], projectConf["ssh/password"], projectConf["ssh/host"], projectConf["ssh/port"], projectConf["ssh/username"])
+	sshType := "ssh"
+	if args.SshType != "" {
+		sshType += "_" + args.SshType
+	}
+	siteRootPath := projectConf[sshType+"/site_root_path"]
+	if _, ok := projectConf[sshType+"/site_root_path"]; !ok {
+		siteRootPath = projectConf["ssh/site_root_path"]
+	}
+	conn := remote_sync.Connect(projectConf, sshType)
 
-	remoteDir := projectConf["ssh/site_root_path"]
+	remoteDir := siteRootPath
 	name := args.Name
 	//TODO add options --db-user --db-password --db-name --db-host --db-port
 	defer conn.Close()
