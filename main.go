@@ -15,8 +15,8 @@ import (
 	"github.com/faradey/madock/src/controller/general/isnotdefine"
 	"github.com/faradey/madock/src/controller/general/logs"
 	"github.com/faradey/madock/src/controller/general/node"
+	"github.com/faradey/madock/src/controller/general/open"
 	"github.com/faradey/madock/src/controller/general/patch"
-	"github.com/faradey/madock/src/controller/general/project/open"
 	"github.com/faradey/madock/src/controller/general/project/remove"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/prune"
@@ -114,10 +114,10 @@ func main() {
 		n98.Execute()
 	case "node":
 		node.Execute()
+	case "open":
+		open.Execute()
 	case "patch:create":
 		patch.Create()
-	case "project:open":
-		open.Execute()
 	case "project:remove":
 		remove.Execute()
 	case "proxy:start":
