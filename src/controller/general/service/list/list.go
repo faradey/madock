@@ -1,6 +1,7 @@
 package list
 
 import (
+	service2 "github.com/faradey/madock/src/controller/general/service"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"sort"
@@ -14,11 +15,12 @@ func Execute() {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-
+	service := ""
 	for _, key := range keys {
 		serviceName := strings.SplitN(key, "/enabled", 2)
 		if serviceName[0] != key {
-			fmtc.Title(strings.ToLower(serviceName[0]))
+			service = service2.GetByLong(serviceName[0])
+			fmtc.Title(service)
 			if configData[key] == "true" {
 				fmtc.SuccessLn(" enabled")
 			} else {

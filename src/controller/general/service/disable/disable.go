@@ -9,7 +9,6 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
-	"strings"
 )
 
 type ArgsStruct struct {
@@ -22,9 +21,8 @@ func Execute() {
 
 	if len(args.Args) > 0 {
 		for _, name := range args.Args {
-			name = strings.ToLower(name)
 			if service.IsService(name) {
-				serviceName := strings.ToLower(name) + "/enabled"
+				serviceName := service.GetByShort(name) + "/enabled"
 				projectName := configs.GetProjectName()
 				projectConfig := configs.GetProjectConfig(projectName)
 				envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
