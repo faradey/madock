@@ -6,7 +6,6 @@ import (
 	"github.com/faradey/madock/src/controller/general/service"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 )
@@ -25,11 +24,9 @@ func Execute() {
 				serviceName := service.GetByShort(name) + "/enabled"
 				projectName := configs.GetProjectName()
 				projectConfig := configs.GetProjectConfig(projectName)
-				envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
-				configs.SetParam(envFile, serviceName, "false", projectConfig["activeScope"])
+				configs.SetParam(projectName, serviceName, "false", projectConfig["activeScope"])
 				if args.Global {
-					envFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
-					configs.SetParam(envFile, serviceName, "false", "default")
+					configs.SetParam(configs.MainConfigCode, serviceName, "false", "default")
 				}
 			}
 		}

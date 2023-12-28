@@ -35,5 +35,5 @@ func Apply(newAppVersion string) {
 }
 
 func saveNewVersion(newAppVersion string) {
-	configs.SetParam(paths.GetExecDirPath()+"/projects/config.xml", versionOptionName, newAppVersion, "default")
+	configs.SetParam(configs.MainConfigCode, versionOptionName, newAppVersion, "default")
 }

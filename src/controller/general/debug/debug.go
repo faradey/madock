@@ -23,22 +23,19 @@ func Enable() {
 
 func Disable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
-	configs.SetParam(configPath, "php/xdebug/enabled", "false", configs.GetCurrentProjectConfig()["activeScope"])
+	configs.SetParam(configs.GetProjectName(), "php/xdebug/enabled", "false", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 
 func ProfileEnable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
-	configs.SetParam(configPath, "php/xdebug/mode", "profile", configs.GetCurrentProjectConfig()["activeScope"])
+	configs.SetParam(configs.GetProjectName(), "php/xdebug/mode", "profile", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 
 func ProfileDisable() {
 	getArgs()
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
-	configs.SetParam(configPath, "php/xdebug/mode", "debug", configs.GetCurrentProjectConfig()["activeScope"])
+	configs.SetParam(configs.GetProjectName(), "php/xdebug/mode", "debug", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 

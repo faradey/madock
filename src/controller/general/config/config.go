@@ -5,7 +5,6 @@ import (
 	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 	"strings"
@@ -34,8 +33,7 @@ func SetEnvOption() {
 		activeScope = projectConfig["activeScope"]
 	}
 	if len(name) > 0 && configs.IsOption(name) {
-		configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
-		configs.SetParam(configPath, name, val, activeScope)
+		configs.SetParam(configs.GetProjectName(), name, val, activeScope)
 	}
 }
 
