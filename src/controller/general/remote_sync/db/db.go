@@ -9,6 +9,7 @@ import (
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 	"log"
 	"strings"
 	"time"
@@ -38,7 +39,12 @@ func Execute() {
 	remoteDir := siteRootPath
 	name := args.Name
 	//TODO add options --db-user --db-password --db-name --db-host --db-port
-	defer conn.Close()
+	defer func(conn *ssh.Client) {
+		err := conn.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(conn)
 	fmt.Println("")
 	fmt.Println("Dumping and downloading DB is started")
 	result := remote_sync.RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
@@ -73,7 +79,12 @@ func Execute() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer sc.Close()
+		defer func(sc *sftp.Client) {
+			err := sc.Close()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}(sc)
 		execPath := paths.GetExecDirPath()
 		projectName := configs.GetProjectName()
 		err = remote_sync.DownloadFile(sc, "/tmp/"+dumpName, execPath+"/projects/"+projectName+"/backup/db/"+dumpName, false, false)
