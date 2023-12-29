@@ -24,6 +24,8 @@ func Execute() {
 	describeByLevel("cloud", "Executing commands to work with Magento Cloud. Also, can be used the long command: magento-cloud", 0)
 	describeByLevel("composer", "Execute composer inside php container", 0)
 	describeByLevel("compress", "Compress a project to archive", 0)
+	describeByLevel("config:cache:clean", "Clearing internal Madock cache", 0)
+	describeByLevel("c:c:c", "The short alias of `config:cache:clean` command", 0)
 	describeByLevel("config:list", "List all project environment settings", 0)
 	describeByLevel("config:set", "Set a new value for parameter", 0)
 	describeByLevel("--name", "Parameter name", 1)
