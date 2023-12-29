@@ -84,6 +84,7 @@ func Execute() {
 	describeByLevel("restart", "Restarting all containers and services. Stop all containers and start them again", 0)
 	describeByLevel("scope:list", "Show all config scopes", 0)
 	describeByLevel("scope:set", "Set config scope", 0)
+	describeByLevel("[scope name]", "Scope name", 1)
 	describeByLevel("service:list", "Show all services", 0)
 	describeByLevel("service:enable", "Enable the service", 0)
 	describeByLevel("[service name]", "Service name", 1)
