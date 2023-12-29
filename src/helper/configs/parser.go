@@ -127,6 +127,43 @@ func SetXmlMap(data map[string]interface{}) map[string]interface{} {
 				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = make(map[string]interface{})
 			}
 			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]] = value.(string)
+		case 6:
+			if _, ok := result[keys[0]]; !ok {
+				result[keys[0]] = make(map[string]interface{})
+			}
+			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
+				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
+			}
+			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]]; !ok {
+				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = make(map[string]interface{})
+			}
+			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]]; !ok {
+				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = make(map[string]interface{})
+			}
+			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]]; !ok {
+				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]] = make(map[string]interface{})
+			}
+			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]].(map[string]interface{})[keys[5]] = value.(string)
+		case 7:
+			if _, ok := result[keys[0]]; !ok {
+				result[keys[0]] = make(map[string]interface{})
+			}
+			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
+				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
+			}
+			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]]; !ok {
+				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = make(map[string]interface{})
+			}
+			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]]; !ok {
+				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = make(map[string]interface{})
+			}
+			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]]; !ok {
+				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]] = make(map[string]interface{})
+			}
+			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]].(map[string]interface{})[keys[5]]; !ok {
+				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]].(map[string]interface{})[keys[5]] = make(map[string]interface{})
+			}
+			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]].(map[string]interface{})[keys[5]].(map[string]interface{})[keys[6]] = value.(string)
 		}
 	}
 

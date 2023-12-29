@@ -129,6 +129,8 @@ func makeNginxConf(projectName string) {
 	}
 	str = strings.Replace(str, "{{{nginx/host_names}}}", hostName, -1)
 	str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
+
+	str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
 	str = strings.Replace(str, "{{{nginx/host_names_with_codes}}}", hostNameWebsites, -1)
 
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
@@ -207,6 +209,7 @@ func makeDockerCompose(projectName string) {
 	}
 	str = strings.Replace(str, "{{{nginx/network_number}}}", strconv.Itoa(portNumber+90), -1)
 	str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
+	str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
 
 	resultFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml"
 	err = os.WriteFile(resultFile, []byte(str), 0755)

@@ -191,3 +191,16 @@ func SetScope(projectName, scope string) bool {
 
 	return true
 }
+
+func GetActiveScope(projectName string, withDefault bool, prefix string) string {
+	config := GetProjectConfig(projectName)
+	if val, ok := config["activeScope"]; ok && val != "default" {
+		return prefix + val
+	}
+
+	if withDefault {
+		return prefix + "default"
+	}
+
+	return ""
+}

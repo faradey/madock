@@ -16,7 +16,7 @@ func Execute() {
 	if len(args.Args) == 1 && len(scopes[args.Args[0]]) > 0 {
 		result := configs.SetScope(configs.GetProjectName(), args.Args[0])
 		if result {
-			fmtc.SuccessLn("Scope was set")
+			fmtc.SuccessLn("Scope was set successfully")
 		} else {
 			fmtc.WarningLn("Scope was not set")
 		}
