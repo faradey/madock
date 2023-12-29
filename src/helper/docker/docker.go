@@ -275,7 +275,11 @@ func StopNginx(force bool) {
 }
 
 func GetContainerName(projectConf map[string]string, projectName, service string) string {
-	return strings.ToLower(projectConf["container_name_prefix"]) + strings.ToLower(projectName) + "-" + service + "-1"
+	scope := ""
+	if val, ok := projectConf["activeScope"]; ok && val != "default" {
+		scope = strings.ToLower("-" + val)
+	}
+	return strings.ToLower(projectConf["container_name_prefix"]) + strings.ToLower(projectName) + scope + "-" + service + "-1"
 }
 
 func CronExecute(flag, manual bool) {

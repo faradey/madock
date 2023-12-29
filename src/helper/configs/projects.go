@@ -1,7 +1,11 @@
 package configs
 
 import (
+	"bytes"
+	"encoding/xml"
 	"github.com/faradey/madock/src/helper/paths"
+	"github.com/go-xmlfmt/xmlfmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -159,4 +163,31 @@ func GetScopes(projectName string) map[string]string {
 	}
 
 	return scopes
+}
+
+func SetScope(projectName, scope string) bool {
+	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
+		return false
+	}
+
+	config := ParseXmlFile(configPath)
+	config["activeScope"] = scope
+	resultData := make(map[string]interface{})
+	for key, value := range config {
+		resultData[key] = value
+	}
+	resultMapData := SetXmlMap(resultData)
+	w := &bytes.Buffer{}
+	w.WriteString(xml.Header)
+	err := MarshalXML(resultMapData, xml.NewEncoder(w), "config")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
+	if err != nil {
+		return false
+	}
+
+	return true
 }
