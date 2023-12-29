@@ -135,3 +135,28 @@ func getConfigByScope(originConfig map[string]string, activeScope string) map[st
 
 	return config
 }
+
+func GetScopes(projectName string) map[string]string {
+	scopes := make(map[string]string)
+	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
+		return scopes
+	}
+
+	config := ParseXmlFile(configPath)
+
+	var parts []string
+	for key, _ := range config {
+		parts = strings.Split(key, "/")
+		if len(parts) > 1 && parts[0] == "scopes" {
+			if val, ok := config["activeScope"]; !ok || val == parts[1] {
+				scopes[parts[1]] = "1"
+				continue
+			}
+
+			scopes[parts[1]] = "0"
+		}
+	}
+
+	return scopes
+}
