@@ -3,6 +3,7 @@ package compress
 import (
 	"archive/zip"
 	"fmt"
+	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/paths"
 	"io"
 	"os"
@@ -11,7 +12,7 @@ import (
 )
 
 func Unzip() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 
 	isOk := false
 	basePath := paths.GetRunDirPath() + "/"

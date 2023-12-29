@@ -3,7 +3,6 @@ package setup
 import (
 	"bufio"
 	"fmt"
-	"github.com/alexflint/go-arg"
 	setupCustom "github.com/faradey/madock/src/controller/custom/setup"
 	setupMagento "github.com/faradey/madock/src/controller/magento/setup"
 	setupPWA "github.com/faradey/madock/src/controller/pwa/setup"
@@ -26,7 +25,7 @@ type ArgsStruct struct {
 }
 
 func Execute() {
-	args := getArgs()
+	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 	projectName := configs2.GetProjectName()
 	hasConfig := configs2.IsHasConfig(projectName)
@@ -76,27 +75,4 @@ func Execute() {
 	} else if platform == "custom" {
 		setupCustom.Execute(projectName, projectConf, continueSetup)
 	}
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

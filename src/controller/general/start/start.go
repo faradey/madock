@@ -1,7 +1,6 @@
 package start
 
 import (
-	"github.com/alexflint/go-arg"
 	startCustom "github.com/faradey/madock/src/controller/custom/start"
 	startMagento2 "github.com/faradey/madock/src/controller/magento/start"
 	startPwa "github.com/faradey/madock/src/controller/pwa/start"
@@ -9,8 +8,6 @@ import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
-	"log"
-	"os"
 )
 
 type ArgsStruct struct {
@@ -19,7 +16,7 @@ type ArgsStruct struct {
 }
 
 func Execute() {
-	args := getArgs()
+	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 	if !configs2.IsHasNotConfig() {
 		projectConf := configs2.GetCurrentProjectConfig()
@@ -38,27 +35,4 @@ func Execute() {
 		fmtc.WarningLn("Set up the project")
 		fmtc.ToDoLn("Run madock setup")
 	}
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

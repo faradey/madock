@@ -3,7 +3,6 @@ package remove
 import (
 	"bufio"
 	"fmt"
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
@@ -19,7 +18,7 @@ type ArgsStruct struct {
 }
 
 func Execute() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 
 	fmt.Println("Are you sure? (y/n)")
 	fmt.Print("> ")
@@ -65,27 +64,4 @@ func Execute() {
 			fmtc.WarningLn("The project was not removed. The entered value does not match the project name.")
 		}
 	}
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

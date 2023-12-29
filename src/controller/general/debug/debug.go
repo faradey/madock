@@ -1,13 +1,10 @@
 package debug
 
 import (
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
-	"os"
 )
 
 type ArgsStruct struct {
@@ -15,49 +12,26 @@ type ArgsStruct struct {
 }
 
 func Enable() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
 	configs.SetParam(configPath, "php/xdebug/enabled", "true", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 
 func Disable() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 	configs.SetParam(configs.GetProjectName(), "php/xdebug/enabled", "false", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 
 func ProfileEnable() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 	configs.SetParam(configs.GetProjectName(), "php/xdebug/mode", "profile", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 
 func ProfileDisable() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 	configs.SetParam(configs.GetProjectName(), "php/xdebug/mode", "debug", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

@@ -2,11 +2,8 @@ package help
 
 import (
 	"fmt"
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
-	"log"
-	"os"
 )
 
 type ArgsStruct struct {
@@ -14,7 +11,7 @@ type ArgsStruct struct {
 }
 
 func Execute() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 
 	fmtc.WarningLn("Usage:")
 	tab()
@@ -140,27 +137,4 @@ func tab() {
 
 func tabln() {
 	fmt.Println("	")
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

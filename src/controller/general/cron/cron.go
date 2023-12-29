@@ -1,11 +1,8 @@
 package cron
 
 import (
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/docker"
-	"log"
-	"os"
 )
 
 type ArgsStruct struct {
@@ -13,34 +10,11 @@ type ArgsStruct struct {
 }
 
 func Enable() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 	docker.CronExecute(true, true)
 }
 
 func Disable() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 	docker.CronExecute(false, true)
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

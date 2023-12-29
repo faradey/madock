@@ -1,7 +1,6 @@
 package cloud
 
 import (
-	"github.com/alexflint/go-arg"
 	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -18,7 +17,7 @@ type ArgsStruct struct {
 }
 
 func Cloud() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 
 	projectConf := configs.GetCurrentProjectConfig()
 	if projectConf["platform"] == "magento2" {
@@ -37,27 +36,4 @@ func Cloud() {
 	} else {
 		fmtc.Warning("This command is not supported for " + projectConf["platform"])
 	}
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

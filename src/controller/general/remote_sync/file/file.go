@@ -2,14 +2,12 @@ package file
 
 import (
 	"fmt"
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/controller/general/remote_sync"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/pkg/sftp"
 	"log"
-	"os"
 	"strings"
 )
 
@@ -20,7 +18,7 @@ type ArgsStruct struct {
 }
 
 func Execute() {
-	args := getArgs()
+	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 	projectConf := configs.GetCurrentProjectConfig()
 	var err error
@@ -50,27 +48,4 @@ func Execute() {
 	fmt.Println("\n" + "Synchronization is started")
 
 	remote_sync.DownloadFile(sc, strings.TrimRight(siteRootPath, "/")+"/"+path, strings.TrimRight(paths.GetRunDirPath(), "/")+"/"+path, false, false)
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

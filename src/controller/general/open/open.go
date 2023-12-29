@@ -1,11 +1,9 @@
 package open
 
 import (
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"log"
-	"os"
 	"os/exec"
 	"runtime"
 )
@@ -15,7 +13,7 @@ type ArgsStruct struct {
 }
 
 func Execute() {
-	getArgs()
+	attr.Parse(new(ArgsStruct))
 
 	projectConfig := configs.GetCurrentProjectConfig()
 	hosts := configs.GetHosts(projectConfig)
@@ -36,27 +34,4 @@ func Execute() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

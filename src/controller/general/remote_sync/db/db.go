@@ -3,7 +3,6 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/controller/general/remote_sync"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -11,7 +10,6 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/pkg/sftp"
 	"log"
-	"os"
 	"strings"
 	"time"
 )
@@ -24,7 +22,7 @@ type ArgsStruct struct {
 }
 
 func Execute() {
-	args := getArgs()
+	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 	projectConf := configs.GetCurrentProjectConfig()
 	sshType := "ssh"
@@ -88,27 +86,4 @@ func Execute() {
 	} else {
 		fmt.Println("Failed to get database authentication data")
 	}
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

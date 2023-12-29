@@ -1,10 +1,9 @@
-package db
+package _import
 
 import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -29,7 +28,7 @@ func Import() {
 	projectConf := configs.GetCurrentProjectConfig()
 
 	if projectConf["platform"] != "pwa" {
-		args := getArgs()
+		args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 		option := ""
 		if args.Force {
@@ -125,27 +124,4 @@ func Import() {
 	} else {
 		fmt.Println("This command is not supported for " + projectConf["platform"])
 	}
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

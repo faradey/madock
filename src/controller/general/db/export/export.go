@@ -1,9 +1,8 @@
-package db
+package export
 
 import (
 	"compress/gzip"
 	"fmt"
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -15,7 +14,7 @@ import (
 	"time"
 )
 
-type ArgsExportStruct struct {
+type ArgsStruct struct {
 	attr.Arguments
 	Name          string   `arg:"-n,--name" help:"Name of the archive file"`
 	DBServiceName string   `arg:"-s,--service" help:"DB service name. For example: db"`
@@ -27,7 +26,7 @@ func Export() {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 	if projectConf["platform"] != "pwa" {
-		args := getExportArgs()
+		args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 		name := strings.TrimSpace(args.Name)
 		if len(name) > 0 {
@@ -72,27 +71,4 @@ func Export() {
 	} else {
 		fmt.Println("This command is not supported for " + projectConf["platform"])
 	}
-}
-
-func getExportArgs() *ArgsExportStruct {
-	args := new(ArgsExportStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

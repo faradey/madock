@@ -7,7 +7,9 @@ import (
 	"github.com/faradey/madock/src/controller/general/composer"
 	"github.com/faradey/madock/src/controller/general/config"
 	"github.com/faradey/madock/src/controller/general/cron"
-	"github.com/faradey/madock/src/controller/general/db"
+	"github.com/faradey/madock/src/controller/general/db/export"
+	"github.com/faradey/madock/src/controller/general/db/import"
+	info2 "github.com/faradey/madock/src/controller/general/db/info"
 	"github.com/faradey/madock/src/controller/general/debug"
 	"github.com/faradey/madock/src/controller/general/help"
 	"github.com/faradey/madock/src/controller/general/info"
@@ -74,6 +76,8 @@ func main() {
 		composer.Composer()
 	case "compress":
 		compress.Zip()
+	case "config:cache:clean", "c:c:c":
+		config.CacheClean()
 	case "config:list":
 		config.ShowEnv()
 	case "config:set":
@@ -83,11 +87,11 @@ func main() {
 	case "cron:disable":
 		cron.Disable()
 	case "db:import":
-		db.Import()
+		_import.Import()
 	case "db:export":
-		db.Export()
+		export.Export()
 	case "db:info":
-		db.Info()
+		info2.Info()
 	case "debug:enable":
 		debug.Enable()
 	case "debug:disable":

@@ -1,7 +1,6 @@
 package patch
 
 import (
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
@@ -20,7 +19,7 @@ type ArgsStruct struct {
 }
 
 func Create() {
-	args := getArgs()
+	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 	filePath := args.File
 	patchName := args.Name
@@ -46,27 +45,4 @@ func Create() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	attr.IsParseArgs = false
-	return args
 }

@@ -2,15 +2,12 @@ package media
 
 import (
 	"fmt"
-	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/src/controller/general/remote_sync"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/finder"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/pkg/sftp"
-	"log"
-	"os"
 	"sync"
 	"time"
 )
@@ -23,7 +20,7 @@ type ArgsStruct struct {
 }
 
 func Execute() {
-	args := getArgs()
+	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 	projectConf := configs.GetCurrentProjectConfig()
 
@@ -59,26 +56,4 @@ func Execute() {
 	time.Sleep(3 * time.Second)
 	chDownload.Wait()
 	fmt.Println("\n" + "Synchronization is completed")
-}
-
-func getArgs() *ArgsStruct {
-	args := new(ArgsStruct)
-	if attr.IsParseArgs && len(os.Args) > 2 {
-		argsOrigin := os.Args[2:]
-		p, err := arg.NewParser(arg.Config{
-			IgnoreEnv: true,
-		}, args)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = p.Parse(argsOrigin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	return args
 }
