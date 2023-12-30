@@ -1,7 +1,21 @@
 **v2.4.0**
 - Added the new option PUBLIC_DIR in the project configuration. Each platform can have a different path of public folder therefore this option will be specified as a public folder in the container.
 - Fixed host for phpmyadmin2
-- 
+- Fixed mcrypt extension for PHP
+- Fixed mail for CLI
+- Improve command "madock c:f"
+- Added --force option for the command "madock rebuild". Removes running containers without waiting for them to complete correctly and creates new containers.
+- Added new library for CLI commands
+- Replaced Mailhog to Mailpit
+- The configuration file format would be changed from .txt to .xml. The project configuration file env.txt has been renamed to config.xml. The old configuration files have been preserved so that if you have problems with the new version of Madock, you can roll back to the old version.
+- Configuration scopes for the project have been added. Now switching between configurations has become convenient and there is no need to create a copy of the project in a neighboring folder. The database is also separate for each scope.
+- Added the new command "madock scope:list" for listing all scopes of the project.
+- Added the new command "madock scope:set" for switching between scopes of the project.
+- The commands "remote:sync:media", "remote:sync:db" and "remote:sync:file" have received an additional option "--ssh-type" which specifies the prefix of the name of the ssh settings in the project configuration. This way you can specify which ssh settings to use when executing the command.
+- Added aruntime configuration caching. Now Madock will parse files less when starting and rebuilding a project.
+- Added the new command "madock config:cache:clean" for cleaning Madock aruntime cache.
+- Added the new command "madock open" for opening the project in the browser.
+- Improve documentation of Madock
 
 **2.2.0**
 - Shopify support
