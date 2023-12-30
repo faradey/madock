@@ -60,7 +60,7 @@ func Execute() {
 	describeByLevel("--name, -n", "Name of the patch file", 1)
 	describeByLevel("--title, -t", "Title of the patch", 1)
 	describeByLevel("--force, -f", "Replace patch if it already exists", 1)
-	describeByLevel("project:remove", "Remove project (project folder, madock project configuration, volumes, images, containers)", 0)
+	describeByLevel("project:remove", "Remove project (project folder, Madock project configuration, volumes, images, containers)", 0)
 	describeByLevel("proxy:start", "Start a proxy server", 0)
 	describeByLevel("proxy:stop", "Stop a proxy server", 0)
 	describeByLevel("proxy:restart", "Restart a proxy server", 0)

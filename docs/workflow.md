@@ -1,6 +1,6 @@
 # Workflow
 
-The following guide shows you the normal development workflow using madock.
+The following guide shows you the normal development workflow using Madock.
 
 IMPORTANT: After changing any option in the following files, you should run `madock rebuild`
 madock/projects/config.txt
@@ -32,7 +32,7 @@ madock node grunt exec:<theme>
 madock node grunt watch
 ```
 
-**IMPORTANT:** For the Chrome browser, you can download the LiveReload plugin specifically for madock from the link [Google Chrome plugin](https://chrome.google.com/webstore/detail/livereload-for-madock/cmablbpbnbbgmakinefjgmgpolfahdbo). Then install it and enable it for the site you need.
+**IMPORTANT:** For the Chrome browser, you can download the LiveReload plugin specifically for Madock from the link [Google Chrome plugin](https://chrome.google.com/webstore/detail/livereload-for-madock/cmablbpbnbbgmakinefjgmgpolfahdbo). Then install it and enable it for the site you need.
 
 **NOTE:** You might also need to disable your browser cache. For example in Chrome:
 
@@ -43,7 +43,7 @@ madock node grunt watch
 * Enable xdebug
 
   ```
-  madock debug on
+  madock debug:enable
   ```
 
 * Configure xdebug in PHPStorm (Only first time)
@@ -53,12 +53,12 @@ madock node grunt watch
 * Disable xdebug when finish
 
   ```
-  madock debug off
+  madock debug:disable
   ```
 
 #### 6. SSL certificates
 
-If you want to manually add an ssl certificate to the browser, you can find it at [path to madock folder]/aruntime/ctx/madockCA.pem
+If you want to manually add an ssl certificate to the browser, you can find it at [path to Madock folder]/aruntime/ctx/madockCA.pem
 If the SSL certificates do not work, run the `madock ssl:rebuild` command and restart your browser.
 
 #### 7. auth.json
