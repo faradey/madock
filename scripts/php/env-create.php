@@ -227,8 +227,16 @@ try {
 
         file_put_contents($envPath, "<?php\n    return ".var_export($env, true).";\n");
         print("The env.php file was generated. \n");
-        print("You should update the hosts by using the command below\n");
-        print("madock config:set --name=HOSTS --value=\"".implode(" ", array_unique($hosts))."\"\n"); 
+        print("You should update the hosts by using the command(s) below\n");
+        $hosts = array_unique($hosts);
+        foreach($hosts as $host) {
+            $domainAndCode = explode(":", $host);
+            if(empty($domainAndCode[1])) {
+                $domainAndCode[1] = "base";
+            }
+            print("madock config:set --name=nginx/hosts/".$domainAndCode[1]."/name --value=\"".$domainAndCode[0]."\"\n");
+        }
+
         print("and you can add the domains to /etc/hosts\n"); 
         print("127.0.0.1 ".implode(" ", array_unique($domains))."\n");     
     } else {
