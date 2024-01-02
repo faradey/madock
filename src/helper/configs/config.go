@@ -31,15 +31,14 @@ func (t *ConfigLines) Save() {
 }
 
 func SaveInFile(file string, data map[string]string, activeScope string) {
-
-	if _, err := os.Stat(file); os.IsNotExist(err) && err != nil {
-		log.Fatalln(err)
-	}
-	config := ParseXmlFile(file)
 	resultData := make(map[string]interface{})
-	for key, value := range config {
-		resultData[key] = value
+	if paths.IsFileExist(file) {
+		config := ParseXmlFile(file)
+		for key, value := range config {
+			resultData[key] = value
+		}
 	}
+
 	for key, value := range data {
 		resultData["scopes/"+activeScope+"/"+key] = value
 	}
