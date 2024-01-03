@@ -178,7 +178,7 @@ func GetHosts(data map[string]string) []map[string]string {
 	for _, key := range sortedKeys {
 		if strings.Contains(key, "/hosts/") && data[key] != "" {
 			items := strings.Split(key, "/")
-			hosts = append(hosts, map[string]string{"name": data[key], "code": items[len(items)-2]})
+			hosts = append(hosts, map[string]string{"name": data[key], "code": items[len(items)-1]})
 		}
 	}
 
