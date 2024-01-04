@@ -6,6 +6,7 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/go-xmlfmt/xmlfmt"
 	"log"
+	"net"
 	"os"
 	"os/user"
 	"regexp"
@@ -152,12 +153,24 @@ func ReplaceConfigValue(str string) string {
 	hosts := GetHosts(projectConf)
 	if len(hosts) > 0 {
 		for _, host := range hosts {
-			onlyHosts = append(onlyHosts, "- \""+host["name"]+":172.17.0.1\"")
+			onlyHosts = append(onlyHosts, "- \""+host["name"]+":"+GetOutboundIP()+"\"")
 		}
 	}
 
 	str = strings.Replace(str, "{{{nginx/host_gateways}}}", strings.Join(onlyHosts, "\n      "), -1)
 	return str
+}
+
+func GetOutboundIP() string {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "172.17.0.1"
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP.String()
 }
 
 func IsOption(name string) bool {
