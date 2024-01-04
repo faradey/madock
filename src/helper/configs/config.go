@@ -174,6 +174,9 @@ func GetOutboundIP() string {
 }
 
 func IsOption(name string) bool {
+	if strings.Contains(name, "/hosts/") {
+		return true
+	}
 	for key := range GetCurrentProjectConfig() {
 		if key == name {
 			return true
