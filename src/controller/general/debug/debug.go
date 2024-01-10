@@ -4,7 +4,6 @@ import (
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/paths"
 )
 
 type ArgsStruct struct {
@@ -13,8 +12,7 @@ type ArgsStruct struct {
 
 func Enable() {
 	attr.Parse(new(ArgsStruct))
-	configPath := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/config.xml"
-	configs.SetParam(configPath, "php/xdebug/enabled", "true", configs.GetCurrentProjectConfig()["activeScope"])
+	configs.SetParam(configs.GetProjectName(), "php/xdebug/enabled", "true", configs.GetCurrentProjectConfig()["activeScope"])
 	rebuild.Execute()
 }
 
