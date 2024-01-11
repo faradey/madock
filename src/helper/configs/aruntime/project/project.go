@@ -40,6 +40,7 @@ func MakeConf(projectName string) {
 	} else if projectConf["platform"] == "custom" {
 		MakeConfCustom(projectName)
 	}
+	processOtherCTXFiles(projectName)
 }
 
 func makeScriptsConf(projectName string) {
@@ -396,5 +397,17 @@ func processOtherCTXFiles(projectName string) {
 		if err != nil {
 			log.Fatalf("Unable to write file: %v", err)
 		}
+	}
+
+	//do foreach project docker/ctx/files and add them to "/aruntime/projects/" + projectName + "/ctx/"
+	ctxFiles := paths.GetFiles(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/")
+	for _, ctxFile := range ctxFiles {
+		b, err = os.ReadFile(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/" + ctxFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		str := string(b)
+		destinationFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + ctxFile
+		err = os.WriteFile(destinationFile, []byte(str), 0755)
 	}
 }

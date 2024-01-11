@@ -8,5 +8,4 @@ func MakeConfCustom(projectName string) {
 	makeRedisDockerfile(projectName)
 	makeKibanaConf(projectName)
 	makeScriptsConf(projectName)
-	processOtherCTXFiles(projectName)
 }
