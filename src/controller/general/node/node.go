@@ -13,10 +13,7 @@ func Execute() {
 	flag := cli.NormalizeCliCommandWithJoin(os.Args[2:])
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
-	service := "php"
-	if projectConf["platform"] == "pwa" {
-		service = "nodejs"
-	}
+	service := "nodejs"
 
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", projectConf["workdir"])
 

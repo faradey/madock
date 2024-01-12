@@ -73,6 +73,7 @@
             </db2>
             <nodejs>
                 <enabled>false</enabled>
+                <repository>node</repository>
                 <version>18.15.0</version>
                 <yarn>
                     <enabled>false</enabled>

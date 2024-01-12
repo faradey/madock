@@ -73,6 +73,19 @@ services:
       - dbdata2:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
 <<<endif>>>
+  
+<<<if{{{nodejs/enabled}}}>>>
+    nodejs:
+      build:
+        context: ctx
+        dockerfile: nodejs.Dockerfile
+      tty: true
+      volumes:
+      - ./src:/var/www/html:cached
+      extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+<<<endif>>>
 
 <<<if{{{search/elasticsearch/enabled}}}>>>
   elasticsearch:

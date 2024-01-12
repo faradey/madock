@@ -120,10 +120,6 @@ RUN if [ "{{{magento/cloud/enabled}}}" = "true" ]; then curl -sS https://account
 
 RUN apt-get install cron \
     && mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/n98magerun/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
-<<<if{{{nodejs/enabled}}}>>>RUN apt-get install -y gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget<<<endif>>>
-<<<if{{{nodejs/enabled}}}>>>RUN curl -sL https://deb.nodesource.com/setup_{{{nodejs/major_version}}}.x | bash -<<<endif>>>
-<<<if{{{nodejs/enabled}}}>>>RUN mkdir /var/www/.npm && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.npm && apt install nodejs -y && apt install chromium-bsu -y && npm install -g grunt-cli && npm install -g bower && npm install -g livereload<<<endif>>>
-
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
 RUN usermod -u {{{os/user/uid}}} -o www-data && groupmod -g {{{os/user/guid}}} -o www-data \

@@ -1,4 +1,4 @@
-FROM node:{{{nodejs/version}}}
+FROM {{{nodejs/repository}}}:{{{nodejs/version}}}
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
