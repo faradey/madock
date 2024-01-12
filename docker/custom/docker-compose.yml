@@ -84,7 +84,7 @@ services:
       - ./src:/var/www/html:cached
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    {{{nginx/host_gateways}}}
+      {{{nginx/host_gateways}}}
 <<<endif>>>
 
 <<<if{{{search/elasticsearch/enabled}}}>>>

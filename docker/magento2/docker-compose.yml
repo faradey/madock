@@ -75,14 +75,14 @@ services:
 <<<endif>>>
   
 <<<if{{{nodejs/enabled}}}>>>
-    nodejs:
-      build:
-        context: ctx
-        dockerfile: nodejs.Dockerfile
-      tty: true
-      volumes:
+  nodejs:
+    build:
+      context: ctx
+      dockerfile: nodejs.Dockerfile
+    tty: true
+    volumes:
       - ./src:/var/www/html:cached
-      extra_hosts:
+    extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}
 <<<endif>>>
