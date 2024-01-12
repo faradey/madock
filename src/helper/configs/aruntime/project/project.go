@@ -399,7 +399,7 @@ func processOtherCTXFiles(projectName string) {
 		}
 	}
 
-	//do foreach project docker/ctx/files and add them to "/aruntime/projects/" + projectName + "/ctx/"
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/")
 	ctxFiles := paths.GetFiles(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/")
 	for _, ctxFile := range ctxFiles {
 		b, err = os.ReadFile(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/" + ctxFile)
