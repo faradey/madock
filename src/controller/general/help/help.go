@@ -55,6 +55,8 @@ func Execute() {
 	describeByLevel("mftf:init", "Init MFTF configuration. For example: `madock mftf:init`", 0)
 	describeByLevel("n98", "Execute n98 command inside php container. For example: `madock n98 sys:info`", 0)
 	describeByLevel("node", "Execute NodeJs command inside php container", 0)
+	describeByLevel("open", "Open project in browser", 0)
+	describeByLevel("--service, -s", "Open a specific project service in the browser. For example: phpmyadmin", 1)
 	describeByLevel("patch:create", "Create patch. The patch can be used with the composer plugin cweagans/composer-patches", 0)
 	describeByLevel("--file", "Path of changed file. For example: vendor/magento/module-analytics/Cron/CollectData.php", 1)
 	describeByLevel("--name, -n", "Name of the patch file", 1)

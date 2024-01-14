@@ -177,6 +177,11 @@ This command shows you the following items:
 * `node`    Execute NodeJs command inside php container. For example: `madock node grunt exec:<theme>`
                         
 
+* `open`    Open project in browser
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service, -s`     Open a specific project service in the browser. For example: phpmyadmin                   
+
+
 * `patch:create`   Create patch. The patch can be used with the composer plugin cweagans/composer-patches. For example: `madock patch:create --file=vendor/magento/module-analytics/Cron/CollectData.php --name=collect-data-cron.patch --title="Collect data cron patch" --force`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--file`     Path of changed file. For example: vendor/magento/module-analytics/Cron/CollectData.php
