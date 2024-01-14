@@ -10,27 +10,32 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
+	Service string `arg:"-s,--service" help:"Service name"`
 }
 
 func Execute() {
-	attr.Parse(new(ArgsStruct))
+	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 	projectConfig := configs.GetCurrentProjectConfig()
 	hosts := configs.GetHosts(projectConfig)
 	var cmd string
-	var args []string
+	var argsCommand []string
 
 	switch runtime.GOOS {
 	case "windows":
 		cmd = "cmd"
-		args = []string{"/c", "start"}
+		argsCommand = []string{"/c", "start"}
 	case "darwin":
 		cmd = "open"
 	default: // "linux", "freebsd", "openbsd", "netbsd"
 		cmd = "xdg-open"
 	}
-	args = append(args, "https://"+hosts[0]["name"])
-	err := exec.Command(cmd, args...).Start()
+	host := "https://" + hosts[0]["name"]
+	if args.Service != "" {
+		host = host + "/" + args.Service
+	}
+	argsCommand = append(argsCommand, host)
+	err := exec.Command(cmd, argsCommand...).Start()
 	if err != nil {
 		log.Fatal(err)
 	}
