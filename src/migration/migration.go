@@ -12,22 +12,32 @@ var versionOptionName string = "madock_version"
 
 func Apply(newAppVersion string) {
 	oldAppVersion := ""
-	if newAppVersion > "2.4.0" {
-		configPath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
-		if !paths.IsFileExist(configPath) {
-			err := os.WriteFile(configPath, []byte(""), 0755)
-			if err != nil {
-				log.Fatalln(err)
-			}
-		}
+	oldAppVersionXml := ""
+	oldAppVersionTxt := ""
 
+	configPath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
+	if !paths.IsFileExist(configPath) {
+		err := os.WriteFile(configPath, []byte(""), 0755)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	} else {
 		config := configs.GetGeneralConfig()
-		oldAppVersion = config[versionOptionName]
-	} else if paths.IsFileExist(paths.GetExecDirPath() + "/projects/config.txt") {
+		oldAppVersionXml = config[versionOptionName]
+	}
+
+	if paths.IsFileExist(paths.GetExecDirPath() + "/projects/config.txt") {
 		config := configs2.GetGeneralConfig()
-		oldAppVersion = config["MADOCK_VERSION"]
+		oldAppVersionTxt = config["MADOCK_VERSION"]
 		configs2.SetParam(paths.GetExecDirPath()+"/projects/config.txt", "MADOCK_VERSION", newAppVersion)
 	}
+
+	if oldAppVersionXml > oldAppVersionTxt {
+		oldAppVersion = oldAppVersionXml
+	} else {
+		oldAppVersion = oldAppVersionTxt
+	}
+
 	if oldAppVersion < newAppVersion {
 		Execute(oldAppVersion)
 		saveNewVersion(newAppVersion)
