@@ -23,7 +23,7 @@ func Apply(newAppVersion string) {
 
 		config := configs.GetGeneralConfig()
 		oldAppVersion = config[versionOptionName]
-	} else {
+	} else if paths.IsFileExist(paths.GetExecDirPath() + "/projects/config.txt") {
 		config := configs2.GetGeneralConfig()
 		oldAppVersion = config["MADOCK_VERSION"]
 		configs2.SetParam(paths.GetExecDirPath()+"/projects/config.txt", "MADOCK_VERSION", newAppVersion)
