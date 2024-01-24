@@ -74,10 +74,13 @@ func GetXmlMap(path string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	data := string(dataByte)
-	decoder := xml2map.NewDecoder(strings.NewReader(data))
-	result, err := decoder.Decode()
-	if err != nil {
-		return nil, err
+	result := make(map[string]interface{})
+	if data != "" {
+		decoder := xml2map.NewDecoder(strings.NewReader(data))
+		result, err = decoder.Decode()
+		if err != nil {
+			return nil, err
+		}
 	}
 	return result, nil
 }
