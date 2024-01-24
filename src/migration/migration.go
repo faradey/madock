@@ -29,7 +29,9 @@ func Apply(newAppVersion string) {
 	if paths.IsFileExist(paths.GetExecDirPath() + "/projects/config.txt") {
 		config := configs2.GetGeneralConfig()
 		oldAppVersionTxt = config["MADOCK_VERSION"]
-		configs2.SetParam(paths.GetExecDirPath()+"/projects/config.txt", "MADOCK_VERSION", newAppVersion)
+		if oldAppVersionTxt <= "2.4.0" {
+			configs2.SetParam(paths.GetExecDirPath()+"/projects/config.txt", "MADOCK_VERSION", newAppVersion)
+		}
 	}
 
 	if oldAppVersionXml > oldAppVersionTxt {
