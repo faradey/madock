@@ -17,7 +17,10 @@ func ParseXmlFile(path string) (conf map[string]string) {
 		log.Fatalln(err)
 	}
 
-	mappingData := ComposeConfigMap(mapping["config"].(map[string]interface{}))
+	mappingData := make(map[string]string)
+	if _, ok := mapping["config"]; ok {
+		mappingData = ComposeConfigMap(mapping["config"].(map[string]interface{}))
+	}
 
 	if conf == nil {
 		conf = make(map[string]string)
