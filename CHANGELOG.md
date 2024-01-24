@@ -1,3 +1,6 @@
+**v2.4.1**
+- Added command scope:add to add a new scope and activate it
+
 **v2.4.0**
 - Added the new option PUBLIC_DIR in the project configuration. Each platform can have a different path of public folder therefore this option will be specified as a public folder in the container.
 - Fixed host for phpmyadmin2

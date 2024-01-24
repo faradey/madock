@@ -192,6 +192,34 @@ func SetScope(projectName, scope string) bool {
 	return true
 }
 
+func AddScope(projectName, scope string) bool {
+	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
+		return false
+	}
+
+	config := ParseXmlFile(configPath)
+	config["activeScope"] = scope
+	config[scope] = ""
+	resultData := make(map[string]interface{})
+	for key, value := range config {
+		resultData[key] = value
+	}
+	resultMapData := SetXmlMap(resultData)
+	w := &bytes.Buffer{}
+	w.WriteString(xml.Header)
+	err := MarshalXML(resultMapData, xml.NewEncoder(w), "config")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
 func GetActiveScope(projectName string, withDefault bool, prefix string) string {
 	config := GetProjectConfig(projectName)
 	if val, ok := config["activeScope"]; ok && val != "default" {

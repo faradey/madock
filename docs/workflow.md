@@ -247,6 +247,11 @@ This command shows you the following items:
 * `restart` Restarting all containers and services. Stop all containers and start them again
 
 
+* `scope:add`   Add and activate a new config scope
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[scope name]`  Scope name
+
+
 * `scope:list`   Show all config scopes
 
 

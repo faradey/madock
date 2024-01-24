@@ -84,6 +84,8 @@ func Execute() {
 	describeByLevel("--path", "Path to file on server (from Magento root)", 1)
 	describeByLevel("--ssh-type, -s", "SSH type (dev, stage, prod)", 1)
 	describeByLevel("restart", "Restarting all containers and services. Stop all containers and start them again", 0)
+	describeByLevel("scope:add", "Add and activate a new config scope", 0)
+	describeByLevel("[scope name]", "Scope name", 1)
 	describeByLevel("scope:list", "Show all config scopes", 0)
 	describeByLevel("scope:set", "Set config scope", 0)
 	describeByLevel("[scope name]", "Scope name", 1)

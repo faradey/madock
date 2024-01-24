@@ -27,6 +27,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/remote_sync/file"
 	"github.com/faradey/madock/src/controller/general/remote_sync/media"
 	"github.com/faradey/madock/src/controller/general/restart"
+	"github.com/faradey/madock/src/controller/general/scope/add"
 	listScope "github.com/faradey/madock/src/controller/general/scope/list"
 	"github.com/faradey/madock/src/controller/general/scope/set"
 	"github.com/faradey/madock/src/controller/general/service/disable"
@@ -150,6 +151,8 @@ func main() {
 		restart.Execute()
 	case "pwa":
 		pwa.Execute()
+	case "scope:add":
+		add.Execute()
 	case "scope:list":
 		listScope.Execute()
 	case "scope:set":
