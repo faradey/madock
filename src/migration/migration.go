@@ -17,6 +17,7 @@ func Apply(newAppVersion string) {
 
 	configPath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
 	if !paths.IsFileExist(configPath) {
+		paths.MakeDirsByPath(paths.GetExecDirPath() + "/cache")
 		err := os.WriteFile(configPath, []byte(""), 0755)
 		if err != nil {
 			log.Fatalln(err)
