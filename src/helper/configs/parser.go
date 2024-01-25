@@ -94,12 +94,14 @@ func SetXmlMap(data map[string]interface{}) map[string]interface{} {
 		keys := strings.Split(key, "/")
 		switch len(keys) {
 		case 1:
-			result[keys[0]] = value.(string)
-		case 2:
-			if _, ok := result[keys[0]]; !ok {
-				result[keys[0]] = make(map[string]interface{})
+			if keys[0] == "activeScope" {
+				result[keys[0]] = value.(string)
 			}
-			result[keys[0]].(map[string]interface{})[keys[1]] = value.(string)
+		/*case 2:
+		if _, ok := result[keys[0]]; !ok {
+			result[keys[0]] = make(map[string]interface{})
+		}
+		result[keys[0]].(map[string]interface{})[keys[1]] = value.(string)*/
 		case 3:
 			if _, ok := result[keys[0]]; !ok {
 				result[keys[0]] = make(map[string]interface{})
