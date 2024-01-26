@@ -24,7 +24,7 @@ func V230() {
 				} else if projectConf["PLATFORM"] == "shopify" {
 					configs.SetParam(envFile, "PUBLIC_DIR", "web/public")
 				} else if projectConf["PLATFORM"] == "custom" {
-					configs.SetParam(envFile, "PUBLIC_DIR", "web/public")
+					configs.SetParam(envFile, "PUBLIC_DIR", "public")
 				}
 			}
 		}

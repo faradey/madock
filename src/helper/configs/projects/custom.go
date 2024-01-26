@@ -10,7 +10,7 @@ import (
 func Custom(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	var dbType = "MariaDB"
 	if _, ok := projectConf["public_dir"]; !ok {
-		config.Set("public_dir", "web/public")
+		config.Set("public_dir", "public")
 	}
 
 	config.Set("php/version", defVersions.Php)
