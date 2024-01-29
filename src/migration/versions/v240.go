@@ -70,7 +70,7 @@ func V240() {
 					if len(splitHost) > 1 {
 						runCode = splitHost[1]
 					}
-					resultData["default/nginx/hosts/"+runCode+"/name"] = splitHost[0]
+					resultData["scopes/default/nginx/hosts/"+runCode+"/name"] = splitHost[0]
 				}
 			}
 
