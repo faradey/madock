@@ -30,14 +30,14 @@ func V240() {
 		resultData := make(map[string]interface{})
 		for key, value := range mappingData {
 			if v, ok := configData[value]; ok {
-				resultData[key] = v
+				resultData["scopes/default/"+key] = v
 			}
 		}
 
 		resultMapData := config2.SetXmlMap(resultData)
 		w := &bytes.Buffer{}
 		w.WriteString(xml.Header)
-		err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "config/scopes/default")
+		err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "config")
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -54,7 +54,7 @@ func V240() {
 			resultData := make(map[string]interface{})
 			for key, value := range mappingData {
 				if v, ok := configData[value]; ok {
-					resultData[key] = v
+					resultData["scopes/default/"+key] = v
 				}
 			}
 
@@ -70,14 +70,14 @@ func V240() {
 					if len(splitHost) > 1 {
 						runCode = splitHost[1]
 					}
-					resultData["nginx/hosts/"+runCode+"/name"] = splitHost[0]
+					resultData["default/nginx/hosts/"+runCode+"/name"] = splitHost[0]
 				}
 			}
 
 			resultMapData := config2.SetXmlMap(resultData)
 			w := &bytes.Buffer{}
 			w.WriteString(xml.Header)
-			err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "config/scopes/default")
+			err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "config")
 			if err != nil {
 				log.Fatalln(err)
 			}
