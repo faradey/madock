@@ -2,11 +2,10 @@ package setup
 
 import (
 	"fmt"
-	"github.com/faradey/madock/src/controller/shopify/start"
+	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/projects"
-	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions/shopify"
@@ -36,7 +35,6 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-		docker.Down(false)
-		start.Execute(false, projectConf)
+		rebuild.Execute()
 	}
 }

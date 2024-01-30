@@ -7,6 +7,8 @@ import (
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/paths"
+	"log"
+	"os"
 )
 
 type ArgsStruct struct {
@@ -19,6 +21,12 @@ func Execute() {
 	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 	if !configs.IsHasNotConfig() {
+		if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
+			err := os.Remove(paths.GetExecDirPath() + "/cache/conf-cache")
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 		fmtc.SuccessLn("Stop containers")
 		if args.Force {
 			docker.Kill()

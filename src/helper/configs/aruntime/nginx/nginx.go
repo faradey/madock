@@ -19,6 +19,9 @@ import (
 )
 
 func MakeConf() {
+	if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
+		return
+	}
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/docker/nginx")
 	setPorts()
 	makeProxy()

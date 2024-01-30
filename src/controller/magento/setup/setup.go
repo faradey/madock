@@ -3,7 +3,7 @@ package setup
 import (
 	"fmt"
 	"github.com/faradey/madock/src/controller/general/install"
-	"github.com/faradey/madock/src/controller/magento/start"
+	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
@@ -82,8 +82,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 	}
 
 	if doDownload || doInstall || continueSetup {
-		docker.Down(false)
-		start.Execute(false, projectConf)
+		rebuild.Execute()
 	}
 
 	if doDownload {

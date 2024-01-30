@@ -14,6 +14,9 @@ import (
 )
 
 func MakeConf(projectName string) {
+	if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
+		return
+	}
 	// get project config
 	projectConf := configs.GetProjectConfig(projectName)
 	src := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/src"
