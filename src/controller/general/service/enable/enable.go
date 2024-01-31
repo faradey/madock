@@ -1,13 +1,10 @@
 package enable
 
 import (
-	"fmt"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/controller/general/service"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
-	"os"
-	"os/exec"
 )
 
 type ArgsStruct struct {
@@ -35,11 +32,4 @@ func Execute() {
 	}
 
 	rebuild.Execute()
-	cmd := exec.Command("cd", "../")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println(err)
-	}
 }

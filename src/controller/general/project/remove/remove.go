@@ -60,6 +60,7 @@ func Execute() {
 				log.Fatal(err)
 			}
 			fmtc.SuccessLn("Project was removed successfully")
+			fmtc.SuccessLn("!!! Close the terminal for the changes to take effect !!!")
 		} else {
 			fmtc.WarningLn("The project was not removed. The entered value does not match the project name.")
 		}
