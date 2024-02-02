@@ -119,7 +119,7 @@ RUN if [ "{{{magento/cloud/enabled}}}" = "true" ]; then curl -sS https://account
     && cp -r /root/.magento-cloud/ /var/www/ && chown -R {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.magento-cloud && ln -s /var/www/.magento-cloud/bin/magento-cloud /usr/bin/magento-cloud; fi
 
 RUN apt-get install cron \
-    && mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/n98magerun/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
+    && mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
 RUN usermod -u {{{os/user/uid}}} -o www-data && groupmod -g {{{os/user/guid}}} -o www-data \
@@ -127,10 +127,22 @@ RUN usermod -u {{{os/user/uid}}} -o www-data && groupmod -g {{{os/user/guid}}} -
     && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/patches \
     && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/scripts/php \
     && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.composer \
-    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /usr/bin/composer \
-    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/n98magerun
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /usr/bin/composer
 RUN if [ "{{{magento/cloud/enabled}}}" = "true" ]; then chown {{{os/user/uid}}}:{{{os/user/guid}}} /usr/bin/magento-cloud; fi
-RUN if [ "{{{magento/n98magerun/enabled}}}" = "true" ]; then cd /var/www/n98magerun && curl -sS -O https://files.magerun.net/n98-magerun2.phar && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/n98magerun/n98-magerun2.phar && chmod +x /var/www/n98magerun/n98-magerun2.phar; fi
+
+<<<if{{{magento/n98magerun/enabled}}}>>>
+RUN mkdir /var/www/n98magerun/ \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/n98magerun \
+    && cd /var/www/n98magerun \
+    && IFS='.' read major minor patch <<< "{{{php/version}}}" && n98downfilename="n98-magerun2.phar" \
+    && if [[ "${major}" = "7" && "${minor}" = "3" ]]; then n98downfilename="n98-magerun2-6.1.1.phar"; fi \
+    && if [[ "${major}" = "7" && "${minor}" = "2" ]]; then n98downfilename="n98-magerun2-4.7.0.phar"; fi \
+    && if [[ "${major}" < "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then n98downfilename="n98-magerun2-2.3.3.phar"; fi \
+    && curl -sS -o ./n98-magerun2.phar https://files.magerun.net/${n98downfilename} \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/n98magerun/n98-magerun2.phar \
+    && chmod +x /var/www/n98magerun/n98-magerun2.phar
+<<<endif>>>
+
 WORKDIR {{{workdir}}}
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
