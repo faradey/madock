@@ -366,12 +366,15 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 	if platform == "" {
 		platform = projectConf["platform"]
 	}
-	dockerDefFile := paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + strings.Trim(path, "/")
 	var err error
+	dockerDefFile := paths.GetRunDirPath() + "/.madock/docker/" + strings.Trim(path, "/")
 	if !paths.IsFileExist(dockerDefFile) {
-		dockerDefFile = paths.GetExecDirPath() + "/docker/" + platform + "/" + strings.Trim(path, "/")
+		dockerDefFile = paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + strings.Trim(path, "/")
 		if !paths.IsFileExist(dockerDefFile) {
-			log.Fatal(err)
+			dockerDefFile = paths.GetExecDirPath() + "/docker/" + platform + "/" + strings.Trim(path, "/")
+			if !paths.IsFileExist(dockerDefFile) {
+				log.Fatal(err)
+			}
 		}
 	}
 

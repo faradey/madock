@@ -67,8 +67,32 @@ func GetProjectConfig(projectName string) map[string]string {
 }
 
 func GetProjectConfigOnly(projectName string) map[string]string {
+	activeConfig := make(map[string]string)
 	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
-	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
+	activeScope := "default"
+	if paths.IsFileExist(configPath) {
+		config := ParseXmlFile(configPath)
+
+		defaultConfig := getConfigByScope(config, activeScope)
+		if v, ok := config["activeScope"]; ok {
+			activeScope = v
+			activeConfig = getConfigByScope(config, activeScope)
+		}
+
+		ConfigMapping(defaultConfig, activeConfig)
+		activeConfig["activeScope"] = activeScope
+	}
+
+	defaultConfig := GetProjectConfigInProject(activeConfig["path"])
+	activeProjectConfig := make(map[string]string)
+	ConfigMapping(defaultConfig, activeProjectConfig)
+	ConfigMapping(activeConfig, activeProjectConfig)
+	return activeProjectConfig
+}
+
+func GetProjectConfigInProject(projectPath string) map[string]string {
+	configPath := projectPath + "/.madock/config.xml"
+	if !paths.IsFileExist(configPath) {
 		return make(map[string]string)
 	}
 
