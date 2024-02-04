@@ -90,6 +90,18 @@ func GetProjectConfigOnly(projectName string) map[string]string {
 	return activeProjectConfig
 }
 
+func GetCurrentProjectConfigPath(projectName string) string {
+	if projectName == "" {
+		projectName = GetProjectName()
+	}
+	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
+	if paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
+		envFile = paths.GetRunDirPath() + "/.madock/config.xml"
+	}
+
+	return envFile
+}
+
 func GetProjectConfigInProject(projectPath string) map[string]string {
 	configPath := projectPath + "/.madock/config.xml"
 	if !paths.IsFileExist(configPath) {
@@ -166,7 +178,7 @@ func getConfigByScope(originConfig map[string]string, activeScope string) map[st
 
 func GetScopes(projectName string) map[string]string {
 	scopes := make(map[string]string)
-	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+	configPath := GetCurrentProjectConfigPath(projectName)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
 		return scopes
 	}
@@ -190,7 +202,7 @@ func GetScopes(projectName string) map[string]string {
 }
 
 func SetScope(projectName, scope string) bool {
-	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+	configPath := GetCurrentProjectConfigPath(projectName)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
 		return false
 	}
@@ -217,7 +229,7 @@ func SetScope(projectName, scope string) bool {
 }
 
 func AddScope(projectName, scope string) bool {
-	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+	configPath := GetCurrentProjectConfigPath(projectName)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
 		return false
 	}

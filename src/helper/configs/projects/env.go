@@ -10,7 +10,7 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	generalConf := configs2.GetGeneralConfig()
 	config := new(configs2.ConfigLines)
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
-	if paths.GetRunDirName() == projectName && paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
+	if paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
 		envFile = paths.GetRunDirPath() + "/.madock/config.xml"
 	}
 	config.EnvFile = envFile
@@ -19,7 +19,8 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 		config.ActiveScope = projectConf["activeScope"]
 	}
 
-	config.Set("path", paths.GetRunDirPath())
+	configs2.SetParam(projectName, "path", paths.GetRunDirPath(), "default", configs2.MadockLevelConfigCode)
+	/*config.Set("path", paths.GetRunDirPath())*/
 	config.Set("platform", defVersions.Platform)
 	platform := defVersions.Platform
 	if _, ok := projectConf["platform"]; ok {

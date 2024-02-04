@@ -8,9 +8,13 @@ const MadockLevelConfigCode = ":madockconfig:"
 func SetParam(projectName, name, value, activeScope, level string) {
 	file := ""
 	if level != MainConfigCode {
-		if level != MadockLevelConfigCode && paths.GetRunDirName() == projectName && paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
+		if level != MadockLevelConfigCode && paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
 			file = paths.GetRunDirPath() + "/.madock/config.xml"
 		} else {
+			if projectName == MadockLevelConfigCode {
+				projectName = GetProjectName()
+			}
+
 			file = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 		}
 	} else {

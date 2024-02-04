@@ -81,7 +81,7 @@ func (t *ConfigLines) Set(name, value string) {
 
 func IsHasConfig(projectName string) bool {
 	PrepareDirsForProject(projectName)
-	if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml") {
+	if paths.IsFileExist(paths.GetExecDirPath()+"/projects/"+projectName+"/config.xml") && !paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
 		return true
 	}
 
@@ -89,7 +89,7 @@ func IsHasConfig(projectName string) bool {
 }
 
 func IsHasNotConfig() bool {
-	if !paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + GetProjectName() + "/config.xml") {
+	if !paths.IsFileExist(paths.GetExecDirPath()+"/projects/"+GetProjectName()+"/config.xml") && !paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
 		return true
 	}
 	return false

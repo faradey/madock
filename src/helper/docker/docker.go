@@ -81,6 +81,9 @@ func UpNginx() {
 }
 
 func UpNginxWithBuild() {
+	if !paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
+		configs2.SetParam(configs2.MadockLevelConfigCode, "path", paths.GetRunDirPath(), "default", configs2.MadockLevelConfigCode)
+	}
 	projectName := configs2.GetProjectName()
 	nginx.MakeConf()
 	project.MakeConf(projectName)
