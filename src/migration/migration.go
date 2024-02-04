@@ -48,5 +48,5 @@ func Apply(newAppVersion string) {
 }
 
 func saveNewVersion(newAppVersion string) {
-	configs.SetParam(configs.MainConfigCode, versionOptionName, newAppVersion, "default")
+	configs.SetParam(configs.MainConfigCode, versionOptionName, newAppVersion, "default", configs.MainConfigCode)
 }

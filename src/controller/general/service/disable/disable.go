@@ -21,9 +21,9 @@ func Execute() {
 				serviceName := service.GetByShort(name) + "/enabled"
 				projectName := configs.GetProjectName()
 				projectConfig := configs.GetProjectConfig(projectName)
-				configs.SetParam(projectName, serviceName, "false", projectConfig["activeScope"])
+				configs.SetParam(projectName, serviceName, "false", projectConfig["activeScope"], "")
 				if args.Global {
-					configs.SetParam(configs.MainConfigCode, serviceName, "false", "default")
+					configs.SetParam(projectName, serviceName, "false", "default", configs.MainConfigCode)
 				}
 			}
 		}

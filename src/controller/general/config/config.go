@@ -33,7 +33,7 @@ func SetEnvOption() {
 		activeScope = projectConfig["activeScope"]
 	}
 	if len(name) > 0 && configs.IsOption(name) {
-		configs.SetParam(configs.GetProjectName(), name, val, activeScope)
+		configs.SetParam(configs.GetProjectName(), name, val, activeScope, "")
 	}
 }
 

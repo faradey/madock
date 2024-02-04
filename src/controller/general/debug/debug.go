@@ -12,24 +12,24 @@ type ArgsStruct struct {
 
 func Enable() {
 	attr.Parse(new(ArgsStruct))
-	configs.SetParam(configs.GetProjectName(), "php/xdebug/enabled", "true", configs.GetCurrentProjectConfig()["activeScope"])
+	configs.SetParam(configs.GetProjectName(), "php/xdebug/enabled", "true", configs.GetCurrentProjectConfig()["activeScope"], "")
 	rebuild.Execute()
 }
 
 func Disable() {
 	attr.Parse(new(ArgsStruct))
-	configs.SetParam(configs.GetProjectName(), "php/xdebug/enabled", "false", configs.GetCurrentProjectConfig()["activeScope"])
+	configs.SetParam(configs.GetProjectName(), "php/xdebug/enabled", "false", configs.GetCurrentProjectConfig()["activeScope"], "")
 	rebuild.Execute()
 }
 
 func ProfileEnable() {
 	attr.Parse(new(ArgsStruct))
-	configs.SetParam(configs.GetProjectName(), "php/xdebug/mode", "profile", configs.GetCurrentProjectConfig()["activeScope"])
+	configs.SetParam(configs.GetProjectName(), "php/xdebug/mode", "profile", configs.GetCurrentProjectConfig()["activeScope"], "")
 	rebuild.Execute()
 }
 
 func ProfileDisable() {
 	attr.Parse(new(ArgsStruct))
-	configs.SetParam(configs.GetProjectName(), "php/xdebug/mode", "debug", configs.GetCurrentProjectConfig()["activeScope"])
+	configs.SetParam(configs.GetProjectName(), "php/xdebug/mode", "debug", configs.GetCurrentProjectConfig()["activeScope"], "")
 	rebuild.Execute()
 }
