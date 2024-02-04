@@ -7,7 +7,11 @@ const MainConfigCode = ":config:"
 func SetParam(projectName, name, value, activeScope string) {
 	file := ""
 	if projectName != MainConfigCode {
-		file = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
+		if paths.GetRunDirName() == projectName && paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
+			file = paths.GetRunDirPath() + "/.madock/config.xml"
+		} else {
+			file = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
+		}
 	} else {
 		file = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
 	}
