@@ -13,7 +13,7 @@ import (
 )
 
 type ArgsStruct struct {
-	attr.Arguments
+	attr.ArgumentsWithArgs
 }
 
 func Cloud() {
