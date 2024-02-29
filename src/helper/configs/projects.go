@@ -82,8 +82,14 @@ func GetProjectConfigOnly(projectName string) map[string]string {
 		ConfigMapping(defaultConfig, activeConfig)
 		activeConfig["activeScope"] = activeScope
 	}
-
-	defaultConfig := GetProjectConfigInProject(activeConfig["path"])
+	projectPath := ""
+	if val, ok := activeConfig["path"]; ok {
+		projectPath = val
+	} else {
+		projectPath = paths.GetRunDirPath()
+		activeConfig["path"] = projectPath
+	}
+	defaultConfig := GetProjectConfigInProject(projectPath)
 	activeProjectConfig := make(map[string]string)
 	ConfigMapping(defaultConfig, activeProjectConfig)
 	ConfigMapping(activeConfig, activeProjectConfig)
