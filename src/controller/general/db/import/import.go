@@ -46,14 +46,17 @@ func Import() {
 
 		globalIndex := 0
 		dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db"
-		dbNames := paths.GetDBFiles(dbsPath)
-		fmt.Println("Location: madock/projects/" + projectName + "/backup/db")
-		if len(dbNames) == 0 {
-			fmt.Println("No DB files")
-		}
-		for index, dbName := range dbNames {
-			fmt.Println(strconv.Itoa(index+1) + ") " + filepath.Base(dbName))
-			globalIndex += 1
+		var dbNames []string
+		if paths.IsFileExist(dbsPath) {
+			dbNames = paths.GetDBFiles(dbsPath)
+			fmt.Println("Location: madock/projects/" + projectName + "/backup/db")
+			if len(dbNames) == 0 {
+				fmt.Println("No DB files")
+			}
+			for index, dbName := range dbNames {
+				fmt.Println(strconv.Itoa(index+1) + ") " + filepath.Base(dbName))
+				globalIndex += 1
+			}
 		}
 
 		dbsPath = paths.GetRunDirPath()
