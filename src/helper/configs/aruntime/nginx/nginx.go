@@ -81,7 +81,7 @@ func makeProxy() {
 	allFileData := "worker_processes 2;\nworker_priority -10;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\nserver_names_hash_bucket_size  128;\nserver_names_hash_max_size 1024;\n"
 
 	var onlyHostsGlobal []string
-	projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
+	projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
 	if !finder.IsContain(projectsNames, configs2.GetProjectName()) {
 		projectsNames = append(projectsNames, configs2.GetProjectName())
 	}
@@ -217,7 +217,7 @@ func getMaxPort(conf map[string]string) int {
 func GenerateSslCert(ctxPath string, force bool) {
 	generalConfig := configs2.GetGeneralConfig()
 	if val, ok := generalConfig["nginx/ssl/enabled"]; force || (ok && val == "true") {
-		projectsNames := paths.GetDirs(paths.GetExecDirPath() + "/aruntime/projects")
+		projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
 		var commands []string
 		i := 0
 		for _, name := range projectsNames {
