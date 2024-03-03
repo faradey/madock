@@ -10,9 +10,9 @@ import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
-	"log"
 	"os"
 	"strings"
 )
@@ -39,10 +39,10 @@ func Execute() {
 		sentence, err := buf.ReadBytes('\n')
 		selected := strings.TrimSpace(string(sentence))
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		} else if selected != "y" {
 			if !args.Download && !args.Install {
-				log.Fatal("Exit")
+				logger.Fatal("Exit")
 			}
 			continueSetup = false
 		}

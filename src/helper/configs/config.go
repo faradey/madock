@@ -141,7 +141,7 @@ func ReplaceConfigValue(str string) string {
 		gr, _ := user.LookupGroupId(usr.Gid)
 		str = strings.Replace(str, "{{{os/user/ugroup}}}", gr.Name, -1)
 	} else {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	r := regexp.MustCompile("(?ism)<<<iftrue>>>(.*?)<<<endif>>>")

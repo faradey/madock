@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
 	"os"
 	"strings"
 )
@@ -41,7 +41,7 @@ func CacheClean() {
 	folder := paths.MakeDirsByPath(paths.GetExecDirPath() + "/cache/")
 	err := os.RemoveAll(folder)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/cache/")
 }

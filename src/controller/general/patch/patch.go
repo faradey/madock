@@ -5,7 +5,7 @@ import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
-	"log"
+	"github.com/faradey/madock/src/helper/logger"
 	"os"
 	"os/exec"
 )
@@ -27,7 +27,7 @@ func Create() {
 	force := args.Force
 
 	if filePath == "" {
-		log.Fatal("The --file option is incorrect or not specified.")
+		logger.Fatal("The --file option is incorrect or not specified.")
 	}
 
 	projectName := configs.GetProjectName()
@@ -43,6 +43,6 @@ func Create() {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }

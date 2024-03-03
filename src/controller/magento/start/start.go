@@ -4,8 +4,8 @@ import (
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -39,7 +39,7 @@ func Execute(withChown bool, projectConf map[string]string) {
 			cmd.Stderr = os.Stderr
 			err = cmd.Run()
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 		}
 

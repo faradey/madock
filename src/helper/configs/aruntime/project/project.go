@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	configs2 "github.com/faradey/madock/src/migration/versions/v240/configs"
 	"log"
@@ -28,7 +29,7 @@ func MakeConf(projectName string) {
 
 	err := os.Symlink(paths.GetRunDirPath(), src)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	makeNginxDockerfile(projectName)
@@ -55,7 +56,7 @@ func makeScriptsConf(projectName string) {
 			if err == nil {
 				err := os.Symlink(exPath+"/scripts", src)
 				if err != nil {
-					log.Fatal(err)
+					logger.Fatal(err)
 				}
 			} else {
 				fmt.Println(err)
@@ -64,7 +65,7 @@ func makeScriptsConf(projectName string) {
 	} else {
 		err := os.Symlink(exPath+"/scripts", src)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 }
@@ -74,7 +75,7 @@ func makeKibanaConf(projectName string) {
 
 	b, err := os.ReadFile(file)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
@@ -91,7 +92,7 @@ func makeNginxDockerfile(projectName string) {
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	str := string(b)
 	str = configs.ReplaceConfigValue(str)
@@ -109,7 +110,7 @@ func makeNginxConf(projectName string) {
 
 	b, err := os.ReadFile(defFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str := string(b)
@@ -150,7 +151,7 @@ func makePhpDockerfile(projectName string) {
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str := string(b)
@@ -166,7 +167,7 @@ func makePhpDockerfile(projectName string) {
 		dockerDefFile = GetDockerConfigFile(projectName, "php/DockerfileWithoutXdebug", "")
 		b, err = os.ReadFile(dockerDefFile)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		str = string(b)

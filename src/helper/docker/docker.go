@@ -6,6 +6,7 @@ import (
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"io"
 	"log"
@@ -93,7 +94,7 @@ func UpNginxWithBuild() {
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
 		result, err := cmd.CombinedOutput()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		if len(result) > 100 {
 			doNeedRunAruntime = false
@@ -109,7 +110,7 @@ func UpNginxWithBuild() {
 
 			err := os.WriteFile(paths.GetExecDirPath()+"/cache/conf-cache", []byte("config cache"), 0755)
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 		}
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
@@ -117,7 +118,7 @@ func UpNginxWithBuild() {
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 }
@@ -128,13 +129,13 @@ func UpProjectWithBuild(withChown bool) {
 	if !paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/.composer") {
 		err = os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 
 	composerGlobalDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	} else {
 		if !paths.IsFileExist(composerGlobalDir + "/.composer") {
 			paths.MakeDirsByPath(composerGlobalDir + "/.composer")
@@ -149,7 +150,7 @@ func UpProjectWithBuild(withChown bool) {
 			if err == nil {
 				err := os.Symlink(composerGlobalDir+"/.composer", src)
 				if err != nil {
-					log.Fatal(err)
+					logger.Fatal(err)
 				}
 			} else {
 				fmt.Println(err)
@@ -158,7 +159,7 @@ func UpProjectWithBuild(withChown bool) {
 	} else {
 		err := os.Symlink(composerGlobalDir+"/.composer", src)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 
@@ -170,7 +171,7 @@ func UpProjectWithBuild(withChown bool) {
 			if err == nil {
 				err := os.Symlink(composerGlobalDir+"/.ssh", sshDir)
 				if err != nil {
-					log.Fatal(err)
+					logger.Fatal(err)
 				}
 			} else {
 				fmt.Println(err)
@@ -179,7 +180,7 @@ func UpProjectWithBuild(withChown bool) {
 	} else {
 		err := os.Symlink(composerGlobalDir+"/.ssh", sshDir)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 
@@ -205,7 +206,7 @@ func UpProjectWithBuild(withChown bool) {
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	projectConf := configs2.GetCurrentProjectConfig()

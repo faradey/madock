@@ -9,7 +9,6 @@ import (
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
 	"os"
 	"strings"
 )
@@ -48,17 +47,17 @@ func Execute() {
 			docker.Down(true)
 			err := os.RemoveAll(paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/")
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 
 			err = os.RemoveAll(paths.GetExecDirPath() + "/aruntime/projects/" + configs.GetProjectName() + "/")
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 
 			err = os.RemoveAll(paths.GetRunDirPath())
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 			fmtc.SuccessLn("Project was removed successfully")
 			fmtc.SuccessLn("!!! Close the terminal for the changes to take effect !!!")

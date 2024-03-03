@@ -6,8 +6,8 @@ import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -54,7 +54,7 @@ func Export() {
 		dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
 		selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		defer selectedFile.Close()
 		writer := gzip.NewWriter(selectedFile)
@@ -65,7 +65,7 @@ func Export() {
 		cmd.Stdout = writer
 		err = cmd.Run()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		fmt.Println("Database export completed successfully")
 	} else {

@@ -9,7 +9,6 @@ import (
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -83,7 +82,7 @@ func Import() {
 			selectedInt, err = strconv.Atoi(selected)
 
 			if err != nil || selectedInt > len(dbNames) {
-				log.Fatal("The item you selected was not found")
+				logger.Fatal("The item you selected was not found")
 			}
 		}
 
@@ -92,7 +91,7 @@ func Import() {
 
 		selectedFile, err := os.Open(dbNames[selectedInt-1])
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		defer selectedFile.Close()
 
@@ -109,7 +108,7 @@ func Import() {
 		if ext == "gz" {
 			out, err = gzip.NewReader(selectedFile)
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 			cmd.Stdin = out
 		} else {
@@ -122,7 +121,7 @@ func Import() {
 		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["db/database"])
 		cmdFKeys.Run()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		fmt.Println("Database import completed successfully")
 	} else {

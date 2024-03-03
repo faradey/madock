@@ -39,7 +39,7 @@ func ListFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 	projectPath := paths.GetRunDirPath()
 	files, err := scp.ReadDir(remoteDir + subdir)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	var name string
@@ -196,7 +196,7 @@ func Connect(projectConf map[string]string, sshType string) *ssh.Client {
 
 	conn, err := ssh.Dial("tcp", host+":"+port, config)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return conn
@@ -209,7 +209,7 @@ func Disconnect(conn *ssh.Client) {
 func publicKey(path string) ssh.AuthMethod {
 	key, err := os.ReadFile(path)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
@@ -224,7 +224,7 @@ func publicKey(path string) ssh.AuthMethod {
 		}
 		signer, err = ssh.ParsePrivateKeyWithPassphrase(key, []byte(passwd))
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 
@@ -249,7 +249,7 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 func NewClient(conn *ssh.Client) *sftp.Client {
 	scTemp, err := sftp.NewClient(conn)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	sc = append(sc, scTemp)
 

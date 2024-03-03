@@ -5,9 +5,9 @@ import (
 	"github.com/faradey/madock/src/controller/general/remote_sync"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/pkg/sftp"
-	"log"
 	"strings"
 )
 
@@ -24,7 +24,7 @@ func Execute() {
 	var err error
 	path := strings.Trim(args.Path, "/")
 	if path == "" {
-		log.Fatal("")
+		logger.Fatal("Path is empty")
 	}
 	var sc *sftp.Client
 	sshType := "ssh"
@@ -41,7 +41,7 @@ func Execute() {
 	defer remote_sync.Disconnect(conn)
 	sc, err = sftp.NewClient(conn)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	defer sc.Close()
 

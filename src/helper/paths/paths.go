@@ -2,7 +2,7 @@ package paths
 
 import (
 	"github.com/faradey/madock/src/helper/hash"
-	"log"
+	"github.com/faradey/madock/src/helper/logger"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -57,7 +57,7 @@ func GetRunDirNameWithHash() string {
 func GetDirs(path string) (dirs []string) {
 	items, err := os.ReadDir(path)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	for _, file := range items {
@@ -72,7 +72,7 @@ func GetDirs(path string) (dirs []string) {
 func GetFiles(path string) (dirs []string) {
 	items, err := os.ReadDir(path)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	for _, file := range items {
@@ -102,7 +102,7 @@ func GetFilesRecursively(path string) (dirs []string) {
 func GetDBFiles(path string) (dirs []string) {
 	items, err := os.ReadDir(path)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	for _, file := range items {
@@ -130,7 +130,7 @@ func MakeDirsByPath(val string) string {
 			if !IsFileExist("/" + strings.Join(dirs[:i+1], "/")) {
 				err = os.Mkdir("/"+strings.Join(dirs[:i+1], "/"), 0755)
 				if err != nil {
-					log.Fatal(err)
+					logger.Fatal(err)
 				}
 			}
 		}
@@ -145,7 +145,7 @@ func GetActiveProjects() []string {
 	cmd := exec.Command("docker", "ps", "--format", "json")
 	result, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	} else {
 		resultString := string(result)
 		for _, projectName := range projects {

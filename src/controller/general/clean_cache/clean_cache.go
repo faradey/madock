@@ -6,7 +6,7 @@ import (
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
-	"log"
+	"github.com/faradey/madock/src/helper/logger"
 	"os"
 	"os/exec"
 	"sync"
@@ -37,7 +37,7 @@ func Execute() {
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		var waitGroup sync.WaitGroup

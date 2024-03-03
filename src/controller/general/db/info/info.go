@@ -4,8 +4,8 @@ import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
 	"strconv"
 )
 
@@ -22,7 +22,7 @@ func Info() {
 		portsConfig := configs2.ParseFile(portsFile)
 		port, err := strconv.Atoi(portsConfig[configs2.GetProjectName()])
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		fmtc.SuccessLn("host: db")
 		fmtc.SuccessLn("name: " + projectConf["db/database"])

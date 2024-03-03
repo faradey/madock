@@ -6,8 +6,8 @@ import (
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
 	"os"
 )
 
@@ -24,7 +24,7 @@ func Execute() {
 		if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
 			err := os.Remove(paths.GetExecDirPath() + "/cache/conf-cache")
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 		}
 		fmtc.SuccessLn("Stop containers")

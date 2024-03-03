@@ -9,10 +9,10 @@ import (
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/projects"
 	"github.com/faradey/madock/src/helper/docker"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions/magento2"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -124,6 +124,6 @@ func DownloadMagento(projectName, edition, version string, isSampleData bool) {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }

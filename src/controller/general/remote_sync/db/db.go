@@ -7,6 +7,7 @@ import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -42,7 +43,7 @@ func Execute() {
 	defer func(conn *ssh.Client) {
 		err := conn.Close()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}(conn)
 	fmt.Println("")
@@ -53,7 +54,7 @@ func Execute() {
 		result = result[nOpenBrace:]
 	} else {
 		fmt.Println(result)
-		log.Fatal("Failed to get database authentication data")
+		logger.Fatal("Failed to get database authentication data")
 	}
 	if len(result) > 2 {
 		dbAuthData := remote_sync.RemoteDbStruct{}

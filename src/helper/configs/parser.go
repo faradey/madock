@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/sbabiv/xml2map"
-	"log"
 	"os"
 	"strings"
 )
@@ -54,7 +53,7 @@ func getLines(path string) []string {
 	var rows []string
 	file, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	defer file.Close()
 
@@ -66,7 +65,7 @@ func getLines(path string) []string {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return rows

@@ -217,7 +217,7 @@ func setSelectedVersion(defVersion *string, availableVersions []string, selected
 func copyFile(pathFrom, pathTo string) {
 	b, err := os.ReadFile(pathFrom)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	pathToAsSlice := strings.Split(pathTo, "/")
 	paths.MakeDirsByPath(strings.Join(pathToAsSlice[:len(pathToAsSlice)-1], "/"))

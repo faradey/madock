@@ -3,7 +3,7 @@ package open
 import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
-	"log"
+	"github.com/faradey/madock/src/helper/logger"
 	"os/exec"
 	"runtime"
 )
@@ -37,6 +37,6 @@ func Execute() {
 	argsCommand = append(argsCommand, host)
 	err := exec.Command(cmd, argsCommand...).Start()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }

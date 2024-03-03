@@ -2,7 +2,7 @@ package attr
 
 import (
 	"github.com/alexflint/go-arg"
-	"log"
+	"github.com/faradey/madock/src/helper/logger"
 	"os"
 )
 
@@ -24,13 +24,13 @@ func Parse(dest interface{}) interface{} {
 		}, dest)
 
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		err = p.Parse(argsOrigin)
 
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 

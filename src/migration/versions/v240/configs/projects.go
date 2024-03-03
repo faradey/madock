@@ -1,8 +1,8 @@
 package configs
 
 import (
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
 	"os"
 )
 
@@ -54,7 +54,7 @@ func GetProjectConfig(projectName string) map[string]string {
 func GetProjectConfigOnly(projectName string) map[string]string {
 	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/env.txt"
 	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return ParseFile(configPath)

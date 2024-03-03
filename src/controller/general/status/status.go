@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"log"
 	"os/exec"
 	"strings"
 )
@@ -23,7 +23,7 @@ func Execute() {
 	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "ps", "--format", "json")
 	result, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	if len(result) > 0 {
@@ -50,7 +50,7 @@ func Execute() {
 	cmd = exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
 	result, err = cmd.CombinedOutput()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	if len(result) > 0 {

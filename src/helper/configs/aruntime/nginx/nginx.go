@@ -92,14 +92,14 @@ func makeProxy() {
 					nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
 					b, err := os.ReadFile(nginxDefFile)
 					if err != nil {
-						log.Fatal(err)
+						logger.Fatal(err)
 					}
 
 					str = string(b)
 					port, err := strconv.Atoi(portsConfig[name])
 					if err != nil {
 						fmt.Println("Project name is " + name)
-						log.Fatal(err)
+						logger.Fatal(err)
 					}
 					portRanged := (port - 1) * 20
 					strReplaced := strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged), -1)
@@ -161,7 +161,7 @@ func makeDockerfile() {
 	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/proxy.Dockerfile"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str := string(b)
@@ -180,7 +180,7 @@ func makeDockerCompose() {
 	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/docker-compose-proxy.yml"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str := string(b)
@@ -200,7 +200,7 @@ func getMaxPort(conf map[string]string) int {
 	for _, port := range conf {
 		portInt, err = strconv.Atoi(port)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		ports = append(ports, portInt)
 	}
@@ -280,7 +280,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 			cmd.Stderr = os.Stderr
 			err = cmd.Run()
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 
 			fmt.Println("Enter your password for adding an SSL certificate to your system.")
@@ -296,7 +296,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
 				if err != nil {
-					log.Fatal(err)
+					logger.Fatal(err)
 				}
 			} else if runtime.GOOS == "linux" {
 				cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", "/usr/local/share/ca-certificates/madockCA.crt")
@@ -304,7 +304,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
 				if err != nil {
-					log.Fatal(err)
+					logger.Fatal(err)
 				}
 
 				cmd = exec.Command("sudo", "chmod", "644", "/usr/local/share/ca-certificates/madockCA.crt")
@@ -312,7 +312,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
 				if err != nil {
-					log.Fatal(err)
+					logger.Fatal(err)
 				}
 
 				cmd = exec.Command("certutil", "-H")
@@ -336,7 +336,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 						cmd.Stderr = os.Stderr
 						err = cmd.Run()
 						if err != nil {
-							log.Fatal(err)
+							logger.Fatal(err)
 						}
 					}
 				}
@@ -358,7 +358,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 					cmd.Stderr = os.Stderr
 					err = cmd.Run()
 					if err != nil {
-						log.Fatal(err)
+						logger.Fatal(err)
 					}
 				}
 

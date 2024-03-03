@@ -5,8 +5,8 @@ import (
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/model/versions/magento2"
-	"log"
 	"os"
 	"os/exec"
 )
@@ -81,7 +81,7 @@ func Magento(projectName, magentoVer string) {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	fmt.Println("")
 	fmtc.SuccessLn("[SUCCESS]: Magento installation complete.")
