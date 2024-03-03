@@ -3,9 +3,9 @@ package configs
 import (
 	"bytes"
 	"encoding/xml"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/go-xmlfmt/xmlfmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -224,7 +224,7 @@ func SetScope(projectName, scope string) bool {
 	w.WriteString(xml.Header)
 	err := MarshalXML(resultMapData, xml.NewEncoder(w), "config")
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatalln(err)
 	}
 	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
 	if err != nil {
@@ -252,7 +252,7 @@ func AddScope(projectName, scope string) bool {
 	w.WriteString(xml.Header)
 	err := MarshalXML(resultMapData, xml.NewEncoder(w), "config")
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatalln(err)
 	}
 	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
 	if err != nil {

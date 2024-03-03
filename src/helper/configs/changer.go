@@ -20,8 +20,10 @@ func SetParam(projectName, name, value, activeScope, level string) {
 	} else {
 		file = paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects") + "/config.xml"
 	}
-
-	confList := ParseXmlFile(file)
+	confList := make(map[string]string)
+	if paths.IsFileExist(file) {
+		confList = ParseXmlFile(file)
+	}
 	confList = getConfigByScope(confList, activeScope)
 	confList[name] = value
 	SaveInFile(file, confList, activeScope)

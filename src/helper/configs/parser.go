@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/xml"
 	"fmt"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/sbabiv/xml2map"
 	"log"
 	"os"
@@ -14,7 +15,7 @@ func ParseXmlFile(path string) (conf map[string]string) {
 	mapping, err := GetXmlMap(path)
 
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatalln(err)
 	}
 
 	mappingData := make(map[string]string)

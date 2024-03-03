@@ -7,6 +7,7 @@ import (
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
@@ -25,7 +26,7 @@ func Execute() {
 	buf := bufio.NewReader(os.Stdin)
 	sentence, err := buf.ReadBytes('\n')
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatalln(err)
 	}
 	result := strings.ToLower(strings.TrimSpace(string(sentence)))
 	if result == "y" && len(configs.GetProjectName()) > 0 {
@@ -40,7 +41,7 @@ func Execute() {
 		buf = bufio.NewReader(os.Stdin)
 		sentence, err = buf.ReadBytes('\n')
 		if err != nil {
-			log.Fatalln(err)
+			logger.Fatalln(err)
 		}
 		result = strings.TrimSpace(string(sentence))
 		if result == configs.GetProjectName() {

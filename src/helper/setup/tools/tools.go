@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
@@ -179,7 +180,7 @@ func Waiter() (selected, repoAndVersion string) {
 	buf := bufio.NewReader(os.Stdin)
 	sentence, err := buf.ReadBytes('\n')
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatalln(err)
 	}
 	selected = strings.TrimSpace(string(sentence))
 	if selected == "0" {
@@ -188,7 +189,7 @@ func Waiter() (selected, repoAndVersion string) {
 		buf = bufio.NewReader(os.Stdin)
 		sentence, err = buf.ReadBytes('\n')
 		if err != nil {
-			log.Fatalln(err)
+			logger.Fatalln(err)
 		}
 		repoAndVersion = strings.TrimSpace(string(sentence))
 	}

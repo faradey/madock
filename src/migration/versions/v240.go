@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/xml"
 	config2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/migration/versions/v240/configs"
 	"github.com/go-xmlfmt/xmlfmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -20,7 +20,7 @@ func V240() {
 	mapping, err := config2.GetXmlMap(paths.GetExecDirPath() + "/src/migration/versions/v240/migration_v240_config_map.xml")
 
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatalln(err)
 	}
 	mappingData := config2.ComposeConfigMap(mapping["default"].(map[string]interface{}))
 
@@ -39,12 +39,12 @@ func V240() {
 		w.WriteString(xml.Header)
 		err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "config")
 		if err != nil {
-			log.Fatalln(err)
+			logger.Fatalln(err)
 		}
 
 		err = os.WriteFile(execPath+"config.xml", []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
 		if err != nil {
-			log.Fatalln(err)
+			logger.Fatalln(err)
 		}
 	}
 
@@ -79,12 +79,12 @@ func V240() {
 			w.WriteString(xml.Header)
 			err = config2.MarshalXML(resultMapData, xml.NewEncoder(w), "config")
 			if err != nil {
-				log.Fatalln(err)
+				logger.Fatalln(err)
 			}
 
 			err = os.WriteFile(execPath+projectName+"/config.xml", []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
 			if err != nil {
-				log.Fatalln(err)
+				logger.Fatalln(err)
 			}
 		}
 
@@ -118,7 +118,7 @@ func fixExtendedFiles(mapNames map[string]string) {
 
 					err = os.WriteFile(pth, []byte(str), 0755)
 					if err != nil {
-						log.Fatalln(err)
+						logger.Fatalln(err)
 					}
 				}
 			}
@@ -146,7 +146,7 @@ func fixSrcFiles(mapNames map[string]string) {
 
 					err = os.WriteFile(pth, []byte(str), 0755)
 					if err != nil {
-						log.Fatalln(err)
+						logger.Fatalln(err)
 					}
 				}
 			}
@@ -171,7 +171,7 @@ func fixScriptsFiles(mapNames map[string]string) {
 
 				err = os.WriteFile(pth, []byte(str), 0755)
 				if err != nil {
-					log.Fatalln(err)
+					logger.Fatalln(err)
 				}
 			}
 		}
@@ -197,7 +197,7 @@ func fixDockerFiles(mapNames map[string]string) {
 
 				err = os.WriteFile(pth, []byte(str), 0755)
 				if err != nil {
-					log.Fatalln(err)
+					logger.Fatalln(err)
 				}
 			}
 		}

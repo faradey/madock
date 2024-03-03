@@ -2,9 +2,9 @@ package migration
 
 import (
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	configs2 "github.com/faradey/madock/src/migration/versions/v240/configs"
-	"log"
 	"os"
 )
 
@@ -20,7 +20,7 @@ func Apply(newAppVersion string) {
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/cache")
 		err := os.WriteFile(configPath, []byte("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<config>\n<scopes>\n<default></default>\n</scopes>\n</config>"), 0755)
 		if err != nil {
-			log.Fatalln(err)
+			logger.Fatalln(err)
 		}
 	} else {
 		config := configs.GetGeneralConfig()

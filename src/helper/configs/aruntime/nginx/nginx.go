@@ -7,6 +7,7 @@ import (
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper/finder"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
@@ -117,7 +118,7 @@ func makeProxy() {
 						for _, hostAndStore := range hosts {
 							domain = hostAndStore["name"]
 							if finder.IsContain(onlyHostsGlobal, domain) {
-								log.Fatalln("Error. Duplicate domain " + domain)
+								logger.Fatalln("Error. Duplicate domain " + domain)
 							}
 							onlyHosts = append(onlyHosts, domain)
 							onlyHostsGlobal = append(onlyHostsGlobal, domain)
@@ -129,14 +130,14 @@ func makeProxy() {
 
 					err = os.WriteFile(paths.GetExecDirPath()+"/cache/"+name+"-proxy.conf", []byte(strReplaced), 0755)
 					if err != nil {
-						log.Fatalln(err)
+						logger.Fatalln(err)
 					}
 
 					allFileData += "\n" + strReplaced
 				} else {
 					strReplaced, err := os.ReadFile(paths.GetExecDirPath() + "/cache/" + name + "-proxy.conf")
 					if err != nil {
-						log.Fatalln(err)
+						logger.Fatalln(err)
 					}
 					allFileData += "\n" + string(strReplaced)
 				}
@@ -326,7 +327,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 					buf := bufio.NewReader(os.Stdin)
 					sentence, err := buf.ReadBytes('\n')
 					if err != nil {
-						log.Fatalln(err)
+						logger.Fatalln(err)
 					}
 					selected = strings.TrimSpace(string(sentence))
 					if selected == "y" {

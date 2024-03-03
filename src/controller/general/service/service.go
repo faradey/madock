@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/faradey/madock/src/helper/configs"
-	"log"
+	"github.com/faradey/madock/src/helper/logger"
 	"strings"
 )
 
@@ -17,7 +17,7 @@ func IsService(name string) bool {
 		}
 	}
 
-	log.Fatalln("The service \"" + name + "\" doesn't exist.")
+	logger.Fatalln("The service \"" + name + "\" doesn't exist.")
 
 	return false
 }

@@ -2,6 +2,7 @@ package remote_sync
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -217,7 +218,7 @@ func publicKey(path string) ssh.AuthMethod {
 			var sentence []byte
 			sentence, err = terminal.ReadPassword(int(syscall.Stdin))
 			if err != nil {
-				log.Fatalln(err)
+				logger.Fatalln(err)
 			}
 			passwd = strings.TrimSpace(string(sentence))
 		}

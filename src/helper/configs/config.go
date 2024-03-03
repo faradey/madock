@@ -3,6 +3,7 @@ package configs
 import (
 	"bytes"
 	"encoding/xml"
+	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/go-xmlfmt/xmlfmt"
 	"log"
@@ -48,7 +49,7 @@ func SaveInFile(file string, data map[string]string, activeScope string) {
 	w.WriteString(xml.Header)
 	err := MarshalXML(resultMapData, xml.NewEncoder(w), "config")
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatalln(err)
 	}
 
 	err = os.WriteFile(file, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
@@ -183,7 +184,7 @@ func IsOption(name string) bool {
 		}
 	}
 
-	log.Fatalln("The option \"" + name + "\" doesn't exist.")
+	logger.Fatalln("The option \"" + name + "\" doesn't exist.")
 
 	return false
 }
