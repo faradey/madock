@@ -29,7 +29,7 @@ func Execute(flag string) {
 				docker.UpNginx()
 			} else if flag == "rebuild" {
 				docker.DownNginx(args.Force)
-				docker.UpNginx()
+				docker.UpNginxWithBuild(true)
 			}
 			fmtc.SuccessLn("Done")
 		} else {

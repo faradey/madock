@@ -17,7 +17,7 @@ import (
 )
 
 func UpWithBuild(withChown bool) {
-	UpNginx()
+	UpNginxWithBuild(true)
 	UpProjectWithBuild(withChown)
 }
 
@@ -78,10 +78,10 @@ func Kill() {
 }
 
 func UpNginx() {
-	UpNginxWithBuild()
+	UpNginxWithBuild(false)
 }
 
-func UpNginxWithBuild() {
+func UpNginxWithBuild(force bool) {
 	if !paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
 		configs2.SetParam(configs2.MadockLevelConfigCode, "path", paths.GetRunDirPath(), "default", configs2.MadockLevelConfigCode)
 	}
@@ -113,7 +113,11 @@ func UpNginxWithBuild() {
 				logger.Fatal(err)
 			}
 		}
-		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "up", "--build", "--force-recreate", "--no-deps", "-d")
+		command := []string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml", "up", "--no-deps", "-d"}
+		if force {
+			command = append(command, "--build", "--force-recreate")
+		}
+		cmd := exec.Command("docker", command...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
