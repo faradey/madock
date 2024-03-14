@@ -16,10 +16,13 @@ if(file_exists($configPath)){
     $composerLock = file_get_contents($composerLockJson);
     $composerLock = json_decode($composerLock, true);
     print("Magento Version\n");
+    $magentoVersion = "Unknown";
     if(!empty($composer['require']['magento/product-enterprise-edition'])){
         $magentoVersion = "Enterprise edition ".$composer['require']['magento/product-enterprise-edition'];
-    } else {
+    } elseif(!empty($composer['require']['magento/product-community-edition'])) {
         $magentoVersion = "Community edition ".$composer['require']['magento/product-community-edition'];
+    } elseif(!empty($composer['require']['magento/magento-cloud-metapackage'])) {
+        $magentoVersion = "Enterprise edition on Adobe Cloud ".$composer['require']['magento/magento-cloud-metapackage'];
     }
     
     print($magentoVersion."\n\n");
