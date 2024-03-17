@@ -78,12 +78,26 @@ if(file_exists($filePatch)){
 
                         $composerFile = $siteRootPath."/composer.json";
                         $composerJsonData = json_decode(file_get_contents($composerFile), true);
-                        if(!empty($force) || empty($composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
-                            $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
-                            file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
-                            print("\nThe patch was created successfully\n");
-                        } else {
-                            print("The patch with same title or name has already been created.\n");
+                        if(!empty($composerJsonData['extra']['patches'])) {
+                            if(!empty($force) || empty($composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
+                                $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
+                                file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                                print("\nThe patch was created successfully\n");
+                            } else {
+                                print("The patch with same title or name has already been created.\n");
+                            }
+                        } elseif(!empty($composerJsonData['extra']['patches-file']) || file_exists($siteRootPath."/patches.json")) {
+                            $composerPatchesFile = $siteRootPath."/".($composerJsonData['extra']['patches-file']??'patches.json');
+                            $composerPatchesJsonData = json_decode(file_get_contents($composerPatchesFile), true);
+                            if(!empty($composerPatchesJsonData['patches'])) {
+                                if(!empty($force) || empty($composerPatchesJsonData['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
+                                    $composerPatchesJsonData['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
+                                    file_put_contents($composerPatchesFile, json_encode($composerPatchesJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                                    print("\nThe patch was created successfully\n");
+                                } else {
+                                    print("The patch with same title or name has already been created.\n");
+                                }
+                            }
                         }
                         exec("rm -r ".$vendorPath."/" . $moduleRoot[0]."/".$moduleRoot[1]);
                         recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
