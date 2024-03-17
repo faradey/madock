@@ -92,7 +92,7 @@ RUN if [[ "{{{php/xdebug/enabled}}}" = "true" ]]; then pecl install -f xdebug-{{
     && echo "zend_extension=xdebug.so" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
     && echo "xdebug.mode={{{php/xdebug/mode}}}" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
     && echo "xdebug.output_dir={{{workdir}}}/var" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
-    && echo "xdebug.profiler_output_name=cachegrind.out.%t" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.profiler_output_name=\"cachegrind.out.%t\"" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_enable=1" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
     && echo "xdebug.start_with_request=on" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
     && echo "xdebug.remote_autostart=on" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
@@ -105,6 +105,11 @@ RUN if [[ "{{{php/xdebug/enabled}}}" = "true" ]]; then pecl install -f xdebug-{{
     && echo "xdebug.log_level=7" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
     && ln -s /etc/php/{{{php/version}}}/mods-available/xdebug.ini /etc/php/{{{php/version}}}/cli/conf.d/11-xdebug.ini \
     && ln -s /etc/php/{{{php/version}}}/mods-available/xdebug.ini /etc/php/{{{php/version}}}/fpm/conf.d/11-xdebug.ini; fi
+
+RUN if [[ "{{{php/xdebug/enabled}}}" = "true" && "{{{php/xdebug/mode}}}" = "profile" ]]; then echo "xdebug.profiler_enable=1" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.profiler_output_dir={{{workdir}}}/var" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.xdebug.profiler_enable_trigger=0" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.profiler_append=0" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini; fi
 
 RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /etc/php/{{{php/version}}}/fpm/php.ini \
     && sed -i 's/post_max_size = 8M/post_max_size = 80M/g' /etc/php/{{{php/version}}}/fpm/php.ini \
