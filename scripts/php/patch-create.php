@@ -60,12 +60,22 @@ if(file_exists($filePatch)){
                         print_r($output);
                     }
                 } else {
+                    $composerFile = $siteRootPath."/composer.json";
+                    $composerJsonData = json_decode(file_get_contents($composerFile), true);
+                    if(!empty($composerJsonData['extra']['patches-search'])) {
+                        $patchSearchFolder = $composerJsonData['extra']['patches-search'];
+                        if(is_array($patchSearchFolder)){
+                            $patchSearchFolder = $patchSearchFolder[0];
+                        }
+                        $patchMagentoPath = $siteRootPath."/".trim($patchSearchFolder, "/");
+                    }
                     if(!empty($force) || !file_exists($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName)){
                         if(!file_exists($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1])){
                             mkdir($patchMagentoPath . "/" . $moduleRoot[0] . "/" . $moduleRoot[1], 0755, true);
                         }
                         if(empty($moduleRoot[2]) && is_dir($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1])){
                             exec("diff -u -r -N ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]. " ".$patchContainerPath."/".$composerModuleNameDir . " > " .$patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $output, $responseCode);
+                            print("diff -u -r -N ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]. " ".$patchContainerPath."/".$composerModuleNameDir . " > " .$patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
                         } else {
                             $moduleRoot[2] = trim($moduleRoot[2], "/");
                             exec("diff -u ".$vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$moduleRoot[2]. " ".$patchContainerPath."/".$composerModuleNameDir."/".$moduleRoot[2] . " > ".$patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $output, $responseCode);
@@ -74,10 +84,12 @@ if(file_exists($filePatch)){
                         $patchContent = file_get_contents($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
                         $patchContent = str_replace($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1], "", $patchContent);
                         $patchContent = str_replace($patchContainerPath."/".$composerModuleNameDir, "", $patchContent);
+                        if(!empty($composerJsonData['extra']['patches-search'])) {
+                            $patchContent = "@package ".$moduleRoot[0]."/".$moduleRoot[1]."\n\n".$patchContent;
+                        }
                         file_put_contents($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchContent);
 
-                        $composerFile = $siteRootPath."/composer.json";
-                        $composerJsonData = json_decode(file_get_contents($composerFile), true);
+
                         if(!empty($composerJsonData['extra']['patches'])) {
                             if(!empty($force) || empty($composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
                                 $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
@@ -87,7 +99,11 @@ if(file_exists($filePatch)){
                                 print("The patch with same title or name has already been created.\n");
                             }
                         } elseif(!empty($composerJsonData['extra']['patches-file']) || file_exists($siteRootPath."/patches.json")) {
-                            $composerPatchesFile = $siteRootPath."/".($composerJsonData['extra']['patches-file']??'patches.json');
+                            $patchesFile = $composerJsonData['extra']['patches-file']??'patches.json';
+                            if(is_array($patchesFile)){
+                                $patchesFile = $patchesFile[0];
+                            }
+                            $composerPatchesFile = $siteRootPath."/".$patchesFile;
                             $composerPatchesJsonData = json_decode(file_get_contents($composerPatchesFile), true);
                             if(!empty($composerPatchesJsonData['patches'])) {
                                 if(!empty($force) || empty($composerPatchesJsonData['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
