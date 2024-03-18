@@ -1,5 +1,21 @@
 **v2.4.1**
 - Added command scope:add to add a new scope and activate it
+- Added the ability to store the madock configuration within a project in the .madock folder. To do this, you need to manually create a .madock folder and transfer configuration files and database backups to it, if necessary
+- Added full support for creating patches for cweagans/composer-patches
+- Added full support for creating patches for vaimo/composer-patches
+- Added logger with stack trace
+- Fixed the config cache
+- Fixed the bug with the enable/disable services
+- Fixed compatible version magerun n98 and PHP
+- Fixed Adobe Cloud commands
+- Fixed project path
+- Fixed db:import
+- Fixed bug with config.xml and the setup of a new project
+- Fixed missing dir aruntime/projects
+- Fixed working commands Start, Stop, Restart without internet
+- Fixed madock info
+- Fixed xdebug profile for PHP 7.1 or less
+
 
 **v2.4.0**
 - Added the new option PUBLIC_DIR in the project configuration. Each platform can have a different path of public folder therefore this option will be specified as a public folder in the container.

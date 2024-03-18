@@ -33,6 +33,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Composer patches
 * Magento Functional Testing Framework (MFTF). Learn [more](docs/mftf.md)
 * Scopes. Learn [more](docs/scopes.md)
+* Configuration in a project. Learn [more](docs/config.md)
 
 ## Tested on
 * Linux (Ubuntu 20.04)
