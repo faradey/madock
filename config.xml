@@ -55,7 +55,7 @@
                 <phpmyadmin>
                     <enabled>false</enabled>
                     <repository>phpmyadmin/phpmyadmin</repository>
-                    <version>5.2.1</version>
+                    <version>5.2.1-fpm-alpine</version>
                 </phpmyadmin>
             </db>
             <db2>
