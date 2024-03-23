@@ -171,7 +171,7 @@ services:
   phpmyadmin2:
     image: {{{db/phpmyadmin/repository}}}:{{{db2/phpmyadmin/version}}}
     environment:
-      PMA_HOST: "db"
+      PMA_HOST: "db2"
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
       PMA_ABSOLUTE_URI: "http://{{{nginx/host_name_default}}}/phpmyadmin2/"
