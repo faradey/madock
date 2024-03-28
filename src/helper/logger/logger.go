@@ -9,16 +9,16 @@ import (
 )
 
 func Fatal(v ...any) {
-	debugger(v)
+	Debugger(v)
 	log.Fatal(v)
 }
 
 func Fatalln(v ...any) {
-	debugger(v)
+	Debugger(v)
 	log.Fatalln(v)
 }
 
-func debugger(v ...any) {
+func Debugger(v ...any) {
 	var dirAbsPath string
 
 	ex, err := os.Executable()
