@@ -144,7 +144,7 @@ func GetActiveProjects() []string {
 	cmd := exec.Command("docker", "ps", "--format", "json")
 	result, err := cmd.CombinedOutput()
 	if err != nil {
-		logger.Debugger(err, string(result))
+		logger.Println(err, string(result))
 	} else {
 		resultString := string(result)
 		projects := GetDirs(MakeDirsByPath(GetExecDirPath() + "/aruntime/projects"))
