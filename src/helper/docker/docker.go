@@ -96,13 +96,12 @@ func UpNginxWithBuild(force bool) {
 		if err != nil {
 			logger.Println(err, result)
 		} else {
-			if len(result) > 100 {
-				logger.Println(string(result))
+			if len(result) > 100 && strings.Contains(string(result), "\"Command\"") && strings.Contains(string(result), "\"aruntime-nginx\"") {
 				doNeedRunAruntime = false
 			}
 		}
 	}
-	logger.Println(paths.IsFileExist(paths.GetExecDirPath()+"/cache/conf-cache"), doNeedRunAruntime, projectConf["proxy/enabled"])
+
 	if (!paths.IsFileExist(paths.GetExecDirPath()+"/cache/conf-cache") || doNeedRunAruntime) && projectConf["proxy/enabled"] == "true" {
 		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 		if !paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
