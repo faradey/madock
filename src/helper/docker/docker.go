@@ -97,7 +97,7 @@ func UpNginxWithBuild(force bool) {
 			logger.Println(err, result)
 		} else {
 			if len(result) > 100 {
-				logger.Println(result)
+				logger.Println(string(result))
 				doNeedRunAruntime = false
 			}
 		}
