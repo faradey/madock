@@ -94,10 +94,11 @@ func UpNginxWithBuild(force bool) {
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
 		result, err := cmd.CombinedOutput()
 		if err != nil {
-			logger.Println(err)
-		}
-		if len(result) > 100 {
-			doNeedRunAruntime = false
+			logger.Println(err, result)
+		} else {
+			if len(result) > 100 {
+				doNeedRunAruntime = false
+			}
 		}
 	}
 
