@@ -57,7 +57,7 @@ import (
 var appVersion string = "2.4.1"
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 	migration.Apply(appVersion)
 	if len(os.Args) <= 1 {
 		help.Execute()
