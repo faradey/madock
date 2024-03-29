@@ -51,7 +51,7 @@ func Export() {
 
 		containerName := docker.GetContainerName(projectConf, projectName, service)
 
-		dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/"
+		dbsPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/")
 		selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
 		if err != nil {
 			logger.Fatal(err)
