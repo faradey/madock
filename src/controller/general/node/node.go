@@ -91,7 +91,12 @@ func checkMutation(projectName, command, service, user, workdir string, projectC
 					if err != nil {
 						logger.Fatal(err)
 					}
-					cmd = exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+workdir+" && php bin/magento dev:source-theme:deploy --type=less --locale="+theme.(map[string]interface{})["locale"].(string)+" --area="+theme.(map[string]interface{})["area"].(string)+" --theme="+theme.(map[string]interface{})["name"].(string))
+					files := theme.(map[string]interface{})["files"]
+					joinedFiles := ""
+					for _, file := range files.([]interface{}) {
+						joinedFiles += file.(string) + " "
+					}
+					cmd = exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+workdir+" && php bin/magento dev:source-theme:deploy "+joinedFiles+" --type=less --locale="+theme.(map[string]interface{})["locale"].(string)+" --area="+theme.(map[string]interface{})["area"].(string)+" --theme="+theme.(map[string]interface{})["name"].(string))
 					cmd.Stdin = os.Stdin
 					cmd.Stdout = os.Stdout
 					cmd.Stderr = os.Stderr
