@@ -36,15 +36,6 @@ func Execute() {
 
 func checkMutation(projectName, command, service, user, workdir string, projectConf map[string]string) bool {
 	if projectConf["platform"] == "magento2" && strings.Contains(command, "grunt") && (strings.Contains(command, "exec:") || strings.Contains(command, "refresh")) {
-		cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash", "-c", "cd "+workdir+" && grunt --force clean")
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		if err != nil {
-			logger.Fatal(err)
-		}
-
 		if paths.IsFileExist(paths.GetRunDirPath() + "/grunt-config.json") {
 			type GruntConfig struct {
 				Themes string `json:"themes"`
@@ -80,14 +71,6 @@ func checkMutation(projectName, command, service, user, workdir string, projectC
 				type Themes struct {
 					X map[string]interface{} `json:"-"`
 				}
-				type ThemeConfig struct {
-					Area   string `json:"area"`
-					Name   string `json:"name"`
-					Locale string `json:"locale"`
-					Files  string `json:"files"`
-					Dsl    string `json:"dsl"`
-				}
-				fmt.Println(string(data))
 				var themes Themes
 				err = json.Unmarshal(data, &themes)
 				if err != nil {
@@ -99,7 +82,15 @@ func checkMutation(projectName, command, service, user, workdir string, projectC
 					fmt.Println(err)
 					return false
 				}
-				for _, theme := range themes.X {
+				for key, theme := range themes.X {
+					cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash", "-c", "cd "+workdir+" && grunt --force clean:"+key)
+					cmd.Stdin = os.Stdin
+					cmd.Stdout = os.Stdout
+					cmd.Stderr = os.Stderr
+					err := cmd.Run()
+					if err != nil {
+						logger.Fatal(err)
+					}
 					cmd = exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+workdir+" && php bin/magento dev:source-theme:deploy --type=less --locale="+theme.(map[string]interface{})["locale"].(string)+" --area="+theme.(map[string]interface{})["area"].(string)+" --theme="+theme.(map[string]interface{})["name"].(string))
 					cmd.Stdin = os.Stdin
 					cmd.Stdout = os.Stdout
