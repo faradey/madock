@@ -3,6 +3,7 @@ package docker
 import (
 	"fmt"
 	cliHelper "github.com/faradey/madock/src/helper/cli"
+	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/aruntime/nginx"
 	"github.com/faradey/madock/src/helper/configs/aruntime/project"
@@ -321,7 +322,8 @@ func CronExecute(flag, manual bool) {
 			cmdSub.Stderr = os.Stderr
 			err = cmdSub.Run()
 			if err != nil {
-				log.Fatal(err)
+				logger.Println(err)
+				fmtc.ErrorLn(err.Error())
 			}
 		}
 	} else {
@@ -337,8 +339,8 @@ func CronExecute(flag, manual bool) {
 				err := cmdSub.Run()
 				if manual {
 					if err != nil {
-						fmt.Println(bErr)
-						fmt.Println(err)
+						logger.Println(bErr)
+						logger.Println(err)
 					} else {
 						fmt.Println("Cron was removed from Magento")
 					}
@@ -351,8 +353,8 @@ func CronExecute(flag, manual bool) {
 			err = cmd.Run()
 			if manual {
 				if err != nil {
-					logger.Println(bErr)
-					logger.Println(err)
+					fmt.Println(bErr)
+					log.Fatal(err)
 				} else {
 					fmt.Println("Cron was stopped from System (container)")
 				}
