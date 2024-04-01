@@ -18,16 +18,17 @@ type ArgsStruct struct {
 func Execute() {
 	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
-	if !configs2.IsHasNotConfig() {
+	if configs2.IsHasConfig("") {
 		projectConf := configs2.GetCurrentProjectConfig()
+		platform := projectConf["platform"]
 		fmtc.SuccessLn("Start containers in detached mode")
-		if projectConf["platform"] == "magento2" {
+		if platform == "magento2" {
 			startMagento2.Execute(args.WithChown, projectConf)
-		} else if projectConf["platform"] == "pwa" {
+		} else if platform == "pwa" {
 			startPwa.Execute(args.WithChown)
-		} else if projectConf["platform"] == "shopify" {
+		} else if platform == "shopify" {
 			builder2.Execute(args.WithChown, projectConf)
-		} else if projectConf["platform"] == "custom" {
+		} else if platform == "custom" {
 			startCustom.Execute(args.WithChown, projectConf)
 		}
 		fmtc.SuccessLn("Done")

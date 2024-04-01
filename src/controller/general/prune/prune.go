@@ -17,7 +17,7 @@ type ArgsStruct struct {
 func Execute() {
 	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
-	if !configs.IsHasNotConfig() {
+	if configs.IsHasConfig("") {
 		docker.Down(args.WithVolumes)
 		if len(paths.GetActiveProjects()) == 0 {
 			proxy.Execute("prune")

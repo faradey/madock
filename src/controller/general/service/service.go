@@ -56,6 +56,7 @@ func GetByShort(shortName string) string {
 	for key, val := range mapNames {
 		if val == shortName {
 			shortName = key
+			break
 		}
 	}
 

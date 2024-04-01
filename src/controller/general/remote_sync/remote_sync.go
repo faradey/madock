@@ -83,7 +83,7 @@ func ListFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 func DownloadFile(scp *sftp.Client, remoteFile, localFile string, imagesOnly, compress bool) (err error) {
 	ext := strings.ToLower(filepath.Ext(remoteFile))
 	// Note: SFTP To Go doesn't support O_RDWR mode
-	srcFile, err := scp.OpenFile(remoteFile, (os.O_RDONLY))
+	srcFile, err := scp.OpenFile(remoteFile, os.O_RDONLY)
 	if err != nil {
 		fmt.Println("\n" + "Unable to open remote file: " + remoteFile + " " + err.Error() + "\n")
 		return
@@ -203,7 +203,10 @@ func Connect(projectConf map[string]string, sshType string) *ssh.Client {
 }
 
 func Disconnect(conn *ssh.Client) {
-	conn.Close()
+	err := conn.Close()
+	if err != nil {
+		return
+	}
 }
 
 func publicKey(path string) ssh.AuthMethod {

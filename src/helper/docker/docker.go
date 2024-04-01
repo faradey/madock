@@ -296,13 +296,13 @@ func CronExecute(flag, manual bool) {
 		service = "nodejs"
 	}
 
-	service, user, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
+	service, userOS, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
 
 	var cmd *exec.Cmd
 	var bOut io.Writer
 	var bErr io.Writer
 	if flag {
-		cmd = exec.Command("docker", "exec", "-i", "-u", user, GetContainerName(projectConf, projectName, service), "service", "cron", "start")
+		cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, service), "service", "cron", "start")
 		cmd.Stdout = bOut
 		cmd.Stderr = bErr
 		err := cmd.Run()
@@ -325,7 +325,7 @@ func CronExecute(flag, manual bool) {
 			}
 		}
 	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", user, GetContainerName(projectConf, projectName, "php"), "service", "cron", "status")
+		cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, "php"), "service", "cron", "status")
 		cmd.Stdout = bOut
 		cmd.Stderr = bErr
 		err := cmd.Run()
@@ -345,7 +345,7 @@ func CronExecute(flag, manual bool) {
 				}
 			}
 
-			cmd = exec.Command("docker", "exec", "-i", "-u", user, GetContainerName(projectConf, projectName, "php"), "service", "cron", "stop")
+			cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, "php"), "service", "cron", "stop")
 			cmd.Stdout = bOut
 			cmd.Stderr = bErr
 			err = cmd.Run()

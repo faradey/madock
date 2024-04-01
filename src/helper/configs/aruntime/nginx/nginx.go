@@ -128,7 +128,7 @@ func makeProxy() {
 
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/host_names}}}", hostName, -1)
 
-					err = os.WriteFile(paths.GetExecDirPath()+"/cache/"+name+"-proxy.conf", []byte(strReplaced), 0755)
+					err = os.WriteFile(paths.MakeDirsByPath(paths.GetExecDirPath()+"/cache/")+name+"-proxy.conf", []byte(strReplaced), 0755)
 					if err != nil {
 						logger.Fatalln(err)
 					}

@@ -20,8 +20,7 @@ type ArgsStruct struct {
 func Execute() {
 	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/cache")
-	if !configs.IsHasNotConfig() {
+	if configs.IsHasConfig("") {
 		if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
 			err := os.Remove(paths.GetExecDirPath() + "/cache/conf-cache")
 			if err != nil {

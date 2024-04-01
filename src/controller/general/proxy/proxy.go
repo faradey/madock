@@ -15,7 +15,7 @@ type ArgsStruct struct {
 func Execute(flag string) {
 	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
-	if !configs2.IsHasNotConfig() {
+	if configs2.IsHasConfig("") {
 		projectConf := configs2.GetCurrentProjectConfig()
 		if projectConf["proxy/enabled"] == "true" {
 			if flag == "prune" {

@@ -12,13 +12,14 @@ import (
 
 func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["platform"] == "magento2" {
+	platform := projectConf["platform"]
+	if platform == "magento2" {
 		stopMagento2.Execute()
-	} else if projectConf["platform"] == "pwa" {
+	} else if platform == "pwa" {
 		stopPwa.Execute()
-	} else if projectConf["platform"] == "shopify" {
+	} else if platform == "shopify" {
 		stopShopify.Execute()
-	} else if projectConf["platform"] == "custom" {
+	} else if platform == "custom" {
 		stopCustom.Execute()
 	}
 	if len(paths.GetActiveProjects()) == 0 {
