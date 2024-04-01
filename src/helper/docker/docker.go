@@ -323,7 +323,7 @@ func CronExecute(flag, manual bool) {
 			err = cmdSub.Run()
 			if err != nil {
 				logger.Println(err)
-				fmtc.ErrorLn(err.Error())
+				fmtc.WarningLn(err.Error())
 			}
 		}
 	} else {
