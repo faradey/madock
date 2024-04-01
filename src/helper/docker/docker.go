@@ -10,7 +10,6 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -152,9 +151,9 @@ func UpProjectWithBuild(withChown bool) {
 
 	if fi, err := os.Lstat(src); err == nil {
 		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
-			err := os.RemoveAll(src)
+			err = os.RemoveAll(src)
 			if err == nil {
-				err := os.Symlink(composerGlobalDir+"/.composer", src)
+				err = os.Symlink(composerGlobalDir+"/.composer", src)
 				if err != nil {
 					logger.Fatal(err)
 				}
@@ -163,7 +162,7 @@ func UpProjectWithBuild(withChown bool) {
 			}
 		}
 	} else {
-		err := os.Symlink(composerGlobalDir+"/.composer", src)
+		err = os.Symlink(composerGlobalDir+"/.composer", src)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -173,9 +172,9 @@ func UpProjectWithBuild(withChown bool) {
 
 	if fi, err := os.Lstat(sshDir); err == nil {
 		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
-			err := os.RemoveAll(sshDir)
+			err = os.RemoveAll(sshDir)
 			if err == nil {
-				err := os.Symlink(composerGlobalDir+"/.ssh", sshDir)
+				err = os.Symlink(composerGlobalDir+"/.ssh", sshDir)
 				if err != nil {
 					logger.Fatal(err)
 				}
@@ -184,7 +183,7 @@ func UpProjectWithBuild(withChown bool) {
 			}
 		}
 	} else {
-		err := os.Symlink(composerGlobalDir+"/.ssh", sshDir)
+		err = os.Symlink(composerGlobalDir+"/.ssh", sshDir)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -231,7 +230,7 @@ func UpProjectWithBuild(withChown bool) {
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 }
@@ -243,7 +242,7 @@ func dockerComposePull(composeFiles []string) {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
@@ -310,7 +309,7 @@ func CronExecute(flag, manual bool) {
 		if manual {
 			if err != nil {
 				fmt.Println(bErr)
-				log.Fatal(err)
+				logger.Fatal(err)
 			} else {
 				fmt.Println("Cron was started")
 			}
@@ -354,7 +353,7 @@ func CronExecute(flag, manual bool) {
 			if manual {
 				if err != nil {
 					fmt.Println(bErr)
-					log.Fatal(err)
+					logger.Fatal(err)
 				} else {
 					fmt.Println("Cron was stopped from System (container)")
 				}

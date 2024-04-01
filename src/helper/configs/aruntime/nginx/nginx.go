@@ -367,7 +367,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
 				if err != nil {
-					log.Fatal(err)
+					logger.Fatal(err)
 				}
 			}
 		}
@@ -377,7 +377,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		cmd = exec.Command("openssl", "x509", "-req", "-in", ctxPath+"/madock.local.csr", "-CA", ctxPath+"/madockCA.pem", "-CAkey", ctxPath+"/madockCA.key", "-CAcreateserial", "-out", ctxPath+"/madock.local.crt", "-days", "365", "-sha256", "-extfile", ctxPath+"/madock.ca.ext")
@@ -385,7 +385,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		cmd = exec.Command("bash", "-c", "cat "+ctxPath+"/madock.local.crt "+ctxPath+"/madockCA.pem > "+ctxPath+"/fullchain.crt")
@@ -393,7 +393,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 }

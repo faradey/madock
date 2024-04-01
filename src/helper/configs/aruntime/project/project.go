@@ -189,14 +189,14 @@ func makeDockerCompose(projectName string) {
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str := string(b)
 	portsConfig := configs2.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
 	portNumber, err := strconv.Atoi(portsConfig[projectName])
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	portNumberRanged := (portNumber - 1) * 20
@@ -224,14 +224,14 @@ func makeDockerCompose(projectName string) {
 
 	b, err = os.ReadFile(dockerDefFileForOS)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str = string(b)
 	portsConfig = configs2.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
 	portNumber, err = strconv.Atoi(portsConfig[projectName])
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	portNumberRanged = (portNumber - 1) * 20
@@ -263,7 +263,7 @@ func makeDBDockerfile(projectName string) {
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str := string(b)
@@ -276,12 +276,12 @@ func makeDBDockerfile(projectName string) {
 
 	myCnfFile := GetDockerConfigFile(projectName, "db/my.cnf", "")
 	if !paths.IsFileExist(myCnfFile) {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	b, err = os.ReadFile(myCnfFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	if strings.ToLower(configs.GetCurrentProjectConfig()["db/repository"]) == "mariadb" && configs.GetCurrentProjectConfig()["db/version"] >= "10.4" {
@@ -299,7 +299,7 @@ func makeElasticDockerfile(projectName string) {
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str := string(b)
@@ -316,7 +316,7 @@ func makeOpenSearchDockerfile(projectName string) {
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str := string(b)
@@ -333,7 +333,7 @@ func makeRedisDockerfile(projectName string) {
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str := string(b)
@@ -350,7 +350,7 @@ func makeNodeJsDockerfile(projectName string) {
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	str := string(b)
@@ -374,7 +374,7 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 		if !paths.IsFileExist(dockerDefFile) {
 			dockerDefFile = paths.GetExecDirPath() + "/docker/" + platform + "/" + strings.Trim(path, "/")
 			if !paths.IsFileExist(dockerDefFile) {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 		}
 	}
@@ -393,7 +393,7 @@ func processOtherCTXFiles(projectName string) {
 		file = GetDockerConfigFile(projectName, fileName, "")
 		b, err = os.ReadFile(file)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		str := string(b)
@@ -411,7 +411,7 @@ func processOtherCTXFiles(projectName string) {
 	for _, ctxFile := range ctxFiles {
 		b, err = os.ReadFile(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/" + ctxFile)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		str := string(b)
 		destinationFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + ctxFile

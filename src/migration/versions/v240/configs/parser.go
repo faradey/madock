@@ -3,7 +3,6 @@ package configs
 import (
 	"bufio"
 	"github.com/faradey/madock/src/helper/logger"
-	"log"
 	"os"
 	"strings"
 )
@@ -66,8 +65,8 @@ func GetAllLines(path string) []string {
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+	if err = scanner.Err(); err != nil {
+		logger.Fatal(err)
 	}
 
 	return rows

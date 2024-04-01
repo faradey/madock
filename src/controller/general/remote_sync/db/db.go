@@ -11,7 +11,6 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
-	"log"
 	"strings"
 	"time"
 )
@@ -78,19 +77,19 @@ func Execute() {
 		result = remote_sync.RunCommand(conn, "mysqldump -u \""+dbAuthData.Username+"\" -p\""+dbAuthData.Password+"\" -h "+dbAuthData.Host+" --quick --lock-tables=false --no-tablespaces --triggers"+ignoreTablesStr+" "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+"/tmp/"+dumpName)
 		sc, err := sftp.NewClient(conn)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		defer func(sc *sftp.Client) {
-			err := sc.Close()
+			err = sc.Close()
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 		}(sc)
 		execPath := paths.GetExecDirPath()
 		projectName := configs.GetProjectName()
 		err = remote_sync.DownloadFile(sc, "/tmp/"+dumpName, execPath+"/projects/"+projectName+"/backup/db/"+dumpName, false, false)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		result = remote_sync.RunCommand(conn, "rm "+"/tmp/"+dumpName)
 		fmt.Println("")
