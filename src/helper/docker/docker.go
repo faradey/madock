@@ -338,7 +338,7 @@ func CronExecute(flag, manual bool) {
 				if manual {
 					if err != nil {
 						fmt.Println(bErr)
-						log.Fatal(err)
+						fmt.Println(err)
 					} else {
 						fmt.Println("Cron was removed from Magento")
 					}
@@ -351,8 +351,8 @@ func CronExecute(flag, manual bool) {
 			err = cmd.Run()
 			if manual {
 				if err != nil {
-					fmt.Println(bErr)
-					log.Fatal(err)
+					logger.Println(bErr)
+					logger.Println(err)
 				} else {
 					fmt.Println("Cron was stopped from System (container)")
 				}
