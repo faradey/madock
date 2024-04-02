@@ -6,12 +6,12 @@ There are some properties that can be customised if your project setup differs f
 
 ### Default properties
 
-* `<MADOCK_ROOT>/config.txt` - Origin Properties. This file cannot be changed
-* `<MADOCK_ROOT>/projects/config.txt` - Overridden properties. This file must be created manually if you want to override the default values
+* `<MADOCK_ROOT>/config.xml` - Origin Properties. This file cannot be changed
+* `<MADOCK_ROOT>/projects/config.xml` - Overridden properties. This file must be created manually if you want to override the default values
 
 Default list of properties that can be customised:
 
-* See [config.txt](../config.txt)
+* See [config.xml](../config.xml)
 
 
 ### Custom properties paths

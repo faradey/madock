@@ -3,8 +3,8 @@
 The following guide shows you the normal development workflow using Madock.
 
 IMPORTANT: After changing any option in the following files, you should run `madock rebuild`
-madock/projects/config.txt
-madock/projects/{project name}/env.txt
+madock/projects/config.xml
+madock/projects/{project name}/env.xml
 
 #### 1. Start containers
 

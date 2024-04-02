@@ -1,6 +1,6 @@
 With `madock` you can import the database from your dev site.
 
-First, add ssh data in the project file `madock/projects/{projects_name}/env.txt`
+First, add ssh data in the project file `madock/projects/{projects_name}/config.xml`
 
 List of ssh options
 * SSH_HOST
@@ -10,6 +10,7 @@ List of ssh options
 * SSH_SITE_ROOT_PATH
 * SSH_AUTH_TYPE (key or password)
 * SSH_PASSWORD (enter only if you do not use a ssh key)
+* See [examples](./ssh_example.md)
 
 Run the following commands
 ```
