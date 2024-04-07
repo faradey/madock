@@ -53,17 +53,26 @@ func GetProjectsGeneralConfig() map[string]string {
 }
 
 func GetCurrentProjectConfig() map[string]string {
-	if len(projectConfig) == 0 {
-		projectConfig = GetProjectConfig(GetProjectName())
-	}
+	return GetProjectConfig(GetProjectName())
+}
 
-	return projectConfig
+func SetCurrentProjectConfig(conf map[string]string) {
+	projectConfig = conf
 }
 
 func GetProjectConfig(projectName string) map[string]string {
-	config := GetProjectConfigOnly(projectName)
-	ConfigMapping(GetGeneralConfig(), config)
-	return config
+	if projectName == GetProjectName() {
+		if len(projectConfig) == 0 {
+			config := GetProjectConfigOnly(projectName)
+			ConfigMapping(GetGeneralConfig(), config)
+			projectConfig = config
+		}
+		return projectConfig
+	} else {
+		config := GetProjectConfigOnly(projectName)
+		ConfigMapping(GetGeneralConfig(), config)
+		return config
+	}
 }
 
 func GetProjectConfigOnly(projectName string) map[string]string {

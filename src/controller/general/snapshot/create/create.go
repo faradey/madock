@@ -1,0 +1,87 @@
+package create
+
+import (
+	"compress/gzip"
+	"fmt"
+	"github.com/faradey/madock/src/helper/cli/attr"
+	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/docker"
+	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/src/helper/paths"
+	"os"
+	"os/exec"
+	"time"
+)
+
+type ArgsStruct struct {
+	attr.Arguments
+	Name string `arg:"-n,--name" help:"Name"`
+}
+
+func Execute() {
+	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	projectConf := configs.GetCurrentProjectConfig()
+	exPath := paths.GetExecDirPath()
+	projectName := configs.GetProjectName()
+	dest := paths.MakeDirsByPath(exPath + "/projects/" + projectName + "/backup/snapshot")
+
+	name := "snapshot-"
+	if args.Name != "" {
+		name += args.Name + "-"
+	}
+	name += time.Now().Format("2006-01-02-15-04-05")
+
+	dbsPath := paths.MakeDirsByPath(dest + "/" + name + "/")
+	if projectConf["platform"] != "pwa" {
+		selectedFile, err := os.Create(dbsPath + "db.tar.gz")
+		if err != nil {
+			logger.Fatal(err)
+		}
+		defer selectedFile.Close()
+		writer := gzip.NewWriter(selectedFile)
+		defer writer.Close()
+		cmd := exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "db"), "bash", "-c", "cd /var/lib/ && tar -czf /tmp/db.tar.gz mysql && cat /tmp/db.tar.gz")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = writer
+		err = cmd.Run()
+		if err != nil {
+			logger.Fatal(err)
+		}
+
+		if projectConf["db2/enabled"] == "true" {
+			selectedFileDb2, err := os.Create(dbsPath + "db2.tar.gz")
+			if err != nil {
+				logger.Fatal(err)
+			}
+			defer selectedFileDb2.Close()
+			writerDb2 := gzip.NewWriter(selectedFileDb2)
+			defer writerDb2.Close()
+			cmd = exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "db2"), "bash", "-c", "cd /var/lib/ && tar -czf /tmp/db2.tar.gz mysql && cat /tmp/db2.tar.gz")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = writerDb2
+			err = cmd.Run()
+			if err != nil {
+				logger.Fatal(err)
+			}
+		}
+	}
+
+	selectedFileFiles, err := os.Create(dbsPath + "files.tar.gz")
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer selectedFileFiles.Close()
+	writerFiles := gzip.NewWriter(selectedFileFiles)
+	defer writerFiles.Close()
+	cmd := exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd /var/www && tar -czf /tmp/files.tar.gz html && cat /tmp/files.tar.gz")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = writerFiles
+	err = cmd.Run()
+	if err != nil {
+		logger.Fatal(err)
+	}
+	fmt.Println("Snapshot completed successfully")
+}

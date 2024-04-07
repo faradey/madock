@@ -147,9 +147,9 @@ func ReplaceConfigValue(str string) string {
 		logger.Fatal(err)
 	}
 
-	r := regexp.MustCompile("(?ism)<<<iftrue>>>(.*?)<<<endif>>>")
-	str = r.ReplaceAllString(str, "$1")
-	r = regexp.MustCompile("(?ism)<<<iffalse>>>.*?<<<endif>>>")
+	r := regexp.MustCompile("(?ism)<<<if(true\\s*)+>>>(.*?)<<<endif>>>")
+	str = r.ReplaceAllString(str, "$2")
+	r = regexp.MustCompile("(?ism)<<<if.*?(false\\s*)+.*?>>>.*?<<<endif>>>")
 	str = r.ReplaceAllString(str, "")
 
 	var onlyHosts []string

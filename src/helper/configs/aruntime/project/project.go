@@ -20,6 +20,7 @@ func MakeConf(projectName string) {
 	}
 	// get project config
 	projectConf := configs.GetProjectConfig(projectName)
+	fmt.Println(projectConf)
 	src := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/src"
 	if _, err := os.Lstat(src); err == nil {
 		if err := os.Remove(src); err != nil {
@@ -52,9 +53,9 @@ func makeScriptsConf(projectName string) {
 	src := exPath + "/aruntime/projects/" + projectName + "/ctx/scripts"
 	if fi, err := os.Lstat(src); err == nil {
 		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
-			err := os.RemoveAll(src)
+			err = os.RemoveAll(src)
 			if err == nil {
-				err := os.Symlink(exPath+"/scripts", src)
+				err = os.Symlink(exPath+"/scripts", src)
 				if err != nil {
 					logger.Fatal(err)
 				}
@@ -63,7 +64,7 @@ func makeScriptsConf(projectName string) {
 			}
 		}
 	} else {
-		err := os.Symlink(exPath+"/scripts", src)
+		err = os.Symlink(exPath+"/scripts", src)
 		if err != nil {
 			logger.Fatal(err)
 		}

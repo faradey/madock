@@ -35,6 +35,8 @@ import (
 	"github.com/faradey/madock/src/controller/general/service/list"
 	"github.com/faradey/madock/src/controller/general/setup"
 	"github.com/faradey/madock/src/controller/general/setup/env"
+	"github.com/faradey/madock/src/controller/general/snapshot/create"
+	"github.com/faradey/madock/src/controller/general/snapshot/restore"
 	"github.com/faradey/madock/src/controller/general/ssl"
 	"github.com/faradey/madock/src/controller/general/start"
 	"github.com/faradey/madock/src/controller/general/status"
@@ -173,6 +175,10 @@ func main() {
 		web.Execute()
 	case "shopify:web:frontend", "sy:w:f":
 		frontend.Execute()
+	case "snapshot:create":
+		create.Execute()
+	case "snapshot:restore":
+		restore.Execute()
 	case "ssl:rebuild":
 		ssl.Execute()
 	case "start":

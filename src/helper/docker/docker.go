@@ -147,7 +147,7 @@ func UpProjectWithBuild(withChown bool) {
 		}
 	}
 
-	src := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/composer"
+	src := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/composer")
 
 	if fi, err := os.Lstat(src); err == nil {
 		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
@@ -203,7 +203,7 @@ func UpProjectWithBuild(withChown bool) {
 		"-d",
 	}
 	dockerComposePull([]string{"compose", "-f",
-		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
+		paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml",
 		"-f",
 		composeFileOS})
 	cmd := exec.Command("docker", profilesOn...)
