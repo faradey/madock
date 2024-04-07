@@ -7,7 +7,7 @@ services:
     volumes:
       - ./src:/var/www/html:cached
       - dbdata:/var/www/mysql
-<<<if{{{db2/enabled}}}>>>      - dbdata2:/var/www/mysql2<<<endif>>>
+<<<if{{{db2/enabled}}}>>>      - dbdata2:/var/www/mysql2/mysql<<<endif>>>
 volumes:
   dbdata:
   <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>

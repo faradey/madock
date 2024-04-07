@@ -48,28 +48,70 @@ func Execute() {
 	}
 
 	if projectConf["platform"] != "pwa" {
-		selectedFile, err := os.Open(dbsPath + "/" + snapshotNames[selectedInt-1] + "/db.tar.gz")
-		if err != nil {
-			logger.Fatal(err)
-		}
-		defer selectedFile.Close()
-
 		containerName := docker.GetContainerName(projectConf, projectName, "snapshot")
 		docker.Down(false)
 		docker.UpSnapshot(projectName)
 
-		cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/mysql/* && cd /var/www && tar -zxf -")
-		out, err := gzip.NewReader(selectedFile)
-		if err != nil {
-			logger.Fatal(err)
+		if paths.IsFileExist(dbsPath + "/" + snapshotNames[selectedInt-1] + "/db.tar.gz") {
+			selectedFile, err := os.Open(dbsPath + "/" + snapshotNames[selectedInt-1] + "/db.tar.gz")
+			if err != nil {
+				logger.Fatal(err)
+			}
+			defer selectedFile.Close()
+			cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/mysql/* && cd /var/www && tar -zxf -")
+			out, err := gzip.NewReader(selectedFile)
+			if err != nil {
+				logger.Fatal(err)
+			}
+			cmd.Stdin = out
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err = cmd.Run()
+			if err != nil {
+				logger.Fatal(err, containerName)
+			}
 		}
-		cmd.Stdin = out
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
-		if err != nil {
-			logger.Fatal(err, containerName)
+
+		if projectConf["db2/enabled"] == "true" && paths.IsFileExist(dbsPath+"/"+snapshotNames[selectedInt-1]+"/db2.tar.gz") {
+			selectedFileDb2, err := os.Open(dbsPath + "/" + snapshotNames[selectedInt-1] + "/db2.tar.gz")
+			if err != nil {
+				logger.Fatal(err)
+			}
+			defer selectedFileDb2.Close()
+			cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/mysql2/mysql/* && cd /var/www/mysql2 && tar -zxf -")
+			out, err := gzip.NewReader(selectedFileDb2)
+			if err != nil {
+				logger.Fatal(err)
+			}
+			cmd.Stdin = out
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err = cmd.Run()
+			if err != nil {
+				logger.Fatal(err, containerName)
+			}
 		}
+
+		if paths.IsFileExist(dbsPath + "/" + snapshotNames[selectedInt-1] + "/files.tar.gz") {
+			selectedFileFiles, err := os.Open(dbsPath + "/" + snapshotNames[selectedInt-1] + "/files.tar.gz")
+			if err != nil {
+				logger.Fatal(err)
+			}
+			defer selectedFileFiles.Close()
+			cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/html/* && cd /var/www && tar -zxf -")
+			out, err := gzip.NewReader(selectedFileFiles)
+			if err != nil {
+				logger.Fatal(err)
+			}
+			cmd.Stdin = out
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err = cmd.Run()
+			if err != nil {
+				logger.Fatal(err, containerName)
+			}
+		}
+
 		docker.StopSnapshot(projectName)
 		rebuild.Execute()
 	}
