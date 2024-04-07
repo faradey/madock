@@ -221,16 +221,6 @@ services:
     depends_on:
       - php
 <<<endif>>>
-  
-<<<if{{{snapshot/enabled}}}>>>
-  snapshot:
-    image: {{{os/name}}}:{{{os/version}}}
-    volumes:
-      - ./src:/var/www/html:cached
-      - dbdata:/var/www/mysql
-<<<endif>>><<<if{{{snapshot/enabled}}}{{{db2/enabled}}}>>>
-      - dbdata2:/var/www/mysql2
-<<<endif>>>
 
 volumes:
   dbdata:

@@ -55,9 +55,10 @@ func Execute() {
 		defer selectedFile.Close()
 
 		containerName := docker.GetContainerName(projectConf, projectName, "snapshot")
-		configs.SetParam(configs.MadockLevelConfigCode, "snapshot/enabled", "true", "default", configs.MadockLevelConfigCode)
-		rebuild.Execute()
-		cmd := exec.Command("docker", "exec", "-i", "-u", "mysql", containerName, "bash", "-c", "cd /var/lib && tar -zxf -")
+		docker.Down(false)
+		docker.UpSnapshot(projectName)
+
+		cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/mysql/* && cd /var/www && tar -zxf -")
 		out, err := gzip.NewReader(selectedFile)
 		if err != nil {
 			logger.Fatal(err)
@@ -67,9 +68,9 @@ func Execute() {
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(err, containerName)
 		}
-		configs.SetParam(configs.MadockLevelConfigCode, "snapshot/enabled", "false", "default", configs.MadockLevelConfigCode)
+		docker.StopSnapshot(projectName)
 		rebuild.Execute()
 	}
 	fmt.Println("Snapshot restored successfully")

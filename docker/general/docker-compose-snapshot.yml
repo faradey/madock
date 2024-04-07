@@ -1,0 +1,13 @@
+version: "3.8"
+name: {{{container_name_prefix}}}{{{project_name}}}{{{scope}}}
+services:
+  snapshot:
+    image: {{{os/name}}}:{{{os/version}}}
+    tty: true
+    volumes:
+      - ./src:/var/www/html:cached
+      - dbdata:/var/www/mysql
+<<<if{{{db2/enabled}}}>>>      - dbdata2:/var/www/mysql2<<<endif>>>
+volumes:
+  dbdata:
+  <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>

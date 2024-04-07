@@ -189,11 +189,12 @@ func UpProjectWithBuild(withChown bool) {
 		}
 	}
 
+	composeFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"compose",
 		"-f",
-		paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml",
+		composeFile,
 		"-f",
 		composeFileOS,
 		"up",
@@ -202,10 +203,7 @@ func UpProjectWithBuild(withChown bool) {
 		"--no-deps",
 		"-d",
 	}
-	dockerComposePull([]string{"compose", "-f",
-		paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml",
-		"-f",
-		composeFileOS})
+	dockerComposePull([]string{"compose", "-f", composeFile, "-f", composeFileOS})
 	cmd := exec.Command("docker", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -358,6 +356,42 @@ func CronExecute(flag, manual bool) {
 					fmt.Println("Cron was stopped from System (container)")
 				}
 			}
+		}
+	}
+}
+
+func UpSnapshot(projectName string) {
+	composerFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose-snapshot.yml"
+	profilesOn := []string{
+		"compose",
+		"-f",
+		composerFile,
+		"up",
+		"--build",
+		"--force-recreate",
+		"--no-deps",
+		"-d",
+	}
+	dockerComposePull([]string{"compose", "-f", composerFile})
+	cmd := exec.Command("docker", profilesOn...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		logger.Fatal(err)
+	}
+}
+
+func StopSnapshot(projectName string) {
+	composerFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose-snapshot.yml"
+	if paths.IsFileExist(composerFile) {
+		command := "stop"
+		cmd := exec.Command("docker", "compose", "-f", composerFile, command)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 }

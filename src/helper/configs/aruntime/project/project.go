@@ -20,7 +20,6 @@ func MakeConf(projectName string) {
 	}
 	// get project config
 	projectConf := configs.GetProjectConfig(projectName)
-	fmt.Println(projectConf)
 	src := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/src"
 	if _, err := os.Lstat(src); err == nil {
 		if err := os.Remove(src); err != nil {
@@ -184,78 +183,47 @@ func makePhpDockerfile(projectName string) {
 func makeDockerCompose(projectName string) {
 	overrideFile := runtime.GOOS
 	projectConf := configs.GetCurrentProjectConfig()
+	var dockerDefFiles map[string]string
+	dockerDefFiles = make(map[string]string)
+	dockerDefFiles["docker-compose.yml"] = GetDockerConfigFile(projectName, "docker-compose.yml", "")
+	dockerDefFiles["docker-compose.override.yml"] = GetDockerConfigFile(projectName, "docker-compose."+overrideFile+".yml", "")
+	dockerDefFiles["docker-compose-snapshot.yml"] = GetDockerConfigFile(projectName, "docker-compose-snapshot.yml", "general")
 
-	dockerDefFile := GetDockerConfigFile(projectName, "docker-compose.yml", "")
-	dockerDefFileForOS := GetDockerConfigFile(projectName, "docker-compose."+overrideFile+".yml", "")
+	for key, dockerDefFile := range dockerDefFiles {
+		b, err := os.ReadFile(dockerDefFile)
+		if err != nil {
+			logger.Fatal(err)
+		}
 
-	b, err := os.ReadFile(dockerDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
+		str := string(b)
+		portsConfig := configs2.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
+		portNumber, err := strconv.Atoi(portsConfig[projectName])
+		if err != nil {
+			logger.Fatal(err)
+		}
 
-	str := string(b)
-	portsConfig := configs2.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
-	portNumber, err := strconv.Atoi(portsConfig[projectName])
-	if err != nil {
-		logger.Fatal(err)
-	}
+		portNumberRanged := (portNumber - 1) * 20
+		hostName := "loc." + projectName + ".com"
+		hosts := configs.GetHosts(projectConf)
+		if len(hosts) > 0 {
+			hostName = hosts[0]["name"]
+		}
+		str = configs.ReplaceConfigValue(str)
+		str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
+		str = strings.Replace(str, "{{{nginx/port/project}}}", strconv.Itoa(portNumberRanged+17000), -1)
+		str = strings.Replace(str, "{{{nginx/port/project_ssl}}}", strconv.Itoa(portNumberRanged+17001), -1)
+		for i := 2; i < 20; i++ {
+			str = strings.Replace(str, "{{{nginx/port/project+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
+		}
+		str = strings.Replace(str, "{{{nginx/network_number}}}", strconv.Itoa(portNumber+90), -1)
+		str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
+		str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
 
-	portNumberRanged := (portNumber - 1) * 20
-	hostName := "loc." + projectName + ".com"
-	hosts := configs.GetHosts(projectConf)
-	if len(hosts) > 0 {
-		hostName = hosts[0]["name"]
-	}
-	str = configs.ReplaceConfigValue(str)
-	str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
-	str = strings.Replace(str, "{{{nginx/port/project}}}", strconv.Itoa(portNumberRanged+17000), -1)
-	str = strings.Replace(str, "{{{nginx/port/project_ssl}}}", strconv.Itoa(portNumberRanged+17001), -1)
-	for i := 2; i < 20; i++ {
-		str = strings.Replace(str, "{{{nginx/port/project+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
-	}
-	str = strings.Replace(str, "{{{nginx/network_number}}}", strconv.Itoa(portNumber+90), -1)
-	str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
-	str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
-
-	resultFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml"
-	err = os.WriteFile(resultFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
-
-	b, err = os.ReadFile(dockerDefFileForOS)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	str = string(b)
-	portsConfig = configs2.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
-	portNumber, err = strconv.Atoi(portsConfig[projectName])
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	portNumberRanged = (portNumber - 1) * 20
-	hostName = "loc." + projectName + ".com"
-	projectConf = configs.GetCurrentProjectConfig()
-
-	hosts = configs.GetHosts(projectConf)
-	if len(hosts) > 0 {
-		hostName = hosts[0]["name"]
-	}
-	str = configs.ReplaceConfigValue(str)
-	str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
-	str = strings.Replace(str, "{{{nginx/port/project}}}", strconv.Itoa(portNumberRanged+17000), -1)
-	str = strings.Replace(str, "{{{nginx/port/project_ssl}}}", strconv.Itoa(portNumberRanged+17001), -1)
-	for i := 2; i < 20; i++ {
-		str = strings.Replace(str, "{{{nginx/port/project+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
-	}
-	str = strings.Replace(str, "{{{nginx/network_number}}}", strconv.Itoa(portNumber+90), -1)
-
-	resultFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.override.yml"
-	err = os.WriteFile(resultFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
+		resultFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/" + key
+		err = os.WriteFile(resultFile, []byte(str), 0755)
+		if err != nil {
+			log.Fatalf("Unable to write file: %v", err)
+		}
 	}
 }
 
