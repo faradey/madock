@@ -299,6 +299,14 @@ This command shows you the following items:
 * `shopify:web:frontend` or `sy:w:f`   Execute the Shopify command inside the php container in 'web/frontend' folder. For example: `madock shopify:web:frontend SHOPIFY_API_KEY=REPLACE_ME yarn build`
 
 
+* `snapshot:create`   To create a snapshot of the project. The snapshot will include databases and project files
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name, -n`  Name of the snapshot
+
+
+* `snapshot:restore`   To restore a project of the snapshot. The databases and project files will be restored
+
+
 * `ssl:rebuild`   Rebuild SSL Certificates  
                         
 
