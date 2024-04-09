@@ -88,11 +88,12 @@ func IsHasConfig(projectName string) bool {
 	if !paths.IsFileExist(paths.GetExecDirPath()+"/projects/"+projectName+"/config.xml") && paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
 		err := paths.Copy(paths.GetRunDirPath()+"/.madock/config.xml", paths.GetExecDirPath()+"/projects/"+projectName+"/config.xml")
 		if err != nil {
+			logger.Println(err)
 			return false
 		}
 		SetParam(projectName, "path", paths.GetRunDirPath(), "default", MadockLevelConfigCode)
 	}
-	if paths.IsFileExist(paths.GetExecDirPath()+"/projects/"+projectName+"/config.xml") && !paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
+	if paths.IsFileExist(paths.GetExecDirPath()+"/projects/"+projectName+"/config.xml") || paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
 		return true
 	}
 
