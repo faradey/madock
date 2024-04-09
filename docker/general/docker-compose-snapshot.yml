@@ -4,6 +4,7 @@ services:
   snapshot:
     image: {{{os/name}}}:{{{os/version}}}
     tty: true
+    user: "{{{os/user/uid}}}:{{{os/user/guid}}}"
     volumes:
       - ./src:/var/www/html:cached
       - dbdata:/var/www/mysql
