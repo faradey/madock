@@ -40,7 +40,7 @@ func Execute() {
 		defer selectedFile.Close()
 		writer := gzip.NewWriter(selectedFile)
 		defer writer.Close()
-		cmd := exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "db"), "bash", "-c", "cd /var/lib/ && tar -czf /tmp/db.tar.gz mysql && cat /tmp/db.tar.gz")
+		cmd := exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "db"), "bash", "-c", "cd /var/lib/mysql && tar -czf /tmp/db.tar.gz . && cat /tmp/db.tar.gz")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = writer
@@ -57,7 +57,7 @@ func Execute() {
 			defer selectedFileDb2.Close()
 			writerDb2 := gzip.NewWriter(selectedFileDb2)
 			defer writerDb2.Close()
-			cmd = exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "db2"), "bash", "-c", "cd /var/lib/ && tar -czf /tmp/db2.tar.gz mysql && cat /tmp/db2.tar.gz")
+			cmd = exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "db2"), "bash", "-c", "cd /var/lib/mysql && tar -czf /tmp/db2.tar.gz . && cat /tmp/db2.tar.gz")
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = writerDb2
@@ -75,7 +75,7 @@ func Execute() {
 	defer selectedFileFiles.Close()
 	writerFiles := gzip.NewWriter(selectedFileFiles)
 	defer writerFiles.Close()
-	cmd := exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd /var/www && tar -czf /tmp/files.tar.gz html && cat /tmp/files.tar.gz")
+	cmd := exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd /var/www/html && tar -czf /tmp/files.tar.gz . && cat /tmp/files.tar.gz")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = writerFiles

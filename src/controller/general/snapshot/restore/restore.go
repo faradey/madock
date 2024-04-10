@@ -58,7 +58,7 @@ func Execute() {
 				logger.Fatal(err)
 			}
 			defer selectedFile.Close()
-			cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/mysql/* && cd /var/www && tar -zxf -")
+			cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/mysql/* && cd /var/www/mysql && tar -zxf -")
 			out, err := gzip.NewReader(selectedFile)
 			if err != nil {
 				logger.Fatal(err)
@@ -78,7 +78,7 @@ func Execute() {
 				logger.Fatal(err)
 			}
 			defer selectedFileDb2.Close()
-			cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/mysql2/mysql/* && cd /var/www/mysql2 && tar -zxf -")
+			cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/mysql2/mysql/* && cd /var/www/mysql2/mysql && tar -zxf -")
 			out, err := gzip.NewReader(selectedFileDb2)
 			if err != nil {
 				logger.Fatal(err)
@@ -98,7 +98,7 @@ func Execute() {
 				logger.Fatal(err)
 			}
 			defer selectedFileFiles.Close()
-			cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/html/* && cd /var/www && tar -zxf -")
+			cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/html/* && cd /var/www/html && tar -zxf -")
 			out, err := gzip.NewReader(selectedFileFiles)
 			if err != nil {
 				logger.Fatal(err)
