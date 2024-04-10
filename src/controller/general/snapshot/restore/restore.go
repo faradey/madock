@@ -113,6 +113,7 @@ func Execute() {
 		}
 
 		docker.StopSnapshot(projectName)
+		os.Args = append(os.Args, "-c")
 		rebuild.Execute()
 	}
 	fmt.Println("Snapshot restored successfully")
