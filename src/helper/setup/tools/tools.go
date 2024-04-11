@@ -28,7 +28,7 @@ func Platform() string {
 func Php(defVersion *string) {
 	setTitleAndRecommended("PHP", defVersion)
 
-	availableVersions := []string{"Custom", "8.2", "8.1", "8.0", "7.4", "7.3", "7.2", "7.1", "7.0"}
+	availableVersions := []string{"Custom", "8.3", "8.2", "8.1", "8.0", "7.4"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -38,7 +38,7 @@ func Php(defVersion *string) {
 func Db(defVersion *string) {
 	setTitleAndRecommended("DB", defVersion)
 
-	availableVersions := []string{"Custom", "11.1", "10.6", "10.4", "10.3", "10.2", "10.1", "10.0"}
+	availableVersions := []string{"Custom", "11.1", "10.6", "10.4", "10.3", "10.2"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -68,7 +68,7 @@ func SearchEngine(defVersion *string) {
 func Elastic(defVersion *string) {
 	setTitleAndRecommended("Elasticsearch", defVersion)
 
-	availableVersions := []string{"Custom", "8.4.3", "7.17.5", "7.16.3", "7.10.1", "7.9.3", "7.7.1", "7.6.2", "6.8.20", "5.1.2"}
+	availableVersions := []string{"Custom", "8.11.14", "8.4.3", "7.17.5", "7.16.3", "7.10.1"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -78,7 +78,7 @@ func Elastic(defVersion *string) {
 func OpenSearch(defVersion *string) {
 	setTitleAndRecommended("OpenSearch", defVersion)
 
-	availableVersions := []string{"Custom", "2.5.0", "1.2.0"}
+	availableVersions := []string{"Custom", "2.12.0", "2.5.0", "1.2.0"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -88,7 +88,7 @@ func OpenSearch(defVersion *string) {
 func Redis(defVersion *string) {
 	setTitleAndRecommended("Redis", defVersion)
 
-	availableVersions := []string{"Custom", "7.0 (Magento version > 2.4.6)", "6.2 (Magento version > 2.4.3-p3)", "6.0 (Magento version <= 2.4.3-p3)", "5.0 (Magento version <= 2.3.2)"}
+	availableVersions := []string{"Custom", "7.2 (Magento version > 2.4.7)", "7.0 (Magento version > 2.4.6)", "6.2 (Magento version > 2.4.3-p3)", "6.0 (Magento version <= 2.4.3-p3)", "5.0 (Magento version <= 2.3.2)"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -97,7 +97,7 @@ func Redis(defVersion *string) {
 
 func RabbitMQ(defVersion *string) {
 	setTitleAndRecommended("RabbitMQ", defVersion)
-	availableVersions := []string{"Custom", "3.9 (Magento version > 2.4.3-p3)", "3.8 (Magento version <= 2.4.3-p3)", "3.7 (Magento version <= 2.3.4)"}
+	availableVersions := []string{"Custom", "3.13 (Magento version > 2.4.7)", "3.9 (Magento version > 2.4.3-p3)", "3.8 (Magento version <= 2.4.3-p3)", "3.7 (Magento version <= 2.3.4)"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)

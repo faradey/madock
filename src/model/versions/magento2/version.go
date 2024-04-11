@@ -49,7 +49,7 @@ func getMagentoVersion() (edition, version string) {
 }
 
 func GetPhpVersion(mageVer string) string {
-	if mageVer >= "2.4.4" {
+	if mageVer >= "2.4.7" {
 		return "8.3"
 	} else if mageVer >= "2.4.4" {
 		return "8.1"
