@@ -1,3 +1,22 @@
+**v2.4.2**
+- Support Magento 2.4.7 and Adobe Commerce 2.4.7
+- Updated docker-compose version to 3.8
+- Fixed DB host for the service db2
+- Fixed GetActiveProjects method
+- Fixed start/stop project
+- Fixed db:export
+- Fixed node grunt exec:<theme>
+- Fixed documentation
+- Added "RUN npm install -g grunt-cli" to docker file
+- Fixed bug with "cache" folder
+- Fixed if/else in config files
+- Fixed project configuration
+- Fixed Snapshot container
+- Added snapshots functionality for the project
+- Fixed .madock/config.xml
+
+
+
 **v2.4.1**
 - Added command scope:add to add a new scope and activate it
 - Added the ability to store the madock configuration within a project in the .madock folder. To do this, you need to manually create a .madock folder and transfer configuration files and database backups to it, if necessary
