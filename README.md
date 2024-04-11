@@ -30,10 +30,11 @@ This project is written on Golang, and it is distributed under a MIT License.
 * LiveReload with [Google Chrome plugin](https://chrome.google.com/webstore/detail/livereload-for-madock/cmablbpbnbbgmakinefjgmgpolfahdbo)
 * MailHog (email testing tool for developers)
 * Magento Cloud
-* Composer patches
+* Composer patches in two clicks
 * Magento Functional Testing Framework (MFTF). Learn [more](docs/mftf.md)
 * Scopes. Learn [more](docs/scopes.md)
 * Configuration in a project. Learn [more](docs/config.md)
+* Snapshots. Learn [more](docs/snapshot.md)
 
 ## Tested on
 * Linux (Ubuntu 20.04)
