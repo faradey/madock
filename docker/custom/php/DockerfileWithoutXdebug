@@ -46,7 +46,7 @@ RUN apt-get update && apt-get install -y php{{{php/version}}}-bcmath \
 
 SHELL ["/bin/bash", "-c"]
 RUN IFS='.' read major minor patch <<< "{{{php/version}}}" \
-    && if [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then pecl install mcrypt-1.0.6 \
+    && if [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then pecl install mcrypt-1.0.7 \
     && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
     && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{php/version}}}/cli/conf.d/mcrypt.ini" \
     && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{php/version}}}/fpm/conf.d/mcrypt.ini"; fi \
