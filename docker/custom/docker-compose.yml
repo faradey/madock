@@ -129,12 +129,10 @@ services:
         soft: 65536
         hard: 65536
     environment:
-      - discovery.type=single-node
-      - "plugins.security.disabled=true"
-      - "DISABLE_SECURITY_PLUGIN=true"
-      - "ES_JAVA_OPTS=-Xms800m -Xmx800m"
-      - "cluster.routing.allocation.disk.threshold_enabled=false"
-      - "index.blocks.read_only_allow_delete"
+      OPENSEARCH_DISCOVERY_TYPE: 'single-node'
+      DISABLE_INSTALL_DEMO_CONFIG: 'true'
+      DISABLE_SECURITY_PLUGIN: 'true'
+      ES_JAVA_OPTS: '-Xms800m -Xmx800m'
     volumes:
       - opensearch_vlm_{{{search/opensearch/version}}}:/usr/share/opensearch/data
 <<<endif>>>
