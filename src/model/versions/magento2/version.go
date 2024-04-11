@@ -50,6 +50,8 @@ func getMagentoVersion() (edition, version string) {
 
 func GetPhpVersion(mageVer string) string {
 	if mageVer >= "2.4.4" {
+		return "8.3"
+	} else if mageVer >= "2.4.4" {
 		return "8.1"
 	} else if mageVer >= "2.3.7" {
 		return "7.4"
@@ -67,7 +69,7 @@ func GetPhpVersion(mageVer string) string {
 }
 
 func GetDBVersion(mageVer string) string {
-	if mageVer >= "2.4.6" {
+	if mageVer >= "2.4.7" {
 		return "10.6"
 	} else if mageVer >= "2.4.1" {
 		return "10.4"
@@ -85,7 +87,9 @@ func GetDBVersion(mageVer string) string {
 }
 
 func GetElasticVersion(mageVer string) string {
-	if mageVer >= "2.4.6" {
+	if mageVer >= "2.4.7" {
+		return "8.11.14"
+	} else if mageVer >= "2.4.6" {
 		return "8.4.3"
 	} else if mageVer >= "2.4.5" {
 		return "7.17.5"
@@ -123,7 +127,9 @@ func GetSearchEngineVersion(mageVer string) string {
 }
 
 func GetOpenSearchVersion(mageVer string) string {
-	if mageVer >= "2.4.6" {
+	if mageVer >= "2.4.7" {
+		return "2.12.0"
+	} else if mageVer >= "2.4.6" {
 		return "2.5.0"
 	} else if mageVer >= "2.4.3-p2" {
 		return "1.2.0"
@@ -153,7 +159,9 @@ func GetComposerVersion(mageVer string) string {
 }
 
 func GetRedisVersion(mageVer string) string {
-	if mageVer >= "2.4.6" {
+	if mageVer >= "2.4.7" {
+		return "7.2"
+	} else if mageVer >= "2.4.6" {
 		return "7.0"
 	} else if mageVer >= "2.4.4" {
 		return "6.2"
@@ -171,7 +179,11 @@ func GetRedisVersion(mageVer string) string {
 }
 
 func GetRabbitMQVersion(mageVer string) string {
-	if mageVer >= "2.4.4" {
+	if mageVer >= "2.4.7" {
+		return "3.13"
+	} else if mageVer >= "2.4.6" {
+		return "3.11"
+	} else if mageVer >= "2.4.4" {
 		return "3.9"
 	} else if mageVer >= "2.3.4" {
 		return "3.8"
@@ -183,7 +195,9 @@ func GetRabbitMQVersion(mageVer string) string {
 }
 
 func GetXdebugVersion(phpVer string) string {
-	if phpVer >= "8.1" {
+	if phpVer >= "8.3" {
+		return "3.3.1"
+	} else if phpVer >= "8.1" {
 		return "3.2.2"
 	} else if phpVer >= "7.2" {
 		return "3.1.6"
