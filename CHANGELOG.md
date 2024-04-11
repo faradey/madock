@@ -15,6 +15,7 @@
 - Added snapshots functionality for the project
 - Fixed .madock/config.xml
 - Update PHP mcrypt version
+- Fixed OpenSearch env variables
 
 
 
