@@ -18,6 +18,9 @@ services:
       {{{nginx/host_gateways}}}
     ports:
       - "{{{nginx/port/project+5}}}:35729"
+    <<<if{{{isolation/enabled}}}>>>cap_add:
+      - NET_ADMIN<<<endif>>>
+
 
 <<<if{{{php/xdebug/enabled}}}>>>
   php_without_xdebug:

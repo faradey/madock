@@ -155,6 +155,9 @@
                 <backend_url></backend_url>
             </pwa>
             <container_name_prefix>madock_</container_name_prefix>
+            <isolation>
+                <enabled>false</enabled>
+            </isolation>
         </default>
     </scopes>
 </config>
