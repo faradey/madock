@@ -232,17 +232,6 @@ func UpProjectWithBuild(withChown bool) {
 			logger.Fatal(err)
 		}
 	}
-
-	if val, ok := projectConf["isolation/enabled"]; ok && val == "true" {
-		cmd := exec.Command("docker", "exec", "-it", "-u", "root", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "apt update && apt install -y iptables && iptables --new-chain SANDBOX && iptables -A OUTPUT -j SANDBOX && iptables -A SANDBOX -m state ! --state NEW -j RETURN && iptables -A SANDBOX -p tcp -d 172.16.0.0/12 -j RETURN && iptables -A SANDBOX -p udp -d 172.16.0.0/12 -j RETURN && iptables -A SANDBOX -p udp -d 1.1.1.1/32 --dport 53 -j RETURN && iptables -A SANDBOX -m state --state NEW -j LOG --log-prefix \"Filtered outbound connection: \" && iptables -A SANDBOX -j REJECT")
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
-		if err != nil {
-			logger.Fatal(err)
-		}
-	}
 }
 
 func dockerComposePull(composeFiles []string) {
