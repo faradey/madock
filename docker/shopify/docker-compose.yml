@@ -15,8 +15,11 @@ services:
     - COMPOSER_HOME=/var/www/.composer
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
     ports:
       - "{{{nginx/port/project+5}}}:35729"
+    <<<if{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
   nginx:
     build:
@@ -30,8 +33,12 @@ services:
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
     depends_on:
       - php
+    <<<if{{{isolation/enabled}}}>>>networks:
+      - opened
+      - isolated<<<endif>>>
 
   db:
     command: 
@@ -44,6 +51,8 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+    <<<if{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{db2/enabled}}}>>>
   db2:
@@ -58,6 +67,8 @@ services:
       - dbdata2:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
 <<<endif>>>
+    <<<if{{{db2/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{redis/enabled}}}>>>
   redisdb:
@@ -65,11 +76,15 @@ services:
       context: ctx
       dockerfile: redis.Dockerfile
 <<<endif>>>
+    <<<if{{{redis/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{rabbitmq/enabled}}}>>>
   rabbitmq:
     image: {{{rabbitmq/repository}}}:{{{rabbitmq/version}}}
 <<<endif>>>
+    <<<if{{{rabbitmq/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{db/phpmyadmin/enabled}}}>>>
   phpmyadmin:
@@ -87,10 +102,12 @@ services:
     depends_on:
       - db
 <<<endif>>>
+    <<<if{{{db/phpmyadmin/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{db2/phpmyadmin/enabled}}}>>>
   phpmyadmin2:
-    image: {{{db/phpmyadmin/repository}}}:{{{db2/phpmyadmin/version}}}
+    image: {{{db2/phpmyadmin/repository}}}:{{{db2/phpmyadmin/version}}}
     environment:
       PMA_HOST: "db2"
       PMA_PORT: 3306
@@ -102,7 +119,17 @@ services:
     ports:
       - "{{{nginx/port/project+7}}}:80"
 <<<endif>>>
+    <<<if{{{db2/phpmyadmin/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 volumes:
   dbdata:
   <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>
+<<<if{{{isolation/enabled}}}>>>
+networks:
+  opened:
+    driver: bridge
+  isolated:
+    driver: bridge
+    internal: true
+<<<endif>>>
