@@ -18,6 +18,8 @@ services:
       {{{nginx/host_gateways}}}
     ports:
       - "{{{nginx/port/project+5}}}:35729"
+    <<<if{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{php/xdebug/enabled}}}>>>
   php_without_xdebug:
@@ -31,6 +33,8 @@ services:
     depends_on:
       - php
 <<<endif>>>
+    <<<if{{{php/xdebug/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
   nginx:
     build:
@@ -47,6 +51,9 @@ services:
       {{{nginx/host_gateways}}}
     depends_on:
       - php
+    <<<if{{{isolation/enabled}}}>>>networks:
+      - opened
+      - isolated<<<endif>>>
 
   db:
     command: 
@@ -59,6 +66,8 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+    <<<if{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{db2/enabled}}}>>>
   db2:
@@ -73,7 +82,9 @@ services:
       - dbdata2:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
 <<<endif>>>
-  
+    <<<if{{{db2/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
+
 <<<if{{{nodejs/enabled}}}>>>
   nodejs:
     build:
@@ -86,6 +97,8 @@ services:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}
 <<<endif>>>
+    <<<if{{{nodejs/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{search/elasticsearch/enabled}}}>>>
   elasticsearch:
@@ -111,7 +124,9 @@ services:
     volumes:
       - elasticsearch_vlm_{{{search/elasticsearch/version}}}:/usr/share/elasticsearch/data
 <<<endif>>>
-  
+    <<<if{{{search/elasticsearch/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
+
 <<<if{{{search/opensearch/enabled}}}>>>
   opensearch:
     build:
@@ -136,6 +151,8 @@ services:
     volumes:
       - opensearch_vlm_{{{search/opensearch/version}}}:/usr/share/opensearch/data
 <<<endif>>>
+    <<<if{{{search/opensearch/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{redis/enabled}}}>>>
   redisdb:
@@ -143,11 +160,15 @@ services:
       context: ctx
       dockerfile: redis.Dockerfile
 <<<endif>>>
+    <<<if{{{redis/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{rabbitmq/enabled}}}>>>
   rabbitmq:
     image: {{{rabbitmq/repository}}}:{{{rabbitmq/version}}}
 <<<endif>>>
+    <<<if{{{rabbitmq/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{db/phpmyadmin/enabled}}}>>>
   phpmyadmin:
@@ -165,10 +186,12 @@ services:
     depends_on:
       - db
 <<<endif>>>
+    <<<if{{{db/phpmyadmin/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{db2/phpmyadmin/enabled}}}>>>
   phpmyadmin2:
-    image: {{{db/phpmyadmin/repository}}}:{{{db2/phpmyadmin/version}}}
+    image: {{{db2/phpmyadmin/repository}}}:{{{db2/phpmyadmin/version}}}
     environment:
       PMA_HOST: "db2"
       PMA_PORT: 3306
@@ -180,6 +203,8 @@ services:
     ports:
       - "{{{nginx/port/project+7}}}:80"
 <<<endif>>>
+    <<<if{{{db2/phpmyadmin/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{search/elasticsearch/dashboard/enabled}}}>>>
   kibana:
@@ -193,6 +218,8 @@ services:
     depends_on:
       - elasticsearch
 <<<endif>>>
+    <<<if{{{search/elasticsearch/dashboard/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 <<<if{{{search/opensearch/dashboard/enabled}}}>>>
   opensearchdashboard:
@@ -207,9 +234,19 @@ services:
     depends_on:
       - opensearch
 <<<endif>>>
+    <<<if{{{search/opensearch/dashboard/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
 
 volumes:
   dbdata:
   <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>
   <<<if{{{search/elasticsearch/enabled}}}>>>elasticsearch_vlm_{{{search/elasticsearch/version}}}:<<<endif>>>
   <<<if{{{search/opensearch/enabled}}}>>>opensearch_vlm_{{{search/opensearch/version}}}:<<<endif>>>
+<<<if{{{isolation/enabled}}}>>>
+networks:
+  opened:
+    driver: bridge
+  isolated:
+    driver: bridge
+    internal: true
+<<<endif>>>
