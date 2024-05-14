@@ -52,30 +52,52 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 
 		if args.Php == "" {
 			tools.Php(&toolsDefVersions.Php)
+		} else {
+			toolsDefVersions.Php = args.Php
 		}
 		if args.Db == "" {
 			tools.Db(&toolsDefVersions.Db)
+		} else {
+			toolsDefVersions.Db = args.Db
 		}
 		if args.Composer == "" {
 			tools.Composer(&toolsDefVersions.Composer)
+		} else {
+			toolsDefVersions.Composer = args.Composer
 		}
 		if args.SearchEngine == "" {
 			tools.SearchEngine(&toolsDefVersions.SearchEngine)
+		} else {
+			toolsDefVersions.SearchEngine = args.SearchEngine
 		}
-		if toolsDefVersions.SearchEngine == "Elasticsearch" && args.Elastic == "" {
-			tools.Elastic(&toolsDefVersions.Elastic)
-		} else if toolsDefVersions.SearchEngine == "OpenSearch" && args.OpenSearch == "" {
-			tools.OpenSearch(&toolsDefVersions.OpenSearch)
+		if toolsDefVersions.SearchEngine == "Elasticsearch" {
+			if args.Elastic == "" {
+				tools.Elastic(&toolsDefVersions.Elastic)
+			} else {
+				toolsDefVersions.Elastic = args.Elastic
+			}
+		} else if toolsDefVersions.SearchEngine == "OpenSearch" {
+			if args.OpenSearch == "" {
+				tools.OpenSearch(&toolsDefVersions.OpenSearch)
+			} else {
+				toolsDefVersions.OpenSearch = args.OpenSearch
+			}
 		}
 
 		if args.Redis == "" {
 			tools.Redis(&toolsDefVersions.Redis)
+		} else {
+			toolsDefVersions.Redis = args.Redis
 		}
 		if args.RabbitMQ == "" {
 			tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
+		} else {
+			toolsDefVersions.RabbitMQ = args.RabbitMQ
 		}
 		if args.Hosts == "" {
 			tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+		} else {
+			toolsDefVersions.Hosts = args.Hosts
 		}
 
 		projects.SetEnvForProject(projectName, toolsDefVersions, configs2.GetProjectConfigOnly(projectName))
@@ -86,7 +108,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-		if args.Download {
+		if args.Download && args.PlatformEdition == "" {
 			fmt.Println("")
 			fmtc.TitleLn("Specify Magento version: ")
 			fmt.Println("1) Community (default)")
