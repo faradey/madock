@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/controller/general/install"
 	"github.com/faradey/madock/src/controller/general/rebuild"
+	"github.com/faradey/madock/src/controller/general/setup"
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
@@ -18,8 +19,14 @@ import (
 	"strings"
 )
 
-func Execute(projectName string, projectConf map[string]string, continueSetup, doDownload, doInstall, isSampleData bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *setup.ArgsStruct) {
 	toolsDefVersions := magento2.GetVersions("")
+
+	if args.Platform == "magento2" && args.PlatformVersion != "" {
+		if args.Php != "" {
+			toolsDefVersions.Php = args.Php
+		}
+	}
 
 	mageVersion := ""
 	if toolsDefVersions.Php == "" {
@@ -29,30 +36,47 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 		if mageVersion != "" {
 			toolsDefVersions = magento2.GetVersions(mageVersion)
 		} else {
-			Execute(projectName, projectConf, continueSetup, doDownload, doInstall, isSampleData)
+			Execute(projectName, projectConf, continueSetup, args)
 			return
 		}
 	}
 
 	edition := "community"
+	if args.PlatformEdition != "" {
+		edition = args.PlatformEdition
+	}
 
 	if continueSetup {
 		fmt.Println("")
 		fmtc.Title("Your Magento version is " + toolsDefVersions.Magento)
 
-		tools.Php(&toolsDefVersions.Php)
-		tools.Db(&toolsDefVersions.Db)
-		tools.Composer(&toolsDefVersions.Composer)
-		tools.SearchEngine(&toolsDefVersions.SearchEngine)
-		if toolsDefVersions.SearchEngine == "Elasticsearch" {
+		if args.Php == "" {
+			tools.Php(&toolsDefVersions.Php)
+		}
+		if args.Db == "" {
+			tools.Db(&toolsDefVersions.Db)
+		}
+		if args.Composer == "" {
+			tools.Composer(&toolsDefVersions.Composer)
+		}
+		if args.SearchEngine == "" {
+			tools.SearchEngine(&toolsDefVersions.SearchEngine)
+		}
+		if toolsDefVersions.SearchEngine == "Elasticsearch" && args.Elastic == "" {
 			tools.Elastic(&toolsDefVersions.Elastic)
-		} else if toolsDefVersions.SearchEngine == "OpenSearch" {
+		} else if toolsDefVersions.SearchEngine == "OpenSearch" && args.OpenSearch == "" {
 			tools.OpenSearch(&toolsDefVersions.OpenSearch)
 		}
 
-		tools.Redis(&toolsDefVersions.Redis)
-		tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
-		tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+		if args.Redis == "" {
+			tools.Redis(&toolsDefVersions.Redis)
+		}
+		if args.RabbitMQ == "" {
+			tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
+		}
+		if args.Hosts == "" {
+			tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+		}
 
 		projects.SetEnvForProject(projectName, toolsDefVersions, configs2.GetProjectConfigOnly(projectName))
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
@@ -62,7 +86,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-		if doDownload {
+		if args.Download {
 			fmt.Println("")
 			fmtc.TitleLn("Specify Magento version: ")
 			fmt.Println("1) Community (default)")
@@ -81,15 +105,15 @@ func Execute(projectName string, projectConf map[string]string, continueSetup, d
 		}
 	}
 
-	if doDownload || doInstall || continueSetup {
+	if args.Download || args.Install || continueSetup {
 		rebuild.Execute()
 	}
 
-	if doDownload {
-		DownloadMagento(projectName, edition, mageVersion, isSampleData)
+	if args.Download {
+		DownloadMagento(projectName, edition, mageVersion, args.SampleData)
 	}
 
-	if doInstall {
+	if args.Install {
 		install.Magento(projectName, toolsDefVersions.Magento)
 	}
 }

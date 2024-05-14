@@ -85,12 +85,12 @@ go build -o madock
 ```shell
 Run command below for Apple M1
 
-ln -s absolute_path_to_your_madock_dir/madock /opt/homebrew/bin/
+sudo ln -s absolute_path_to_your_madock_dir/madock /opt/homebrew/bin/
 ```
 ```shell
 Run command below for Apple Intel
 
-ln -s absolute_path_to_your_madock_dir/madock /usr/local/bin/
+sudo ln -s absolute_path_to_your_madock_dir/madock /usr/local/bin/
 ```
 7. Open a new terminal tab/window and check that `madock` works
 ```
