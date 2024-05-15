@@ -57,9 +57,12 @@ func Execute() {
 		projectConf = configs2.GetGeneralConfig()
 	}
 
-	fmt.Println("")
-	fmtc.Title("Specify Platform: ")
-	platform := tools.Platform()
+	platform := args.Platform
+	if platform == "" {
+		fmt.Println("")
+		fmtc.Title("Specify Platform: ")
+		platform = tools.Platform()
+	}
 	if platform == "magento2" {
 		setupMagento.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "pwa" {

@@ -23,7 +23,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	toolsDefVersions := magento2.GetVersions("")
 
 	mageVersion := ""
-	if args.Platform == "magento2" && args.PlatformVersion != "" {
+	if args.PlatformVersion != "" {
 		mageVersion = args.PlatformVersion
 		if args.Php != "" {
 			toolsDefVersions.Php = args.Php
@@ -31,9 +31,11 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 
 	if toolsDefVersions.Php == "" {
-		fmt.Println("")
-		fmtc.Title("Specify Magento version: ")
-		mageVersion, _ = tools.Waiter()
+		if mageVersion == "" {
+			fmt.Println("")
+			fmtc.Title("Specify Magento version: ")
+			mageVersion, _ = tools.Waiter()
+		}
 		if mageVersion != "" {
 			toolsDefVersions = magento2.GetVersions(mageVersion)
 		} else {

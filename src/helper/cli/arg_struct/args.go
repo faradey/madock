@@ -29,3 +29,29 @@ type ControllerGeneralSetup struct {
 	Yarn            string `arg:"--yarn" help:"Yarn version"`
 	PwaBackendUrl   string `arg:"--pwa-backend-url" help:"PWA backend url"`
 }
+
+type ControllerGeneralStart struct {
+	attr.Arguments
+	WithChown bool `arg:"-c,--with-chown" help:"With Chown"`
+}
+
+type ControllerGeneralSnapshotCreate struct {
+	attr.Arguments
+	Name string `arg:"-n,--name" help:"Name"`
+}
+
+type ControllerGeneralSetupEnv struct {
+	attr.Arguments
+	Force bool   `arg:"-f,--force" help:"Force"`
+	Host  string `arg:"-h,--host" help:"Host"`
+}
+
+type ControllerGeneralServiceEnable struct {
+	attr.ArgumentsWithArgs
+	Global bool `arg:"-g,--global" help:"Global"`
+}
+
+type ControllerGeneralServiceDisable struct {
+	attr.ArgumentsWithArgs
+	Global bool `arg:"-g,--global" help:"Global"`
+}

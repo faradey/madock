@@ -3,6 +3,7 @@ package env
 import (
 	"encoding/json"
 	"github.com/faradey/madock/src/helper/cli"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -12,14 +13,8 @@ import (
 	"os/exec"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	Force bool   `arg:"-f,--force" help:"Force"`
-	Host  string `arg:"-h,--host" help:"Host"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralSetupEnv)).(*arg_struct.ControllerGeneralSetupEnv)
 
 	envFile := paths.GetRunDirPath() + "/app/etc/env.php"
 	if paths.IsFileExist(envFile) && !args.Force {

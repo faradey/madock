@@ -1,3 +1,9 @@
+**v2.4.3**
+- Added interactive options for the `madock setup` command
+- Added an isolation mode
+- Refactoring code
+
+
 **v2.4.2**
 - Support Magento 2.4.7 and Adobe Commerce 2.4.7
 - Updated docker-compose version to 3.8

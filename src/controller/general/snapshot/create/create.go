@@ -3,6 +3,7 @@ package create
 import (
 	"compress/gzip"
 	"fmt"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -13,13 +14,8 @@ import (
 	"time"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	Name string `arg:"-n,--name" help:"Name"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralSnapshotCreate)).(*arg_struct.ControllerGeneralSnapshotCreate)
 	projectConf := configs.GetCurrentProjectConfig()
 	exPath := paths.GetExecDirPath()
 	projectName := configs.GetProjectName()

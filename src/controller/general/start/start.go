@@ -5,18 +5,14 @@ import (
 	startMagento2 "github.com/faradey/madock/src/controller/magento/start"
 	startPwa "github.com/faradey/madock/src/controller/pwa/start"
 	builder2 "github.com/faradey/madock/src/controller/shopify/start"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	WithChown bool `arg:"-c,--with-chown" help:"With Chown"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralStart)).(*arg_struct.ControllerGeneralStart)
 
 	if configs2.IsHasConfig("") {
 		projectConf := configs2.GetCurrentProjectConfig()
