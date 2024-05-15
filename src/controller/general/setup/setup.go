@@ -84,10 +84,10 @@ func Execute() {
 	if platform == "magento2" {
 		setupMagento.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "pwa" {
-		setupPWA.Execute(projectName, projectConf, continueSetup)
+		setupPWA.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "shopify" {
-		setupShopify.Execute(projectName, projectConf, continueSetup)
+		setupShopify.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "custom" {
-		setupCustom.Execute(projectName, projectConf, continueSetup)
+		setupCustom.Execute(projectName, projectConf, continueSetup, args)
 	}
 }

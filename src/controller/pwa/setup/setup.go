@@ -3,6 +3,7 @@ package setup
 import (
 	"fmt"
 	"github.com/faradey/madock/src/controller/general/rebuild"
+	"github.com/faradey/madock/src/controller/general/setup"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/projects"
@@ -10,13 +11,29 @@ import (
 	"github.com/faradey/madock/src/model/versions/pwa"
 )
 
-func Execute(projectName string, projectConf map[string]string, continueSetup bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *setup.ArgsStruct) {
 	if continueSetup {
 		toolsDefVersions := pwa.GetVersions()
-		tools.NodeJs(&toolsDefVersions.NodeJs)
-		tools.Yarn(&toolsDefVersions.Yarn)
-		tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
-		setMagentoBackendHost(&toolsDefVersions.PwaBackendUrl, projectConf)
+		if args.NodeJs == "" {
+			tools.NodeJs(&toolsDefVersions.NodeJs)
+		} else {
+			toolsDefVersions.NodeJs = args.NodeJs
+		}
+		if args.Yarn == "" {
+			tools.Yarn(&toolsDefVersions.Yarn)
+		} else {
+			toolsDefVersions.Yarn = args.Yarn
+		}
+		if args.Hosts == "" {
+			tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+		} else {
+			toolsDefVersions.Hosts = args.Hosts
+		}
+		if args.PwaBackendUrl == "" {
+			setMagentoBackendHost(&toolsDefVersions.PwaBackendUrl, projectConf)
+		} else {
+			toolsDefVersions.PwaBackendUrl = args.PwaBackendUrl
+		}
 		projects.SetEnvForProject(projectName, toolsDefVersions, configs.GetProjectConfigOnly(projectName))
 		fmtc.SuccessLn("\n" + "Finish set up environment")
 

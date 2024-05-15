@@ -3,6 +3,7 @@ package setup
 import (
 	"fmt"
 	"github.com/faradey/madock/src/controller/general/rebuild"
+	"github.com/faradey/madock/src/controller/general/setup"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/projects"
@@ -11,21 +12,52 @@ import (
 	"github.com/faradey/madock/src/model/versions/shopify"
 )
 
-func Execute(projectName string, projectConf map[string]string, continueSetup bool) {
+func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *setup.ArgsStruct) {
 	toolsDefVersions := shopify.GetVersions()
 
 	if continueSetup {
 		fmt.Println("")
 
-		tools.Php(&toolsDefVersions.Php)
-		tools.Db(&toolsDefVersions.Db)
-		tools.Composer(&toolsDefVersions.Composer)
-		tools.NodeJs(&toolsDefVersions.NodeJs)
-		tools.Yarn(&toolsDefVersions.Yarn)
-
-		tools.Redis(&toolsDefVersions.Redis)
-		tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
-		tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+		if args.Php == "" {
+			tools.Php(&toolsDefVersions.Php)
+		} else {
+			toolsDefVersions.Php = args.Php
+		}
+		if args.Db == "" {
+			tools.Db(&toolsDefVersions.Db)
+		} else {
+			toolsDefVersions.Db = args.Db
+		}
+		if args.Composer == "" {
+			tools.Composer(&toolsDefVersions.Composer)
+		} else {
+			toolsDefVersions.Composer = args.Composer
+		}
+		if args.NodeJs == "" {
+			tools.NodeJs(&toolsDefVersions.NodeJs)
+		} else {
+			toolsDefVersions.NodeJs = args.NodeJs
+		}
+		if args.Yarn == "" {
+			tools.Yarn(&toolsDefVersions.Yarn)
+		} else {
+			toolsDefVersions.Yarn = args.Yarn
+		}
+		if args.Redis == "" {
+			tools.Redis(&toolsDefVersions.Redis)
+		} else {
+			toolsDefVersions.Redis = args.Redis
+		}
+		if args.RabbitMQ == "" {
+			tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
+		} else {
+			toolsDefVersions.RabbitMQ = args.RabbitMQ
+		}
+		if args.Hosts == "" {
+			tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+		} else {
+			toolsDefVersions.Hosts = args.Hosts
+		}
 
 		projects.SetEnvForProject(projectName, toolsDefVersions, configs.GetProjectConfigOnly(projectName))
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
