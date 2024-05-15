@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/faradey/madock/src/controller/general/install"
 	"github.com/faradey/madock/src/controller/general/rebuild"
-	"github.com/faradey/madock/src/controller/general/setup"
 	"github.com/faradey/madock/src/helper/cli"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/projects"
@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *setup.ArgsStruct) {
+func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
 	toolsDefVersions := magento2.GetVersions("")
 
 	if args.Platform == "magento2" && args.PlatformVersion != "" {
