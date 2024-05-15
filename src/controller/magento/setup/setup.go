@@ -22,13 +22,14 @@ import (
 func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
 	toolsDefVersions := magento2.GetVersions("")
 
+	mageVersion := ""
 	if args.Platform == "magento2" && args.PlatformVersion != "" {
+		mageVersion = args.PlatformVersion
 		if args.Php != "" {
 			toolsDefVersions.Php = args.Php
 		}
 	}
 
-	mageVersion := ""
 	if toolsDefVersions.Php == "" {
 		fmt.Println("")
 		fmtc.Title("Specify Magento version: ")

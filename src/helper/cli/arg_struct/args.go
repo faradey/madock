@@ -14,13 +14,13 @@ type ControllerGeneralSetup struct {
 	Install         bool   `arg:"-i,--install" help:"Install service (Magento, PWA, Shopify SDK, etc.)"`
 	SampleData      bool   `arg:"-s,--sample-data" help:"Sample data"`
 	Platform        string `arg:"--platform" help:"Platform"`
-	PlatformEdition string `arg:"--edition" help:"Platform edition"`
-	PlatformVersion string `arg:"--edition" help:"Platform version"`
+	PlatformEdition string `arg:"--platform-edition" help:"Platform edition"`
+	PlatformVersion string `arg:"--platform-version" help:"Platform version"`
 	Php             string `arg:"--php" help:"PHP version"`
 	Db              string `arg:"--db" help:"DB version"`
 	Composer        string `arg:"--composer" help:"Composer version"`
 	SearchEngine    string `arg:"--search-engine" help:"Search Engine"`
-	Elastic         string `arg:"--elastic" help:"Elastic version"`
+	Elastic         string `arg:"--elastic" help:"Elasticsearch version"`
 	OpenSearch      string `arg:"--opensearch" help:"OpenSearch version"`
 	Redis           string `arg:"--redis" help:"Redis version"`
 	RabbitMQ        string `arg:"--rabbitmq" help:"RabbitMQ version"`
