@@ -35,6 +35,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Scopes. Learn [more](docs/scopes.md)
 * Configuration in a project. Learn [more](docs/config.md)
 * Snapshots. Learn [more](docs/snapshot.md)
+* Isolation mode [more](docs/isolation.md)
 
 ## Tested on
 * Linux (Ubuntu 20.04)
