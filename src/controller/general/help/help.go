@@ -2,16 +2,13 @@ package help
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-}
-
 func Execute() {
-	attr.Parse(new(ArgsStruct))
+	attr.Parse(new(arg_struct.ControllerGeneralHelp))
 
 	fmtc.WarningLn("Usage:")
 	tab()

@@ -4,6 +4,10 @@ import "github.com/faradey/madock/src/helper/cli/attr"
 
 //TODO relocate here other ArgsStruct
 
+type ControllerGeneralHelp struct {
+	attr.Arguments
+}
+
 type ControllerGeneralSetup struct {
 	attr.Arguments
 	Download        bool   `arg:"-d,--download" help:"Download code from repository"`
