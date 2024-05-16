@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/logger"
@@ -9,12 +10,6 @@ import (
 	"os"
 	"strings"
 )
-
-type ArgsStruct struct {
-	attr.Arguments
-	Name  string `arg:"-n,--name" help:"Parameter name"`
-	Value string `arg:"-v,--value" help:"Parameter value"`
-}
 
 func ShowEnv() {
 	lines := configs.GetProjectConfig(configs.GetProjectName())
@@ -24,7 +19,7 @@ func ShowEnv() {
 }
 
 func SetEnvOption() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralConfig)).(*arg_struct.ControllerGeneralConfig)
 	name := strings.ToLower(args.Name)
 	val := args.Value
 	activeScope := "default"

@@ -55,3 +55,35 @@ type ControllerGeneralServiceDisable struct {
 	attr.ArgumentsWithArgs
 	Global bool `arg:"-g,--global" help:"Global"`
 }
+
+type ControllerGeneralBash struct {
+	attr.Arguments
+	Service string `arg:"-s,--service" help:"Service name (php, nginx, db, etc.)"`
+	User    string `arg:"-u,--user" help:"User"`
+}
+
+type ControllerGeneralCleanCache struct {
+	attr.Arguments
+	User string `arg:"-u,--user" help:"User"`
+}
+
+type ControllerGeneralConfig struct {
+	attr.Arguments
+	Name  string `arg:"-n,--name" help:"Parameter name"`
+	Value string `arg:"-v,--value" help:"Parameter value"`
+}
+
+type ControllerGeneralDbExport struct {
+	attr.Arguments
+	Name          string   `arg:"-n,--name" help:"Name of the archive file"`
+	DBServiceName string   `arg:"-s,--service" help:"DB service name. For example: db"`
+	IgnoreTable   []string `arg:"--ignore-table" help:"Ignore db table"`
+	User          string   `arg:"-u,--user" help:"Ignore db table"`
+}
+
+type ControllerGeneralDbImport struct {
+	attr.Arguments
+	Force         bool   `arg:"-f,--force" help:"Install Magento"`
+	DBServiceName string `arg:"-s,--service" help:"DB service name. For example: db"`
+	User          string `arg:"-u,--user" help:"User"`
+}

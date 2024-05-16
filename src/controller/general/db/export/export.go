@@ -3,6 +3,7 @@ package export
 import (
 	"compress/gzip"
 	"fmt"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -14,19 +15,10 @@ import (
 	"time"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	Name          string   `arg:"-n,--name" help:"Name of the archive file"`
-	DBServiceName string   `arg:"-s,--service" help:"DB service name. For example: db"`
-	IgnoreTable   []string `arg:"--ignore-table" help:"Ignore db table"`
-	User          string   `arg:"-u,--user" help:"Ignore db table"`
-}
-
 func Export() {
-	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 	if projectConf["platform"] != "pwa" {
-		args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+		args := attr.Parse(new(arg_struct.ControllerGeneralDbExport)).(*arg_struct.ControllerGeneralDbExport)
 
 		name := strings.TrimSpace(args.Name)
 		if len(name) > 0 {
@@ -49,6 +41,7 @@ func Export() {
 			user = args.User
 		}
 
+		projectName := configs.GetProjectName()
 		containerName := docker.GetContainerName(projectConf, projectName, service)
 
 		dbsPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/")

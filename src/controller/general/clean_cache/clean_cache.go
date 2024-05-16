@@ -2,6 +2,7 @@ package clean_cache
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
@@ -12,13 +13,8 @@ import (
 	"sync"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	User string `arg:"-u,--user" help:"User"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralCleanCache)).(*arg_struct.ControllerGeneralCleanCache)
 
 	user := "www-data"
 
