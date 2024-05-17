@@ -255,6 +255,8 @@ services:
 <<<if{{{varnish/enabled}}}>>>
   varnish:
     image: {{{varnish/repository}}}:{{{varnish/version}}}
+    volumes:
+      - ./src/{{{varnish/config_file}}}:/etc/varnish/default.vcl:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:

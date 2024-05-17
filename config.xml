@@ -162,6 +162,7 @@
                 <enabled>false</enabled>
                 <repository>varnish</repository>
                 <version>7.5.0</version>
+                <config_file>default.vcl</config_file>
             </varnish>
         </default>
     </scopes>

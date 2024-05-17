@@ -27,7 +27,6 @@ func Execute() {
 			if args.Global {
 				configs.SetParam(projectName, serviceName, "true", "default", configs.MainConfigCode)
 			}
-
 		}
 	}
 
