@@ -3,6 +3,7 @@ package file
 import (
 	"fmt"
 	"github.com/faradey/madock/src/controller/general/remote_sync"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/logger"
@@ -11,14 +12,8 @@ import (
 	"strings"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	Path    string `arg:"-p,--path" help:"Path to file on server (from site root folder)"`
-	SshType string `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralRemoteSyncFile)).(*arg_struct.ControllerGeneralRemoteSyncFile)
 
 	projectConf := configs.GetCurrentProjectConfig()
 	var err error

@@ -1,19 +1,15 @@
 package proxy
 
 import (
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	Force bool `arg:"-f,--force" help:"Force"`
-}
-
 func Execute(flag string) {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralProxy)).(*arg_struct.ControllerGeneralProxy)
 
 	if configs2.IsHasConfig("") {
 		projectConf := configs2.GetCurrentProjectConfig()

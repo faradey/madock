@@ -16,7 +16,7 @@ type ArgsStruct struct {
 	attr.ArgumentsWithArgs
 }
 
-func Cloud() {
+func Execute() {
 	attr.Parse(new(ArgsStruct))
 
 	projectConf := configs.GetCurrentProjectConfig()

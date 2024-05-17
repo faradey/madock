@@ -10,7 +10,7 @@ import (
 	"os/exec"
 )
 
-func Bash() {
+func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralBash)).(*arg_struct.ControllerGeneralBash)
 
 	service := "php"

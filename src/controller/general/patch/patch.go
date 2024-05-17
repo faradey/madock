@@ -2,6 +2,7 @@ package patch
 
 import (
 	"github.com/faradey/madock/src/helper/cli"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -10,16 +11,8 @@ import (
 	"os/exec"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	File  string `arg:"--file" help:"File path"`
-	Name  string `arg:"-n,--name" help:"Parameter name"`
-	Title string `arg:"-t,--title" help:"Title"`
-	Force bool   `arg:"-f,--force" help:"Force"`
-}
-
-func Create() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+func Execute() {
+	args := attr.Parse(new(arg_struct.ControllerGeneralPatch)).(*arg_struct.ControllerGeneralPatch)
 
 	filePath := args.File
 	patchName := args.Name

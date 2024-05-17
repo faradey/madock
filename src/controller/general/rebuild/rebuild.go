@@ -2,6 +2,7 @@ package rebuild
 
 import (
 	"github.com/faradey/madock/src/controller/general/proxy"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
@@ -11,14 +12,8 @@ import (
 	"os"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	Force     bool `arg:"-f,--force" help:"Force"`
-	WithChown bool `arg:"-c,--with-chown" help:"With Chown"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralRebuild)).(*arg_struct.ControllerGeneralRebuild)
 
 	if configs.IsHasConfig("") {
 		if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {

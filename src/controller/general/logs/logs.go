@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -9,13 +10,8 @@ import (
 	"os/exec"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	Service string `arg:"-s,--service" help:"Service name (php, nginx, db, etc.)"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralLogs)).(*arg_struct.ControllerGeneralLogs)
 
 	service := "php"
 	projectConf := configs.GetCurrentProjectConfig()

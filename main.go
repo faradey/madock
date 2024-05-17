@@ -70,15 +70,15 @@ func main() {
 
 	switch command {
 	case "bash":
-		bash.Bash()
+		bash.Execute()
 	case "c:f":
 		clean_cache.Execute()
 	case "magento-cloud", "cloud":
-		cloud.Cloud()
+		cloud.Execute()
 	case "cli":
-		cli.Cli()
+		cli.Execute()
 	case "composer":
-		composer.Composer()
+		composer.Execute()
 	case "compress":
 		compress.Zip()
 	case "config:cache:clean", "c:c:c":
@@ -126,7 +126,7 @@ func main() {
 	case "open":
 		open.Execute()
 	case "patch:create":
-		patch.Create()
+		patch.Execute()
 	case "project:remove":
 		remove.Execute()
 	case "proxy:start":

@@ -2,6 +2,7 @@ package prune
 
 import (
 	"github.com/faradey/madock/src/controller/general/proxy"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
@@ -9,13 +10,8 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	WithVolumes bool `arg:"-v,--with-volumes" help:"With Volumes"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralPrune)).(*arg_struct.ControllerGeneralPrune)
 
 	if configs.IsHasConfig("") {
 		docker.Down(args.WithVolumes)

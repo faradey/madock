@@ -9,7 +9,7 @@ import (
 	"os/exec"
 )
 
-func Composer() {
+func Execute() {
 	flag := cli.NormalizeCliCommandWithJoin(os.Args[2:])
 
 	projectName := configs.GetProjectName()

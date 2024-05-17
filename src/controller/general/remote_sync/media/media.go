@@ -3,6 +3,7 @@ package media
 import (
 	"fmt"
 	"github.com/faradey/madock/src/controller/general/remote_sync"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/finder"
@@ -12,15 +13,8 @@ import (
 	"time"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	ImagesOnly bool   `arg:"-i,--images-only" help:"Sync images only"`
-	Compress   bool   `arg:"-c,--compress" help:"Compress images"`
-	SshType    string `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralRemoteSyncMedia)).(*arg_struct.ControllerGeneralRemoteSyncMedia)
 
 	projectConf := configs.GetCurrentProjectConfig()
 

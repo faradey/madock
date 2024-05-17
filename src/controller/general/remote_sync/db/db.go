@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/faradey/madock/src/controller/general/remote_sync"
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
@@ -15,15 +16,8 @@ import (
 	"time"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	Name        string   `arg:"-n,--name" help:"Name of the archive file"`
-	IgnoreTable []string `arg:"-i,--ignore-table" help:"Ignore db table"`
-	SshType     string   `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralRemoteSyncDb)).(*arg_struct.ControllerGeneralRemoteSyncDb)
 
 	projectConf := configs.GetCurrentProjectConfig()
 	sshType := "ssh"

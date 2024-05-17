@@ -1,6 +1,7 @@
 package open
 
 import (
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/logger"
@@ -8,13 +9,8 @@ import (
 	"runtime"
 )
 
-type ArgsStruct struct {
-	attr.Arguments
-	Service string `arg:"-s,--service" help:"Service name"`
-}
-
 func Execute() {
-	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	args := attr.Parse(new(arg_struct.ControllerGeneralOpen)).(*arg_struct.ControllerGeneralOpen)
 
 	projectConfig := configs.GetCurrentProjectConfig()
 	hosts := configs.GetHosts(projectConfig)

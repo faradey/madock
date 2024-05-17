@@ -87,3 +87,57 @@ type ControllerGeneralDbImport struct {
 	DBServiceName string `arg:"-s,--service" help:"DB service name. For example: db"`
 	User          string `arg:"-u,--user" help:"User"`
 }
+
+type ControllerGeneralLogs struct {
+	attr.Arguments
+	Service string `arg:"-s,--service" help:"Service name (php, nginx, db, etc.)"`
+}
+
+type ControllerGeneralPatch struct {
+	attr.Arguments
+	File  string `arg:"--file" help:"File path"`
+	Name  string `arg:"-n,--name" help:"Parameter name"`
+	Title string `arg:"-t,--title" help:"Title"`
+	Force bool   `arg:"-f,--force" help:"Force"`
+}
+
+type ControllerGeneralOpen struct {
+	attr.Arguments
+	Service string `arg:"-s,--service" help:"Service name"`
+}
+
+type ControllerGeneralProxy struct {
+	attr.Arguments
+	Force bool `arg:"-f,--force" help:"Force"`
+}
+
+type ControllerGeneralPrune struct {
+	attr.Arguments
+	WithVolumes bool `arg:"-v,--with-volumes" help:"With Volumes"`
+}
+
+type ControllerGeneralRebuild struct {
+	attr.Arguments
+	Force     bool `arg:"-f,--force" help:"Force"`
+	WithChown bool `arg:"-c,--with-chown" help:"With Chown"`
+}
+
+type ControllerGeneralRemoteSyncDb struct {
+	attr.Arguments
+	Name        string   `arg:"-n,--name" help:"Name of the archive file"`
+	IgnoreTable []string `arg:"-i,--ignore-table" help:"Ignore db table"`
+	SshType     string   `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
+}
+
+type ControllerGeneralRemoteSyncFile struct {
+	attr.Arguments
+	Path    string `arg:"-p,--path" help:"Path to file on server (from site root folder)"`
+	SshType string `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
+}
+
+type ControllerGeneralRemoteSyncMedia struct {
+	attr.Arguments
+	ImagesOnly bool   `arg:"-i,--images-only" help:"Sync images only"`
+	Compress   bool   `arg:"-c,--compress" help:"Compress images"`
+	SshType    string `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
+}
