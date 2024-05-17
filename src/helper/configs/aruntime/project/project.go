@@ -215,7 +215,6 @@ func makeDockerCompose(projectName string) {
 		for i := 2; i < 20; i++ {
 			str = strings.Replace(str, "{{{nginx/port/project+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
 		}
-		str = strings.Replace(str, "{{{nginx/network_number}}}", strconv.Itoa(portNumber+90), -1)
 		str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
 		str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
 

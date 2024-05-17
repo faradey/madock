@@ -101,8 +101,14 @@ func makeProxy() {
 						fmt.Println("Project name is " + name)
 						logger.Fatal(err)
 					}
+					projectConf := configs2.GetProjectConfig(name)
 					portRanged := (port - 1) * 20
-					strReplaced := strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged), -1)
+					strReplaced := ""
+					if projectConf["varnish/enabled"] != "true" {
+						strReplaced = strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged), -1)
+					} else {
+						strReplaced = strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged+9), -1)
+					}
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/unsecure}}}", generalConfig["nginx/port/unsecure"], -1)
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/secure}}}", generalConfig["nginx/port/secure"], -1)
 					for i := 1; i < 20; i++ {
@@ -110,7 +116,6 @@ func makeProxy() {
 					}
 					strReplaced = configs2.ReplaceConfigValue(strReplaced)
 					hostName := "loc." + name + ".com"
-					projectConf := configs2.GetProjectConfig(name)
 					hosts := configs2.GetHosts(projectConf)
 					if len(hosts) > 0 {
 						var onlyHosts []string

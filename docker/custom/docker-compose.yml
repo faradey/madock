@@ -237,6 +237,19 @@ services:
     <<<if{{{search/opensearch/dashboard/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>
 
+<<<if{{{varnish/enabled}}}>>>
+  varnish:
+    image: {{{varnish/repository}}}:{{{varnish/version}}}
+    volumes:
+      - ./src:/var/www/html:delegated
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - nginx
+<<<endif>>>
+<<<if{{{varnish/enabled}}}{{{isolation/enabled}}}>>>networks:
+  - isolated<<<endif>>>
+
 volumes:
   dbdata:
   <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>

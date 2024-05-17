@@ -252,6 +252,24 @@ services:
     <<<if{{{magento/mftf/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>
 
+<<<if{{{varnish/enabled}}}>>>
+varnish:
+  image: {{{varnish/repository}}}:{{{varnish/version}}}
+  volumes:
+    - ./src:/var/www/html:delegated
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  environment:
+    VARNISH_HTTP_PORT: {{{nginx/port/project+9}}}
+    VARNISH_BACKEND_HOST: host.docker.internal
+    VARNISH_BACKEND_PORT: {{{nginx/port/project}}}
+    VARNISH_SIZE: 1G
+  depends_on:
+    - nginx
+<<<endif>>>
+<<<if{{{varnish/enabled}}}{{{isolation/enabled}}}>>>networks:
+  - isolated<<<endif>>>
+
 volumes:
   dbdata:
   <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>
