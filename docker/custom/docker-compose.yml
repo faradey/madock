@@ -244,11 +244,13 @@ services:
       - ./src/{{{varnish/config_file}}}:/etc/varnish/default.vcl:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+    command: "-p default_keep=300"
     environment:
       VARNISH_HTTP_PORT: {{{nginx/port/project+9}}}
-      VARNISH_BACKEND_HOST: host.docker.internal
-      VARNISH_BACKEND_PORT: {{{nginx/port/project}}}
       VARNISH_SIZE: 1G
+    ports:
+      - "{{{nginx/port/project+9}}}:{{{nginx/port/project+9}}}"
     depends_on:
       - nginx
 <<<endif>>>
