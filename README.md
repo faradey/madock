@@ -36,6 +36,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Configuration in a project. Learn [more](docs/config.md)
 * Snapshots. Learn [more](docs/snapshot.md)
 * Isolation mode [more](docs/isolation.md)
+* Varnish Cache [more](docs/varnish.md)
 
 ## Tested on
 * Linux (Ubuntu 20.04)

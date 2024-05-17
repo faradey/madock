@@ -1,6 +1,7 @@
 **v2.4.3**
 - Added interactive options for the `madock setup` command
-- Added an isolation mode
+- Added an isolation mode [more](docs/isolation.md)
+- Added Varnish cache [more](docs/varnish.md)
 - Refactoring code
 
 
