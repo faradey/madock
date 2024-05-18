@@ -29,3 +29,7 @@ To set up or change the path to default.vcl file use command (path should be fro
 ```
 madock config:set --name varnish/config_file --value default.vcl
 ```
+After any configuration changes, a project rebuild is required
+```
+madock rebuild
+```
