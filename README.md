@@ -157,6 +157,7 @@ IMPORTANT: Please, read all items before starting work.
 
 ## More Documentation
 
+* [VSCODE + Xdebug Setup](docs/xdebug_vscode.md)
 * [PHPStorm + Xdebug Setup](docs/xdebug_phpstorm.md)
 * [Docker images list](docs/docker_images.md)
 * [Customizations](docs/customizations.md)
