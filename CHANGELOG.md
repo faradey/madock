@@ -1,3 +1,6 @@
+**v2.4.4**
+- Fixed opensearch-dashboards
+
 **v2.4.3**
 - Added interactive options for the `madock setup` command
 - Added an isolation mode [more](docs/isolation.md)
