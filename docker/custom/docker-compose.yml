@@ -224,7 +224,7 @@ services:
 <<<if{{{search/opensearch/dashboard/enabled}}}>>>
   opensearchdashboard:
     platform: linux/x86_64
-    image: {{{search/opensearch/repository}}}:{{{search/opensearch/version}}}
+    image: {{{search/opensearch/dashboard/repository}}}:{{{search/opensearch/version}}}
     environment:
       SERVER_BASEPATH: /opensearch-dashboard
       OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
