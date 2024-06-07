@@ -19,6 +19,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/node"
 	"github.com/faradey/madock/src/controller/general/open"
 	"github.com/faradey/madock/src/controller/general/patch"
+	"github.com/faradey/madock/src/controller/general/project/clone"
 	"github.com/faradey/madock/src/controller/general/project/remove"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/general/prune"
@@ -127,6 +128,8 @@ func main() {
 		open.Execute()
 	case "patch:create":
 		patch.Execute()
+	case "project:clone":
+		clone.Execute()
 	case "project:remove":
 		remove.Execute()
 	case "proxy:start":

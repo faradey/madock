@@ -141,3 +141,8 @@ type ControllerGeneralRemoteSyncMedia struct {
 	Compress   bool   `arg:"-c,--compress" help:"Compress images"`
 	SshType    string `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
 }
+
+type ControllerGeneralProjectClone struct {
+	attr.Arguments
+	Name string `arg:"-n,--name,required" help:"Name of the project"`
+}

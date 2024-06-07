@@ -177,6 +177,26 @@ func GetProjectName() string {
 	return nameOfProject
 }
 
+func IsProjectNameExists(name string) bool {
+	suffix := ""
+	for i := 2; i < 1000; i++ {
+		nameOfProject = paths.GetRunDirName() + suffix
+		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + nameOfProject + "/config.xml") {
+			projectConf := GetProjectConfigOnly(nameOfProject)
+			val, ok := projectConf["path"]
+			if ok && val != paths.GetRunDirPath() {
+				suffix = "-" + strconv.Itoa(i)
+			} else {
+				break
+			}
+		} else {
+			break
+		}
+	}
+
+	return false
+}
+
 func getConfigByScope(originConfig map[string]string, activeScope string) map[string]string {
 	config := make(map[string]string)
 	for key, val := range originConfig {

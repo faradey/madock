@@ -17,7 +17,7 @@ type ArgumentsWithArgs struct {
 }
 
 func Parse(dest interface{}) interface{} {
-	if IsParseArgs && len(os.Args) > 2 {
+	if IsParseArgs && len(os.Args) > 1 {
 		argsOrigin := os.Args[2:]
 		p, err := arg.NewParser(arg.Config{
 			IgnoreEnv: true,
