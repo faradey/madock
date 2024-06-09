@@ -12,6 +12,7 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -37,9 +38,14 @@ func Execute() {
 	projectName := configs.GetProjectName()
 	currentDest := paths.MakeDirsByPath(exPath + "/projects/" + projectName + "/")
 	dest := paths.MakeDirsByPath(exPath + "/projects/" + cloneName + "/")
-	err := paths.CopyDir(currentDest, dest)
-	if err != nil {
-		logger.Fatal(err)
+	configs.PrepareDirsForProject(cloneName)
+	files := paths.GetFilesRecursively(currentDest)
+	for _, val := range files {
+		paths.MakeDirsByPath(dest + strings.Replace(strings.Replace(val, currentDest, "", -1), "/"+filepath.Base(val), "", -1))
+		err := paths.Copy(val, dest+strings.Replace(val, currentDest, "", -1))
+		if err != nil {
+			logger.Fatal(err)
+		}
 	}
 
 	clonePathParts := strings.Split(projectConf["path"], "/")
