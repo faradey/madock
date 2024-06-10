@@ -26,7 +26,7 @@ func MakeConf(projectName string) {
 			log.Fatalf("failed to unlink: %+v", err)
 		}
 	}
-	err := os.Symlink(paths.GetRunDirPath(), src)
+	err := os.Symlink(projectConf["path"], src)
 	if err != nil {
 		logger.Fatal(err)
 	}

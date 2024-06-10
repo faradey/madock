@@ -15,17 +15,18 @@ func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralStart)).(*arg_struct.ControllerGeneralStart)
 
 	if configs2.IsHasConfig("") {
-		projectConf := configs2.GetCurrentProjectConfig()
+		projectName := configs2.GetProjectName()
+		projectConf := configs2.GetProjectConfig(projectName)
 		platform := projectConf["platform"]
 		fmtc.SuccessLn("Start containers in detached mode")
 		if platform == "magento2" {
-			startMagento2.Execute(args.WithChown, projectConf)
+			startMagento2.Execute(projectName, args.WithChown, projectConf)
 		} else if platform == "pwa" {
-			startPwa.Execute(args.WithChown)
+			startPwa.Execute(projectName, args.WithChown)
 		} else if platform == "shopify" {
-			builder2.Execute(args.WithChown, projectConf)
+			builder2.Execute(projectName, args.WithChown, projectConf)
 		} else if platform == "custom" {
-			startCustom.Execute(args.WithChown, projectConf)
+			startCustom.Execute(projectName, args.WithChown, projectConf)
 		}
 		fmtc.SuccessLn("Done")
 	} else {

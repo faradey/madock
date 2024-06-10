@@ -2,7 +2,6 @@ package start
 
 import (
 	"github.com/faradey/madock/src/helper/cli/fmtc"
-	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
@@ -11,9 +10,9 @@ import (
 	"os/user"
 )
 
-func Execute(withChown bool, projectConf map[string]string) {
-	projectName := configs.GetProjectName()
+func Execute(projectName string, withChown bool, projectConf map[string]string) {
 	docker.UpNginx(projectName)
+
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"compose",
@@ -23,6 +22,7 @@ func Execute(withChown bool, projectConf map[string]string) {
 		composeFileOS,
 		"start",
 	}
+
 	cmd := exec.Command("docker", profilesOn...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

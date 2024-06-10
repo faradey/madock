@@ -11,8 +11,7 @@ import (
 	"os/user"
 )
 
-func Execute(withChown bool) {
-	projectName := configs.GetProjectName()
+func Execute(projectName string, withChown bool) {
 	docker.UpNginx(projectName)
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
