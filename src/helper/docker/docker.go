@@ -83,9 +83,9 @@ func UpNginxWithBuild(projectName string, force bool) {
 	if !paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
 		configs2.SetParam(configs2.MadockLevelConfigCode, "path", paths.GetRunDirPath(), "default", configs2.MadockLevelConfigCode)
 	}
-	nginx.MakeConf()
+	nginx.MakeConf(projectName)
 	project.MakeConf(projectName)
-	projectConf := configs2.GetCurrentProjectConfig()
+	projectConf := configs2.GetProjectConfig(projectName)
 	doNeedRunAruntime := true
 	if paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/docker-compose.yml") {
 		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
@@ -199,6 +199,7 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 		"--no-deps",
 		"-d",
 	}
+	fmt.Println("Start containers in detached mode4")
 	dockerComposePull([]string{"compose", "-f", composeFile, "-f", composeFileOS})
 	cmd := exec.Command("docker", profilesOn...)
 	cmd.Stdout = os.Stdout
@@ -208,12 +209,12 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 		logger.Fatal(err)
 	}
 
-	projectConf := configs2.GetCurrentProjectConfig()
+	projectConf := configs2.GetProjectConfig(projectName)
 
 	if val, ok := projectConf["cron/enabled"]; ok && val == "true" {
-		CronExecute(true, false)
+		CronExecute(projectName, true, false)
 	} else {
-		CronExecute(false, false)
+		CronExecute(projectName, false, false)
 	}
 
 	if withChown {
@@ -283,8 +284,7 @@ func GetContainerName(projectConf map[string]string, projectName, service string
 	return strings.ToLower(projectConf["container_name_prefix"]) + strings.ToLower(projectName) + scope + "-" + service + "-1"
 }
 
-func CronExecute(flag, manual bool) {
-	projectName := configs2.GetProjectName()
+func CronExecute(projectName string, flag, manual bool) {
 	projectConf := configs2.GetCurrentProjectConfig()
 	service := "php"
 	if projectConf["platform"] == "pwa" {

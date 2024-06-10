@@ -120,8 +120,8 @@ func ConfigMapping(mainConf map[string]string, targetConf map[string]string) {
 	}
 }
 
-func ReplaceConfigValue(str string) string {
-	projectConf := GetCurrentProjectConfig()
+func ReplaceConfigValue(projectName, str string) string {
+	projectConf := GetProjectConfig(projectName)
 	osArch := runtime.GOARCH
 	arches := map[string]string{"arm64": "aarch64"}
 

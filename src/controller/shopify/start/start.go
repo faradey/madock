@@ -44,9 +44,9 @@ func Execute(withChown bool, projectConf map[string]string) {
 		}
 
 		if val, ok := projectConf["cron/enabled"]; ok && val == "true" {
-			docker.CronExecute(true, false)
+			docker.CronExecute(projectName, true, false)
 		} else {
-			docker.CronExecute(false, false)
+			docker.CronExecute(projectName, false, false)
 		}
 	}
 }

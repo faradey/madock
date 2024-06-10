@@ -19,18 +19,18 @@ import (
 	"time"
 )
 
-func MakeConf() {
+func MakeConf(projectName string) {
 	if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
 		return
 	}
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + configs2.GetProjectName() + "/docker/nginx")
-	setPorts()
-	makeProxy()
-	makeDockerfile()
-	makeDockerCompose()
+	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx")
+	setPorts(projectName)
+	makeProxy(projectName)
+	makeDockerfile(projectName)
+	makeDockerCompose(projectName)
 }
 
-func setPorts() {
+func setPorts(projectName string) {
 	projectsAruntime := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
 	projects := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects"))
 	if len(projectsAruntime) > len(projects) {
@@ -47,9 +47,9 @@ func setPorts() {
 
 	portsConfig := configs2.ParseFile(portsFile)
 	lines := ""
-	for projectName, port := range portsConfig {
-		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + projectName) {
-			lines += projectName + "=" + port + "\n"
+	for projName, port := range portsConfig {
+		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + projName) {
+			lines += projName + "=" + port + "\n"
 		}
 	}
 
@@ -57,7 +57,7 @@ func setPorts() {
 		_ = os.WriteFile(portsFile, []byte(lines), 0664)
 	}
 
-	if _, ok := portsConfig[configs2.GetProjectName()]; !ok {
+	if _, ok := portsConfig[projectName]; !ok {
 		f, err := os.OpenFile(portsFile,
 			os.O_APPEND|os.O_WRONLY, 0664)
 		if err != nil {
@@ -65,13 +65,13 @@ func setPorts() {
 		}
 		defer f.Close()
 		maxPort := getMaxPort(portsConfig)
-		if _, err := f.WriteString(configs2.GetProjectName() + "=" + strconv.Itoa(maxPort+1) + "\n"); err != nil {
+		if _, err := f.WriteString(projectName + "=" + strconv.Itoa(maxPort+1) + "\n"); err != nil {
 			log.Println(err)
 		}
 	}
 }
 
-func makeProxy() {
+func makeProxy(projectName string) {
 	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
 	portsConfig := configs2.ParseFile(portsFile)
 	generalConfig := configs2.GetGeneralConfig()
@@ -82,13 +82,13 @@ func makeProxy() {
 
 	var onlyHostsGlobal []string
 	projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
-	if !finder.IsContain(projectsNames, configs2.GetProjectName()) {
-		projectsNames = append(projectsNames, configs2.GetProjectName())
+	if !finder.IsContain(projectsNames, projectName) {
+		projectsNames = append(projectsNames, projectName)
 	}
 	for _, name := range projectsNames {
 		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
 			if !paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped") {
-				if configs2.GetProjectName() == name || !paths.IsFileExist(paths.GetExecDirPath()+"/cache/"+name+"-proxy.conf") {
+				if projectName == name || !paths.IsFileExist(paths.GetExecDirPath()+"/cache/"+name+"-proxy.conf") {
 					nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
 					b, err := os.ReadFile(nginxDefFile)
 					if err != nil {
@@ -114,7 +114,7 @@ func makeProxy() {
 					for i := 1; i < 20; i++ {
 						strReplaced = strings.Replace(strReplaced, "{{{nginx/port/default+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 					}
-					strReplaced = configs2.ReplaceConfigValue(strReplaced)
+					strReplaced = configs2.ReplaceConfigValue(projectName, strReplaced)
 					hostName := "loc." + name + ".com"
 					hosts := configs2.GetHosts(projectConf)
 					if len(hosts) > 0 {
@@ -160,7 +160,7 @@ func makeProxy() {
 	/* END Create nginx default configuration for Magento2 */
 }
 
-func makeDockerfile() {
+func makeDockerfile(projectName string) {
 	/* Create nginx Dockerfile configuration */
 	ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/proxy.Dockerfile"
@@ -170,7 +170,7 @@ func makeDockerfile() {
 	}
 
 	str := string(b)
-	str = configs2.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(projectName, str)
 
 	err = os.WriteFile(ctxPath+"/Dockerfile", []byte(str), 0755)
 	if err != nil {
@@ -179,7 +179,7 @@ func makeDockerfile() {
 	/* END Create nginx Dockerfile configuration */
 }
 
-func makeDockerCompose() {
+func makeDockerCompose(projectName string) {
 	/* Copy nginx docker-compose configuration */
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/docker-compose-proxy.yml"
@@ -189,7 +189,7 @@ func makeDockerCompose() {
 	}
 
 	str := string(b)
-	str = configs2.ReplaceConfigValue(str)
+	str = configs2.ReplaceConfigValue(projectName, str)
 
 	err = os.WriteFile(paths.GetExecDirPath()+"/aruntime/docker-compose.yml", []byte(str), 0755)
 	if err != nil {

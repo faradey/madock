@@ -78,7 +78,7 @@ func makeKibanaConf(projectName string) {
 		logger.Fatal(err)
 	}
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs.ReplaceConfigValue(projectName, str)
 
 	filePath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/kibana.yml"
 	err = os.WriteFile(filePath, []byte(str), 0755)
@@ -95,7 +95,7 @@ func makeNginxDockerfile(projectName string) {
 		logger.Fatal(err)
 	}
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs.ReplaceConfigValue(projectName, str)
 
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/nginx.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
@@ -114,7 +114,7 @@ func makeNginxConf(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs.ReplaceConfigValue(projectName, str)
 	hostName := "loc." + projectName + ".com"
 	hostNameWebsites := "loc." + projectName + ".com base;"
 	hosts := configs.GetHosts(projectConf)
@@ -155,7 +155,7 @@ func makePhpDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs.ReplaceConfigValue(projectName, str)
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -171,7 +171,7 @@ func makePhpDockerfile(projectName string) {
 		}
 
 		str = string(b)
-		str = configs.ReplaceConfigValue(str)
+		str = configs.ReplaceConfigValue(projectName, str)
 		nginxFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.DockerfileWithoutXdebug"
 		err = os.WriteFile(nginxFile, []byte(str), 0755)
 		if err != nil {
@@ -208,7 +208,7 @@ func makeDockerCompose(projectName string) {
 		if len(hosts) > 0 {
 			hostName = hosts[0]["name"]
 		}
-		str = configs.ReplaceConfigValue(str)
+		str = configs.ReplaceConfigValue(projectName, str)
 		str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
 		str = strings.Replace(str, "{{{nginx/port/project}}}", strconv.Itoa(portNumberRanged+17000), -1)
 		str = strings.Replace(str, "{{{nginx/port/project_ssl}}}", strconv.Itoa(portNumberRanged+17001), -1)
@@ -235,7 +235,7 @@ func makeDBDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs.ReplaceConfigValue(projectName, str)
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/db.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -271,7 +271,7 @@ func makeElasticDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs.ReplaceConfigValue(projectName, str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/elasticsearch.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -288,7 +288,7 @@ func makeOpenSearchDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs.ReplaceConfigValue(projectName, str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/opensearch.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -305,7 +305,7 @@ func makeRedisDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs.ReplaceConfigValue(projectName, str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/redis.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
@@ -322,7 +322,7 @@ func makeNodeJsDockerfile(projectName string) {
 	}
 
 	str := string(b)
-	str = configs.ReplaceConfigValue(str)
+	str = configs.ReplaceConfigValue(projectName, str)
 	nodeJsFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nodejs.Dockerfile"
 	err = os.WriteFile(nodeJsFile, []byte(str), 0755)
 	if err != nil {
@@ -365,7 +365,7 @@ func processOtherCTXFiles(projectName string) {
 		}
 
 		str := string(b)
-		str = configs.ReplaceConfigValue(str)
+		str = configs.ReplaceConfigValue(projectName, str)
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + strings.Split(fileName, "/")[0] + "/")
 		destinationFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + fileName
 		err = os.WriteFile(destinationFile, []byte(str), 0755)

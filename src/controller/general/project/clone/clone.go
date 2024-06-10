@@ -2,6 +2,7 @@ package clone
 
 import (
 	"compress/gzip"
+	"fmt"
 	"github.com/faradey/madock/src/controller/general/snapshot/create"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
@@ -32,7 +33,7 @@ func Execute() {
 			return
 		}
 	}
-
+	fmt.Println("Cloning the project")
 	projectConf := configs.GetCurrentProjectConfig()
 	exPath := paths.GetExecDirPath()
 	projectName := configs.GetProjectName()
@@ -57,6 +58,8 @@ func Execute() {
 	}
 	create.GetFiles(projectConf, projectName, dest)
 	containerName := docker.GetContainerName(cloneProjectConf, cloneName, "snapshot")
+	docker.UpWithBuild(cloneName, false)
+	docker.Down(cloneName, false)
 	docker.UpSnapshot(cloneName)
 	if paths.IsFileExist(dest + "db.tar.gz") {
 		selectedFile, err := os.Open(dest + "db.tar.gz")
