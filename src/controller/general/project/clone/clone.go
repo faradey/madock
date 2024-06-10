@@ -50,7 +50,8 @@ func Execute() {
 	}
 
 	clonePathParts := strings.Split(projectConf["path"], "/")
-	clonePath := strings.Join(clonePathParts[:len(clonePathParts)-1], "/") + "/" + cloneName + "/"
+	clonePath := strings.Join(clonePathParts[:len(clonePathParts)-1], "/") + "/" + cloneName
+	paths.MakeDirsByPath(clonePath)
 	configs.SetParam(cloneName, "path", clonePath, projectConf["activeScope"], "")
 	cloneProjectConf := configs.GetProjectConfig(cloneName)
 	if projectConf["platform"] != "pwa" {
@@ -58,6 +59,12 @@ func Execute() {
 	}
 	create.GetFiles(projectConf, projectName, dest)
 	containerName := docker.GetContainerName(cloneProjectConf, cloneName, "snapshot")
+	if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
+		err := os.Remove(paths.GetExecDirPath() + "/cache/conf-cache")
+		if err != nil {
+			logger.Fatal(err)
+		}
+	}
 	docker.UpWithBuild(cloneName, false)
 	docker.Down(cloneName, false)
 	docker.UpSnapshot(cloneName)

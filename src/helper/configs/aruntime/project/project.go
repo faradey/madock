@@ -26,12 +26,10 @@ func MakeConf(projectName string) {
 			log.Fatalf("failed to unlink: %+v", err)
 		}
 	}
-
 	err := os.Symlink(paths.GetRunDirPath(), src)
 	if err != nil {
 		logger.Fatal(err)
 	}
-
 	makeNginxDockerfile(projectName)
 	makeNginxConf(projectName)
 	makeDockerCompose(projectName)
@@ -105,7 +103,7 @@ func makeNginxDockerfile(projectName string) {
 }
 
 func makeNginxConf(projectName string) {
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetProjectConfig(projectName)
 	defFile := GetDockerConfigFile(projectName, "nginx/conf/default.conf", "")
 
 	b, err := os.ReadFile(defFile)
@@ -162,7 +160,7 @@ func makePhpDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetProjectConfig(projectName)
 	if paths.IsFileExist(paths.GetExecDirPath() + "/docker/" + projectConf["platform"] + "/php/DockerfileWithoutXdebug") {
 		dockerDefFile = GetDockerConfigFile(projectName, "php/DockerfileWithoutXdebug", "")
 		b, err = os.ReadFile(dockerDefFile)
@@ -182,13 +180,13 @@ func makePhpDockerfile(projectName string) {
 
 func makeDockerCompose(projectName string) {
 	overrideFile := runtime.GOOS
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetProjectConfig(projectName)
 	var dockerDefFiles map[string]string
 	dockerDefFiles = make(map[string]string)
 	dockerDefFiles["docker-compose.yml"] = GetDockerConfigFile(projectName, "docker-compose.yml", "")
 	dockerDefFiles["docker-compose.override.yml"] = GetDockerConfigFile(projectName, "docker-compose."+overrideFile+".yml", "")
 	dockerDefFiles["docker-compose-snapshot.yml"] = GetDockerConfigFile(projectName, "docker-compose-snapshot.yml", "general")
-
+	fmt.Println(dockerDefFiles)
 	for key, dockerDefFile := range dockerDefFiles {
 		b, err := os.ReadFile(dockerDefFile)
 		if err != nil {
@@ -252,7 +250,7 @@ func makeDBDockerfile(projectName string) {
 		logger.Fatal(err)
 	}
 
-	if strings.ToLower(configs.GetCurrentProjectConfig()["db/repository"]) == "mariadb" && configs.GetCurrentProjectConfig()["db/version"] >= "10.4" {
+	if strings.ToLower(configs.GetProjectConfig(projectName)["db/repository"]) == "mariadb" && configs.GetProjectConfig(projectName)["db/version"] >= "10.4" {
 		b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
 	}
 
@@ -331,7 +329,7 @@ func makeNodeJsDockerfile(projectName string) {
 }
 
 func GetDockerConfigFile(projectName, path, platform string) string {
-	projectConf := configs.GetCurrentProjectConfig()
+	projectConf := configs.GetProjectConfig(projectName)
 	if platform == "" {
 		platform = projectConf["platform"]
 	}

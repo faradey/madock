@@ -163,8 +163,12 @@ func GetProjectName() string {
 			if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + nameOfProject + "/config.xml") {
 				projectConf := GetProjectConfigOnly(nameOfProject)
 				val, ok := projectConf["path"]
-				if ok && val != paths.GetRunDirPath() {
-					suffix = "-" + strconv.Itoa(i)
+				if ok {
+					val = strings.TrimPrefix(strings.TrimSuffix(strings.TrimSpace(val), "/"), "/")
+					currentPath := strings.TrimPrefix(strings.TrimSuffix(strings.TrimSpace(paths.GetRunDirPath()), "/"), "/")
+					if val != currentPath {
+						suffix = "-" + strconv.Itoa(i)
+					}
 				} else {
 					break
 				}

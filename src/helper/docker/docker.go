@@ -199,7 +199,6 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 		"--no-deps",
 		"-d",
 	}
-	fmt.Println("Start containers in detached mode4")
 	dockerComposePull([]string{"compose", "-f", composeFile, "-f", composeFileOS})
 	cmd := exec.Command("docker", profilesOn...)
 	cmd.Stdout = os.Stdout
@@ -285,7 +284,7 @@ func GetContainerName(projectConf map[string]string, projectName, service string
 }
 
 func CronExecute(projectName string, flag, manual bool) {
-	projectConf := configs2.GetCurrentProjectConfig()
+	projectConf := configs2.GetProjectConfig(projectName)
 	service := "php"
 	if projectConf["platform"] == "pwa" {
 		service = "nodejs"
