@@ -6,7 +6,7 @@ services:
     tty: true
     user: "{{{os/user/uid}}}:{{{os/user/guid}}}"
     volumes:
-      - ./src:/var/www/html:cached
+      - ./src:/var/www/html
       - dbdata:/var/www/mysql
 <<<if{{{db2/enabled}}}>>>      - dbdata2:/var/www/mysql2/mysql<<<endif>>>
 volumes:
