@@ -16,13 +16,12 @@ import (
 	"strings"
 )
 
-func UpWithBuild(withChown bool) {
-	UpNginxWithBuild(true)
-	UpProjectWithBuild(withChown)
+func UpWithBuild(projectName string, withChown bool) {
+	UpNginxWithBuild(projectName, true)
+	UpProjectWithBuild(projectName, withChown)
 }
 
-func Down(withVolumes bool) {
-	projectName := configs2.GetProjectName()
+func Down(projectName string, withVolumes bool) {
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	if paths.IsFileExist(composeFile) {
@@ -52,8 +51,7 @@ func Down(withVolumes bool) {
 	}
 }
 
-func Kill() {
-	projectName := configs2.GetProjectName()
+func Kill(projectName string) {
 	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	if paths.IsFileExist(composeFile) {
@@ -77,15 +75,14 @@ func Kill() {
 	}
 }
 
-func UpNginx() {
-	UpNginxWithBuild(false)
+func UpNginx(projectName string) {
+	UpNginxWithBuild(projectName, false)
 }
 
-func UpNginxWithBuild(force bool) {
+func UpNginxWithBuild(projectName string, force bool) {
 	if !paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
 		configs2.SetParam(configs2.MadockLevelConfigCode, "path", paths.GetRunDirPath(), "default", configs2.MadockLevelConfigCode)
 	}
-	projectName := configs2.GetProjectName()
 	nginx.MakeConf()
 	project.MakeConf(projectName)
 	projectConf := configs2.GetCurrentProjectConfig()
@@ -128,8 +125,7 @@ func UpNginxWithBuild(force bool) {
 	}
 }
 
-func UpProjectWithBuild(withChown bool) {
-	projectName := configs2.GetProjectName()
+func UpProjectWithBuild(projectName string, withChown bool) {
 	var err error
 	if !paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/.composer") {
 		err = os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)

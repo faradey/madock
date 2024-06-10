@@ -13,7 +13,7 @@ import (
 
 func Execute(withChown bool) {
 	projectName := configs.GetProjectName()
-	docker.UpNginx()
+	docker.UpNginx(projectName)
 	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
 	profilesOn := []string{
 		"compose",
@@ -29,7 +29,7 @@ func Execute(withChown bool) {
 	err := cmd.Run()
 	if err != nil {
 		fmtc.ToDoLn("Creating containers")
-		docker.UpProjectWithBuild(withChown)
+		docker.UpProjectWithBuild(projectName, withChown)
 	} else if withChown {
 		projectConf := configs.GetCurrentProjectConfig()
 		usr, _ := user.Current()

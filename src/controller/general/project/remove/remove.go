@@ -28,14 +28,15 @@ func Execute() {
 		logger.Fatalln(err)
 	}
 	result := strings.ToLower(strings.TrimSpace(string(sentence)))
-	if result == "y" && len(configs.GetProjectName()) > 0 {
+	projectName := configs.GetProjectName()
+	if result == "y" && len(projectName) > 0 {
 		fmt.Println("The following items will be removed:")
-		fmt.Println(paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/")
-		fmt.Println(paths.GetExecDirPath() + "/aruntime/projects/" + configs.GetProjectName() + "/")
+		fmt.Println(paths.GetExecDirPath() + "/projects/" + projectName + "/")
+		fmt.Println(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/")
 		fmt.Println(paths.GetRunDirPath())
 		fmt.Println("Containers, images and volumes associated with the project.")
 		fmt.Println("")
-		fmt.Println("Enter the project name \"" + configs.GetProjectName() + "\" to confirm the deletion of the project")
+		fmt.Println("Enter the project name \"" + projectName + "\" to confirm the deletion of the project")
 		fmt.Print("> ")
 		buf = bufio.NewReader(os.Stdin)
 		sentence, err = buf.ReadBytes('\n')
@@ -43,14 +44,14 @@ func Execute() {
 			logger.Fatalln(err)
 		}
 		result = strings.TrimSpace(string(sentence))
-		if result == configs.GetProjectName() {
-			docker.Down(true)
-			err := os.RemoveAll(paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/")
+		if result == projectName {
+			docker.Down(projectName, true)
+			err := os.RemoveAll(paths.GetExecDirPath() + "/projects/" + projectName + "/")
 			if err != nil {
 				logger.Fatal(err)
 			}
 
-			err = os.RemoveAll(paths.GetExecDirPath() + "/aruntime/projects/" + configs.GetProjectName() + "/")
+			err = os.RemoveAll(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/")
 			if err != nil {
 				logger.Fatal(err)
 			}

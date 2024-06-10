@@ -14,7 +14,8 @@ func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralPrune)).(*arg_struct.ControllerGeneralPrune)
 
 	if configs.IsHasConfig("") {
-		docker.Down(args.WithVolumes)
+		projectname := configs.GetProjectName()
+		docker.Down(projectname, args.WithVolumes)
 		if len(paths.GetActiveProjects()) == 0 {
 			proxy.Execute("prune")
 		}

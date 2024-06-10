@@ -12,6 +12,7 @@ func Execute(flag string) {
 	args := attr.Parse(new(arg_struct.ControllerGeneralProxy)).(*arg_struct.ControllerGeneralProxy)
 
 	if configs2.IsHasConfig("") {
+		projectName := configs2.GetProjectName()
 		projectConf := configs2.GetCurrentProjectConfig()
 		if projectConf["proxy/enabled"] == "true" {
 			if flag == "prune" {
@@ -20,12 +21,12 @@ func Execute(flag string) {
 				docker.StopNginx(args.Force)
 			} else if flag == "restart" {
 				docker.StopNginx(args.Force)
-				docker.UpNginx()
+				docker.UpNginx(projectName)
 			} else if flag == "start" {
-				docker.UpNginx()
+				docker.UpNginx(projectName)
 			} else if flag == "rebuild" {
 				docker.DownNginx(args.Force)
-				docker.UpNginxWithBuild(true)
+				docker.UpNginxWithBuild(projectName, true)
 			}
 			fmtc.SuccessLn("Done")
 		} else {

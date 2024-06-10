@@ -16,6 +16,7 @@ func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralRebuild)).(*arg_struct.ControllerGeneralRebuild)
 
 	if configs.IsHasConfig("") {
+		projectName := configs.GetProjectName()
 		if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
 			err := os.Remove(paths.GetExecDirPath() + "/cache/conf-cache")
 			if err != nil {
@@ -24,15 +25,15 @@ func Execute() {
 		}
 		fmtc.SuccessLn("Stop containers")
 		if args.Force {
-			docker.Kill()
+			docker.Kill(projectName)
 		} else {
-			docker.Down(false)
+			docker.Down(projectName, false)
 		}
 		if len(paths.GetActiveProjects()) == 0 {
 			proxy.Execute("stop")
 		}
 		fmtc.SuccessLn("Start containers in detached mode")
-		docker.UpWithBuild(args.WithChown)
+		docker.UpWithBuild(projectName, args.WithChown)
 		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")

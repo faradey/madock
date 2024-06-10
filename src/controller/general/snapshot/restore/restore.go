@@ -54,7 +54,7 @@ func Execute() {
 
 func RestoreSnapshot(projectName string, projectConf map[string]string, selectedInt int, snapshotNames []string, dbsPath string) {
 	containerName := docker.GetContainerName(projectConf, projectName, "snapshot")
-	docker.Down(false)
+	docker.Down(projectName, false)
 	docker.UpSnapshot(projectName)
 	if paths.IsFileExist(dbsPath + "/" + snapshotNames[selectedInt-1] + "/db.tar.gz") {
 		selectedFile, err := os.Open(dbsPath + "/" + snapshotNames[selectedInt-1] + "/db.tar.gz")
