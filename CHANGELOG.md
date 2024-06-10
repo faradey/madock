@@ -1,5 +1,6 @@
 **v2.4.4**
 - Fixed opensearch-dashboards
+- Added new command `madock project:clone` [more](docs/project_clone.md)
 
 **v2.4.3**
 - Added interactive options for the `madock setup` command

@@ -193,6 +193,11 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--force, -f`     Replace patch if it already exists
 
 
+* `project:clone`   Clone project. For example: `madock project:clone --name=project_name`
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name, -n`  Name of the new project
+
+
 * `project:remove`   Remove project (project folder, madock project configuration, volumes, images, containers)
 
 * `proxy:start`   Start a proxy server
