@@ -148,6 +148,10 @@ RUN mkdir /var/www/n98magerun/ \
     && chmod +x /var/www/n98magerun/n98-magerun2.phar
 <<<endif>>>
 
+<<<if{{{php/nodejs/enabled}}}>>>RUN curl -sL https://deb.nodesource.com/setup_{{{nodejs/major_version}}}.x | bash -<<<endif>>>
+<<<if{{{php/nodejs/enabled}}}>>>RUN mkdir /var/www/.npm && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.npm && apt install nodejs -y<<<endif>>>
+
+
 WORKDIR {{{workdir}}}
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog

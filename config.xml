@@ -45,6 +45,9 @@
                 <ioncube>
                     <enabled>false</enabled>
                 </ioncube>
+                <nodejs>
+                    <enabled>false</enabled>
+                </nodejs>
             </php>
             <db>
                 <repository>mariadb</repository>
