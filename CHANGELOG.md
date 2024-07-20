@@ -2,6 +2,7 @@
 - Fixed opensearch-dashboards
 - Added new command `madock project:clone` [more](docs/project_clone.md)
 - Added php/nodejs service to the php container
+- Fix documentation
 
 **v2.4.3**
 - Added interactive options for the `madock setup` command
