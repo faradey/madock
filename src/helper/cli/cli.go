@@ -6,6 +6,9 @@ import (
 
 func NormalizeCliCommand(arguments []string) []string {
 	args := arguments
+	if len(args) <= 1 {
+		return args
+	}
 	for i, val := range args {
 		val = strings.TrimSpace(val)
 		if strings.Contains(val, "=") {
