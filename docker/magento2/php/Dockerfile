@@ -149,7 +149,8 @@ RUN mkdir /var/www/n98magerun/ \
 <<<endif>>>
 
 <<<if{{{php/nodejs/enabled}}}>>>RUN curl -sL https://deb.nodesource.com/setup_{{{nodejs/major_version}}}.x | bash -<<<endif>>>
-<<<if{{{php/nodejs/enabled}}}>>>RUN mkdir /var/www/.npm && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.npm && apt install nodejs -y<<<endif>>>
+RUN mkdir /var/www/.npm && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.npm
+<<<if{{{php/nodejs/enabled}}}>>>RUN apt install nodejs -y<<<endif>>>
 
 
 WORKDIR {{{workdir}}}
