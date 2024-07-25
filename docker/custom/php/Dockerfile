@@ -114,7 +114,8 @@ RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /
     && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/{{{php/version}}}/cli/php.ini
 
 <<<if{{{php/nodejs/enabled}}}>>>RUN curl -sL https://deb.nodesource.com/setup_{{{nodejs/major_version}}}.x | bash -<<<endif>>>
-<<<if{{{php/nodejs/enabled}}}>>>RUN mkdir /var/www/.npm && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.npm && apt install nodejs -y<<<endif>>>
+RUN mkdir /var/www/.npm && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.npm
+<<<if{{{php/nodejs/enabled}}}>>>RUN apt install nodejs -y<<<endif>>>
 
 WORKDIR /var/www
 
