@@ -1,4 +1,3 @@
-version: "3.8"
 name: {{{container_name_prefix}}}{{{project_name}}}{{{scope}}}
 services:
   snapshot:
