@@ -304,7 +304,19 @@ func GenerateSslCert(ctxPath string, force bool) {
 					logger.Fatal(err)
 				}
 			} else if runtime.GOOS == "linux" {
-				cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", "/usr/local/share/ca-certificates/madockCA.crt")
+
+				content, err := os.ReadFile("/etc/os-release")
+				if err != nil {
+					logger.Fatal(err)
+				}
+
+				osRelease := string(content)
+
+				if strings.Contains(osRelease, "Arch Linux") {
+					cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", "/etc/ca-certificates/trust-source/anchors/madockCA.crt")
+				} else {
+					cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", "/usr/local/share/ca-certificates/madockCA.crt")
+				}
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
@@ -312,7 +324,12 @@ func GenerateSslCert(ctxPath string, force bool) {
 					logger.Fatal(err)
 				}
 
-				cmd = exec.Command("sudo", "chmod", "644", "/usr/local/share/ca-certificates/madockCA.crt")
+				if strings.Contains(osRelease, "Arch Linux") {
+					cmd = exec.Command("sudo", "chmod", "644", "/etc/ca-certificates/trust-source/anchors/madockCA.crt")
+				} else {
+					cmd = exec.Command("sudo", "chmod", "644", "/usr/local/share/ca-certificates/madockCA.crt")
+				}
+
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
@@ -367,7 +384,13 @@ func GenerateSslCert(ctxPath string, force bool) {
 					}
 				}
 
-				cmd = exec.Command("sudo", "update-ca-certificates", "-f")
+				if strings.Contains(osRelease, "Arch Linux") {
+					cmd = exec.Command("sudo", "update-ca-trust")
+				} else {
+					cmd = exec.Command("sudo", "update-ca-certificates", "-f")
+				}
+
+				cmd = exec.Command("sudo", "update-ca-trust")
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
