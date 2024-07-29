@@ -304,19 +304,34 @@ func GenerateSslCert(ctxPath string, force bool) {
 					logger.Fatal(err)
 				}
 			} else if runtime.GOOS == "linux" {
-
 				content, err := os.ReadFile("/etc/os-release")
 				if err != nil {
 					logger.Fatal(err)
 				}
 
 				osRelease := string(content)
+				var certPath string
+				var updateCertCommand []string
+
+				distroPaths := map[string]string{
+					"Arch Linux": "/etc/ca-certificates/trust-source/anchors",
+					"default":    "/usr/local/share/ca-certificates",
+				}
+
+				distroUpdateCert := map[string][]string{
+					"Arch Linux": {"update-ca-trust"},
+					"default":    {"update-ca-certificates", "-f"},
+				}
 
 				if strings.Contains(osRelease, "Arch Linux") {
-					cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", "/etc/ca-certificates/trust-source/anchors/madockCA.crt")
+					certPath = distroPaths["Arch Linux"]
+					updateCertCommand = distroUpdateCert["Arch Linux"]
 				} else {
-					cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", "/usr/local/share/ca-certificates/madockCA.crt")
+					certPath = distroPaths["default"]
+					updateCertCommand = distroUpdateCert["default"]
 				}
+				
+				cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", certPath+"/madockCA.crt")
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
@@ -324,12 +339,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 					logger.Fatal(err)
 				}
 
-				if strings.Contains(osRelease, "Arch Linux") {
-					cmd = exec.Command("sudo", "chmod", "644", "/etc/ca-certificates/trust-source/anchors/madockCA.crt")
-				} else {
-					cmd = exec.Command("sudo", "chmod", "644", "/usr/local/share/ca-certificates/madockCA.crt")
-				}
-
+				cmd = exec.Command("sudo", "chmod", "644", certPath+"/madockCA.crt")
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
@@ -384,13 +394,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 					}
 				}
 
-				if strings.Contains(osRelease, "Arch Linux") {
-					cmd = exec.Command("sudo", "update-ca-trust")
-				} else {
-					cmd = exec.Command("sudo", "update-ca-certificates", "-f")
-				}
-
-				cmd = exec.Command("sudo", "update-ca-trust")
+				cmd = exec.Command("sudo", updateCertCommand...)
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 				err = cmd.Run()
