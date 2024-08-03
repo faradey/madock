@@ -4,6 +4,7 @@
 - Added php/nodejs service to the php container
 - Fixed documentation
 - Fixed bug with the `madock cli` command
+- Added custom commands [more](docs/custom_commands.md)
 
 **v2.4.3**
 - Added interactive options for the `madock setup` command

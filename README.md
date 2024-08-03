@@ -37,6 +37,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Snapshots. Learn [more](docs/snapshot.md)
 * Isolation mode [more](docs/isolation.md)
 * Varnish Cache [more](docs/varnish.md)
+* Custom commands [more](docs/custom_commands.md)
 
 ## Tested on
 * Linux (Ubuntu 20.04)
