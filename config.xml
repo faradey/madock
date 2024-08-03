@@ -167,6 +167,16 @@
                 <version>7.5.0</version>
                 <config_file>default.vcl</config_file>
             </varnish>
+            <!--<custom_commands>
+                <ci>
+                    <alias>c:i</alias>
+                    <origin>madock composer install</origin>
+                </ci>
+                <ls>
+                    <alias>ls</alias>
+                    <origin>madock cli ls</origin>
+                </ls>
+            </custom_commands>-->
         </default>
     </scopes>
 </config>

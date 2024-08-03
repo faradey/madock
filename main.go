@@ -193,10 +193,9 @@ func main() {
 	case "uncompress":
 		compress.Unzip()
 	default:
-		isnotdefine.Execute()
+		isnotdefine.Execute(command)
 	}
 }
 
-//TODO check opensearchdashboard in browser
 //TODO check rabbitMQ in browser
 //TODO check redis in browser

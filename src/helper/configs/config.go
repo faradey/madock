@@ -206,6 +206,31 @@ func GetHosts(data map[string]string) []map[string]string {
 	return hosts
 }
 
+func GetCommands(data map[string]string) map[string]map[string]string {
+	var commands map[string]map[string]string
+	commands = make(map[string]map[string]string)
+	sortedKeys := SortMap(data)
+	for _, key := range sortedKeys {
+		if strings.Contains(key, "custom_commands/") && data[key] != "" {
+			items := strings.Split(key, "/")
+			commandName := items[1]
+			code := ""
+			if strings.Contains(key, "/alias") {
+				code = "alias"
+			} else if strings.Contains(key, "/origin") {
+				code = "origin"
+			}
+
+			if _, ok := commands[commandName]; !ok {
+				commands[commandName] = make(map[string]string)
+			}
+			commands[commandName][code] = data[key]
+		}
+	}
+
+	return commands
+}
+
 func SortMap(data map[string]string) []string {
 	keys := make([]string, 0, len(data))
 
