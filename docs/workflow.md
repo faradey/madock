@@ -79,7 +79,7 @@ This command shows you the following items:
 
 * `bash`    Connect into container using bash
 
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[name of container]` Name of container. Optional. Default container: php. For example: php, node, db, nginx
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service-name, -s` Name of container. Optional. Default container: php. For example: php, node, db, db2, nginx
 
 * `c:f`  Cleaning up static and generated files
 
