@@ -1,3 +1,7 @@
+**v2.4.5**
+- Added the setup project from the remote server
+- Added synchronization files with the remote server (download, upload)
+
 **v2.4.4**
 - Fixed opensearch-dashboards
 - Added new command `madock project:clone` [more](docs/project_clone.md)

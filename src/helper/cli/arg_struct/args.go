@@ -10,24 +10,27 @@ type ControllerGeneralHelp struct {
 
 type ControllerGeneralSetup struct {
 	attr.Arguments
-	Download        bool   `arg:"-d,--download" help:"Download code from repository"`
-	Install         bool   `arg:"-i,--install" help:"Install service (Magento, PWA, Shopify SDK, etc.)"`
-	SampleData      bool   `arg:"-s,--sample-data" help:"Sample data"`
-	Platform        string `arg:"--platform" help:"Platform"`
-	PlatformEdition string `arg:"--platform-edition" help:"Platform edition"`
-	PlatformVersion string `arg:"--platform-version" help:"Platform version"`
-	Php             string `arg:"--php" help:"PHP version"`
-	Db              string `arg:"--db" help:"DB version"`
-	Composer        string `arg:"--composer" help:"Composer version"`
-	SearchEngine    string `arg:"--search-engine" help:"Search Engine"`
-	Elastic         string `arg:"--elastic" help:"Elasticsearch version"`
-	OpenSearch      string `arg:"--opensearch" help:"OpenSearch version"`
-	Redis           string `arg:"--redis" help:"Redis version"`
-	RabbitMQ        string `arg:"--rabbitmq" help:"RabbitMQ version"`
-	Hosts           string `arg:"--hosts" help:"Hosts"`
-	NodeJs          string `arg:"--nodejs" help:"Node.js version"`
-	Yarn            string `arg:"--yarn" help:"Yarn version"`
-	PwaBackendUrl   string `arg:"--pwa-backend-url" help:"PWA backend url"`
+	Download        bool     `arg:"-d,--download" help:"Download code from repository"`
+	Install         bool     `arg:"-i,--install" help:"Install service (Magento, PWA, Shopify SDK, etc.)"`
+	SampleData      bool     `arg:"-s,--sample-data" help:"Sample data"`
+	Platform        string   `arg:"--platform" help:"Platform"`
+	PlatformEdition string   `arg:"--platform-edition" help:"Platform edition"`
+	PlatformVersion string   `arg:"--platform-version" help:"Platform version"`
+	Php             string   `arg:"--php" help:"PHP version"`
+	Db              string   `arg:"--db" help:"DB version"`
+	Composer        string   `arg:"--composer" help:"Composer version"`
+	SearchEngine    string   `arg:"--search-engine" help:"Search Engine"`
+	Elastic         string   `arg:"--elastic" help:"Elasticsearch version"`
+	OpenSearch      string   `arg:"--opensearch" help:"OpenSearch version"`
+	Redis           string   `arg:"--redis" help:"Redis version"`
+	RabbitMQ        string   `arg:"--rabbitmq" help:"RabbitMQ version"`
+	Hosts           string   `arg:"--hosts" help:"Hosts"`
+	NodeJs          string   `arg:"--nodejs" help:"Node.js version"`
+	Yarn            string   `arg:"--yarn" help:"Yarn version"`
+	PwaBackendUrl   string   `arg:"--pwa-backend-url" help:"PWA backend url"`
+	Remote          bool     `arg:"--remote" help:"Setup project from remote server (DB and files)"`
+	SshType         string   `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
+	IgnoreTable     []string `arg:"-i,--ignore-table" help:"Ignore db table"`
 }
 
 type ControllerGeneralStart struct {

@@ -176,3 +176,7 @@ func DownloadMagento(projectName, edition, version string, isSampleData bool) {
 		logger.Fatal(err)
 	}
 }
+
+func syncAll() {
+
+}

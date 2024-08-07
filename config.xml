@@ -177,6 +177,52 @@
                     <origin>madock cli ls</origin>
                 </ls>
             </custom_commands>-->
+            <!--<sync>
+                    <setup_media>
+                        <enabled>false</enabled>
+                        <source>pub/media</source>
+                        <destination>pub/media</destination>
+                        <compress>true</compress>
+                        <images_only>true</images_only>
+                    </setup_media>
+                    <setup_excludes>
+                        <file>app/bootstrap.php</file>
+                        <file>app/etc/di.xml</file>
+                        <dir>pub/media</dir>
+                        <dir>bin</dir>
+                        <dir>dev</dir>
+                        <dir>generated</dir>
+                        <dir>lib</dir>
+                        <dir>phpserver</dir>
+                        <dir>setup</dir>
+                        <dir>var</dir>
+                        <dir>vendor</dir>
+                    </setup_excludes>
+                    <download_excludes>
+                        <file>app/etc/env.php</file>
+                        <dir>pub/media</dir>
+                        <dir>bin</dir>
+                        <dir>dev</dir>
+                        <dir>generated</dir>
+                        <dir>lib</dir>
+                        <dir>phpserver</dir>
+                        <dir>setup</dir>
+                        <dir>var</dir>
+                        <dir>vendor</dir>
+                    </download_excludes>
+                    <upload_excludes>
+                        <file>app/etc/env.php</file>
+                        <dir>pub/media</dir>
+                        <dir>bin</dir>
+                        <dir>dev</dir>
+                        <dir>generated</dir>
+                        <dir>lib</dir>
+                        <dir>phpserver</dir>
+                        <dir>setup</dir>
+                        <dir>var</dir>
+                        <dir>vendor</dir>
+                    </upload_excludes>
+                </sync>-->
         </default>
     </scopes>
 </config>
