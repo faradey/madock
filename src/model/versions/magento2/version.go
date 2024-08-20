@@ -18,19 +18,19 @@ func GetVersions(ver string) versions.ToolsVersions {
 
 	phpVer := GetPhpVersion(mageVersion)
 	return versions.ToolsVersions{
-		Platform:     "magento2",
-		Php:          phpVer,
-		Db:           GetDBVersion(mageVersion),
-		SearchEngine: GetSearchEngineVersion(mageVersion),
-		Elastic:      GetElasticVersion(mageVersion),
-		OpenSearch:   GetOpenSearchVersion(mageVersion),
-		Composer:     GetComposerVersion(mageVersion),
-		Redis:        GetRedisVersion(mageVersion),
-		RabbitMQ:     GetRabbitMQVersion(mageVersion),
-		Xdebug:       GetXdebugVersion(phpVer),
-		Magento:      mageVersion,
-		NodeJs:       "18.15.0",
-		Yarn:         "3.6.4",
+		Platform:        "magento2",
+		Php:             phpVer,
+		Db:              GetDBVersion(mageVersion),
+		SearchEngine:    GetSearchEngineVersion(mageVersion),
+		Elastic:         GetElasticVersion(mageVersion),
+		OpenSearch:      GetOpenSearchVersion(mageVersion),
+		Composer:        GetComposerVersion(mageVersion),
+		Redis:           GetRedisVersion(mageVersion),
+		RabbitMQ:        GetRabbitMQVersion(mageVersion),
+		Xdebug:          GetXdebugVersion(phpVer),
+		PlatformVersion: mageVersion,
+		NodeJs:          "18.15.0",
+		Yarn:            "3.6.4",
 	}
 }
 

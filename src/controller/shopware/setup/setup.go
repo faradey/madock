@@ -14,13 +14,13 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions/magento2"
+	"github.com/faradey/madock/src/model/versions/shopware"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
-	toolsDefVersions := magento2.GetVersions("")
+	toolsDefVersions := shopware.GetVersions("")
 
 	mageVersion := ""
 	if args.PlatformVersion != "" {
@@ -42,11 +42,6 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 			Execute(projectName, projectConf, continueSetup, args)
 			return
 		}
-	}
-
-	edition := "community"
-	if args.PlatformEdition != "" {
-		edition = args.PlatformEdition
 	}
 
 	if continueSetup {
@@ -110,24 +105,6 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
-
-		if args.Download && args.PlatformEdition == "" {
-			fmt.Println("")
-			fmtc.TitleLn("Specify PlatformVersion version: ")
-			fmt.Println("1) Community (default)")
-			fmt.Println("2) Enterprise")
-			edition, _ = tools.Waiter()
-			edition = strings.TrimSpace(edition)
-			if edition != "1" && edition != "2" && edition != "" {
-				fmtc.ErrorLn("The specified edition '" + edition + "' is incorrect.")
-				return
-			}
-			if edition == "1" || edition == "" {
-				edition = "community"
-			} else if edition == "2" {
-				edition = "enterprise"
-			}
-		}
 	}
 
 	if args.Download || args.Install || continueSetup {
@@ -135,20 +112,17 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 
 	if args.Download {
-		DownloadMagento(projectName, edition, mageVersion, args.SampleData)
+		DownloadShopware(projectName, mageVersion, args.SampleData)
 	}
 
 	if args.Install {
-		install.Magento(projectName, toolsDefVersions.PlatformVersion)
+		install.Shopware(projectName, toolsDefVersions.PlatformVersion)
 	}
 }
 
-func DownloadMagento(projectName, edition, version string, isSampleData bool) {
+func DownloadShopware(projectName, version string, isSampleData bool) {
 	projectConf := configs2.GetCurrentProjectConfig()
 	sampleData := ""
-	if isSampleData {
-		sampleData = " && bin/magento sampledata:deploy"
-	}
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 	command := []string{
 		"exec",
@@ -161,7 +135,7 @@ func DownloadMagento(projectName, edition, version string, isSampleData bool) {
 		"cd " + workdir + " " +
 			"&& rm -r -f " + workdir + "/download-magento123456789 " +
 			"&& mkdir " + workdir + "/download-magento123456789 " +
-			"&& composer create-project --repository-url=https://repo.magento.com/ magento/project-" + edition + "-edition:" + version + " ./download-magento123456789 " +
+			"&& composer create-project shopware/production:" + version + " ./download-magento123456789 " +
 			"&& shopt -s dotglob " +
 			"&& mv  -v ./download-magento123456789/* ./ " +
 			"&& rm -r -f ./download-magento123456789 " +

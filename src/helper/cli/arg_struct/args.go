@@ -11,7 +11,7 @@ type ControllerGeneralHelp struct {
 type ControllerGeneralSetup struct {
 	attr.Arguments
 	Download        bool   `arg:"-d,--download" help:"Download code from repository"`
-	Install         bool   `arg:"-i,--install" help:"Install service (Magento, PWA, Shopify SDK, etc.)"`
+	Install         bool   `arg:"-i,--install" help:"Install service (PlatformVersion, PWA, Shopify SDK, etc.)"`
 	SampleData      bool   `arg:"-s,--sample-data" help:"Sample data"`
 	Platform        string `arg:"--platform" help:"Platform"`
 	PlatformEdition string `arg:"--platform-edition" help:"Platform edition"`
@@ -83,7 +83,7 @@ type ControllerGeneralDbExport struct {
 
 type ControllerGeneralDbImport struct {
 	attr.Arguments
-	Force         bool   `arg:"-f,--force" help:"Install Magento"`
+	Force         bool   `arg:"-f,--force" help:"Install PlatformVersion"`
 	DBServiceName string `arg:"-s,--service" help:"DB service name. For example: db"`
 	User          string `arg:"-u,--user" help:"User"`
 }

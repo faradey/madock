@@ -88,7 +88,7 @@ func OpenSearch(defVersion *string) {
 func Redis(defVersion *string) {
 	setTitleAndRecommended("Redis", defVersion)
 
-	availableVersions := []string{"Custom", "7.2 (Magento version > 2.4.7)", "7.0 (Magento version > 2.4.6)", "6.2 (Magento version > 2.4.3-p3)", "6.0 (Magento version <= 2.4.3-p3)", "5.0 (Magento version <= 2.3.2)"}
+	availableVersions := []string{"Custom", "7.2 (PlatformVersion version > 2.4.7)", "7.0 (PlatformVersion version > 2.4.6)", "6.2 (PlatformVersion version > 2.4.3-p3)", "6.0 (PlatformVersion version <= 2.4.3-p3)", "5.0 (PlatformVersion version <= 2.3.2)"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -97,7 +97,7 @@ func Redis(defVersion *string) {
 
 func RabbitMQ(defVersion *string) {
 	setTitleAndRecommended("RabbitMQ", defVersion)
-	availableVersions := []string{"Custom", "3.13 (Magento version > 2.4.7)", "3.9 (Magento version > 2.4.3-p3)", "3.8 (Magento version <= 2.4.3-p3)", "3.7 (Magento version <= 2.3.4)"}
+	availableVersions := []string{"Custom", "3.13 (PlatformVersion version > 2.4.7)", "3.9 (PlatformVersion version > 2.4.3-p3)", "3.8 (PlatformVersion version <= 2.4.3-p3)", "3.7 (PlatformVersion version <= 2.3.4)"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)

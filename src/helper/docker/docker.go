@@ -335,7 +335,7 @@ func CronExecute(projectName string, flag, manual bool) {
 						logger.Println(bErr)
 						logger.Println(err)
 					} else {
-						fmt.Println("Cron was removed from Magento")
+						fmt.Println("Cron was removed from PlatformVersion")
 					}
 				}
 			}

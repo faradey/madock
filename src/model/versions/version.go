@@ -13,7 +13,7 @@ type ToolsVersions struct {
 	Xdebug,
 	Hosts,
 	PwaBackendUrl,
-	Magento,
+	PlatformVersion,
 	NodeJs,
 	Yarn string
 }
