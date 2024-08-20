@@ -22,7 +22,7 @@
         <ssl>
             <enabled>SSL</enabled>
         </ssl>
-        <rut_type>MAGENTO_RUN_TYPE</rut_type>
+        <run_type>MAGENTO_RUN_TYPE</run_type>
         <default_host_first_level>DEFAULT_HOST_FIRST_LEVEL</default_host_first_level>
         <interface_ip>INTERFACE_IP</interface_ip>
         <host_gateways>HOST_GATEWAYS</host_gateways>

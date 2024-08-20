@@ -22,7 +22,7 @@
                 <ssl>
                     <enabled>true</enabled>
                 </ssl>
-                <rut_type>website</rut_type>
+                <run_type>website</run_type>
                 <default_host_first_level>.test</default_host_first_level>
                 <interface_ip></interface_ip>
             </nginx>
