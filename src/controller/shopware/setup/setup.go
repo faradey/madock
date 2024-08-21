@@ -13,7 +13,6 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
-	"github.com/faradey/madock/src/model/versions/magento2"
 	"github.com/faradey/madock/src/model/versions/shopware"
 	"os"
 	"os/exec"
@@ -22,22 +21,22 @@ import (
 func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
 	toolsDefVersions := shopware.GetVersions("")
 
-	mageVersion := ""
+	platformVersion := ""
 	if args.PlatformVersion != "" {
-		mageVersion = args.PlatformVersion
+		platformVersion = args.PlatformVersion
 		if args.Php != "" {
 			toolsDefVersions.Php = args.Php
 		}
 	}
 
 	if toolsDefVersions.Php == "" {
-		if mageVersion == "" {
+		if platformVersion == "" {
 			fmt.Println("")
 			fmtc.Title("Specify Shopware version: ")
-			mageVersion, _ = tools.Waiter()
+			platformVersion, _ = tools.Waiter()
 		}
-		if mageVersion != "" {
-			toolsDefVersions = magento2.GetVersions(mageVersion)
+		if platformVersion != "" {
+			toolsDefVersions = shopware.GetVersions(platformVersion)
 		} else {
 			Execute(projectName, projectConf, continueSetup, args)
 			return
@@ -112,7 +111,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 
 	if args.Download {
-		DownloadShopware(projectName, mageVersion, args.SampleData)
+		DownloadShopware(projectName, platformVersion, args.SampleData)
 	}
 
 	if args.Install {
@@ -133,12 +132,12 @@ func DownloadShopware(projectName, version string, isSampleData bool) {
 		"bash",
 		"-c",
 		"cd " + workdir + " " +
-			"&& rm -r -f " + workdir + "/download-magento123456789 " +
-			"&& mkdir " + workdir + "/download-magento123456789 " +
-			"&& composer create-project shopware/production:" + version + " ./download-magento123456789 " +
+			"&& rm -r -f " + workdir + "/download-shopware123456789 " +
+			"&& mkdir " + workdir + "/download-shopware123456789 " +
+			"&& composer create-project shopware/production:" + version + " ./download-shopware123456789 " +
 			"&& shopt -s dotglob " +
-			"&& mv  -v ./download-magento123456789/* ./ " +
-			"&& rm -r -f ./download-magento123456789 " +
+			"&& mv  -v ./download-shopware123456789/* ./ " +
+			"&& rm -r -f ./download-shopware123456789 " +
 			"&& composer install" + sampleData,
 	}
 	cmd := exec.Command("docker", command...)
