@@ -7,6 +7,7 @@ import (
 	setupMagento "github.com/faradey/madock/src/controller/magento/setup"
 	setupPWA "github.com/faradey/madock/src/controller/pwa/setup"
 	setupShopify "github.com/faradey/madock/src/controller/shopify/setup"
+	setupShopware "github.com/faradey/madock/src/controller/shopware/setup"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -71,5 +72,7 @@ func Execute() {
 		setupShopify.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "custom" {
 		setupCustom.Execute(projectName, projectConf, continueSetup, args)
+	} else if platform == "shopware" {
+		setupShopware.Execute(projectName, projectConf, continueSetup, args)
 	}
 }
