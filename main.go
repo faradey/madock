@@ -50,6 +50,7 @@ import (
 	"github.com/faradey/madock/src/controller/shopify"
 	"github.com/faradey/madock/src/controller/shopify/frontend"
 	"github.com/faradey/madock/src/controller/shopify/web"
+	"github.com/faradey/madock/src/controller/shopware"
 	"github.com/faradey/madock/src/helper/compress"
 	"github.com/faradey/madock/src/migration"
 	"log"
@@ -178,6 +179,8 @@ func main() {
 		web.Execute()
 	case "shopify:web:frontend", "sy:w:f":
 		frontend.Execute()
+	case "shopware", "sw":
+		shopware.Execute()
 	case "snapshot:create":
 		create.Execute()
 	case "snapshot:restore":
