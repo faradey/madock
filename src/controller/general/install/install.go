@@ -102,17 +102,13 @@ func Shopware(projectName, magentoVer string) {
 		host = hosts[0]["name"]
 	}
 
-	/*
-		 \
-		 \
-		 \
-		--admin-email="admin@yourshop.com"
-	*/
-
 	installCommand := "bin/console system:install " +
 		"--create-database " +
 		"--basic-setup " +
-		"--database-url=\"mysql://magento:magento@db:3306/magento\" " +
+		"--db-host=db " +
+		"--db-name=magento " +
+		"--db-user=magento " +
+		"--db-password=magento " +
 		"--shop-locale=\"en-GB\" " +
 		"--shop-host=\"" + host + "\" " +
 		"--shop-name=\"Your Shop Name\" " +
