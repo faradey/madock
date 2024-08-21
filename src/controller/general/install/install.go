@@ -88,10 +88,10 @@ func Magento(projectName, magentoVer string) {
 		logger.Fatal(err)
 	}
 	fmt.Println("")
-	fmtc.SuccessLn("[SUCCESS]: PlatformVersion installation complete.")
-	fmtc.SuccessLn("[SUCCESS]: PlatformVersion Admin URI: /" + projectConf["magento/admin_frontname"])
-	fmtc.SuccessLn("[SUCCESS]: PlatformVersion Admin User: " + projectConf["magento/admin_user"])
-	fmtc.SuccessLn("[SUCCESS]: PlatformVersion Admin Password: " + projectConf["magento/admin_password"])
+	fmtc.SuccessLn("[SUCCESS]: Magento installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin URI: /" + projectConf["magento/admin_frontname"])
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin User: " + projectConf["magento/admin_user"])
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin Password: " + projectConf["magento/admin_password"])
 }
 
 func Shopware(projectName, magentoVer string) {
@@ -103,13 +103,9 @@ func Shopware(projectName, magentoVer string) {
 	}
 
 	/*
-		--shop-locale="en-GB" \
-		--shop-host="your-shop-url.com" \
-		--shop-name="Your Shop Name" \
-		--shop-email="admin@yourshop.com" \
-		--shop-currency="USD" \
-		--admin-username="admin" \
-		--admin-password="yourpassword" \
+		 \
+		 \
+		 \
 		--admin-email="admin@yourshop.com"
 	*/
 
@@ -117,33 +113,15 @@ func Shopware(projectName, magentoVer string) {
 		"--create-database " +
 		"--basic-setup " +
 		"--database-url=\"mysql://magento:magento@db:3306/magento\" " +
-		"--base-url=https://" + host + " " +
-		"--admin-firstname=" + projectConf["magento/admin_first_name"] + " " +
-		"--admin-lastname=" + projectConf["magento/admin_last_name"] + " " +
-		"--admin-email=" + projectConf["magento/admin_email"] + " " +
-		"--admin-user=" + projectConf["magento/admin_user"] + " " +
-		"--admin-password=" + projectConf["magento/admin_password"] + " " +
-		"--backend-frontname=" + projectConf["magento/admin_frontname"] + " " +
-		"--language=" + projectConf["magento/locale"] + " " +
-		"--currency=" + projectConf["magento/currency"] + " " +
-		"--timezone=" + projectConf["magento/timezone"] + " " +
-		"--use-rewrites=1 "
-	searchEngine := projectConf["search/engine"]
-	if searchEngine == "Elasticsearch" {
-		installCommand += "--search-engine=elasticsearch7 " +
-			"--elasticsearch-host=elasticsearch " +
-			"--elasticsearch-port=9200 " +
-			"--elasticsearch-index-prefix=magento2 " +
-			"--elasticsearch-timeout=15 "
-	} else if searchEngine == "OpenSearch" {
-		installCommand += "--search-engine=opensearch " +
-			"--opensearch-host=opensearch " +
-			"--opensearch-port=9200 " +
-			"--opensearch-index-prefix=magento2 " +
-			"--opensearch-timeout=15 "
-	}
+		"--shop-locale=\"en-GB\" " +
+		"--shop-host=\"" + host + "\" " +
+		"--shop-name=\"Your Shop Name\" " +
+		"--shop-email=\"" + projectConf["magento/admin_email"] + "\" " +
+		"--shop-currency=\"USD\" " +
+		"--admin-username=\"" + projectConf["magento/admin_user"] + "\" " +
+		"--admin-password=\"" + projectConf["magento/admin_password"] + "\" " +
+		"--admin-email=\"" + projectConf["magento/admin_email"] + "\" "
 
-	installCommand += " && bin/magento s:up && bin/magento c:c && bin/magento i:rei | bin/magento c:f"
 	fmt.Println(installCommand)
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
 	cmd.Stdin = os.Stdin
@@ -154,8 +132,8 @@ func Shopware(projectName, magentoVer string) {
 		logger.Fatal(err)
 	}
 	fmt.Println("")
-	fmtc.SuccessLn("[SUCCESS]: PlatformVersion installation complete.")
-	fmtc.SuccessLn("[SUCCESS]: PlatformVersion Admin URI: /" + projectConf["magento/admin_frontname"])
-	fmtc.SuccessLn("[SUCCESS]: PlatformVersion Admin User: " + projectConf["magento/admin_user"])
-	fmtc.SuccessLn("[SUCCESS]: PlatformVersion Admin Password: " + projectConf["magento/admin_password"])
+	fmtc.SuccessLn("[SUCCESS]: Shopware installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Shopware Admin URI: /admin")
+	fmtc.SuccessLn("[SUCCESS]: Shopware Admin User: " + projectConf["magento/admin_user"])
+	fmtc.SuccessLn("[SUCCESS]: Shopware Admin Password: " + projectConf["magento/admin_password"])
 }

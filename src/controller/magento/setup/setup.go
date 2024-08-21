@@ -33,7 +33,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	if toolsDefVersions.Php == "" {
 		if mageVersion == "" {
 			fmt.Println("")
-			fmtc.Title("Specify PlatformVersion version: ")
+			fmtc.Title("Specify Magento version: ")
 			mageVersion, _ = tools.Waiter()
 		}
 		if mageVersion != "" {
@@ -51,7 +51,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 
 	if continueSetup {
 		fmt.Println("")
-		fmtc.Title("Your PlatformVersion version is " + toolsDefVersions.PlatformVersion)
+		fmtc.Title("Your Magento version is " + toolsDefVersions.PlatformVersion)
 
 		if args.Php == "" {
 			tools.Php(&toolsDefVersions.Php)
@@ -113,7 +113,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 
 		if args.Download && args.PlatformEdition == "" {
 			fmt.Println("")
-			fmtc.TitleLn("Specify PlatformVersion version: ")
+			fmtc.TitleLn("Specify Magento version: ")
 			fmt.Println("1) Community (default)")
 			fmt.Println("2) Enterprise")
 			edition, _ = tools.Waiter()

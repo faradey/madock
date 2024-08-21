@@ -33,7 +33,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	if toolsDefVersions.Php == "" {
 		if mageVersion == "" {
 			fmt.Println("")
-			fmtc.Title("Specify PlatformVersion version: ")
+			fmtc.Title("Specify Shopware version: ")
 			mageVersion, _ = tools.Waiter()
 		}
 		if mageVersion != "" {
@@ -46,7 +46,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 
 	if continueSetup {
 		fmt.Println("")
-		fmtc.Title("Your PlatformVersion version is " + toolsDefVersions.PlatformVersion)
+		fmtc.Title("Your Shopware version is " + toolsDefVersions.PlatformVersion)
 
 		if args.Php == "" {
 			tools.Php(&toolsDefVersions.Php)
