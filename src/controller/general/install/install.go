@@ -102,21 +102,27 @@ func Shopware(projectName, magentoVer string) {
 		host = hosts[0]["name"]
 	}
 
-	installCommand := "bin/console system:install " +
-		"--create-database " +
+	installCommand := "bin/console system:setup " +
+		"--database-url=\"mysql://magento:magento@db:3306/magento\" " +
+		"--app-url=\"" + host + "\" "
+	searchEngine := projectConf["search/engine"]
+	if searchEngine == "Elasticsearch" {
+		installCommand += "--es-enabled=1 " +
+			"--es-hosts=elasticsearch:9200 " +
+			"--es-indexing-enabled=1 " +
+			"--elasticsearch-index-prefix=swlocal "
+	} else if searchEngine == "OpenSearch" {
+		installCommand += "--es-enabled=1 " +
+			"--es-hosts=opensearch:9200 " +
+			"--es-indexing-enabled=1 " +
+			"--opensearch-index-prefix=swlocal "
+	}
+	installCommand += "&& bin/console system:install " +
 		"--basic-setup " +
-		"--db-host=db " +
-		"--db-name=magento " +
-		"--db-user=magento " +
-		"--db-password=magento " +
-		"--shop-locale=\"en-GB\" " +
-		"--shop-host=\"" + host + "\" " +
 		"--shop-name=\"Your Shop Name\" " +
 		"--shop-email=\"" + projectConf["magento/admin_email"] + "\" " +
-		"--shop-currency=\"USD\" " +
-		"--admin-username=\"" + projectConf["magento/admin_user"] + "\" " +
-		"--admin-password=\"" + projectConf["magento/admin_password"] + "\" " +
-		"--admin-email=\"" + projectConf["magento/admin_email"] + "\" "
+		"--shop-locale=\"en-GB\" " +
+		"--shop-currency=\"USD\" "
 
 	fmt.Println(installCommand)
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
@@ -130,6 +136,6 @@ func Shopware(projectName, magentoVer string) {
 	fmt.Println("")
 	fmtc.SuccessLn("[SUCCESS]: Shopware installation complete.")
 	fmtc.SuccessLn("[SUCCESS]: Shopware Admin URI: /admin")
-	fmtc.SuccessLn("[SUCCESS]: Shopware Admin User: " + projectConf["magento/admin_user"])
-	fmtc.SuccessLn("[SUCCESS]: Shopware Admin Password: " + projectConf["magento/admin_password"])
+	fmtc.SuccessLn("[SUCCESS]: Shopware Admin User: admin")
+	fmtc.SuccessLn("[SUCCESS]: Shopware Admin Password: shopware")
 }

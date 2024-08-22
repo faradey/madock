@@ -7,9 +7,7 @@ import (
 
 func GetVersions(ver string) versions.ToolsVersions {
 	swVersion := ""
-	if ver == "" {
-		swVersion = "6.6"
-	} else {
+	if ver != "" {
 		swVersion = strings.TrimSpace(ver)
 	}
 
