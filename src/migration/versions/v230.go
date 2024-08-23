@@ -25,6 +25,8 @@ func V230() {
 					configs.SetParam(envFile, "PUBLIC_DIR", "web/public")
 				} else if projectConf["PLATFORM"] == "custom" {
 					configs.SetParam(envFile, "PUBLIC_DIR", "public")
+				} else if projectConf["PLATFORM"] == "shopware" {
+					configs.SetParam(envFile, "PUBLIC_DIR", "public")
 				}
 			}
 		}

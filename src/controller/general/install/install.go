@@ -117,6 +117,7 @@ func Shopware(projectName, magentoVer string) {
 			"--es-indexing-enabled=1 " +
 			"--es-index-prefix=swlocal "
 	}
+	installCommand += "&& echo \"LOCK_DSN=flock\" >> .env "
 	installCommand += "&& bin/console system:install " +
 		"--basic-setup " +
 		"--shop-name=\"Your Shop Name\" " +

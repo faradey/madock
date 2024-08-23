@@ -9,7 +9,7 @@ import (
 func Shopware(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	var dbType = "MariaDB"
 	if _, ok := projectConf["public_dir"]; !ok {
-		config.Set("public_dir", "pub")
+		config.Set("public_dir", "public")
 	}
 	config.Set("php/version", defVersions.Php)
 	config.Set("php/composer/version", defVersions.Composer)
