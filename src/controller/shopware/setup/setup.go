@@ -29,21 +29,21 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		}
 	}
 
-	if toolsDefVersions.Php == "" {
-		if platformVersion == "" {
-			fmt.Println("")
-			fmtc.Title("Specify Shopware version: ")
-			platformVersion, _ = tools.Waiter()
-		}
-		if platformVersion != "" {
-			toolsDefVersions = shopware.GetVersions(platformVersion)
-		} else {
-			Execute(projectName, projectConf, continueSetup, args)
-			return
-		}
-	}
-
 	if continueSetup {
+		if toolsDefVersions.Php == "" {
+			if platformVersion == "" {
+				fmt.Println("")
+				fmtc.Title("Specify Shopware version: ")
+				platformVersion, _ = tools.Waiter()
+			}
+			if platformVersion != "" {
+				toolsDefVersions = shopware.GetVersions(platformVersion)
+			} else {
+				Execute(projectName, projectConf, continueSetup, args)
+				return
+			}
+		}
+
 		fmt.Println("")
 		fmtc.Title("Your Shopware version is " + toolsDefVersions.PlatformVersion)
 

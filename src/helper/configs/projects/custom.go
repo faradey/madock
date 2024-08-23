@@ -3,7 +3,6 @@ package projects
 import (
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/model/versions"
-	"github.com/faradey/madock/src/model/versions/magento2"
 	"strings"
 )
 
@@ -17,7 +16,7 @@ func Custom(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	config.Set("php/composer/version", defVersions.Composer)
 	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))
 
-	config.Set("php/xdebug/version", magento2.GetXdebugVersion(defVersions.Php))
+	config.Set("php/xdebug/version", versions.GetXdebugVersion(defVersions.Php))
 	config.Set("php/xdebug/remote_host", "host.docker.internal")
 	config.Set("php/xdebug/ide_key", configs2.GetOption("php/xdebug/ide_key", generalConf, projectConf))
 	config.Set("php/xdebug/enabled", configs2.GetOption("php/xdebug/enabled", generalConf, projectConf))

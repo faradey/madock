@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func Magento2(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
+func Shopware(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	var dbType = "MariaDB"
 	if _, ok := projectConf["public_dir"]; !ok {
 		config.Set("public_dir", "pub")
@@ -56,6 +56,7 @@ func Magento2(config *configs2.ConfigLines, defVersions versions.ToolsVersions, 
 		}
 	} else if defVersions.SearchEngine == "OpenSearch" {
 		config.Set("search/elasticsearch/enabled", "false")
+		config.Set("search/elasticsearch/version", defVersions.Elastic)
 		config.Set("search/elasticsearch/version", defVersions.Elastic)
 
 		config.Set("search/opensearch/enabled", "true")

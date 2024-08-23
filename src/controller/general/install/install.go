@@ -104,7 +104,7 @@ func Shopware(projectName, magentoVer string) {
 
 	installCommand := "bin/console system:setup " +
 		"--database-url=\"mysql://magento:magento@db:3306/magento\" " +
-		"--app-url=\"" + host + "\" "
+		"--app-url=\"https://" + host + "\" "
 	searchEngine := projectConf["search/engine"]
 	if searchEngine == "Elasticsearch" {
 		installCommand += "--es-enabled=1 " +

@@ -27,7 +27,7 @@ func GetVersions(ver string) versions.ToolsVersions {
 		Composer:        GetComposerVersion(mageVersion),
 		Redis:           GetRedisVersion(mageVersion),
 		RabbitMQ:        GetRabbitMQVersion(mageVersion),
-		Xdebug:          GetXdebugVersion(phpVer),
+		Xdebug:          versions.GetXdebugVersion(phpVer),
 		PlatformVersion: mageVersion,
 		NodeJs:          "18.15.0",
 		Yarn:            "3.6.4",
@@ -192,16 +192,4 @@ func GetRabbitMQVersion(mageVer string) string {
 	}
 
 	return ""
-}
-
-func GetXdebugVersion(phpVer string) string {
-	if phpVer >= "8.3" {
-		return "3.3.1"
-	} else if phpVer >= "8.1" {
-		return "3.2.2"
-	} else if phpVer >= "7.2" {
-		return "3.1.6"
-	}
-
-	return "2.7.2"
 }

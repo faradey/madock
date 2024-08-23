@@ -3,7 +3,6 @@ package projects
 import (
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/model/versions"
-	"github.com/faradey/madock/src/model/versions/magento2"
 	"strings"
 )
 
@@ -15,7 +14,7 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 	if _, ok := projectConf["public_dir"]; !ok {
 		config.Set("public_dir", "web/public")
 	}
-	config.Set("php/xdebug/version", magento2.GetXdebugVersion(defVersions.Php))
+	config.Set("php/xdebug/version", versions.GetXdebugVersion(defVersions.Php))
 	config.Set("php/xdebug/remote_host", "host.docker.internal")
 	config.Set("php/xdebug/ide_key", configs2.GetOption("php/xdebug/ide_key", generalConf, projectConf))
 	config.Set("php/xdebug/enabled", configs2.GetOption("php/xdebug/enabled", generalConf, projectConf))
