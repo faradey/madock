@@ -5,6 +5,7 @@ import (
 	startMagento2 "github.com/faradey/madock/src/controller/magento/start"
 	startPwa "github.com/faradey/madock/src/controller/pwa/start"
 	builder2 "github.com/faradey/madock/src/controller/shopify/start"
+	startShopware "github.com/faradey/madock/src/controller/shopware/start"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -27,6 +28,8 @@ func Execute() {
 			builder2.Execute(projectName, args.WithChown, projectConf)
 		} else if platform == "custom" {
 			startCustom.Execute(projectName, args.WithChown, projectConf)
+		} else if platform == "shopware" {
+			startShopware.Execute(projectName, args.WithChown, projectConf)
 		}
 		fmtc.SuccessLn("Done")
 	} else {

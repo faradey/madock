@@ -6,6 +6,7 @@ import (
 	stopMagento2 "github.com/faradey/madock/src/controller/magento/stop"
 	stopPwa "github.com/faradey/madock/src/controller/pwa/stop"
 	stopShopify "github.com/faradey/madock/src/controller/shopify/stop"
+	stopShopware "github.com/faradey/madock/src/controller/shopware/stop"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 )
@@ -21,6 +22,8 @@ func Execute() {
 		stopShopify.Execute()
 	} else if platform == "custom" {
 		stopCustom.Execute()
+	} else if platform == "shopware" {
+		stopShopware.Execute()
 	}
 	if len(paths.GetActiveProjects()) == 0 {
 		proxy.Execute("stop")
