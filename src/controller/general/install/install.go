@@ -110,12 +110,12 @@ func Shopware(projectName, magentoVer string) {
 		installCommand += "--es-enabled=1 " +
 			"--es-hosts=elasticsearch:9200 " +
 			"--es-indexing-enabled=1 " +
-			"--elasticsearch-index-prefix=swlocal "
+			"--es-index-prefix=swlocal "
 	} else if searchEngine == "OpenSearch" {
 		installCommand += "--es-enabled=1 " +
 			"--es-hosts=opensearch:9200 " +
 			"--es-indexing-enabled=1 " +
-			"--opensearch-index-prefix=swlocal "
+			"--es-index-prefix=swlocal "
 	}
 	installCommand += "&& bin/console system:install " +
 		"--basic-setup " +
