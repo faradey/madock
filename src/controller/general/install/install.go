@@ -102,9 +102,11 @@ func Shopware(projectName, magentoVer string) {
 		host = hosts[0]["name"]
 	}
 
-	installCommand := "bin/console system:setup " +
-		"--database-url=\"mysql://magento:magento@db:3306/magento\" " +
-		"--app-url=\"https://" + host + "\" "
+	installCommand := "echo \"LOCK_DSN=flock\" >> .env "
+	installCommand += "&& echo \"APP_ENV=dev\" >> .env "
+	installCommand += "&& echo \"DATABASE_URL=mysql://magento:magento@db:3306/magento\" >> .env "
+	installCommand += "&& echo \"APP_URL=https://" + host + "\" >> .env "
+	installCommand += "&& bin/console system:setup "
 	searchEngine := projectConf["search/engine"]
 	if searchEngine == "Elasticsearch" {
 		installCommand += "--es-enabled=1 " +
@@ -117,13 +119,13 @@ func Shopware(projectName, magentoVer string) {
 			"--es-indexing-enabled=1 " +
 			"--es-index-prefix=swlocal "
 	}
-	installCommand += "&& echo \"LOCK_DSN=flock\" >> .env "
+
 	installCommand += "&& bin/console system:install " +
-		"--basic-setup " +
 		"--shop-name=\"Your Shop Name\" " +
 		"--shop-email=\"" + projectConf["magento/admin_email"] + "\" " +
 		"--shop-locale=\"en-GB\" " +
-		"--shop-currency=\"USD\" "
+		"--shop-currency=\"USD\" " +
+		"&& composer update "
 
 	fmt.Println(installCommand)
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
