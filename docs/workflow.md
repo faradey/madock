@@ -334,6 +334,9 @@ This command shows you the following items:
 * `shopify:web:frontend` or `sy:w:f`   Execute the Shopify command inside the php container in 'web/frontend' folder. For example: `madock shopify:web:frontend SHOPIFY_API_KEY=REPLACE_ME yarn build`
 
 
+* `shopware` or `sw`   Execute the Shopware command inside the php container. For example: `madock shopware es:index`
+
+
 * `snapshot:create`   To create a snapshot of the project. The snapshot will include databases and project files
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name, -n`  Name of the snapshot
