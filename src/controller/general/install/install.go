@@ -102,23 +102,26 @@ func Shopware(projectName, magentoVer string) {
 		host = hosts[0]["name"]
 	}
 
-	installCommand := "echo \"LOCK_DSN=flock\" >> .env "
-	installCommand += "&& echo \"APP_ENV=dev\" >> .env "
-	installCommand += "&& echo \"DATABASE_URL=mysql://magento:magento@db:3306/magento\" >> .env "
-	installCommand += "&& echo \"APP_URL=https://" + host + "\" >> .env "
-	installCommand += "&& bin/console system:setup "
+	installCommand := "sed -i 's/APP_ENV=prod/APP_ENV=dev/g' .env "
+	installCommand += "&& sed -i 's/APP_URL=http:\\/\\/127.0.0.1:8000/APP_URL=https:\\/\\/" + host + "/g' .env "
+	installCommand += "&& sed -i 's/DATABASE_URL=mysql:\\/\\/root:root@localhost\\/shopware/DATABASE_URL=mysql:\\/\\/magento:magento@db:3306\\/magento/g' .env "
 	searchEngine := projectConf["search/engine"]
 	if searchEngine == "Elasticsearch" {
-		installCommand += "--es-enabled=1 " +
-			"--es-hosts=elasticsearch:9200 " +
-			"--es-indexing-enabled=1 " +
-			"--es-index-prefix=swlocal "
+		installCommand += "&& sed -i 's/SHOPWARE_ES_ENABLED=0/SHOPWARE_ES_ENABLED=1/g' .env "
+		installCommand += "&& sed -i 's/OPENSEARCH_URL=http:\\/\\/localhost:9200/OPENSEARCH_URL=http:\\/\\/elasticsearch:9200/g' .env "
+		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEXING_ENABLED=0/SHOPWARE_ES_INDEXING_ENABLED=1/g' .env "
+
+		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEX_PREFIX=sw6/SHOPWARE_ES_INDEX_PREFIX=swlocal/g' .env "
 	} else if searchEngine == "OpenSearch" {
-		installCommand += "--es-enabled=1 " +
-			"--es-hosts=opensearch:9200 " +
-			"--es-indexing-enabled=1 " +
-			"--es-index-prefix=swlocal "
+		installCommand += "&& sed -i 's/SHOPWARE_ES_ENABLED=0/SHOPWARE_ES_ENABLED=1/g' .env "
+		installCommand += "&& sed -i 's/OPENSEARCH_URL=http:\\/\\/localhost:9200/OPENSEARCH_URL=http:\\/\\/opensearch:9200/g' .env "
+		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEXING_ENABLED=0/SHOPWARE_ES_INDEXING_ENABLED=1/g' .env "
+		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEX_PREFIX=sw6/SHOPWARE_ES_INDEX_PREFIX=swlocal/g' .env "
 	}
+
+	// replace SHOPWARE_HTTP_CACHE_ENABLED=1 to SHOPWARE_HTTP_CACHE_ENABLED=0
+	installCommand += "&& sed -i 's/SHOPWARE_HTTP_CACHE_ENABLED=1/SHOPWARE_HTTP_CACHE_ENABLED=0/g' .env "
+	installCommand += "&& sed -i 's/STOREFRONT_PROXY_URL=http:\\/\\/localhost/STOREFRONT_PROXY_URL=https:\\/\\/" + host + "/g' .env "
 
 	installCommand += "&& bin/console system:install " +
 		"--shop-name=\"Your Shop Name\" " +
