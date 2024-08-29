@@ -116,14 +116,15 @@ func Shopware(projectName, magentoVer string) {
 		installCommand += "&& sed -i 's/SHOPWARE_ES_ENABLED=0/SHOPWARE_ES_ENABLED=1/g' .env "
 		installCommand += "&& sed -i 's/OPENSEARCH_URL=http:\\/\\/localhost:9200/OPENSEARCH_URL=http:\\/\\/opensearch:9200/g' .env "
 		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEXING_ENABLED=0/SHOPWARE_ES_INDEXING_ENABLED=1/g' .env "
-		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEX_PREFIX=sw6/SHOPWARE_ES_INDEX_PREFIX=swlocal/g' .env "
+		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEX_PREFIX=sw/SHOPWARE_ES_INDEX_PREFIX=swlocal/g' .env "
 	}
 
 	// replace SHOPWARE_HTTP_CACHE_ENABLED=1 to SHOPWARE_HTTP_CACHE_ENABLED=0
 	installCommand += "&& sed -i 's/SHOPWARE_HTTP_CACHE_ENABLED=1/SHOPWARE_HTTP_CACHE_ENABLED=0/g' .env "
 	installCommand += "&& sed -i 's/STOREFRONT_PROXY_URL=http:\\/\\/localhost/STOREFRONT_PROXY_URL=https:\\/\\/" + host + "/g' .env "
-
+	installCommand += "&& bin/console system:setup "
 	installCommand += "&& bin/console system:install " +
+		"--basic-setup " +
 		"--shop-name=\"Your Shop Name\" " +
 		"--shop-email=\"" + projectConf["magento/admin_email"] + "\" " +
 		"--shop-locale=\"en-GB\" " +
