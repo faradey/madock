@@ -1,7 +1,7 @@
 # madock
 Local development environment based on Docker
 
-Supported platforms: Magento2, PWA, Shopify, Custom PHP projects.
+Supported platforms: Magento2, PWA, Shopify, Shopware, Custom PHP projects.
 
 [![GoDoc](https://godoc.org/github.com/faradey/madock?status.svg)](https://godoc.org/github.com/faradey/madock)
 [![Go Report Card](https://goreportcard.com/badge/github.com/faradey/madock)](https://goreportcard.com/report/github.com/faradey/madock)
@@ -20,6 +20,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * **PWA Studio** as a separate service
 * **Shopify** as a separate service. Learn [more](docs/shopify.md)
 * **Custom PHP project** as a separate service
+* **Shopware** as a separate service
 * Cron support
 * Flexible configuration for each project
 * Database import and export in two clicks

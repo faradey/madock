@@ -1,3 +1,8 @@
+**v2.5.0**
+- Added supporting of Shopware
+- Fixed mailcatcher configuration with MP_SMTP_AUTH_ACCEPT_ANY and MP_SMTP_AUTH_ALLOW_INSECURE
+- Fixed documentation
+
 **v2.4.4**
 - Fixed opensearch-dashboards
 - Added new command `madock project:clone` [more](docs/project_clone.md)
