@@ -115,7 +115,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 
 	if args.Install {
-		install.Shopware(projectName, toolsDefVersions.PlatformVersion)
+		install.Shopware(projectName, toolsDefVersions.PlatformVersion, args.SampleData)
 	}
 }
 

@@ -19,13 +19,13 @@ func Execute() {
 		Magento(configs.GetProjectName(), toolsDefVersions.PlatformVersion)
 	} else if projectConf["platform"] == "shopware" {
 		toolsDefVersions := shopware.GetVersions("")
-		Shopware(configs.GetProjectName(), toolsDefVersions.PlatformVersion)
+		Shopware(configs.GetProjectName(), toolsDefVersions.PlatformVersion, false)
 	} else {
 		fmtc.Warning("This command is not supported for " + projectConf["platform"])
 	}
 }
 
-func Magento(projectName, magentoVer string) {
+func Magento(projectName, platformVer string) {
 	projectConf := configs.GetCurrentProjectConfig()
 	host := ""
 	hosts := configs.GetHosts(projectConf)
@@ -48,7 +48,7 @@ func Magento(projectName, magentoVer string) {
 		"--currency=" + projectConf["magento/currency"] + " " +
 		"--timezone=" + projectConf["magento/timezone"] + " " +
 		"--use-rewrites=1 "
-	if magentoVer >= "2.3.7" {
+	if platformVer >= "2.3.7" {
 		searchEngine := projectConf["search/engine"]
 		if searchEngine == "Elasticsearch" {
 			installCommand += "--search-engine=elasticsearch7 " +
@@ -57,7 +57,7 @@ func Magento(projectName, magentoVer string) {
 				"--elasticsearch-index-prefix=magento2 " +
 				"--elasticsearch-timeout=15 "
 		} else if searchEngine == "OpenSearch" {
-			if magentoVer >= "2.4.6" {
+			if platformVer >= "2.4.6" {
 				installCommand += "--search-engine=opensearch " +
 					"--opensearch-host=opensearch " +
 					"--opensearch-port=9200 " +
@@ -72,7 +72,7 @@ func Magento(projectName, magentoVer string) {
 			}
 		}
 
-		if magentoVer >= "2.4.6" {
+		if platformVer >= "2.4.6" {
 			installCommand += "&& bin/magento module:disable Magento_AdminAdobeImsTwoFactorAuth "
 		}
 		installCommand += "&& bin/magento module:disable Magento_TwoFactorAuth "
@@ -94,7 +94,7 @@ func Magento(projectName, magentoVer string) {
 	fmtc.SuccessLn("[SUCCESS]: Magento Admin Password: " + projectConf["magento/admin_password"])
 }
 
-func Shopware(projectName, magentoVer string) {
+func Shopware(projectName, platformVer string, isSampleData bool) {
 	projectConf := configs.GetCurrentProjectConfig()
 	host := ""
 	hosts := configs.GetHosts(projectConf)
@@ -129,6 +129,11 @@ func Shopware(projectName, magentoVer string) {
 		"--shop-locale=\"en-GB\" " +
 		"--shop-currency=\"USD\" " +
 		"&& composer update "
+
+	if isSampleData {
+		installCommand += "&& bin/console framework:demodata "
+	}
+	installCommand += "&& bin/console es:index "
 
 	fmt.Println(installCommand)
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
