@@ -131,7 +131,7 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 		"&& composer update "
 
 	if isSampleData {
-		installCommand += "&& bin/console framework:demodata "
+		installCommand += "&& composer require store.shopware.com/swagplatformdemodata && bin/console framework:demodata "
 	}
 	installCommand += "&& bin/console es:index "
 
