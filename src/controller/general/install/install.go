@@ -102,8 +102,7 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 		host = hosts[0]["name"]
 	}
 
-	installCommand := "sed -i 's/APP_ENV=prod/APP_ENV=dev/g' .env "
-	installCommand += "&& sed -i 's/APP_URL=http:\\/\\/127.0.0.1:8000/APP_URL=https:\\/\\/" + host + "/g' .env "
+	installCommand := "sed -i 's/APP_URL=http:\\/\\/127.0.0.1:8000/APP_URL=https:\\/\\/" + host + "/g' .env "
 	installCommand += "&& sed -i 's/DATABASE_URL=mysql:\\/\\/root:root@localhost\\/shopware/DATABASE_URL=mysql:\\/\\/magento:magento@db:3306\\/magento/g' .env "
 	searchEngine := projectConf["search/engine"]
 	if searchEngine == "Elasticsearch" {
@@ -131,7 +130,7 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 		"&& composer update "
 
 	if isSampleData {
-		installCommand += "&& composer require swag/demo-data && bin/console framework:demodata "
+		installCommand += "&& composer require swag/demo-data shopware/dev-tools && bin/console framework:demodata "
 	}
 	installCommand += "&& bin/console es:index "
 
