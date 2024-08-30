@@ -129,7 +129,7 @@ func Execute() {
 	describeByLevel("shopify:web:frontend", "Execute the Shopify command inside the php container in 'web/frontend' folder. For example: `madock shopify:web:frontend SHOPIFY_API_KEY=REPLACE_ME yarn build`", 0)
 	describeByLevel("sy:w:f", "The short alias of `shopify:web:frontend` command", 0)
 	describeByLevel("shopware", "Execute the Shopware command inside the php container. For example: `madock shopware es:index`", 0)
-	describeByLevel("sy", "The short alias of `shopware` command", 0)
+	describeByLevel("sw", "The short alias of `shopware` command", 0)
 	describeByLevel("snapshot:create", "To create a snapshot of the project. The snapshot will include databases and project files", 0)
 	describeByLevel("--name, -n", "Name of the snapshot", 1)
 	describeByLevel("ssl:rebuild", "Rebuild SSL Certificates", 0)
