@@ -32,7 +32,6 @@ func Execute() {
 
 	remoteDir := siteRootPath
 	name := args.Name
-	//TODO add options --db-user --db-password --db-name --db-host --db-port
 	defer func(conn *ssh.Client) {
 		err := conn.Close()
 		if err != nil {
@@ -41,7 +40,23 @@ func Execute() {
 	}(conn)
 	fmt.Println("")
 	fmt.Println("Dumping and downloading DB is started")
-	result := remote_sync.RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
+	result := ""
+	if args.DbUser != "" && args.DbPassword != "" && args.DbName != "" {
+		if args.DbPort == "" {
+			args.DbPort = "3306"
+		}
+		if args.DbHost == "" {
+			args.DbHost = "localhost"
+		}
+		result = "{\"host\":\"" + args.DbHost + "\",\"dbname\":\"" + args.DbName + "\",\"username\":\"" + args.DbUser + "\",\"password\":\"" + args.DbPassword + "\",\"port\":\"" + args.DbPort + "\"}"
+	} else {
+		if projectConf["platform"] == "magento" {
+			result = remote_sync.RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
+		} else if projectConf["platform"] == "shopware" {
+			result = remote_sync.RunCommand(conn, "php -r \"\\$parsed_url=[];\\$env = include('"+remoteDir+"/.env'); $lines = explode(\"\\n\",\\$env); foreach(\\$lines as \\$line){  preg_match(\"/([^#]+)\\=(.*)/\",\\$line,\\$matches);  if(isset(\\$matches[1]) && \\$matches[1] == \"DATABASE_URL\" && !empty(\\$matches[2])){ \\$parsed_url = parse_url(\\$matches[2]); \\$parsed_url = ['username' => \\$parsed_url['user'],'password' => \\$parsed_url['pass'],'host'     => \\$parsed_url['host'],'port'     => \\$parsed_url['port']??\"3306\",'dbname' => ltrim($parsed_url['path'], '/')];   break;  }} echo json_encode(\\$parsed_url);\"")
+		}
+	}
+
 	nOpenBrace := strings.Index(result, "{")
 	if nOpenBrace != -1 {
 		result = result[nOpenBrace:]
@@ -67,8 +82,11 @@ func Execute() {
 		if len(ignoreTables) > 0 {
 			ignoreTablesStr = " --ignore-table=" + dbAuthData.Dbname + "." + strings.Join(ignoreTables, " --ignore-table="+dbAuthData.Dbname+".")
 		}
-
-		result = remote_sync.RunCommand(conn, "mysqldump -u \""+dbAuthData.Username+"\" -p\""+dbAuthData.Password+"\" -h "+dbAuthData.Host+" --quick --lock-tables=false --no-tablespaces --triggers"+ignoreTablesStr+" "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+"/tmp/"+dumpName)
+		dbPort := ""
+		if dbAuthData.Port != "" {
+			dbPort = " -P " + dbAuthData.Port
+		}
+		result = remote_sync.RunCommand(conn, "mysqldump -u \""+dbAuthData.Username+"\" -p\""+dbAuthData.Password+"\" -h "+dbAuthData.Host+dbPort+" --quick --lock-tables=false --no-tablespaces --triggers"+ignoreTablesStr+" "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+"/tmp/"+dumpName)
 		sc, err := sftp.NewClient(conn)
 		if err != nil {
 			logger.Fatal(err)

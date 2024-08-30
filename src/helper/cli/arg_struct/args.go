@@ -127,6 +127,11 @@ type ControllerGeneralRemoteSyncDb struct {
 	Name        string   `arg:"-n,--name" help:"Name of the archive file"`
 	IgnoreTable []string `arg:"-i,--ignore-table" help:"Ignore db table"`
 	SshType     string   `arg:"-s,--ssh-type" help:"SSH type (dev, stage, prod)"`
+	DbHost      string   `arg:"--db-host" help:"DB Host"`
+	DbPort      string   `arg:"--db-port" help:"DB Port"`
+	DbUser      string   `arg:"--db-user" help:"DB User"`
+	DbPassword  string   `arg:"--db-password" help:"DB Password"`
+	DbName      string   `arg:"--db-name" help:"DB Name"`
 }
 
 type ControllerGeneralRemoteSyncFile struct {

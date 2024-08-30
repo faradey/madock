@@ -31,6 +31,7 @@ type RemoteDbStruct struct {
 	Model          string `json:"model"`
 	Engine         string `json:"engine"`
 	InitStatements string `json:"initStatements"`
+	Port           string `json:"port"`
 }
 
 func ListFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir string, indx int, imagesOnly, compress bool) (err error) {
