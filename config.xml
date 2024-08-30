@@ -108,6 +108,11 @@
                 <enabled>false</enabled>
                 <repository>redis</repository>
                 <version>7.2.3</version>
+                <dashboard>
+                    <enabled>false</enabled>
+                    <repository>grafana/grafana</repository>
+                    <version>11.2.0</version>
+                </dashboard>
             </redis>
             <rabbitmq>
                 <enabled>false</enabled>
