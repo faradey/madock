@@ -9,6 +9,7 @@ import (
 	configs2 "github.com/faradey/madock/src/migration/versions/v240/configs"
 	"log"
 	"os"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -188,12 +189,12 @@ func makeDockerCompose(projectName string) {
 	dockerDefFiles["docker-compose.yml"] = GetDockerConfigFile(projectName, "docker-compose.yml", "")
 	dockerDefFiles["docker-compose.override.yml"] = GetDockerConfigFile(projectName, "docker-compose."+overrideFile+".yml", "")
 	dockerDefFiles["docker-compose-snapshot.yml"] = GetDockerConfigFile(projectName, "docker-compose-snapshot.yml", "general")
-	fmt.Println(dockerDefFiles)
 	for key, dockerDefFile := range dockerDefFiles {
 		b, err := os.ReadFile(dockerDefFile)
 		if err != nil {
 			logger.Fatal(err)
 		}
+		b = ProcessSnippets(b, projectName)
 
 		str := string(b)
 		portsConfig := configs2.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
@@ -385,4 +386,40 @@ func processOtherCTXFiles(projectName string) {
 		destinationFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + ctxFile
 		err = os.WriteFile(destinationFile, []byte(str), 0755)
 	}
+}
+
+func ProcessSnippets(b []byte, projectName string) []byte {
+	str := string(b)
+	r, _ := regexp.Compile(`\{\{\{include snippets/[^\}]+\}\}\}`)
+
+	for index, match := range r.FindStringSubmatch(str) {
+		snipperFile := strings.Replace(match, "{{{include ", "", -1)
+		snipperFile = strings.TrimSpace(strings.Replace(snipperFile, "}}}", "", -1))
+		snipperFile = GetSnippetFile(projectName, snipperFile)
+		b2, err := os.ReadFile(snipperFile)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		str = strings.Replace(str, match, string(b2), -1)
+		fmt.Printf("[%d] %s\n", index, match)
+		fmt.Printf("%s\n", snipperFile)
+	}
+
+	return []byte(str)
+}
+
+func GetSnippetFile(projectName, path string) string {
+	var err error
+	snippetFile := paths.GetRunDirPath() + "/.madock/docker/" + strings.Trim(path, "/")
+	if !paths.IsFileExist(snippetFile) {
+		snippetFile = paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + strings.Trim(path, "/")
+		if !paths.IsFileExist(snippetFile) {
+			snippetFile = paths.GetExecDirPath() + "/docker/" + strings.Trim(path, "/")
+			if !paths.IsFileExist(snippetFile) {
+				logger.Fatal(err)
+			}
+		}
+	}
+
+	return snippetFile
 }
