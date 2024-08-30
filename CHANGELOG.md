@@ -2,6 +2,8 @@
 - Added supporting of Shopware
 - Fixed mailcatcher configuration with MP_SMTP_AUTH_ACCEPT_ANY and MP_SMTP_AUTH_ALLOW_INSECURE
 - Fixed documentation
+- Fixed the media synchronization public path
+- Added --db-host, --db-port, --db-name, --db-user, --db-password as options for the remote:sync:db command
 
 **v2.4.4**
 - Fixed opensearch-dashboards
