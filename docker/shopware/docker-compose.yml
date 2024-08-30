@@ -1,24 +1,6 @@
 name: {{{container_name_prefix}}}{{{project_name}}}{{{scope}}}
 services:
-  php:
-    build:
-      context: ctx
-      dockerfile: php.Dockerfile
-    volumes:
-      - ./src:/var/www/html:cached
-      - ./composer:/var/www/.composer:cached
-      - ./ssh/id_rsa:/var/www/.ssh/id_rsa:ro
-      - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
-      - ./ctx/scripts/:/var/www/scripts/:cached
-    environment:
-    - COMPOSER_HOME=/var/www/.composer
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
-    ports:
-      - "{{{nginx/port/project+5}}}:35729"
-    <<<if{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-php.yml}}}
 
 <<<if{{{php/xdebug/enabled}}}>>>
   php_without_xdebug:
