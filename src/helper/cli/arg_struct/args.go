@@ -2,8 +2,6 @@ package arg_struct
 
 import "github.com/faradey/madock/src/helper/cli/attr"
 
-//TODO relocate here other ArgsStruct
-
 type ControllerGeneralHelp struct {
 	attr.Arguments
 }
