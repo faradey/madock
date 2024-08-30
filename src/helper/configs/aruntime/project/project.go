@@ -390,9 +390,9 @@ func processOtherCTXFiles(projectName string) {
 
 func ProcessSnippets(b []byte, projectName string) []byte {
 	str := string(b)
-	r, _ := regexp.Compile(`\{\{\{include snippets/[^\}]+\}\}\}`)
+	r := regexp.MustCompile(`\{\{\{include snippets/[^\}]+\}\}\}`)
 
-	for index, match := range r.FindStringSubmatch(str) {
+	for index, match := range r.FindAllString(str, -1) {
 		snipperFile := strings.Replace(match, "{{{include ", "", -1)
 		snipperFile = strings.TrimSpace(strings.Replace(snipperFile, "}}}", "", -1))
 		snipperFile = GetSnippetFile(projectName, snipperFile)

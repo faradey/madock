@@ -1,21 +1,7 @@
 name: {{{container_name_prefix}}}{{{project_name}}}{{{scope}}}
 services:
   {{{include snippets/docker-compose-php.yml}}}
-
-<<<if{{{php/xdebug/enabled}}}>>>
-  php_without_xdebug:
-    build:
-      context: ctx
-      dockerfile: php.DockerfileWithoutXdebug
-    volumes:
-      - ./src:/var/www/html:delegated
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      - php
-<<<endif>>>
-    <<<if{{{php/xdebug/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-php-xdebug.yml}}}
 
   nginx:
     build:
