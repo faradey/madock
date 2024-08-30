@@ -21,7 +21,7 @@ func Execute() {
 	maxProcs := finder.MaxParallelism() - 1
 	var scTemp *sftp.Client
 	isFirstConnect := false
-	paths.MakeDirsByPath(paths.GetRunDirPath() + "/pub/media")
+	paths.MakeDirsByPath(paths.GetRunDirPath() + "/" + projectConf["public_dir"] + "/media")
 	sshType := "ssh"
 	if args.SshType != "" {
 		sshType += "_" + args.SshType
@@ -46,7 +46,7 @@ func Execute() {
 	fmt.Println("\n" + "Synchronization is started")
 	ch := make(chan bool, 15)
 	var chDownload sync.WaitGroup
-	go remote_sync.ListFiles(&chDownload, ch, siteRootPath+"/pub/media/", "", 0, args.ImagesOnly, args.Compress)
+	go remote_sync.ListFiles(&chDownload, ch, siteRootPath+"/"+projectConf["public_dir"]+"/media/", "", 0, args.ImagesOnly, args.Compress)
 	time.Sleep(3 * time.Second)
 	chDownload.Wait()
 	fmt.Println("\n" + "Synchronization is completed")

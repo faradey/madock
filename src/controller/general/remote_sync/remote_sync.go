@@ -2,6 +2,7 @@ package remote_sync
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/pkg/sftp"
@@ -36,7 +37,9 @@ func ListFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 	chDownload.Add(1)
 	remainder := indx % len(sc)
 	scp := sc[remainder]
+	projectConf := configs.GetCurrentProjectConfig()
 	projectPath := paths.GetRunDirPath()
+	projectMediaPath := projectPath + "/" + projectConf["public_dir"] + "/media/"
 	files, err := scp.ReadDir(remoteDir + subdir)
 	if err != nil {
 		logger.Fatal(err)
@@ -56,12 +59,12 @@ func ListFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 				subdirName != "import" &&
 				!strings.Contains(subdirName+"/", "/cache") &&
 				!strings.Contains(subdirName, ".thumb") {
-				if !paths.IsFileExist(projectPath + "/pub/media/" + subdirName) {
-					os.Mkdir(projectPath+"/pub/media/"+subdirName, 0775)
+				if !paths.IsFileExist(projectMediaPath + subdirName) {
+					os.Mkdir(projectMediaPath+subdirName, 0775)
 				}
 				go ListFiles(chDownload, ch, remoteDir, subdirName+"/", indx, imagesOnly, compress)
 			}
-		} else if !paths.IsFileExist(projectPath + "/pub/media/" + subdirName) {
+		} else if !paths.IsFileExist(projectMediaPath + subdirName) {
 			ext := strings.ToLower(filepath.Ext(name))
 			if !imagesOnly || ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".webp" {
 				remainderDownload := indx % len(sc)
@@ -69,7 +72,7 @@ func ListFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 				chDownload.Add(1)
 				ch <- true
 				go func() {
-					DownloadFile(scpDownload, remoteDir+subdirName, projectPath+"/pub/media/"+subdirName, imagesOnly, compress)
+					DownloadFile(scpDownload, remoteDir+subdirName, projectMediaPath+subdirName, imagesOnly, compress)
 					chDownload.Done()
 					<-ch
 				}()
