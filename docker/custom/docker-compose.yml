@@ -4,22 +4,7 @@ services:
   {{{include snippets/docker-compose-php-xdebug.yml}}}
   {{{include snippets/docker-compose-nginx.yml}}}
   {{{include snippets/docker-compose-db.yml}}}
-
-<<<if{{{db2/enabled}}}>>>
-  db2:
-    command:
-      --default-authentication-plugin=mysql_native_password
-    build:
-      context: ctx
-      dockerfile: db.Dockerfile
-    ports:
-      - "{{{nginx/port/project+6}}}:3306"
-    volumes:
-      - dbdata2:/var/lib/mysql
-      - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
-<<<endif>>>
-    <<<if{{{db2/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-db2.yml}}}
 
 <<<if{{{nodejs/enabled}}}>>>
   nodejs:
