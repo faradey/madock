@@ -2,20 +2,7 @@
 services:
   {{{include snippets/docker-compose-php.yml}}}
   {{{include snippets/docker-compose-nginx.yml}}}
-
-  db:
-    command: 
-      --default-authentication-plugin=mysql_native_password
-    build:
-      context: ctx
-      dockerfile: db.Dockerfile
-    ports:
-      - "{{{nginx/port/project+4}}}:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
-      - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
-    <<<if{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-db.yml}}}
 
 <<<if{{{db2/enabled}}}>>>
   db2:
