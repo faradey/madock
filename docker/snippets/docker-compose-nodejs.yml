@@ -1,0 +1,14 @@
+<<<if{{{nodejs/enabled}}}>>>
+  nodejs:
+    build:
+      context: ctx
+      dockerfile: nodejs.Dockerfile
+    tty: true
+    volumes:
+      - ./src:/var/www/html:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+<<<endif>>>
+    <<<if{{{nodejs/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

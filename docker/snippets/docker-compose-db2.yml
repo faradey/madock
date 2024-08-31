@@ -12,4 +12,4 @@
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
 <<<endif>>>
     <<<if{{{db2/enabled}}}{{{isolation/enabled}}}>>>networks:
-    - isolated<<<endif>>>
+      - isolated<<<endif>>>

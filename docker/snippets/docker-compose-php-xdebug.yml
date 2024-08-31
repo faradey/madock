@@ -11,4 +11,4 @@
       - php
 <<<endif>>>
     <<<if{{{php/xdebug/enabled}}}{{{isolation/enabled}}}>>>networks:
-    - isolated<<<endif>>>
+      - isolated<<<endif>>>

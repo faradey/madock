@@ -5,21 +5,7 @@ services:
   {{{include snippets/docker-compose-nginx.yml}}}
   {{{include snippets/docker-compose-db.yml}}}
   {{{include snippets/docker-compose-db2.yml}}}
-
-<<<if{{{nodejs/enabled}}}>>>
-  nodejs:
-    build:
-      context: ctx
-      dockerfile: nodejs.Dockerfile
-    tty: true
-    volumes:
-      - ./src:/var/www/html:cached
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
-<<<endif>>>
-    <<<if{{{nodejs/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-nodejs.yml}}}
 
 <<<if{{{search/elasticsearch/enabled}}}>>>
   elasticsearch:
