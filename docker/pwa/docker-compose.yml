@@ -1,4 +1,4 @@
-name: {{{container_name_prefix}}}{{{project_name}}}{{{scope}}}
+{{{include snippets/docker-compose-container-name.yml}}}
 services:
   nodejs:
     build:

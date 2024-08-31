@@ -1,26 +1,8 @@
-name: {{{container_name_prefix}}}{{{project_name}}}{{{scope}}}
+{{{include snippets/docker-compose-container-name.yml}}}
 services:
   {{{include snippets/docker-compose-php.yml}}}
   {{{include snippets/docker-compose-php-xdebug.yml}}}
-
-  nginx:
-    build:
-      context: ctx
-      dockerfile: nginx.Dockerfile
-    ports:
-      - "{{{nginx/port/project}}}:80"
-      - "{{{nginx/port/project_ssl}}}:443"
-    volumes:
-      - ./src:/var/www/html:delegated
-      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
-    depends_on:
-      - php
-    <<<if{{{isolation/enabled}}}>>>networks:
-      - opened
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-nginx.yml}}}
 
   db:
     command: 
