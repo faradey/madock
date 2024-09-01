@@ -1,0 +1,6 @@
+<<<if{{{rabbitmq/enabled}}}>>>
+  rabbitmq:
+    image: {{{rabbitmq/repository}}}:{{{rabbitmq/version}}}
+<<<endif>>>
+    <<<if{{{rabbitmq/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

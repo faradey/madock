@@ -5,13 +5,7 @@ services:
   {{{include snippets/docker-compose-db.yml}}}
   {{{include snippets/docker-compose-db2.yml}}}
   {{{include snippets/docker-compose-redis.yml}}}
-
-<<<if{{{rabbitmq/enabled}}}>>>
-  rabbitmq:
-    image: {{{rabbitmq/repository}}}:{{{rabbitmq/version}}}
-<<<endif>>>
-    <<<if{{{rabbitmq/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-rabbitmq.yml}}}
 
 <<<if{{{db/phpmyadmin/enabled}}}>>>
   phpmyadmin:
