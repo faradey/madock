@@ -1,0 +1,8 @@
+<<<if{{{isolation/enabled}}}>>>
+  networks:
+    opened:
+      driver: bridge
+    isolated:
+      driver: bridge
+      internal: true
+<<<endif>>>

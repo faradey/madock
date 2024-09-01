@@ -13,11 +13,5 @@ services:
 volumes:
   dbdata:
   <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>
-<<<if{{{isolation/enabled}}}>>>
-networks:
-  opened:
-    driver: bridge
-  isolated:
-    driver: bridge
-    internal: true
-<<<endif>>>
+
+{{{include snippets/docker-compose-networks.yml}}}
