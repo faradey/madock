@@ -32,11 +32,4 @@ services:
       - opened
       - isolated<<<endif>>>
 
-<<<if{{{isolation/enabled}}}>>>
-networks:
-  opened:
-    driver: bridge
-  isolated:
-    driver: bridge
-    internal: true
-<<<endif>>>
+{{{include snippets/docker-compose-networks.yml}}}

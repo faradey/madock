@@ -9,7 +9,6 @@ services:
   {{{include snippets/docker-compose-phpmyadmin.yml}}}
   {{{include snippets/docker-compose-phpmyadmin2.yml}}}
 
-
 volumes:
   dbdata:
   <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>

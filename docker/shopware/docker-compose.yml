@@ -13,26 +13,7 @@ services:
   {{{include snippets/docker-compose-phpmyadmin2.yml}}}
   {{{include snippets/docker-compose-kibana.yml}}}
   {{{include snippets/docker-compose-opensearchdashboard.yml}}}
-
-<<<if{{{varnish/enabled}}}>>>
-  varnish:
-    image: {{{varnish/repository}}}:{{{varnish/version}}}
-    volumes:
-      - ./src/{{{varnish/config_file}}}:/etc/varnish/default.vcl:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
-    command: "-p default_keep=300"
-    environment:
-      VARNISH_HTTP_PORT: {{{nginx/port/project+9}}}
-      VARNISH_SIZE: 1G
-    ports:
-      - "{{{nginx/port/project+9}}}:{{{nginx/port/project+9}}}"
-    depends_on:
-      - nginx
-<<<endif>>>
-<<<if{{{varnish/enabled}}}{{{isolation/enabled}}}>>>networks:
-  - isolated<<<endif>>>
+  {{{include snippets/docker-compose-varnish.yml}}}
 
 {{{include snippets/docker-compose-volumes.yml}}}
 {{{include snippets/docker-compose-networks.yml}}}
