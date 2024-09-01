@@ -1,0 +1,16 @@
+<<<if{{{grafana/enabled}}}>>>
+  grafana:
+    image: {{{grafana/repository}}}:{{{grafana/version}}}
+    environment:
+      GF_SERVER_ROOT_URL: "http://{{{nginx/host_name_default}}}/grafana/"
+      GF_INSTALL_PLUGINS: grafana-clock-panel
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_BASIC_ENABLED: "false"
+    volumes:
+      - grafanadata:/var/lib/grafana
+    ports:
+      - "{{{nginx/port/project+10}}}:3000"
+<<<endif>>>
+    <<<if{{{grafana/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

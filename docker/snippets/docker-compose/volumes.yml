@@ -3,3 +3,4 @@ volumes:
   <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>
   <<<if{{{search/elasticsearch/enabled}}}>>>elasticsearch_vlm_{{{search/elasticsearch/version}}}:<<<endif>>>
   <<<if{{{search/opensearch/enabled}}}>>>opensearch_vlm_{{{search/opensearch/version}}}:<<<endif>>>
+  <<<if{{{grafana/enabled}}}>>>grafanadata:<<<endif>>>
