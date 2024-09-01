@@ -6,25 +6,7 @@ services:
   {{{include snippets/docker-compose-db2.yml}}}
   {{{include snippets/docker-compose-redis.yml}}}
   {{{include snippets/docker-compose-rabbitmq.yml}}}
-
-<<<if{{{db/phpmyadmin/enabled}}}>>>
-  phpmyadmin:
-    image: {{{db/phpmyadmin/repository}}}:{{{db/phpmyadmin/version}}}
-    environment:
-      PMA_HOST: "db"
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-      PMA_ABSOLUTE_URI: "http://{{{nginx/host_name_default}}}/phpmyadmin/"
-      PMA_USER: root
-      PMA_PASSWORD: {{{db/root_password}}}
-      UPLOAD_LIMIT: 2G
-    ports:
-      - "{{{nginx/port/project+2}}}:80"
-    depends_on:
-      - db
-<<<endif>>>
-    <<<if{{{db/phpmyadmin/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-phpmyadmin.yml}}}
 
 <<<if{{{db2/phpmyadmin/enabled}}}>>>
   phpmyadmin2:
