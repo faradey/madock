@@ -78,6 +78,8 @@ func makeKibanaConf(projectName string) {
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
 
@@ -95,6 +97,8 @@ func makeNginxDockerfile(projectName string) {
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
 
@@ -114,6 +118,7 @@ func makeNginxConf(projectName string) {
 		logger.Fatal(err)
 	}
 
+	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
 	hostName := "loc." + projectName + ".com"
@@ -155,6 +160,7 @@ func makePhpDockerfile(projectName string) {
 		logger.Fatal(err)
 	}
 
+	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.Dockerfile"
@@ -171,6 +177,7 @@ func makePhpDockerfile(projectName string) {
 			logger.Fatal(err)
 		}
 
+		b = ProcessSnippets(b, projectName)
 		str = string(b)
 		str = configs.ReplaceConfigValue(projectName, str)
 		nginxFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.DockerfileWithoutXdebug"
@@ -235,6 +242,7 @@ func makeDBDockerfile(projectName string) {
 		logger.Fatal(err)
 	}
 
+	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/db.Dockerfile"
@@ -252,6 +260,7 @@ func makeDBDockerfile(projectName string) {
 	if err != nil {
 		logger.Fatal(err)
 	}
+	b = ProcessSnippets(b, projectName)
 
 	if strings.ToLower(configs.GetProjectConfig(projectName)["db/repository"]) == "mariadb" && configs.GetProjectConfig(projectName)["db/version"] >= "10.4" {
 		b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
@@ -271,6 +280,7 @@ func makeElasticDockerfile(projectName string) {
 		logger.Fatal(err)
 	}
 
+	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/elasticsearch.Dockerfile"
@@ -288,6 +298,7 @@ func makeOpenSearchDockerfile(projectName string) {
 		logger.Fatal(err)
 	}
 
+	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/opensearch.Dockerfile"
@@ -305,6 +316,7 @@ func makeRedisDockerfile(projectName string) {
 		logger.Fatal(err)
 	}
 
+	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
 	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/redis.Dockerfile"
@@ -322,6 +334,7 @@ func makeNodeJsDockerfile(projectName string) {
 		logger.Fatal(err)
 	}
 
+	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
 	nodeJsFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nodejs.Dockerfile"
@@ -365,6 +378,7 @@ func processOtherCTXFiles(projectName string) {
 			logger.Fatal(err)
 		}
 
+		b = ProcessSnippets(b, projectName)
 		str := string(b)
 		str = configs.ReplaceConfigValue(projectName, str)
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + strings.Split(fileName, "/")[0] + "/")
@@ -382,6 +396,7 @@ func processOtherCTXFiles(projectName string) {
 		if err != nil {
 			logger.Fatal(err)
 		}
+		b = ProcessSnippets(b, projectName)
 		str := string(b)
 		destinationFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + ctxFile
 		err = os.WriteFile(destinationFile, []byte(str), 0755)
