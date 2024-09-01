@@ -1,3 +1,6 @@
+**v2.6.0**
+- Support for snippets in configuration files has been added. This has allowed us to eliminate repetitive code and settings.
+
 **v2.5.0**
 - Added supporting of Shopware
 - Fixed mailcatcher configuration with MP_SMTP_AUTH_ACCEPT_ANY and MP_SMTP_AUTH_ALLOW_INSECURE
