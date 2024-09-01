@@ -1,0 +1,3 @@
+RUN is_composer_version_one="" \
+    && if [[ "{{{php/composer/version}}}" = "2" ]]; then is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [[ "{{{php/composer/version}}}" = "1" ]]; then  is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
+    && if [[ -z "${is_composer_version_one}" ]]; then php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version={{{php/composer/version}}}; fi

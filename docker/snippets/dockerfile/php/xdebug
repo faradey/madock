@@ -1,0 +1,23 @@
+RUN if [[ "{{{php/xdebug/enabled}}}" = "true" ]]; then pecl install -f xdebug-{{{php/xdebug/version}}} \
+    && touch /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "zend_extension=xdebug.so" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.mode={{{php/xdebug/mode}}}" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.output_dir={{{workdir}}}/var" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.profiler_output_name=\"cachegrind.out.%t\"" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.remote_enable=1" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.start_with_request=on" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.remote_autostart=on" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.idekey={{{php/xdebug/ide_key}}}" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.client_host={{{php/xdebug/remote_host}}}" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.remote_host={{{php/xdebug/remote_host}}}" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.remote_port=9003" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.client_port=9003" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.log=/var/www/var/log/xdebug.log" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.log_level=7" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && ln -s /etc/php/{{{php/version}}}/mods-available/xdebug.ini /etc/php/{{{php/version}}}/cli/conf.d/11-xdebug.ini \
+    && ln -s /etc/php/{{{php/version}}}/mods-available/xdebug.ini /etc/php/{{{php/version}}}/fpm/conf.d/11-xdebug.ini; fi
+
+RUN if [[ "{{{php/xdebug/enabled}}}" = "true" && "{{{php/xdebug/mode}}}" = "profile" ]]; then echo "xdebug.profiler_enable=1" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.profiler_output_dir={{{workdir}}}/var" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.xdebug.profiler_enable_trigger=0" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini \
+    && echo "xdebug.profiler_append=0" >> /etc/php/{{{php/version}}}/mods-available/xdebug.ini; fi

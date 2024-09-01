@@ -1,4 +1,10 @@
 {{{include snippets/dockerfile/php/header}}}
+{{{include snippets/dockerfile/php/ioncube}}}
+{{{include snippets/dockerfile/php/composer}}}
+{{{include snippets/dockerfile/php/xdebug}}}
+{{{include snippets/dockerfile/php/ini}}}
+{{{include snippets/dockerfile/php/cron}}}
+{{{include snippets/dockerfile/php/mkdir}}}
 {{{include snippets/dockerfile/php/nodejs}}}
 RUN if [ "{{{magento/cloud/enabled}}}" = "true" ]; then curl -sS https://accounts.magento.cloud/cli/installer | php \
     && cp -r /root/.magento-cloud/ /var/www/ && chown -R {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.magento-cloud && ln -s /var/www/.magento-cloud/bin/magento-cloud /usr/bin/magento-cloud; fi
@@ -18,5 +24,4 @@ RUN mkdir /var/www/n98magerun/ \
 <<<endif>>>
 
 {{{include snippets/dockerfile/php/chown}}}
-
 {{{include snippets/dockerfile/php/footer}}}

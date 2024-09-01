@@ -1,4 +1,10 @@
 {{{include snippets/dockerfile/php/header}}}
+{{{include snippets/dockerfile/php/ioncube}}}
+{{{include snippets/dockerfile/php/composer}}}
+{{{include snippets/dockerfile/php/xdebug}}}
+{{{include snippets/dockerfile/php/ini}}}
+{{{include snippets/dockerfile/php/cron}}}
+{{{include snippets/dockerfile/php/mkdir}}}
 RUN curl -sL https://deb.nodesource.com/setup_{{{nodejs/major_version}}}.x | bash -
 RUN mkdir /var/www/.npm && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.npm && apt install nodejs -y
 ENV YARN_VERSION=1.22.19

@@ -1,4 +1,10 @@
 {{{include snippets/dockerfile/php/header}}}
+{{{include snippets/dockerfile/php/ioncube}}}
+{{{include snippets/dockerfile/php/composer}}}
+{{{include snippets/dockerfile/php/xdebug}}}
+{{{include snippets/dockerfile/php/ini}}}
+{{{include snippets/dockerfile/php/cron}}}
+{{{include snippets/dockerfile/php/mkdir}}}
 {{{include snippets/dockerfile/php/chown}}}
 {{{include snippets/dockerfile/php/nodejs}}}
 {{{include snippets/dockerfile/php/footer}}}
