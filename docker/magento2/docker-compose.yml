@@ -11,23 +11,7 @@ services:
   {{{include snippets/docker-compose-redis.yml}}}
   {{{include snippets/docker-compose-rabbitmq.yml}}}
   {{{include snippets/docker-compose-phpmyadmin.yml}}}
-
-<<<if{{{db2/phpmyadmin/enabled}}}>>>
-  phpmyadmin2:
-    image: {{{db2/phpmyadmin/repository}}}:{{{db2/phpmyadmin/version}}}
-    environment:
-      PMA_HOST: "db2"
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-      PMA_ABSOLUTE_URI: "http://{{{nginx/host_name_default}}}/phpmyadmin2/"
-      PMA_USER: root
-      PMA_PASSWORD: {{{db2/root_password}}}
-      UPLOAD_LIMIT: 2G
-    ports:
-      - "{{{nginx/port/project+7}}}:80"
-<<<endif>>>
-    <<<if{{{db2/phpmyadmin/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-phpmyadmin2.yml}}}
 
 <<<if{{{search/elasticsearch/dashboard/enabled}}}>>>
   kibana:
