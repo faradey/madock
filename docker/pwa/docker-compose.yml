@@ -1,4 +1,4 @@
-{{{include snippets/docker-compose-container-name.yml}}}
+{{{include snippets/docker-compose/container-name.yml}}}
 services:
   nodejs:
     build:
@@ -32,4 +32,4 @@ services:
       - opened
       - isolated<<<endif>>>
 
-{{{include snippets/docker-compose-networks.yml}}}
+{{{include snippets/docker-compose/networks.yml}}}

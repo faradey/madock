@@ -1,19 +1,19 @@
-{{{include snippets/docker-compose-container-name.yml}}}
+{{{include snippets/docker-compose/container-name.yml}}}
 services:
-  {{{include snippets/docker-compose-php.yml}}}
-  {{{include snippets/docker-compose-php-xdebug.yml}}}
-  {{{include snippets/docker-compose-nginx.yml}}}
-  {{{include snippets/docker-compose-db.yml}}}
-  {{{include snippets/docker-compose-db2.yml}}}
-  {{{include snippets/docker-compose-nodejs.yml}}}
-  {{{include snippets/docker-compose-elasticsearch.yml}}}
-  {{{include snippets/docker-compose-opensearch.yml}}}
-  {{{include snippets/docker-compose-redis.yml}}}
-  {{{include snippets/docker-compose-rabbitmq.yml}}}
-  {{{include snippets/docker-compose-phpmyadmin2.yml}}}
-  {{{include snippets/docker-compose-kibana.yml}}}
-  {{{include snippets/docker-compose-opensearchdashboard.yml}}}
-  {{{include snippets/docker-compose-varnish.yml}}}
+  {{{include snippets/docker-compose/php.yml}}}
+  {{{include snippets/docker-compose/php-xdebug.yml}}}
+  {{{include snippets/docker-compose/nginx.yml}}}
+  {{{include snippets/docker-compose/db.yml}}}
+  {{{include snippets/docker-compose/db2.yml}}}
+  {{{include snippets/docker-compose/nodejs.yml}}}
+  {{{include snippets/docker-compose/elasticsearch.yml}}}
+  {{{include snippets/docker-compose/opensearch.yml}}}
+  {{{include snippets/docker-compose/redis.yml}}}
+  {{{include snippets/docker-compose/rabbitmq.yml}}}
+  {{{include snippets/docker-compose/phpmyadmin2.yml}}}
+  {{{include snippets/docker-compose/kibana.yml}}}
+  {{{include snippets/docker-compose/opensearchdashboard.yml}}}
+  {{{include snippets/docker-compose/varnish.yml}}}
 
-{{{include snippets/docker-compose-volumes.yml}}}
-{{{include snippets/docker-compose-networks.yml}}}
+{{{include snippets/docker-compose/volumes.yml}}}
+{{{include snippets/docker-compose/networks.yml}}}
