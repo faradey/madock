@@ -1,0 +1,3 @@
+<<<if{{{php/nodejs/enabled}}}>>>RUN curl -sL https://deb.nodesource.com/setup_{{{nodejs/major_version}}}.x | bash -<<<endif>>>
+RUN mkdir /var/www/.npm && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.npm
+<<<if{{{php/nodejs/enabled}}}>>>RUN apt install nodejs -y<<<endif>>>
