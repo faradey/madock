@@ -17,4 +17,6 @@ RUN mkdir /var/www/n98magerun/ \
     && chmod +x /var/www/n98magerun/n98-magerun2.phar
 <<<endif>>>
 
+{{{include snippets/dockerfile/php/chown}}}
+
 {{{include snippets/dockerfile/php/footer}}}

@@ -1,0 +1,6 @@
+RUN usermod -u {{{os/user/uid}}} -o www-data && groupmod -g {{{os/user/guid}}} -o www-data \
+    && chown -R {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.ssh \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/patches \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/scripts/php \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.composer \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} /usr/bin/composer
