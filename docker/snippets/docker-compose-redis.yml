@@ -1,0 +1,8 @@
+<<<if{{{redis/enabled}}}>>>
+  redisdb:
+    build:
+      context: ctx
+      dockerfile: redis.Dockerfile
+<<<endif>>>
+    <<<if{{{redis/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

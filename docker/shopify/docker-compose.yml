@@ -4,15 +4,7 @@ services:
   {{{include snippets/docker-compose-nginx.yml}}}
   {{{include snippets/docker-compose-db.yml}}}
   {{{include snippets/docker-compose-db2.yml}}}
-
-<<<if{{{redis/enabled}}}>>>
-  redisdb:
-    build:
-      context: ctx
-      dockerfile: redis.Dockerfile
-<<<endif>>>
-    <<<if{{{redis/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-redis.yml}}}
 
 <<<if{{{rabbitmq/enabled}}}>>>
   rabbitmq:
