@@ -1,0 +1,15 @@
+<<<if{{{search/opensearch/dashboard/enabled}}}>>>
+  opensearchdashboard:
+    platform: linux/x86_64
+    image: {{{search/opensearch/dashboard/repository}}}:{{{search/opensearch/version}}}
+    environment:
+      SERVER_BASEPATH: /opensearch-dashboard
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: 'true'
+    ports:
+      - "{{{nginx/port/project+3}}}:5601"
+    depends_on:
+      - opensearch
+<<<endif>>>
+    <<<if{{{search/opensearch/dashboard/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

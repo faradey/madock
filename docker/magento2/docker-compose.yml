@@ -12,37 +12,8 @@ services:
   {{{include snippets/docker-compose-rabbitmq.yml}}}
   {{{include snippets/docker-compose-phpmyadmin.yml}}}
   {{{include snippets/docker-compose-phpmyadmin2.yml}}}
-
-<<<if{{{search/elasticsearch/dashboard/enabled}}}>>>
-  kibana:
-    platform: linux/x86_64
-    image: {{{search/elasticsearch/dashboard/repository}}}:{{{search/elasticsearch/version}}}
-    environment:
-      SERVER_BASEPATH: /kibana
-      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
-    ports:
-      - "{{{nginx/port/project+3}}}:5601"
-    depends_on:
-      - elasticsearch
-<<<endif>>>
-    <<<if{{{search/elasticsearch/dashboard/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
-
-<<<if{{{search/opensearch/dashboard/enabled}}}>>>
-  opensearchdashboard:
-    platform: linux/x86_64
-    image: {{{search/opensearch/dashboard/repository}}}:{{{search/opensearch/version}}}
-    environment:
-      SERVER_BASEPATH: /opensearch-dashboard
-      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
-      DISABLE_SECURITY_DASHBOARDS_PLUGIN: 'true'
-    ports:
-      - "{{{nginx/port/project+3}}}:5601"
-    depends_on:
-      - opensearch
-<<<endif>>>
-    <<<if{{{search/opensearch/dashboard/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+  {{{include snippets/docker-compose-kibana.yml}}}
+  {{{include snippets/docker-compose-opensearchdashboard.yml}}}
   
 <<<if{{{magento/mftf/enabled}}}>>>
   selenium:

@@ -392,31 +392,29 @@ func ProcessSnippets(b []byte, projectName string) []byte {
 	str := string(b)
 	r := regexp.MustCompile(`\{\{\{include snippets/[^\}]+\}\}\}`)
 
-	for index, match := range r.FindAllString(str, -1) {
-		snipperFile := strings.Replace(match, "{{{include ", "", -1)
-		snipperFile = strings.TrimSpace(strings.Replace(snipperFile, "}}}", "", -1))
-		snipperFile = GetSnippetFile(projectName, snipperFile)
-		b2, err := os.ReadFile(snipperFile)
+	for _, match := range r.FindAllString(str, -1) {
+		snippetFile := strings.Replace(match, "{{{include ", "", -1)
+		snippetFile = strings.TrimSpace(strings.Replace(snippetFile, "}}}", "", -1))
+		snippetFile = GetSnippetFile(projectName, snippetFile)
+
+		b2, err := os.ReadFile(snippetFile)
 		if err != nil {
 			logger.Fatal(err)
 		}
 		str = strings.Replace(str, match, string(b2), -1)
-		fmt.Printf("[%d] %s\n", index, match)
-		fmt.Printf("%s\n", snipperFile)
 	}
 
 	return []byte(str)
 }
 
 func GetSnippetFile(projectName, path string) string {
-	var err error
 	snippetFile := paths.GetRunDirPath() + "/.madock/docker/" + strings.Trim(path, "/")
 	if !paths.IsFileExist(snippetFile) {
 		snippetFile = paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + strings.Trim(path, "/")
 		if !paths.IsFileExist(snippetFile) {
 			snippetFile = paths.GetExecDirPath() + "/docker/" + strings.Trim(path, "/")
 			if !paths.IsFileExist(snippetFile) {
-				logger.Fatal(err)
+				logger.Fatal("The file " + path + " does not exist")
 			}
 		}
 	}
