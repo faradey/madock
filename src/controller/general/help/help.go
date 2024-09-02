@@ -16,6 +16,8 @@ func Execute() {
 	fmtc.Warning("Available commands:")
 	describeByLevel("bash", "Connect into container using bash", 0)
 	describeByLevel("--service-name, -s", "Name of container. Optional. Default container: php. For example: php, node, db, db2, nginx", 1)
+	describeByLevel("--user, -u", "User", 1)
+	describeByLevel("--shell", "Shell. Example: bash, sh. Default: bash", 1)
 	describeByLevel("c:f", "Cleaning up static and generated files", 0)
 	describeByLevel("cli", "Execute any commands inside php container. If you want to run several commands you can cover them in the quotes", 0)
 	describeByLevel("cloud", "Executing commands to work with Magento Cloud. Also, can be used the long command: magento-cloud", 0)

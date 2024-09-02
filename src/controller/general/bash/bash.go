@@ -8,6 +8,7 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func Execute() {
@@ -29,7 +30,11 @@ func Execute() {
 	}
 
 	projectName := configs.GetProjectName()
-	cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash")
+	shell := "bash"
+	if args.Shell != "" {
+		shell = strings.TrimSpace(args.Shell)
+	}
+	cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), shell)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

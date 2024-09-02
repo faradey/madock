@@ -58,6 +58,7 @@ type ControllerGeneralBash struct {
 	attr.Arguments
 	Service string `arg:"-s,--service" help:"Service name (php, nginx, db, etc.)"`
 	User    string `arg:"-u,--user" help:"User"`
+	Shell   string `arg:"--shell" help:"Shell. Example: bash, sh. Default: bash"`
 }
 
 type ControllerGeneralCleanCache struct {

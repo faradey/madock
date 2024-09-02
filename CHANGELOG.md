@@ -1,5 +1,6 @@
 **v2.6.0**
 - Support for snippets in configuration files has been added. This has allowed us to eliminate repetitive code and settings.
+- Added the new option `--shell` for `madock bash` command. It can be used `bash` or `sh` as a shell.
 
 **v2.5.0**
 - Added supporting of Shopware
