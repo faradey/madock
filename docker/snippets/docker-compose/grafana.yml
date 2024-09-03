@@ -4,7 +4,7 @@
     environment:
       GF_SERVER_ROOT_URL: "https://{{{nginx/host_name_default}}}/grafana/"
       GF_SERVER_DOMAIN: "{{{nginx/host_name_default}}}"
-      GF_INSTALL_PLUGINS: grafana-clock-panel,redis-datasource
+      GF_INSTALL_PLUGINS: grafana-clock-panel,redis-datasource,redis-app,redis-explorer-app
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
       GF_AUTH_ANONYMOUS_ENABLED: true
       GF_SERVE_FROM_SUB_PATH: true
@@ -29,6 +29,14 @@
           url: http://loki:3100
           basicAuth: false
           isDefault: true
+          version: 1
+          editable: false
+        - name: Redis
+          type: redis-datasource
+          access: proxy 
+          orgId: 1
+          url: redisdb:6379
+          basicAuth: false
           version: 1
           editable: false
         EOF
