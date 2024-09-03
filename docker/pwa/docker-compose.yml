@@ -32,4 +32,5 @@ services:
       - opened
       - isolated<<<endif>>>
 
+  {{{include snippets/docker-compose/grafana.yml}}}
 {{{include snippets/docker-compose/networks.yml}}}

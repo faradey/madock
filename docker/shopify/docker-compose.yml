@@ -8,6 +8,7 @@ services:
   {{{include snippets/docker-compose/rabbitmq.yml}}}
   {{{include snippets/docker-compose/phpmyadmin.yml}}}
   {{{include snippets/docker-compose/phpmyadmin2.yml}}}
+  {{{include snippets/docker-compose/grafana-shopify.yml}}}
 
 volumes:
   dbdata:

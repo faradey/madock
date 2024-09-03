@@ -1,0 +1,32 @@
+scrape_configs:
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          __path__: /var/log/system.log
+
+  - job_name: exception
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: exception
+          __path__: /var/log/exception.log
+
+  - job_name: debug
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: debug
+          __path__: /var/log/debug.log
+
+  - job_name: all
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: all
+          __path__: /var/log/*log
