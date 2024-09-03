@@ -4,7 +4,7 @@
     environment:
       GF_SERVER_ROOT_URL: "https://{{{nginx/host_name_default}}}/grafana/"
       GF_SERVER_DOMAIN: "{{{nginx/host_name_default}}}"
-      GF_INSTALL_PLUGINS: grafana-clock-panel,redis-datasource,redis-app,redis-explorer-app,rabbitmq-prometheus,rabbitmq-stream
+      GF_INSTALL_PLUGINS: grafana-clock-panel,redis-datasource,redis-app,redis-explorer-app
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
       GF_AUTH_ANONYMOUS_ENABLED: true
       GF_SERVE_FROM_SUB_PATH: true
