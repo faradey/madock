@@ -366,7 +366,8 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 
 func processOtherCTXFiles(projectName string) {
 	filesNames := []string{
-		/*"mftf/mftf_runner.sh",*/
+		"grafana/loki-config.yaml",
+		"grafana/promtail-config.yml",
 	}
 	var b []byte
 	var err error
