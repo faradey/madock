@@ -10,8 +10,5 @@ services:
   {{{include snippets/docker-compose/phpmyadmin2.yml}}}
   {{{include snippets/docker-compose/grafana-shopify.yml}}}
 
-volumes:
-  dbdata:
-  <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>
-
+{{{include snippets/docker-compose/volumes.yml}}}
 {{{include snippets/docker-compose/networks.yml}}}
