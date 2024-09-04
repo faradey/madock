@@ -16,6 +16,8 @@ services:
   {{{include snippets/docker-compose/opensearchdashboard.yml}}}
   {{{include snippets/docker-compose/varnish.yml}}}
   {{{include snippets/docker-compose/grafana.yml}}}
+  {{{include snippets/docker-compose/grafana-loki.yml}}}
+  {{{include snippets/docker-compose/grafana-promtail.yml}}}
 
 {{{include snippets/docker-compose/volumes.yml}}}
 {{{include snippets/docker-compose/networks.yml}}}

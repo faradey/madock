@@ -1,0 +1,14 @@
+<<<if{{{magento/mftf/enabled}}}>>>
+  selenium:
+    image: selenium/standalone-chrome:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+    ports:
+      - "{{{nginx/port/project+8}}}:7900"
+    shm_size: '2g'
+    depends_on:
+      - php
+<<<endif>>>
+    <<<if{{{magento/mftf/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
