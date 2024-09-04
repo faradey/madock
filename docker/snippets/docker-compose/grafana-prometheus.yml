@@ -1,0 +1,9 @@
+<<<if{{{grafana/enabled}}}>>>
+  prometheus:
+    image: prom/prometheus
+    command: --config.file=/etc/prometheus/prometheus-config.yml
+    volumes:
+      - ./ctx/grafana/prometheus-config.yml:/etc/prometheus/prometheus-config.yml
+  <<<endif>>>
+    <<<if{{{grafana/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

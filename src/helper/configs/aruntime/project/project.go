@@ -368,6 +368,8 @@ func processOtherCTXFiles(projectName string) {
 	filesNames := []string{
 		"grafana/loki-config.yaml",
 		"grafana/promtail-config.yml",
+		"grafana/prometheus-config.yml",
+		"grafana/mysql-exporter.my.cnf",
 	}
 	var b []byte
 	var err error

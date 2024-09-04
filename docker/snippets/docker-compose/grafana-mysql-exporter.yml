@@ -1,0 +1,8 @@
+<<<if{{{grafana/enabled}}}>>>
+  dbexporter:
+    image: prom/mysqld-exporter
+    volumes:
+      - ./ctx/grafana/mysql-exporter.my.cnf:/.my.cnf
+  <<<endif>>>
+    <<<if{{{grafana/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

@@ -4,7 +4,7 @@
     volumes:
       - ./ctx/grafana/promtail-config.yml:/etc/promtail/config.yml
       - ./src/web/storage/logs:/var/log
-    command: -config.file=/etc/promtail/config.yml
+    command: --config.file=/etc/promtail/config.yml
     depends_on:
       - loki
 <<<endif>>>
