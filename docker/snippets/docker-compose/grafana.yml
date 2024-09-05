@@ -15,6 +15,7 @@
     volumes:
       - grafanadata:/var/lib/grafana
       - ./ctx/grafana/dashboard-mysql.json:/etc/grafana/dashboards/mysql.json
+      - ./ctx/grafana/dashboard-redis.json:/etc/grafana/dashboards/redis.json
     entrypoint:
       - sh
       - -euc
