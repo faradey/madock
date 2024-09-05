@@ -370,6 +370,7 @@ func processOtherCTXFiles(projectName string) {
 		"grafana/promtail-config.yml",
 		"grafana/prometheus-config.yml",
 		"grafana/mysql-exporter.my.cnf",
+		"grafana/dashboard-mysql.json",
 	}
 	var b []byte
 	var err error

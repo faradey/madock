@@ -14,6 +14,7 @@
       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
     volumes:
       - grafanadata:/var/lib/grafana
+      - ./ctx/grafana/dashboard-mysql.json:/etc/grafana/dashboards/mysql.json
     entrypoint:
       - sh
       - -euc
@@ -47,6 +48,20 @@
           basicAuth: false
           version: 1
           editable: false
+        EOF
+        mkdir -p /etc/grafana/provisioning/dashboards
+        cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml
+        apiVersion: 1
+        providers:
+        - name: Default
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: false
+          editable: true
+          allowUiUpdates: false
+          options:
+            path: /etc/grafana/dashboards
         EOF
         /run.sh
     ports:
