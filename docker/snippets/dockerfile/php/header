@@ -7,6 +7,7 @@ RUN ln -snf /usr/share/zoneinfo/{{{php/timezone}}} /etc/localtime && echo {{{php
 
 RUN apt-get clean && apt-get -y update && apt-get install -y locales \
     curl \
+    wget \
     ca-certificates \
     software-properties-common \
     git \
