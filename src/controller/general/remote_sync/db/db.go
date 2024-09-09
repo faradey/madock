@@ -50,7 +50,7 @@ func Execute() {
 		}
 		result = "{\"host\":\"" + args.DbHost + "\",\"dbname\":\"" + args.DbName + "\",\"username\":\"" + args.DbUser + "\",\"password\":\"" + args.DbPassword + "\",\"port\":\"" + args.DbPort + "\"}"
 	} else {
-		if projectConf["platform"] == "magento" {
+		if projectConf["platform"] == "magento2" {
 			result = remote_sync.RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
 		} else if projectConf["platform"] == "shopware" {
 			result = remote_sync.RunCommand(conn, "php -r \"\\$parsed_url=[];\\$env = include('"+remoteDir+"/.env'); $lines = explode(\"\\n\",\\$env); foreach(\\$lines as \\$line){  preg_match(\"/([^#]+)\\=(.*)/\",\\$line,\\$matches);  if(isset(\\$matches[1]) && \\$matches[1] == \"DATABASE_URL\" && !empty(\\$matches[2])){ \\$parsed_url = parse_url(\\$matches[2]); \\$parsed_url = ['username' => \\$parsed_url['user'],'password' => \\$parsed_url['pass'],'host'     => \\$parsed_url['host'],'port'     => \\$parsed_url['port']??\"3306\",'dbname' => ltrim($parsed_url['path'], '/')];   break;  }} echo json_encode(\\$parsed_url);\"")
@@ -62,7 +62,7 @@ func Execute() {
 		result = result[nOpenBrace:]
 	} else {
 		fmt.Println(result)
-		logger.Fatal("Failed to get database authentication data")
+		logger.Fatal("Failed to get database authentication data (row 65)")
 	}
 	if len(result) > 2 {
 		dbAuthData := remote_sync.RemoteDbStruct{}
@@ -107,6 +107,6 @@ func Execute() {
 		fmt.Println("")
 		fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db:import`")
 	} else {
-		fmt.Println("Failed to get database authentication data")
+		fmt.Println("Failed to get database authentication data (row 110)")
 	}
 }
