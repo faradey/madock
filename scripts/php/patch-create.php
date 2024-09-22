@@ -105,7 +105,7 @@ if(file_exists($filePatch)){
                             }
                             $composerPatchesFile = $siteRootPath."/".$patchesFile;
                             $composerPatchesJsonData = json_decode(file_get_contents($composerPatchesFile), true);
-                            if(!empty($composerPatchesJsonData['patches'])) {
+                            if(isset($composerPatchesJsonData['patches'])) {
                                 if(!empty($force) || empty($composerPatchesJsonData['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
                                     $composerPatchesJsonData['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
                                     file_put_contents($composerPatchesFile, json_encode($composerPatchesJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
