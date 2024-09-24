@@ -372,6 +372,7 @@ func processOtherCTXFiles(projectName string) {
 		"grafana/mysql-exporter.my.cnf",
 		"grafana/dashboard-mysql.json",
 		"grafana/dashboard-redis.json",
+		"grafana/dashboard-loki.json",
 	}
 	var b []byte
 	var err error
