@@ -1,4 +1,6 @@
 **v2.6.0**
+- Added Grafana as a service
+- Added Grafana dashboards for Loki, Mysql and Redis
 - Support for snippets in configuration files has been added. This has allowed us to eliminate repetitive code and settings.
 - Added the new option `--shell` for `madock bash` command. It can be used `bash` or `sh` as a shell.
 
