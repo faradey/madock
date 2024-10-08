@@ -89,8 +89,7 @@ if(file_exists($filePatch)){
                         }
                         file_put_contents($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchContent);
 
-
-                        if(!empty($composerJsonData['extra']['patches'])) {
+                        if(isset($composerJsonData['extra']['patches'])) {
                             if(!empty($force) || empty($composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
                                 $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
                                 file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
@@ -98,7 +97,7 @@ if(file_exists($filePatch)){
                             } else {
                                 print("The patch with same title or name has already been created.\n");
                             }
-                        } elseif(!empty($composerJsonData['extra']['patches-file']) || file_exists($siteRootPath."/patches.json")) {
+                        } elseif(isset($composerJsonData['extra']['patches-file']) || file_exists($siteRootPath."/patches.json")) {
                             $patchesFile = $composerJsonData['extra']['patches-file']??'patches.json';
                             if(is_array($patchesFile)){
                                 $patchesFile = $patchesFile[0];
