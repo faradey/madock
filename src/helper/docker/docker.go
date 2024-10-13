@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"encoding/json"
 	"fmt"
 	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -318,6 +319,22 @@ func CronExecute(projectName string, flag, manual bool) {
 				logger.Println(err)
 				fmtc.WarningLn(err.Error())
 			}
+		} else if projectConf["platform"] == "shopify" {
+			data, err := json.Marshal(projectConf)
+			if err != nil {
+				logger.Fatal(err)
+			}
+
+			conf := string(data)
+			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "php", "/var/www/scripts/php/shopify-crontab.php", conf, "0")
+			cmdSub.Stdout = os.Stdout
+			cmdSub.Stderr = os.Stderr
+			err = cmdSub.Run()
+			if err != nil {
+				logger.Println(err)
+				fmtc.WarningLn(err.Error())
+			}
+
 		}
 	} else {
 		cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, "php"), "service", "cron", "status")
@@ -336,6 +353,25 @@ func CronExecute(projectName string, flag, manual bool) {
 						logger.Println(err)
 					} else {
 						fmt.Println("Cron was removed from Magento")
+					}
+				}
+			} else if projectConf["platform"] == "shopify" {
+				data, err := json.Marshal(projectConf)
+				if err != nil {
+					logger.Fatal(err)
+				}
+
+				conf := string(data)
+				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "php", "/var/www/scripts/php/shopify-crontab.php", conf, "1")
+				cmdSub.Stdout = bOut
+				cmdSub.Stderr = bErr
+				err = cmdSub.Run()
+				if manual {
+					if err != nil {
+						logger.Println(bErr)
+						logger.Println(err)
+					} else {
+						fmt.Println("Cron was removed from Shopify")
 					}
 				}
 			}
