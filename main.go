@@ -201,5 +201,4 @@ func main() {
 }
 
 //TODO check rabbitMQ in browser
-//TODO check redis in browser
 //TODO add new argument "--name, -n" to "madock project:remove" CLI command
