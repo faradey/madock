@@ -159,6 +159,11 @@ func makePhpDockerfile(projectName string) {
 	if err != nil {
 		logger.Fatal(err)
 	}
+	projectConf := configs.GetProjectConfig(projectName)
+	nodeMajorVersion := strings.Split(projectConf["nodejs/version"], ".")
+	if len(nodeMajorVersion) > 0 {
+		projectConf["nodejs/major_version"] = nodeMajorVersion[0]
+	}
 
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
@@ -169,7 +174,6 @@ func makePhpDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	projectConf := configs.GetProjectConfig(projectName)
 	if paths.IsFileExist(paths.GetExecDirPath() + "/docker/" + projectConf["platform"] + "/php/DockerfileWithoutXdebug") {
 		dockerDefFile = GetDockerConfigFile(projectName, "php/DockerfileWithoutXdebug", "")
 		b, err = os.ReadFile(dockerDefFile)
