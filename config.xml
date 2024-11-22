@@ -22,6 +22,9 @@
                 <ssl>
                     <enabled>true</enabled>
                 </ssl>
+                <http>
+                    <version>http2</version>
+                </http>
                 <run_type>website</run_type>
                 <default_host_first_level>.test</default_host_first_level>
                 <interface_ip></interface_ip>
