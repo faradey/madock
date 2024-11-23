@@ -111,6 +111,7 @@ func makeProxy(projectName string) {
 					}
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/unsecure}}}", generalConfig["nginx/port/unsecure"], -1)
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/secure}}}", generalConfig["nginx/port/secure"], -1)
+					strReplaced = strings.Replace(strReplaced, "{{{nginx/http/version}}}", generalConfig["nginx/http/version"], -1)
 					for i := 1; i < 20; i++ {
 						strReplaced = strings.Replace(strReplaced, "{{{nginx/port/default+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 					}
@@ -150,7 +151,7 @@ func makeProxy(projectName string) {
 		}
 	}
 
-	allFileData += "\nserver {\n    listen       " + generalConfig["nginx/port/unsecure"] + "  default_server;\n listen " + generalConfig["nginx/port/secure"] + " default_server ssl;\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
+	allFileData += "\nserver {\n    listen       " + generalConfig["nginx/port/unsecure"] + "  default_server;\n listen " + generalConfig["nginx/port/secure"] + " default_server ssl " + generalConfig["nginx/http/version"] + ";\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
 	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
 	err := os.WriteFile(nginxFile, []byte(allFileData), 0755)
@@ -330,7 +331,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 					certPath = distroPaths["default"]
 					updateCertCommand = distroUpdateCert["default"]
 				}
-				
+
 				cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", certPath+"/madockCA.crt")
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
