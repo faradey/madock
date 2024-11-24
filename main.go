@@ -58,7 +58,7 @@ import (
 	"strings"
 )
 
-var appVersion string = "2.6.0"
+var appVersion string = "2.7.0"
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)

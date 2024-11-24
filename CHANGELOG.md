@@ -1,3 +1,10 @@
+**v2.7.0**
+- Fixed the creation patches
+- Fixed the cron for shopify platform
+- Fixed TODO comments
+- Fixed NodeJs major version for php.Docker file
+- Added http2 in the nginx configuration
+
 **v2.6.0**
 - Added Grafana as a service
 - Added Grafana dashboards for Loki, Mysql and Redis
