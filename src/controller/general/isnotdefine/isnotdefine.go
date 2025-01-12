@@ -14,7 +14,7 @@ func Execute(originCommand string) {
 	commands := configs.GetCommands(projectConf)
 	for _, command := range commands {
 		alias := command["alias"]
-		origin := strings.Replace(command["origin"], "_args_", strings.Join(os.Args[1:], " "), 1)
+		origin := strings.Replace(command["origin"], "_args_", strings.Join(os.Args[2:], " "), 1)
 		if alias != "" && origin != "" && alias == originCommand {
 			cmd := exec.Command("bash", "-c", origin)
 			cmd.Stdin = os.Stdin
