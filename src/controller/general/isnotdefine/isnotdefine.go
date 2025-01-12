@@ -6,6 +6,7 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func Execute(originCommand string) {
@@ -13,7 +14,7 @@ func Execute(originCommand string) {
 	commands := configs.GetCommands(projectConf)
 	for _, command := range commands {
 		alias := command["alias"]
-		origin := command["origin"]
+		origin := strings.Replace(command["origin"], "_args_", strings.Join(os.Args[1:], " "), 1)
 		if alias != "" && origin != "" && alias == originCommand {
 			cmd := exec.Command("bash", "-c", origin)
 			cmd.Stdin = os.Stdin
