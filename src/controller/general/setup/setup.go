@@ -5,6 +5,7 @@ import (
 	"fmt"
 	setupCustom "github.com/faradey/madock/src/controller/custom/setup"
 	setupMagento "github.com/faradey/madock/src/controller/magento/setup"
+	setupPrestashop "github.com/faradey/madock/src/controller/prestashop/setup"
 	setupPWA "github.com/faradey/madock/src/controller/pwa/setup"
 	setupShopify "github.com/faradey/madock/src/controller/shopify/setup"
 	setupShopware "github.com/faradey/madock/src/controller/shopware/setup"
@@ -74,5 +75,7 @@ func Execute() {
 		setupCustom.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "shopware" {
 		setupShopware.Execute(projectName, projectConf, continueSetup, args)
+	} else if platform == "prestashop" {
+		setupPrestashop.Execute(projectName, projectConf, continueSetup, args)
 	}
 }
