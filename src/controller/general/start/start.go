@@ -3,6 +3,7 @@ package start
 import (
 	startCustom "github.com/faradey/madock/src/controller/custom/start"
 	startMagento2 "github.com/faradey/madock/src/controller/magento/start"
+	startPrestashop "github.com/faradey/madock/src/controller/prestashop/start"
 	startPwa "github.com/faradey/madock/src/controller/pwa/start"
 	builder2 "github.com/faradey/madock/src/controller/shopify/start"
 	startShopware "github.com/faradey/madock/src/controller/shopware/start"
@@ -20,6 +21,7 @@ func Execute() {
 		projectConf := configs2.GetProjectConfig(projectName)
 		platform := projectConf["platform"]
 		fmtc.SuccessLn("Start containers in detached mode")
+
 		if platform == "magento2" {
 			startMagento2.Execute(projectName, args.WithChown, projectConf)
 		} else if platform == "pwa" {
@@ -30,7 +32,10 @@ func Execute() {
 			startCustom.Execute(projectName, args.WithChown, projectConf)
 		} else if platform == "shopware" {
 			startShopware.Execute(projectName, args.WithChown, projectConf)
+		} else if platform == "prestashop" {
+			startPrestashop.Execute(projectName, args.WithChown, projectConf)
 		}
+
 		fmtc.SuccessLn("Done")
 	} else {
 		fmtc.WarningLn("Set up the project")
