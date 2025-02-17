@@ -44,6 +44,8 @@ func MakeConf(projectName string) {
 		MakeConfCustom(projectName)
 	} else if projectConf["platform"] == "shopware" {
 		MakeConfShopware(projectName)
+	} else if projectConf["platform"] == "prestashop" {
+		MakeConfPrestashop(projectName)
 	}
 	processOtherCTXFiles(projectName)
 }
