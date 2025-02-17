@@ -111,7 +111,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 
 	if args.Download {
-		DownloadPrestashop(projectName, platformVersion, args.SampleData)
+		DownloadPrestashop(projectName, platformVersion)
 	}
 
 	if args.Install {
@@ -119,12 +119,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 }
 
-func DownloadPrestashop(projectName, version string, isSampleData bool) {
+func DownloadPrestashop(projectName, version string) {
 	projectConf := configs2.GetCurrentProjectConfig()
-	sampleData := ""
-	if isSampleData {
-		sampleData = ""
-	}
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 	command := []string{
 		"exec",
@@ -137,11 +133,13 @@ func DownloadPrestashop(projectName, version string, isSampleData bool) {
 		"cd " + workdir + " " +
 			"&& rm -r -f " + workdir + "/download-presta123456789 " +
 			"&& mkdir " + workdir + "/download-presta123456789 " +
-			"&& composer create-project prestashop/prestashop:" + version + " ./download-presta123456789 " +
+			"&& wget -P ./download-presta123456789 https://github.com/PrestaShop/PrestaShop/releases/download/" + version + "/prestashop_" + version + ".zip " +
+			"&& unzip ./download-presta123456789/prestashop_" + version + ".zip " +
+			"&& rm ./download-presta123456789/prestashop_" + version + ".zip " +
 			"&& shopt -s dotglob " +
 			"&& mv  -v ./download-presta123456789/* ./ " +
 			"&& rm -r -f ./download-presta123456789 " +
-			"&& composer install" + sampleData,
+			"&& composer install",
 	}
 	cmd := exec.Command("docker", command...)
 	cmd.Stdin = os.Stdin
