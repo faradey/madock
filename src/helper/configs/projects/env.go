@@ -37,6 +37,8 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 		Custom(config, defVersions, generalConf, projectConf)
 	case "shopware":
 		Shopware(config, defVersions, generalConf, projectConf)
+	case "prestashop":
+		PrestaShop(config, defVersions, generalConf, projectConf)
 	}
 
 	config.Set("cron/enabled", configs2.GetOption("cron/enabled", generalConf, projectConf))
