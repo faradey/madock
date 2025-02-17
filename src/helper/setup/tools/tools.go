@@ -17,7 +17,7 @@ func Platform() string {
 	defVersion := "magento2"
 	setTitleAndRecommended("Platform", &defVersion)
 
-	availableVersions := []string{"", "magento2", "pwa", "custom", "shopify", "shopware"}
+	availableVersions := []string{"", "magento2", "pwa", "custom", "shopify", "shopware", "prestashop"}
 
 	PrepareVersions(availableVersions)
 	Invitation(&defVersion)
