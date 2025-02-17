@@ -29,7 +29,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		}
 	}
 
-	if toolsDefVersions.Php == "" {
+	if args.Download && continueSetup {
 		if platformVersion == "" {
 			fmt.Println("")
 			fmtc.Title("Specify PrestaShop version: ")
