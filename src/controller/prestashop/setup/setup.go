@@ -13,30 +13,30 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
-	"github.com/faradey/madock/src/model/versions/magento2"
+	"github.com/faradey/madock/src/model/versions/prestashop"
 	"os"
 	"os/exec"
 )
 
 func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
-	toolsDefVersions := magento2.GetVersions("")
+	toolsDefVersions := prestashop.GetVersions("")
 
-	mageVersion := ""
+	platformVersion := ""
 	if args.PlatformVersion != "" {
-		mageVersion = args.PlatformVersion
+		platformVersion = args.PlatformVersion
 		if args.Php != "" {
 			toolsDefVersions.Php = args.Php
 		}
 	}
 
 	if toolsDefVersions.Php == "" {
-		if mageVersion == "" {
+		if platformVersion == "" {
 			fmt.Println("")
 			fmtc.Title("Specify PrestaShop version: ")
-			mageVersion, _ = tools.Waiter()
+			platformVersion, _ = tools.Waiter()
 		}
-		if mageVersion != "" {
-			toolsDefVersions = magento2.GetVersions(mageVersion)
+		if platformVersion != "" {
+			toolsDefVersions = prestashop.GetVersions(platformVersion)
 		} else {
 			Execute(projectName, projectConf, continueSetup, args)
 			return
@@ -111,11 +111,11 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 
 	if args.Download {
-		DownloadPrestashop(projectName, mageVersion, args.SampleData)
+		DownloadPrestashop(projectName, platformVersion, args.SampleData)
 	}
 
 	if args.Install {
-		install.Magento(projectName, toolsDefVersions.PlatformVersion)
+		install.PrestaShop(projectName, toolsDefVersions.PlatformVersion, args.SampleData)
 	}
 }
 
@@ -123,7 +123,7 @@ func DownloadPrestashop(projectName, version string, isSampleData bool) {
 	projectConf := configs2.GetCurrentProjectConfig()
 	sampleData := ""
 	if isSampleData {
-		sampleData = " && bin/magento sampledata:deploy"
+		sampleData = ""
 	}
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 	command := []string{
@@ -135,12 +135,12 @@ func DownloadPrestashop(projectName, version string, isSampleData bool) {
 		"bash",
 		"-c",
 		"cd " + workdir + " " +
-			"&& rm -r -f " + workdir + "/download-magento123456789 " +
-			"&& mkdir " + workdir + "/download-magento123456789 " +
-			"&& composer create-project prestashop/prestashop:" + version + " ./download-magento123456789 " +
+			"&& rm -r -f " + workdir + "/download-presta123456789 " +
+			"&& mkdir " + workdir + "/download-presta123456789 " +
+			"&& composer create-project prestashop/prestashop:" + version + " ./download-presta123456789 " +
 			"&& shopt -s dotglob " +
-			"&& mv  -v ./download-magento123456789/* ./ " +
-			"&& rm -r -f ./download-magento123456789 " +
+			"&& mv  -v ./download-presta123456789/* ./ " +
+			"&& rm -r -f ./download-presta123456789 " +
 			"&& composer install" + sampleData,
 	}
 	cmd := exec.Command("docker", command...)

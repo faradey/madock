@@ -7,6 +7,7 @@ import (
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/model/versions/magento2"
+	"github.com/faradey/madock/src/model/versions/prestashop"
 	"github.com/faradey/madock/src/model/versions/shopware"
 	"os"
 	"os/exec"
@@ -19,6 +20,9 @@ func Execute() {
 		Magento(configs.GetProjectName(), toolsDefVersions.PlatformVersion)
 	} else if projectConf["platform"] == "shopware" {
 		toolsDefVersions := shopware.GetVersions("")
+		Shopware(configs.GetProjectName(), toolsDefVersions.PlatformVersion, false)
+	} else if projectConf["platform"] == "prestashop" {
+		toolsDefVersions := prestashop.GetVersions("")
 		Shopware(configs.GetProjectName(), toolsDefVersions.PlatformVersion, false)
 	} else {
 		fmtc.Warning("This command is not supported for " + projectConf["platform"])
@@ -148,4 +152,47 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 	fmtc.SuccessLn("[SUCCESS]: Shopware Admin URI: /admin")
 	fmtc.SuccessLn("[SUCCESS]: Shopware Admin User: admin")
 	fmtc.SuccessLn("[SUCCESS]: Shopware Admin Password: shopware")
+}
+
+func PrestaShop(projectName, platformVer string, isSampleData bool) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+
+	installCommand := "php install/index_cli.php " +
+		"--domain=" + host + " " +
+		"--db_server=db " +
+		"--db_name=magento " +
+		"--db_user=magento " +
+		"--db_password=magento " +
+		"--firstname=" + projectConf["magento/admin_first_name"] + " " +
+		"--lastname=" + projectConf["magento/admin_last_name"] + " " +
+		"--email=" + projectConf["magento/admin_email"] + " " +
+		"--password=" + projectConf["magento/admin_password"] + " " +
+		"--language=" + projectConf["magento/locale"] + " " +
+		"--timezone=" + projectConf["magento/timezone"] + " " +
+		"--rewrite=1 " + " " +
+		"--ssl=1 "
+
+	if isSampleData {
+		installCommand += " --fixtures=1 "
+	}
+
+	fmt.Println(installCommand)
+	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		logger.Fatal(err)
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: PrestaShop installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: PrestaShop Admin URI: /admin")
+	fmtc.SuccessLn("[SUCCESS]: PrestaShop Admin User: " + projectConf["magento/admin_email"])
+	fmtc.SuccessLn("[SUCCESS]: PrestaShop Admin Password: " + projectConf["magento/admin_password"])
 }
