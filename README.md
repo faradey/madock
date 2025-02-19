@@ -21,6 +21,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * **Shopify** as a separate service. Learn [more](docs/shopify.md)
 * **Custom PHP project** as a separate service
 * **Shopware** as a separate service
+* **PrestaShop** as a separate service
 * Cron support
 * Flexible configuration for each project
 * Database import and export in two clicks

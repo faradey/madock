@@ -1,3 +1,8 @@
+**v2.8.0**
+- Added **PrestaShop** as a separate service
+- Fixed "composer" command for Shopify service
+- Improved custom commands and documentation
+
 **v2.7.0**
 - Fixed the creation of patches
 - Fixed the cron for Shopify platform
