@@ -137,8 +137,7 @@ func DownloadPrestashop(projectName, version string) {
 			"&& unzip ./download-presta123456789/prestashop_" + version + ".zip -d ./download-presta123456789/" +
 			"&& rm ./download-presta123456789/prestashop_" + version + ".zip " +
 			"&& unzip ./download-presta123456789/prestashop.zip " +
-			"&& rm -r -f ./download-presta123456789 " +
-			"&& composer install",
+			"&& rm -r -f ./download-presta123456789 ",
 	}
 	cmd := exec.Command("docker", command...)
 	cmd.Stdin = os.Stdin

@@ -172,7 +172,6 @@ func PrestaShop(projectName, platformVer string, isSampleData bool) {
 		"--lastname=" + projectConf["magento/admin_last_name"] + " " +
 		"--email=" + projectConf["magento/admin_email"] + " " +
 		"--password=" + projectConf["magento/admin_password"] + " " +
-		"--language=" + projectConf["magento/locale"] + " " +
 		"--timezone=" + projectConf["magento/timezone"] + " " +
 		"--rewrite=1 " + " " +
 		"--ssl=1 "
