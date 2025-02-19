@@ -134,10 +134,9 @@ func DownloadPrestashop(projectName, version string) {
 			"&& rm -r -f " + workdir + "/download-presta123456789 " +
 			"&& mkdir " + workdir + "/download-presta123456789 " +
 			"&& wget -P ./download-presta123456789 https://github.com/PrestaShop/PrestaShop/releases/download/" + version + "/prestashop_" + version + ".zip " +
-			"&& unzip ./download-presta123456789/prestashop_" + version + ".zip " +
+			"&& unzip ./download-presta123456789/prestashop_" + version + ".zip -d ./download-presta123456789/" +
 			"&& rm ./download-presta123456789/prestashop_" + version + ".zip " +
-			"&& shopt -s dotglob " +
-			"&& mv  -v ./download-presta123456789/* ./ " +
+			"&& unzip ./download-presta123456789/prestashop.zip " +
 			"&& rm -r -f ./download-presta123456789 " +
 			"&& composer install",
 	}
