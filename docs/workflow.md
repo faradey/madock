@@ -196,6 +196,8 @@ This command shows you the following items:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--force, -f`     Replace patch if it already exists
 
+* `prestashop` or `ps`   Execute PrestaShop command inside php container. For example: `madock ps about`
+
 
 * `project:clone`   Clone project. For example: `madock project:clone --name=project_name`
 

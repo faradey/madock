@@ -61,6 +61,8 @@ func Execute() {
 	describeByLevel("--name, -n", "Name of the patch file", 1)
 	describeByLevel("--title, -t", "Title of the patch", 1)
 	describeByLevel("--force, -f", "Replace patch if it already exists", 1)
+	describeByLevel("prestashop", "Execute PrestaShop command inside php container", 0)
+	describeByLevel("ps", "The short alias of `prestashop` command", 0)
 	describeByLevel("project:clone", "Clone project. For example: madock project:clone --name=project_name", 0)
 	describeByLevel("--name, -n", "Name of the new project", 1)
 	describeByLevel("project:remove", "Remove project (project folder, Madock project configuration, volumes, images, containers)", 0)

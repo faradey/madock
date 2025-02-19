@@ -46,6 +46,7 @@ import (
 	"github.com/faradey/madock/src/controller/magento/cloud"
 	"github.com/faradey/madock/src/controller/magento/mftf"
 	"github.com/faradey/madock/src/controller/magento/n98"
+	"github.com/faradey/madock/src/controller/prestashop"
 	"github.com/faradey/madock/src/controller/pwa"
 	"github.com/faradey/madock/src/controller/shopify"
 	"github.com/faradey/madock/src/controller/shopify/frontend"
@@ -129,6 +130,8 @@ func main() {
 		open.Execute()
 	case "patch:create":
 		patch.Execute()
+	case "prestashop", "ps":
+		prestashop.Execute()
 	case "project:clone":
 		clone.Execute()
 	case "project:remove":
