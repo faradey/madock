@@ -5,7 +5,7 @@ php:
     volumes:
       - ./src:/var/www/html:cached
       - ./composer:/var/www/.composer:cached
-      - ./ssh/id_rsa:/var/www/.ssh/id_rsa:ro
+      - ./ssh:/var/www/.ssh:ro
       - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
       - ./ctx/scripts/:/var/www/scripts/:cached
     environment:
