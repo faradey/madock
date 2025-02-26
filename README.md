@@ -167,6 +167,7 @@ IMPORTANT: Please, read all items before starting work.
 * [Database import, export, synchronization, phpmyadmin](docs/database.md)
 * [Media synchronization](docs/media.md)
 * [Cron](docs/cron.md)
+* [ENV variables](docs/env.md)
 * Kibana. URL http://{you_domain_name}/kibana
 * Mailhog. Default URL http://localhost:8025
 

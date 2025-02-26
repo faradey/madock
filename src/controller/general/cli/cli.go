@@ -20,11 +20,17 @@ func Execute() {
 
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", "")
 
+	interactivePlusTTY := "-it"
+
+	if os.Getenv("MADOCK_TTY_ENABLED") == "0" {
+		interactivePlusTTY = "-i"
+	}
+
 	if workdir != "" {
 		workdir = "cd " + workdir + " && "
 	}
 
-	cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash", "-c", workdir+flag)
+	cmd := exec.Command("docker", "exec", interactivePlusTTY, "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash", "-c", workdir+flag)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
