@@ -23,7 +23,7 @@ func Execute() {
 		Shopware(configs.GetProjectName(), toolsDefVersions.PlatformVersion, false)
 	} else if projectConf["platform"] == "prestashop" {
 		toolsDefVersions := prestashop.GetVersions("")
-		Shopware(configs.GetProjectName(), toolsDefVersions.PlatformVersion, false)
+		PrestaShop(configs.GetProjectName(), toolsDefVersions.PlatformVersion, false)
 	} else {
 		fmtc.Warning("This command is not supported for " + projectConf["platform"])
 	}
