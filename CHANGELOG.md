@@ -222,7 +222,7 @@ Thanks @artmouse @serhii-chernenko
 **1.5.0**
 - Added new options for the setup command:    
   - --download - Download the specific Magento version from Composer to the container
-  - --install - Install Magento from the source code
+  - --install - Install Magento, Shopware, etc. from the source code
 - Added new command madock db info. This command prints data for connecting to the database. The output contains a port (permanent) for connecting such database programs as HeidiSQL, MySQL Workbench, and others
 - Support Windows OS
 

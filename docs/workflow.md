@@ -154,7 +154,7 @@ This command shows you the following items:
 * `info`   Show information about third-parties modules (name, current version, latest version, status)             
     
     
-* `install`   Install Magento. It is a synonym for `madock magento setup:install` with additional actions.            
+* `install`   Install Magento, Shopware, etc.            
     
     
 * `help`    Displays help for commands
@@ -300,9 +300,9 @@ This command shows you the following items:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--download, -d`   Download the specific Magento version from Composer to the container
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--install, -i`   Install Magento from the source code
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--install, -i`   Install Magento, Shopware, etc. from the source code
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--sample-data, -s`   Install Magento Sample Data          
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--sample-data, -s`   Install Sample Data for Magento, Shopware, etc.         
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--platform`   Platform (magento2, shopify, pwa, custom, etc.)                            
 
