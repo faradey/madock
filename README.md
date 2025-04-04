@@ -10,6 +10,8 @@ Supported platforms: Magento2, PWA, Shopify, Shopware, Custom PHP projects.
 [![GitHub issues](https://img.shields.io/github/issues/faradey/madock.svg)](https://github.com/faradey/madock/issues)
 
 ## Description
+<img alt="Local development environment based on Docker" src="media/madock-logo.png" title="Madock" width="150"/>
+
 `madock` is a local Docker-based environment that allows you to run PHP projects.
 This project is written on Golang, and it is distributed under a MIT License.
 

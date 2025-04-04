@@ -20,4 +20,6 @@
 !/scripts
 !/scripts/*
 !/scripts/**
+!/media
+!/media/*
 .DS_Store
