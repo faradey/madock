@@ -81,7 +81,7 @@ func Magento(projectName, platformVer string) {
 		}
 		installCommand += "&& bin/magento module:disable Magento_TwoFactorAuth "
 	}
-	installCommand += " && bin/magento s:up && bin/magento c:c && bin/magento i:rei | bin/magento c:f"
+	installCommand += " && bin/magento setup:upgrade && bin/magento cache:clean && bin/magento i:rei | bin/magento cache:flush"
 	fmt.Println(installCommand)
 	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
 	cmd.Stdin = os.Stdin
