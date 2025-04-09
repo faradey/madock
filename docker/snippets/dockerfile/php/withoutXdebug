@@ -46,12 +46,23 @@ RUN apt-get update && apt-get install -y php{{{php/version}}}-bcmath \
 
 SHELL ["/bin/bash", "-c"]
 RUN IFS='.' read major minor patch <<< "{{{php/version}}}" \
-    && if [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then pecl install mcrypt-1.0.7 \
-    && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
-    && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{php/version}}}/cli/conf.d/mcrypt.ini" \
-    && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{php/version}}}/fpm/conf.d/mcrypt.ini"; fi \
-    && if [[ "${major}" < "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then apt-get install -y php{{{php/version}}}-mcrypt; fi \
-    && if [[ "${major}" < "7" ]]; then apt-get install -y php{{{php/version}}}-json; fi
+    && if [[ "${major}" = "8" && "${minor}" = "4" ]]; then \
+        # Special handling for PHP 8.4
+        apt-get install -y pkg-config libmcrypt-dev \
+        && pecl channel-update pecl.php.net \
+        && echo "Installing alternative to mcrypt for PHP 8.4" \
+    ; elif [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then \
+        pecl install mcrypt-1.0.7 \
+        && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
+        && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{php/version}}}/cli/conf.d/mcrypt.ini" \
+        && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{php/version}}}/fpm/conf.d/mcrypt.ini" \
+    ; fi \
+    && if [[ "${major}" < "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then \
+        apt-get install -y php{{{php/version}}}-mcrypt \
+    ; fi \
+    && if [[ "${major}" < "7" ]]; then \
+        apt-get install -y php{{{php/version}}}-json \
+    ; fi
 
 RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{php/version}}}-fpm.pid/" /etc/php/{{{php/version}}}/fpm/php-fpm.conf \
     && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/{{{php/version}}}/fpm/php-fpm.conf \
