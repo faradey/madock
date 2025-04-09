@@ -240,6 +240,35 @@ func makeDockerCompose(projectName string) {
 	}
 }
 
+func compareVersions(v1, v2 string) int {
+	parts1 := strings.Split(v1, ".")
+	parts2 := strings.Split(v2, ".")
+
+	maxLength := len(parts1)
+	if len(parts2) > maxLength {
+		maxLength = len(parts2)
+	}
+
+	for i := 0; i < maxLength; i++ {
+		var p1, p2 int
+
+		if i < len(parts1) {
+			p1, _ = strconv.Atoi(parts1[i])
+		}
+		if i < len(parts2) {
+			p2, _ = strconv.Atoi(parts2[i])
+		}
+
+		if p1 > p2 {
+			return 1
+		} else if p1 < p2 {
+			return -1
+		}
+	}
+
+	return 0
+}
+
 func makeDBDockerfile(projectName string) {
 	dockerDefFile := GetDockerConfigFile(projectName, "/db/Dockerfile", "")
 
@@ -268,9 +297,9 @@ func makeDBDockerfile(projectName string) {
 	}
 	b = ProcessSnippets(b, projectName)
 
-	if strings.ToLower(configs.GetProjectConfig(projectName)["db/repository"]) == "mariadb" && configs.GetProjectConfig(projectName)["db/version"] >= "10.4" {
-		b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
-	}
+        if strings.ToLower(configs.GetProjectConfig(projectName)["db/repository"]) == "mariadb" && compareVersions(configs.GetProjectConfig(projectName)["db/version"], "10.4") >= 0 {
+	        b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
+        }
 
 	err = os.WriteFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx/my.cnf", b, 0755)
 	if err != nil {
