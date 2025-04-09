@@ -40,16 +40,16 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 			toolsDefVersions.SearchEngine = args.SearchEngine
 		}
 		if toolsDefVersions.SearchEngine == "Elasticsearch" {
-			if args.Elastic == "" {
+			if args.SearchEngineVersion == "" {
 				tools.Elastic(&toolsDefVersions.Elastic)
 			} else {
-				toolsDefVersions.Elastic = args.Elastic
+				toolsDefVersions.Elastic = args.SearchEngineVersion
 			}
 		} else if toolsDefVersions.SearchEngine == "OpenSearch" {
-			if args.OpenSearch == "" {
+			if args.SearchEngineVersion == "" {
 				tools.OpenSearch(&toolsDefVersions.OpenSearch)
 			} else {
-				toolsDefVersions.OpenSearch = args.OpenSearch
+				toolsDefVersions.OpenSearch = args.SearchEngineVersion
 			}
 		}
 
