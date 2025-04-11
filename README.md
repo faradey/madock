@@ -31,7 +31,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Debug support
 * Synchronization of the local database and media files with the dev site
 * Additional services: phpmyadmin, redis, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
-* LiveReload. Learn [more](docs/config.md)
+* LiveReload. Learn [more](docs/livereload.md)
 * MailHog (email testing tool for developers)
 * Magento Cloud
 * Composer patches in two clicks
