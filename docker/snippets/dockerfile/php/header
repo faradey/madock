@@ -5,7 +5,7 @@ ARG DEBCONF_NOWARNINGS="yes"
 
 RUN ln -snf /usr/share/zoneinfo/{{{php/timezone}}} /etc/localtime && echo {{{php/timezone}}} > /etc/timezone
 
-RUN apt clean && apt update -y --allow-releaseinfo-change && apt install -y locales \
+RUN apt-get clean && apt-get update -y --allow-releaseinfo-change && apt-get install -y locales \
     curl \
     wget \
     ca-certificates \
@@ -29,7 +29,7 @@ RUN apt clean && apt update -y --allow-releaseinfo-change && apt install -y loca
     && locale-gen en_US.UTF-8 \
     && LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
 
-RUN apt update -y --allow-releaseinfo-change && apt install -y php{{{php/version}}}-bcmath \
+RUN apt-get update -y --allow-releaseinfo-change && apt-get install -y php{{{php/version}}}-bcmath \
     php{{{php/version}}}-cli \
     php{{{php/version}}}-common \
     php{{{php/version}}}-curl \
@@ -61,7 +61,7 @@ SHELL ["/bin/bash", "-c"]
 RUN IFS='.' read major minor patch <<< "{{{php/version}}}" \
     && if [[ "${major}" = "8" && "${minor}" = "4" ]]; then \
         # Special handling for PHP 8.4
-        apt install -y pkg-config libmcrypt-dev \
+        apt-get install -y pkg-config libmcrypt-dev \
         && pecl channel-update pecl.php.net \
         && echo "Installing alternative to mcrypt for PHP 8.4" \
     ; elif [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then \
@@ -71,10 +71,10 @@ RUN IFS='.' read major minor patch <<< "{{{php/version}}}" \
         && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/{{{php/version}}}/fpm/conf.d/mcrypt.ini" \
     ; fi \
     && if [[ "${major}" < "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then \
-        apt install -y php{{{php/version}}}-mcrypt \
+        apt-get install -y php{{{php/version}}}-mcrypt \
     ; fi \
     && if [[ "${major}" < "7" ]]; then \
-        apt install -y php{{{php/version}}}-json \
+        apt-get install -y php{{{php/version}}}-json \
     ; fi
 
 RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{php/version}}}-fpm.pid/" /etc/php/{{{php/version}}}/fpm/php-fpm.conf \
