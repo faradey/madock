@@ -1,6 +1,8 @@
 WORKDIR {{{workdir}}}
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && rm -f /var/log/faillog && rm -f /var/log/lastlog
 
 EXPOSE 9001 9003 35729
+
 CMD "php-fpm{{{php/version}}}"

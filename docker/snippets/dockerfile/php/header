@@ -3,9 +3,8 @@ FROM {{{os/name}}}:{{{os/version}}}
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NOWARNINGS="yes"
 
-RUN ln -snf /usr/share/zoneinfo/{{{php/timezone}}} /etc/localtime && echo {{{php/timezone}}} > /etc/timezone
-
-RUN apt-get clean && apt-get -y  --allow-releaseinfo-change update && apt-get install -y locales \
+RUN ln -snf /usr/share/zoneinfo/{{{php/timezone}}} /etc/localtime && echo {{{php/timezone}}} > /etc/timezone \
+    && apt-get clean && apt-get -y  --allow-releaseinfo-change update && apt-get install -y locales \
     curl \
     wget \
     ca-certificates \
@@ -55,7 +54,8 @@ RUN apt-get -y --allow-releaseinfo-change update && apt-get install -y php{{{php
     php{{{php/version}}}-sockets \
     php{{{php/version}}}-tokenizer \
     php{{{php/version}}}-xmlwriter \
-    php{{{php/version}}}-ssh2
+    php{{{php/version}}}-ssh2 \
+    php{{{php/version}}}-redis
 
 SHELL ["/bin/bash", "-c"]
 RUN IFS='.' read major minor patch <<< "{{{php/version}}}" \

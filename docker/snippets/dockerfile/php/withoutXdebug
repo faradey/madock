@@ -3,9 +3,8 @@ FROM {{{os/name}}}:{{{os/version}}}
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NOWARNINGS="yes"
 
-RUN ln -snf /usr/share/zoneinfo/{{{php/timezone}}} /etc/localtime && echo {{{php/timezone}}} > /etc/timezone
-
-RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y locales \
+RUN ln -snf /usr/share/zoneinfo/{{{php/timezone}}} /etc/localtime && echo {{{php/timezone}}} > /etc/timezone \
+    && apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y locales \
     curl \
     ca-certificates \
     software-properties-common \
@@ -42,7 +41,8 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install -y php{{{php/ve
     php{{{php/version}}}-xmlrpc \
     php{{{php/version}}}-xsl \
     php{{{php/version}}}-zip \
-    php{{{php/version}}}-imagick
+    php{{{php/version}}}-imagick \
+    php{{{php/version}}}-redis
 
 SHELL ["/bin/bash", "-c"]
 RUN IFS='.' read major minor patch <<< "{{{php/version}}}" \
@@ -70,12 +70,12 @@ RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{php/version}}}-fpm.pid/" /etc/p
     && sed -i "s/listen = .*/listen = 9000/" /etc/php/{{{php/version}}}/fpm/pool.d/www.conf \
     && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/{{{php/version}}}/fpm/pool.d/www.conf
 
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && rm -f /var/log/faillog && rm -f /var/log/lastlog
 
-RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
-
-RUN usermod -u {{{os/user/uid}}} -o www-data && groupmod -g {{{os/user/guid}}} -o www-data
 WORKDIR {{{workdir}}}
-RUN chown {{{os/user/uid}}}:{{{os/user/guid}}} {{{workdir}}}
+
+RUN usermod -u {{{os/user/uid}}} -o www-data && groupmod -g {{{os/user/guid}}} -o www-data \
+    && chown {{{os/user/uid}}}:{{{os/user/guid}}} {{{workdir}}}
 
 CMD "php-fpm{{{php/version}}}"
