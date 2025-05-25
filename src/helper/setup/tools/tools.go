@@ -97,7 +97,7 @@ func Redis(defVersion *string) {
 
 func RabbitMQ(defVersion *string) {
 	setTitleAndRecommended("RabbitMQ", defVersion)
-	availableVersions := []string{"Custom", "3.13", "3.9", "3.8", "3.7"}
+	availableVersions := []string{"Custom", "4.1", "3.13", "3.12", "3.9", "3.8", "3.7"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)

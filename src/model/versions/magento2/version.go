@@ -179,7 +179,9 @@ func GetRedisVersion(mageVer string) string {
 }
 
 func GetRabbitMQVersion(mageVer string) string {
-	if mageVer >= "2.4.7" {
+	if mageVer >= "2.4.7-p5" {
+		return "4.1"
+	} else if mageVer >= "2.4.7" {
 		return "3.13"
 	} else if mageVer >= "2.4.6" {
 		return "3.11"
