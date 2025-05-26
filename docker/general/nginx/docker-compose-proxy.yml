@@ -13,6 +13,7 @@ services:
       - {{{nginx/interface_ip}}}35729:35729
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    restart: {{{restart_policy}}}
 
   mailcatcher:
     image: axllent/mailpit:latest
@@ -22,3 +23,4 @@ services:
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    restart: {{{restart_policy}}}
