@@ -1,3 +1,20 @@
+**v2.9.0**
+- Added the env variable MADOCK_TTY_ENABLED (0/1). MADOCK_TTY_ENABLED is enabled by default
+- Fixed SSH volume
+- Fixed "install" command for prestashop platform
+- Fixed docs
+- Added logo
+- Fixed GetRunDirPath function for outside executors
+- Added php8.4 support
+- Fixed incorrect version comparison for MariaDB
+- Fixed arguments for the Setup command
+- Fixed Magento2 install subcommands
+- Fixed livereload
+- Fixed apt-get to apt and added --allow-releaseinfo-change
+- Added php-redis library to php installation
+- Fixed RabbitMQ recommended version for Magento 2.4.7-p5 and later
+- Added the restart policy
+
 **v2.8.0**
 - Added **PrestaShop** as a separate service
 - Fixed "composer" command for Shopify service
