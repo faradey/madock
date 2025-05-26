@@ -59,7 +59,7 @@ import (
 	"strings"
 )
 
-var appVersion = "2.8.0"
+var appVersion = "2.9.0"
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
