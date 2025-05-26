@@ -9,6 +9,7 @@
       - "{{{nginx/port/project+3}}}:5601"
     depends_on:
       - elasticsearch
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{search/elasticsearch/dashboard/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

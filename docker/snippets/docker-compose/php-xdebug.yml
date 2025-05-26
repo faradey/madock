@@ -9,6 +9,7 @@
       - "host.docker.internal:host-gateway"
     depends_on:
       - php
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{php/xdebug/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

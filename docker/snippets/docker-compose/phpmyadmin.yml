@@ -13,6 +13,7 @@
       - "{{{nginx/port/project+2}}}:80"
     depends_on:
       - db
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{db/phpmyadmin/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

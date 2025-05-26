@@ -185,6 +185,7 @@
                     <origin>madock cli ls</origin>
                 </ls>
             </custom_commands>-->
+            <restart_policy>no</restart_policy>
         </default>
     </scopes>
 </config>

@@ -14,6 +14,7 @@
       - "{{{nginx/port/project+9}}}:{{{nginx/port/project+9}}}"
     depends_on:
       - nginx
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{varnish/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

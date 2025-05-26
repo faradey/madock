@@ -3,6 +3,7 @@
     build:
       context: ctx
       dockerfile: redis.Dockerfile
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{redis/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

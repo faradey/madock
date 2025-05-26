@@ -3,6 +3,7 @@
     image: prom/mysqld-exporter
     volumes:
       - ./ctx/grafana/mysql-exporter.my.cnf:/.my.cnf
+    restart: {{{restart_policy}}}
   <<<endif>>>
     <<<if{{{grafana/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

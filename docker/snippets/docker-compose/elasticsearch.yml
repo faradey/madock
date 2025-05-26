@@ -21,6 +21,7 @@
       - "index.blocks.read_only_allow_delete"
     volumes:
       - elasticsearch_vlm_{{{search/elasticsearch/version}}}:/usr/share/elasticsearch/data
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{search/elasticsearch/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

@@ -9,6 +9,7 @@
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{nodejs/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

@@ -11,3 +11,4 @@ db:
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
     <<<if{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>
+    restart: {{{restart_policy}}}

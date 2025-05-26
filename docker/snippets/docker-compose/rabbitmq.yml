@@ -1,6 +1,7 @@
 <<<if{{{rabbitmq/enabled}}}>>>
   rabbitmq:
     image: {{{rabbitmq/repository}}}:{{{rabbitmq/version}}}
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{rabbitmq/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

@@ -9,6 +9,7 @@
     shm_size: '2g'
     depends_on:
       - php
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{magento/mftf/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

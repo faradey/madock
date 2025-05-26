@@ -70,6 +70,7 @@
       - "{{{nginx/port/project+10}}}:3000"
     depends_on:
       - loki
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{grafana/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

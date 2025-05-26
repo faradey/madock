@@ -6,6 +6,7 @@
     volumes:
       - ./ctx/grafana/loki-config.yaml:/etc/loki/local-config.yaml
       - lokidata:/loki
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{grafana/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

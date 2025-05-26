@@ -21,6 +21,7 @@
       ES_JAVA_OPTS: '-Xms800m -Xmx800m'
     volumes:
       - opensearch_vlm_{{{search/opensearch/version}}}:/usr/share/opensearch/data
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{search/opensearch/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

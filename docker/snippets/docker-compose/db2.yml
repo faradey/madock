@@ -10,6 +10,7 @@
     volumes:
       - dbdata2:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{db2/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

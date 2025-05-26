@@ -11,6 +11,7 @@
       UPLOAD_LIMIT: 2G
     ports:
       - "{{{nginx/port/project+7}}}:80"
+    restart: {{{restart_policy}}}
 <<<endif>>>
     <<<if{{{db2/phpmyadmin/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

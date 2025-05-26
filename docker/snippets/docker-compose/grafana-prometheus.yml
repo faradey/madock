@@ -4,6 +4,7 @@
     command: --config.file=/etc/prometheus/prometheus-config.yml
     volumes:
       - ./ctx/grafana/prometheus-config.yml:/etc/prometheus/prometheus-config.yml
+    restart: {{{restart_policy}}}
   <<<endif>>>
     <<<if{{{grafana/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>

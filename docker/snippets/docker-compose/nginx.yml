@@ -16,3 +16,4 @@ nginx:
     <<<if{{{isolation/enabled}}}>>>networks:
       - opened
       - isolated<<<endif>>>
+    restart: {{{restart_policy}}}
