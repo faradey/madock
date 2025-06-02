@@ -1,3 +1,7 @@
+**v2.9.1**
+- Added Magento 2.4.8 support
+- Fixed the restart policy for aruntime containers
+
 **v2.9.0**
 - Added the env variable MADOCK_TTY_ENABLED (0/1). MADOCK_TTY_ENABLED is enabled by default
 - Fixed SSH volume
