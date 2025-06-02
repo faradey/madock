@@ -28,7 +28,7 @@ func Platform() string {
 func Php(defVersion *string) {
 	setTitleAndRecommended("PHP", defVersion)
 
-	availableVersions := []string{"Custom", "8.3", "8.2", "8.1", "8.0", "7.4"}
+	availableVersions := []string{"Custom", "8.4", "8.3", "8.2", "8.1", "8.0", "7.4"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -38,7 +38,7 @@ func Php(defVersion *string) {
 func Db(defVersion *string) {
 	setTitleAndRecommended("DB", defVersion)
 
-	availableVersions := []string{"Custom", "11.1", "10.6", "10.4", "10.3", "10.2"}
+	availableVersions := []string{"Custom", "11.4", "11.1", "10.6", "10.4", "10.3", "10.2"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -68,7 +68,7 @@ func SearchEngine(defVersion *string) {
 func Elastic(defVersion *string) {
 	setTitleAndRecommended("Elasticsearch", defVersion)
 
-	availableVersions := []string{"Custom", "8.11.14", "8.4.3", "7.17.5", "7.16.3", "7.10.1"}
+	availableVersions := []string{"Custom", "8.17.6", "8.11.14", "8.4.3", "7.17.5", "7.16.3", "7.10.1"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -78,7 +78,7 @@ func Elastic(defVersion *string) {
 func OpenSearch(defVersion *string) {
 	setTitleAndRecommended("OpenSearch", defVersion)
 
-	availableVersions := []string{"Custom", "2.12.0", "2.5.0", "1.2.0"}
+	availableVersions := []string{"Custom", "2.19.0", "2.12.0", "2.5.0", "1.2.0"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -88,7 +88,7 @@ func OpenSearch(defVersion *string) {
 func Redis(defVersion *string) {
 	setTitleAndRecommended("Redis", defVersion)
 
-	availableVersions := []string{"Custom", "7.2", "7.0", "6.2", "6.0", "5.0"}
+	availableVersions := []string{"Custom", "8.0", "7.2", "7.0", "6.2", "6.0", "5.0"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
@@ -128,7 +128,7 @@ func Hosts(projectName string, defVersion *string, projectConf map[string]string
 func NodeJs(defVersion *string) {
 	setTitleAndRecommended("NodeJs", defVersion)
 
-	availableVersions := []string{"Custom", "18.15.0", "16.20.0"}
+	availableVersions := []string{"Custom", "21.1.0", "20.19.0", "18.15.0", "16.20.0"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)
