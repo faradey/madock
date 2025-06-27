@@ -133,11 +133,11 @@ func DownloadPrestashop(projectName, version string) {
 		"cd " + workdir + " " +
 			"&& rm -r -f " + workdir + "/download-presta123456789 " +
 			"&& mkdir " + workdir + "/download-presta123456789 " +
-			"&& wget -P ./download-presta123456789 https://github.com/PrestaShop/PrestaShop/releases/download/" + version + "/prestashop_" + version + ".zip " +
-			"&& unzip ./download-presta123456789/prestashop_" + version + ".zip -d ./download-presta123456789/" +
-			"&& rm ./download-presta123456789/prestashop_" + version + ".zip " +
-			"&& unzip ./download-presta123456789/prestashop.zip " +
-			"&& rm -r -f ./download-presta123456789 ",
+			"&& wget -P ./download-presta123456789 https://github.com/PrestaShop/PrestaShop/archive/refs/tags/" + version + ".tar.gz " +
+			"&& tar -xzf ./download-presta123456789/" + version + ".tar.gz -C " + workdir +
+			"&& mv ./PrestaShop-" + version + "/* " + workdir +
+			"&& rm -rf ./download-presta123456789 " +
+			"&& rm -rf ./PrestaShop-" + version,
 	}
 	cmd := exec.Command("docker", command...)
 	cmd.Stdin = os.Stdin
