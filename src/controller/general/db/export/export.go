@@ -3,16 +3,18 @@ package export
 import (
 	"compress/gzip"
 	"fmt"
-	"github.com/faradey/madock/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/src/helper/cli/attr"
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/docker"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/faradey/madock/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/src/helper/cli/attr"
+	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/src/helper/docker"
+	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/src/helper/paths"
 )
 
 func Export() {
@@ -52,7 +54,13 @@ func Export() {
 		defer selectedFile.Close()
 		writer := gzip.NewWriter(selectedFile)
 		defer writer.Close()
-		cmd := exec.Command("docker", "exec", "-i", "-u", user, containerName, "bash", "-c", "mysqldump -u root -p"+projectConf["db/root_password"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["db/database"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
+
+		mysqldumpCommandName := "mysqldump"
+		if projectConf["db/repository"] == "mariadb" && project.CompareVersions(projectConf["db/version"], "10.5") != -1 {
+			mysqldumpCommandName = "mariadb-dump"
+		}
+
+		cmd := exec.Command("docker", "exec", "-i", "-u", user, containerName, "bash", "-c", mysqldumpCommandName+" -u root -p"+projectConf["db/root_password"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["db/database"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = writer

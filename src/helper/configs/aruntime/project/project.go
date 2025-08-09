@@ -3,16 +3,17 @@ package project
 import (
 	"bytes"
 	"fmt"
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
-	configs2 "github.com/faradey/madock/src/migration/versions/v240/configs"
 	"log"
 	"os"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/src/helper/paths"
+	configs2 "github.com/faradey/madock/src/migration/versions/v240/configs"
 )
 
 func MakeConf(projectName string) {
@@ -240,7 +241,7 @@ func makeDockerCompose(projectName string) {
 	}
 }
 
-func compareVersions(v1, v2 string) int {
+func CompareVersions(v1, v2 string) int {
 	parts1 := strings.Split(v1, ".")
 	parts2 := strings.Split(v2, ".")
 
@@ -297,9 +298,9 @@ func makeDBDockerfile(projectName string) {
 	}
 	b = ProcessSnippets(b, projectName)
 
-        if strings.ToLower(configs.GetProjectConfig(projectName)["db/repository"]) == "mariadb" && compareVersions(configs.GetProjectConfig(projectName)["db/version"], "10.4") >= 0 {
-	        b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
-        }
+	if strings.ToLower(configs.GetProjectConfig(projectName)["db/repository"]) == "mariadb" && CompareVersions(configs.GetProjectConfig(projectName)["db/version"], "10.4") >= 0 {
+		b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
+	}
 
 	err = os.WriteFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx/my.cnf", b, 0755)
 	if err != nil {
