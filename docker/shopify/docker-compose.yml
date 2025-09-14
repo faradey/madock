@@ -5,6 +5,7 @@ services:
   {{{include snippets/docker-compose/db.yml}}}
   {{{include snippets/docker-compose/db2.yml}}}
   {{{include snippets/docker-compose/redis.yml}}}
+  {{{include snippets/docker-compose/valkey.yml}}}
   {{{include snippets/docker-compose/rabbitmq.yml}}}
   {{{include snippets/docker-compose/phpmyadmin.yml}}}
   {{{include snippets/docker-compose/phpmyadmin2.yml}}}

@@ -112,6 +112,11 @@
                 <repository>redis</repository>
                 <version>7.2.3</version>
             </redis>
+            <valkey>
+                <enabled>false</enabled>
+                <repository>valkey/valkey</repository>
+                <version>8.1.3</version>
+            </valkey>
             <rabbitmq>
                 <enabled>false</enabled>
                 <repository>rabbitmq</repository>

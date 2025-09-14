@@ -20,6 +20,7 @@ type ControllerGeneralSetup struct {
 	SearchEngine        string `arg:"--search-engine" help:"Search Engine"`
 	SearchEngineVersion string `arg:"--search-engine-version" help:"Search Engine Version"`
 	Redis               string `arg:"--redis" help:"Redis version"`
+	Valkey              string `arg:"--valkey" help:"Valkey version"`
 	RabbitMQ            string `arg:"--rabbitmq" help:"RabbitMQ version"`
 	Hosts               string `arg:"--hosts" help:"Hosts"`
 	NodeJs              string `arg:"--nodejs" help:"Node.js version"`

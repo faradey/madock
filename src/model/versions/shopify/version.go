@@ -11,6 +11,7 @@ func GetVersions() versions.ToolsVersions {
 		Db:       "11.1.2",
 		Composer: "2",
 		Redis:    "7.2.1",
+		Valkey:   "8.1.3",
 		RabbitMQ: "3.9.29",
 		Xdebug:   "3.2.2",
 		NodeJs:   "18.15.0",

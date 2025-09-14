@@ -2,6 +2,7 @@ package setup
 
 import (
 	"fmt"
+
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -43,11 +44,19 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		} else {
 			toolsDefVersions.Yarn = args.Yarn
 		}
+
 		if args.Redis == "" {
 			tools.Redis(&toolsDefVersions.Redis)
 		} else {
 			toolsDefVersions.Redis = args.Redis
 		}
+
+		if args.Valkey == "" {
+			tools.Valkey(&toolsDefVersions.Valkey)
+		} else {
+			toolsDefVersions.Valkey = args.Valkey
+		}
+
 		if args.RabbitMQ == "" {
 			tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
 		} else {

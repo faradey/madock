@@ -15,6 +15,7 @@ func GetVersions() versions.ToolsVersions {
 		OpenSearch:   GetOpenSearchVersion(),
 		Composer:     GetComposerVersion(),
 		Redis:        GetRedisVersion(),
+		Valkey:       GetValkeyVersion(),
 		RabbitMQ:     GetRabbitMQVersion(),
 		Xdebug:       GetXdebugVersion(phpVer),
 	}
@@ -46,6 +47,10 @@ func GetComposerVersion() string {
 
 func GetRedisVersion() string {
 	return "7.0"
+}
+
+func GetValkeyVersion() string {
+	return "8.1.3"
 }
 
 func GetRabbitMQVersion() string {

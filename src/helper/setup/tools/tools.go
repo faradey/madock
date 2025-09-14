@@ -3,14 +3,15 @@ package tools
 import (
 	"bufio"
 	"fmt"
-	"github.com/faradey/madock/src/helper/cli/fmtc"
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/faradey/madock/src/helper/cli/fmtc"
+	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/src/helper/paths"
 )
 
 func Platform() string {
@@ -89,6 +90,16 @@ func Redis(defVersion *string) {
 	setTitleAndRecommended("Redis", defVersion)
 
 	availableVersions := []string{"Custom", "8.0", "7.2", "7.0", "6.2", "6.0", "5.0"}
+
+	PrepareVersions(availableVersions)
+	Invitation(defVersion)
+	WaiterAndProceed(defVersion, availableVersions)
+}
+
+func Valkey(defVersion *string) {
+	setTitleAndRecommended("Valkey", defVersion)
+
+	availableVersions := []string{"Custom", "8.1.3"}
 
 	PrepareVersions(availableVersions)
 	Invitation(defVersion)

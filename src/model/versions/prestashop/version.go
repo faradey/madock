@@ -1,8 +1,9 @@
 package prestashop
 
 import (
-	"github.com/faradey/madock/src/model/versions"
 	"strings"
+
+	"github.com/faradey/madock/src/model/versions"
 )
 
 func GetVersions(ver string) versions.ToolsVersions {
@@ -21,6 +22,7 @@ func GetVersions(ver string) versions.ToolsVersions {
 		OpenSearch:      GetOpenSearchVersion(),
 		Composer:        GetComposerVersion(),
 		Redis:           GetRedisVersion(),
+		Valkey:          GetValkeyVersion(),
 		RabbitMQ:        GetRabbitMQVersion(),
 		Xdebug:          versions.GetXdebugVersion(phpVer),
 		PlatformVersion: platformVer,
@@ -56,6 +58,10 @@ func GetComposerVersion() string {
 
 func GetRedisVersion() string {
 	return "7.2"
+}
+
+func GetValkeyVersion() string {
+	return "8.1.3"
 }
 
 func GetRabbitMQVersion() string {

@@ -2,6 +2,8 @@ package setup
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -10,7 +12,6 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions/custom"
-	"strings"
 )
 
 func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
@@ -58,6 +59,13 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		} else {
 			toolsDefVersions.Redis = args.Redis
 		}
+
+		if args.Valkey == "" {
+			tools.Valkey(&toolsDefVersions.Valkey)
+		} else {
+			toolsDefVersions.Valkey = args.Valkey
+		}
+
 		if args.RabbitMQ == "" {
 			tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
 		} else {

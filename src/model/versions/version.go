@@ -9,6 +9,7 @@ type ToolsVersions struct {
 	OpenSearch,
 	Composer,
 	Redis,
+	Valkey,
 	RabbitMQ,
 	Xdebug,
 	Hosts,

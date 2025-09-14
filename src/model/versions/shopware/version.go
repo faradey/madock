@@ -1,8 +1,9 @@
 package shopware
 
 import (
-	"github.com/faradey/madock/src/model/versions"
 	"strings"
+
+	"github.com/faradey/madock/src/model/versions"
 )
 
 func GetVersions(ver string) versions.ToolsVersions {
@@ -21,6 +22,7 @@ func GetVersions(ver string) versions.ToolsVersions {
 		OpenSearch:      GetOpenSearchVersion(swVersion),
 		Composer:        GetComposerVersion(swVersion),
 		Redis:           GetRedisVersion(swVersion),
+		Valkey:          GetValkeyVersion(swVersion),
 		RabbitMQ:        GetRabbitMQVersion(swVersion),
 		Xdebug:          GetXdebugVersion(phpVer),
 		PlatformVersion: swVersion,
@@ -91,6 +93,10 @@ func GetRedisVersion(mageVer string) string {
 	}
 
 	return ""
+}
+
+func GetValkeyVersion(mageVer string) string {
+	return "8.1.3"
 }
 
 func GetRabbitMQVersion(mageVer string) string {

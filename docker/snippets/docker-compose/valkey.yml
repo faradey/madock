@@ -1,0 +1,7 @@
+<<<if{{{valkey/enabled}}}>>>
+  valkeydb:
+    image: {{{valkey/repository}}}:{{{valkey/version}}}
+    restart: {{{restart_policy}}}
+<<<endif>>>
+    <<<if{{{valkey/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

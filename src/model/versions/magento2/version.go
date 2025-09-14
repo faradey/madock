@@ -1,11 +1,12 @@
 package magento2
 
 import (
-	"github.com/faradey/madock/src/helper/paths"
-	"github.com/faradey/madock/src/model/versions"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/src/model/versions"
 )
 
 func GetVersions(ver string) versions.ToolsVersions {
@@ -26,6 +27,7 @@ func GetVersions(ver string) versions.ToolsVersions {
 		OpenSearch:      GetOpenSearchVersion(mageVersion),
 		Composer:        GetComposerVersion(mageVersion),
 		Redis:           GetRedisVersion(mageVersion),
+		Valkey:          GetValkeyVersion(mageVersion),
 		RabbitMQ:        GetRabbitMQVersion(mageVersion),
 		Xdebug:          versions.GetXdebugVersion(phpVer),
 		PlatformVersion: mageVersion,
@@ -186,6 +188,10 @@ func GetRedisVersion(mageVer string) string {
 	}
 
 	return ""
+}
+
+func GetValkeyVersion(mageVer string) string {
+	return "8.1.3"
 }
 
 func GetRabbitMQVersion(mageVer string) string {
