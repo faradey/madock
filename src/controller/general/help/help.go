@@ -2,6 +2,7 @@ package help
 
 import (
 	"fmt"
+
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -43,6 +44,11 @@ func Execute() {
 	describeByLevel("debug:disable", "Disable xdebug", 0)
 	describeByLevel("debug:profile:enable", "Enable xdebug profiling", 0)
 	describeByLevel("debug:profile:disable", "Disable xdebug profiling", 0)
+	describeByLevel("diff", "Generate code diffs between two versions or paths for a platform", 0)
+	describeByLevel("--platform", "Target platform (currently supports: magento)", 1)
+	describeByLevel("--old, -o", "OLD version or path", 1)
+	describeByLevel("--new, -n", "NEW version or path", 1)
+	describeByLevel("--path, -p", "Public output directory relative to site root (default: diffs)", 1)
 	describeByLevel("info", "Show information about third-parties modules (name, current version, latest version, status)", 0)
 	describeByLevel("install", "Install Magento, Shopware, etc.", 0)
 	describeByLevel("help", "Display help for commands", 0)

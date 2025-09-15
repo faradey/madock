@@ -149,6 +149,17 @@ This command shows you the following items:
 
 
 * `debug:profile:disable`   Disable xdebug profiling
+
+
+* `diff`   Generate code diffs between two versions or paths for a platform. For example: `madock diff --platform magento --old 2.4.8-p1 --new 2.4.8-p2 --path diffs`
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--platform`   Target platform (currently supports: magento)
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--old, -o`   OLD version or path
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--new, -n`   NEW version or path
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--path, -p`   Public output directory relative to site root (default: diffs)
                      
    
 * `info`   Show information about third-parties modules (name, current version, latest version, status)             
@@ -195,6 +206,7 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--title, -t`     Title of the patch
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--force, -f`     Replace patch if it already exists
+
 
 * `prestashop` or `ps`   Execute PrestaShop command inside php container. For example: `madock ps about`
 
