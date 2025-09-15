@@ -1,3 +1,9 @@
+**v3.0.0**
+- Introduced a generic diff command: `madock diff --platform <code> --old <ver> --new <ver> [--path <publicDirFromSiteRoot>]`
+- Added store scopes documentation split into a dedicated file `docs/store_scopes.md` and linked from README
+- Added Valkey key-value DB
+- Minor fixes and refactors in diff scripts (path handling and directory creation)
+
 **v2.9.1**
 - Added Magento 2.4.8 support
 - Fixed the restart policy for aruntime containers
