@@ -11,7 +11,7 @@ import (
 	"github.com/faradey/madock/src/controller/general/db/import"
 	info2 "github.com/faradey/madock/src/controller/general/db/info"
 	"github.com/faradey/madock/src/controller/general/debug"
-	magentoDiff "github.com/faradey/madock/src/controller/general/diff/magento"
+	diffController "github.com/faradey/madock/src/controller/general/diff"
 	"github.com/faradey/madock/src/controller/general/help"
 	"github.com/faradey/madock/src/controller/general/info"
 	"github.com/faradey/madock/src/controller/general/install"
@@ -131,8 +131,8 @@ func main() {
 		open.Execute()
 	case "patch:create":
 		patch.Execute()
-	case "diff:magento":
-		magentoDiff.Execute()
+	case "diff":
+		diffController.Execute()
 	case "prestashop", "ps":
 		prestashop.Execute()
 	case "project:clone":
