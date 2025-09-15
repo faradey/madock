@@ -3,11 +3,22 @@ $siteRootPath = $argv[1] ?? '';
 $oldArg = $argv[2] ?? '';
 $newArg = $argv[3] ?? '';
 $publicRel = $argv[4] ?? '';
+$platform = strtolower($argv[5] ?? 'magento');
 
 if (empty($oldArg) || empty($newArg)) {
-    fwrite(STDERR, "Usage: magento-diff.php <siteRoot> <oldVersion|oldPath> <newVersion|newPath> [<publicDirFromSiteRoot>]\n");
-    fwrite(STDERR, "Notes: Generates per-file diffs into /var/www/var/magento_diff/diffs without console output. Public output defaults to /var/www/html/diffs but can be overridden by the 4th argument (path from site root).\n");
+    fwrite(STDERR, "Usage: madock diff <oldVersion|oldPath> <newVersion|newPath> [<publicDirFromSiteRoot>] [<platform>]\n");
+    fwrite(STDERR, "Notes: Generates per-file diffs into /var/www/var/magento_diff/diffs without console output. Public output defaults to /var/www/html/diffs but can be overridden by the 4th argument (path from site root). Platform defaults to 'magento'.\n");
     exit(1);
+}
+
+// Gate by platform: only proceed for Magento for now
+switch ($platform) {
+    case 'magento':
+        // proceed below
+        break;
+    default:
+        fwrite(STDERR, "Platform '$platform' is not supported yet. No diffs generated.\n");
+        exit(0);
 }
 
 function normPath($siteRootPath, $path) {
