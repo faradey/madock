@@ -1,6 +1,10 @@
 package main
 
 import (
+	"log"
+	"os"
+	"strings"
+
 	"github.com/faradey/madock/src/controller/general/bash"
 	"github.com/faradey/madock/src/controller/general/clean_cache"
 	"github.com/faradey/madock/src/controller/general/cli"
@@ -55,12 +59,9 @@ import (
 	"github.com/faradey/madock/src/controller/shopware"
 	"github.com/faradey/madock/src/helper/compress"
 	"github.com/faradey/madock/src/migration"
-	"log"
-	"os"
-	"strings"
 )
 
-var appVersion = "2.9.1"
+var appVersion = "3.0.0"
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
