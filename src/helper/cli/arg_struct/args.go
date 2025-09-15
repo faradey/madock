@@ -100,6 +100,13 @@ type ControllerGeneralPatch struct {
 	Force bool   `arg:"-f,--force" help:"Force"`
 }
 
+type ControllerGeneralMagentoDiff struct {
+	attr.Arguments
+	Old    string `arg:"--old,required" help:"OLD Magento version (e.g., 2.4.8-p1) or path"`
+	New    string `arg:"--new,required" help:"NEW Magento version (e.g., 2.4.8-p2) or path"`
+	Output string `arg:"-o,--output" help:"Output file path to save diff (optional). If omitted, prints to stdout."`
+}
+
 type ControllerGeneralOpen struct {
 	attr.Arguments
 	Service string `arg:"-s,--service" help:"Service name"`
