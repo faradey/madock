@@ -172,6 +172,7 @@ IMPORTANT: Please, read all items before starting work.
 * [ENV variables](docs/env.md)
 * Kibana. URL http://{you_domain_name}/kibana
 * Mailhog. Default URL http://localhost:8025
+* [Store scopes](docs/store_scopes.md): website vs store
 
 ## Donations
 If you find it useful and want to invite us for a beer, just click on the donation button. Thanks!
