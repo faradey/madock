@@ -2,11 +2,10 @@
 $siteRootPath = $argv[1] ?? '';
 $oldArg = $argv[2] ?? '';
 $newArg = $argv[3] ?? '';
-$outputFile = $argv[4] ?? '';
 
 if (empty($oldArg) || empty($newArg)) {
-    fwrite(STDERR, "Usage: magento-diff.php <siteRoot> <oldVersion|oldPath> <newVersion|newPath> [outputFile]\n");
-    fwrite(STDERR, "Examples:\n  magento-diff.php /var/www 2.4.8-p1 2.4.8-p2 var/diffs/magento.patch\n  magento-diff.php /var/www ../releases/2.4.6 ../releases/2.4.7\n");
+    fwrite(STDERR, "Usage: magento-diff.php <siteRoot> <oldVersion|oldPath> <newVersion|newPath>\n");
+    fwrite(STDERR, "Notes: Generates per-file diffs into /var/www/var/magento_diff/diffs without console output.\n");
     exit(1);
 }
 
@@ -27,6 +26,21 @@ function runCmdOrFail(string $cmd, int $exitCode = 10) {
         fwrite(STDERR, "Command failed ($code): $cmd\n" . implode("\n", $output) . "\n");
         exit($exitCode);
     }
+}
+
+function slugifyArg(string $s): string {
+    $s = trim($s);
+    // If it's a path, reduce to a representative form
+    // Replace directory separators with dashes
+    $s = str_replace(['\\\\/','\\'], '/', $s);
+    $s = str_replace('/', '-', $s);
+    // Keep only safe chars: letters, digits, dot, dash, underscore
+    $s = preg_replace('/[^A-Za-z0-9._-]+/', '-', $s);
+    $s = trim($s, '-._');
+    if ($s === '') {
+        $s = 'unknown';
+    }
+    return $s;
 }
 
 $workBase = '/var/www/var/magento_diff';
@@ -80,33 +94,94 @@ recurseCopy($newPath, $newTmp);
 stripCommentsInDir($oldTmp);
 stripCommentsInDir($newTmp);
 
-// Create diff
-$cmd = 'diff -u -r -N ' . escapeshellarg($oldTmp) . ' ' . escapeshellarg($newTmp);
-if (!empty($outputFile)) {
-    $outputFile = normPath($siteRootPath, $outputFile);
-    // Ensure output directory exists
-    $outDir = dirname($outputFile);
+// Create per-file diffs for specific file types only
+$outBase = $workBase . '/diffs';
+if (file_exists($outBase)) deleteDirectory($outBase);
+mkdir($outBase, 0755, true);
+
+$allowedExts = ['php','phtml','html','xml','js','css','less','sass','yaml'];
+$allowedNames = ['composer.json','php.ini'];
+
+$oldList = listAllowedFiles($oldTmp, $allowedExts, $allowedNames);
+$newList = listAllowedFiles($newTmp, $allowedExts, $allowedNames);
+$allRel = array_unique(array_merge(array_keys($oldList), array_keys($newList)));
+sort($allRel);
+
+$diffsCount = 0;
+foreach ($allRel as $rel) {
+    $oldFile = $oldTmp . '/' . $rel;
+    $newFile = $newTmp . '/' . $rel;
+    $outFile = $outBase . '/' . $rel . '.patch';
+    $outDir = dirname($outFile);
     if (!file_exists($outDir)) mkdir($outDir, 0755, true);
-    $cmd .= ' > ' . escapeshellarg($outputFile);
-}
 
-$output = null;
-$responseCode = 0;
-exec($cmd, $output, $responseCode);
+    $oldArgFile = file_exists($oldFile) ? escapeshellarg($oldFile) : '/dev/null';
+    $newArgFile = file_exists($newFile) ? escapeshellarg($newFile) : '/dev/null';
 
-if (empty($outputFile)) {
-    // Print stdout output (when diff writes to stdout)
-    if (is_array($output)) {
-        echo implode("\n", $output);
+    // Build labels for diff headers to include relative paths
+    $labelOld = file_exists($oldFile) ? escapeshellarg('a/' . $rel) : escapeshellarg('a/DEV_NULL');
+    $labelNew = file_exists($newFile) ? escapeshellarg('b/' . $rel) : escapeshellarg('b/DEV_NULL');
+
+    $cmd = 'diff -u -N --label ' . $labelOld . ' --label ' . $labelNew . ' ' . $oldArgFile . ' ' . $newArgFile;
+    $output = [];
+    $code = 0;
+    exec($cmd, $output, $code);
+    if ($code === 1 && !empty($output)) { // differences found
+        file_put_contents($outFile, implode("\n", $output) . "\n");
+        $diffsCount++;
     } else {
-        // No differences or binary differences produce no stdout
-        // Still echo nothing; rely on exit code
+        // No differences; skip creating file if exists
+        if (file_exists($outFile)) @unlink($outFile);
     }
-} else {
-    echo "Diff saved to: {$outputFile}\n";
 }
 
-exit($responseCode);
+// After creating diffs, move them to /var/www/html/diff/magento-{old}-{new}
+$publicBase = '/var/www/html/diffs';
+$oldSlug = slugifyArg($oldArg);
+$newSlug = slugifyArg($newArg);
+$targetDir = $publicBase . '/magento-' . $oldSlug . '-' . $newSlug;
+
+if (!file_exists($publicBase)) {
+    @mkdir($publicBase, 0755, true);
+}
+if (file_exists($targetDir)) {
+    deleteDirectory($targetDir);
+}
+@mkdir($targetDir, 0755, true);
+recurseCopy($outBase, $targetDir);
+// Optionally clean up working diffs directory
+deleteDirectory($outBase);
+
+// Do not print to console; exit 0 regardless
+if ($diffsCount > 0) {
+    fwrite(STDERR, "Generated $diffsCount diffs in $targetDir\n");
+} else {
+    fwrite(STDERR, "No differences found between the specified Magento versions.\n");
+}
+
+exit(0);
+
+function listAllowedFiles(string $root, array $allowedExts, array $allowedNames): array
+{
+    $root = rtrim($root, '/');
+    $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS));
+    $result = [];
+    foreach ($rii as $file) {
+        /** @var SplFileInfo $file */
+        if (!$file->isFile()) continue;
+        $path = $file->getPathname();
+        if (strpos($path, DIRECTORY_SEPARATOR.'.git'.DIRECTORY_SEPARATOR) !== false || strpos($path, DIRECTORY_SEPARATOR.'.idea'.DIRECTORY_SEPARATOR) !== false) {
+            continue;
+        }
+        $rel = ltrim(str_replace($root.'/', '', $path), '/');
+        $name = basename($path);
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if (in_array($name, $allowedNames, true) || in_array($ext, $allowedExts, true)) {
+            $result[$rel] = true;
+        }
+    }
+    return $result;
+}
 
 function stripCommentsInDir(string $dir)
 {
@@ -196,7 +271,7 @@ function recurseCopy(
             }
 
             if (is_dir($sourceDirectory."/".$file) === true) {
-                recurseCopy($sourceDirectory."/".$file, $destinationDirectory."/".$childFolder/$file);
+                recurseCopy($sourceDirectory."/".$file, $destinationDirectory."/".$childFolder."/".$file);
             } else {
                 copy($sourceDirectory."/".$file, $destinationDirectory."/".$childFolder."/".$file);
             }

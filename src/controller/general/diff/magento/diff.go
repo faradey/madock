@@ -16,7 +16,6 @@ func Execute() {
 
 	oldPath := args.Old
 	newPath := args.New
-	output := args.Output
 
 	if oldPath == "" || newPath == "" {
 		logger.Fatal("The --old and --new options are required.")
@@ -27,9 +26,6 @@ func Execute() {
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 
 	cmdArgs := []string{"exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/magento-diff.php", workdir, oldPath, newPath}
-	if output != "" {
-		cmdArgs = append(cmdArgs, output)
-	}
 
 	cmd := exec.Command("docker", cmdArgs...)
 	cmd.Stdin = os.Stdin

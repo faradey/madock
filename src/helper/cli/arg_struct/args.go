@@ -102,9 +102,8 @@ type ControllerGeneralPatch struct {
 
 type ControllerGeneralMagentoDiff struct {
 	attr.Arguments
-	Old    string `arg:"--old,required" help:"OLD Magento version (e.g., 2.4.8-p1) or path"`
-	New    string `arg:"--new,required" help:"NEW Magento version (e.g., 2.4.8-p2) or path"`
-	Output string `arg:"-o,--output" help:"Output file path to save diff (optional). If omitted, prints to stdout."`
+	Old string `arg:"--old,required" help:"OLD Magento version (e.g., 2.4.8-p1) or path"`
+	New string `arg:"--new,required" help:"NEW Magento version (e.g., 2.4.8-p2) or path"`
 }
 
 type ControllerGeneralOpen struct {
