@@ -113,7 +113,6 @@ foreach ($allRel as $rel) {
     $newFile = $newTmp . '/' . $rel;
     $outFile = $outBase . '/' . $rel . '.patch';
     $outDir = dirname($outFile);
-    if (!file_exists($outDir)) mkdir($outDir, 0755, true);
 
     $oldArgFile = file_exists($oldFile) ? escapeshellarg($oldFile) : '/dev/null';
     $newArgFile = file_exists($newFile) ? escapeshellarg($newFile) : '/dev/null';
@@ -127,10 +126,11 @@ foreach ($allRel as $rel) {
     $code = 0;
     exec($cmd, $output, $code);
     if ($code === 1 && !empty($output)) { // differences found
+        if (!file_exists($outDir)) mkdir($outDir, 0755, true);
         file_put_contents($outFile, implode("\n", $output) . "\n");
         $diffsCount++;
     } else {
-        // No differences; skip creating file if exists
+        // No differences; ensure no leftover empty file
         if (file_exists($outFile)) @unlink($outFile);
     }
 }
@@ -149,6 +149,8 @@ if (file_exists($targetDir)) {
 }
 @mkdir($targetDir, 0755, true);
 recurseCopy($outBase, $targetDir);
+// Remove any empty directories in the target directory after copy
+removeEmptyDirectories($targetDir);
 // Optionally clean up working diffs directory
 deleteDirectory($outBase);
 
@@ -210,9 +212,9 @@ function stripCommentsInDir(string $dir)
             // Remove /* ... */ including multiline
             $content = preg_replace('#/\*[^*]*\*+(?:[^/*][^*]*\*+)*/#s', '', $content);
             // Remove // ... to end of line
-            $content = preg_replace('#(^|\s)//.*$#m', '$1', $content);
+            //$content = preg_replace('#(^|\s)//.*$#m', '$1', $content);
             // Remove # ... to end of line
-            $content = preg_replace('/(^|\s)#.*$/m', '$1', $content);
+            //$content = preg_replace('/(^|\s)#.*$/m', '$1', $content);
         }
         if (in_array($ext, $extMapXml, true) || in_array($ext, $extMapHtml, true) || $ext === 'svg' || $ext === 'xhtml') {
             // Remove <!-- ... --> comments
@@ -247,6 +249,39 @@ function deleteDirectory($dir) {
     }
 
     return rmdir($dir);
+}
+
+/**
+ * Remove empty directories within the given directory (does not remove the root itself).
+ */
+function removeEmptyDirectories(string $dir): void {
+    if (!is_dir($dir)) {
+        return;
+    }
+    // Depth-first removal
+    $items = @scandir($dir);
+    if ($items === false) return;
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') continue;
+        $path = $dir . DIRECTORY_SEPARATOR . $item;
+        if (is_dir($path)) {
+            removeEmptyDirectories($path);
+            // After pruning children, if directory is empty, remove it
+            $subItems = @scandir($path);
+            if ($subItems !== false) {
+                $count = 0;
+                foreach ($subItems as $si) {
+                    if ($si !== '.' && $si !== '..') {
+                        $count++;
+                        break;
+                    }
+                }
+                if ($count === 0) {
+                    @rmdir($path);
+                }
+            }
+        }
+    }
 }
 
 function recurseCopy(
