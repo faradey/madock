@@ -25,7 +25,8 @@ func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 
-	cmdArgs := []string{"exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/magento-diff.php", workdir, oldPath, newPath}
+	publicDir := args.Path
+	cmdArgs := []string{"exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/magento-diff.php", workdir, oldPath, newPath, publicDir}
 
 	cmd := exec.Command("docker", cmdArgs...)
 	cmd.Stdin = os.Stdin

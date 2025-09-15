@@ -2,10 +2,11 @@
 $siteRootPath = $argv[1] ?? '';
 $oldArg = $argv[2] ?? '';
 $newArg = $argv[3] ?? '';
+$publicRel = $argv[4] ?? '';
 
 if (empty($oldArg) || empty($newArg)) {
-    fwrite(STDERR, "Usage: magento-diff.php <siteRoot> <oldVersion|oldPath> <newVersion|newPath>\n");
-    fwrite(STDERR, "Notes: Generates per-file diffs into /var/www/var/magento_diff/diffs without console output.\n");
+    fwrite(STDERR, "Usage: magento-diff.php <siteRoot> <oldVersion|oldPath> <newVersion|newPath> [<publicDirFromSiteRoot>]\n");
+    fwrite(STDERR, "Notes: Generates per-file diffs into /var/www/var/magento_diff/diffs without console output. Public output defaults to /var/www/html/diffs but can be overridden by the 4th argument (path from site root).\n");
     exit(1);
 }
 
@@ -135,8 +136,8 @@ foreach ($allRel as $rel) {
     }
 }
 
-// After creating diffs, move them to /var/www/html/diff/magento-{old}-{new}
-$publicBase = '/var/www/html/diffs';
+// After creating diffs, move them to <publicBase>/magento-{old}-{new}
+$publicBase = !empty($publicRel) ? normPath($siteRootPath, $publicRel) : '/var/www/html/diffs';
 $oldSlug = slugifyArg($oldArg);
 $newSlug = slugifyArg($newArg);
 $targetDir = $publicBase . '/magento-' . $oldSlug . '-' . $newSlug;
