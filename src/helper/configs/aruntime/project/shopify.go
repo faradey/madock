@@ -5,4 +5,5 @@ func MakeConfShopify(projectName string) {
 	makeDBDockerfile(projectName)
 	makeRedisDockerfile(projectName)
 	makeScriptsConf(projectName)
+	makeClaudeDockerfile(projectName)
 }

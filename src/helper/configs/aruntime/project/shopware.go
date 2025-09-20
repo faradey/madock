@@ -9,4 +9,5 @@ func MakeConfShopware(projectName string) {
 	makeRedisDockerfile(projectName)
 	makeKibanaConf(projectName)
 	makeScriptsConf(projectName)
+	makeClaudeDockerfile(projectName)
 }
