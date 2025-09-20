@@ -16,7 +16,7 @@ func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()
 	service := "claude"
 
-	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", "")
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", projectConf["workdir"])
 
 	interactivePlusTTY := "-it"
 
