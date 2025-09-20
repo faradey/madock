@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/faradey/madock/src/controller/general/bash"
+	"github.com/faradey/madock/src/controller/general/claude"
 	"github.com/faradey/madock/src/controller/general/clean_cache"
 	"github.com/faradey/madock/src/controller/general/cli"
 	"github.com/faradey/madock/src/controller/general/composer"
@@ -80,6 +81,8 @@ func main() {
 		clean_cache.Execute()
 	case "magento-cloud", "cloud":
 		cloud.Execute()
+	case "claude":
+		claude.Execute()
 	case "cli":
 		cli.Execute()
 	case "composer":
