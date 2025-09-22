@@ -191,6 +191,11 @@
                 </ls>
             </custom_commands>-->
             <restart_policy>no</restart_policy>
+            <claude>
+                <enabled>false</enabled>
+                <nodejs_repository>node</nodejs_repository>
+                <nodejs_version>22.19.0</nodejs_version>
+            </claude>
         </default>
     </scopes>
 </config>

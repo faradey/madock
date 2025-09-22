@@ -94,22 +94,7 @@ func makeKibanaConf(projectName string) {
 }
 
 func makeNginxDockerfile(projectName string) {
-	dockerDefFile := GetDockerConfigFile(projectName, "nginx/Dockerfile", "")
-
-	b, err := os.ReadFile(dockerDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	b = ProcessSnippets(b, projectName)
-	str := string(b)
-	str = configs.ReplaceConfigValue(projectName, str)
-
-	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/nginx.Dockerfile"
-	err = os.WriteFile(nginxFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
+	makeDockerfile(projectName, "nginx/Dockerfile", "nginx.Dockerfile")
 }
 
 func makeNginxConf(projectName string) {
@@ -309,61 +294,27 @@ func makeDBDockerfile(projectName string) {
 }
 
 func makeElasticDockerfile(projectName string) {
-	dockerDefFile := GetDockerConfigFile(projectName, "elasticsearch/Dockerfile", "")
-
-	b, err := os.ReadFile(dockerDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	b = ProcessSnippets(b, projectName)
-	str := string(b)
-	str = configs.ReplaceConfigValue(projectName, str)
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/elasticsearch.Dockerfile"
-	err = os.WriteFile(nginxFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
+	makeDockerfile(projectName, "elasticsearch/Dockerfile", "elasticsearch.Dockerfile")
 }
 
 func makeOpenSearchDockerfile(projectName string) {
-	dockerDefFile := GetDockerConfigFile(projectName, "opensearch/Dockerfile", "")
-
-	b, err := os.ReadFile(dockerDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	b = ProcessSnippets(b, projectName)
-	str := string(b)
-	str = configs.ReplaceConfigValue(projectName, str)
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/opensearch.Dockerfile"
-	err = os.WriteFile(nginxFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
+	makeDockerfile(projectName, "opensearch/Dockerfile", "opensearch.Dockerfile")
 }
 
 func makeRedisDockerfile(projectName string) {
-	dockerDefFile := GetDockerConfigFile(projectName, "redis/Dockerfile", "")
-
-	b, err := os.ReadFile(dockerDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	b = ProcessSnippets(b, projectName)
-	str := string(b)
-	str = configs.ReplaceConfigValue(projectName, str)
-	nginxFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/redis.Dockerfile"
-	err = os.WriteFile(nginxFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
+	makeDockerfile(projectName, "redis/Dockerfile", "redis.Dockerfile")
 }
 
 func makeNodeJsDockerfile(projectName string) {
-	dockerDefFile := GetDockerConfigFile(projectName, "nodejs/Dockerfile", "")
+	makeDockerfile(projectName, "nodejs/Dockerfile", "nodejs.Dockerfile")
+}
+
+func makeClaudeDockerfile(projectName string) {
+	makeDockerfile(projectName, "claude/Dockerfile", "claude.Dockerfile")
+}
+
+func makeDockerfile(projectName, path, fileName string) {
+	dockerDefFile := GetDockerConfigFile(projectName, path, "")
 
 	b, err := os.ReadFile(dockerDefFile)
 	if err != nil {
@@ -373,8 +324,8 @@ func makeNodeJsDockerfile(projectName string) {
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
-	nodeJsFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/nodejs.Dockerfile"
-	err = os.WriteFile(nodeJsFile, []byte(str), 0755)
+	dockerFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/" + fileName
+	err = os.WriteFile(dockerFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -392,7 +343,10 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 		if !paths.IsFileExist(dockerDefFile) {
 			dockerDefFile = paths.GetExecDirPath() + "/docker/" + platform + "/" + strings.Trim(path, "/")
 			if !paths.IsFileExist(dockerDefFile) {
-				logger.Fatal(err)
+				dockerDefFile = paths.GetExecDirPath() + "/docker/general/service/" + strings.Trim(path, "/")
+				if !paths.IsFileExist(dockerDefFile) {
+					logger.Fatal(err)
+				}
 			}
 		}
 	}

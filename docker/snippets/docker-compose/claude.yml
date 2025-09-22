@@ -1,0 +1,15 @@
+  <<<if{{{claude/enabled}}}>>>
+  claude:
+    build:
+      context: ctx
+      dockerfile: claude.Dockerfile
+    tty: true
+    volumes:
+      - ./src:/var/www/html:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+    restart: {{{restart_policy}}}
+    <<<endif>>>
+  <<<if{{{claude/enabled}}}{{{isolation/enabled}}}>>>networks:
+    - isolated<<<endif>>>
