@@ -2,6 +2,9 @@ package install
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -9,8 +12,6 @@ import (
 	"github.com/faradey/madock/src/model/versions/magento2"
 	"github.com/faradey/madock/src/model/versions/prestashop"
 	"github.com/faradey/madock/src/model/versions/shopware"
-	"os"
-	"os/exec"
 )
 
 func Execute() {
@@ -116,7 +117,7 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEX_PREFIX=sw/SHOPWARE_ES_INDEX_PREFIX=swlocal/g' .env "
 	} else if searchEngine == "OpenSearch" {
 		installCommand += "&& sed -i 's/SHOPWARE_ES_ENABLED=0/SHOPWARE_ES_ENABLED=1/g' .env "
-		installCommand += "&& sed -i 's/OPENSEARCH_URL=http:\\/\\/localhost:9200/OPENSEARCH_URL=http:\\/\\/opensearch:9200/g' .env "
+		installCommand += "&& sed -i 's/OPENSEARCH_URL=http:\\/\\/localhost:9200/OPENSEARCH_URL=opensearch:9200/g' .env "
 		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEXING_ENABLED=0/SHOPWARE_ES_INDEXING_ENABLED=1/g' .env "
 		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEX_PREFIX=sw/SHOPWARE_ES_INDEX_PREFIX=swlocal/g' .env "
 	}
