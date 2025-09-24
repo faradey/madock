@@ -191,6 +191,8 @@ func main() {
 		frontend.Execute()
 	case "shopware", "sw":
 		shopware.Execute()
+	case "shopware:bin", "sw:b":
+		shopware.ExecuteBin()
 	case "snapshot:create":
 		create.Execute()
 	case "snapshot:restore":
