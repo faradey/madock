@@ -11,6 +11,7 @@ services:
       - {{{nginx/interface_ip}}}{{{nginx/port/unsecure}}}:80
       - {{{nginx/interface_ip}}}{{{nginx/port/secure}}}:443
       - {{{nginx/interface_ip}}}35729:35729
+      - {{{nginx/interface_ip}}}5173:5173
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: {{{restart_policy}}}
