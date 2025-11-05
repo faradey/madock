@@ -14,4 +14,8 @@ func PWA(config *configs.ConfigLines, defVersions versions.ToolsVersions, genera
 	if _, ok := projectConf["public_dir"]; !ok {
 		config.Set("public_dir", "")
 	}
+
+	if _, ok := projectConf["composer_dir"]; !ok {
+		config.Set("composer_dir", "")
+	}
 }

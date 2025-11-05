@@ -8,7 +8,6 @@ import (
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
 )
 
 func Execute() {
@@ -19,11 +18,7 @@ func Execute() {
 
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 
-	if projectConf["platform"] == "shopify" {
-		if _, err := os.Stat(paths.GetRunDirPath() + "/composer.json"); os.IsNotExist(err) {
-			workdir += "/web"
-		}
-	}
+	workdir += "/" + projectConf["composer_dir"]
 
 	cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash", "-c", "cd "+workdir+" && composer "+flag)
 	cmd.Stdin = os.Stdin

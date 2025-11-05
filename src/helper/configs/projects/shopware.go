@@ -11,6 +11,11 @@ func Shopware(config *configs2.ConfigLines, defVersions versions.ToolsVersions, 
 	if _, ok := projectConf["public_dir"]; !ok {
 		config.Set("public_dir", "public")
 	}
+
+	if _, ok := projectConf["composer_dir"]; !ok {
+		config.Set("composer_dir", "")
+	}
+
 	config.Set("php/version", defVersions.Php)
 	config.Set("php/composer/version", defVersions.Composer)
 	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))

@@ -1,9 +1,10 @@
 package projects
 
 import (
+	"strings"
+
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/model/versions"
-	"strings"
 )
 
 func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
@@ -11,9 +12,15 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 	config.Set("php/version", defVersions.Php)
 	config.Set("php/composer/version", defVersions.Composer)
 	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))
+
 	if _, ok := projectConf["public_dir"]; !ok {
 		config.Set("public_dir", "web/public")
 	}
+
+	if _, ok := projectConf["composer_dir"]; !ok {
+		config.Set("composer_dir", "web")
+	}
+
 	config.Set("php/xdebug/version", versions.GetXdebugVersion(defVersions.Php))
 	config.Set("php/xdebug/remote_host", "host.docker.internal")
 	config.Set("php/xdebug/ide_key", configs2.GetOption("php/xdebug/ide_key", generalConf, projectConf))

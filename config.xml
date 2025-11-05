@@ -32,6 +32,7 @@
             <platform>magento2</platform>
             <workdir>/var/www/html</workdir>
             <public_dir>public</public_dir>
+            <composer_dir></composer_dir>
             <php>
                 <version>8.2</version>
                 <composer>
