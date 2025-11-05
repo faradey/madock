@@ -8,6 +8,7 @@ import (
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/src/helper/paths"
 )
 
 func Execute() {
@@ -19,7 +20,7 @@ func Execute() {
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 
 	if projectConf["platform"] == "shopify" {
-		if _, err := os.Stat(workdir + "/composer.json"); os.IsNotExist(err) {
+		if _, err := os.Stat(paths.GetRunDirPath() + "/composer.json"); os.IsNotExist(err) {
 			workdir += "/web"
 		}
 	}
