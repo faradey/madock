@@ -1,3 +1,3 @@
-FROM nginx:1.21.4
+FROM nginx:1.26
 COPY . /
 EXPOSE 35729
