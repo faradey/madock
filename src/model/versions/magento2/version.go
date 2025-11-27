@@ -135,7 +135,9 @@ func GetSearchEngineVersion(mageVer string) string {
 }
 
 func GetOpenSearchVersion(mageVer string) string {
-	if mageVer >= "2.4.8" {
+	if mageVer >= "2.4.9" {
+		return "3.0.0"
+	} else if mageVer >= "2.4.8" {
 		return "2.19.0"
 	} else if mageVer >= "2.4.7" {
 		return "2.12.0"
