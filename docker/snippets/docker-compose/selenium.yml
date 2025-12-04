@@ -1,6 +1,7 @@
 <<<if{{{magento/mftf/enabled}}}>>>
   selenium:
     image: selenium/standalone-chrome:latest
+    platform: linux/amd64
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}
