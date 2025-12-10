@@ -66,6 +66,10 @@ func Import() {
 			fmt.Println(strconv.Itoa(globalIndex+index+1) + ") " + filepath.Base(dbName) + "  " + dbName)
 		}
 
+		if len(dbNames) == 0 {
+			logger.Fatal("No database files found for import")
+		}
+
 		fmt.Println("Choose one of the offered variants")
 		buf := bufio.NewReader(os.Stdin)
 		sentence, err := buf.ReadBytes('\n')
@@ -76,15 +80,15 @@ func Import() {
 		} else {
 			selectedInt, err = strconv.Atoi(selected)
 
-			if err != nil || selectedInt > len(dbNames) {
+			if err != nil || selectedInt < 1 || selectedInt > len(dbNames) {
 				logger.Fatal("The item you selected was not found")
 			}
 		}
 
-		ext := dbNames[selectedInt-1][len(dbNames[selectedInt-1])-2:]
-		out := &gzip.Reader{}
+		filePath := dbNames[selectedInt-1]
+		ext := strings.ToLower(filepath.Ext(filePath))
 
-		selectedFile, err := os.Open(dbNames[selectedInt-1])
+		selectedFile, err := os.Open(filePath)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -97,20 +101,23 @@ func Import() {
 			mysqlCommandName = "mariadb"
 		}
 
-		var cmd, cmdFKeys *exec.Cmd
-		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["db/database"])
-		cmdFKeys.Run()
+		var cmd *exec.Cmd
+		cmdFKeys := exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["db/database"])
+		if err := cmdFKeys.Run(); err != nil {
+			logger.Fatalln("Failed to disable foreign key checks:", err)
+		}
 		if option != "" {
 			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, option, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
 		} else {
 			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
 		}
 
-		if ext == "gz" {
-			out, err = gzip.NewReader(selectedFile)
+		if ext == ".gz" {
+			out, err := gzip.NewReader(selectedFile)
 			if err != nil {
 				logger.Fatal(err)
 			}
+			defer out.Close()
 			cmd.Stdin = out
 		} else {
 			cmd.Stdin = selectedFile
@@ -120,7 +127,9 @@ func Import() {
 		fmt.Println("Restoring database...")
 		err = cmd.Run()
 		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["db/database"])
-		cmdFKeys.Run()
+		if fkErr := cmdFKeys.Run(); fkErr != nil {
+			logger.Fatalln("Failed to enable foreign key checks:", fkErr)
+		}
 		if err != nil {
 			logger.Fatal(err)
 		}
