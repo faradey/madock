@@ -49,7 +49,8 @@ func ChangeParamName(file string, names map[string]string) {
 	config.EnvFile = file
 
 	for _, line := range confList {
-		if strings.TrimSpace(line) == "" || strings.TrimSpace(line)[:1] == "#" {
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
 			config.AddRawLine(line)
 		} else {
 			opt := strings.Split(strings.TrimSpace(line), "=")

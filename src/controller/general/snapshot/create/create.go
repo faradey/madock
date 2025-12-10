@@ -44,9 +44,8 @@ func GetDB(projectConf map[string]string, projectName string, dbsPath string) {
 	writer := gzip.NewWriter(selectedFile)
 	defer writer.Close()
 	cmd := exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "db"), "bash", "-c", "cd /var/lib/mysql && tar -czf /tmp/db.tar.gz . && cat /tmp/db.tar.gz")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	cmd.Stdout = writer
+	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
 		logger.Fatal(err)
@@ -61,9 +60,8 @@ func GetDB(projectConf map[string]string, projectName string, dbsPath string) {
 		writerDb2 := gzip.NewWriter(selectedFileDb2)
 		defer writerDb2.Close()
 		cmd = exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "db2"), "bash", "-c", "cd /var/lib/mysql && tar -czf /tmp/db2.tar.gz . && cat /tmp/db2.tar.gz")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
 		cmd.Stdout = writerDb2
+		cmd.Stderr = os.Stderr
 		err = cmd.Run()
 		if err != nil {
 			logger.Fatal(err)
@@ -80,9 +78,8 @@ func GetFiles(projectConf map[string]string, projectName string, dbsPath string)
 	writerFiles := gzip.NewWriter(selectedFileFiles)
 	defer writerFiles.Close()
 	cmd := exec.Command("docker", "exec", "-i", "-u", "root", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd /var/www/html && tar -czf /tmp/files.tar.gz . && cat /tmp/files.tar.gz")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	cmd.Stdout = writerFiles
+	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
 		logger.Fatal(err)

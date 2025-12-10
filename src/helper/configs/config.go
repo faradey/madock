@@ -142,8 +142,12 @@ func ReplaceConfigValue(projectName, str string) string {
 		str = strings.Replace(str, "{{{os/user/uid}}}", usr.Uid, -1)
 		str = strings.Replace(str, "{{{os/user/name}}}", usr.Username, -1)
 		str = strings.Replace(str, "{{{os/user/guid}}}", usr.Gid, -1)
-		gr, _ := user.LookupGroupId(usr.Gid)
-		str = strings.Replace(str, "{{{os/user/ugroup}}}", gr.Name, -1)
+		gr, err := user.LookupGroupId(usr.Gid)
+		if err == nil && gr != nil {
+			str = strings.Replace(str, "{{{os/user/ugroup}}}", gr.Name, -1)
+		} else {
+			str = strings.Replace(str, "{{{os/user/ugroup}}}", usr.Username, -1)
+		}
 	} else {
 		logger.Fatal(err)
 	}

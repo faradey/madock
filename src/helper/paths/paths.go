@@ -107,15 +107,16 @@ func GetDBFiles(path string) (dirs []string) {
 	}
 
 	for _, file := range items {
+		fileName := file.Name()
 		if !file.IsDir() {
-			if file.Name()[0:1] != "." &&
-				strings.Contains(strings.ToLower(file.Name()), ".sql") &&
+			if len(fileName) > 0 && !strings.HasPrefix(fileName, ".") &&
+				strings.Contains(strings.ToLower(fileName), ".sql") &&
 				!strings.Contains(strings.ToLower(path), "/dev/tests/acceptance") &&
 				!strings.Contains(strings.ToLower(path), strings.ToLower(strings.Trim(GetRunDirPath(), "/"))+"/vendor/") {
-				dirs = append(dirs, path+"/"+file.Name())
+				dirs = append(dirs, path+"/"+fileName)
 			}
 		} else {
-			dirs = append(dirs, GetDBFiles(path+"/"+file.Name())...)
+			dirs = append(dirs, GetDBFiles(path+"/"+fileName)...)
 		}
 	}
 

@@ -32,6 +32,10 @@ func Execute() {
 		}
 	}
 
+	if len(snapshotNames) == 0 {
+		logger.Fatal("No snapshots found for restore")
+	}
+
 	fmt.Println("Choose one of the offered variants")
 	buf := bufio.NewReader(os.Stdin)
 	sentence, err := buf.ReadBytes('\n')
@@ -42,7 +46,7 @@ func Execute() {
 	} else {
 		selectedInt, err = strconv.Atoi(selected)
 
-		if err != nil || selectedInt > len(snapshotNames) {
+		if err != nil || selectedInt < 1 || selectedInt > len(snapshotNames) {
 			logger.Fatal("The item you selected was not found")
 		}
 	}
@@ -67,6 +71,7 @@ func RestoreSnapshot(projectName string, projectConf map[string]string, selected
 		if err != nil {
 			logger.Fatal(err)
 		}
+		defer out.Close()
 		cmd.Stdin = out
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -83,11 +88,12 @@ func RestoreSnapshot(projectName string, projectConf map[string]string, selected
 		}
 		defer selectedFileDb2.Close()
 		cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/mysql2/mysql/* && cd /var/www/mysql2/mysql && tar -zxf -")
-		out, err := gzip.NewReader(selectedFileDb2)
+		outDb2, err := gzip.NewReader(selectedFileDb2)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		cmd.Stdin = out
+		defer outDb2.Close()
+		cmd.Stdin = outDb2
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
@@ -103,11 +109,12 @@ func RestoreSnapshot(projectName string, projectConf map[string]string, selected
 		}
 		defer selectedFileFiles.Close()
 		cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/html/* && cd /var/www/html && tar -zxf -")
-		out, err := gzip.NewReader(selectedFileFiles)
+		outFiles, err := gzip.NewReader(selectedFileFiles)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		cmd.Stdin = out
+		defer outFiles.Close()
+		cmd.Stdin = outFiles
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()

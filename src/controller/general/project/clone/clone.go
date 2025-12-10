@@ -79,6 +79,7 @@ func Execute() {
 		if err != nil {
 			logger.Fatal(err)
 		}
+		defer out.Close()
 		cmd.Stdin = out
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -99,11 +100,12 @@ func Execute() {
 		}
 		defer selectedFileDb2.Close()
 		cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/mysql2/mysql/* && cd /var/www/mysql2/mysql && tar -zxf -")
-		out, err := gzip.NewReader(selectedFileDb2)
+		outDb2, err := gzip.NewReader(selectedFileDb2)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		cmd.Stdin = out
+		defer outDb2.Close()
+		cmd.Stdin = outDb2
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
@@ -123,11 +125,12 @@ func Execute() {
 		}
 		defer selectedFileFiles.Close()
 		cmd := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c", "rm -rf /var/www/html/* && cd /var/www/html && tar -zxf -")
-		out, err := gzip.NewReader(selectedFileFiles)
+		outFiles, err := gzip.NewReader(selectedFileFiles)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		cmd.Stdin = out
+		defer outFiles.Close()
+		cmd.Stdin = outFiles
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()

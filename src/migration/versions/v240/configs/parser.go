@@ -34,7 +34,8 @@ func getLines(path string) []string {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if len(strings.TrimSpace(line)) > 0 && strings.TrimSpace(line)[:1] != "#" {
+		trimmedLine := strings.TrimSpace(line)
+		if len(trimmedLine) > 0 && !strings.HasPrefix(trimmedLine, "#") {
 			rows = append(rows, line)
 		}
 	}
@@ -56,13 +57,7 @@ func GetAllLines(path string) []string {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if len(strings.TrimSpace(line)) == 0 {
-			rows = append(rows, "")
-		} else if strings.TrimSpace(line)[:1] != "#" {
-			rows = append(rows, line)
-		} else {
-			rows = append(rows, line)
-		}
+		rows = append(rows, line)
 	}
 
 	if err = scanner.Err(); err != nil {

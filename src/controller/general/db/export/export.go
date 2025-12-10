@@ -61,9 +61,8 @@ func Export() {
 		}
 
 		cmd := exec.Command("docker", "exec", "-i", "-u", user, containerName, "bash", "-c", mysqldumpCommandName+" -u root -p"+projectConf["db/root_password"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["db/database"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
 		cmd.Stdout = writer
+		cmd.Stderr = os.Stderr
 		err = cmd.Run()
 		if err != nil {
 			logger.Fatal(err)
