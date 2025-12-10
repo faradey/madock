@@ -4,6 +4,15 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"sync/atomic"
+	"time"
+
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
@@ -11,12 +20,61 @@ import (
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strconv"
-	"strings"
 )
+
+type progressReader struct {
+	reader      io.Reader
+	bytesRead   atomic.Int64
+	totalBytes  int64
+	lastPercent int
+}
+
+func (pr *progressReader) Read(p []byte) (int, error) {
+	n, err := pr.reader.Read(p)
+	if n > 0 {
+		pr.bytesRead.Add(int64(n))
+	}
+	return n, err
+}
+
+func (pr *progressReader) printProgress(done chan struct{}) {
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-done:
+			fmt.Print("\r\033[K")
+			return
+		case <-ticker.C:
+			read := pr.bytesRead.Load()
+			percent := int(float64(read) / float64(pr.totalBytes) * 100)
+			if percent > 100 {
+				percent = 100
+			}
+			fmt.Printf("\rRestoring database... %d%% (%s / %s)", percent, formatBytes(read), formatBytes(pr.totalBytes))
+		}
+	}
+}
+
+func formatBytes(bytes int64) string {
+	const (
+		KB = 1024
+		MB = KB * 1024
+		GB = MB * 1024
+	)
+
+	switch {
+	case bytes >= GB:
+		return fmt.Sprintf("%.1fGB", float64(bytes)/float64(GB))
+	case bytes >= MB:
+		return fmt.Sprintf("%.1fMB", float64(bytes)/float64(MB))
+	case bytes >= KB:
+		return fmt.Sprintf("%.1fKB", float64(bytes)/float64(KB))
+	default:
+		return fmt.Sprintf("%dB", bytes)
+	}
+}
 
 func Import() {
 	projectConf := configs.GetCurrentProjectConfig()
@@ -94,6 +152,12 @@ func Import() {
 		}
 		defer selectedFile.Close()
 
+		fileInfo, err := selectedFile.Stat()
+		if err != nil {
+			logger.Fatal(err)
+		}
+		totalSize := fileInfo.Size()
+
 		containerName := docker.GetContainerName(projectConf, projectName, service)
 
 		mysqlCommandName := "mysql"
@@ -112,20 +176,30 @@ func Import() {
 			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
 		}
 
+		progress := &progressReader{
+			totalBytes: totalSize,
+		}
+
 		if ext == ".gz" {
 			out, err := gzip.NewReader(selectedFile)
 			if err != nil {
 				logger.Fatal(err)
 			}
 			defer out.Close()
-			cmd.Stdin = out
+			progress.reader = out
 		} else {
-			cmd.Stdin = selectedFile
+			progress.reader = selectedFile
 		}
+
+		cmd.Stdin = progress
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		fmt.Println("Restoring database...")
+
+		done := make(chan struct{})
+		go progress.printProgress(done)
+
 		err = cmd.Run()
+		close(done)
 		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["db/database"])
 		if fkErr := cmdFKeys.Run(); fkErr != nil {
 			logger.Fatalln("Failed to enable foreign key checks:", fkErr)
