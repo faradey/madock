@@ -7,6 +7,7 @@ import (
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
@@ -90,13 +91,19 @@ func Import() {
 		defer selectedFile.Close()
 
 		containerName := docker.GetContainerName(projectConf, projectName, service)
+
+		mysqlCommandName := "mysql"
+		if projectConf["db/repository"] == "mariadb" && project.CompareVersions(projectConf["db/version"], "10.5") != -1 {
+			mysqlCommandName = "mariadb"
+		}
+
 		var cmd, cmdFKeys *exec.Cmd
-		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["db/database"])
+		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["db/database"])
 		cmdFKeys.Run()
 		if option != "" {
-			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", option, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
+			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, option, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
 		} else {
-			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
+			cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
 		}
 
 		if ext == "gz" {
@@ -112,7 +119,7 @@ func Import() {
 		cmd.Stderr = os.Stderr
 		fmt.Println("Restoring database...")
 		err = cmd.Run()
-		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, "mysql", "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["db/database"])
+		cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["db/database"])
 		cmdFKeys.Run()
 		if err != nil {
 			logger.Fatal(err)
