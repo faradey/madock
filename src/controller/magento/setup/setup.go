@@ -16,6 +16,7 @@ import (
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/src/helper/preset"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions"
 	"github.com/faradey/madock/src/model/versions/magento2"
@@ -29,17 +30,67 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 	toolsDefVersions := magento2.GetVersions("")
 
 	mageVersion := ""
+	usePreset := false
+
+	// Check if preset is specified via command line
+	if args.Preset != "" {
+		selectedPreset := findPresetByName(args.Preset)
+		if selectedPreset != nil {
+			toolsDefVersions = selectedPreset.Versions
+			mageVersion = toolsDefVersions.PlatformVersion
+			usePreset = true
+			fmtc.SuccessIconLn(fmt.Sprintf("Using preset: %s", selectedPreset.Name))
+		} else {
+			fmtc.WarningLn(fmt.Sprintf("Preset '%s' not found, proceeding with manual configuration", args.Preset))
+		}
+	}
 
 	// Use detected version if available
-	if detectedVersion != "" {
+	if !usePreset && detectedVersion != "" {
 		mageVersion = detectedVersion
 		toolsDefVersions = magento2.GetVersions(mageVersion)
 		fmtc.InfoIconLn(fmt.Sprintf("Using detected Magento version: %s", mageVersion))
-	} else if args.PlatformVersion != "" {
+	} else if !usePreset && args.PlatformVersion != "" {
 		mageVersion = args.PlatformVersion
 		if args.Php != "" {
 			toolsDefVersions.Php = args.Php
 		}
+	}
+
+	// If no preset and no detected version, offer preset selection
+	if !usePreset && detectedVersion == "" && args.PlatformVersion == "" && continueSetup {
+		presets := preset.GetMagentoPresets()
+		presetOptions := make([]fmtc.PresetOption, 0, len(presets)+1)
+
+		for _, p := range presets {
+			presetOptions = append(presetOptions, fmtc.PresetOption{
+				Name:        p.Name,
+				Description: p.Description,
+				IsCustom:    false,
+			})
+		}
+
+		// Add custom option at the end
+		presetOptions = append(presetOptions, fmtc.PresetOption{
+			Name:        preset.CustomPreset.Name,
+			Description: preset.CustomPreset.Description,
+			IsCustom:    true,
+		})
+
+		fmt.Println("")
+		fmtc.TitleLn("Choose a configuration preset:")
+		selectedIdx := fmtc.SelectPreset("Configuration", presetOptions)
+
+		if selectedIdx < len(presets) {
+			// User selected a preset
+			selectedPreset := presets[selectedIdx]
+			toolsDefVersions = selectedPreset.Versions
+			mageVersion = toolsDefVersions.PlatformVersion
+			usePreset = true
+			fmt.Println("")
+			fmtc.SuccessIconLn(fmt.Sprintf("Using preset: %s", selectedPreset.Name))
+		}
+		// If selectedIdx == len(presets), user selected "Custom", continue with manual selection
 	}
 
 	// Initialize progress tracker for setup steps
@@ -58,7 +109,7 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 	tools.InitProgress(setupSteps)
 	currentStep := 1
 
-	if toolsDefVersions.Php == "" && detectedVersion == "" {
+	if !usePreset && toolsDefVersions.Php == "" && detectedVersion == "" {
 		if mageVersion == "" {
 			tools.SetProgressStep(currentStep)
 			fmtc.Title("Specify Magento version: ")
@@ -82,92 +133,103 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 		fmt.Println("")
 		fmtc.Title("Your Magento version is " + toolsDefVersions.PlatformVersion)
 
-		// Step 2: PHP Version
-		tools.SetProgressStep(currentStep)
-		if args.Php == "" {
-			tools.Php(&toolsDefVersions.Php)
-		} else {
-			toolsDefVersions.Php = args.Php
-		}
-		currentStep++
-
-		// Step 3: Database Version
-		tools.SetProgressStep(currentStep)
-		if args.Db == "" {
-			tools.Db(&toolsDefVersions.Db)
-		} else {
-			toolsDefVersions.Db = args.Db
-		}
-		currentStep++
-
-		// Step 4: Composer Version
-		tools.SetProgressStep(currentStep)
-		if args.Composer == "" {
-			tools.Composer(&toolsDefVersions.Composer)
-		} else {
-			toolsDefVersions.Composer = args.Composer
-		}
-		currentStep++
-
-		// Step 5: Search Engine
-		tools.SetProgressStep(currentStep)
-		if args.SearchEngine == "" {
-			tools.SearchEngine(&toolsDefVersions.SearchEngine)
-		} else {
-			toolsDefVersions.SearchEngine = args.SearchEngine
-		}
-		currentStep++
-
-		// Step 6: Search Engine Version
-		tools.SetProgressStep(currentStep)
-		if toolsDefVersions.SearchEngine == "Elasticsearch" {
-			if args.SearchEngineVersion == "" {
-				tools.Elastic(&toolsDefVersions.Elastic)
+		if usePreset {
+			// Skip to hosts configuration when using preset
+			currentStep = 10
+			tools.SetProgressStep(currentStep)
+			if args.Hosts == "" {
+				tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
 			} else {
-				toolsDefVersions.Elastic = args.SearchEngineVersion
+				toolsDefVersions.Hosts = args.Hosts
 			}
-		} else if toolsDefVersions.SearchEngine == "OpenSearch" {
-			if args.SearchEngineVersion == "" {
-				tools.OpenSearch(&toolsDefVersions.OpenSearch)
+		} else {
+			// Step 2: PHP Version
+			tools.SetProgressStep(currentStep)
+			if args.Php == "" {
+				tools.Php(&toolsDefVersions.Php)
 			} else {
-				toolsDefVersions.OpenSearch = args.SearchEngineVersion
+				toolsDefVersions.Php = args.Php
 			}
-		}
-		currentStep++
+			currentStep++
 
-		// Step 7: Redis Version
-		tools.SetProgressStep(currentStep)
-		if args.Redis == "" {
-			tools.Redis(&toolsDefVersions.Redis)
-		} else {
-			toolsDefVersions.Redis = args.Redis
-		}
-		currentStep++
+			// Step 3: Database Version
+			tools.SetProgressStep(currentStep)
+			if args.Db == "" {
+				tools.Db(&toolsDefVersions.Db)
+			} else {
+				toolsDefVersions.Db = args.Db
+			}
+			currentStep++
 
-		// Step 8: Valkey Version
-		tools.SetProgressStep(currentStep)
-		if args.Valkey == "" {
-			tools.Valkey(&toolsDefVersions.Valkey)
-		} else {
-			toolsDefVersions.Valkey = args.Valkey
-		}
-		currentStep++
+			// Step 4: Composer Version
+			tools.SetProgressStep(currentStep)
+			if args.Composer == "" {
+				tools.Composer(&toolsDefVersions.Composer)
+			} else {
+				toolsDefVersions.Composer = args.Composer
+			}
+			currentStep++
 
-		// Step 9: RabbitMQ Version
-		tools.SetProgressStep(currentStep)
-		if args.RabbitMQ == "" {
-			tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
-		} else {
-			toolsDefVersions.RabbitMQ = args.RabbitMQ
-		}
-		currentStep++
+			// Step 5: Search Engine
+			tools.SetProgressStep(currentStep)
+			if args.SearchEngine == "" {
+				tools.SearchEngine(&toolsDefVersions.SearchEngine)
+			} else {
+				toolsDefVersions.SearchEngine = args.SearchEngine
+			}
+			currentStep++
 
-		// Step 10: Hosts Configuration
-		tools.SetProgressStep(currentStep)
-		if args.Hosts == "" {
-			tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
-		} else {
-			toolsDefVersions.Hosts = args.Hosts
+			// Step 6: Search Engine Version
+			tools.SetProgressStep(currentStep)
+			if toolsDefVersions.SearchEngine == "Elasticsearch" {
+				if args.SearchEngineVersion == "" {
+					tools.Elastic(&toolsDefVersions.Elastic)
+				} else {
+					toolsDefVersions.Elastic = args.SearchEngineVersion
+				}
+			} else if toolsDefVersions.SearchEngine == "OpenSearch" {
+				if args.SearchEngineVersion == "" {
+					tools.OpenSearch(&toolsDefVersions.OpenSearch)
+				} else {
+					toolsDefVersions.OpenSearch = args.SearchEngineVersion
+				}
+			}
+			currentStep++
+
+			// Step 7: Redis Version
+			tools.SetProgressStep(currentStep)
+			if args.Redis == "" {
+				tools.Redis(&toolsDefVersions.Redis)
+			} else {
+				toolsDefVersions.Redis = args.Redis
+			}
+			currentStep++
+
+			// Step 8: Valkey Version
+			tools.SetProgressStep(currentStep)
+			if args.Valkey == "" {
+				tools.Valkey(&toolsDefVersions.Valkey)
+			} else {
+				toolsDefVersions.Valkey = args.Valkey
+			}
+			currentStep++
+
+			// Step 9: RabbitMQ Version
+			tools.SetProgressStep(currentStep)
+			if args.RabbitMQ == "" {
+				tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
+			} else {
+				toolsDefVersions.RabbitMQ = args.RabbitMQ
+			}
+			currentStep++
+
+			// Step 10: Hosts Configuration
+			tools.SetProgressStep(currentStep)
+			if args.Hosts == "" {
+				tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
+			} else {
+				toolsDefVersions.Hosts = args.Hosts
+			}
 		}
 
 		// Show completion
@@ -311,4 +373,46 @@ func getSearchEngineItems(v versions.ToolsVersions) []fmtc.SectionItem {
 	return []fmtc.SectionItem{
 		{Key: "Engine", Value: "Not configured"},
 	}
+}
+
+// findPresetByName finds a preset by name or keyword
+func findPresetByName(name string) *preset.Preset {
+	name = strings.ToLower(name)
+	presets := preset.GetMagentoPresets()
+
+	// Try exact match first
+	for _, p := range presets {
+		if strings.ToLower(p.Name) == name {
+			return &p
+		}
+	}
+
+	// Try keyword match (e.g., "247" matches "Magento 2.4.7")
+	for _, p := range presets {
+		lowerName := strings.ToLower(p.Name)
+		if strings.Contains(lowerName, name) ||
+			strings.Contains(strings.ReplaceAll(p.Versions.PlatformVersion, ".", ""), name) ||
+			strings.Contains(p.Versions.PlatformVersion, name) {
+			return &p
+		}
+	}
+
+	// Try common aliases
+	aliases := map[string]string{
+		"latest":  "2.4.7",
+		"lts":     "2.4.6",
+		"legacy":  "2.4.5",
+		"minimal": "Development",
+		"dev":     "Development",
+	}
+
+	if alias, ok := aliases[name]; ok {
+		for _, p := range presets {
+			if strings.Contains(p.Name, alias) || strings.Contains(p.Versions.PlatformVersion, alias) {
+				return &p
+			}
+		}
+	}
+
+	return nil
 }

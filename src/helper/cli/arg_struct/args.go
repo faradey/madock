@@ -14,6 +14,7 @@ type ControllerGeneralSetup struct {
 	Platform            string `arg:"--platform" help:"Platform"`
 	PlatformEdition     string `arg:"--platform-edition" help:"Platform edition"`
 	PlatformVersion     string `arg:"--platform-version" help:"Platform version"`
+	Preset              string `arg:"--preset" help:"Use a preset configuration (e.g., 'magento-247', 'magento-246', 'shopware-65')"`
 	Php                 string `arg:"--php" help:"PHP version"`
 	Db                  string `arg:"--db" help:"DB version"`
 	Composer            string `arg:"--composer" help:"Composer version"`
