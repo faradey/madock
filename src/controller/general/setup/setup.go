@@ -23,6 +23,11 @@ import (
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralSetup)).(*arg_struct.ControllerGeneralSetup)
 
+	// Display setup banner
+	fmt.Println("")
+	fmtc.Banner("MADOCK SETUP", "Docker Environment Configuration")
+	fmt.Println("")
+
 	projectName := configs2.GetProjectName()
 	hasConfig := configs2.IsHasConfig(projectName)
 	continueSetup := true
@@ -48,8 +53,6 @@ func Execute() {
 		fmtc.ErrorLn("The project folder name cannot contain a period or space")
 		return
 	}
-
-	fmtc.SuccessLn("Start set up environment")
 
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 	var projectConf map[string]string
