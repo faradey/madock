@@ -39,101 +39,92 @@ func CompleteProgress() {
 
 func Platform() string {
 	defVersion := "magento2"
-	setTitleAndRecommended("Platform", &defVersion)
-
 	availableVersions := []string{"", "magento2", "pwa", "custom", "shopify", "shopware", "prestashop"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("Platform", availableVersions, defVersion)
 	Invitation(&defVersion)
 	WaiterAndProceed(&defVersion, availableVersions)
 	return defVersion
 }
 
 func Php(defVersion *string) {
-	setTitleAndRecommended("PHP", defVersion)
-
 	availableVersions := []string{"Custom", "8.4", "8.3", "8.2", "8.1", "8.0", "7.4"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("PHP Version", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Db(defVersion *string) {
-	setTitleAndRecommended("DB", defVersion)
-
 	availableVersions := []string{"Custom", "11.4", "11.1", "10.6", "10.4", "10.3", "10.2"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("Database (MariaDB)", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Composer(defVersion *string) {
-	setTitleAndRecommended("Composer", defVersion)
-
 	availableVersions := []string{"Custom", "1", "2"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("Composer Version", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func SearchEngine(defVersion *string) {
-	setTitleAndRecommended("Search Engine", defVersion)
-
 	availableVersions := []string{"", "OpenSearch", "Elasticsearch", "Do not use"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("Search Engine", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Elastic(defVersion *string) {
-	setTitleAndRecommended("Elasticsearch", defVersion)
-
 	availableVersions := []string{"Custom", "8.17.6", "8.11.14", "8.4.3", "7.17.5", "7.16.3", "7.10.1"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("Elasticsearch Version", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func OpenSearch(defVersion *string) {
-	setTitleAndRecommended("OpenSearch", defVersion)
-
 	availableVersions := []string{"Custom", "2.19.0", "2.12.0", "2.5.0", "1.2.0"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("OpenSearch Version", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Redis(defVersion *string) {
-	setTitleAndRecommended("Redis", defVersion)
-
 	availableVersions := []string{"Custom", "8.0", "7.2", "7.0", "6.2", "6.0", "5.0"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("Redis Version", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Valkey(defVersion *string) {
-	setTitleAndRecommended("Valkey", defVersion)
-
 	availableVersions := []string{"Custom", "8.1.3"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("Valkey Version", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func RabbitMQ(defVersion *string) {
-	setTitleAndRecommended("RabbitMQ", defVersion)
 	availableVersions := []string{"Custom", "4.1", "3.13", "3.12", "3.9", "3.8", "3.7"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("RabbitMQ Version", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
@@ -149,42 +140,37 @@ func Hosts(projectName string, defVersion *string, projectConf map[string]string
 		host = strings.Join(hostItems, " ")
 	}
 
-	fmtc.TitleLn("Hosts")
-	fmt.Println("Input format: a.example.com:x_website_code b.example.com:y_website_code")
-	fmt.Println("Recommended host: " + host)
 	*defVersion = host
 	availableVersions := []string{"Custom", projectName + projectConf["nginx/default_host_first_level"] + ":base", "loc." + projectName + ".com:base"}
-	PrepareVersions(availableVersions)
+
+	fmt.Println("")
+	PrepareVersionsStyled("Hosts Configuration", availableVersions, *defVersion)
+	fmt.Printf("  %sFormat: domain.com:website_code%s\n", fmtc.Gray(), fmtc.ResetColor())
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func NodeJs(defVersion *string) {
-	setTitleAndRecommended("NodeJs", defVersion)
-
 	availableVersions := []string{"Custom", "21.1.0", "20.19.0", "18.15.0", "16.20.0"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("NodeJS Version", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func Yarn(defVersion *string) {
-	setTitleAndRecommended("Yarn", defVersion)
-
 	availableVersions := []string{"Custom", "3.6.4", "1.22.19"}
 
-	PrepareVersions(availableVersions)
+	fmt.Println("")
+	PrepareVersionsStyled("Yarn Version", availableVersions, *defVersion)
 	Invitation(defVersion)
 	WaiterAndProceed(defVersion, availableVersions)
 }
 
 func setTitleAndRecommended(title string, recommended *string) {
+	// Title is now shown as part of the selector box
 	fmt.Println("")
-	fmtc.TitleLn(title)
-	if *recommended != "" {
-		fmt.Println("Recommended version: " + *recommended)
-	}
 }
 
 func PrepareVersions(availableVersions []string) {
@@ -193,6 +179,30 @@ func PrepareVersions(availableVersions []string) {
 			fmt.Println(strconv.Itoa(index) + ") " + ver)
 		}
 	}
+}
+
+// PrepareVersionsStyled displays versions in a styled selector box
+func PrepareVersionsStyled(title string, availableVersions []string, recommended string) {
+	var options []fmtc.SelectorOption
+	recommendedKey := ""
+
+	for index, ver := range availableVersions {
+		if ver == "" {
+			continue
+		}
+		key := strconv.Itoa(index)
+		isRecommended := ver == recommended
+		if isRecommended {
+			recommendedKey = key
+		}
+		options = append(options, fmtc.SelectorOption{
+			Key:         key,
+			Value:       ver,
+			Recommended: isRecommended,
+		})
+	}
+
+	fmtc.Selector(title, options, recommendedKey)
 }
 
 func Invitation(ver *string) {

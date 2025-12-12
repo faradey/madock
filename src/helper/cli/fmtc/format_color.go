@@ -44,3 +44,13 @@ func SuccessLn(txt string) {
 func Success(txt string) {
 	fmt.Print(color.Green + txt + color.Reset)
 }
+
+// Gray returns the gray color code
+func Gray() string {
+	return color.Gray
+}
+
+// ResetColor returns the reset color code
+func ResetColor() string {
+	return color.Reset
+}
