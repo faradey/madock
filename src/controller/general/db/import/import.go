@@ -1,20 +1,19 @@
 package _import
 
 import (
-	"bufio"
 	"compress/gzip"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
+	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper/docker"
@@ -97,53 +96,40 @@ func Import() {
 		}
 
 		projectName := configs.GetProjectName()
-		globalIndex := 0
 		dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db"
 		var dbNames []string
+		var displayNames []string
+
 		if paths.IsFileExist(dbsPath) {
-			dbNames = paths.GetDBFiles(dbsPath)
-			fmt.Println("Location: madock/projects/" + projectName + "/backup/db")
-			if len(dbNames) == 0 {
-				fmt.Println("No DB files")
-			}
-			for index, dbName := range dbNames {
-				fmt.Println(strconv.Itoa(index+1) + ") " + filepath.Base(dbName))
-				globalIndex += 1
+			backupFiles := paths.GetDBFiles(dbsPath)
+			if len(backupFiles) > 0 {
+				for _, dbName := range backupFiles {
+					dbNames = append(dbNames, dbName)
+					displayNames = append(displayNames, filepath.Base(dbName)+" (backup)")
+				}
 			}
 		}
 
 		dbsPath = paths.GetRunDirPath()
-		dbNames2 := paths.GetDBFiles(dbsPath)
-		fmt.Println("Location: " + dbsPath)
-		if len(dbNames2) == 0 {
-			fmt.Println("No DB files")
-		} else {
-			dbNames = append(dbNames, dbNames2...)
-		}
-		for index, dbName := range dbNames2 {
-			fmt.Println(strconv.Itoa(globalIndex+index+1) + ") " + filepath.Base(dbName) + "  " + dbName)
+		projectFiles := paths.GetDBFiles(dbsPath)
+		if len(projectFiles) > 0 {
+			for _, dbName := range projectFiles {
+				dbNames = append(dbNames, dbName)
+				displayNames = append(displayNames, filepath.Base(dbName)+" (project)")
+			}
 		}
 
 		if len(dbNames) == 0 {
 			logger.Fatal("No database files found for import")
 		}
 
-		fmt.Println("Choose one of the offered variants")
-		buf := bufio.NewReader(os.Stdin)
-		sentence, err := buf.ReadBytes('\n')
-		selected := strings.TrimSpace(string(sentence))
-		selectedInt := 0
-		if err != nil {
-			logger.Fatalln(err)
-		} else {
-			selectedInt, err = strconv.Atoi(selected)
+		// Use interactive selector for file selection
+		fmt.Println("")
+		fmtc.TitleLn("Select database file to import:")
+		selector := fmtc.NewInteractiveSelector("Database File", displayNames, 0)
+		selectedIdx, _ := selector.Run()
 
-			if err != nil || selectedInt < 1 || selectedInt > len(dbNames) {
-				logger.Fatal("The item you selected was not found")
-			}
-		}
-
-		filePath := dbNames[selectedInt-1]
+		filePath := dbNames[selectedIdx]
 		ext := strings.ToLower(filepath.Ext(filePath))
 
 		selectedFile, err := os.Open(filePath)

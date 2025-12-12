@@ -10,6 +10,9 @@ import (
 	"golang.org/x/term"
 )
 
+// MaxVisibleItems is the maximum number of items to show at once
+const MaxVisibleItems = 15
+
 // InteractiveSelector displays an interactive selector with arrow key navigation
 type InteractiveSelector struct {
 	Title        string
@@ -18,6 +21,7 @@ type InteractiveSelector struct {
 	Recommended  int
 	errorMsg     string
 	numberBuffer string // Buffer for multi-digit number input
+	scrollOffset int    // For scrolling in long lists
 }
 
 // NewInteractiveSelector creates a new interactive selector
@@ -123,6 +127,7 @@ func (s *InteractiveSelector) Run() (int, string) {
 				idx, err := strconv.Atoi(s.numberBuffer)
 				if err == nil && idx >= 0 && idx < len(s.Options) {
 					s.Selected = idx
+					s.updateScrollOffset()
 				}
 				s.render()
 			}
@@ -142,7 +147,22 @@ func (s *InteractiveSelector) Run() (int, string) {
 
 // calculateRenderHeight returns the number of lines used by render
 func (s *InteractiveSelector) calculateRenderHeight() int {
-	height := len(s.Options) + 4 // options + borders + help
+	visibleCount := len(s.Options)
+	if visibleCount > MaxVisibleItems {
+		visibleCount = MaxVisibleItems
+	}
+	height := visibleCount + 4 // visible options + borders + help
+
+	// Add scroll indicators if needed
+	if len(s.Options) > MaxVisibleItems {
+		if s.scrollOffset > 0 {
+			height++ // "↑ X more above"
+		}
+		if s.scrollOffset+MaxVisibleItems < len(s.Options) {
+			height++ // "↓ X more below"
+		}
+	}
+
 	if s.errorMsg != "" {
 		height++
 	}
@@ -152,10 +172,29 @@ func (s *InteractiveSelector) calculateRenderHeight() int {
 	return height
 }
 
+// updateScrollOffset adjusts scroll to keep selected item visible
+func (s *InteractiveSelector) updateScrollOffset() {
+	if len(s.Options) <= MaxVisibleItems {
+		s.scrollOffset = 0
+		return
+	}
+
+	// If selected is above visible area, scroll up
+	if s.Selected < s.scrollOffset {
+		s.scrollOffset = s.Selected
+	}
+
+	// If selected is below visible area, scroll down
+	if s.Selected >= s.scrollOffset+MaxVisibleItems {
+		s.scrollOffset = s.Selected - MaxVisibleItems + 1
+	}
+}
+
 func (s *InteractiveSelector) moveUp() {
 	if s.Selected > 0 {
 		s.Selected--
 		s.errorMsg = ""
+		s.updateScrollOffset()
 		s.render()
 	}
 }
@@ -164,6 +203,7 @@ func (s *InteractiveSelector) moveDown() {
 	if s.Selected < len(s.Options)-1 {
 		s.Selected++
 		s.errorMsg = ""
+		s.updateScrollOffset()
 		s.render()
 	}
 }
@@ -172,9 +212,17 @@ func (s *InteractiveSelector) render() {
 	// Move cursor up and clear previous render
 	s.clearLines(s.calculateRenderHeight())
 
-	// Calculate width
+	// Calculate visible range
+	visibleStart := s.scrollOffset
+	visibleEnd := s.scrollOffset + MaxVisibleItems
+	if visibleEnd > len(s.Options) {
+		visibleEnd = len(s.Options)
+	}
+
+	// Calculate width based on visible options
 	maxWidth := len(s.Title) + 4
-	for i, opt := range s.Options {
+	for i := visibleStart; i < visibleEnd; i++ {
+		opt := s.Options[i]
 		optLen := len(fmt.Sprintf("%d) %s", i, opt))
 		if i == s.Recommended {
 			optLen += 14
@@ -187,13 +235,34 @@ func (s *InteractiveSelector) render() {
 		maxWidth = 40
 	}
 
+	// Title with scroll info
+	titleSuffix := ""
+	if len(s.Options) > MaxVisibleItems {
+		titleSuffix = fmt.Sprintf(" (%d-%d of %d)", visibleStart, visibleEnd-1, len(s.Options))
+	}
+
 	// Top border
-	fmt.Printf("%s┌─ %s%s%s ", color.Cyan, color.Green, s.Title, color.Cyan)
-	fmt.Print(strings.Repeat("─", maxWidth-len(s.Title)-4))
+	fmt.Printf("%s┌─ %s%s%s%s ", color.Cyan, color.Green, s.Title, color.Gray+titleSuffix, color.Cyan)
+	titleLen := len(s.Title) + len(titleSuffix)
+	borderLen := maxWidth - titleLen - 4
+	if borderLen > 0 {
+		fmt.Print(strings.Repeat("─", borderLen))
+	}
 	fmt.Printf("┐%s\r\n", color.Reset)
 
-	// Options
-	for i, opt := range s.Options {
+	// Scroll up indicator
+	if visibleStart > 0 {
+		fmt.Printf("%s│%s  %s↑ %d more above%s", color.Cyan, color.Reset, color.Gray, visibleStart, color.Reset)
+		padding := maxWidth - 17
+		if padding > 0 {
+			fmt.Print(strings.Repeat(" ", padding))
+		}
+		fmt.Printf(" %s│%s\r\n", color.Cyan, color.Reset)
+	}
+
+	// Visible options only
+	for i := visibleStart; i < visibleEnd; i++ {
+		opt := s.Options[i]
 		isSelected := i == s.Selected
 		isRecommended := i == s.Recommended
 
@@ -225,6 +294,17 @@ func (s *InteractiveSelector) render() {
 			fmt.Print(strings.Repeat(" ", padding))
 		}
 
+		fmt.Printf(" %s│%s\r\n", color.Cyan, color.Reset)
+	}
+
+	// Scroll down indicator
+	if visibleEnd < len(s.Options) {
+		remaining := len(s.Options) - visibleEnd
+		fmt.Printf("%s│%s  %s↓ %d more below%s", color.Cyan, color.Reset, color.Gray, remaining, color.Reset)
+		padding := maxWidth - 17
+		if padding > 0 {
+			fmt.Print(strings.Repeat(" ", padding))
+		}
 		fmt.Printf(" %s│%s\r\n", color.Cyan, color.Reset)
 	}
 
