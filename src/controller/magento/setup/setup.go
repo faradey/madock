@@ -258,18 +258,12 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 
 		if args.Download && args.PlatformEdition == "" {
 			fmt.Println("")
-			fmtc.TitleLn("Specify Magento version: ")
-			fmt.Println("1) Community (default)")
-			fmt.Println("2) Enterprise")
-			edition, _ = tools.Waiter()
-			edition = strings.TrimSpace(edition)
-			if edition != "1" && edition != "2" && edition != "" {
-				fmtc.ErrorLn("The specified edition '" + edition + "' is incorrect.")
-				return
-			}
-			if edition == "1" || edition == "" {
+			editions := []string{"Community", "Enterprise"}
+			selector := fmtc.NewInteractiveSelector("Magento Edition", editions, 0)
+			idx, _ := selector.Run()
+			if idx == 0 {
 				edition = "community"
-			} else if edition == "2" {
+			} else {
 				edition = "enterprise"
 			}
 		}

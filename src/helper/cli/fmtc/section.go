@@ -24,10 +24,14 @@ func Section(title string, items []SectionItem) {
 	}
 
 	// Section header
+	repeatCount := 40 - len(title) - 4
+	if repeatCount < 0 {
+		repeatCount = 0
+	}
 	fmt.Printf("\n%s── %s %s%s\n",
 		color.Cyan,
 		title,
-		strings.Repeat("─", 40-len(title)-4),
+		strings.Repeat("─", repeatCount),
 		color.Reset,
 	)
 
@@ -69,8 +73,12 @@ func SectionBox(title string, items []SectionItem) {
 	}
 
 	// Top border with title
+	topRepeat := width - len(title) - 4
+	if topRepeat < 0 {
+		topRepeat = 0
+	}
 	fmt.Printf("\n%s╭─ %s%s%s ", color.Cyan, color.Green, title, color.Cyan)
-	fmt.Print(strings.Repeat("─", width-len(title)-4))
+	fmt.Print(strings.Repeat("─", topRepeat))
 	fmt.Printf("╮%s\n", color.Reset)
 
 	// Items
@@ -78,6 +86,9 @@ func SectionBox(title string, items []SectionItem) {
 		keyPadding := strings.Repeat(" ", maxKeyLen-len(item.Key))
 		visibleLen := len(item.Key) + maxKeyLen - len(item.Key) + 3 + len(item.Value)
 		valPadding := width - visibleLen
+		if valPadding < 0 {
+			valPadding = 0
+		}
 
 		fmt.Printf("%s│%s  %s%s%s%s %s│%s\n",
 			color.Cyan,
@@ -117,12 +128,19 @@ func (cs *ConfigSummary) Display() {
 
 	// Title (centered)
 	titlePadding := (width - len(cs.Title)) / 2
+	if titlePadding < 0 {
+		titlePadding = 0
+	}
+	titlePaddingRight := width - titlePadding - len(cs.Title)
+	if titlePaddingRight < 0 {
+		titlePaddingRight = 0
+	}
 	fmt.Printf("%s│%s%s%s%s%s%s│%s\n",
 		color.Cyan,
 		color.Reset,
 		strings.Repeat(" ", titlePadding),
 		color.Green+cs.Title+color.Reset,
-		strings.Repeat(" ", width-titlePadding-len(cs.Title)),
+		strings.Repeat(" ", titlePaddingRight),
 		"",
 		color.Cyan,
 		color.Reset,
@@ -147,8 +165,8 @@ func (cs *ConfigSummary) Display() {
 
 		// Items
 		for _, item := range section.Items {
-			line := fmt.Sprintf("  %s: %s", item.Key, item.Value)
-			padding := width - len(line)
+			// Calculate padding: width - "  " - Key - ":" - " " - Value - " " = width - 5 - len(Key) - len(Value)
+			padding := width - 5 - len(item.Key) - len(item.Value)
 			if padding < 0 {
 				padding = 0
 			}
@@ -161,7 +179,7 @@ func (cs *ConfigSummary) Display() {
 				color.Green,
 				item.Value,
 				color.Reset,
-				strings.Repeat(" ", padding-len(item.Key)-len(item.Value)-4),
+				strings.Repeat(" ", padding),
 				color.Cyan,
 				color.Reset,
 			)

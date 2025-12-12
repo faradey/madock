@@ -16,8 +16,25 @@ type Preset struct {
 func GetMagentoPresets() []Preset {
 	return []Preset{
 		{
-			Name:        "Magento 2.4.7 (Latest)",
-			Description: "Latest stable with PHP 8.3, OpenSearch 2.12, Redis 7.2",
+			Name:        "Magento 2.4.8 (Latest)",
+			Description: "Latest stable with PHP 8.4, OpenSearch 2.19, Redis 8.0",
+			Platform:    "magento2",
+			Versions: versions.ToolsVersions{
+				Platform:        "magento2",
+				PlatformVersion: "2.4.8",
+				Php:             "8.4",
+				Db:              "11.4",
+				Composer:        "2",
+				SearchEngine:    "OpenSearch",
+				OpenSearch:      "2.19.0",
+				Redis:           "8.0",
+				Valkey:          "8.1.3",
+				RabbitMQ:        "4.1",
+			},
+		},
+		{
+			Name:        "Magento 2.4.7 (Stable)",
+			Description: "Stable release with PHP 8.3, OpenSearch 2.12, Redis 7.2",
 			Platform:    "magento2",
 			Versions: versions.ToolsVersions{
 				Platform:        "magento2",
@@ -64,23 +81,6 @@ func GetMagentoPresets() []Preset {
 				Redis:           "6.2",
 				Valkey:          "8.1.3",
 				RabbitMQ:        "3.9",
-			},
-		},
-		{
-			Name:        "Development (Minimal)",
-			Description: "Lightweight setup for development",
-			Platform:    "magento2",
-			Versions: versions.ToolsVersions{
-				Platform:        "magento2",
-				PlatformVersion: "2.4.7",
-				Php:             "8.3",
-				Db:              "10.6",
-				Composer:        "2",
-				SearchEngine:    "OpenSearch",
-				OpenSearch:      "2.12.0",
-				Redis:           "7.2",
-				Valkey:          "8.1.3",
-				RabbitMQ:        "3.13",
 			},
 		},
 	}
