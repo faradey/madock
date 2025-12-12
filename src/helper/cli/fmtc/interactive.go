@@ -193,7 +193,15 @@ func (s *InteractiveSelector) render() {
 	fmt.Printf("%s└%s┘%s\r\n", color.Cyan, strings.Repeat("─", maxWidth), color.Reset)
 
 	// Help text
-	fmt.Printf("%s↑/↓ Navigate  •  Enter Select  •  0-9 Quick select%s\r\n", color.Gray, color.Reset)
+	fmt.Printf("%s↑/↓%s Navigate  %s•%s  %sEnter%s Select  %s•%s  %s0-9%s Quick select  %s•%s  %sCtrl+C%s Cancel\r\n",
+		color.Cyan, color.Gray,
+		color.Gray, color.Reset,
+		color.Cyan, color.Gray,
+		color.Gray, color.Reset,
+		color.Cyan, color.Gray,
+		color.Gray, color.Reset,
+		color.Cyan, color.Reset,
+	)
 
 	// Error message if any
 	if s.errorMsg != "" {
