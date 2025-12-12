@@ -54,9 +54,9 @@ func Execute() {
 		// Done
 		elapsed := time.Since(startTime).Round(time.Second)
 		fmt.Println("")
-		fmtc.SuccessLn(fmt.Sprintf("Rebuild completed in %s", elapsed))
+		fmtc.SuccessIconLn(fmt.Sprintf("Rebuild completed in %s", elapsed))
 	} else {
-		fmtc.WarningLn("Set up the project")
+		fmtc.WarningIconLn("Set up the project")
 		fmtc.ToDoLn("Run madock setup")
 	}
 }

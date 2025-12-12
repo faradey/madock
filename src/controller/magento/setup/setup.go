@@ -178,7 +178,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
 		fmt.Println("")
-		fmtc.SuccessLn("Configuration saved!")
+		fmtc.SuccessIconLn("Configuration saved!")
 		fmt.Println("")
 		fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
