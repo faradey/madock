@@ -3,6 +3,7 @@ package fmtc
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/faradey/madock/src/helper/cli/color"
@@ -11,11 +12,12 @@ import (
 
 // InteractiveSelector displays an interactive selector with arrow key navigation
 type InteractiveSelector struct {
-	Title       string
-	Options     []string
-	Selected    int
-	Recommended int
-	errorMsg    string
+	Title        string
+	Options      []string
+	Selected     int
+	Recommended  int
+	errorMsg     string
+	numberBuffer string // Buffer for multi-digit number input
 }
 
 // NewInteractiveSelector creates a new interactive selector
@@ -74,29 +76,58 @@ func (s *InteractiveSelector) Run() (int, string) {
 		if n == 1 {
 			switch buf[0] {
 			case 13, 10: // Enter
+				// If there's a number in buffer, try to select it
+				if s.numberBuffer != "" {
+					idx, err := strconv.Atoi(s.numberBuffer)
+					if err == nil && idx >= 0 && idx < len(s.Options) {
+						s.Selected = idx
+						s.errorMsg = ""
+						s.numberBuffer = ""
+						s.clearAndPrintResult()
+						return s.Selected, s.Options[s.Selected]
+					}
+					s.errorMsg = fmt.Sprintf("Invalid option '%s'. Enter 0-%d", s.numberBuffer, len(s.Options)-1)
+					s.numberBuffer = ""
+					s.render()
+					continue
+				}
 				s.clearAndPrintResult()
 				return s.Selected, s.Options[s.Selected]
 			case 3: // Ctrl+C
-				s.clearLines(len(s.Options) + 4)
+				s.clearLines(s.calculateRenderHeight())
 				term.Restore(int(os.Stdin.Fd()), oldState)
 				os.Exit(0)
-			case 'j', 'J': // vim down
-				s.moveDown()
-			case 'k', 'K': // vim up
-				s.moveUp()
-			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-				idx := int(buf[0] - '0')
-				if idx < len(s.Options) {
-					s.Selected = idx
+			case 127, 8: // Backspace (127 for Mac, 8 for others)
+				if len(s.numberBuffer) > 0 {
+					s.numberBuffer = s.numberBuffer[:len(s.numberBuffer)-1]
 					s.errorMsg = ""
-					s.clearAndPrintResult()
-					return s.Selected, s.Options[s.Selected]
-				} else {
-					s.errorMsg = fmt.Sprintf("Invalid option. Enter 0-%d", len(s.Options)-1)
 					s.render()
 				}
+			case 27: // Escape - clear number buffer
+				if s.numberBuffer != "" {
+					s.numberBuffer = ""
+					s.errorMsg = ""
+					s.render()
+				}
+			case 'j', 'J': // vim down
+				s.numberBuffer = ""
+				s.moveDown()
+			case 'k', 'K': // vim up
+				s.numberBuffer = ""
+				s.moveUp()
+			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				s.numberBuffer += string(buf[0])
+				s.errorMsg = ""
+
+				// Preview: update selection if valid
+				idx, err := strconv.Atoi(s.numberBuffer)
+				if err == nil && idx >= 0 && idx < len(s.Options) {
+					s.Selected = idx
+				}
+				s.render()
 			}
 		} else if n == 3 && buf[0] == 27 && buf[1] == 91 {
+			s.numberBuffer = "" // Clear buffer on arrow keys
 			switch buf[2] {
 			case 65: // Up arrow
 				s.moveUp()
@@ -107,6 +138,18 @@ func (s *InteractiveSelector) Run() (int, string) {
 	}
 
 	return s.Selected, s.Options[s.Selected]
+}
+
+// calculateRenderHeight returns the number of lines used by render
+func (s *InteractiveSelector) calculateRenderHeight() int {
+	height := len(s.Options) + 4 // options + borders + help
+	if s.errorMsg != "" {
+		height++
+	}
+	if s.numberBuffer != "" {
+		height++
+	}
+	return height
 }
 
 func (s *InteractiveSelector) moveUp() {
@@ -127,11 +170,7 @@ func (s *InteractiveSelector) moveDown() {
 
 func (s *InteractiveSelector) render() {
 	// Move cursor up and clear previous render
-	extraLines := 0
-	if s.errorMsg != "" {
-		extraLines = 1
-	}
-	s.clearLines(len(s.Options) + 4 + extraLines)
+	s.clearLines(s.calculateRenderHeight())
 
 	// Calculate width
 	maxWidth := len(s.Title) + 4
@@ -193,7 +232,7 @@ func (s *InteractiveSelector) render() {
 	fmt.Printf("%s└%s┘%s\r\n", color.Cyan, strings.Repeat("─", maxWidth), color.Reset)
 
 	// Help text
-	fmt.Printf("%s↑/↓%s Navigate  %s•%s  %sEnter%s Select  %s•%s  %s0-9%s Quick select  %s•%s  %sCtrl+C%s Cancel\r\n",
+	fmt.Printf("%s↑/↓%s Navigate  %s•%s  %sEnter%s Select  %s•%s  %sNumber+Enter%s Jump to  %s•%s  %sCtrl+C%s Cancel\r\n",
 		color.Cyan, color.Gray,
 		color.Gray, color.Reset,
 		color.Cyan, color.Gray,
@@ -202,6 +241,11 @@ func (s *InteractiveSelector) render() {
 		color.Gray, color.Reset,
 		color.Cyan, color.Reset,
 	)
+
+	// Show number buffer if typing
+	if s.numberBuffer != "" {
+		fmt.Printf("  %s→ Jump to: %s%s%s\r\n", color.Cyan, color.Green, s.numberBuffer, color.Reset)
+	}
 
 	// Error message if any
 	if s.errorMsg != "" {
@@ -220,7 +264,7 @@ func (s *InteractiveSelector) clearLines(n int) {
 }
 
 func (s *InteractiveSelector) clearAndPrintResult() {
-	s.clearLines(len(s.Options) + 4)
+	s.clearLines(s.calculateRenderHeight())
 	fmt.Printf("%s✓ %s: %s%s%s\r\n",
 		color.Green,
 		s.Title,
