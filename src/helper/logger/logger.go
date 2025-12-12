@@ -9,18 +9,18 @@ import (
 )
 
 func Fatal(v ...any) {
-	debugger(v)
-	log.Fatal(v)
+	debugger(v...)
+	log.Fatal(v...)
 }
 
 func Fatalln(v ...any) {
-	debugger(v)
-	log.Fatalln(v)
+	debugger(v...)
+	log.Fatalln(v...)
 }
 
 func Println(v ...any) {
-	debugger(v)
-	log.Println(v)
+	debugger(v...)
+	log.Println(v...)
 }
 
 func debugger(v ...any) {

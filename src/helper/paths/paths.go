@@ -21,13 +21,11 @@ func GetExecDirPath() string {
 	exReal, err := filepath.EvalSymlinks(ex)
 	if err != nil {
 		dirAbsPath = filepath.Dir(ex)
-		return dirAbsPath
 	} else {
 		dirAbsPath = filepath.Dir(exReal)
-		return dirAbsPath
 	}
 
-	panic("Unknown error")
+	return dirAbsPath
 }
 
 func GetExecDirName() string {

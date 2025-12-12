@@ -22,10 +22,6 @@ import (
 	"github.com/faradey/madock/src/model/versions/magento2"
 )
 
-func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
-	ExecuteWithVersion(projectName, projectConf, continueSetup, args, "")
-}
-
 func ExecuteWithVersion(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup, detectedVersion string) {
 	toolsDefVersions := magento2.GetVersions("")
 

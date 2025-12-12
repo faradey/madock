@@ -149,11 +149,9 @@ func GetOpenSearchVersion(mageVer string) string {
 		return "1.2.0"
 	} else if mageVer == "2.3.7-p3" {
 		return "1.2.0"
-	} else {
-		return "NotCompatible"
 	}
 
-	return ""
+	return "NotCompatible"
 }
 
 func GetComposerVersion(mageVer string) string {
