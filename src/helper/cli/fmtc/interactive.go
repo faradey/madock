@@ -15,6 +15,7 @@ type InteractiveSelector struct {
 	Options     []string
 	Selected    int
 	Recommended int
+	errorMsg    string
 }
 
 // NewInteractiveSelector creates a new interactive selector
@@ -87,8 +88,12 @@ func (s *InteractiveSelector) Run() (int, string) {
 				idx := int(buf[0] - '0')
 				if idx < len(s.Options) {
 					s.Selected = idx
+					s.errorMsg = ""
 					s.clearAndPrintResult()
 					return s.Selected, s.Options[s.Selected]
+				} else {
+					s.errorMsg = fmt.Sprintf("Invalid option. Enter 0-%d", len(s.Options)-1)
+					s.render()
 				}
 			}
 		} else if n == 3 && buf[0] == 27 && buf[1] == 91 {
@@ -107,6 +112,7 @@ func (s *InteractiveSelector) Run() (int, string) {
 func (s *InteractiveSelector) moveUp() {
 	if s.Selected > 0 {
 		s.Selected--
+		s.errorMsg = ""
 		s.render()
 	}
 }
@@ -114,13 +120,18 @@ func (s *InteractiveSelector) moveUp() {
 func (s *InteractiveSelector) moveDown() {
 	if s.Selected < len(s.Options)-1 {
 		s.Selected++
+		s.errorMsg = ""
 		s.render()
 	}
 }
 
 func (s *InteractiveSelector) render() {
 	// Move cursor up and clear previous render
-	s.clearLines(len(s.Options) + 4)
+	extraLines := 0
+	if s.errorMsg != "" {
+		extraLines = 1
+	}
+	s.clearLines(len(s.Options) + 4 + extraLines)
 
 	// Calculate width
 	maxWidth := len(s.Title) + 4
@@ -183,6 +194,11 @@ func (s *InteractiveSelector) render() {
 
 	// Help text
 	fmt.Printf("%s↑/↓ Navigate  •  Enter Select  •  0-9 Quick select%s\r\n", color.Gray, color.Reset)
+
+	// Error message if any
+	if s.errorMsg != "" {
+		fmt.Printf("  %s↳ %s%s\r\n", color.Red, s.errorMsg, color.Reset)
+	}
 }
 
 func (s *InteractiveSelector) clearLines(n int) {
