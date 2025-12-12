@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"time"
 )
 
 func Fatal(v ...any) {
@@ -47,7 +48,8 @@ func debugger(v ...any) {
 		}
 	}(f)
 
-	if _, err = f.WriteString("\n" + fmt.Sprintln(v...) + string(debug.Stack())); err != nil {
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	if _, err = f.WriteString("\n[" + timestamp + "] " + fmt.Sprintln(v...) + string(debug.Stack())); err != nil {
 		log.Fatal(err)
 	}
 }
