@@ -1,6 +1,9 @@
 package start
 
 import (
+	"fmt"
+	"time"
+
 	startCustom "github.com/faradey/madock/src/controller/custom/start"
 	startMagento2 "github.com/faradey/madock/src/controller/magento/start"
 	startPrestashop "github.com/faradey/madock/src/controller/prestashop/start"
@@ -20,7 +23,9 @@ func Execute() {
 		projectName := configs2.GetProjectName()
 		projectConf := configs2.GetProjectConfig(projectName)
 		platform := projectConf["platform"]
-		fmtc.SuccessLn("Start containers in detached mode")
+		startTime := time.Now()
+
+		fmtc.TitleLn("Starting containers...")
 
 		if platform == "magento2" {
 			startMagento2.Execute(projectName, args.WithChown, projectConf)
@@ -36,7 +41,9 @@ func Execute() {
 			startPrestashop.Execute(projectName, args.WithChown, projectConf)
 		}
 
-		fmtc.SuccessLn("Done")
+		elapsed := time.Since(startTime).Round(time.Second)
+		fmt.Println("")
+		fmtc.SuccessLn(fmt.Sprintf("Containers started in %s", elapsed))
 	} else {
 		fmtc.WarningLn("Set up the project")
 		fmtc.ToDoLn("Run madock setup")

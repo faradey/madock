@@ -1,6 +1,10 @@
 package rebuild
 
 import (
+	"fmt"
+	"os"
+	"time"
+
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
@@ -9,7 +13,6 @@ import (
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"os"
 )
 
 func Execute() {
@@ -17,13 +20,23 @@ func Execute() {
 
 	if configs.IsHasConfig("") {
 		projectName := configs.GetProjectName()
+		startTime := time.Now()
+
+		// Clear config cache with spinner
+		spinner := fmtc.NewSpinner("Preparing environment...")
+		spinner.Start()
 		if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
 			err := os.Remove(paths.GetExecDirPath() + "/cache/conf-cache")
 			if err != nil {
+				spinner.StopWithError("Failed to clear cache")
 				logger.Fatal(err)
 			}
 		}
-		fmtc.SuccessLn("Stop containers")
+		spinner.StopWithSuccess("Environment prepared")
+
+		// Stop containers
+		fmt.Println("")
+		fmtc.TitleLn("Stopping containers...")
 		if args.Force {
 			docker.Kill(projectName)
 		} else {
@@ -32,9 +45,16 @@ func Execute() {
 		if len(paths.GetActiveProjects()) == 0 {
 			proxy.Execute("stop")
 		}
-		fmtc.SuccessLn("Start containers in detached mode")
+
+		// Start containers
+		fmt.Println("")
+		fmtc.TitleLn("Starting containers...")
 		docker.UpWithBuild(projectName, args.WithChown)
-		fmtc.SuccessLn("Done")
+
+		// Done
+		elapsed := time.Since(startTime).Round(time.Second)
+		fmt.Println("")
+		fmtc.SuccessLn(fmt.Sprintf("Rebuild completed in %s", elapsed))
 	} else {
 		fmtc.WarningLn("Set up the project")
 		fmtc.ToDoLn("Run madock setup")
