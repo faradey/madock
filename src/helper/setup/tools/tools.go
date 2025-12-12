@@ -14,6 +14,29 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 )
 
+// Global progress tracker for setup process
+var setupProgress *fmtc.StepProgress
+
+// InitProgress initializes the progress tracker with given steps
+func InitProgress(steps []string) {
+	setupProgress = fmtc.NewStepProgress(steps)
+}
+
+// SetProgressStep sets and displays the current step
+func SetProgressStep(step int) {
+	if setupProgress != nil {
+		setupProgress.SetStep(step)
+		setupProgress.Display()
+	}
+}
+
+// CompleteProgress displays the completion message
+func CompleteProgress() {
+	if setupProgress != nil {
+		setupProgress.Complete()
+	}
+}
+
 func Platform() string {
 	defVersion := "magento2"
 	setTitleAndRecommended("Platform", &defVersion)

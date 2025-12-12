@@ -31,9 +31,25 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		}
 	}
 
+	// Initialize progress tracker for setup steps
+	setupSteps := []string{
+		"Magento Version",
+		"PHP Version",
+		"Database Version",
+		"Composer Version",
+		"Search Engine",
+		"Search Engine Version",
+		"Redis Version",
+		"Valkey Version",
+		"RabbitMQ Version",
+		"Hosts Configuration",
+	}
+	tools.InitProgress(setupSteps)
+	currentStep := 1
+
 	if toolsDefVersions.Php == "" {
 		if mageVersion == "" {
-			fmt.Println("")
+			tools.SetProgressStep(currentStep)
 			fmtc.Title("Specify Magento version: ")
 			mageVersion, _ = tools.Waiter()
 		}
@@ -44,6 +60,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 			return
 		}
 	}
+	currentStep++
 
 	edition := "community"
 	if args.PlatformEdition != "" {
@@ -54,26 +71,44 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		fmt.Println("")
 		fmtc.Title("Your Magento version is " + toolsDefVersions.PlatformVersion)
 
+		// Step 2: PHP Version
+		tools.SetProgressStep(currentStep)
 		if args.Php == "" {
 			tools.Php(&toolsDefVersions.Php)
 		} else {
 			toolsDefVersions.Php = args.Php
 		}
+		currentStep++
+
+		// Step 3: Database Version
+		tools.SetProgressStep(currentStep)
 		if args.Db == "" {
 			tools.Db(&toolsDefVersions.Db)
 		} else {
 			toolsDefVersions.Db = args.Db
 		}
+		currentStep++
+
+		// Step 4: Composer Version
+		tools.SetProgressStep(currentStep)
 		if args.Composer == "" {
 			tools.Composer(&toolsDefVersions.Composer)
 		} else {
 			toolsDefVersions.Composer = args.Composer
 		}
+		currentStep++
+
+		// Step 5: Search Engine
+		tools.SetProgressStep(currentStep)
 		if args.SearchEngine == "" {
 			tools.SearchEngine(&toolsDefVersions.SearchEngine)
 		} else {
 			toolsDefVersions.SearchEngine = args.SearchEngine
 		}
+		currentStep++
+
+		// Step 6: Search Engine Version
+		tools.SetProgressStep(currentStep)
 		if toolsDefVersions.SearchEngine == "Elasticsearch" {
 			if args.SearchEngineVersion == "" {
 				tools.Elastic(&toolsDefVersions.Elastic)
@@ -87,24 +122,37 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 				toolsDefVersions.OpenSearch = args.SearchEngineVersion
 			}
 		}
+		currentStep++
 
+		// Step 7: Redis Version
+		tools.SetProgressStep(currentStep)
 		if args.Redis == "" {
 			tools.Redis(&toolsDefVersions.Redis)
 		} else {
 			toolsDefVersions.Redis = args.Redis
 		}
+		currentStep++
 
+		// Step 8: Valkey Version
+		tools.SetProgressStep(currentStep)
 		if args.Valkey == "" {
 			tools.Valkey(&toolsDefVersions.Valkey)
 		} else {
 			toolsDefVersions.Valkey = args.Valkey
 		}
+		currentStep++
 
+		// Step 9: RabbitMQ Version
+		tools.SetProgressStep(currentStep)
 		if args.RabbitMQ == "" {
 			tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
 		} else {
 			toolsDefVersions.RabbitMQ = args.RabbitMQ
 		}
+		currentStep++
+
+		// Step 10: Hosts Configuration
+		tools.SetProgressStep(currentStep)
 		if args.Hosts == "" {
 			tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
 		} else {
@@ -114,7 +162,9 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		projects.SetEnvForProject(projectName, toolsDefVersions, configs2.GetProjectConfigOnly(projectName))
 		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
 
-		fmtc.SuccessLn("\n" + "Finish set up environment")
+		// Show completion
+		tools.CompleteProgress()
+		fmt.Println("")
 		fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
