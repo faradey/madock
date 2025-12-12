@@ -22,10 +22,20 @@ import (
 )
 
 func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
+	ExecuteWithVersion(projectName, projectConf, continueSetup, args, "")
+}
+
+func ExecuteWithVersion(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup, detectedVersion string) {
 	toolsDefVersions := magento2.GetVersions("")
 
 	mageVersion := ""
-	if args.PlatformVersion != "" {
+
+	// Use detected version if available
+	if detectedVersion != "" {
+		mageVersion = detectedVersion
+		toolsDefVersions = magento2.GetVersions(mageVersion)
+		fmtc.InfoIconLn(fmt.Sprintf("Using detected Magento version: %s", mageVersion))
+	} else if args.PlatformVersion != "" {
 		mageVersion = args.PlatformVersion
 		if args.Php != "" {
 			toolsDefVersions.Php = args.Php
@@ -48,7 +58,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	tools.InitProgress(setupSteps)
 	currentStep := 1
 
-	if toolsDefVersions.Php == "" {
+	if toolsDefVersions.Php == "" && detectedVersion == "" {
 		if mageVersion == "" {
 			tools.SetProgressStep(currentStep)
 			fmtc.Title("Specify Magento version: ")
@@ -57,7 +67,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		if mageVersion != "" {
 			toolsDefVersions = magento2.GetVersions(mageVersion)
 		} else {
-			Execute(projectName, projectConf, continueSetup, args)
+			ExecuteWithVersion(projectName, projectConf, continueSetup, args, "")
 			return
 		}
 	}

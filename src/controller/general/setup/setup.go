@@ -3,6 +3,9 @@ package setup
 import (
 	"bufio"
 	"fmt"
+	"os"
+	"strings"
+
 	setupCustom "github.com/faradey/madock/src/controller/custom/setup"
 	setupMagento "github.com/faradey/madock/src/controller/magento/setup"
 	setupPrestashop "github.com/faradey/madock/src/controller/prestashop/setup"
@@ -13,11 +16,10 @@ import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/detect"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
-	"os"
-	"strings"
 )
 
 func Execute() {
@@ -63,13 +65,30 @@ func Execute() {
 	}
 
 	platform := args.Platform
+	detectedVersion := ""
+
+	// Try to auto-detect platform from composer.json
 	if platform == "" {
-		fmt.Println("")
-		fmtc.Title("Specify Platform: ")
+		detection := detect.Detect(paths.GetRunDirPath())
+		if detection.Detected {
+			fmtc.SuccessIconLn(fmt.Sprintf("Detected: %s %s", detection.Platform, detection.PlatformVersion))
+			fmtc.PrintKeyValue("Source", detection.Source)
+			fmt.Println("")
+
+			if fmtc.Confirm("Use detected configuration?", true) {
+				platform = detection.Platform
+				detectedVersion = detection.PlatformVersion
+			}
+			fmt.Println("")
+		}
+	}
+
+	if platform == "" {
 		platform = tools.Platform()
 	}
+
 	if platform == "magento2" {
-		setupMagento.Execute(projectName, projectConf, continueSetup, args)
+		setupMagento.ExecuteWithVersion(projectName, projectConf, continueSetup, args, detectedVersion)
 	} else if platform == "pwa" {
 		setupPWA.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "shopify" {
