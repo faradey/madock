@@ -160,15 +160,25 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 			toolsDefVersions.Hosts = args.Hosts
 		}
 
-		projects.SetEnvForProject(projectName, toolsDefVersions, configs2.GetProjectConfigOnly(projectName))
-		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
-
 		// Show completion
 		tools.CompleteProgress()
 
 		// Display configuration summary
 		displayConfigSummary(toolsDefVersions, projectName)
 
+		// Ask for confirmation
+		fmt.Println("")
+		if !fmtc.Confirm("Proceed with this configuration?", true) {
+			fmtc.WarningLn("Setup cancelled.")
+			return
+		}
+
+		// Save configuration
+		projects.SetEnvForProject(projectName, toolsDefVersions, configs2.GetProjectConfigOnly(projectName))
+		paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db")
+
+		fmt.Println("")
+		fmtc.SuccessLn("Configuration saved!")
 		fmt.Println("")
 		fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
