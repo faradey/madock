@@ -7,6 +7,7 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/sbabiv/xml2map"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -241,7 +242,16 @@ func MarshalXML(s map[string]interface{}, e *xml.Encoder, startTag string) error
 
 func getXMLTokens(s map[string]interface{}, e *xml.Encoder, tokens []xml.Token) ([]xml.Token, error) {
 	var err error
-	for key, value := range s {
+
+	// Sort keys to ensure deterministic XML output order
+	keys := make([]string, 0, len(s))
+	for key := range s {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		value := s[key]
 		t := xml.StartElement{Name: xml.Name{Local: key}}
 		tokens = append(tokens, t)
 		switch value.(type) {
