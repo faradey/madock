@@ -39,12 +39,10 @@ func CompleteProgress() {
 
 func Platform() string {
 	defVersion := "magento2"
-	availableVersions := []string{"", "magento2", "pwa", "custom", "shopify", "shopware", "prestashop"}
+	availableVersions := []string{"magento2", "pwa", "custom", "shopify", "shopware", "prestashop"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("Platform", availableVersions, defVersion)
-	Invitation(&defVersion)
-	WaiterAndProceed(&defVersion, availableVersions)
+	SelectInteractive("Platform", availableVersions, &defVersion)
 	return defVersion
 }
 
@@ -52,81 +50,63 @@ func Php(defVersion *string) {
 	availableVersions := []string{"Custom", "8.4", "8.3", "8.2", "8.1", "8.0", "7.4"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("PHP Version", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("PHP Version", availableVersions, defVersion)
 }
 
 func Db(defVersion *string) {
 	availableVersions := []string{"Custom", "11.4", "11.1", "10.6", "10.4", "10.3", "10.2"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("Database (MariaDB)", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("Database (MariaDB)", availableVersions, defVersion)
 }
 
 func Composer(defVersion *string) {
 	availableVersions := []string{"Custom", "1", "2"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("Composer Version", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("Composer Version", availableVersions, defVersion)
 }
 
 func SearchEngine(defVersion *string) {
-	availableVersions := []string{"", "OpenSearch", "Elasticsearch", "Do not use"}
+	availableVersions := []string{"OpenSearch", "Elasticsearch", "Do not use"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("Search Engine", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("Search Engine", availableVersions, defVersion)
 }
 
 func Elastic(defVersion *string) {
 	availableVersions := []string{"Custom", "8.17.6", "8.11.14", "8.4.3", "7.17.5", "7.16.3", "7.10.1"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("Elasticsearch Version", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("Elasticsearch Version", availableVersions, defVersion)
 }
 
 func OpenSearch(defVersion *string) {
 	availableVersions := []string{"Custom", "2.19.0", "2.12.0", "2.5.0", "1.2.0"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("OpenSearch Version", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("OpenSearch Version", availableVersions, defVersion)
 }
 
 func Redis(defVersion *string) {
 	availableVersions := []string{"Custom", "8.0", "7.2", "7.0", "6.2", "6.0", "5.0"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("Redis Version", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("Redis Version", availableVersions, defVersion)
 }
 
 func Valkey(defVersion *string) {
 	availableVersions := []string{"Custom", "8.1.3"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("Valkey Version", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("Valkey Version", availableVersions, defVersion)
 }
 
 func RabbitMQ(defVersion *string) {
 	availableVersions := []string{"Custom", "4.1", "3.13", "3.12", "3.9", "3.8", "3.7"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("RabbitMQ Version", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("RabbitMQ Version", availableVersions, defVersion)
 }
 
 func Hosts(projectName string, defVersion *string, projectConf map[string]string) {
@@ -144,28 +124,22 @@ func Hosts(projectName string, defVersion *string, projectConf map[string]string
 	availableVersions := []string{"Custom", projectName + projectConf["nginx/default_host_first_level"] + ":base", "loc." + projectName + ".com:base"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("Hosts Configuration", availableVersions, *defVersion)
-	fmt.Printf("  %sFormat: domain.com:website_code%s\n", fmtc.Gray(), fmtc.ResetColor())
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	fmt.Printf("%sFormat: domain.com:website_code%s\n", fmtc.Gray(), fmtc.ResetColor())
+	SelectInteractive("Hosts Configuration", availableVersions, defVersion)
 }
 
 func NodeJs(defVersion *string) {
 	availableVersions := []string{"Custom", "21.1.0", "20.19.0", "18.15.0", "16.20.0"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("NodeJS Version", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("NodeJS Version", availableVersions, defVersion)
 }
 
 func Yarn(defVersion *string) {
 	availableVersions := []string{"Custom", "3.6.4", "1.22.19"}
 
 	fmt.Println("")
-	PrepareVersionsStyled("Yarn Version", availableVersions, *defVersion)
-	Invitation(defVersion)
-	WaiterAndProceed(defVersion, availableVersions)
+	SelectInteractive("Yarn Version", availableVersions, defVersion)
 }
 
 func setTitleAndRecommended(title string, recommended *string) {
@@ -203,6 +177,37 @@ func PrepareVersionsStyled(title string, availableVersions []string, recommended
 	}
 
 	fmtc.Selector(title, options, recommendedKey)
+}
+
+// SelectInteractive runs an interactive selector and returns the selected value
+func SelectInteractive(title string, availableVersions []string, defVersion *string) {
+	// Find recommended index
+	recommendedIdx := -1
+	for i, ver := range availableVersions {
+		if ver == *defVersion {
+			recommendedIdx = i
+			break
+		}
+	}
+
+	selector := fmtc.NewInteractiveSelector(title, availableVersions, recommendedIdx)
+	idx, value := selector.Run()
+
+	// Handle "Custom" option
+	if value == "Custom" {
+		fmt.Print("Enter custom value: ")
+		buf := bufio.NewReader(os.Stdin)
+		sentence, err := buf.ReadBytes('\n')
+		if err != nil {
+			logger.Fatalln(err)
+		}
+		*defVersion = strings.TrimSpace(string(sentence))
+		fmtc.SuccessLn("Your choice: " + *defVersion)
+	} else {
+		*defVersion = value
+		// Result already printed by selector
+		_ = idx
+	}
 }
 
 func Invitation(ver *string) {
