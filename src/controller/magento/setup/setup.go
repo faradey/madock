@@ -17,6 +17,7 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
+	"github.com/faradey/madock/src/model/versions"
 	"github.com/faradey/madock/src/model/versions/magento2"
 )
 
@@ -164,6 +165,10 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 
 		// Show completion
 		tools.CompleteProgress()
+
+		// Display configuration summary
+		displayConfigSummary(toolsDefVersions, projectName)
+
 		fmt.Println("")
 		fmtc.ToDoLn("Optionally, you can configure SSH access to the development server in order ")
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
@@ -232,5 +237,58 @@ func DownloadMagento(projectName, edition, version string, isSampleData bool) {
 	err := cmd.Run()
 	if err != nil {
 		logger.Fatal(err)
+	}
+}
+
+func displayConfigSummary(v versions.ToolsVersions, projectName string) {
+	summary := &fmtc.ConfigSummary{
+		Title: "Configuration Summary",
+		Sections: []fmtc.ConfigSection{
+			{
+				Name: "Core Services",
+				Items: []fmtc.SectionItem{
+					{Key: "Platform", Value: "Magento " + v.PlatformVersion},
+					{Key: "PHP", Value: v.Php},
+					{Key: "Database", Value: "MariaDB " + v.Db},
+					{Key: "Composer", Value: v.Composer},
+				},
+			},
+			{
+				Name: "Search Engine",
+				Items: getSearchEngineItems(v),
+			},
+			{
+				Name: "Cache & Queue",
+				Items: []fmtc.SectionItem{
+					{Key: "Redis", Value: v.Redis},
+					{Key: "Valkey", Value: v.Valkey},
+					{Key: "RabbitMQ", Value: v.RabbitMQ},
+				},
+			},
+			{
+				Name: "Hosts",
+				Items: []fmtc.SectionItem{
+					{Key: "Domain", Value: v.Hosts},
+				},
+			},
+		},
+	}
+	summary.Display()
+}
+
+func getSearchEngineItems(v versions.ToolsVersions) []fmtc.SectionItem {
+	if v.SearchEngine == "Elasticsearch" {
+		return []fmtc.SectionItem{
+			{Key: "Engine", Value: "Elasticsearch"},
+			{Key: "Version", Value: v.Elastic},
+		}
+	} else if v.SearchEngine == "OpenSearch" {
+		return []fmtc.SectionItem{
+			{Key: "Engine", Value: "OpenSearch"},
+			{Key: "Version", Value: v.OpenSearch},
+		}
+	}
+	return []fmtc.SectionItem{
+		{Key: "Engine", Value: "Not configured"},
 	}
 }
