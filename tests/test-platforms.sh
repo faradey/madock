@@ -24,6 +24,7 @@ RESULTS_FILE="/tmp/madock-test-results.txt"
 FAILED_TESTS=0
 PASSED_TESTS=0
 KEEP_PROJECT=false
+INTERACTIVE_MODE=false
 
 # Magento presets to test (from preset.go)
 MAGENTO_PRESETS=(
@@ -193,6 +194,89 @@ test_all_presets() {
     done
 }
 
+# Interactive test - manual selection of options
+test_interactive() {
+    local project_name="test-interactive"
+    local project_dir="$TMP_DIR/$project_name"
+    local host="interactive.test"
+    local test_passed=true
+
+    log_header "Interactive Test (Manual Selection)"
+
+    # Cleanup any previous test
+    cleanup_project "$project_name"
+
+    # Create project directory
+    log_info "Creating project directory: $project_dir"
+    mkdir -p "$project_dir"
+    cd "$project_dir"
+
+    # Create minimal composer.json
+    cat > composer.json << 'EOF'
+{
+    "name": "test/magento2",
+    "type": "project"
+}
+EOF
+
+    # Run setup interactively (no preset, no auto-confirm)
+    log_info "Running madock setup interactively..."
+    log_info "Please answer the setup questions manually"
+    echo ""
+    if ! "$MADOCK_BIN" setup --platform=magento2 --hosts="${host}:base" 2>&1; then
+        log_error "Setup failed"
+        test_passed=false
+    else
+        log_success "Setup completed"
+    fi
+
+    # Check if config was created
+    if [[ -f "$MADOCK_DIR/projects/$project_name/config.xml" ]]; then
+        log_success "Config file created"
+    else
+        log_error "Config file not found"
+        test_passed=false
+    fi
+
+    # Test status command
+    log_info "Testing status command..."
+    if "$MADOCK_BIN" status 2>&1; then
+        log_success "Status command works"
+    else
+        log_warning "Status command returned non-zero (expected if containers not running)"
+    fi
+
+    # Test config:list command
+    log_info "Testing config:list command..."
+    if "$MADOCK_BIN" config:list 2>&1 | head -20; then
+        log_success "Config:list command works"
+    else
+        log_error "Config:list command failed"
+        test_passed=false
+    fi
+
+    # Cleanup (unless --keep flag is set)
+    if ! $KEEP_PROJECT; then
+        cleanup_project "$project_name"
+    else
+        log_info "Keeping project at: $project_dir"
+        log_info "Config at: $MADOCK_DIR/projects/$project_name/config.xml"
+    fi
+
+    # Record result
+    if $test_passed; then
+        echo "interactive=PASSED" >> "$RESULTS_FILE"
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        log_success "Interactive test: ALL TESTS PASSED"
+    else
+        echo "interactive=FAILED" >> "$RESULTS_FILE"
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        log_error "Interactive test: SOME TESTS FAILED"
+    fi
+
+    echo ""
+}
+
 # Print summary
 print_summary() {
     log_header "TEST SUMMARY"
@@ -231,10 +315,14 @@ print_summary() {
 cleanup_all() {
     log_header "Cleaning up all test projects"
 
+    # Cleanup preset tests
     for preset in "${MAGENTO_PRESETS[@]}"; do
         local safe_name=$(echo "$preset" | tr ' +()./' '------' | tr -s '-' | tr '[:upper:]' '[:lower:]' | sed 's/-$//')
         cleanup_project "test-${safe_name}"
     done
+
+    # Cleanup interactive test
+    cleanup_project "test-interactive"
 
     # Remove tmp directory if empty
     if [[ -d "$TMP_DIR" ]] && [[ -z "$(ls -A "$TMP_DIR")" ]]; then
@@ -262,6 +350,10 @@ main() {
                 KEEP_PROJECT=true
                 shift
                 ;;
+            --interactive|-i)
+                INTERACTIVE_MODE=true
+                shift
+                ;;
             --cleanup)
                 cleanup_only=true
                 shift
@@ -270,10 +362,11 @@ main() {
                 echo "Usage: $0 [options]"
                 echo ""
                 echo "Options:"
-                echo "  --preset NAME  Test specific preset (use quotes for names with spaces)"
-                echo "  --keep         Keep project after test (don't cleanup)"
-                echo "  --cleanup      Only cleanup, don't run tests"
-                echo "  --help         Show this help"
+                echo "  --preset NAME    Test specific preset (use quotes for names with spaces)"
+                echo "  --interactive|-i Run interactive test with manual selection"
+                echo "  --keep           Keep project after test (don't cleanup)"
+                echo "  --cleanup        Only cleanup, don't run tests"
+                echo "  --help           Show this help"
                 echo ""
                 echo "Available presets:"
                 for preset in "${MAGENTO_PRESETS[@]}"; do
@@ -302,6 +395,13 @@ main() {
     if $cleanup_only; then
         cleanup_all
         exit 0
+    fi
+
+    # Run interactive test
+    if $INTERACTIVE_MODE; then
+        test_interactive
+        print_summary
+        exit $?
     fi
 
     # Run specific preset test
