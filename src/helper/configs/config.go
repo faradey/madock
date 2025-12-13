@@ -152,9 +152,15 @@ func ReplaceConfigValue(projectName, str string) string {
 		logger.Fatal(err)
 	}
 
+	// Process conditionals:
+	// 1. Keep content if condition contains only "true"
 	r := regexp.MustCompile("(?ism)<<<if(true\\s*)+>>>(.*?)<<<endif>>>")
 	str = r.ReplaceAllString(str, "$2")
+	// 2. Remove content if condition contains "false"
 	r = regexp.MustCompile("(?ism)<<<if.*?(false\\s*)+.*?>>>.*?<<<endif>>>")
+	str = r.ReplaceAllString(str, "")
+	// 3. Remove unprocessed conditionals (placeholders not replaced = treat as false)
+	r = regexp.MustCompile("(?ism)<<<if\\{\\{\\{[^>]+>>>.*?<<<endif>>>")
 	str = r.ReplaceAllString(str, "")
 
 	var onlyHosts []string
