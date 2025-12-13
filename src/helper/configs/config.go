@@ -3,18 +3,18 @@ package configs
 import (
 	"bytes"
 	"encoding/xml"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
-	"github.com/go-xmlfmt/xmlfmt"
 	"log"
 	"net"
 	"os"
 	"os/user"
-	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/src/helper/paths"
+	"github.com/go-xmlfmt/xmlfmt"
 )
 
 type ConfigLines struct {
@@ -152,16 +152,8 @@ func ReplaceConfigValue(projectName, str string) string {
 		logger.Fatal(err)
 	}
 
-	// Process conditionals:
-	// 1. Keep content if condition contains only "true"
-	r := regexp.MustCompile("(?ism)<<<if(true\\s*)+>>>(.*?)<<<endif>>>")
-	str = r.ReplaceAllString(str, "$2")
-	// 2. Remove content if condition contains "false"
-	r = regexp.MustCompile("(?ism)<<<if.*?(false\\s*)+.*?>>>.*?<<<endif>>>")
-	str = r.ReplaceAllString(str, "")
-	// 3. Remove unprocessed conditionals (placeholders not replaced = treat as false)
-	r = regexp.MustCompile("(?ism)<<<if\\{\\{\\{[^>]+>>>.*?<<<endif>>>")
-	str = r.ReplaceAllString(str, "")
+	// Process conditionals with proper nesting support
+	str = processConditionals(str)
 
 	var onlyHosts []string
 
@@ -174,6 +166,144 @@ func ReplaceConfigValue(projectName, str string) string {
 
 	str = strings.Replace(str, "{{{nginx/host_gateways}}}", strings.Join(onlyHosts, "\n      "), -1)
 	return str
+}
+
+// processConditionals handles nested <<<if...>>>...<<<endif>>> blocks
+func processConditionals(str string) string {
+	for {
+		// Find the first <<<if...>>> tag
+		ifStart := strings.Index(str, "<<<if")
+		if ifStart == -1 {
+			break // No more conditionals
+		}
+
+		// Find the end of the opening tag (>>>)
+		tagEnd := strings.Index(str[ifStart:], ">>>")
+		if tagEnd == -1 {
+			break // Malformed tag
+		}
+		tagEnd += ifStart + 3 // Position after >>>
+
+		// Safety check
+		if tagEnd > len(str) {
+			break
+		}
+
+		// Extract the condition (between <<<if and >>>)
+		condition := str[ifStart+5 : tagEnd-3]
+
+		// Find the matching <<<endif>>> (accounting for nesting)
+		endifPos := findMatchingEndif(str, tagEnd)
+		if endifPos == -1 {
+			break // No matching endif
+		}
+
+		// Extract content between opening and closing tags
+		content := str[tagEnd:endifPos]
+
+		// Evaluate condition
+		shouldKeep := evaluateCondition(condition)
+
+		// Calculate end position after <<<endif>>>
+		endPos := endifPos + 11 // 11 = len("<<<endif>>>")
+		if endPos > len(str) {
+			endPos = len(str)
+		}
+
+		// Build the replacement
+		var replacement string
+		if shouldKeep {
+			// Recursively process nested conditionals in the content
+			replacement = processConditionals(content)
+			str = str[:ifStart] + replacement + str[endPos:]
+		} else {
+			// When removing, also remove leading whitespace on the same line
+			lineStart := ifStart
+			for lineStart > 0 && str[lineStart-1] != '\n' {
+				lineStart--
+			}
+			// Check if line only has whitespace before <<<if
+			prefix := str[lineStart:ifStart]
+			if strings.TrimSpace(prefix) == "" {
+				// Remove from line start (including leading whitespace)
+				// Also remove trailing newline if the line becomes empty
+				afterEnd := str[endPos:]
+				if len(afterEnd) > 0 && afterEnd[0] == '\n' {
+					endPos++ // Skip the newline after <<<endif>>>
+				}
+				str = str[:lineStart] + str[endPos:]
+			} else {
+				// There's content before <<<if on this line, just remove the block
+				str = str[:ifStart] + str[endPos:]
+			}
+		}
+	}
+
+	return str
+}
+
+// findMatchingEndif finds the position of <<<endif>>> that matches the opening tag
+// accounting for nested conditionals
+func findMatchingEndif(str string, startPos int) int {
+	depth := 1
+	pos := startPos
+
+	for depth > 0 && pos < len(str) {
+		nextIf := strings.Index(str[pos:], "<<<if")
+		nextEndif := strings.Index(str[pos:], "<<<endif>>>")
+
+		if nextEndif == -1 {
+			return -1 // No matching endif found
+		}
+
+		// Check which comes first
+		if nextIf != -1 && nextIf < nextEndif {
+			// Found another <<<if before <<<endif>>>
+			depth++
+			pos += nextIf + 5 // Move past <<<if
+		} else {
+			// Found <<<endif>>>
+			depth--
+			if depth == 0 {
+				return pos + nextEndif
+			}
+			pos += nextEndif + 11 // Move past <<<endif>>>
+		}
+	}
+
+	return -1
+}
+
+// evaluateCondition checks if the condition should evaluate to true
+func evaluateCondition(condition string) bool {
+	// Trim whitespace
+	condition = strings.TrimSpace(condition)
+
+	// Empty condition = false
+	if condition == "" {
+		return false
+	}
+
+	// Contains unprocessed placeholder = false
+	if strings.Contains(condition, "{{{") {
+		return false
+	}
+
+	// Contains "false" anywhere = false
+	if strings.Contains(strings.ToLower(condition), "false") {
+		return false
+	}
+
+	// Contains only "true" (possibly repeated) = true
+	// Remove all "true" and whitespace, if nothing left = true
+	cleaned := strings.ReplaceAll(strings.ToLower(condition), "true", "")
+	cleaned = strings.TrimSpace(cleaned)
+	if cleaned == "" {
+		return true
+	}
+
+	// Any other non-empty value without false = true
+	return true
 }
 
 func GetOutboundIP() string {
