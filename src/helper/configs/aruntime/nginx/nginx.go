@@ -4,11 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	configs2 "github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/configs/aruntime/project"
-	"github.com/faradey/madock/src/helper/finder"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
 	"log"
 	"os"
 	"os/exec"
@@ -17,6 +12,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/src/helper/finder"
+	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/src/helper/ports"
 )
 
 func MakeConf(projectName string) {
@@ -72,8 +74,6 @@ func setPorts(projectName string) {
 }
 
 func makeProxy(projectName string) {
-	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
-	portsConfig := configs2.ParseFile(portsFile)
 	generalConfig := configs2.GetGeneralConfig()
 	/* Create nginx default configuration for Magento2 */
 	nginxDefFile := ""
@@ -96,19 +96,22 @@ func makeProxy(projectName string) {
 					}
 
 					str = string(b)
-					port, err := strconv.Atoi(portsConfig[name])
-					if err != nil {
-						fmt.Println("Project name is " + name)
-						logger.Fatal(err)
-					}
 					projectConf := configs2.GetProjectConfig(name)
-					portRanged := (port - 1) * 12
-					strReplaced := strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged), -1)
+
+					// Get ports using on-demand allocation
+					nginxPort := ports.GetPort(name, ports.ServiceNginx)
+					liveReloadPort := ports.GetPort(name, ports.ServiceLiveReload)
+					vitePort := ports.GetPort(name, ports.ServiceVite)
+
+					// Replace named port placeholders
+					strReplaced := strings.Replace(str, "{{{port/nginx}}}", strconv.Itoa(nginxPort), -1)
+					strReplaced = strings.Replace(strReplaced, "{{{port/livereload}}}", strconv.Itoa(liveReloadPort), -1)
+					strReplaced = strings.Replace(strReplaced, "{{{port/vite}}}", strconv.Itoa(vitePort), -1)
 
 					// Set main upstream server - either nginx directly or varnish via Docker network
 					mainUpstreamServer := ""
 					if projectConf["varnish/enabled"] != "true" {
-						mainUpstreamServer = "host.docker.internal:" + strconv.Itoa(17000+portRanged)
+						mainUpstreamServer = "host.docker.internal:" + strconv.Itoa(nginxPort)
 					} else {
 						// Varnish is accessed via Docker network (madock-proxy)
 						mainUpstreamServer = name + "-varnish-1:6081"
@@ -137,10 +140,6 @@ func makeProxy(projectName string) {
 					}
 					strReplaced = strings.Replace(strReplaced, "{{{proxy/rate_limit/zone}}}", rateLimitZone, -1)
 					strReplaced = strings.Replace(strReplaced, "{{{proxy/rate_limit/req}}}", rateLimitReq, -1)
-
-					for i := 1; i < 12; i++ {
-						strReplaced = strings.Replace(strReplaced, "{{{nginx/port/default+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
-					}
 
 					// Replace container name placeholders for Docker network communication
 					strReplaced = strings.Replace(strReplaced, "{{{container/phpmyadmin}}}", name+"-phpmyadmin-1", -1)

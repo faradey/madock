@@ -13,7 +13,7 @@ import (
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	configs2 "github.com/faradey/madock/src/migration/versions/v240/configs"
+	"github.com/faradey/madock/src/helper/ports"
 )
 
 func MakeConf(projectName string) {
@@ -196,13 +196,7 @@ func makeDockerCompose(projectName string) {
 		b = ProcessSnippets(b, projectName)
 
 		str := string(b)
-		portsConfig := configs2.ParseFile(paths.GetExecDirPath() + "/aruntime/ports.conf")
-		portNumber, err := strconv.Atoi(portsConfig[projectName])
-		if err != nil {
-			logger.Fatal(err)
-		}
 
-		portNumberRanged := (portNumber - 1) * 12
 		hostName := "loc." + projectName + ".com"
 		hosts := configs.GetHosts(projectConf)
 		if len(hosts) > 0 {
@@ -210,11 +204,15 @@ func makeDockerCompose(projectName string) {
 		}
 		str = configs.ReplaceConfigValue(projectName, str)
 		str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
-		str = strings.Replace(str, "{{{nginx/port/project}}}", strconv.Itoa(portNumberRanged+17000), -1)
-		str = strings.Replace(str, "{{{nginx/port/project_ssl}}}", strconv.Itoa(portNumberRanged+17001), -1)
-		for i := 2; i < 12; i++ {
-			str = strings.Replace(str, "{{{nginx/port/project+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
-		}
+
+		// Replace named port placeholders using on-demand allocation
+		str = strings.Replace(str, "{{{port/nginx}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceNginx)), -1)
+		str = strings.Replace(str, "{{{port/nginx_ssl}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceNginxSSL)), -1)
+		str = strings.Replace(str, "{{{port/db}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceDB)), -1)
+		str = strings.Replace(str, "{{{port/db2}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceDB2)), -1)
+		str = strings.Replace(str, "{{{port/livereload}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceLiveReload)), -1)
+		str = strings.Replace(str, "{{{port/vite}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceVite)), -1)
+
 		str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
 		str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
 

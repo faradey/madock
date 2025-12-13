@@ -62,7 +62,7 @@ import (
 	"github.com/faradey/madock/src/migration"
 )
 
-var appVersion = "3.0.0"
+var appVersion = "3.1.0"
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)

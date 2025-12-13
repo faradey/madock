@@ -5,7 +5,7 @@ db:
       context: ctx
       dockerfile: db.Dockerfile
     ports:
-      - "{{{nginx/port/project+2}}}:3306"
+      - "{{{port/db}}}:3306"
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
