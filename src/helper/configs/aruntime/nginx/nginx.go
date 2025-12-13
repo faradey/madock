@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -98,15 +99,11 @@ func makeProxy(projectName string) {
 					str = string(b)
 					projectConf := configs2.GetProjectConfig(name)
 
-					// Get ports using on-demand allocation
-					nginxPort := ports.GetPort(name, ports.ServiceNginx)
-					liveReloadPort := ports.GetPort(name, ports.ServiceLiveReload)
-					vitePort := ports.GetPort(name, ports.ServiceVite)
+					// Dynamic port placeholder replacement - scans for any {{{port/XXX}}} pattern
+					strReplaced := replacePortPlaceholders(str, name)
 
-					// Replace named port placeholders
-					strReplaced := strings.Replace(str, "{{{port/nginx}}}", strconv.Itoa(nginxPort), -1)
-					strReplaced = strings.Replace(strReplaced, "{{{port/livereload}}}", strconv.Itoa(liveReloadPort), -1)
-					strReplaced = strings.Replace(strReplaced, "{{{port/vite}}}", strconv.Itoa(vitePort), -1)
+					// Get nginx port for main upstream (needed for varnish logic)
+					nginxPort := ports.GetPort(name, "nginx")
 
 					// Set main upstream server - either nginx directly or varnish via Docker network
 					mainUpstreamServer := ""
@@ -253,6 +250,30 @@ func getMaxPort(conf map[string]string) int {
 	}
 
 	return 0
+}
+
+// replacePortPlaceholders dynamically scans for {{{port/XXX}}} patterns and allocates ports
+func replacePortPlaceholders(str, projectName string) string {
+	re := regexp.MustCompile(`\{\{\{port/([a-z0-9_]+)\}\}\}`)
+	matches := re.FindAllStringSubmatch(str, -1)
+
+	replaced := make(map[string]bool)
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+		placeholder := match[0]
+		serviceName := match[1]
+
+		if replaced[placeholder] {
+			continue
+		}
+		replaced[placeholder] = true
+
+		port := ports.GetPort(projectName, serviceName)
+		str = strings.Replace(str, placeholder, strconv.Itoa(port), -1)
+	}
+	return str
 }
 
 func GenerateSslCert(ctxPath string, force bool) {

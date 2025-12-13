@@ -205,13 +205,8 @@ func makeDockerCompose(projectName string) {
 		str = configs.ReplaceConfigValue(projectName, str)
 		str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
 
-		// Replace named port placeholders using on-demand allocation
-		str = strings.Replace(str, "{{{port/nginx}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceNginx)), -1)
-		str = strings.Replace(str, "{{{port/nginx_ssl}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceNginxSSL)), -1)
-		str = strings.Replace(str, "{{{port/db}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceDB)), -1)
-		str = strings.Replace(str, "{{{port/db2}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceDB2)), -1)
-		str = strings.Replace(str, "{{{port/livereload}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceLiveReload)), -1)
-		str = strings.Replace(str, "{{{port/vite}}}", strconv.Itoa(ports.GetPort(projectName, ports.ServiceVite)), -1)
+		// Dynamic port placeholder replacement - scans for any {{{port/XXX}}} pattern
+		str = replacePortPlaceholders(str, projectName)
 
 		str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
 		str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
@@ -222,6 +217,32 @@ func makeDockerCompose(projectName string) {
 			log.Fatalf("Unable to write file: %v", err)
 		}
 	}
+}
+
+// replacePortPlaceholders dynamically scans for {{{port/XXX}}} patterns and allocates ports
+func replacePortPlaceholders(str, projectName string) string {
+	re := regexp.MustCompile(`\{\{\{port/([a-z0-9_]+)\}\}\}`)
+	matches := re.FindAllStringSubmatch(str, -1)
+
+	// Use a map to avoid duplicate replacements
+	replaced := make(map[string]bool)
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+		placeholder := match[0]
+		serviceName := match[1]
+
+		if replaced[placeholder] {
+			continue
+		}
+		replaced[placeholder] = true
+
+		port := ports.GetPort(projectName, serviceName)
+		str = strings.Replace(str, placeholder, strconv.Itoa(port), -1)
+	}
+
+	return str
 }
 
 func CompareVersions(v1, v2 string) int {

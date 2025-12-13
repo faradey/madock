@@ -17,14 +17,15 @@ const (
 	NextPortKey = "__next__"
 )
 
-// Service names for port allocation
+// Service names used for migration from old format only
+// New services can be added dynamically via {{{port/service_name}}} placeholders
 const (
-	ServiceNginx       = "nginx"
-	ServiceNginxSSL    = "nginx_ssl"
-	ServiceDB          = "db"
-	ServiceDB2         = "db2"
-	ServiceLiveReload  = "livereload"
-	ServiceVite        = "vite"
+	ServiceNginx      = "nginx"
+	ServiceNginxSSL   = "nginx_ssl"
+	ServiceDB         = "db"
+	ServiceDB2        = "db2"
+	ServiceLiveReload = "livereload"
+	ServiceVite       = "vite"
 )
 
 // Registry holds the port allocations
