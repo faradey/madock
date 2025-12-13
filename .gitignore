@@ -22,4 +22,7 @@
 !/scripts/**
 !/media
 !/media/*
+!/tests
+!/tests/*
+!/tests/**
 .DS_Store
