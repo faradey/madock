@@ -1,8 +1,10 @@
+networks:
+  madock-proxy:
+    external: true
 <<<if{{{isolation/enabled}}}>>>
-  networks:
-    opened:
-      driver: bridge
-    isolated:
-      driver: bridge
-      internal: true
+  opened:
+    driver: bridge
+  isolated:
+    driver: bridge
+    internal: true
 <<<endif>>>

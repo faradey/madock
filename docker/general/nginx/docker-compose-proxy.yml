@@ -14,6 +14,9 @@ services:
       - {{{nginx/interface_ip}}}5173:5173
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - madock-proxy
+      - default
     restart: {{{restart_policy}}}
 
   mailcatcher:
@@ -25,3 +28,7 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
     restart: {{{restart_policy}}}
+
+networks:
+  madock-proxy:
+    external: true

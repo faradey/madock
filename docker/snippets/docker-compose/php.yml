@@ -14,8 +14,8 @@ php:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}
     ports:
-      - "{{{nginx/port/project+5}}}:35729"
-      - "{{{nginx/port/project+11}}}:5173"
+      - "{{{nginx/port/project+4}}}:35729"
+      - "{{{nginx/port/project+5}}}:5173"
     <<<if{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>
     restart: {{{restart_policy}}}

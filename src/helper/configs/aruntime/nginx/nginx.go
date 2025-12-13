@@ -102,13 +102,18 @@ func makeProxy(projectName string) {
 						logger.Fatal(err)
 					}
 					projectConf := configs2.GetProjectConfig(name)
-					portRanged := (port - 1) * 20
-					strReplaced := ""
+					portRanged := (port - 1) * 12
+					strReplaced := strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged), -1)
+
+					// Set main upstream server - either nginx directly or varnish via Docker network
+					mainUpstreamServer := ""
 					if projectConf["varnish/enabled"] != "true" {
-						strReplaced = strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged), -1)
+						mainUpstreamServer = "host.docker.internal:" + strconv.Itoa(17000+portRanged)
 					} else {
-						strReplaced = strings.Replace(str, "{{{nginx/port/default}}}", strconv.Itoa(17000+portRanged+9), -1)
+						// Varnish is accessed via Docker network (madock-proxy)
+						mainUpstreamServer = name + "-varnish-1:6081"
 					}
+					strReplaced = strings.Replace(strReplaced, "{{{main_upstream_server}}}", mainUpstreamServer, -1)
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/unsecure}}}", generalConfig["nginx/port/unsecure"], -1)
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/secure}}}", generalConfig["nginx/port/secure"], -1)
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/http/version}}}", generalConfig["nginx/http/version"], -1)
@@ -133,9 +138,19 @@ func makeProxy(projectName string) {
 					strReplaced = strings.Replace(strReplaced, "{{{proxy/rate_limit/zone}}}", rateLimitZone, -1)
 					strReplaced = strings.Replace(strReplaced, "{{{proxy/rate_limit/req}}}", rateLimitReq, -1)
 
-					for i := 1; i < 20; i++ {
+					for i := 1; i < 12; i++ {
 						strReplaced = strings.Replace(strReplaced, "{{{nginx/port/default+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 					}
+
+					// Replace container name placeholders for Docker network communication
+					strReplaced = strings.Replace(strReplaced, "{{{container/phpmyadmin}}}", name+"-phpmyadmin-1", -1)
+					strReplaced = strings.Replace(strReplaced, "{{{container/phpmyadmin2}}}", name+"-phpmyadmin2-1", -1)
+					strReplaced = strings.Replace(strReplaced, "{{{container/kibana}}}", name+"-kibana-1", -1)
+					strReplaced = strings.Replace(strReplaced, "{{{container/opensearchdashboard}}}", name+"-opensearchdashboard-1", -1)
+					strReplaced = strings.Replace(strReplaced, "{{{container/selenium}}}", name+"-selenium-1", -1)
+					strReplaced = strings.Replace(strReplaced, "{{{container/grafana}}}", name+"-grafana-1", -1)
+					strReplaced = strings.Replace(strReplaced, "{{{container/varnish}}}", name+"-varnish-1", -1)
+
 					strReplaced = configs2.ReplaceConfigValue(projectName, strReplaced)
 					hostName := "loc." + name + ".com"
 					hosts := configs2.GetHosts(projectConf)

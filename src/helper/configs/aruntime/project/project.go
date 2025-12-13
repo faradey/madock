@@ -202,7 +202,7 @@ func makeDockerCompose(projectName string) {
 			logger.Fatal(err)
 		}
 
-		portNumberRanged := (portNumber - 1) * 20
+		portNumberRanged := (portNumber - 1) * 12
 		hostName := "loc." + projectName + ".com"
 		hosts := configs.GetHosts(projectConf)
 		if len(hosts) > 0 {
@@ -212,7 +212,7 @@ func makeDockerCompose(projectName string) {
 		str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
 		str = strings.Replace(str, "{{{nginx/port/project}}}", strconv.Itoa(portNumberRanged+17000), -1)
 		str = strings.Replace(str, "{{{nginx/port/project_ssl}}}", strconv.Itoa(portNumberRanged+17001), -1)
-		for i := 2; i < 20; i++ {
+		for i := 2; i < 12; i++ {
 			str = strings.Replace(str, "{{{nginx/port/project+"+strconv.Itoa(i)+"}}}", strconv.Itoa(portNumberRanged+17000+i), -1)
 		}
 		str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)

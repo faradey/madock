@@ -5,11 +5,10 @@
     environment:
       SERVER_BASEPATH: /kibana
       ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
-    ports:
-      - "{{{nginx/port/project+3}}}:5601"
     depends_on:
       - elasticsearch
+    networks:
+      - madock-proxy
+    <<<if{{{isolation/enabled}}}>>>  - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>
-    <<<if{{{search/elasticsearch/dashboard/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>

@@ -101,6 +101,9 @@ func UpNginxWithBuild(projectName string, force bool) {
 	}
 
 	if (!paths.IsFileExist(paths.GetExecDirPath()+"/cache/conf-cache") || doNeedRunAruntime) && projectConf["proxy/enabled"] == "true" {
+		// Create shared network for proxy and services
+		CreateProxyNetwork()
+
 		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
 		if !paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
 			nginx.GenerateSslCert(ctxPath, false)
@@ -284,6 +287,13 @@ func ReloadNginx() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func CreateProxyNetwork() {
+	// Create shared network for proxy and project services communication
+	// Ignore error if network already exists
+	cmd := exec.Command("docker", "network", "create", "--driver", "bridge", "madock-proxy")
+	_ = cmd.Run()
 }
 
 func GetContainerName(projectConf map[string]string, projectName, service string) string {

@@ -9,11 +9,10 @@
       PMA_USER: root
       PMA_PASSWORD: {{{db/root_password}}}
       UPLOAD_LIMIT: 2G
-    ports:
-      - "{{{nginx/port/project+2}}}:80"
     depends_on:
       - db
+    networks:
+      - madock-proxy
+    <<<if{{{isolation/enabled}}}>>>  - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>
-    <<<if{{{db/phpmyadmin/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>

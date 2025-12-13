@@ -5,12 +5,11 @@
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}
-    ports:
-      - "{{{nginx/port/project+8}}}:7900"
     shm_size: '2g'
     depends_on:
       - php
+    networks:
+      - madock-proxy
+    <<<if{{{isolation/enabled}}}>>>  - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>
-    <<<if{{{magento/mftf/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>

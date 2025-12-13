@@ -31,7 +31,7 @@ func Info() {
 		fmtc.SuccessLn("   user: " + projectConf["db/user"])
 		fmtc.SuccessLn("   password: " + projectConf["db/password"])
 		fmtc.SuccessLn("   root password: " + projectConf["db/root_password"])
-		fmtc.SuccessLn("   remote HOST:PORT: " + "localhost:" + strconv.Itoa(17000+((port-1)*20)+4))
+		fmtc.SuccessLn("   remote HOST:PORT: " + "localhost:" + strconv.Itoa(17000+((port-1)*12)+2))
 
 		fmt.Println("")
 		fmtc.SuccessLn("Second DB")
@@ -40,7 +40,7 @@ func Info() {
 		fmtc.SuccessLn("   user: " + projectConf["db2/user"])
 		fmtc.SuccessLn("   password: " + projectConf["db2/password"])
 		fmtc.SuccessLn("   root password: " + projectConf["db2/root_password"])
-		fmtc.SuccessLn("   remote HOST:PORT: " + "localhost:" + strconv.Itoa(17000+((port-1)*20)+6))
+		fmtc.SuccessLn("   remote HOST:PORT: " + "localhost:" + strconv.Itoa(17000+((port-1)*12)+3))
 	} else {
 		fmtc.Warning("This command is not supported for " + projectConf["platform"])
 	}

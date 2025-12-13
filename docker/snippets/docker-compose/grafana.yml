@@ -66,11 +66,10 @@
             path: /etc/grafana/dashboards
         EOF
         /run.sh
-    ports:
-      - "{{{nginx/port/project+10}}}:3000"
     depends_on:
       - loki
+    networks:
+      - madock-proxy
+    <<<if{{{isolation/enabled}}}>>>  - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>
-    <<<if{{{grafana/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>

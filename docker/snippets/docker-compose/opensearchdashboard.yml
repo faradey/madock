@@ -6,11 +6,10 @@
       SERVER_BASEPATH: /opensearch-dashboard
       OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
       DISABLE_SECURITY_DASHBOARDS_PLUGIN: 'true'
-    ports:
-      - "{{{nginx/port/project+3}}}:5601"
     depends_on:
       - opensearch
+    networks:
+      - madock-proxy
+    <<<if{{{isolation/enabled}}}>>>  - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>
-    <<<if{{{search/opensearch/dashboard/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>

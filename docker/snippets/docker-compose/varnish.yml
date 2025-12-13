@@ -8,13 +8,12 @@
       {{{nginx/host_gateways}}}
     command: "-p default_keep=300"
     environment:
-      VARNISH_HTTP_PORT: {{{nginx/port/project+9}}}
+      VARNISH_HTTP_PORT: 6081
       VARNISH_SIZE: 1G
-    ports:
-      - "{{{nginx/port/project+9}}}:{{{nginx/port/project+9}}}"
     depends_on:
       - nginx
+    networks:
+      - madock-proxy
+    <<<if{{{isolation/enabled}}}>>>  - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>
-    <<<if{{{varnish/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
