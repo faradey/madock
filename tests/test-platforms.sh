@@ -23,6 +23,7 @@ MADOCK_BIN="$MADOCK_DIR/madock"
 RESULTS_FILE="/tmp/madock-test-results.txt"
 FAILED_TESTS=0
 PASSED_TESTS=0
+KEEP_PROJECT=false
 
 # Magento presets to test (from preset.go)
 MAGENTO_PRESETS=(
@@ -161,8 +162,13 @@ EOF
         test_passed=false
     fi
 
-    # Cleanup
-    cleanup_project "$project_name"
+    # Cleanup (unless --keep flag is set)
+    if ! $KEEP_PROJECT; then
+        cleanup_project "$project_name"
+    else
+        log_info "Keeping project at: $project_dir"
+        log_info "Config at: $MADOCK_DIR/projects/$project_name/config.xml"
+    fi
 
     # Record result
     if $test_passed; then
@@ -252,6 +258,10 @@ main() {
                 specific_preset="$2"
                 shift 2
                 ;;
+            --keep)
+                KEEP_PROJECT=true
+                shift
+                ;;
             --cleanup)
                 cleanup_only=true
                 shift
@@ -261,6 +271,7 @@ main() {
                 echo ""
                 echo "Options:"
                 echo "  --preset NAME  Test specific preset (use quotes for names with spaces)"
+                echo "  --keep         Keep project after test (don't cleanup)"
                 echo "  --cleanup      Only cleanup, don't run tests"
                 echo "  --help         Show this help"
                 echo ""
