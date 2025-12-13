@@ -27,6 +27,15 @@ PASSED_TESTS=0
 # Platforms to test
 PLATFORMS="magento2 shopware prestashop pwa shopify custom"
 
+# Magento 2.4.8 presets to test
+MAGENTO_PRESETS=(
+    "Magento 2.4.8 (Latest)"
+    "Magento 2.4.8 + Elasticsearch"
+    "Magento 2.4.8 + Valkey"
+    "Magento 2.4.8 Minimal"
+    "Magento 2.4.8 + Elasticsearch + Valkey"
+)
+
 # Logging functions
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -279,6 +288,147 @@ test_platform_with_containers() {
     log_success "Full test completed for $platform"
 }
 
+# Test a single preset
+test_preset() {
+    local preset_name="$1"
+    local safe_name=$(echo "$preset_name" | tr ' +()./' '------' | tr -s '-' | tr '[:upper:]' '[:lower:]' | sed 's/-$//')
+    local project_name="test-preset-${safe_name}"
+    local project_dir="$TMP_DIR/$project_name"
+    local host="${safe_name}.test"
+    local test_passed=true
+
+    log_header "Testing preset: $preset_name"
+
+    # Cleanup any previous test
+    cleanup_project "$project_name"
+
+    # Create project directory
+    log_info "Creating project directory: $project_dir"
+    mkdir -p "$project_dir"
+    cd "$project_dir"
+
+    # Create minimal composer.json for Magento detection
+    cat > composer.json << 'EOF'
+{
+    "name": "test/magento2",
+    "type": "project"
+}
+EOF
+
+    # Run setup with preset (use yes to auto-confirm)
+    log_info "Running madock setup with preset: $preset_name"
+    if ! yes "" | "$MADOCK_BIN" setup --platform=magento2 --preset="$preset_name" --hosts="${host}:base" 2>&1 | tee /tmp/madock-setup-preset.log; then
+        log_error "Setup failed for preset: $preset_name"
+        test_passed=false
+    else
+        log_success "Setup completed for preset: $preset_name"
+    fi
+
+    # Check if config was created
+    if [[ -f "$MADOCK_DIR/projects/$project_name/config.xml" ]]; then
+        log_success "Config file created"
+    else
+        log_error "Config file not found"
+        test_passed=false
+    fi
+
+    # Test status command
+    log_info "Testing status command..."
+    if "$MADOCK_BIN" status 2>&1; then
+        log_success "Status command works"
+    else
+        log_warning "Status command returned non-zero (expected if containers not running)"
+    fi
+
+    # Test config:list command
+    log_info "Testing config:list command..."
+    if "$MADOCK_BIN" config:list 2>&1 | head -20; then
+        log_success "Config:list command works"
+    else
+        log_error "Config:list command failed"
+        test_passed=false
+    fi
+
+    # Verify preset-specific settings
+    log_info "Verifying preset configuration..."
+    local config_output=$("$MADOCK_BIN" config:list 2>&1)
+
+    if echo "$preset_name" | grep -qi "elasticsearch"; then
+        if echo "$config_output" | grep -q "search/elasticsearch/enabled.*true"; then
+            log_success "Elasticsearch is enabled as expected"
+        else
+            log_warning "Could not verify Elasticsearch setting"
+        fi
+    fi
+
+    if echo "$preset_name" | grep -qi "opensearch\|latest\|minimal"; then
+        if echo "$config_output" | grep -q "search/opensearch/enabled.*true"; then
+            log_success "OpenSearch is enabled as expected"
+        else
+            log_warning "Could not verify OpenSearch setting"
+        fi
+    fi
+
+    # Cleanup
+    cleanup_project "$project_name"
+
+    # Record result
+    if $test_passed; then
+        echo "preset:$safe_name=PASSED" >> "$RESULTS_FILE"
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        log_success "Preset '$preset_name': ALL TESTS PASSED"
+    else
+        echo "preset:$safe_name=FAILED" >> "$RESULTS_FILE"
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        log_error "Preset '$preset_name': SOME TESTS FAILED"
+    fi
+
+    echo ""
+}
+
+# Test all presets
+test_all_presets() {
+    log_header "Testing Magento 2.4.8 Presets"
+
+    for preset in "${MAGENTO_PRESETS[@]}"; do
+        test_preset "$preset"
+    done
+}
+
+# Print preset summary
+print_preset_summary() {
+    log_header "PRESET TEST SUMMARY"
+
+    local preset_count=${#MAGENTO_PRESETS[@]}
+    echo -e "Total presets tested: $preset_count"
+    echo -e "${GREEN}Passed: $PASSED_TESTS${NC}"
+    echo -e "${RED}Failed: $FAILED_TESTS${NC}"
+    echo ""
+
+    echo "Results by preset:"
+    for preset in "${MAGENTO_PRESETS[@]}"; do
+        local safe_name=$(echo "$preset" | tr ' +()' '----' | tr -s '-' | tr '[:upper:]' '[:lower:]')
+        local result="NOT RUN"
+        if [[ -f "$RESULTS_FILE" ]]; then
+            result=$(grep "^preset:$safe_name=" "$RESULTS_FILE" 2>/dev/null | cut -d= -f2 || echo "NOT RUN")
+        fi
+        if [[ "$result" == "PASSED" ]]; then
+            echo -e "  ${GREEN}$preset: $result${NC}"
+        else
+            echo -e "  ${RED}$preset: $result${NC}"
+        fi
+    done
+
+    echo ""
+    if [[ $FAILED_TESTS -eq 0 ]]; then
+        log_success "All preset tests passed!"
+        return 0
+    else
+        log_error "Some preset tests failed!"
+        return 1
+    fi
+}
+
 # Print summary
 print_summary() {
     log_header "TEST SUMMARY"
@@ -321,6 +471,12 @@ cleanup_all() {
         cleanup_project "test-${platform}-full"
     done
 
+    # Cleanup preset test projects
+    for preset in "${MAGENTO_PRESETS[@]}"; do
+        local safe_name=$(echo "$preset" | tr ' +()' '----' | tr -s '-' | tr '[:upper:]' '[:lower:]')
+        cleanup_project "test-preset-${safe_name}"
+    done
+
     # Remove tmp directory if empty
     if [[ -d "$TMP_DIR" ]] && [[ -z "$(ls -A "$TMP_DIR")" ]]; then
         rmdir "$TMP_DIR"
@@ -337,6 +493,8 @@ main() {
     local run_full_tests=false
     local specific_platform=""
     local cleanup_only=false
+    local test_presets=false
+    local specific_preset=""
 
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -349,6 +507,14 @@ main() {
                 specific_platform=$2
                 shift 2
                 ;;
+            --presets)
+                test_presets=true
+                shift
+                ;;
+            --preset)
+                specific_preset="$2"
+                shift 2
+                ;;
             --cleanup)
                 cleanup_only=true
                 shift
@@ -357,12 +523,19 @@ main() {
                 echo "Usage: $0 [options]"
                 echo ""
                 echo "Options:"
-                echo "  --full          Run full tests with containers (slower)"
-                echo "  --platform NAME Test only specific platform"
-                echo "  --cleanup       Only cleanup, don't run tests"
-                echo "  --help          Show this help"
+                echo "  --full           Run full tests with containers (slower)"
+                echo "  --platform NAME  Test only specific platform"
+                echo "  --presets        Test all Magento 2.4.8 presets"
+                echo "  --preset NAME    Test specific preset (use quotes for names with spaces)"
+                echo "  --cleanup        Only cleanup, don't run tests"
+                echo "  --help           Show this help"
                 echo ""
                 echo "Platforms: $PLATFORMS"
+                echo ""
+                echo "Available presets:"
+                for preset in "${MAGENTO_PRESETS[@]}"; do
+                    echo "  - $preset"
+                done
                 exit 0
                 ;;
             *)
@@ -388,7 +561,21 @@ main() {
         exit 0
     fi
 
-    # Run tests
+    # Run preset tests
+    if $test_presets; then
+        test_all_presets
+        print_preset_summary
+        exit $?
+    fi
+
+    # Run specific preset test
+    if [[ -n "$specific_preset" ]]; then
+        test_preset "$specific_preset"
+        print_preset_summary
+        exit $?
+    fi
+
+    # Run platform tests
     if [[ -n "$specific_platform" ]]; then
         if echo "$PLATFORMS" | grep -qw "$specific_platform"; then
             test_platform "$specific_platform"
