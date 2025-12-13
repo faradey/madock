@@ -1,3 +1,6 @@
+**v3.0.1**
+- Added `proxy:reload` command for graceful nginx configuration reload without downtime
+
 **v3.0.0**
 - Introduced a generic diff command: `madock diff --platform <code> --old <ver> --new <ver> [--path <publicDirFromSiteRoot>]`
 - Added store scopes documentation split into a dedicated file `docs/store_scopes.md` and linked from README

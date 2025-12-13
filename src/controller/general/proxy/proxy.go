@@ -27,6 +27,8 @@ func Execute(flag string) {
 			} else if flag == "rebuild" {
 				docker.DownNginx(args.Force)
 				docker.UpNginxWithBuild(projectName, true)
+			} else if flag == "reload" {
+				docker.ReloadNginx()
 			}
 			fmtc.SuccessLn("Done")
 		} else {

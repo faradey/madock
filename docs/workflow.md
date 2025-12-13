@@ -230,6 +230,9 @@ This command shows you the following items:
 * `proxy:rebuild`   Rebuild a proxy server
 
 
+* `proxy:reload`   Gracefully reload nginx configuration without downtime
+
+
 * `proxy:prune`   Prune a proxy server
                         
 

@@ -76,6 +76,7 @@ func Execute() {
 	describeByLevel("proxy:stop", "Stop a proxy server", 0)
 	describeByLevel("proxy:restart", "Restart a proxy server", 0)
 	describeByLevel("proxy:rebuild", "Rebuild a proxy server", 0)
+	describeByLevel("proxy:reload", "Gracefully reload nginx configuration without downtime", 0)
 	describeByLevel("proxy:prune", "Prune a proxy server", 0)
 	describeByLevel("prune", "Stop and delete running project containers and networks", 0)
 	describeByLevel("--with-volumes, -v", "Remove volumes, too", 1)

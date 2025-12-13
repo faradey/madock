@@ -276,6 +276,16 @@ func StopNginx(force bool) {
 	}
 }
 
+func ReloadNginx() {
+	cmd := exec.Command("docker", "exec", "aruntime-nginx", "nginx", "-s", "reload")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func GetContainerName(projectConf map[string]string, projectName, service string) string {
 	scope := ""
 	if val, ok := projectConf["activeScope"]; ok && val != "default" {

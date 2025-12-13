@@ -151,6 +151,8 @@ func main() {
 		proxy.Execute("restart")
 	case "proxy:rebuild":
 		proxy.Execute("rebuild")
+	case "proxy:reload":
+		proxy.Execute("reload")
 	case "proxy:prune":
 		proxy.Execute("prune")
 	case "prune":
