@@ -112,6 +112,27 @@ func makeProxy(projectName string) {
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/unsecure}}}", generalConfig["nginx/port/unsecure"], -1)
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/secure}}}", generalConfig["nginx/port/secure"], -1)
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/http/version}}}", generalConfig["nginx/http/version"], -1)
+					strReplaced = strings.Replace(strReplaced, "{{{proxy/timeout/connect}}}", generalConfig["proxy/timeout/connect"], -1)
+					strReplaced = strings.Replace(strReplaced, "{{{proxy/timeout/send}}}", generalConfig["proxy/timeout/send"], -1)
+					strReplaced = strings.Replace(strReplaced, "{{{proxy/timeout/read}}}", generalConfig["proxy/timeout/read"], -1)
+
+					// Gzip block (conditional)
+					gzipBlock := ""
+					if generalConfig["proxy/gzip/enabled"] == "true" {
+						gzipBlock = "# Gzip compression\ngzip on;\ngzip_vary on;\ngzip_proxied any;\ngzip_comp_level 6;\ngzip_min_length 1000;\ngzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;"
+					}
+					strReplaced = strings.Replace(strReplaced, "{{{proxy/gzip/block}}}", gzipBlock, -1)
+
+					// Rate limiting (conditional)
+					rateLimitZone := ""
+					rateLimitReq := ""
+					if generalConfig["proxy/rate_limit/enabled"] == "true" {
+						rateLimitZone = "# Rate limiting (protection against infinite loops)\nlimit_req_zone $binary_remote_addr zone=general:10m rate=" + generalConfig["proxy/rate_limit/rate"] + "r/s;"
+						rateLimitReq = "limit_req zone=general burst=" + generalConfig["proxy/rate_limit/burst"] + " nodelay;"
+					}
+					strReplaced = strings.Replace(strReplaced, "{{{proxy/rate_limit/zone}}}", rateLimitZone, -1)
+					strReplaced = strings.Replace(strReplaced, "{{{proxy/rate_limit/req}}}", rateLimitReq, -1)
+
 					for i := 1; i < 20; i++ {
 						strReplaced = strings.Replace(strReplaced, "{{{nginx/port/default+"+strconv.Itoa(i)+"}}}", strconv.Itoa(17000+portRanged+i), -1)
 					}

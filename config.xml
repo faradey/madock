@@ -162,6 +162,19 @@
             </magento>
             <proxy>
                 <enabled>true</enabled>
+                <timeout>
+                    <connect>60</connect>
+                    <send>300</send>
+                    <read>300</read>
+                </timeout>
+                <gzip>
+                    <enabled>true</enabled>
+                </gzip>
+                <rate_limit>
+                    <enabled>true</enabled>
+                    <rate>100</rate>
+                    <burst>200</burst>
+                </rate_limit>
             </proxy>
             <pwa>
                 <backend_url></backend_url>
