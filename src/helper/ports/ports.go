@@ -11,10 +11,9 @@ import (
 )
 
 const (
-	BasePort    = 17000
-	MaxPort     = 65535
-	PortsFile   = "/aruntime/ports.conf"
-	NextPortKey = "__next__"
+	BasePort  = 17000
+	MaxPort   = 65535
+	PortsFile = "/aruntime/ports.conf"
 )
 
 // Service names used for migration from old format only
@@ -31,7 +30,6 @@ const (
 // Registry holds the port allocations
 type Registry struct {
 	ports    map[string]int
-	nextPort int
 	filePath string
 }
 
@@ -39,10 +37,13 @@ type Registry struct {
 func NewRegistry() *Registry {
 	r := &Registry{
 		ports:    make(map[string]int),
-		nextPort: BasePort,
 		filePath: paths.GetExecDirPath() + PortsFile,
 	}
 	r.load()
+	// Auto-migrate old format entries if present
+	if r.IsOldFormat() {
+		r.MigrateFromOldFormat()
+	}
 	return r
 }
 
@@ -77,22 +78,10 @@ func (r *Registry) load() {
 			continue
 		}
 
-		if key == NextPortKey {
-			r.nextPort = port
-		} else {
+		// Only load new format entries (project/service=port)
+		if strings.Contains(key, "/") {
 			r.ports[key] = port
 		}
-	}
-
-	// If nextPort wasn't set, calculate it from existing ports
-	if r.nextPort == BasePort && len(r.ports) > 0 {
-		maxPort := BasePort
-		for _, port := range r.ports {
-			if port >= maxPort {
-				maxPort = port + 1
-			}
-		}
-		r.nextPort = maxPort
 	}
 }
 
@@ -112,7 +101,6 @@ func (r *Registry) save() {
 	for _, key := range keys {
 		lines = append(lines, key+"="+strconv.Itoa(r.ports[key]))
 	}
-	lines = append(lines, NextPortKey+"="+strconv.Itoa(r.nextPort))
 
 	content := strings.Join(lines, "\n") + "\n"
 	err := os.WriteFile(r.filePath, []byte(content), 0664)
@@ -129,13 +117,29 @@ func (r *Registry) GetOrAllocate(projectName, serviceName string) int {
 		return port
 	}
 
-	// Allocate new port
-	port := r.nextPort
+	// Find first available port starting from BasePort
+	port := r.findAvailablePort()
 	r.ports[key] = port
-	r.nextPort++
 	r.save()
 
 	return port
+}
+
+// findAvailablePort finds the first available port starting from BasePort
+func (r *Registry) findAvailablePort() int {
+	usedPorts := make(map[int]bool)
+	for _, port := range r.ports {
+		usedPorts[port] = true
+	}
+
+	for port := BasePort; port < MaxPort; port++ {
+		if !usedPorts[port] {
+			return port
+		}
+	}
+
+	// Fallback (should never happen)
+	return BasePort
 }
 
 // Get returns port for a service, 0 if not found
@@ -194,8 +198,8 @@ func (r *Registry) IsOldFormat() bool {
 		}
 
 		key := strings.TrimSpace(parts[0])
-		// Old format has no "/" in keys (except __next__)
-		if key != NextPortKey && !strings.Contains(key, "/") {
+		// Old format has no "/" in keys
+		if !strings.Contains(key, "/") {
 			return true
 		}
 	}
@@ -236,7 +240,7 @@ func (r *Registry) MigrateFromOldFormat() {
 		}
 
 		// Skip if already new format
-		if strings.Contains(key, "/") || key == NextPortKey {
+		if strings.Contains(key, "/") {
 			continue
 		}
 
@@ -249,26 +253,30 @@ func (r *Registry) MigrateFromOldFormat() {
 
 	// Convert old format to new format
 	// Old formula: basePort = 17000 + (portNum - 1) * 12
-	maxPort := BasePort
-	newPorts := make(map[string]int)
-
 	for projectName, portNum := range oldPorts {
 		basePort := BasePort + (portNum-1)*12
 
-		newPorts[projectName+"/"+ServiceNginx] = basePort + 0
-		newPorts[projectName+"/"+ServiceNginxSSL] = basePort + 1
-		newPorts[projectName+"/"+ServiceDB] = basePort + 2
-		newPorts[projectName+"/"+ServiceDB2] = basePort + 3
-		newPorts[projectName+"/"+ServiceLiveReload] = basePort + 4
-		newPorts[projectName+"/"+ServiceVite] = basePort + 5
-
-		if basePort+11 > maxPort {
-			maxPort = basePort + 11
+		// Add converted entries (don't overwrite if already exists)
+		if _, exists := r.ports[projectName+"/"+ServiceNginx]; !exists {
+			r.ports[projectName+"/"+ServiceNginx] = basePort + 0
+		}
+		if _, exists := r.ports[projectName+"/"+ServiceNginxSSL]; !exists {
+			r.ports[projectName+"/"+ServiceNginxSSL] = basePort + 1
+		}
+		if _, exists := r.ports[projectName+"/"+ServiceDB]; !exists {
+			r.ports[projectName+"/"+ServiceDB] = basePort + 2
+		}
+		if _, exists := r.ports[projectName+"/"+ServiceDB2]; !exists {
+			r.ports[projectName+"/"+ServiceDB2] = basePort + 3
+		}
+		if _, exists := r.ports[projectName+"/"+ServiceLiveReload]; !exists {
+			r.ports[projectName+"/"+ServiceLiveReload] = basePort + 4
+		}
+		if _, exists := r.ports[projectName+"/"+ServiceVite]; !exists {
+			r.ports[projectName+"/"+ServiceVite] = basePort + 5
 		}
 	}
 
-	r.ports = newPorts
-	r.nextPort = maxPort + 1
 	r.save()
 }
 

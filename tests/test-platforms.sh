@@ -87,13 +87,13 @@ cleanup_project() {
 
     log_info "Cleaning up project: $project_name"
 
-    # Stop containers if running
+    # Remove project with containers, images and volumes
     if [[ -d "$project_dir" ]]; then
         cd "$project_dir"
-        "$MADOCK_BIN" stop 2>/dev/null || true
+        "$MADOCK_BIN" project:remove --force --name="$project_name" 2>/dev/null || true
     fi
 
-    # Remove directories
+    # Remove remaining directories (if project:remove didn't clean everything)
     rm -rf "$project_dir"
     rm -rf "$MADOCK_DIR/projects/$project_name"
     rm -rf "$MADOCK_DIR/aruntime/projects/$project_name"
@@ -130,6 +130,7 @@ test_preset() {
 EOF
 
     # Run setup with preset (use yes to auto-confirm)
+    # Note: -d -i flags require TTY and won't work with pipes, use --interactive mode for that
     log_info "Running madock setup with preset: $preset_name"
     if ! yes "" | "$MADOCK_BIN" setup --platform=magento2 --preset="$preset_name" --hosts="${host}:base" 2>&1 | tee /tmp/madock-setup-preset.log; then
         log_error "Setup failed for preset: $preset_name"
@@ -223,7 +224,7 @@ EOF
     log_info "Running madock setup interactively..."
     log_info "Please answer the setup questions manually"
     echo ""
-    if ! "$MADOCK_BIN" setup --platform=magento2 --hosts="${host}:base" 2>&1; then
+    if ! "$MADOCK_BIN" setup -d -i --platform=magento2 --hosts="${host}:base" 2>&1; then
         log_error "Setup failed"
         test_passed=false
     else

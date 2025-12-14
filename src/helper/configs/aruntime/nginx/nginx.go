@@ -34,44 +34,9 @@ func MakeConf(projectName string) {
 }
 
 func setPorts(projectName string) {
-	projectsAruntime := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
-	projects := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects"))
-	if len(projectsAruntime) > len(projects) {
-		projects = projectsAruntime
-	}
-	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
-	if !paths.IsFileExist(portsFile) {
-		lines := ""
-		for port, line := range projects {
-			lines += line + "=" + strconv.Itoa(port+1) + "\n"
-		}
-		_ = os.WriteFile(portsFile, []byte(lines), 0664)
-	}
-
-	portsConfig := configs2.ParseFile(portsFile)
-	lines := ""
-	for projName, port := range portsConfig {
-		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + projName) {
-			lines += projName + "=" + port + "\n"
-		}
-	}
-
-	if lines != "" {
-		_ = os.WriteFile(portsFile, []byte(lines), 0664)
-	}
-
-	if _, ok := portsConfig[projectName]; !ok {
-		f, err := os.OpenFile(portsFile,
-			os.O_APPEND|os.O_WRONLY, 0664)
-		if err != nil {
-			log.Println(err)
-		}
-		defer f.Close()
-		maxPort := getMaxPort(portsConfig)
-		if _, err := f.WriteString(projectName + "=" + strconv.Itoa(maxPort+1) + "\n"); err != nil {
-			log.Println(err)
-		}
-	}
+	// Use the new ports package - it handles everything
+	// Just ensure the project is registered
+	_ = ports.GetPort(projectName, ports.ServiceNginx)
 }
 
 func makeProxy(projectName string) {
@@ -231,26 +196,6 @@ func makeDockerCompose(projectName string) {
 	/* END Create nginx Dockerfile configuration */
 }
 
-func getMaxPort(conf map[string]string) int {
-	portInt := 0
-	var err error
-	var ports []int
-	for _, port := range conf {
-		portInt, err = strconv.Atoi(port)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		ports = append(ports, portInt)
-	}
-
-	for i := 1; i < 1000; i++ {
-		if !finder.IsContainInt(ports, i) {
-			return i - 1
-		}
-	}
-
-	return 0
-}
 
 // replacePortPlaceholders dynamically scans for {{{port/XXX}}} patterns and allocates ports
 func replacePortPlaceholders(str, projectName string) string {
