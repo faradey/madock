@@ -26,11 +26,28 @@ func MakeConf(projectName string) {
 	if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
 		return
 	}
+
+	// Clean up old proxy cache files to prevent stale configs
+	cleanProxyCache()
+
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx")
 	setPorts(projectName)
 	makeProxy(projectName)
 	makeDockerfile(projectName)
 	makeDockerCompose(projectName)
+}
+
+// cleanProxyCache removes old proxy config cache files
+func cleanProxyCache() {
+	cacheDir := paths.GetExecDirPath() + "/cache"
+	if paths.IsFileExist(cacheDir) {
+		cacheFiles, _ := os.ReadDir(cacheDir)
+		for _, f := range cacheFiles {
+			if strings.HasSuffix(f.Name(), "-proxy.conf") {
+				os.Remove(cacheDir + "/" + f.Name())
+			}
+		}
+	}
 }
 
 func setPorts(projectName string) {
@@ -46,12 +63,35 @@ func makeProxy(projectName string) {
 	str := ""
 	allFileData := "worker_processes 2;\nworker_priority -10;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\nserver_names_hash_bucket_size  128;\nserver_names_hash_max_size 1024;\n"
 
+	// Global rate limiting zone (defined once for all projects)
+	if generalConfig["proxy/rate_limit/enabled"] == "true" {
+		allFileData += "# Rate limiting (protection against infinite loops)\nlimit_req_zone $binary_remote_addr zone=general:10m rate=" + generalConfig["proxy/rate_limit/rate"] + "r/s;\n"
+	}
+
+	// Global gzip settings (defined once for all projects)
+	if generalConfig["proxy/gzip/enabled"] == "true" {
+		allFileData += "# Gzip compression\ngzip on;\ngzip_vary on;\ngzip_proxied any;\ngzip_comp_level 6;\ngzip_min_length 1000;\ngzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;\n"
+	}
+
+	// Global map for WebSocket upgrade (used by Grafana Live, etc.)
+	allFileData += "# WebSocket upgrade map\nmap $http_upgrade $connection_upgrade {\n  default upgrade;\n  '' close;\n}\n"
+
+	// Global log format and access log
+	allFileData += "# Access log format\nlog_format main '$remote_addr - $host [$time_local] \"$request\" '\n                '$status $body_bytes_sent \"$http_referer\" '\n                '\"$http_user_agent\" $request_time';\n"
+	allFileData += "access_log /var/log/nginx/access.log main;\n"
+
 	var onlyHostsGlobal []string
+	processedProjects := make(map[string]bool) // Track processed projects to avoid duplicates
 	projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
 	if !finder.IsContain(projectsNames, projectName) {
 		projectsNames = append(projectsNames, projectName)
 	}
 	for _, name := range projectsNames {
+		// Skip if already processed (prevents duplicate upstream definitions)
+		if processedProjects[name] {
+			continue
+		}
+		processedProjects[name] = true
 		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
 			if !paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped") {
 				if projectName == name || !paths.IsFileExist(paths.GetExecDirPath()+"/cache/"+name+"-proxy.conf") {
@@ -81,36 +121,22 @@ func makeProxy(projectName string) {
 					strReplaced = strings.Replace(strReplaced, "{{{main_upstream_server}}}", mainUpstreamServer, -1)
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/unsecure}}}", generalConfig["nginx/port/unsecure"], -1)
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/secure}}}", generalConfig["nginx/port/secure"], -1)
-					strReplaced = strings.Replace(strReplaced, "{{{nginx/http/version}}}", generalConfig["nginx/http/version"], -1)
+					// HTTP/2 directive (new nginx 1.25+ syntax)
+					http2Directive := ""
+					if generalConfig["nginx/http/version"] == "http2" {
+						http2Directive = "http2 on;"
+					}
+					strReplaced = strings.Replace(strReplaced, "{{{nginx/http2/directive}}}", http2Directive, -1)
 					strReplaced = strings.Replace(strReplaced, "{{{proxy/timeout/connect}}}", generalConfig["proxy/timeout/connect"], -1)
 					strReplaced = strings.Replace(strReplaced, "{{{proxy/timeout/send}}}", generalConfig["proxy/timeout/send"], -1)
 					strReplaced = strings.Replace(strReplaced, "{{{proxy/timeout/read}}}", generalConfig["proxy/timeout/read"], -1)
 
-					// Gzip block (conditional)
-					gzipBlock := ""
-					if generalConfig["proxy/gzip/enabled"] == "true" {
-						gzipBlock = "# Gzip compression\ngzip on;\ngzip_vary on;\ngzip_proxied any;\ngzip_comp_level 6;\ngzip_min_length 1000;\ngzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;"
-					}
-					strReplaced = strings.Replace(strReplaced, "{{{proxy/gzip/block}}}", gzipBlock, -1)
-
-					// Rate limiting (conditional)
-					rateLimitZone := ""
+					// Rate limiting request directive (per-location, conditional)
 					rateLimitReq := ""
 					if generalConfig["proxy/rate_limit/enabled"] == "true" {
-						rateLimitZone = "# Rate limiting (protection against infinite loops)\nlimit_req_zone $binary_remote_addr zone=general:10m rate=" + generalConfig["proxy/rate_limit/rate"] + "r/s;"
 						rateLimitReq = "limit_req zone=general burst=" + generalConfig["proxy/rate_limit/burst"] + " nodelay;"
 					}
-					strReplaced = strings.Replace(strReplaced, "{{{proxy/rate_limit/zone}}}", rateLimitZone, -1)
 					strReplaced = strings.Replace(strReplaced, "{{{proxy/rate_limit/req}}}", rateLimitReq, -1)
-
-					// Replace container name placeholders for Docker network communication
-					strReplaced = strings.Replace(strReplaced, "{{{container/phpmyadmin}}}", name+"-phpmyadmin-1", -1)
-					strReplaced = strings.Replace(strReplaced, "{{{container/phpmyadmin2}}}", name+"-phpmyadmin2-1", -1)
-					strReplaced = strings.Replace(strReplaced, "{{{container/kibana}}}", name+"-kibana-1", -1)
-					strReplaced = strings.Replace(strReplaced, "{{{container/opensearchdashboard}}}", name+"-opensearchdashboard-1", -1)
-					strReplaced = strings.Replace(strReplaced, "{{{container/selenium}}}", name+"-selenium-1", -1)
-					strReplaced = strings.Replace(strReplaced, "{{{container/grafana}}}", name+"-grafana-1", -1)
-					strReplaced = strings.Replace(strReplaced, "{{{container/varnish}}}", name+"-varnish-1", -1)
 
 					strReplaced = configs2.ReplaceConfigValue(projectName, strReplaced)
 					hostName := "loc." + name + ".com"
@@ -148,7 +174,12 @@ func makeProxy(projectName string) {
 		}
 	}
 
-	allFileData += "\nserver {\n    listen       " + generalConfig["nginx/port/unsecure"] + "  default_server;\n listen " + generalConfig["nginx/port/secure"] + " default_server ssl " + generalConfig["nginx/http/version"] + ";\n    server_name  _;\n    return       444;\n ssl_certificate /sslcert/fullchain.crt;\n        ssl_certificate_key /sslcert/madock.local.key;\n        include /sslcert/options-ssl-nginx.conf; \n}\n"
+	// Build default server block with new http2 directive syntax (nginx 1.25+)
+	http2DefaultDirective := ""
+	if generalConfig["nginx/http/version"] == "http2" {
+		http2DefaultDirective = "\n    http2 on;"
+	}
+	allFileData += "\nserver {\n    listen       " + generalConfig["nginx/port/unsecure"] + "  default_server;\n    listen " + generalConfig["nginx/port/secure"] + " default_server ssl;" + http2DefaultDirective + "\n    server_name  _;\n    return       444;\n    ssl_certificate /sslcert/fullchain.crt;\n    ssl_certificate_key /sslcert/madock.local.key;\n    include /sslcert/options-ssl-nginx.conf; \n}\n"
 	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
 	err := os.WriteFile(nginxFile, []byte(allFileData), 0755)

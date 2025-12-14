@@ -30,8 +30,9 @@ const (
 	ServiceVarnish            = "varnish"            // +9
 	ServiceGrafana            = "grafana"            // +10
 	ServiceVite               = "vite"               // +11
-	ServiceRabbitMQ           = "rabbitmq"           // +12
-	ServiceRabbitMQManagement = "rabbitmq_management" // +13
+	ServiceRabbitMQ              = "rabbitmq"              // +12
+	ServiceRabbitMQManagement    = "rabbitmq_management"    // +13
+	ServiceOpenSearchDashboard   = "opensearchdashboard"    // +14
 )
 
 // Registry holds the port allocations
