@@ -90,94 +90,38 @@ func GetXmlMap(path string) (map[string]interface{}, error) {
 	return result, nil
 }
 
+// SetXmlMap converts a flat map with "/" separated keys to a nested map structure.
+// Example: {"php/version": "8.1"} -> {"php": {"version": "8.1"}}
 func SetXmlMap(data map[string]interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
 	for key, value := range data {
 		keys := strings.Split(key, "/")
-		switch len(keys) {
-		case 1:
-			if keys[0] == "activeScope" {
-				result[keys[0]] = value.(string)
-			}
-		/*case 2:
-		if _, ok := result[keys[0]]; !ok {
-			result[keys[0]] = make(map[string]interface{})
-		}
-		result[keys[0]].(map[string]interface{})[keys[1]] = value.(string)*/
-		case 3:
-			if _, ok := result[keys[0]]; !ok {
-				result[keys[0]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
-			}
-			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = value.(string)
-		case 4:
-			if _, ok := result[keys[0]]; !ok {
-				result[keys[0]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = make(map[string]interface{})
-			}
-			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = value.(string)
-		case 5:
-			if _, ok := result[keys[0]]; !ok {
-				result[keys[0]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = make(map[string]interface{})
-			}
-			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]] = value.(string)
-		case 6:
-			if _, ok := result[keys[0]]; !ok {
-				result[keys[0]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]] = make(map[string]interface{})
-			}
-			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]].(map[string]interface{})[keys[5]] = value.(string)
-		case 7:
-			if _, ok := result[keys[0]]; !ok {
-				result[keys[0]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]] = make(map[string]interface{})
-			}
-			if _, ok := result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]].(map[string]interface{})[keys[5]]; !ok {
-				result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]].(map[string]interface{})[keys[5]] = make(map[string]interface{})
-			}
-			result[keys[0]].(map[string]interface{})[keys[1]].(map[string]interface{})[keys[2]].(map[string]interface{})[keys[3]].(map[string]interface{})[keys[4]].(map[string]interface{})[keys[5]].(map[string]interface{})[keys[6]] = value.(string)
-		}
+		setNestedValue(result, keys, value)
+	}
+	return result
+}
+
+// setNestedValue recursively creates nested maps and sets the value at the deepest level.
+func setNestedValue(m map[string]interface{}, keys []string, value interface{}) {
+	if len(keys) == 0 {
+		return
 	}
 
-	return result
+	if len(keys) == 1 {
+		// Leaf node - set the value
+		m[keys[0]] = value
+		return
+	}
+
+	// Intermediate node - create nested map if needed
+	if _, ok := m[keys[0]]; !ok {
+		m[keys[0]] = make(map[string]interface{})
+	}
+
+	// Recurse into the nested map
+	if nested, ok := m[keys[0]].(map[string]interface{}); ok {
+		setNestedValue(nested, keys[1:], value)
+	}
 }
 
 func ComposeConfigMap(rawData map[string]interface{}) map[string]string {
