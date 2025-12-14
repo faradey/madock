@@ -18,18 +18,20 @@ const (
 
 // Service names for port allocation
 const (
-	ServiceNginx       = "nginx"       // +0
-	ServiceNginxSSL    = "nginx_ssl"   // +1
-	ServicePhpMyAdmin  = "phpmyadmin"  // +2
-	ServiceKibana      = "kibana"      // +3
-	ServiceDB          = "db"          // +4
-	ServiceLiveReload  = "livereload"  // +5
-	ServiceDB2         = "db2"         // +6
-	ServicePhpMyAdmin2 = "phpmyadmin2" // +7
-	ServiceSelenium    = "selenium"    // +8
-	ServiceVarnish     = "varnish"     // +9
-	ServiceGrafana     = "grafana"     // +10
-	ServiceVite        = "vite"        // +11
+	ServiceNginx              = "nginx"              // +0
+	ServiceNginxSSL           = "nginx_ssl"          // +1
+	ServicePhpMyAdmin         = "phpmyadmin"         // +2
+	ServiceKibana             = "kibana"             // +3
+	ServiceDB                 = "db"                 // +4
+	ServiceLiveReload         = "livereload"         // +5
+	ServiceDB2                = "db2"                // +6
+	ServicePhpMyAdmin2        = "phpmyadmin2"        // +7
+	ServiceSelenium           = "selenium"           // +8
+	ServiceVarnish            = "varnish"            // +9
+	ServiceGrafana            = "grafana"            // +10
+	ServiceVite               = "vite"               // +11
+	ServiceRabbitMQ           = "rabbitmq"           // +12
+	ServiceRabbitMQManagement = "rabbitmq_management" // +13
 )
 
 // Registry holds the port allocations

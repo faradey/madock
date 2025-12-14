@@ -17,6 +17,7 @@
       - ./ctx/grafana/dashboard-mysql.json:/etc/grafana/dashboards/mysql.json
       - ./ctx/grafana/dashboard-redis.json:/etc/grafana/dashboards/redis.json
       - ./ctx/grafana/dashboard-loki.json:/etc/grafana/dashboards/loki.json
+      - ./ctx/grafana/dashboard-rabbitmq.json:/etc/grafana/dashboards/rabbitmq.json
     entrypoint:
       - sh
       - -euc

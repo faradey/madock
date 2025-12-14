@@ -1,7 +1,14 @@
 <<<if{{{rabbitmq/enabled}}}>>>
   rabbitmq:
-    image: {{{rabbitmq/repository}}}:{{{rabbitmq/version}}}
+    image: {{{rabbitmq/repository}}}:{{{rabbitmq/version}}}-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "{{{port/rabbitmq}}}:5672"
+      - "{{{port/rabbitmq_management}}}:15672"
+    networks:
+      - default
+<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>
-    <<<if{{{rabbitmq/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
