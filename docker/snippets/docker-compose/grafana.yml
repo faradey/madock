@@ -27,7 +27,8 @@
         datasources:
         - name: Loki
           type: loki
-          access: proxy 
+          uid: P8E80F9AEF21F6940
+          access: proxy
           orgId: 1
           url: http://loki:3100
           basicAuth: false
@@ -36,15 +37,17 @@
           editable: false
         - name: Redis
           type: redis-datasource
-          access: proxy 
+          uid: PA7F6415749A3297A
+          access: proxy
           orgId: 1
-          url: redisdb:6379
+          url: redis://redisdb:6379
           basicAuth: false
           version: 1
           editable: false
         - name: Prometheus
           type: prometheus
-          access: proxy 
+          uid: PBFA97CFB590B2093
+          access: proxy
           orgId: 1
           url: http://prometheus:9090
           basicAuth: false
@@ -69,7 +72,8 @@
     depends_on:
       - loki
     networks:
+      - default
       - madock-proxy
-    <<<if{{{isolation/enabled}}}>>>  - isolated<<<endif>>>
+<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>
