@@ -14,10 +14,14 @@ Added:
 - Magento 2.4.9 support with OpenSearch 3.0.0
 - `shopware:bin` command for Shopware CLI operations
 - Unit tests for core packages
+- RabbitMQ monitoring dashboard in Grafana (queues, connections, channels, message rates)
+- RabbitMQ exporter for Prometheus metrics collection
+- Port mappings for Grafana, Kibana, OpenSearch Dashboards, phpMyAdmin, Selenium, Varnish
 
 Improved:
 - Nginx proxy security and performance
 - Updated nginx from 1.21.4 to 1.26
+- Grafana stack configuration with proper datasource UIDs for dashboard compatibility
 
 Fixed:
 - Section padding panic in setup wizard
@@ -26,6 +30,10 @@ Fixed:
 - MariaDB exec file compatibility
 - Composer install command for Shopify platform
 - Various potential bugs across the codebase
+- Nginx http2 directive deprecation warning (nginx 1.25+)
+- Duplicate upstream and global directive errors in nginx proxy
+- Varnish network connectivity with backend nginx
+- Grafana subpath proxy configuration
 
 **v3.0.0**
 - Introduced a generic diff command: `madock diff --platform <code> --old <ver> --new <ver> [--path <publicDirFromSiteRoot>]`

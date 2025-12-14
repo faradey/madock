@@ -51,8 +51,27 @@ This document lists the Docker images used by Madock.
 
 ## Monitoring & Logging
 
-### Grafana
-* [grafana/grafana](https://hub.docker.com/r/grafana/grafana)
+### Grafana Stack
+
+Grafana provides a comprehensive monitoring solution with pre-configured dashboards:
+
+**Images:**
+* [grafana/grafana](https://hub.docker.com/r/grafana/grafana) - Visualization platform
+* [grafana/loki](https://hub.docker.com/r/grafana/loki) - Log aggregation
+* [grafana/promtail](https://hub.docker.com/r/grafana/promtail) - Log collector
+* [prom/prometheus](https://hub.docker.com/r/prom/prometheus) - Metrics collection
+* [prom/mysqld-exporter](https://hub.docker.com/r/prom/mysqld-exporter) - MySQL metrics exporter
+* [kbudde/rabbitmq-exporter](https://hub.docker.com/r/kbudde/rabbitmq-exporter) - RabbitMQ metrics exporter
+
+**Pre-configured Dashboards:**
+* **Loki** - Application logs viewer
+* **MySQL Overview** - Database performance metrics (connections, queries, buffer pool)
+* **Redis** - Cache performance and memory usage
+* **RabbitMQ** - Queue metrics, connections, channels, message rates
+
+**Access:** `https://your-domain.test/grafana/`
+
+**Enable:** `madock service:enable grafana`
 
 ### Kibana
 * [kibana](https://hub.docker.com/_/kibana)
