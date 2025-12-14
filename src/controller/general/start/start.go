@@ -4,12 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	startCustom "github.com/faradey/madock/src/controller/custom/start"
-	startMagento2 "github.com/faradey/madock/src/controller/magento/start"
-	startPrestashop "github.com/faradey/madock/src/controller/prestashop/start"
-	startPwa "github.com/faradey/madock/src/controller/pwa/start"
-	builder2 "github.com/faradey/madock/src/controller/shopify/start"
-	startShopware "github.com/faradey/madock/src/controller/shopware/start"
+	"github.com/faradey/madock/src/controller/platform"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -22,24 +17,13 @@ func Execute() {
 	if configs2.IsHasConfig("") {
 		projectName := configs2.GetProjectName()
 		projectConf := configs2.GetProjectConfig(projectName)
-		platform := projectConf["platform"]
+		platformName := projectConf["platform"]
 		startTime := time.Now()
 
 		fmtc.TitleLn("Starting containers...")
 
-		if platform == "magento2" {
-			startMagento2.Execute(projectName, args.WithChown, projectConf)
-		} else if platform == "pwa" {
-			startPwa.Execute(projectName, args.WithChown)
-		} else if platform == "shopify" {
-			builder2.Execute(projectName, args.WithChown, projectConf)
-		} else if platform == "custom" {
-			startCustom.Execute(projectName, args.WithChown, projectConf)
-		} else if platform == "shopware" {
-			startShopware.Execute(projectName, args.WithChown, projectConf)
-		} else if platform == "prestashop" {
-			startPrestashop.Execute(projectName, args.WithChown, projectConf)
-		}
+		handler := platform.GetOrDefault(platformName)
+		handler.Start(projectName, args.WithChown, projectConf)
 
 		elapsed := time.Since(startTime).Round(time.Second)
 		fmt.Println("")
