@@ -1,6 +1,8 @@
 <<<if{{{varnish/enabled}}}>>>
   varnish:
     image: {{{varnish/repository}}}:{{{varnish/version}}}
+    ports:
+      - "{{{port/varnish}}}:6081"
     volumes:
       - ./src/{{{varnish/config_file}}}:/etc/varnish/default.vcl:ro
     extra_hosts:
@@ -13,7 +15,7 @@
     depends_on:
       - nginx
     networks:
-      - madock-proxy
-    <<<if{{{isolation/enabled}}}>>>  - isolated<<<endif>>>
+      - default
+<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>

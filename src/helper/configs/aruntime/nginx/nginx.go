@@ -110,13 +110,13 @@ func makeProxy(projectName string) {
 					// Get nginx port for main upstream (needed for varnish logic)
 					nginxPort := ports.GetPort(name, "nginx")
 
-					// Set main upstream server - either nginx directly or varnish via Docker network
+					// Set main upstream server - either nginx directly or varnish
 					mainUpstreamServer := ""
 					if projectConf["varnish/enabled"] != "true" {
 						mainUpstreamServer = "host.docker.internal:" + strconv.Itoa(nginxPort)
 					} else {
-						// Varnish is accessed via Docker network (madock-proxy)
-						mainUpstreamServer = name + "-varnish-1:6081"
+						varnishPort := ports.GetPort(name, "varnish")
+						mainUpstreamServer = "host.docker.internal:" + strconv.Itoa(varnishPort)
 					}
 					strReplaced = strings.Replace(strReplaced, "{{{main_upstream_server}}}", mainUpstreamServer, -1)
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/unsecure}}}", generalConfig["nginx/port/unsecure"], -1)
