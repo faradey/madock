@@ -1,27 +1,23 @@
 package docker
 
 import (
-	"encoding/json"
 	"fmt"
-	cliHelper "github.com/faradey/madock/src/helper/cli"
-	"github.com/faradey/madock/src/helper/cli/fmtc"
-	configs2 "github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/configs/aruntime/nginx"
-	"github.com/faradey/madock/src/helper/configs/aruntime/project"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
-	"io"
 	"os"
 	"os/exec"
 	"os/user"
-	"strings"
+
+	configs2 "github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/src/helper/paths"
 )
 
+// UpWithBuild starts both nginx proxy and project containers with build
 func UpWithBuild(projectName string, withChown bool) {
 	UpNginxWithBuild(projectName, true)
 	UpProjectWithBuild(projectName, withChown)
 }
 
+// Down stops project containers
 func Down(projectName string, withVolumes bool) {
 	pp := paths.NewProjectPaths(projectName)
 	composeFile := pp.DockerCompose()
@@ -53,6 +49,7 @@ func Down(projectName string, withVolumes bool) {
 	}
 }
 
+// Kill forcefully stops project containers
 func Kill(projectName string) {
 	pp := paths.NewProjectPaths(projectName)
 	composeFile := pp.DockerCompose()
@@ -78,61 +75,7 @@ func Kill(projectName string) {
 	}
 }
 
-func UpNginx(projectName string) {
-	UpNginxWithBuild(projectName, false)
-}
-
-func UpNginxWithBuild(projectName string, force bool) {
-	if !paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
-		configs2.SetParam(configs2.MadockLevelConfigCode, "path", paths.GetRunDirPath(), "default", configs2.MadockLevelConfigCode)
-	}
-	nginx.MakeConf(projectName)
-	project.MakeConf(projectName)
-	projectConf := configs2.GetProjectConfig(projectName)
-	doNeedRunAruntime := true
-	proxyCompose := paths.ProxyDockerCompose()
-	if paths.IsFileExist(proxyCompose) {
-		cmd := exec.Command("docker", "compose", "-f", proxyCompose, "ps", "--format", "json")
-		result, err := cmd.CombinedOutput()
-		if err != nil {
-			logger.Println(err, result)
-		} else {
-			if len(result) > 100 && strings.Contains(string(result), "\"Command\"") && strings.Contains(string(result), "\"aruntime-nginx\"") {
-				doNeedRunAruntime = false
-			}
-		}
-	}
-
-	confCache := paths.CacheDir() + "/conf-cache"
-	if (!paths.IsFileExist(confCache) || doNeedRunAruntime) && projectConf["proxy/enabled"] == "true" {
-		// Create shared network for proxy and services
-		CreateProxyNetwork()
-
-		ctxPath := paths.MakeDirsByPath(paths.CtxDir())
-		if !paths.IsFileExist(confCache) {
-			nginx.GenerateSslCert(ctxPath, false)
-
-			dockerComposePull([]string{"compose", "-f", proxyCompose})
-
-			err := os.WriteFile(confCache, []byte("config cache"), 0755)
-			if err != nil {
-				logger.Fatal(err)
-			}
-		}
-		command := []string{"compose", "-f", proxyCompose, "up", "--no-deps", "-d"}
-		if force {
-			command = append(command, "--build", "--force-recreate")
-		}
-		cmd := exec.Command("docker", command...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		if err != nil {
-			logger.Println(err)
-		}
-	}
-}
-
+// UpProjectWithBuild starts project containers with build
 func UpProjectWithBuild(projectName string, withChown bool) {
 	var err error
 	globalComposer := paths.ComposerDir()
@@ -241,6 +184,7 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 	}
 }
 
+// dockerComposePull pulls images for docker-compose
 func dockerComposePull(composeFiles []string) {
 	composeFiles = append(composeFiles, "pull")
 	cmd := exec.Command("docker", composeFiles...)
@@ -252,173 +196,7 @@ func dockerComposePull(composeFiles []string) {
 	}
 }
 
-func DownNginx(force bool) {
-	composeFile := paths.ProxyDockerCompose()
-	if paths.IsFileExist(composeFile) {
-		command := "down"
-		if force {
-			command = "kill"
-		}
-		cmd := exec.Command("docker", "compose", "-f", composeFile, command)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-}
-
-func StopNginx(force bool) {
-	composeFile := paths.ProxyDockerCompose()
-	if paths.IsFileExist(composeFile) {
-		command := "stop"
-		if force {
-			command = "kill"
-		}
-		cmd := exec.Command("docker", "compose", "-f", composeFile, command)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-}
-
-func ReloadNginx() {
-	cmd := exec.Command("docker", "exec", "aruntime-nginx", "nginx", "-s", "reload")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func CreateProxyNetwork() {
-	// Create shared network for proxy and project services communication
-	// Ignore error if network already exists
-	cmd := exec.Command("docker", "network", "create", "--driver", "bridge", "madock-proxy")
-	_ = cmd.Run()
-}
-
-func GetContainerName(projectConf map[string]string, projectName, service string) string {
-	scope := ""
-	if val, ok := projectConf["activeScope"]; ok && val != "default" {
-		scope = strings.ToLower("-" + val)
-	}
-	return strings.ToLower(projectConf["container_name_prefix"]) + strings.ToLower(projectName) + scope + "-" + service + "-1"
-}
-
-func CronExecute(projectName string, flag, manual bool) {
-	projectConf := configs2.GetProjectConfig(projectName)
-	service := "php"
-	if projectConf["platform"] == "pwa" {
-		service = "nodejs"
-	}
-
-	service, userOS, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
-
-	var cmd *exec.Cmd
-	var bOut io.Writer
-	var bErr io.Writer
-	if flag {
-		cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, service), "service", "cron", "start")
-		cmd.Stdout = bOut
-		cmd.Stderr = bErr
-		err := cmd.Run()
-		if manual {
-			if err != nil {
-				fmt.Println(bErr)
-				logger.Fatal(err)
-			} else {
-				fmt.Println("Cron was started")
-			}
-		}
-
-		if projectConf["platform"] == "magento2" {
-			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove && php bin/magento cron:install && php bin/magento cron:run")
-			cmdSub.Stdout = os.Stdout
-			cmdSub.Stderr = os.Stderr
-			err = cmdSub.Run()
-			if err != nil {
-				logger.Println(err)
-				fmtc.WarningLn(err.Error())
-			}
-		} else if projectConf["platform"] == "shopify" {
-			data, err := json.Marshal(projectConf)
-			if err != nil {
-				logger.Fatal(err)
-			}
-
-			conf := string(data)
-			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "php", "/var/www/scripts/php/shopify-crontab.php", conf, "0")
-			cmdSub.Stdout = os.Stdout
-			cmdSub.Stderr = os.Stderr
-			err = cmdSub.Run()
-			if err != nil {
-				logger.Println(err)
-				fmtc.WarningLn(err.Error())
-			}
-
-		}
-	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, "php"), "service", "cron", "status")
-		cmd.Stdout = bOut
-		cmd.Stderr = bErr
-		err := cmd.Run()
-		if err == nil {
-			if projectConf["platform"] == "magento2" {
-				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove")
-				cmdSub.Stdout = bOut
-				cmdSub.Stderr = bErr
-				err := cmdSub.Run()
-				if manual {
-					if err != nil {
-						logger.Println(bErr)
-						logger.Println(err)
-					} else {
-						fmt.Println("Cron was removed from Magento")
-					}
-				}
-			} else if projectConf["platform"] == "shopify" {
-				data, err := json.Marshal(projectConf)
-				if err != nil {
-					logger.Fatal(err)
-				}
-
-				conf := string(data)
-				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "php", "/var/www/scripts/php/shopify-crontab.php", conf, "1")
-				cmdSub.Stdout = bOut
-				cmdSub.Stderr = bErr
-				err = cmdSub.Run()
-				if manual {
-					if err != nil {
-						logger.Println(bErr)
-						logger.Println(err)
-					} else {
-						fmt.Println("Cron was removed from Shopify")
-					}
-				}
-			}
-
-			cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, "php"), "service", "cron", "stop")
-			cmd.Stdout = bOut
-			cmd.Stderr = bErr
-			err = cmd.Run()
-			if manual {
-				if err != nil {
-					fmt.Println(bErr)
-					logger.Fatal(err)
-				} else {
-					fmt.Println("Cron was stopped from System (container)")
-				}
-			}
-		}
-	}
-}
-
+// UpSnapshot starts snapshot container
 func UpSnapshot(projectName string) {
 	pp := paths.NewProjectPaths(projectName)
 	paths.MakeDirsByPath(pp.RuntimeDir())
@@ -443,6 +221,7 @@ func UpSnapshot(projectName string) {
 	}
 }
 
+// StopSnapshot stops snapshot container
 func StopSnapshot(projectName string) {
 	pp := paths.NewProjectPaths(projectName)
 	composerFile := pp.DockerComposeSnapshot()
