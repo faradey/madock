@@ -50,9 +50,10 @@ func Execute() {
 	}
 	result := strings.ToLower(strings.TrimSpace(string(sentence)))
 	if result == "y" && len(projectName) > 0 {
+		pp := paths.NewProjectPaths(projectName)
 		fmt.Println("The following items will be removed:")
 		fmt.Println(paths.GetExecDirPath() + "/projects/" + projectName + "/")
-		fmt.Println(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/")
+		fmt.Println(pp.RuntimeDir())
 		fmt.Println(paths.GetRunDirPath())
 		fmt.Println("Containers, images and volumes associated with the project.")
 		fmt.Println("")
@@ -75,12 +76,13 @@ func Execute() {
 func removeProject(projectName string) {
 	docker.Down(projectName, true)
 
+	pp := paths.NewProjectPaths(projectName)
 	err := os.RemoveAll(paths.GetExecDirPath() + "/projects/" + projectName + "/")
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	err = os.RemoveAll(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/")
+	err = os.RemoveAll(pp.RuntimeDir())
 	if err != nil {
 		logger.Fatal(err)
 	}

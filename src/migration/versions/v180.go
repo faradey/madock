@@ -15,9 +15,10 @@ func V180() {
 			projectName = dir
 			projectConf := configs.GetProjectConfig(projectName)
 			if _, ok := projectConf["PATH"]; !ok {
-				if fi, err := os.Lstat(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/src"); err == nil {
+				pp := paths.NewProjectPaths(projectName)
+				if fi, err := os.Lstat(pp.RuntimeDir() + "/src"); err == nil {
 					if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
-						link, err := os.Readlink(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/src")
+						link, err := os.Readlink(pp.RuntimeDir() + "/src")
 						if err == nil {
 							configs.SetParam(execPath+dir+"/env.txt", "PATH", link)
 						}

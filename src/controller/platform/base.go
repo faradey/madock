@@ -51,13 +51,11 @@ func (h *BaseHandler) SupportsCron() bool {
 func (h *BaseHandler) Start(projectName string, withChown bool, projectConf map[string]string) {
 	docker.UpNginx(projectName)
 
-	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
-	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
-
+	pp := paths.NewProjectPaths(projectName)
 	profilesOn := []string{
 		"compose",
-		"-f", composeFile,
-		"-f", composeFileOS,
+		"-f", pp.DockerCompose(),
+		"-f", pp.DockerComposeOverride(),
 		"start",
 	}
 
@@ -86,13 +84,11 @@ func (h *BaseHandler) Start(projectName string, withChown bool, projectConf map[
 
 // Stop stops the containers for a project
 func (h *BaseHandler) Stop(projectName string) {
-	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
-	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
-
+	pp := paths.NewProjectPaths(projectName)
 	profilesOn := []string{
 		"compose",
-		"-f", composeFile,
-		"-f", composeFileOS,
+		"-f", pp.DockerCompose(),
+		"-f", pp.DockerComposeOverride(),
 		"stop",
 	}
 

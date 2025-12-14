@@ -17,12 +17,13 @@ import (
 )
 
 func MakeConf(projectName string) {
-	if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
+	if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
 		return
 	}
 	// get project config
 	projectConf := configs.GetProjectConfig(projectName)
-	src := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/src"
+	pp := paths.NewProjectPaths(projectName)
+	src := paths.MakeDirsByPath(pp.RuntimeDir()) + "/src"
 	if _, err := os.Lstat(src); err == nil {
 		if err := os.Remove(src); err != nil {
 			log.Fatalf("failed to unlink: %+v", err)
@@ -53,7 +54,8 @@ func MakeConf(projectName string) {
 
 func makeScriptsConf(projectName string) {
 	exPath := paths.GetExecDirPath()
-	src := exPath + "/aruntime/projects/" + projectName + "/ctx/scripts"
+	pp := paths.NewProjectPaths(projectName)
+	src := pp.CtxDir() + "/scripts"
 	if fi, err := os.Lstat(src); err == nil {
 		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
 			err = os.RemoveAll(src)
@@ -86,7 +88,8 @@ func makeKibanaConf(projectName string) {
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
 
-	filePath := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/kibana.yml"
+	pp := paths.NewProjectPaths(projectName)
+	filePath := paths.MakeDirsByPath(pp.CtxDir()) + "/kibana.yml"
 	err = os.WriteFile(filePath, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -132,8 +135,9 @@ func makeNginxConf(projectName string) {
 	str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
 	str = strings.Replace(str, "{{{nginx/host_names_with_codes}}}", hostNameWebsites, -1)
 
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx")
-	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/nginx.conf"
+	pp := paths.NewProjectPaths(projectName)
+	paths.MakeDirsByPath(pp.CtxDir())
+	nginxFile := paths.MakeDirsByPath(pp.CtxDir()) + "/nginx.conf"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -156,7 +160,8 @@ func makePhpDockerfile(projectName string) {
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
-	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.Dockerfile"
+	pp := paths.NewProjectPaths(projectName)
+	nginxFile := paths.MakeDirsByPath(pp.CtxDir()) + "/php.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -172,7 +177,7 @@ func makePhpDockerfile(projectName string) {
 		b = ProcessSnippets(b, projectName)
 		str = string(b)
 		str = configs.ReplaceConfigValue(projectName, str)
-		nginxFile = paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/php.DockerfileWithoutXdebug"
+		nginxFile = paths.MakeDirsByPath(pp.CtxDir()) + "/php.DockerfileWithoutXdebug"
 		err = os.WriteFile(nginxFile, []byte(str), 0755)
 		if err != nil {
 			log.Fatalf("Unable to write file: %v", err)
@@ -211,7 +216,8 @@ func makeDockerCompose(projectName string) {
 		str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
 		str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
 
-		resultFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/" + key
+		pp := paths.NewProjectPaths(projectName)
+		resultFile := paths.MakeDirsByPath(pp.RuntimeDir()) + "/" + key
 		err = os.WriteFile(resultFile, []byte(str), 0755)
 		if err != nil {
 			log.Fatalf("Unable to write file: %v", err)
@@ -285,7 +291,8 @@ func makeDBDockerfile(projectName string) {
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
-	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/db.Dockerfile"
+	pp := paths.NewProjectPaths(projectName)
+	nginxFile := paths.MakeDirsByPath(pp.CtxDir()) + "/db.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -306,7 +313,7 @@ func makeDBDockerfile(projectName string) {
 		b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
 	}
 
-	err = os.WriteFile(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx/my.cnf", b, 0755)
+	err = os.WriteFile(pp.CtxDir()+"/my.cnf", b, 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -343,7 +350,8 @@ func makeDockerfile(projectName, path, fileName string) {
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
-	dockerFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/ctx") + "/" + fileName
+	pp := paths.NewProjectPaths(projectName)
+	dockerFile := paths.MakeDirsByPath(pp.CtxDir()) + "/" + fileName
 	err = os.WriteFile(dockerFile, []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -396,14 +404,16 @@ func processOtherCTXFiles(projectName string) {
 		b = ProcessSnippets(b, projectName)
 		str := string(b)
 		str = configs.ReplaceConfigValue(projectName, str)
-		paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + strings.Split(fileName, "/")[0] + "/")
-		destinationFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + fileName
+		pp := paths.NewProjectPaths(projectName)
+		paths.MakeDirsByPath(pp.CtxDir() + "/" + strings.Split(fileName, "/")[0] + "/")
+		destinationFile := pp.CtxDir() + "/" + fileName
 		err = os.WriteFile(destinationFile, []byte(str), 0755)
 		if err != nil {
 			log.Fatalf("Unable to write file: %v", err)
 		}
 	}
 
+	pp := paths.NewProjectPaths(projectName)
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/")
 	ctxFiles := paths.GetFiles(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/")
 	for _, ctxFile := range ctxFiles {
@@ -413,7 +423,7 @@ func processOtherCTXFiles(projectName string) {
 		}
 		b = ProcessSnippets(b, projectName)
 		str := string(b)
-		destinationFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ctx/" + ctxFile
+		destinationFile := pp.CtxDir() + "/" + ctxFile
 		err = os.WriteFile(destinationFile, []byte(str), 0755)
 	}
 }

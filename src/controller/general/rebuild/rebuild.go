@@ -25,8 +25,8 @@ func Execute() {
 		// Clear config cache with spinner
 		spinner := fmtc.NewSpinner("Preparing environment...")
 		spinner.Start()
-		if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
-			err := os.Remove(paths.GetExecDirPath() + "/cache/conf-cache")
+		if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
+			err := os.Remove(paths.CacheDir() + "/conf-cache")
 			if err != nil {
 				spinner.StopWithError("Failed to clear cache")
 				logger.Fatal(err)

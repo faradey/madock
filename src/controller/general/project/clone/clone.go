@@ -59,8 +59,8 @@ func Execute() {
 	}
 	create.GetFiles(projectConf, projectName, dest)
 	containerName := docker.GetContainerName(cloneProjectConf, cloneName, "snapshot")
-	if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
-		err := os.Remove(paths.GetExecDirPath() + "/cache/conf-cache")
+	if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
+		err := os.Remove(paths.CacheDir() + "/conf-cache")
 		if err != nil {
 			logger.Fatal(err)
 		}

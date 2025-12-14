@@ -147,7 +147,7 @@ func GetActiveProjects() []string {
 		logger.Println(err, string(result))
 	} else {
 		resultString := string(result)
-		projects := GetDirs(MakeDirsByPath(GetExecDirPath() + "/aruntime/projects"))
+		projects := GetDirs(MakeDirsByPath(RuntimeProjects()))
 		for _, projectName := range projects {
 			if strings.Contains(resultString, strings.ToLower(projectName)+"-") {
 				activeProjects = append(activeProjects, projectName)

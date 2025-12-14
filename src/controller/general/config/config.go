@@ -33,10 +33,10 @@ func SetEnvOption() {
 }
 
 func CacheClean() {
-	folder := paths.MakeDirsByPath(paths.GetExecDirPath() + "/cache/")
+	folder := paths.MakeDirsByPath(paths.CacheDir())
 	err := os.RemoveAll(folder)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/cache/")
+	paths.MakeDirsByPath(paths.CacheDir())
 }

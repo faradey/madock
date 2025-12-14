@@ -20,7 +20,8 @@ type InfoStruct struct {
 
 func Execute() {
 	projectName := configs.GetProjectName()
-	cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/projects/"+projectName+"/docker-compose.yml", "ps", "--format", "json")
+	pp := paths.NewProjectPaths(projectName)
+	cmd := exec.Command("docker", "compose", "-f", pp.DockerCompose(), "ps", "--format", "json")
 	result, err := cmd.CombinedOutput()
 	if err != nil {
 		logger.Fatal(err)
@@ -47,7 +48,7 @@ func Execute() {
 	}
 
 	fmtc.TitleLn("Proxy:")
-	cmd = exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
+	cmd = exec.Command("docker", "compose", "-f", paths.ProxyDockerCompose(), "ps", "--format", "json")
 	result, err = cmd.CombinedOutput()
 	if err != nil {
 		logger.Fatal(err)

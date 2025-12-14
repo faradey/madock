@@ -6,6 +6,6 @@ import (
 )
 
 func Execute() {
-	ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
+	ctxPath := paths.MakeDirsByPath(paths.CtxDir())
 	nginx.GenerateSslCert(ctxPath, true)
 }

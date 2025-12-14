@@ -91,7 +91,7 @@ func (r *Registry) load() {
 
 // save writes the ports.conf file
 func (r *Registry) save() {
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime")
+	paths.MakeDirsByPath(paths.RuntimeBase())
 
 	// Sort keys for consistent output
 	var keys []string

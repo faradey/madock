@@ -16,7 +16,7 @@ const (
 
 // V310 migrates ports.conf from old format (project=number) to new format (project/service=port)
 func V310() {
-	portsFile := paths.GetExecDirPath() + "/aruntime/ports.conf"
+	portsFile := paths.RuntimeBase() + "/ports.conf"
 	if !paths.IsFileExist(portsFile) {
 		return
 	}

@@ -23,7 +23,7 @@ import (
 )
 
 func MakeConf(projectName string) {
-	if paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
+	if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
 		return
 	}
 
@@ -39,7 +39,7 @@ func MakeConf(projectName string) {
 
 // cleanProxyCache removes old proxy config cache files
 func cleanProxyCache() {
-	cacheDir := paths.GetExecDirPath() + "/cache"
+	cacheDir := paths.CacheDir()
 	if paths.IsFileExist(cacheDir) {
 		cacheFiles, _ := os.ReadDir(cacheDir)
 		for _, f := range cacheFiles {
@@ -82,7 +82,7 @@ func makeProxy(projectName string) {
 
 	var onlyHostsGlobal []string
 	processedProjects := make(map[string]bool) // Track processed projects to avoid duplicates
-	projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
+	projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.RuntimeProjects()))
 	if !finder.IsContain(projectsNames, projectName) {
 		projectsNames = append(projectsNames, projectName)
 	}
@@ -92,9 +92,10 @@ func makeProxy(projectName string) {
 			continue
 		}
 		processedProjects[name] = true
+		pp := paths.NewProjectPaths(name)
 		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
-			if !paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/projects/" + name + "/stopped") {
-				if projectName == name || !paths.IsFileExist(paths.GetExecDirPath()+"/cache/"+name+"-proxy.conf") {
+			if !paths.IsFileExist(pp.StoppedFile()) {
+				if projectName == name || !paths.IsFileExist(paths.CacheDir()+"/"+name+"-proxy.conf") {
 					nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
 					b, err := os.ReadFile(nginxDefFile)
 					if err != nil {
@@ -157,14 +158,14 @@ func makeProxy(projectName string) {
 
 					strReplaced = strings.Replace(strReplaced, "{{{nginx/host_names}}}", hostName, -1)
 
-					err = os.WriteFile(paths.MakeDirsByPath(paths.GetExecDirPath()+"/cache/")+name+"-proxy.conf", []byte(strReplaced), 0755)
+					err = os.WriteFile(paths.MakeDirsByPath(paths.CacheDir())+"/"+name+"-proxy.conf", []byte(strReplaced), 0755)
 					if err != nil {
 						logger.Fatalln(err)
 					}
 
 					allFileData += "\n" + strReplaced
 				} else {
-					strReplaced, err := os.ReadFile(paths.GetExecDirPath() + "/cache/" + name + "-proxy.conf")
+					strReplaced, err := os.ReadFile(paths.CacheDir() + "/" + name + "-proxy.conf")
 					if err != nil {
 						logger.Fatalln(err)
 					}
@@ -181,7 +182,7 @@ func makeProxy(projectName string) {
 	}
 	allFileData += "\nserver {\n    listen       " + generalConfig["nginx/port/unsecure"] + "  default_server;\n    listen " + generalConfig["nginx/port/secure"] + " default_server ssl;" + http2DefaultDirective + "\n    server_name  _;\n    return       444;\n    ssl_certificate /sslcert/fullchain.crt;\n    ssl_certificate_key /sslcert/madock.local.key;\n    include /sslcert/options-ssl-nginx.conf; \n}\n"
 	allFileData += "\n}"
-	nginxFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/ctx") + "/proxy.conf"
+	nginxFile := paths.MakeDirsByPath(paths.CtxDir()) + "/proxy.conf"
 	err := os.WriteFile(nginxFile, []byte(allFileData), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
@@ -191,7 +192,7 @@ func makeProxy(projectName string) {
 
 func makeDockerfile(projectName string) {
 	/* Create nginx Dockerfile configuration */
-	ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
+	ctxPath := paths.MakeDirsByPath(paths.CtxDir())
 	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/proxy.Dockerfile"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
@@ -210,7 +211,7 @@ func makeDockerfile(projectName string) {
 
 func makeDockerCompose(projectName string) {
 	/* Copy nginx docker-compose configuration */
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
+	paths.MakeDirsByPath(paths.CtxDir())
 	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/docker-compose-proxy.yml"
 	b, err := os.ReadFile(nginxDefFile)
 	if err != nil {
@@ -220,7 +221,7 @@ func makeDockerCompose(projectName string) {
 	str := string(b)
 	str = configs2.ReplaceConfigValue(projectName, str)
 
-	err = os.WriteFile(paths.GetExecDirPath()+"/aruntime/docker-compose.yml", []byte(str), 0755)
+	err = os.WriteFile(paths.ProxyDockerCompose(), []byte(str), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
@@ -255,11 +256,11 @@ func replacePortPlaceholders(str, projectName string) string {
 func GenerateSslCert(ctxPath string, force bool) {
 	generalConfig := configs2.GetGeneralConfig()
 	if val, ok := generalConfig["nginx/ssl/enabled"]; force || (ok && val == "true") {
-		projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects"))
+		projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.RuntimeProjects()))
 		var commands []string
 		i := 0
 		for _, name := range projectsNames {
-			if !paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
+			if !paths.IsFileExist(paths.GetExecDirPath()+"/projects/"+name+"/config.xml") {
 				continue
 			}
 

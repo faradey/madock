@@ -23,8 +23,9 @@ func UpWithBuild(projectName string, withChown bool) {
 }
 
 func Down(projectName string, withVolumes bool) {
-	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
-	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
+	pp := paths.NewProjectPaths(projectName)
+	composeFile := pp.DockerCompose()
+	composeFileOS := pp.DockerComposeOverride()
 	if paths.IsFileExist(composeFile) {
 		profilesOn := []string{
 			"compose",
@@ -53,8 +54,9 @@ func Down(projectName string, withVolumes bool) {
 }
 
 func Kill(projectName string) {
-	composeFile := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.yml"
-	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
+	pp := paths.NewProjectPaths(projectName)
+	composeFile := pp.DockerCompose()
+	composeFileOS := pp.DockerComposeOverride()
 	if paths.IsFileExist(composeFile) {
 		profilesOn := []string{
 			"compose",
@@ -88,8 +90,9 @@ func UpNginxWithBuild(projectName string, force bool) {
 	project.MakeConf(projectName)
 	projectConf := configs2.GetProjectConfig(projectName)
 	doNeedRunAruntime := true
-	if paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/docker-compose.yml") {
-		cmd := exec.Command("docker", "compose", "-f", paths.GetExecDirPath()+"/aruntime/docker-compose.yml", "ps", "--format", "json")
+	proxyCompose := paths.ProxyDockerCompose()
+	if paths.IsFileExist(proxyCompose) {
+		cmd := exec.Command("docker", "compose", "-f", proxyCompose, "ps", "--format", "json")
 		result, err := cmd.CombinedOutput()
 		if err != nil {
 			logger.Println(err, result)
@@ -100,22 +103,23 @@ func UpNginxWithBuild(projectName string, force bool) {
 		}
 	}
 
-	if (!paths.IsFileExist(paths.GetExecDirPath()+"/cache/conf-cache") || doNeedRunAruntime) && projectConf["proxy/enabled"] == "true" {
+	confCache := paths.CacheDir() + "/conf-cache"
+	if (!paths.IsFileExist(confCache) || doNeedRunAruntime) && projectConf["proxy/enabled"] == "true" {
 		// Create shared network for proxy and services
 		CreateProxyNetwork()
 
-		ctxPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/ctx")
-		if !paths.IsFileExist(paths.GetExecDirPath() + "/cache/conf-cache") {
+		ctxPath := paths.MakeDirsByPath(paths.CtxDir())
+		if !paths.IsFileExist(confCache) {
 			nginx.GenerateSslCert(ctxPath, false)
 
-			dockerComposePull([]string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml"})
+			dockerComposePull([]string{"compose", "-f", proxyCompose})
 
-			err := os.WriteFile(paths.GetExecDirPath()+"/cache/conf-cache", []byte("config cache"), 0755)
+			err := os.WriteFile(confCache, []byte("config cache"), 0755)
 			if err != nil {
 				logger.Fatal(err)
 			}
 		}
-		command := []string{"compose", "-f", paths.GetExecDirPath() + "/aruntime/docker-compose.yml", "up", "--no-deps", "-d"}
+		command := []string{"compose", "-f", proxyCompose, "up", "--no-deps", "-d"}
 		if force {
 			command = append(command, "--build", "--force-recreate")
 		}
@@ -131,8 +135,9 @@ func UpNginxWithBuild(projectName string, force bool) {
 
 func UpProjectWithBuild(projectName string, withChown bool) {
 	var err error
-	if !paths.IsFileExist(paths.GetExecDirPath() + "/aruntime/.composer") {
-		err = os.Chmod(paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/.composer"), 0777)
+	globalComposer := paths.ComposerDir()
+	if !paths.IsFileExist(globalComposer) {
+		err = os.Chmod(paths.MakeDirsByPath(globalComposer), 0777)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -147,7 +152,8 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 		}
 	}
 
-	src := paths.MakeDirsByPath(paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/composer")
+	pp := paths.NewProjectPaths(projectName)
+	src := paths.MakeDirsByPath(pp.ComposerDir())
 
 	if fi, err := os.Lstat(src); err == nil {
 		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
@@ -168,7 +174,7 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 		}
 	}
 
-	sshDir := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/ssh"
+	sshDir := pp.SSHDir()
 
 	if fi, err := os.Lstat(sshDir); err == nil {
 		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
@@ -189,8 +195,9 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 		}
 	}
 
-	composeFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose.yml"
-	composeFileOS := paths.GetExecDirPath() + "/aruntime/projects/" + projectName + "/docker-compose.override.yml"
+	paths.MakeDirsByPath(pp.RuntimeDir())
+	composeFile := pp.DockerCompose()
+	composeFileOS := pp.DockerComposeOverride()
 	profilesOn := []string{
 		"compose",
 		"-f",
@@ -246,7 +253,7 @@ func dockerComposePull(composeFiles []string) {
 }
 
 func DownNginx(force bool) {
-	composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
+	composeFile := paths.ProxyDockerCompose()
 	if paths.IsFileExist(composeFile) {
 		command := "down"
 		if force {
@@ -263,7 +270,7 @@ func DownNginx(force bool) {
 }
 
 func StopNginx(force bool) {
-	composeFile := paths.GetExecDirPath() + "/aruntime/docker-compose.yml"
+	composeFile := paths.ProxyDockerCompose()
 	if paths.IsFileExist(composeFile) {
 		command := "stop"
 		if force {
@@ -413,7 +420,9 @@ func CronExecute(projectName string, flag, manual bool) {
 }
 
 func UpSnapshot(projectName string) {
-	composerFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose-snapshot.yml"
+	pp := paths.NewProjectPaths(projectName)
+	paths.MakeDirsByPath(pp.RuntimeDir())
+	composerFile := pp.DockerComposeSnapshot()
 	profilesOn := []string{
 		"compose",
 		"-f",
@@ -435,7 +444,8 @@ func UpSnapshot(projectName string) {
 }
 
 func StopSnapshot(projectName string) {
-	composerFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/aruntime/projects/"+projectName) + "/docker-compose-snapshot.yml"
+	pp := paths.NewProjectPaths(projectName)
+	composerFile := pp.DockerComposeSnapshot()
 	if paths.IsFileExist(composerFile) {
 		command := "stop"
 		cmd := exec.Command("docker", "compose", "-f", composerFile, command)
