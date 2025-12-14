@@ -3,11 +3,13 @@ package compress
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/faradey/madock/src/helper/paths"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/faradey/madock/src/helper/paths"
 )
 
 var archiveName string = "madock_compressed_project.zip"
@@ -51,7 +53,7 @@ func Unzip() {
 	}
 	defer func() {
 		if err := r.Close(); err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		if isOk {
 			os.Remove(basePath + archiveName)
@@ -79,7 +81,7 @@ func Unzip() {
 			}
 			defer func() {
 				if err := rc.Close(); err != nil {
-					panic(err)
+					log.Fatal(err)
 				}
 			}()
 			/*fmt.Println(filepath.Dir(path))
@@ -94,7 +96,7 @@ func Unzip() {
 			}
 			defer func() {
 				if err := f.Close(); err != nil {
-					panic(err)
+					log.Fatal(err)
 				}
 			}()
 

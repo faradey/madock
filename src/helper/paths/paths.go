@@ -16,7 +16,7 @@ func GetExecDirPath() string {
 
 	ex, err := os.Executable()
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
 	exReal, err := filepath.EvalSymlinks(ex)
 	if err != nil {

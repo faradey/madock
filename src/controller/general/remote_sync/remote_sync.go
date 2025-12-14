@@ -241,7 +241,7 @@ func publicKey(path string) ssh.AuthMethod {
 func RunCommand(conn *ssh.Client, cmd string) string {
 	sess, err := conn.NewSession()
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
 	defer sess.Close()
 	out, err := sess.CombinedOutput(cmd)

@@ -31,6 +31,3 @@ func main() {
 		isnotdefine.Execute(cmdName)
 	}
 }
-
-//TODO check rabbitMQ in browser
-//TODO add new argument "--name, -n" to "madock project:remove" CLI command

@@ -29,7 +29,7 @@ func debugger(v ...any) {
 
 	ex, err := os.Executable()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	exReal, err := filepath.EvalSymlinks(ex)
 	if err != nil {
