@@ -1,6 +1,8 @@
 <<<if{{{grafana/enabled}}}>>>
   grafana:
     image: {{{grafana/repository}}}:{{{grafana/version}}}
+    ports:
+      - "{{{port/grafana}}}:3000"
     environment:
       GF_SERVER_ROOT_URL: "https://{{{nginx/host_name_default}}}/grafana/"
       GF_SERVER_DOMAIN: "{{{nginx/host_name_default}}}"

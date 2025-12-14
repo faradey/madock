@@ -2,6 +2,8 @@
   selenium:
     image: selenium/standalone-chrome:latest
     platform: linux/amd64
+    ports:
+      - "{{{port/selenium}}}:7900"
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}

@@ -1,6 +1,8 @@
 <<<if{{{db2/phpmyadmin/enabled}}}>>>
   phpmyadmin2:
     image: {{{db2/phpmyadmin/repository}}}:{{{db2/phpmyadmin/version}}}
+    ports:
+      - "{{{port/phpmyadmin2}}}:80"
     environment:
       PMA_HOST: "db2"
       PMA_PORT: 3306

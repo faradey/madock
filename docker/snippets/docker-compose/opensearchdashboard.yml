@@ -2,6 +2,8 @@
   opensearchdashboard:
     platform: linux/x86_64
     image: {{{search/opensearch/dashboard/repository}}}:{{{search/opensearch/version}}}
+    ports:
+      - "{{{port/opensearchdashboard}}}:5601"
     environment:
       SERVER_BASEPATH: /opensearch-dashboard
       OPENSEARCH_HOSTS: '["http://opensearch:9200"]'

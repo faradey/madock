@@ -2,6 +2,8 @@
   kibana:
     platform: linux/x86_64
     image: {{{search/elasticsearch/dashboard/repository}}}:{{{search/elasticsearch/version}}}
+    ports:
+      - "{{{port/kibana}}}:5601"
     environment:
       SERVER_BASEPATH: /kibana
       ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'

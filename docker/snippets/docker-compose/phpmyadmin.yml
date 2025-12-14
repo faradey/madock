@@ -1,6 +1,8 @@
 <<<if{{{db/phpmyadmin/enabled}}}>>>
   phpmyadmin:
     image: {{{db/phpmyadmin/repository}}}:{{{db/phpmyadmin/version}}}
+    ports:
+      - "{{{port/phpmyadmin}}}:80"
     environment:
       PMA_HOST: "db"
       PMA_PORT: 3306
