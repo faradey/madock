@@ -40,10 +40,6 @@ func NewRegistry() *Registry {
 		filePath: paths.GetExecDirPath() + PortsFile,
 	}
 	r.load()
-	// Auto-migrate old format entries if present
-	if r.IsOldFormat() {
-		r.MigrateFromOldFormat()
-	}
 	return r
 }
 
@@ -174,109 +170,14 @@ func (r *Registry) RemoveProject(projectName string) {
 	r.save()
 }
 
-// IsOldFormat checks if ports.conf is in old format (project=number)
-func (r *Registry) IsOldFormat() bool {
-	if !paths.IsFileExist(r.filePath) {
-		return false
-	}
-
-	content, err := os.ReadFile(r.filePath)
-	if err != nil {
-		return false
-	}
-
-	lines := strings.Split(string(content), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-
-		key := strings.TrimSpace(parts[0])
-		// Old format has no "/" in keys
-		if !strings.Contains(key, "/") {
-			return true
-		}
-	}
-
-	return false
+// Set sets a specific port for a service (used by migration)
+func (r *Registry) Set(projectName, serviceName string, port int) {
+	key := projectName + "/" + serviceName
+	r.ports[key] = port
 }
 
-// MigrateFromOldFormat converts old format to new format
-func (r *Registry) MigrateFromOldFormat() {
-	if !paths.IsFileExist(r.filePath) {
-		return
-	}
-
-	content, err := os.ReadFile(r.filePath)
-	if err != nil {
-		return
-	}
-
-	oldPorts := make(map[string]int)
-	lines := strings.Split(string(content), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-
-		portNum, err := strconv.Atoi(value)
-		if err != nil {
-			continue
-		}
-
-		// Skip if already new format
-		if strings.Contains(key, "/") {
-			continue
-		}
-
-		oldPorts[key] = portNum
-	}
-
-	if len(oldPorts) == 0 {
-		return
-	}
-
-	// Convert old format to new format
-	// Old formula: basePort = 17000 + (portNum - 1) * 12
-	for projectName, portNum := range oldPorts {
-		basePort := BasePort + (portNum-1)*12
-
-		// Add converted entries (don't overwrite if already exists)
-		if _, exists := r.ports[projectName+"/"+ServiceNginx]; !exists {
-			r.ports[projectName+"/"+ServiceNginx] = basePort + 0
-		}
-		if _, exists := r.ports[projectName+"/"+ServiceNginxSSL]; !exists {
-			r.ports[projectName+"/"+ServiceNginxSSL] = basePort + 1
-		}
-		if _, exists := r.ports[projectName+"/"+ServiceDB]; !exists {
-			r.ports[projectName+"/"+ServiceDB] = basePort + 2
-		}
-		if _, exists := r.ports[projectName+"/"+ServiceDB2]; !exists {
-			r.ports[projectName+"/"+ServiceDB2] = basePort + 3
-		}
-		if _, exists := r.ports[projectName+"/"+ServiceLiveReload]; !exists {
-			r.ports[projectName+"/"+ServiceLiveReload] = basePort + 4
-		}
-		if _, exists := r.ports[projectName+"/"+ServiceVite]; !exists {
-			r.ports[projectName+"/"+ServiceVite] = basePort + 5
-		}
-	}
-
+// Save persists the registry to disk
+func (r *Registry) Save() {
 	r.save()
 }
 
