@@ -1,5 +1,30 @@
-**v3.0.1**
-- Added `proxy:reload` command for graceful nginx configuration reload without downtime
+**v3.1.0**
+
+Added:
+- Interactive setup wizard with ASCII banner, progress indicators, arrow keys navigation, styled selectors, configuration summary, inline validation, help hints, and confirmation prompts
+- `proxy:reload` command for graceful nginx configuration reload without downtime
+- `--yes` flag to setup command for auto-confirmation (skip prompts in CI/CD)
+- `--preset` flag for quick setup with preset configurations (e.g., `magento-248`, `magento-247`)
+- Auto-detection of Magento version from composer.json
+- Progress indicator for database import
+- On-demand port allocation system for better resource management
+- Configurable proxy settings
+- Timestamp to debug.log entries
+- Magento 2.4.9 support with OpenSearch 3.0.0
+- `shopware:bin` command for Shopware CLI operations
+- Unit tests for core packages
+
+Improved:
+- Nginx proxy security and performance
+- Updated nginx from 1.21.4 to 1.26
+
+Fixed:
+- Section padding panic in setup wizard
+- Non-deterministic XML config output order
+- Nested conditional processing in config templates
+- MariaDB exec file compatibility
+- Composer install command for Shopify platform
+- Various potential bugs across the codebase
 
 **v3.0.0**
 - Introduced a generic diff command: `madock diff --platform <code> --old <ver> --new <ver> [--path <publicDirFromSiteRoot>]`
