@@ -10,9 +10,11 @@ If you use multiple stores within the same website and want to route by store co
 
 Example (project config.xml):
 
+```xml
 <nginx>
     <run_type>store</run_type>
 </nginx>
+```
 
 - Hosts mapping rules:
   - With run_type = website: map domains to website codes (the code from the store_website table in Magento).
@@ -23,6 +25,7 @@ Example (project config.xml):
 
 - Example hosts configuration with store codes (run_type = store):
 
+```xml
 <hosts>
     <store_code_1>
         <name>example.com</name>
@@ -31,6 +34,7 @@ Example (project config.xml):
         <name>example2.com</name>
     </store_code_2>
 </hosts>
+```
 
 Alternatively, you can set hosts via CLI (website codes for website mode or store codes for store mode):
 

@@ -32,7 +32,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Synchronization of the local database and media files with the dev site
 * Additional services: phpmyadmin, redis, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
 * LiveReload. Learn [more](docs/livereload.md)
-* MailHog (email testing tool for developers)
+* Mailpit (email testing tool for developers)
 * Magento Cloud
 * Composer patches in two clicks
 * Magento Functional Testing Framework (MFTF). Learn [more](docs/mftf.md)
@@ -171,7 +171,7 @@ IMPORTANT: Please, read all items before starting work.
 * [Cron](docs/cron.md)
 * [ENV variables](docs/env.md)
 * Kibana. URL http://{you_domain_name}/kibana
-* Mailhog. Default URL http://localhost:8025
+* Mailpit. Default URL http://localhost:8025
 * [Store scopes](docs/store_scopes.md): website vs store
 
 ## Donations

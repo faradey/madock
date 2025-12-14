@@ -52,12 +52,12 @@ SSH configurations for other environments:
 </ssh_live>
 ```
 
-Command for database import/export for example for **dev** environment:
+Command for database sync for **dev** environment:
 ```
-madock remote:sync:db --service dev
+madock remote:sync:db --ssh-type dev
 ```
 
-Command for database import/export for example for **live** environment:
+Command for database sync for **live** environment:
 ```
-madock remote:sync:db --service live
+madock remote:sync:db --ssh-type live
 ```

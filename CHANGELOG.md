@@ -1,6 +1,7 @@
 **v3.1.0**
 
 Added:
+- Improved documentation for media sync, cron, snapshots, isolation, environment variables, and configuration
 - Interactive setup wizard with ASCII banner, progress indicators, arrow keys navigation, styled selectors, configuration summary, inline validation, help hints, and confirmation prompts
 - `proxy:reload` command for graceful nginx configuration reload without downtime
 - `--yes` flag to setup command for auto-confirmation (skip prompts in CI/CD)
