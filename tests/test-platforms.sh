@@ -29,7 +29,6 @@ INTERACTIVE_MODE=false
 # Magento presets to test (from preset.go)
 MAGENTO_PRESETS=(
     "Magento 2.4.8 (Latest)"
-    "Magento 2.4.7 (Stable)"
 )
 
 # Logging functions
