@@ -234,9 +234,9 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 		// Display configuration summary
 		displayConfigSummary(toolsDefVersions, projectName)
 
-		// Ask for confirmation
+		// Ask for confirmation (skip with --yes flag)
 		fmt.Println("")
-		if !fmtc.Confirm("Proceed with this configuration?", true) {
+		if !args.Yes && !fmtc.Confirm("Proceed with this configuration?", true) {
 			fmtc.WarningLn("Setup cancelled.")
 			return
 		}
@@ -252,7 +252,7 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 		fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-		if args.Download && args.PlatformEdition == "" {
+		if args.Download && args.PlatformEdition == "" && !args.Yes {
 			fmt.Println("")
 			editions := []string{"Community", "Enterprise"}
 			selector := fmtc.NewInteractiveSelector("Magento Edition", editions, 0)
@@ -263,6 +263,7 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 				edition = "enterprise"
 			}
 		}
+		// When --yes is used, default to community edition
 	}
 
 	if args.Download || args.Install || continueSetup {

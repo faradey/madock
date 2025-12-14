@@ -59,6 +59,20 @@ log_header() {
     echo ""
 }
 
+# Run command with TTY emulation (for docker exec -it)
+run_with_tty() {
+    local logfile="$1"
+    shift
+    case "$(uname)" in
+        Linux)
+            script -q -c "$*" "$logfile"
+            ;;
+        Darwin)
+            script -q "$logfile" "$@"
+            ;;
+    esac
+}
+
 # Check if madock binary exists
 check_madock() {
     if [[ ! -f "$MADOCK_BIN" ]]; then
@@ -129,10 +143,11 @@ test_preset() {
 }
 EOF
 
-    # Run setup with preset (use yes to auto-confirm)
-    # Note: -d -i flags require TTY and won't work with pipes, use --interactive mode for that
+    # Run setup with preset
+    # --yes flag handles confirmation prompts
+    # run_with_tty provides TTY for docker exec during download/install
     log_info "Running madock setup with preset: $preset_name"
-    if ! yes "" | "$MADOCK_BIN" setup --platform=magento2 --preset="$preset_name" --hosts="${host}:base" 2>&1 | tee /tmp/madock-setup-preset.log; then
+    if ! run_with_tty /tmp/madock-setup-preset.log "$MADOCK_BIN" setup -d -i -y --platform=magento2 --preset="$preset_name" --hosts="${host}:base"; then
         log_error "Setup failed for preset: $preset_name"
         test_passed=false
     else

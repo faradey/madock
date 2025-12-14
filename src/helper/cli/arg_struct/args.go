@@ -11,6 +11,7 @@ type ControllerGeneralSetup struct {
 	Download            bool   `arg:"-d,--download" help:"Download code from repository"`
 	Install             bool   `arg:"-i,--install" help:"Install service (Magento, PWA, Shopify SDKm Shopware, etc.)"`
 	SampleData          bool   `arg:"-s,--sample-data" help:"Sample data"`
+	Yes                 bool   `arg:"-y,--yes" help:"Skip confirmation prompts"`
 	Platform            string `arg:"--platform" help:"Platform"`
 	PlatformEdition     string `arg:"--platform-edition" help:"Platform edition"`
 	PlatformVersion     string `arg:"--platform-version" help:"Platform version"`

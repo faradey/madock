@@ -35,19 +35,24 @@ func Execute() {
 	continueSetup := true
 	if hasConfig {
 		fmtc.WarningLn("File config.xml is already exist in project " + projectName)
-		fmt.Println("Do you want to continue? (y/N)")
-		fmt.Print("> ")
+		if args.Yes {
+			// Auto-confirm with --yes flag
+			continueSetup = true
+		} else {
+			fmt.Println("Do you want to continue? (y/N)")
+			fmt.Print("> ")
 
-		buf := bufio.NewReader(os.Stdin)
-		sentence, err := buf.ReadBytes('\n')
-		selected := strings.TrimSpace(string(sentence))
-		if err != nil {
-			logger.Fatal(err)
-		} else if selected != "y" {
-			if !args.Download && !args.Install {
-				logger.Fatal("Exit")
+			buf := bufio.NewReader(os.Stdin)
+			sentence, err := buf.ReadBytes('\n')
+			selected := strings.TrimSpace(string(sentence))
+			if err != nil {
+				logger.Fatal(err)
+			} else if selected != "y" {
+				if !args.Download && !args.Install {
+					logger.Fatal("Exit")
+				}
+				continueSetup = false
 			}
-			continueSetup = false
 		}
 	}
 
@@ -75,7 +80,8 @@ func Execute() {
 			fmtc.PrintKeyValue("Source", detection.Source)
 			fmt.Println("")
 
-			if fmtc.Confirm("Use detected configuration?", true) {
+			// Auto-confirm with --yes flag
+			if args.Yes || fmtc.Confirm("Use detected configuration?", true) {
 				platform = detection.Platform
 				detectedVersion = detection.PlatformVersion
 			}
