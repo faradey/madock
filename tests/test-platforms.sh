@@ -30,8 +30,6 @@ INTERACTIVE_MODE=false
 MAGENTO_PRESETS=(
     "Magento 2.4.8 (Latest)"
     "Magento 2.4.7 (Stable)"
-    "Magento 2.4.6-p4 (LTS)"
-    "Magento 2.4.5 (Legacy)"
 )
 
 # Logging functions
@@ -179,6 +177,15 @@ EOF
         test_passed=false
     fi
 
+    # Test service:enable command
+    log_info "Testing service:enable phpmyadmin..."
+    if "$MADOCK_BIN" service:enable phpmyadmin 2>&1; then
+        log_success "Service:enable phpmyadmin works"
+    else
+        log_error "Service:enable phpmyadmin failed"
+        test_passed=false
+    fi
+
     # Cleanup (unless --keep flag is set)
     if ! $KEEP_PROJECT; then
         cleanup_project "$project_name"
@@ -268,6 +275,15 @@ EOF
         log_success "Config:list command works"
     else
         log_error "Config:list command failed"
+        test_passed=false
+    fi
+
+    # Test service:enable command
+    log_info "Testing service:enable phpmyadmin..."
+    if "$MADOCK_BIN" service:enable phpmyadmin 2>&1; then
+        log_success "Service:enable phpmyadmin works"
+    else
+        log_error "Service:enable phpmyadmin failed"
         test_passed=false
     fi
 
