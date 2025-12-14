@@ -16,15 +16,20 @@ const (
 	PortsFile = "/aruntime/ports.conf"
 )
 
-// Service names used for migration from old format only
-// New services can be added dynamically via {{{port/service_name}}} placeholders
+// Service names for port allocation
 const (
-	ServiceNginx      = "nginx"
-	ServiceNginxSSL   = "nginx_ssl"
-	ServiceDB         = "db"
-	ServiceDB2        = "db2"
-	ServiceLiveReload = "livereload"
-	ServiceVite       = "vite"
+	ServiceNginx       = "nginx"       // +0
+	ServiceNginxSSL    = "nginx_ssl"   // +1
+	ServicePhpMyAdmin  = "phpmyadmin"  // +2
+	ServiceKibana      = "kibana"      // +3
+	ServiceDB          = "db"          // +4
+	ServiceLiveReload  = "livereload"  // +5
+	ServiceDB2         = "db2"         // +6
+	ServicePhpMyAdmin2 = "phpmyadmin2" // +7
+	ServiceSelenium    = "selenium"    // +8
+	ServiceVarnish     = "varnish"     // +9
+	ServiceGrafana     = "grafana"     // +10
+	ServiceVite        = "vite"        // +11
 )
 
 // Registry holds the port allocations

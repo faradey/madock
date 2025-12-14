@@ -65,17 +65,23 @@ func V310() {
 	os.WriteFile(backupFile, content, 0664)
 
 	// Convert old format to new format
-	// Old formula: basePort = 17000 + (portNum - 1) * 12
+	// Old formula: basePort = 17000 + (portNum - 1) * 20
 	registry := ports.GetRegistry()
 	for projectName, portNum := range oldPorts {
-		portBase := basePort + (portNum-1)*12
+		portBase := basePort + (portNum-1)*20
 
 		registry.Set(projectName, ports.ServiceNginx, portBase+0)
 		registry.Set(projectName, ports.ServiceNginxSSL, portBase+1)
-		registry.Set(projectName, ports.ServiceDB, portBase+2)
-		registry.Set(projectName, ports.ServiceDB2, portBase+3)
-		registry.Set(projectName, ports.ServiceLiveReload, portBase+4)
-		registry.Set(projectName, ports.ServiceVite, portBase+5)
+		registry.Set(projectName, ports.ServicePhpMyAdmin, portBase+2)
+		registry.Set(projectName, ports.ServiceKibana, portBase+3)
+		registry.Set(projectName, ports.ServiceDB, portBase+4)
+		registry.Set(projectName, ports.ServiceLiveReload, portBase+5)
+		registry.Set(projectName, ports.ServiceDB2, portBase+6)
+		registry.Set(projectName, ports.ServicePhpMyAdmin2, portBase+7)
+		registry.Set(projectName, ports.ServiceSelenium, portBase+8)
+		registry.Set(projectName, ports.ServiceVarnish, portBase+9)
+		registry.Set(projectName, ports.ServiceGrafana, portBase+10)
+		registry.Set(projectName, ports.ServiceVite, portBase+11)
 	}
 	registry.Save()
 }
