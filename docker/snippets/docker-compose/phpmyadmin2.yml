@@ -12,7 +12,7 @@
       PMA_PASSWORD: {{{db2/root_password}}}
       UPLOAD_LIMIT: 2G
     networks:
-      - madock-proxy
-    <<<if{{{isolation/enabled}}}>>>  - isolated<<<endif>>>
+      - default
+<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>

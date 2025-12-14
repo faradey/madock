@@ -11,7 +11,7 @@
     depends_on:
       - opensearch
     networks:
-      - madock-proxy
-    <<<if{{{isolation/enabled}}}>>>  - isolated<<<endif>>>
+      - default
+<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
     restart: {{{restart_policy}}}
 <<<endif>>>
