@@ -1,13 +1,14 @@
 <?php
 $projectConfig = json_decode($argv[1], true);
 $siteRootPath = $projectConfig["workdir"];
+$publicDir = $projectConfig["public_dir"] ?? "web";
 $isRemove = $argv[2]??false;
 
 
 
 try {
 //add cron job or remove job from crontab
-    $cronJob = "* * * * * cd {$siteRootPath}/web && php artisan schedule:run >> /dev/null 2>&1";
+    $cronJob = "* * * * * cd {$siteRootPath}/{$publicDir} && php artisan schedule:run >> /dev/null 2>&1";
     if($isRemove){
         removeCronJob("php artisan schedule:run");
     } else {
