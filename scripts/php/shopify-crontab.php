@@ -1,19 +1,60 @@
 <?php
 $projectConfig = json_decode($argv[1], true);
 $siteRootPath = $projectConfig["workdir"];
-$publicDir = $projectConfig["public_dir"] ?? "web";
 $isRemove = $argv[2]??false;
 
+// Find artisan file location
+function findArtisan($basePath) {
+    // Check common locations
+    $locations = [
+        $basePath,
+        $basePath . '/web',
+        $basePath . '/public',
+        $basePath . '/src',
+        $basePath . '/app',
+    ];
 
+    foreach ($locations as $dir) {
+        $artisanPath = $dir . '/artisan';
+        if (file_exists($artisanPath)) {
+            return $dir;
+        }
+    }
+
+    // Recursive search (max 2 levels deep)
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($basePath, RecursiveDirectoryIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST
+    );
+    $iterator->setMaxDepth(2);
+
+    foreach ($iterator as $file) {
+        if ($file->isFile() && $file->getFilename() === 'artisan') {
+            return $file->getPath();
+        }
+    }
+
+    return null;
+}
 
 try {
-//add cron job or remove job from crontab
-    $cronJob = "* * * * * cd {$siteRootPath}/{$publicDir} && php artisan schedule:run >> /dev/null 2>&1";
+    $artisanDir = findArtisan($siteRootPath);
+
+    if ($artisanDir === null) {
+        die("Error: artisan file not found in {$siteRootPath}");
+    }
+
+    echo "Found artisan in: {$artisanDir}\n";
+
+    //add cron job or remove job from crontab
+    $cronJob = "* * * * * cd {$artisanDir} && php artisan schedule:run >> /dev/null 2>&1";
     if($isRemove){
         removeCronJob("php artisan schedule:run");
+        echo "Cron job removed\n";
     } else {
         removeCronJob("php artisan schedule:run");
         addCronJob($cronJob);
+        echo "Cron job added: {$cronJob}\n";
     }
   } catch(\Exception $e) {
     die("Error: " . $e->getMessage());

@@ -51,16 +51,10 @@ func CronExecute(projectName string, flag, manual bool) {
 			}
 		} else if projectConf["platform"] == "shopify" {
 			containerName := GetContainerName(projectConf, projectName, "php")
-			publicDir := projectConf["public_dir"]
-			if publicDir == "" {
-				publicDir = "web"
-			}
 			fmt.Println("Setting up Shopify cron...")
 			fmt.Printf("  Container: %s\n", containerName)
 			fmt.Printf("  Workdir: %s\n", projectConf["workdir"])
-			fmt.Printf("  Public dir: %s\n", publicDir)
-			fmt.Printf("  Script: /var/www/scripts/php/shopify-crontab.php\n")
-			fmt.Printf("  Cron job: * * * * * cd %s/%s && php artisan schedule:run\n", projectConf["workdir"], publicDir)
+			fmt.Println("  Searching for artisan file...")
 
 			data, err := json.Marshal(projectConf)
 			if err != nil {
