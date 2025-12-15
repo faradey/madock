@@ -50,19 +50,28 @@ func CronExecute(projectName string, flag, manual bool) {
 				fmtc.WarningLn(err.Error())
 			}
 		} else if projectConf["platform"] == "shopify" {
+			containerName := GetContainerName(projectConf, projectName, "php")
+			fmt.Println("Setting up Shopify cron...")
+			fmt.Printf("  Container: %s\n", containerName)
+			fmt.Printf("  Workdir: %s\n", projectConf["workdir"])
+			fmt.Printf("  Script: /var/www/scripts/php/shopify-crontab.php\n")
+			fmt.Printf("  Cron job: * * * * * cd %s/web && php artisan schedule:run\n", projectConf["workdir"])
+
 			data, err := json.Marshal(projectConf)
 			if err != nil {
 				logger.Fatal(err)
 			}
 
 			conf := string(data)
-			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "php", "/var/www/scripts/php/shopify-crontab.php", conf, "0")
+			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", containerName, "php", "/var/www/scripts/php/shopify-crontab.php", conf, "0")
 			cmdSub.Stdout = os.Stdout
 			cmdSub.Stderr = os.Stderr
 			err = cmdSub.Run()
 			if err != nil {
 				logger.Println(err)
 				fmtc.WarningLn(err.Error())
+			} else {
+				fmtc.SuccessLn("Shopify cron job installed successfully")
 			}
 
 		}
@@ -86,22 +95,27 @@ func CronExecute(projectName string, flag, manual bool) {
 					}
 				}
 			} else if projectConf["platform"] == "shopify" {
+				containerName := GetContainerName(projectConf, projectName, "php")
+				fmt.Println("Removing Shopify cron...")
+				fmt.Printf("  Container: %s\n", containerName)
+				fmt.Printf("  Script: /var/www/scripts/php/shopify-crontab.php\n")
+
 				data, err := json.Marshal(projectConf)
 				if err != nil {
 					logger.Fatal(err)
 				}
 
 				conf := string(data)
-				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "php", "/var/www/scripts/php/shopify-crontab.php", conf, "1")
-				cmdSub.Stdout = bOut
-				cmdSub.Stderr = bErr
+				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", containerName, "php", "/var/www/scripts/php/shopify-crontab.php", conf, "1")
+				cmdSub.Stdout = os.Stdout
+				cmdSub.Stderr = os.Stderr
 				err = cmdSub.Run()
 				if manual {
 					if err != nil {
-						logger.Println(bErr)
 						logger.Println(err)
+						fmtc.WarningLn(err.Error())
 					} else {
-						fmt.Println("Cron was removed from Shopify")
+						fmtc.SuccessLn("Shopify cron job removed successfully")
 					}
 				}
 			}
