@@ -15,7 +15,6 @@ import (
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
@@ -147,7 +146,7 @@ func Import() {
 		containerName := docker.GetContainerName(projectConf, projectName, service)
 
 		mysqlCommandName := "mysql"
-		if projectConf["db/repository"] == "mariadb" && project.CompareVersions(projectConf["db/version"], "10.5") != -1 {
+		if projectConf["db/repository"] == "mariadb" && configs.CompareVersions(projectConf["db/version"], "10.5") != -1 {
 			mysqlCommandName = "mariadb"
 		}
 

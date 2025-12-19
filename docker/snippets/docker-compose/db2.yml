@@ -1,8 +1,8 @@
 <<<if{{{db2/enabled}}}>>>
   db2:
-    command:
+<<<if{{{db/use_default_auth_plugin}}}>>>    command:
       --default-authentication-plugin=mysql_native_password
-    build:
+<<<endif>>>    build:
       context: ctx
       dockerfile: db.Dockerfile
     ports:

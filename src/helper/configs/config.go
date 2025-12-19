@@ -131,6 +131,16 @@ func ReplaceConfigValue(projectName, str string) string {
 		osArch = "x86-64"
 	}
 
+	// Compute db/use_default_auth_plugin based on MySQL/MariaDB version
+	// MySQL 8.4+ removed --default-authentication-plugin option
+	dbRepo := strings.ToLower(projectConf["db/repository"])
+	dbVersion := projectConf["db/version"]
+	useDefaultAuthPlugin := "true"
+	if dbRepo == "mysql" && CompareVersions(dbVersion, "8.4") >= 0 {
+		useDefaultAuthPlugin = "false"
+	}
+	projectConf["db/use_default_auth_plugin"] = useDefaultAuthPlugin
+
 	for key, val := range projectConf {
 		str = strings.Replace(str, "{{{"+key+"}}}", val, -1)
 	}
@@ -316,6 +326,37 @@ func GetOutboundIP() string {
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
 	return localAddr.IP.String()
+}
+
+// CompareVersions compares two version strings (e.g., "8.4" vs "8.3.1")
+// Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+func CompareVersions(v1, v2 string) int {
+	parts1 := strings.Split(v1, ".")
+	parts2 := strings.Split(v2, ".")
+
+	maxLength := len(parts1)
+	if len(parts2) > maxLength {
+		maxLength = len(parts2)
+	}
+
+	for i := 0; i < maxLength; i++ {
+		var p1, p2 int
+
+		if i < len(parts1) {
+			p1, _ = strconv.Atoi(parts1[i])
+		}
+		if i < len(parts2) {
+			p2, _ = strconv.Atoi(parts2[i])
+		}
+
+		if p1 > p2 {
+			return 1
+		} else if p1 < p2 {
+			return -1
+		}
+	}
+
+	return 0
 }
 
 func IsOption(name string) bool {

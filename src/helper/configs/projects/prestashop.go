@@ -7,7 +7,6 @@ import (
 )
 
 func PrestaShop(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
-	var dbType = "MariaDB"
 	if _, ok := projectConf["public_dir"]; !ok {
 		config.Set("public_dir", "")
 	}
@@ -35,10 +34,8 @@ func PrestaShop(config *configs2.ConfigLines, defVersions versions.ToolsVersions
 	if len(repoVersion) > 1 {
 		config.Set("db/repository", repoVersion[0])
 		config.Set("db/version", repoVersion[1])
-		config.Set("db/type", repoVersion[0])
 	} else {
 		config.Set("db/version", defVersions.Db)
-		config.Set("db/type", dbType)
 	}
 
 	config.Set("db/root_password", configs2.GetOption("db/root_password", generalConf, projectConf))

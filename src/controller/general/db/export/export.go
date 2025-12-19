@@ -11,7 +11,6 @@ import (
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
@@ -56,7 +55,7 @@ func Export() {
 		defer writer.Close()
 
 		mysqldumpCommandName := "mysqldump"
-		if projectConf["db/repository"] == "mariadb" && project.CompareVersions(projectConf["db/version"], "10.5") != -1 {
+		if projectConf["db/repository"] == "mariadb" && configs.CompareVersions(projectConf["db/version"], "10.5") != -1 {
 			mysqldumpCommandName = "mariadb-dump"
 		}
 

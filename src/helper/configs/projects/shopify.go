@@ -8,7 +8,6 @@ import (
 )
 
 func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
-	var dbType = "MariaDB"
 	config.Set("php/version", defVersions.Php)
 	config.Set("php/composer/version", defVersions.Composer)
 	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))
@@ -31,10 +30,8 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 	if len(repoVersion) > 1 {
 		config.Set("db/repository", repoVersion[0])
 		config.Set("db/version", repoVersion[1])
-		config.Set("db/type", repoVersion[0])
 	} else {
 		config.Set("db/version", defVersions.Db)
-		config.Set("db/type", dbType)
 	}
 
 	config.Set("db/root_password", configs2.GetOption("db/root_password", generalConf, projectConf))
