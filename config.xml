@@ -172,8 +172,8 @@
                 </gzip>
                 <rate_limit>
                     <enabled>true</enabled>
-                    <rate>100</rate>
-                    <burst>200</burst>
+                    <rate>200</rate>
+                    <burst>500</burst>
                 </rate_limit>
             </proxy>
             <pwa>
