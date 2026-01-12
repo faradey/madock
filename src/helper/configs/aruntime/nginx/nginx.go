@@ -88,7 +88,12 @@ func makeProxy(projectName string) {
 
 	// Pre-collect all domains to detect duplicates across all projects
 	domainToProjects := make(map[string][]string)
+	scannedProjects := make(map[string]bool)
 	for _, name := range projectsNames {
+		if scannedProjects[name] {
+			continue
+		}
+		scannedProjects[name] = true
 		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
 			projectConf := configs2.GetProjectConfig(name)
 			hosts := configs2.GetHosts(projectConf)
