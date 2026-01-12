@@ -80,12 +80,36 @@ func makeProxy(projectName string) {
 	allFileData += "# Access log format\nlog_format main '$remote_addr - $host [$time_local] \"$request\" '\n                '$status $body_bytes_sent \"$http_referer\" '\n                '\"$http_user_agent\" $request_time';\n"
 	allFileData += "access_log /var/log/nginx/access.log main;\n"
 
-	var onlyHostsGlobal []string
 	processedProjects := make(map[string]bool) // Track processed projects to avoid duplicates
 	projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.RuntimeProjects()))
 	if !finder.IsContain(projectsNames, projectName) {
 		projectsNames = append(projectsNames, projectName)
 	}
+
+	// Pre-collect all domains to detect duplicates across all projects
+	domainToProjects := make(map[string][]string)
+	for _, name := range projectsNames {
+		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
+			projectConf := configs2.GetProjectConfig(name)
+			hosts := configs2.GetHosts(projectConf)
+			for _, hostAndStore := range hosts {
+				domain := hostAndStore["name"]
+				domainToProjects[domain] = append(domainToProjects[domain], name)
+			}
+		}
+	}
+
+	// Check for duplicate domains and report all projects that use them
+	var duplicateErrors []string
+	for domain, projects := range domainToProjects {
+		if len(projects) > 1 {
+			duplicateErrors = append(duplicateErrors, "Domain \""+domain+"\" is used in projects: "+strings.Join(projects, ", "))
+		}
+	}
+	if len(duplicateErrors) > 0 {
+		logger.Fatalln("Error. Duplicate domains found:\n" + strings.Join(duplicateErrors, "\n"))
+	}
+
 	for _, name := range projectsNames {
 		// Skip if already processed (prevents duplicate upstream definitions)
 		if processedProjects[name] {
@@ -144,14 +168,8 @@ func makeProxy(projectName string) {
 					hosts := configs2.GetHosts(projectConf)
 					if len(hosts) > 0 {
 						var onlyHosts []string
-						domain := ""
 						for _, hostAndStore := range hosts {
-							domain = hostAndStore["name"]
-							if finder.IsContain(onlyHostsGlobal, domain) {
-								logger.Fatalln("Error. Duplicate domain " + domain)
-							}
-							onlyHosts = append(onlyHosts, domain)
-							onlyHostsGlobal = append(onlyHostsGlobal, domain)
+							onlyHosts = append(onlyHosts, hostAndStore["name"])
 						}
 						hostName = strings.Join(onlyHosts, "\n")
 					}
