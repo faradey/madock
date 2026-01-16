@@ -1,9 +1,7 @@
 package setup
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strings"
 
 	setupCustom "github.com/faradey/madock/src/controller/custom/setup"
@@ -39,15 +37,7 @@ func Execute() {
 			// Auto-confirm with --yes flag
 			continueSetup = true
 		} else {
-			fmt.Println("Do you want to continue? (y/N)")
-			fmt.Print("> ")
-
-			buf := bufio.NewReader(os.Stdin)
-			sentence, err := buf.ReadBytes('\n')
-			selected := strings.TrimSpace(string(sentence))
-			if err != nil {
-				logger.Fatal(err)
-			} else if selected != "y" {
+			if !fmtc.Confirm("Do you want to continue?", false) {
 				if !args.Download && !args.Install {
 					logger.Fatal("Exit")
 				}
