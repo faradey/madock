@@ -103,7 +103,7 @@ func init() {
 	Register(&Definition{
 		Aliases: []string{"config:list"},
 		Handler: config.ShowEnv,
-		Help:    "List configuration",
+		Help:    "List configuration. Supports --json (-j) output",
 	})
 	Register(&Definition{
 		Aliases: []string{"config:set"},
@@ -137,7 +137,7 @@ func init() {
 	Register(&Definition{
 		Aliases: []string{"db:info"},
 		Handler: info2.Info,
-		Help:    "Show database info",
+		Help:    "Show database info. Supports --json (-j) output",
 	})
 
 	// Debug commands
@@ -333,7 +333,7 @@ func init() {
 	Register(&Definition{
 		Aliases: []string{"scope:list"},
 		Handler: listScope.Execute,
-		Help:    "List scopes",
+		Help:    "List scopes. Supports --json (-j) output",
 	})
 	Register(&Definition{
 		Aliases: []string{"scope:set"},
@@ -345,7 +345,7 @@ func init() {
 	Register(&Definition{
 		Aliases: []string{"service:list"},
 		Handler: list.Execute,
-		Help:    "List services",
+		Help:    "List services. Supports --json (-j) output",
 	})
 	Register(&Definition{
 		Aliases: []string{"service:enable"},
@@ -427,7 +427,7 @@ func init() {
 	Register(&Definition{
 		Aliases: []string{"status"},
 		Handler: status.Execute,
-		Help:    "Show container status",
+		Help:    "Show container status. Supports --json (-j) output",
 	})
 	Register(&Definition{
 		Aliases: []string{"stop"},

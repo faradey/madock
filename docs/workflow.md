@@ -106,6 +106,8 @@ This command shows you the following items:
 
 * `config:list`  List all project environment settings
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--json, -j`     Output in JSON format
+
 
 * `config:set`  Set a new value for parameter. For example: `madock config:set --name=HOSTS --value="website1.test:base website2.test:websitecode"`
 
@@ -137,6 +139,8 @@ This command shows you the following items:
 
 
 * `db:info`      Information about credentials and remote host and port
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--json, -j`     Output in JSON format
  
    
 * `debug:enable`   Enable xdebug
@@ -290,6 +294,8 @@ This command shows you the following items:
 
 * `scope:list`   Show all config scopes
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--json, -j`     Output in JSON format
+
 
 * `scope:set`   Set config scope
 
@@ -297,6 +303,8 @@ This command shows you the following items:
 
 
 * `service:list`   Show all services
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--json, -j`     Output in JSON format
 
 
 * `service:enable`   Enable the service. For example: `madock service:enable phpmyadmin`
@@ -387,6 +395,8 @@ This command shows you the following items:
                         
 
 * `status`   Display the status of the project
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--json, -j`     Output in JSON format
                         
 
 * `stop`    Stopping all containers and services
