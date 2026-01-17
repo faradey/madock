@@ -160,3 +160,23 @@ type ControllerGeneralProjectClone struct {
 	attr.Arguments
 	Name string `arg:"-n,--name,required" help:"Name of the project"`
 }
+
+type ControllerGeneralStatus struct {
+	attr.Arguments
+}
+
+type ControllerGeneralScopeList struct {
+	attr.Arguments
+}
+
+type ControllerGeneralServiceList struct {
+	attr.Arguments
+}
+
+type ControllerGeneralDbInfo struct {
+	attr.Arguments
+}
+
+type ControllerGeneralConfigList struct {
+	attr.Arguments
+}

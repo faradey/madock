@@ -2,17 +2,36 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
+	"github.com/faradey/madock/src/helper/cli/output"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"os"
-	"strings"
 )
 
+type ConfigListOutput struct {
+	Project string            `json:"project"`
+	Config  map[string]string `json:"config"`
+}
+
 func ShowEnv() {
-	lines := configs.GetProjectConfig(configs.GetProjectName())
+	args := attr.Parse(new(arg_struct.ControllerGeneralConfigList)).(*arg_struct.ControllerGeneralConfigList)
+
+	projectName := configs.GetProjectName()
+	lines := configs.GetProjectConfig(projectName)
+
+	if args.Json {
+		output.PrintJSON(ConfigListOutput{
+			Project: projectName,
+			Config:  lines,
+		})
+		return
+	}
+
 	for key, line := range lines {
 		fmt.Println(key + " " + line)
 	}

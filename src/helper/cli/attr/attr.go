@@ -9,6 +9,7 @@ import (
 var IsParseArgs = true
 
 type Arguments struct {
+	Json bool `arg:"--json,-j" help:"Output in JSON format"`
 }
 
 type ArgumentsWithArgs struct {
