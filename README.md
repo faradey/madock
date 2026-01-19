@@ -162,6 +162,7 @@ IMPORTANT: Please, read all items before starting work.
 
 ## More Documentation
 
+* [Deployment Guide](docs/deployment-guide.md) (Magento & Shopware setup for existing projects)
 * [JSON Output](docs/json_output.md)
 * [VSCODE + Xdebug Setup](docs/xdebug_vscode.md)
 * [PHPStorm + Xdebug Setup](docs/xdebug_phpstorm.md)
