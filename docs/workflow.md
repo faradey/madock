@@ -122,11 +122,13 @@ This command shows you the following items:
 * `cron:disable`    Disable cron
               
           
-* `db:import`      Import database
+* `db:import`      Import database. For example: `madock db:import path/to/dump.sql.gz`
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[file]`  Path to database file (optional). If not specified, interactive file selector is shown
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`-f`  Force mode
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service-name, -s`  DB container name. Optional. Default container: db. Example: db2
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service, -s`  DB container name. Optional. Default container: db. Example: db2
 
 
 * `db:export`      Export database. For example: `madock db:export --name=fromdevsite`
