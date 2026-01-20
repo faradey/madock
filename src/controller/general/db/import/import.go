@@ -94,41 +94,56 @@ func Import() {
 			user = args.User
 		}
 
+		var filePath string
 		projectName := configs.GetProjectName()
-		dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db"
-		var dbNames []string
-		var displayNames []string
 
-		if paths.IsFileExist(dbsPath) {
-			backupFiles := paths.GetDBFiles(dbsPath)
-			if len(backupFiles) > 0 {
-				for _, dbName := range backupFiles {
-					dbNames = append(dbNames, dbName)
-					displayNames = append(displayNames, filepath.Base(dbName)+" (backup)")
+		if args.File != "" {
+			// Use file path from argument
+			if !filepath.IsAbs(args.File) {
+				filePath = filepath.Join(paths.GetRunDirPath(), args.File)
+			} else {
+				filePath = args.File
+			}
+			if !paths.IsFileExist(filePath) {
+				logger.Fatal("File not found: " + filePath)
+			}
+		} else {
+			// Interactive file selection
+			dbsPath := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db"
+			var dbNames []string
+			var displayNames []string
+
+			if paths.IsFileExist(dbsPath) {
+				backupFiles := paths.GetDBFiles(dbsPath)
+				if len(backupFiles) > 0 {
+					for _, dbName := range backupFiles {
+						dbNames = append(dbNames, dbName)
+						displayNames = append(displayNames, filepath.Base(dbName)+" (backup)")
+					}
 				}
 			}
-		}
 
-		dbsPath = paths.GetRunDirPath()
-		projectFiles := paths.GetDBFiles(dbsPath)
-		if len(projectFiles) > 0 {
-			for _, dbName := range projectFiles {
-				dbNames = append(dbNames, dbName)
-				displayNames = append(displayNames, filepath.Base(dbName)+" (project)")
+			dbsPath = paths.GetRunDirPath()
+			projectFiles := paths.GetDBFiles(dbsPath)
+			if len(projectFiles) > 0 {
+				for _, dbName := range projectFiles {
+					dbNames = append(dbNames, dbName)
+					displayNames = append(displayNames, filepath.Base(dbName)+" (project)")
+				}
 			}
+
+			if len(dbNames) == 0 {
+				logger.Fatal("No database files found for import")
+			}
+
+			// Use interactive selector for file selection
+			fmt.Println("")
+			fmtc.TitleLn("Select database file to import:")
+			selector := fmtc.NewInteractiveSelector("Database File", displayNames, 0)
+			selectedIdx, _ := selector.Run()
+
+			filePath = dbNames[selectedIdx]
 		}
-
-		if len(dbNames) == 0 {
-			logger.Fatal("No database files found for import")
-		}
-
-		// Use interactive selector for file selection
-		fmt.Println("")
-		fmtc.TitleLn("Select database file to import:")
-		selector := fmtc.NewInteractiveSelector("Database File", displayNames, 0)
-		selectedIdx, _ := selector.Run()
-
-		filePath := dbNames[selectedIdx]
 		ext := strings.ToLower(filepath.Ext(filePath))
 
 		selectedFile, err := os.Open(filePath)
