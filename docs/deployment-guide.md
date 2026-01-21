@@ -404,6 +404,9 @@ DATABASE_URL=mysql://magento:magento@db:3306/magento
 Check if ports are already in use:
 ```bash
 madock logs
+
+# View allocated ports for the project
+madock info:ports
 ```
 
 ### Elasticsearch/OpenSearch errors

@@ -15,6 +15,7 @@ import (
 	diffController "github.com/faradey/madock/src/controller/general/diff"
 	"github.com/faradey/madock/src/controller/general/help"
 	"github.com/faradey/madock/src/controller/general/info"
+	infoPorts "github.com/faradey/madock/src/controller/general/info/ports"
 	"github.com/faradey/madock/src/controller/general/install"
 	"github.com/faradey/madock/src/controller/general/logs"
 	"github.com/faradey/madock/src/controller/general/node"
@@ -167,6 +168,11 @@ func init() {
 		Aliases: []string{"info"},
 		Handler: info.Info,
 		Help:    "Show project info",
+	})
+	Register(&Definition{
+		Aliases: []string{"info:ports"},
+		Handler: infoPorts.Execute,
+		Help:    "Show project ports. Supports --json (-j) output",
 	})
 	Register(&Definition{
 		Aliases: []string{"install"},

@@ -166,6 +166,10 @@ type ControllerGeneralStatus struct {
 	attr.Arguments
 }
 
+type ControllerGeneralInfoPorts struct {
+	attr.Arguments
+}
+
 type ControllerGeneralScopeList struct {
 	attr.Arguments
 }
