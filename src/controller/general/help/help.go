@@ -52,6 +52,8 @@ func Execute() {
 	describeByLevel("--new, -n", "NEW version or path", 1)
 	describeByLevel("--path, -p", "Public output directory relative to site root (default: diffs)", 1)
 	describeByLevel("info", "Show information about third-parties modules (name, current version, latest version, status)", 0)
+	describeByLevel("info:ports", "Show allocated ports for the current project", 0)
+	describeByLevel("--json, -j", "Output in JSON format", 1)
 	describeByLevel("install", "Install Magento, Shopware, etc.", 0)
 	describeByLevel("help", "Display help for commands", 0)
 	describeByLevel("logs", "View logs of a container", 0)

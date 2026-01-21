@@ -168,9 +168,11 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--path, -p`   Public output directory relative to site root (default: diffs)
                      
    
-* `info`   Show information about third-parties modules (name, current version, latest version, status)             
-    
-    
+* `info`   Show information about third-parties modules (name, current version, latest version, status)
+
+* `info:ports`   Show allocated ports for the current project. Supports --json (-j) output
+
+
 * `install`   Install Magento, Shopware, etc.            
     
     

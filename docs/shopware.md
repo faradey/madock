@@ -88,9 +88,10 @@ Shopware provides a hot reload server for storefront development.
 **Step 1:** Find your project's hot reload port:
 
 ```bash
-# Check allocated port in ports.conf
-cat aruntime/ports.conf | grep hot_reload
-# Example output: shopware/hot_reload=17015
+madock info:ports
+# Example output:
+#   hot_reload                17015
+#   hot_reload_2              17016
 ```
 
 **Step 2:** Configure environment variables in `.env`:
