@@ -85,6 +85,22 @@ exit
 
 ## Troubleshooting Permissions (Shopware)
 
+Shopware may create directories and files with root ownership during runtime operations (e.g., `files/theme-config/`, `var/cache/`). This happens because some Shopware background processes (scheduled tasks, message queue consumers) may run as root.
+
+**Symptoms:**
+- "Permission denied" errors when accessing directories from host
+- Theme compilation or cache operations fail
+- Files in `files/` or `var/` directories owned by root
+
+**Quick fix:**
+```bash
+madock rebuild --with-chown
+```
+
+If the problem reoccurs after Shopware operations (theme changes, cache rebuild, etc.), simply run the command again.
+
+---
+
 If you encounter permission errors (especially with `var/`, `public/` folders):
 
 ### Step 1: Rebuild containers with chown
