@@ -22,7 +22,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * **PWA Studio** as a separate service
 * **Shopify** as a separate service. Learn [more](docs/shopify.md)
 * **Custom PHP project** as a separate service
-* **Shopware** as a separate service
+* **Shopware** as a separate service. Learn [more](docs/shopware.md)
 * **PrestaShop** as a separate service
 * Cron support
 * Flexible configuration for each project
