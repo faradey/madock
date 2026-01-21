@@ -81,6 +81,53 @@ madock bash -u www-data
 bin/build-js.sh
 ```
 
+### Hot Reload (Watch Mode)
+
+Shopware provides a hot reload server for storefront development.
+
+**Step 1:** Find your project's hot reload port:
+
+```bash
+# Check allocated port in ports.conf
+cat aruntime/ports.conf | grep hot_reload
+# Example output: shopware/hot_reload=17015
+```
+
+**Step 2:** Configure environment variables in `.env`:
+
+```bash
+# Internal port (inside container) - keep as 9998
+STOREFRONT_PROXY_PORT=9998
+
+# External port (on host) - use the port from Step 1
+PROXY_URL=http://localhost:17015
+```
+
+**Step 3:** Rebuild containers (only needed once):
+
+```bash
+madock rebuild
+```
+
+**Step 4:** Run watch script:
+
+```bash
+madock bash -u www-data
+./bin/watch-storefront.sh
+```
+
+**Step 5:** Open your storefront at the proxy URL:
+- **http://localhost:17015** (use your port from Step 1) — auto-refreshes when you make changes
+
+The hot reload ports are automatically exposed by madock. Each project gets unique ports to avoid conflicts.
+
+**Troubleshooting hot reload:**
+
+If hot reload doesn't work, check:
+1. Ports are exposed: `docker ps` should show port mappings
+2. `PROXY_URL` in `.env` matches the exposed port
+3. Node.js is enabled: `madock service:enable php/nodejs`
+
 ## Troubleshooting
 
 ### File Permissions (files owned by root)

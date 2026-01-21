@@ -16,6 +16,8 @@ php:
     ports:
       - "{{{port/livereload}}}:35729"
       - "{{{port/vite}}}:5173"
+      - "{{{port/hot_reload}}}:9998"
+      - "{{{port/hot_reload_2}}}:9999"
     <<<if{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>
     restart: {{{restart_policy}}}
