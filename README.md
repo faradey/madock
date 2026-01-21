@@ -18,12 +18,12 @@ This project is written on Golang, and it is distributed under a MIT License.
 ## Key Features
 * Automatic project setup
 * Two or more projects can work simultaneously
-* **Magento** as a separate service. Works by default
+* **Magento** as a separate service. Works by default. Learn [more](docs/magento.md)
 * **PWA Studio** as a separate service
 * **Shopify** as a separate service. Learn [more](docs/shopify.md)
 * **Custom PHP project** as a separate service
 * **Shopware** as a separate service. Learn [more](docs/shopware.md)
-* **PrestaShop** as a separate service
+* **PrestaShop** as a separate service. Learn [more](docs/prestashop.md)
 * Cron support
 * Flexible configuration for each project
 * Database import and export in two clicks
@@ -162,7 +162,7 @@ IMPORTANT: Please, read all items before starting work.
 
 ## More Documentation
 
-* [Deployment Guide](docs/deployment-guide.md) (Magento & Shopware setup for existing projects)
+* [Deployment Guide](docs/deployment-guide.md) (Setup existing projects on macOS, Linux, Windows)
 * [JSON Output](docs/json_output.md)
 * [VSCODE + Xdebug Setup](docs/xdebug_vscode.md)
 * [PHPStorm + Xdebug Setup](docs/xdebug_phpstorm.md)

@@ -1,13 +1,54 @@
 # Deployment Guide for Existing Projects
 
-This guide covers deploying existing Magento 2 and Shopware projects using madock on Windows.
+This guide covers deploying existing Magento 2 and Shopware projects using madock.
 
 ## Prerequisites
+
+<details>
+<summary><b>macOS</b></summary>
+
+- Docker Desktop for Mac installed and running
+- Git installed
+- madock installed and available in PATH (see main README for installation)
+
+**Add host to /etc/hosts:**
+```bash
+sudo nano /etc/hosts
+# Add: 127.0.0.1 your-project.local
+```
+
+</details>
+
+<details>
+<summary><b>Linux (Ubuntu/Debian)</b></summary>
+
+- Docker and Docker Compose installed
+- Git installed
+- madock installed and available in PATH (see main README for installation)
+- User added to docker group: `sudo usermod -aG docker $USER`
+
+**Add host to /etc/hosts:**
+```bash
+sudo nano /etc/hosts
+# Add: 127.0.0.1 your-project.local
+```
+
+</details>
+
+<details>
+<summary><b>Windows</b></summary>
 
 - Docker Desktop for Windows installed and running
 - WSL2 enabled (recommended for better performance)
 - Git installed
 - madock installed and available in PATH
+
+**Add host to hosts file:**
+1. Open Notepad as Administrator
+2. Open file: `C:\Windows\System32\drivers\etc\hosts`
+3. Add: `127.0.0.1 your-project.local`
+
+</details>
 
 ## Magento 2
 
@@ -134,20 +175,43 @@ madock bash --root
 bin/console cache:clear
 ```
 
-### Step 4: Fix permissions on host (Windows with WSL2)
+### Step 4: Fix permissions on host
 
-If permissions are still broken, run from WSL2 terminal:
+If permissions are still broken, fix them on the host system:
+
+<details>
+<summary><b>macOS / Linux</b></summary>
+
+```bash
+# Navigate to project folder
+cd /path/to/project
+
+# Fix ownership
+sudo chown -R $(whoami):$(whoami) var public files
+
+# Fix permissions
+chmod -R 775 var public files
+```
+
+</details>
+
+<details>
+<summary><b>Windows (WSL2)</b></summary>
+
+Run from WSL2 terminal:
 
 ```bash
 # Navigate to project folder
 cd /mnt/c/path/to/project
 
 # Fix ownership
-sudo chown -R $(whoami):$(whoami) var public
+sudo chown -R $(whoami):$(whoami) var public files
 
 # Fix permissions
-chmod -R 775 var public
+chmod -R 775 var public files
 ```
+
+</details>
 
 ### Step 5: Full reset (if nothing helps)
 
