@@ -125,6 +125,9 @@
             </rabbitmq>
             <cron>
                 <enabled>false</enabled>
+                <!--<jobs>
+                    <job>* * * * * cd /var/www/html &amp;&amp; php bin/console scheduled:run</job>
+                </jobs>-->
             </cron>
             <ssh>
                 <auth_type>key</auth_type>
