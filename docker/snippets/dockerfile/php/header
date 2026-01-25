@@ -23,6 +23,7 @@ RUN ln -snf /usr/share/zoneinfo/{{{php/timezone}}} /etc/localtime && echo {{{php
     lsof \
     openssl \
     msmtp \
+    xdg-utils \
     libssh2-1-dev \
     libssh2-1 \
     jq \
