@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"sort"
+	"strings"
 
 	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -40,8 +42,12 @@ func CronExecute(projectName string, flag, manual bool) {
 			}
 		}
 
+		// First, install jobs from config (for all platforms)
+		installCronJobsFromConfig(projectConf, projectName, manual)
+
+		// Then, platform-specific cron setup
 		if projectConf["platform"] == "magento2" {
-			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove && php bin/magento cron:install && php bin/magento cron:run")
+			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:install && php bin/magento cron:run")
 			cmdSub.Stdout = os.Stdout
 			cmdSub.Stderr = os.Stderr
 			err = cmdSub.Run()
@@ -72,7 +78,6 @@ func CronExecute(projectName string, flag, manual bool) {
 			} else {
 				fmtc.SuccessLn("Shopify cron job installed successfully")
 			}
-
 		}
 	} else {
 		cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, "php"), "service", "cron", "status")
@@ -80,6 +85,10 @@ func CronExecute(projectName string, flag, manual bool) {
 		cmd.Stderr = bErr
 		err := cmd.Run()
 		if err == nil {
+			// First, remove config-based jobs (for all platforms)
+			removeCronJobsFromConfig(projectConf, projectName, manual)
+
+			// Then, platform-specific cron removal
 			if projectConf["platform"] == "magento2" {
 				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove")
 				cmdSub.Stdout = bOut
@@ -131,6 +140,88 @@ func CronExecute(projectName string, flag, manual bool) {
 					fmt.Println("Cron was stopped from System (container)")
 				}
 			}
+		}
+	}
+}
+
+// getCronJobsFromConfig extracts cron jobs from project configuration
+func getCronJobsFromConfig(projectConf map[string]string) []string {
+	var jobs []string
+	jobsMap := make(map[string]string)
+
+	// Collect all cron/jobs/* entries
+	for key, value := range projectConf {
+		if strings.HasPrefix(key, "cron/jobs/") && value != "" {
+			jobsMap[key] = value
+		}
+	}
+
+	// Sort keys for consistent order
+	keys := make([]string, 0, len(jobsMap))
+	for key := range jobsMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		jobs = append(jobs, jobsMap[key])
+	}
+
+	return jobs
+}
+
+// installCronJobsFromConfig installs cron jobs from configuration
+func installCronJobsFromConfig(projectConf map[string]string, projectName string, manual bool) {
+	jobs := getCronJobsFromConfig(projectConf)
+	if len(jobs) == 0 {
+		if manual {
+			fmt.Println("No cron jobs defined in configuration")
+		}
+		return
+	}
+
+	containerName := GetContainerName(projectConf, projectName, "php")
+
+	// First, remove existing crontab for www-data user
+	cmdRemove := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "crontab", "-u", "www-data", "-r")
+	_ = cmdRemove.Run() // Ignore error if no crontab exists
+
+	// Build crontab content
+	crontabContent := strings.Join(jobs, "\n") + "\n"
+
+	// Install crontab for www-data user
+	cmdSub := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c",
+		fmt.Sprintf("echo '%s' | crontab -u www-data -", crontabContent))
+	cmdSub.Stdout = os.Stdout
+	cmdSub.Stderr = os.Stderr
+	err := cmdSub.Run()
+
+	if manual {
+		if err != nil {
+			logger.Println(err)
+			fmtc.WarningLn(err.Error())
+		} else {
+			fmtc.SuccessLn(fmt.Sprintf("Installed %d cron job(s)", len(jobs)))
+		}
+	}
+}
+
+// removeCronJobsFromConfig removes cron jobs installed from configuration
+func removeCronJobsFromConfig(projectConf map[string]string, projectName string, manual bool) {
+	containerName := GetContainerName(projectConf, projectName, "php")
+
+	// Remove crontab for www-data user
+	cmdSub := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "crontab", "-u", "www-data", "-r")
+	cmdSub.Stdout = os.Stdout
+	cmdSub.Stderr = os.Stderr
+	err := cmdSub.Run()
+
+	if manual {
+		if err != nil {
+			// crontab -r returns error if no crontab exists, which is fine
+			fmt.Println("Cron jobs removed (or none existed)")
+		} else {
+			fmtc.SuccessLn("Cron jobs removed")
 		}
 	}
 }
