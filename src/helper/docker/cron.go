@@ -182,9 +182,8 @@ func installCronJobsFromConfig(projectConf map[string]string, projectName string
 
 	containerName := GetContainerName(projectConf, projectName, "php")
 
-	// First, remove existing crontab for www-data user
-	cmdRemove := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "crontab", "-u", "www-data", "-r")
-	_ = cmdRemove.Run() // Ignore error if no crontab exists
+	// First, remove existing crontab
+	removeCronJobsFromConfig(projectConf, projectName, false)
 
 	// Build crontab content
 	crontabContent := strings.Join(jobs, "\n") + "\n"
