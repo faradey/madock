@@ -18,8 +18,72 @@ madock cron:disable
 
 When cron is enabled:
 1. A cron process starts inside the PHP container
-2. For Magento projects, it executes `bin/magento cron:run` every minute
-3. The setting persists across container restarts
+2. Custom cron jobs from configuration are installed (if defined)
+3. Platform-specific cron jobs are installed automatically:
+   - **Magento 2**: runs `bin/magento cron:install` (installs Magento's built-in cron)
+   - **Shopify**: installs Laravel scheduler cron job automatically
+4. The setting persists across container restarts
+
+## Custom Cron Jobs
+
+You can define custom cron jobs in your project's `config.xml`. These jobs will be installed automatically when cron is enabled and removed when disabled.
+
+### Configuration
+
+Add jobs to the `<cron>` section in your config:
+
+```xml
+<cron>
+    <enabled>false</enabled>
+    <jobs>
+        <job>* * * * * cd /var/www/html &amp;&amp; php bin/console scheduled:run</job>
+        <job>*/5 * * * * cd /var/www/html &amp;&amp; php artisan schedule:run</job>
+        <job>0 * * * * cd /var/www/html &amp;&amp; php bin/console cache:clear</job>
+    </jobs>
+</cron>
+```
+
+### Important Notes
+
+- **XML escaping**: Use `&amp;` instead of `&` in commands (e.g., `cmd1 &amp;&amp; cmd2`)
+- Jobs run as the `www-data` user inside the container
+- Each `<job>` element should contain a complete cron entry (schedule + command)
+- Jobs are installed/removed together with `cron:enable` and `cron:disable`
+
+### Cron Schedule Format
+
+```
+┌───────────── minute (0-59)
+│ ┌───────────── hour (0-23)
+│ │ ┌───────────── day of month (1-31)
+│ │ │ ┌───────────── month (1-12)
+│ │ │ │ ┌───────────── day of week (0-6, Sunday=0)
+│ │ │ │ │
+* * * * * command
+```
+
+### Example Jobs by Platform
+
+**Shopware:**
+```xml
+<job>* * * * * cd /var/www/html &amp;&amp; php bin/console scheduled-task:run</job>
+<job>* * * * * cd /var/www/html &amp;&amp; php bin/console messenger:consume</job>
+```
+
+**Laravel/Shopify:**
+```xml
+<job>* * * * * cd /var/www/html &amp;&amp; php artisan schedule:run</job>
+```
+
+**Symfony:**
+```xml
+<job>* * * * * cd /var/www/html &amp;&amp; php bin/console messenger:consume async</job>
+```
+
+**PrestaShop:**
+```xml
+<job>*/15 * * * * cd /var/www/html &amp;&amp; php bin/console prestashop:update:configuration</job>
+```
 
 ## Viewing Cron Logs
 
