@@ -1,14 +1,16 @@
 package patch
 
 import (
+	"os"
+	"os/exec"
+
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
-	"os"
-	"os/exec"
+	"golang.org/x/term"
 )
 
 func Execute() {
@@ -30,7 +32,12 @@ func Execute() {
 		isForce = "f"
 	}
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
-	cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/patch-create.php", workdir, filePath, patchName, title, isForce)
+	dockerArgs := []string{"exec", "-i"}
+	if term.IsTerminal(int(os.Stdin.Fd())) {
+		dockerArgs = []string{"exec", "-it"}
+	}
+	dockerArgs = append(dockerArgs, "-u", user, docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/patch-create.php", workdir, filePath, patchName, title, isForce)
+	cmd := exec.Command("docker", dockerArgs...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
