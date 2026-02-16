@@ -1,13 +1,24 @@
 package open
 
 import (
+	"os/exec"
+	"runtime"
+
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/logger"
-	"os/exec"
-	"runtime"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"open"},
+		Handler:  Execute,
+		Help:     "Open project in browser",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralOpen)).(*arg_struct.ControllerGeneralOpen)

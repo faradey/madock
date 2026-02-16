@@ -2,6 +2,8 @@ package env
 
 import (
 	"encoding/json"
+
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
@@ -12,6 +14,15 @@ import (
 	"os"
 	"os/exec"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"setup:env"},
+		Handler:  Execute,
+		Help:     "Setup environment",
+		Category: "setup",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralSetupEnv)).(*arg_struct.ControllerGeneralSetupEnv)

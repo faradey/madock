@@ -1,14 +1,25 @@
 package logs
 
 import (
+	"os"
+	"os/exec"
+
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
-	"os"
-	"os/exec"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"logs"},
+		Handler:  Execute,
+		Help:     "Show container logs",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralLogs)).(*arg_struct.ControllerGeneralLogs)

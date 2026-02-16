@@ -1,14 +1,31 @@
 package mftf
 
 import (
+	"os"
+	"os/exec"
+
+	"github.com/faradey/madock/src/command"
 	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
-	"os"
-	"os/exec"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"mftf"},
+		Handler:  Execute,
+		Help:     "Execute MFTF",
+		Category: "magento",
+	})
+	command.Register(&command.Definition{
+		Aliases:  []string{"mftf:init"},
+		Handler:  Init,
+		Help:     "Initialize MFTF",
+		Category: "magento",
+	})
+}
 
 func Init() {
 	projectName := configs.GetProjectName()

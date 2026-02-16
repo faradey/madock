@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -12,6 +13,15 @@ import (
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"bash"},
+		Handler:  Execute,
+		Help:     "Execute bash in container",
+		Category: "general",
+	})
+}
 
 var allowedShells = map[string]bool{
 	"bash": true,

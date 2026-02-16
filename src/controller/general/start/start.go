@@ -4,12 +4,22 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/platform"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/src/helper/configs"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"start"},
+		Handler:  Execute,
+		Help:     "Start containers",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralStart)).(*arg_struct.ControllerGeneralStart)

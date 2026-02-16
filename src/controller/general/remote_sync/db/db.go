@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/general/remote_sync"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
@@ -15,6 +16,15 @@ import (
 	"strings"
 	"time"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"remote:sync:db"},
+		Handler:  Execute,
+		Help:     "Sync remote database",
+		Category: "remote",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralRemoteSyncDb)).(*arg_struct.ControllerGeneralRemoteSyncDb)

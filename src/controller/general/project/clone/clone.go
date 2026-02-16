@@ -3,6 +3,7 @@ package clone
 import (
 	"compress/gzip"
 	"fmt"
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/general/snapshot/create"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
@@ -16,6 +17,15 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"project:clone"},
+		Handler:  Execute,
+		Help:     "Clone project",
+		Category: "project",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralProjectClone)).(*arg_struct.ControllerGeneralProjectClone)

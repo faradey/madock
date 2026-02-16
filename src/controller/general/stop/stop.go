@@ -1,11 +1,21 @@
 package stop
 
 import (
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/controller/platform"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"stop"},
+		Handler:  Execute,
+		Help:     "Stop containers",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	projectName := configs.GetProjectName()

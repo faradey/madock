@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -8,6 +9,21 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
+}
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"cron:enable"},
+		Handler:  Enable,
+		Help:     "Enable cron",
+		Category: "cron",
+	})
+	command.Register(&command.Definition{
+		Aliases:  []string{"cron:disable"},
+		Handler:  Disable,
+		Help:     "Disable cron",
+		Category: "cron",
+	})
 }
 
 func Enable() {

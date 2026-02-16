@@ -3,6 +3,8 @@ package create
 import (
 	"compress/gzip"
 	"fmt"
+
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
@@ -13,6 +15,15 @@ import (
 	"os/exec"
 	"time"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"snapshot:create"},
+		Handler:  Execute,
+		Help:     "Create snapshot",
+		Category: "snapshot",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralSnapshotCreate)).(*arg_struct.ControllerGeneralSnapshotCreate)

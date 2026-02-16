@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
@@ -19,6 +20,15 @@ type ArgsStruct struct {
 	attr.Arguments
 	Force bool   `arg:"-f,--force" help:"Skip interactive confirmations (requires --name)"`
 	Name  string `arg:"-n,--name" help:"Project name to remove (required with --force)"`
+}
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"project:remove"},
+		Handler:  Execute,
+		Help:     "Remove project",
+		Category: "project",
+	})
 }
 
 func Execute() {

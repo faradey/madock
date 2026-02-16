@@ -1,6 +1,7 @@
 package prune
 
 import (
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
@@ -9,6 +10,15 @@ import (
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/paths"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"prune"},
+		Handler:  Execute,
+		Help:     "Prune Docker resources",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralPrune)).(*arg_struct.ControllerGeneralPrune)

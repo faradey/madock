@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/faradey/madock/src/command"
 	setupCustom "github.com/faradey/madock/src/controller/custom/setup"
 	setupMagento "github.com/faradey/madock/src/controller/magento/setup"
 	setupPrestashop "github.com/faradey/madock/src/controller/prestashop/setup"
@@ -19,6 +20,15 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"setup"},
+		Handler:  Execute,
+		Help:     "Setup project",
+		Category: "setup",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralSetup)).(*arg_struct.ControllerGeneralSetup)

@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
@@ -12,6 +13,15 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"golang.org/x/term"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"patch:create"},
+		Handler:  Execute,
+		Help:     "Create patch file",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralPatch)).(*arg_struct.ControllerGeneralPatch)

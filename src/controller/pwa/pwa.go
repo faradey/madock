@@ -1,6 +1,7 @@
 package pwa
 
 import (
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -8,6 +9,15 @@ import (
 	"os"
 	"os/exec"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"pwa"},
+		Handler:  Execute,
+		Help:     "Execute PWA command",
+		Category: "pwa",
+	})
+}
 
 func Execute() {
 	flag := cli.NormalizeCliCommandWithJoin(os.Args[2:])

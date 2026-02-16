@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -20,6 +21,15 @@ type PortInfo struct {
 type PortsOutput struct {
 	Project string     `json:"project"`
 	Ports   []PortInfo `json:"ports"`
+}
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"info:ports"},
+		Handler:  Execute,
+		Help:     "Show project ports. Supports --json (-j) output",
+		Category: "general",
+	})
 }
 
 func Execute() {

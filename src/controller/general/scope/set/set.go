@@ -1,6 +1,7 @@
 package set
 
 import (
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
@@ -8,6 +9,15 @@ import (
 
 type ArgsStruct struct {
 	attr.ArgumentsWithArgs
+}
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"scope:set"},
+		Handler:  Execute,
+		Help:     "Set active scope",
+		Category: "scope",
+	})
 }
 
 func Execute() {

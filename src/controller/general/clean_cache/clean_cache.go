@@ -2,16 +2,27 @@ package clean_cache
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"sync"
+
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
-	"os"
-	"os/exec"
-	"sync"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"c:f"},
+		Handler:  Execute,
+		Help:     "Flush cache",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralCleanCache)).(*arg_struct.ControllerGeneralCleanCache)
