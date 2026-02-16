@@ -20,6 +20,7 @@ func GetVersions(ver string) versions.ToolsVersions {
 	phpVer := GetPhpVersion(mageVersion)
 	return versions.ToolsVersions{
 		Platform:        "magento2",
+		Language:        "php",
 		Php:             phpVer,
 		Db:              GetDBVersion(mageVersion),
 		SearchEngine:    GetSearchEngineVersion(mageVersion),

@@ -11,46 +11,52 @@ import (
 	"github.com/faradey/madock/src/helper/configs/projects"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
+	"github.com/faradey/madock/src/model/versions"
 	"github.com/faradey/madock/src/model/versions/custom"
+	"github.com/faradey/madock/src/model/versions/languages"
 )
 
-func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
+func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup, language string) {
 	toolsDefVersions := custom.GetVersions()
+	toolsDefVersions.Language = language
 
 	if continueSetup {
 		fmt.Println("")
 
-		if args.Php == "" {
-			tools.Php(&toolsDefVersions.Php)
-		} else {
-			toolsDefVersions.Php = args.Php
+		switch language {
+		case "php":
+			setupPhpTools(&toolsDefVersions, args)
+		case "nodejs":
+			setupNodeJsTools(&toolsDefVersions, args)
+		case "python", "golang", "ruby", "none":
+			// No language-specific interactive selectors needed
 		}
+
+		// Common services (DB, search, redis, etc.)
 		if args.Db == "" {
 			tools.Db(&toolsDefVersions.Db)
 		} else {
 			toolsDefVersions.Db = args.Db
 		}
-		if args.Composer == "" {
-			tools.Composer(&toolsDefVersions.Composer)
-		} else {
-			toolsDefVersions.Composer = args.Composer
-		}
-		if args.SearchEngine == "" {
-			tools.SearchEngine(&toolsDefVersions.SearchEngine)
-		} else {
-			toolsDefVersions.SearchEngine = args.SearchEngine
-		}
-		if toolsDefVersions.SearchEngine == "Elasticsearch" {
-			if args.SearchEngineVersion == "" {
-				tools.Elastic(&toolsDefVersions.Elastic)
+
+		if language == "php" {
+			if args.SearchEngine == "" {
+				tools.SearchEngine(&toolsDefVersions.SearchEngine)
 			} else {
-				toolsDefVersions.Elastic = args.SearchEngineVersion
+				toolsDefVersions.SearchEngine = args.SearchEngine
 			}
-		} else if toolsDefVersions.SearchEngine == "OpenSearch" {
-			if args.SearchEngineVersion == "" {
-				tools.OpenSearch(&toolsDefVersions.OpenSearch)
-			} else {
-				toolsDefVersions.OpenSearch = args.SearchEngineVersion
+			if toolsDefVersions.SearchEngine == "Elasticsearch" {
+				if args.SearchEngineVersion == "" {
+					tools.Elastic(&toolsDefVersions.Elastic)
+				} else {
+					toolsDefVersions.Elastic = args.SearchEngineVersion
+				}
+			} else if toolsDefVersions.SearchEngine == "OpenSearch" {
+				if args.SearchEngineVersion == "" {
+					tools.OpenSearch(&toolsDefVersions.OpenSearch)
+				} else {
+					toolsDefVersions.OpenSearch = args.SearchEngineVersion
+				}
 			}
 		}
 
@@ -85,6 +91,35 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 		fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
 		rebuild.Execute()
+	}
+}
+
+func setupPhpTools(toolsDefVersions *versions.ToolsVersions, args *arg_struct.ControllerGeneralSetup) {
+	if args.Php == "" {
+		tools.Php(&toolsDefVersions.Php)
+	} else {
+		toolsDefVersions.Php = args.Php
+	}
+	if args.Composer == "" {
+		tools.Composer(&toolsDefVersions.Composer)
+	} else {
+		toolsDefVersions.Composer = args.Composer
+	}
+}
+
+func setupNodeJsTools(toolsDefVersions *versions.ToolsVersions, args *arg_struct.ControllerGeneralSetup) {
+	defVersions := languages.GetDefaultVersions("nodejs")
+	toolsDefVersions.NodeJs = defVersions["nodejs/version"]
+	if args.NodeJs == "" {
+		tools.NodeJs(&toolsDefVersions.NodeJs)
+	} else {
+		toolsDefVersions.NodeJs = args.NodeJs
+	}
+	toolsDefVersions.Yarn = defVersions["nodejs/yarn/version"]
+	if args.Yarn == "" {
+		tools.Yarn(&toolsDefVersions.Yarn)
+	} else {
+		toolsDefVersions.Yarn = args.Yarn
 	}
 }
 

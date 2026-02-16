@@ -142,6 +142,36 @@ func Yarn(defVersion *string) {
 	SelectInteractive("Yarn Version", availableVersions, defVersion)
 }
 
+func Language() string {
+	defVersion := "php"
+	availableVersions := []string{"php", "nodejs", "python", "golang", "ruby", "none"}
+
+	fmt.Println("")
+	SelectInteractive("Primary Language", availableVersions, &defVersion)
+	return defVersion
+}
+
+func PythonVersion(defVersion *string) {
+	availableVersions := []string{"Custom", "3.13", "3.12", "3.11", "3.10"}
+
+	fmt.Println("")
+	SelectInteractive("Python Version", availableVersions, defVersion)
+}
+
+func GoVersion(defVersion *string) {
+	availableVersions := []string{"Custom", "1.23", "1.22", "1.21", "1.20"}
+
+	fmt.Println("")
+	SelectInteractive("Go Version", availableVersions, defVersion)
+}
+
+func RubyVersion(defVersion *string) {
+	availableVersions := []string{"Custom", "3.3", "3.2", "3.1", "3.0"}
+
+	fmt.Println("")
+	SelectInteractive("Ruby Version", availableVersions, defVersion)
+}
+
 func setTitleAndRecommended(title string, recommended *string) {
 	// Title is now shown as part of the selector box
 	fmt.Println("")

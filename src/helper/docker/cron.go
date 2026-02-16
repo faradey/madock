@@ -18,10 +18,7 @@ import (
 // CronExecute starts or stops cron service in the container
 func CronExecute(projectName string, flag, manual bool) {
 	projectConf := configs2.GetProjectConfig(projectName)
-	service := "php"
-	if projectConf["platform"] == "pwa" {
-		service = "nodejs"
-	}
+	service := resolveMainService(projectConf)
 
 	service, userOS, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
 
@@ -80,7 +77,7 @@ func CronExecute(projectName string, flag, manual bool) {
 			}
 		}
 	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, "php"), "service", "cron", "status")
+		cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, service), "service", "cron", "status")
 		cmd.Stdout = bOut
 		cmd.Stderr = bErr
 		err := cmd.Run()
@@ -128,7 +125,7 @@ func CronExecute(projectName string, flag, manual bool) {
 				}
 			}
 
-			cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, "php"), "service", "cron", "stop")
+			cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, service), "service", "cron", "stop")
 			cmd.Stdout = bOut
 			cmd.Stderr = bErr
 			err = cmd.Run()
@@ -142,6 +139,29 @@ func CronExecute(projectName string, flag, manual bool) {
 			}
 		}
 	}
+}
+
+// resolveMainService determines the main service name based on project config.
+// This is a local helper to avoid importing the platform package (which would cause an import cycle).
+func resolveMainService(projectConf map[string]string) string {
+	if lang, ok := projectConf["language"]; ok && lang != "" && lang != "php" {
+		switch lang {
+		case "nodejs":
+			return "nodejs"
+		case "python":
+			return "python"
+		case "golang":
+			return "golang"
+		case "ruby":
+			return "ruby"
+		case "none":
+			return "app"
+		}
+	}
+	if projectConf["platform"] == "pwa" {
+		return "nodejs"
+	}
+	return "php"
 }
 
 // getCronJobsFromConfig extracts cron jobs from project configuration
@@ -180,7 +200,7 @@ func installCronJobsFromConfig(projectConf map[string]string, projectName string
 		return
 	}
 
-	containerName := GetContainerName(projectConf, projectName, "php")
+	containerName := GetContainerName(projectConf, projectName, resolveMainService(projectConf))
 
 	// First, remove existing crontab
 	removeCronJobsFromConfig(projectConf, projectName, false)
@@ -207,7 +227,7 @@ func installCronJobsFromConfig(projectConf map[string]string, projectName string
 
 // removeCronJobsFromConfig removes cron jobs installed from configuration
 func removeCronJobsFromConfig(projectConf map[string]string, projectName string, manual bool) {
-	containerName := GetContainerName(projectConf, projectName, "php")
+	containerName := GetContainerName(projectConf, projectName, resolveMainService(projectConf))
 
 	// Remove crontab for www-data user
 	cmdSub := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "crontab", "-u", "www-data", "-r")

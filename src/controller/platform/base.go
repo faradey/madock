@@ -118,7 +118,7 @@ func (h *BaseHandler) executeChown(projectName string, projectConf map[string]st
 		chownCmd += "chown -R " + usr.Uid + ":" + usr.Gid + " " + dir
 	}
 
-	containerName := docker.GetContainerName(projectConf, projectName, h.GetMainContainer())
+	containerName := docker.GetContainerName(projectConf, projectName, ResolveMainService(projectConf, h.GetMainContainer()))
 	cmd := exec.Command("docker", "exec", "-it", "-u", "root", containerName, "bash", "-c", chownCmd)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

@@ -22,6 +22,9 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	configs2.SetParam(projectName, "path", paths.GetRunDirPath(), "default", configs2.MadockLevelConfigCode)
 	/*config.Set("path", paths.GetRunDirPath())*/
 	config.Set("platform", defVersions.Platform)
+	if defVersions.Language != "" {
+		config.Set("language", defVersions.Language)
+	}
 	platform := defVersions.Platform
 	if _, ok := projectConf["platform"]; ok {
 		platform = projectConf["platform"]

@@ -72,11 +72,20 @@ func Execute() {
 	platform := args.Platform
 	detectedVersion := ""
 
-	// Try to auto-detect platform from composer.json
+	detectedLanguage := ""
+
+	// Try to auto-detect platform from project files
 	if platform == "" {
 		detection := detect.Detect(paths.GetRunDirPath())
 		if detection.Detected {
-			fmtc.SuccessIconLn(fmt.Sprintf("Detected: %s %s", detection.Platform, detection.PlatformVersion))
+			detectedInfo := detection.Platform
+			if detection.PlatformVersion != "" {
+				detectedInfo += " " + detection.PlatformVersion
+			}
+			if detection.Language != "" {
+				detectedInfo += " (language: " + detection.Language + ")"
+			}
+			fmtc.SuccessIconLn(fmt.Sprintf("Detected: %s", detectedInfo))
 			fmtc.PrintKeyValue("Source", detection.Source)
 			fmt.Println("")
 
@@ -84,6 +93,7 @@ func Execute() {
 			if args.Yes || fmtc.Confirm("Use detected configuration?", true) {
 				platform = detection.Platform
 				detectedVersion = detection.PlatformVersion
+				detectedLanguage = detection.Language
 			}
 			fmt.Println("")
 		}
@@ -93,6 +103,25 @@ func Execute() {
 		platform = tools.Platform()
 	}
 
+	// Determine the language for the project
+	language := args.Language
+	if language == "" && detectedLanguage != "" {
+		language = detectedLanguage
+	}
+	switch platform {
+	case "magento2", "shopware", "prestashop", "shopify":
+		language = "php"
+	case "pwa":
+		language = "nodejs"
+	case "custom":
+		if language == "" && continueSetup {
+			language = tools.Language()
+		}
+		if language == "" {
+			language = "php"
+		}
+	}
+
 	if platform == "magento2" {
 		setupMagento.ExecuteWithVersion(projectName, projectConf, continueSetup, args, detectedVersion)
 	} else if platform == "pwa" {
@@ -100,7 +129,7 @@ func Execute() {
 	} else if platform == "shopify" {
 		setupShopify.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "custom" {
-		setupCustom.Execute(projectName, projectConf, continueSetup, args)
+		setupCustom.Execute(projectName, projectConf, continueSetup, args, language)
 	} else if platform == "shopware" {
 		setupShopware.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "prestashop" {

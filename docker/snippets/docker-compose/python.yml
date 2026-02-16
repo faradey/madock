@@ -1,0 +1,19 @@
+<<<if{{{python/enabled}}}>>>
+  python:
+    build:
+      context: ctx
+      dockerfile: python.Dockerfile
+    tty: true
+    volumes:
+      - ./src:/var/www/html:cached
+      - ./ssh:/var/www/.ssh:ro
+      - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+    <<<if{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
+    restart: {{{restart_policy}}}
+<<<endif>>>

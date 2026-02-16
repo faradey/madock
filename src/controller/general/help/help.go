@@ -134,6 +134,7 @@ func Execute() {
 	describeByLevel("--yes, -y", "Skip confirmation prompts", 1)
 	describeByLevel("--preset", "Use a preset configuration (e.g., 'magento-247', 'magento-246', 'shopware-65')", 1)
 	describeByLevel("--platform", "Platform (magento2, shopify, pwa, custom, etc.)", 1)
+	describeByLevel("--language, -l", "Primary language for custom platform (php, nodejs, python, golang, ruby, none)", 1)
 	describeByLevel("--platform-edition", "Platform edition (community or enterprise for Magento 2)", 1)
 	describeByLevel("--platform-version", "Platform version", 1)
 	describeByLevel("--php", "PHP version", 1)

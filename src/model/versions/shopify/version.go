@@ -7,6 +7,7 @@ import (
 func GetVersions() versions.ToolsVersions {
 	return versions.ToolsVersions{
 		Platform: "shopify",
+		Language: "php",
 		Php:      "8.2",
 		Db:       "11.1.2",
 		Composer: "2",

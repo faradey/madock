@@ -185,6 +185,32 @@ func makePhpDockerfile(projectName string) {
 	}
 }
 
+func makeMainContainerDockerfile(projectName string) {
+	projectConf := configs.GetProjectConfig(projectName)
+	language := projectConf["language"]
+	if language == "" {
+		language = "php"
+	}
+
+	switch language {
+	case "php":
+		makePhpDockerfile(projectName)
+	case "nodejs":
+		// For standalone Node.js projects, build the nodejs Dockerfile as the main container
+		makeDockerfile(projectName, "nodejs/Dockerfile", "nodejs.Dockerfile")
+	case "python":
+		makeDockerfile(projectName, "Dockerfile", "python.Dockerfile")
+	case "golang":
+		makeDockerfile(projectName, "Dockerfile", "golang.Dockerfile")
+	case "ruby":
+		makeDockerfile(projectName, "Dockerfile", "ruby.Dockerfile")
+	case "none":
+		makeDockerfile(projectName, "Dockerfile", "app.Dockerfile")
+	default:
+		makePhpDockerfile(projectName)
+	}
+}
+
 func makeDockerCompose(projectName string) {
 	overrideFile := runtime.GOOS
 	projectConf := configs.GetProjectConfig(projectName)
@@ -334,6 +360,7 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 	if platform == "" {
 		platform = projectConf["platform"]
 	}
+	language := projectConf["language"]
 	var err error
 	dockerDefFile := paths.GetRunDirPath() + "/.madock/docker/" + strings.Trim(path, "/")
 	if !paths.IsFileExist(dockerDefFile) {
@@ -341,9 +368,15 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 		if !paths.IsFileExist(dockerDefFile) {
 			dockerDefFile = paths.GetExecDirPath() + "/docker/" + platform + "/" + strings.Trim(path, "/")
 			if !paths.IsFileExist(dockerDefFile) {
-				dockerDefFile = paths.GetExecDirPath() + "/docker/general/service/" + strings.Trim(path, "/")
+				// Language-specific fallback (for non-PHP languages on custom platform)
+				if language != "" && language != "php" {
+					dockerDefFile = paths.GetExecDirPath() + "/docker/languages/" + language + "/" + strings.Trim(path, "/")
+				}
 				if !paths.IsFileExist(dockerDefFile) {
-					logger.Fatal(err)
+					dockerDefFile = paths.GetExecDirPath() + "/docker/general/service/" + strings.Trim(path, "/")
+					if !paths.IsFileExist(dockerDefFile) {
+						logger.Fatal(err)
+					}
 				}
 			}
 		}

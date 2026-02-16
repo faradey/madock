@@ -5,6 +5,7 @@ import (
 	"os/exec"
 
 	"github.com/faradey/madock/src/command"
+	"github.com/faradey/madock/src/controller/platform"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
@@ -24,11 +25,8 @@ func init() {
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralLogs)).(*arg_struct.ControllerGeneralLogs)
 
-	service := "php"
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["platform"] == "pwa" {
-		service = "nodejs"
-	}
+	service := platform.GetMainService(projectConf)
 
 	if args.Service != "" {
 		service = args.Service
