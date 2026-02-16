@@ -8,6 +8,7 @@ func GetVersions() versions.ToolsVersions {
 	phpVer := GetPhpVersion()
 	return versions.ToolsVersions{
 		Platform:     "custom",
+		Language:     "php",
 		Php:          phpVer,
 		Db:           GetDBVersion(),
 		SearchEngine: GetSearchEngineVersion(),

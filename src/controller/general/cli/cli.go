@@ -5,6 +5,7 @@ import (
 	"os/exec"
 
 	"github.com/faradey/madock/src/command"
+	"github.com/faradey/madock/src/controller/platform"
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -24,10 +25,7 @@ func Execute() {
 	flag := cli.NormalizeCliCommandWithJoin(os.Args[2:])
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
-	service := "php"
-	if projectConf["platform"] == "pwa" {
-		service = "nodejs"
-	}
+	service := platform.GetMainService(projectConf)
 
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", "")
 

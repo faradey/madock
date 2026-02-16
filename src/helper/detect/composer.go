@@ -21,6 +21,7 @@ type ComposerJSON struct {
 type DetectionResult struct {
 	Platform        string
 	PlatformVersion string
+	Language        string
 	Detected        bool
 	Source          string
 }
@@ -148,6 +149,56 @@ func DetectFromComposerLock(projectPath string) DetectionResult {
 	return result
 }
 
+// DetectLanguage tries to detect the primary language from project files
+func DetectLanguage(projectPath string) DetectionResult {
+	result := DetectionResult{Detected: false}
+
+	// Check for Go project (go.mod)
+	if paths.IsFileExist(projectPath + "/go.mod") {
+		result.Language = "golang"
+		result.Platform = "custom"
+		result.Detected = true
+		result.Source = "go.mod"
+		return result
+	}
+
+	// Check for Python project (requirements.txt or pyproject.toml)
+	if paths.IsFileExist(projectPath + "/requirements.txt") {
+		result.Language = "python"
+		result.Platform = "custom"
+		result.Detected = true
+		result.Source = "requirements.txt"
+		return result
+	}
+	if paths.IsFileExist(projectPath + "/pyproject.toml") {
+		result.Language = "python"
+		result.Platform = "custom"
+		result.Detected = true
+		result.Source = "pyproject.toml"
+		return result
+	}
+
+	// Check for Ruby project (Gemfile)
+	if paths.IsFileExist(projectPath + "/Gemfile") {
+		result.Language = "ruby"
+		result.Platform = "custom"
+		result.Detected = true
+		result.Source = "Gemfile"
+		return result
+	}
+
+	// Check for Node.js project (package.json without composer.json)
+	if paths.IsFileExist(projectPath+"/package.json") && !paths.IsFileExist(projectPath+"/composer.json") {
+		result.Language = "nodejs"
+		result.Platform = "custom"
+		result.Detected = true
+		result.Source = "package.json"
+		return result
+	}
+
+	return result
+}
+
 // Detect tries all detection methods
 func Detect(projectPath string) DetectionResult {
 	// Try composer.lock first (more accurate)
@@ -157,6 +208,11 @@ func Detect(projectPath string) DetectionResult {
 
 	// Fall back to composer.json
 	if result := DetectFromComposer(projectPath); result.Detected {
+		return result
+	}
+
+	// Try language-based detection
+	if result := DetectLanguage(projectPath); result.Detected {
 		return result
 	}
 

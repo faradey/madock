@@ -15,6 +15,7 @@ func GetVersions(ver string) versions.ToolsVersions {
 	phpVer := GetPhpVersion(swVersion)
 	return versions.ToolsVersions{
 		Platform:        "shopware",
+		Language:        "php",
 		Php:             phpVer,
 		Db:              GetDBVersion(swVersion),
 		SearchEngine:    GetSearchEngineVersion(swVersion),

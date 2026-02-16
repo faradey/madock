@@ -2,6 +2,7 @@ package versions
 
 type ToolsVersions struct {
 	Platform,
+	Language,
 	Php,
 	Db,
 	SearchEngine,

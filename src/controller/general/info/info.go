@@ -2,6 +2,7 @@ package info
 
 import (
 	"github.com/faradey/madock/src/command"
+	"github.com/faradey/madock/src/controller/platform"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
@@ -27,11 +28,8 @@ func init() {
 func Info() {
 	attr.Parse(new(ArgsStruct))
 
-	service := "php"
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["platform"] == "pwa" {
-		service = "nodejs"
-	}
+	service := platform.GetMainService(projectConf)
 
 	if projectConf["platform"] == "magento2" {
 		projectName := configs.GetProjectName()

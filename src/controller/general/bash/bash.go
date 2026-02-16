@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/faradey/madock/src/command"
+	"github.com/faradey/madock/src/controller/platform"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -34,12 +35,9 @@ var allowedShells = map[string]bool{
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralBash)).(*arg_struct.ControllerGeneralBash)
 
-	service := "php"
-	user := "root"
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["platform"] == "pwa" {
-		service = "nodejs"
-	}
+	service := platform.GetMainService(projectConf)
+	user := "root"
 
 	if args.Service != "" {
 		service = args.Service
