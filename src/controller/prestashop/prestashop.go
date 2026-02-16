@@ -1,6 +1,7 @@
 package prestashop
 
 import (
+	"github.com/faradey/madock/src/command"
 	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -8,6 +9,15 @@ import (
 	"os"
 	"os/exec"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"prestashop", "ps"},
+		Handler:  Execute,
+		Help:     "Execute PrestaShop CLI",
+		Category: "prestashop",
+	})
+}
 
 func Execute() {
 	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])

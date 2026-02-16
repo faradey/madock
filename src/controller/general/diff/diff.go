@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
@@ -12,6 +13,15 @@ import (
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"diff"},
+		Handler:  Execute,
+		Help:     "Show diff",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralDiff)).(*arg_struct.ControllerGeneralDiff)

@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -72,6 +73,15 @@ func formatBytes(bytes int64) string {
 	default:
 		return fmt.Sprintf("%dB", bytes)
 	}
+}
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"db:import"},
+		Handler:  Import,
+		Help:     "Import database",
+		Category: "database",
+	})
 }
 
 func Import() {

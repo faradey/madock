@@ -3,15 +3,26 @@ package node
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/exec"
+	"strings"
+
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"os"
-	"os/exec"
-	"strings"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"node"},
+		Handler:  Execute,
+		Help:     "Execute node command",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	flag := cli.NormalizeCliCommandWithJoin(os.Args[2:])

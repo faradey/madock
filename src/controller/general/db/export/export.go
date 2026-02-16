@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
@@ -15,6 +16,15 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"db:export"},
+		Handler:  Export,
+		Help:     "Export database",
+		Category: "database",
+	})
+}
 
 func Export() {
 	projectConf := configs.GetCurrentProjectConfig()

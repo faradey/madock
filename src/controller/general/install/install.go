@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -13,6 +14,15 @@ import (
 	"github.com/faradey/madock/src/model/versions/prestashop"
 	"github.com/faradey/madock/src/model/versions/shopware"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"install"},
+		Handler:  Execute,
+		Help:     "Install Magento",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()

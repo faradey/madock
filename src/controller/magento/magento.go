@@ -1,6 +1,7 @@
 package magento
 
 import (
+	"github.com/faradey/madock/src/command"
 	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -8,6 +9,15 @@ import (
 	"os"
 	"os/exec"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"magento", "m"},
+		Handler:  Execute,
+		Help:     "Execute Magento CLI",
+		Category: "magento",
+	})
+}
 
 func Execute() {
 	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])

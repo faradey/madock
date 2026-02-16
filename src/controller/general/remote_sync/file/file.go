@@ -2,6 +2,7 @@ package file
 
 import (
 	"fmt"
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/general/remote_sync"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
@@ -11,6 +12,15 @@ import (
 	"github.com/pkg/sftp"
 	"strings"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"remote:sync:file"},
+		Handler:  Execute,
+		Help:     "Sync remote file",
+		Category: "remote",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralRemoteSyncFile)).(*arg_struct.ControllerGeneralRemoteSyncFile)

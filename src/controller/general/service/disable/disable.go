@@ -1,6 +1,7 @@
 package disable
 
 import (
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/controller/general/service"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
@@ -8,6 +9,15 @@ import (
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"service:disable"},
+		Handler:  Execute,
+		Help:     "Disable service",
+		Category: "service",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralServiceDisable)).(*arg_struct.ControllerGeneralServiceDisable)

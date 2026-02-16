@@ -1,6 +1,7 @@
 package debug
 
 import (
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/configs"
@@ -8,6 +9,33 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
+}
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"debug:enable"},
+		Handler:  Enable,
+		Help:     "Enable debug mode",
+		Category: "debug",
+	})
+	command.Register(&command.Definition{
+		Aliases:  []string{"debug:disable"},
+		Handler:  Disable,
+		Help:     "Disable debug mode",
+		Category: "debug",
+	})
+	command.Register(&command.Definition{
+		Aliases:  []string{"debug:profile:enable"},
+		Handler:  ProfileEnable,
+		Help:     "Enable profiler",
+		Category: "debug",
+	})
+	command.Register(&command.Definition{
+		Aliases:  []string{"debug:profile:disable"},
+		Handler:  ProfileDisable,
+		Help:     "Disable profiler",
+		Category: "debug",
+	})
 }
 
 func Enable() {

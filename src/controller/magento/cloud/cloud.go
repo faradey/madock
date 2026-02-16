@@ -1,16 +1,27 @@
 package cloud
 
 import (
+	"os"
+	"os/exec"
+	"strings"
+
+	"github.com/faradey/madock/src/command"
 	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
-	"os"
-	"os/exec"
-	"strings"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"magento-cloud", "cloud"},
+		Handler:  Execute,
+		Help:     "Execute Magento Cloud CLI",
+		Category: "magento",
+	})
+}
 
 type ArgsStruct struct {
 	attr.ArgumentsWithArgs

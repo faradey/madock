@@ -1,6 +1,7 @@
 package info
 
 import (
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
@@ -12,6 +13,15 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
+}
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"info"},
+		Handler:  Info,
+		Help:     "Show project info",
+		Category: "general",
+	})
 }
 
 func Info() {

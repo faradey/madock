@@ -1,6 +1,7 @@
 package n98
 
 import (
+	"github.com/faradey/madock/src/command"
 	cliHelper "github.com/faradey/madock/src/helper/cli"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 	"github.com/faradey/madock/src/helper/configs"
@@ -9,6 +10,15 @@ import (
 	"os"
 	"os/exec"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"n98"},
+		Handler:  Execute,
+		Help:     "Execute n98-magerun",
+		Category: "magento",
+	})
+}
 
 func Execute() {
 	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])

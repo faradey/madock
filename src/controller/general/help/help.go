@@ -3,10 +3,20 @@ package help
 import (
 	"fmt"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"help"},
+		Handler:  Execute,
+		Help:     "Show help",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	attr.Parse(new(arg_struct.ControllerGeneralHelp))

@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/general/proxy"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
@@ -14,6 +15,15 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"rebuild"},
+		Handler:  Execute,
+		Help:     "Rebuild containers",
+		Category: "general",
+	})
+}
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralRebuild)).(*arg_struct.ControllerGeneralRebuild)

@@ -3,6 +3,7 @@ package list
 import (
 	"fmt"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -18,6 +19,15 @@ type ScopeListOutput struct {
 type ScopeInfo struct {
 	Name   string `json:"name"`
 	Active bool   `json:"active"`
+}
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"scope:list"},
+		Handler:  Execute,
+		Help:     "List scopes. Supports --json (-j) output",
+		Category: "scope",
+	})
 }
 
 func Execute() {

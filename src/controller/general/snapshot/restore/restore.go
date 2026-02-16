@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
+
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/general/rebuild"
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
@@ -15,6 +17,15 @@ import (
 	"strconv"
 	"strings"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"snapshot:restore"},
+		Handler:  Execute,
+		Help:     "Restore snapshot",
+		Category: "snapshot",
+	})
+}
 
 func Execute() {
 	projectName := configs.GetProjectName()

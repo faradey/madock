@@ -9,8 +9,24 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/paths"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"compress"},
+		Handler:  Zip,
+		Help:     "Compress project files",
+		Category: "general",
+	})
+	command.Register(&command.Definition{
+		Aliases:  []string{"uncompress"},
+		Handler:  Unzip,
+		Help:     "Uncompress project files",
+		Category: "general",
+	})
+}
 
 var archiveName string = "madock_compressed_project.zip"
 

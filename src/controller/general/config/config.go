@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/output"
@@ -12,6 +13,27 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 )
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"config:cache:clean", "c:c:c"},
+		Handler:  CacheClean,
+		Help:     "Clean config cache",
+		Category: "config",
+	})
+	command.Register(&command.Definition{
+		Aliases:  []string{"config:list"},
+		Handler:  ShowEnv,
+		Help:     "List configuration. Supports --json (-j) output",
+		Category: "config",
+	})
+	command.Register(&command.Definition{
+		Aliases:  []string{"config:set"},
+		Handler:  SetEnvOption,
+		Help:     "Set configuration option",
+		Category: "config",
+	})
+}
 
 type ConfigListOutput struct {
 	Project string            `json:"project"`

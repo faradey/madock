@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -25,6 +26,15 @@ type DatabaseInfo struct {
 	RootPassword string `json:"root_password"`
 	RemoteHost   string `json:"remote_host"`
 	RemotePort   int    `json:"remote_port"`
+}
+
+func init() {
+	command.Register(&command.Definition{
+		Aliases:  []string{"db:info"},
+		Handler:  Info,
+		Help:     "Show database info. Supports --json (-j) output",
+		Category: "database",
+	})
 }
 
 func Info() {
