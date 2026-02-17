@@ -318,7 +318,7 @@ madock service:enable xdebug --global
 | `n98magerun` | n98-magerun tool |
 | `mftf` | Magento Functional Testing Framework |
 
-**PWA/Shopify:**
+**Shopify:**
 | Service | Description |
 |---------|-------------|
 | `yarn` | Yarn package manager (instead of npm) |
@@ -417,6 +417,54 @@ Edit `app/etc/env.php`:
 Add to `.env`:
 ```
 REDIS_URL=redis://redisdb:6379
+```
+
+## PWA Studio (via Custom Platform)
+
+PWA Studio can be set up using the custom platform with Node.js language:
+
+```bash
+# 1. Configure the project
+madock setup
+# Select platform: custom
+# Select language: nodejs
+# Configure host and Node.js version
+
+# 2. Start containers
+madock rebuild
+```
+
+### Custom Docker overrides
+
+Create override files in `.madock/docker/` for PWA-specific configuration:
+
+**`.madock/docker/docker-compose.yml`** - Add backend URL extra_host and SSH key volumes:
+```yaml
+services:
+  nodejs:
+    extra_hosts:
+      - "magento.test:host-gateway"
+    volumes:
+      - ~/.ssh:/var/www/.ssh:cached
+```
+
+**`.madock/docker/Dockerfile`** (optional) - If Yarn Berry setup is needed:
+```dockerfile
+RUN yarn set version berry
+```
+
+**`.madock/docker/nginx/conf/default.conf`** (optional) - Override nginx proxy_pass if needed:
+```nginx
+location / {
+    proxy_pass http://nodejs:10000;
+}
+```
+
+### Configuration
+
+Set the PWA backend URL if needed by your application:
+```bash
+madock config:set --name=pwa/backend_url --value=magento.test
 ```
 
 ## Common Issues

@@ -1,1 +1,0 @@
-{{{include snippets/dockerfile/nginx/nginx}}}

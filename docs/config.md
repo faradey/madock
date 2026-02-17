@@ -74,7 +74,7 @@ Settings are inherited in this order (later overrides earlier):
 
 | Key | Description | Default |
 |-----|-------------|---------|
-| `platform` | Project platform (`magento2`, `shopware`, `prestashop`, `shopify`, `pwa`, `custom`) | `magento2` |
+| `platform` | Project platform (`magento2`, `shopware`, `prestashop`, `shopify`, `custom`) | `magento2` |
 | `language` | Programming language for custom platform (`php`, `nodejs`, `python`, `golang`, `ruby`, `none`) | `php` |
 | `timezone` | Container timezone | `Europe/Kiev` |
 | `php/enabled` | Enable PHP container | `false` (set `true` by setup for PHP-based platforms) |

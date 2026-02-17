@@ -128,26 +128,6 @@ func TestMagento2WithCustomDbRepo(t *testing.T) {
 	}
 }
 
-func TestPWAConfigSets(t *testing.T) {
-	config := new(configs2.ConfigLines)
-	defVersions := versions.ToolsVersions{
-		Platform: "pwa",
-		NodeJs:   "18.15.0",
-		Yarn:     "3.6.4",
-	}
-	generalConf := map[string]string{
-		"nodejs/version": "18.15.0",
-		"nodejs/yarn/version": "3.6.4",
-	}
-	projectConf := map[string]string{}
-
-	PWA(config, defVersions, generalConf, projectConf)
-
-	if config.Lines == nil {
-		t.Fatal("Config lines should not be nil")
-	}
-}
-
 func TestShopifyConfigSets(t *testing.T) {
 	config := new(configs2.ConfigLines)
 	defVersions := versions.ToolsVersions{

@@ -32,8 +32,6 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	switch platform {
 	case "magento2":
 		Magento2(config, defVersions, generalConf, projectConf)
-	case "pwa":
-		PWA(config, defVersions, generalConf, projectConf)
 	case "shopify":
 		Shopify(config, defVersions, generalConf, projectConf)
 	case "custom":

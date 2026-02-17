@@ -138,4 +138,3 @@ madock cli "php bin/magento cron:install"
 | PrestaShop | ✅ Full support |
 | Shopify | ✅ Full support |
 | Custom PHP | ✅ Configurable |
-| PWA | ❌ Not applicable |

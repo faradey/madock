@@ -8,7 +8,6 @@ import (
 	setupCustom "github.com/faradey/madock/src/controller/custom/setup"
 	setupMagento "github.com/faradey/madock/src/controller/magento/setup"
 	setupPrestashop "github.com/faradey/madock/src/controller/prestashop/setup"
-	setupPWA "github.com/faradey/madock/src/controller/pwa/setup"
 	setupShopify "github.com/faradey/madock/src/controller/shopify/setup"
 	setupShopware "github.com/faradey/madock/src/controller/shopware/setup"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
@@ -111,8 +110,6 @@ func Execute() {
 	switch platform {
 	case "magento2", "shopware", "prestashop", "shopify":
 		language = "php"
-	case "pwa":
-		language = "nodejs"
 	case "custom":
 		if language == "" && continueSetup {
 			language = tools.Language()
@@ -124,8 +121,6 @@ func Execute() {
 
 	if platform == "magento2" {
 		setupMagento.ExecuteWithVersion(projectName, projectConf, continueSetup, args, detectedVersion)
-	} else if platform == "pwa" {
-		setupPWA.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "shopify" {
 		setupShopify.Execute(projectName, projectConf, continueSetup, args)
 	} else if platform == "custom" {

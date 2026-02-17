@@ -2,7 +2,6 @@ package versions
 
 import (
 	"os"
-	"strings"
 
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/paths"
@@ -36,8 +35,6 @@ func V320() {
 		platform := projectConf["platform"]
 		language := "php"
 		switch platform {
-		case "pwa":
-			language = "nodejs"
 		case "magento2", "shopware", "prestashop", "shopify", "custom":
 			language = "php"
 		}
@@ -75,11 +72,7 @@ func V320() {
 	if paths.IsFileExist(inProjectConfig) {
 		rawConf := configs.ParseXmlFile(inProjectConfig)
 		if _, ok := rawConf["language"]; !ok || rawConf["language"] == "" {
-			platform := rawConf["platform"]
 			language := "php"
-			if strings.TrimSpace(platform) == "pwa" {
-				language = "nodejs"
-			}
 			config := new(configs.ConfigLines)
 			config.EnvFile = inProjectConfig
 			config.ActiveScope = "default"

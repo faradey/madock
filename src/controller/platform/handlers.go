@@ -33,10 +33,4 @@ func init() {
 		HasCron:       true,
 	})
 
-	// Node.js-based platforms
-	Register("pwa", &BaseHandler{
-		MainContainer: "nodejs",
-		ChownDirs:     []string{"workdir"},
-		HasCron:       false,
-	})
 }

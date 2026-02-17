@@ -19,8 +19,6 @@ func V230() {
 			if _, ok := projectConfOnly["PUBLIC_DIR"]; !ok {
 				if projectConf["PLATFORM"] == "magento2" {
 					configs.SetParam(envFile, "PUBLIC_DIR", "pub")
-				} else if projectConf["PLATFORM"] == "pwa" {
-					configs.SetParam(envFile, "PUBLIC_DIR", "")
 				} else if projectConf["PLATFORM"] == "shopify" {
 					configs.SetParam(envFile, "PUBLIC_DIR", "web/public")
 				} else if projectConf["PLATFORM"] == "custom" {

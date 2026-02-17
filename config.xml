@@ -180,9 +180,6 @@
                     <burst>2000</burst>
                 </rate_limit>
             </proxy>
-            <pwa>
-                <backend_url></backend_url>
-            </pwa>
             <container_name_prefix>madock_</container_name_prefix>
             <isolation>
                 <enabled>false</enabled>

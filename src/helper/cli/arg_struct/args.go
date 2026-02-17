@@ -9,7 +9,7 @@ type ControllerGeneralHelp struct {
 type ControllerGeneralSetup struct {
 	attr.Arguments
 	Download            bool   `arg:"-d,--download" help:"Download code from repository"`
-	Install             bool   `arg:"-i,--install" help:"Install service (Magento, PWA, Shopify SDKm Shopware, etc.)"`
+	Install             bool   `arg:"-i,--install" help:"Install service (Magento, Shopify, Shopware, etc.)"`
 	SampleData          bool   `arg:"-s,--sample-data" help:"Sample data"`
 	Yes                 bool   `arg:"-y,--yes" help:"Skip confirmation prompts"`
 	Platform            string `arg:"--platform" help:"Platform"`
@@ -28,7 +28,6 @@ type ControllerGeneralSetup struct {
 	Hosts               string `arg:"--hosts" help:"Hosts"`
 	NodeJs              string `arg:"--nodejs" help:"Node.js version"`
 	Yarn                string `arg:"--yarn" help:"Yarn version"`
-	PwaBackendUrl       string `arg:"--pwa-backend-url" help:"PWA backend url"`
 }
 
 type ControllerGeneralStart struct {
