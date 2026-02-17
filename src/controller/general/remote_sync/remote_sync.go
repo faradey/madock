@@ -22,6 +22,19 @@ var sc []*sftp.Client
 
 var passwd string
 
+// SSHConfigProvider allows enterprise to customize SSH client configuration.
+// For example, to verify host keys via known_hosts or use certificate-based auth.
+type SSHConfigProvider interface {
+	ClientConfig(host, port, user, password, keyPath string) (*ssh.ClientConfig, error)
+}
+
+var sshConfigProvider SSHConfigProvider
+
+// SetSSHConfigProvider sets a custom provider for creating SSH client configurations.
+func SetSSHConfigProvider(p SSHConfigProvider) {
+	sshConfigProvider = p
+}
+
 type RemoteDbStruct struct {
 	Host           string `json:"host"`
 	Dbname         string `json:"dbname"`
@@ -183,18 +196,27 @@ func Connect(projectConf map[string]string, sshType string) *ssh.Client {
 		keyPath = projectConf["ssh/key_path"]
 	}
 
-	config := &ssh.ClientConfig{
-		User:            username,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	if authType == "password" {
-		config.Auth = []ssh.AuthMethod{
-			ssh.Password(password),
+	var config *ssh.ClientConfig
+	if sshConfigProvider != nil {
+		var err error
+		config, err = sshConfigProvider.ClientConfig(host, port, username, password, keyPath)
+		if err != nil {
+			logger.Fatal(err)
 		}
 	} else {
-		config.Auth = []ssh.AuthMethod{
-			publicKey(keyPath),
+		config = &ssh.ClientConfig{
+			User:            username,
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}
+
+		if authType == "password" {
+			config.Auth = []ssh.AuthMethod{
+				ssh.Password(password),
+			}
+		} else {
+			config.Auth = []ssh.AuthMethod{
+				publicKey(keyPath),
+			}
 		}
 	}
 
