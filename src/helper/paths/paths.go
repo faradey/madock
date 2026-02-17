@@ -11,8 +11,28 @@ import (
 	"strings"
 )
 
+// PathValidator allows enterprise to validate env var overrides for critical paths.
+type PathValidator func(envName, value string) error
+
+var pathValidator PathValidator
+
+// SetPathValidator sets a custom validator for MADOCK_* env var overrides.
+func SetPathValidator(v PathValidator) {
+	pathValidator = v
+}
+
+func getEnvWithValidation(envName string) string {
+	val := os.Getenv(envName)
+	if val != "" && pathValidator != nil {
+		if err := pathValidator(envName, val); err != nil {
+			logger.Fatalln("Invalid env override " + envName + ": " + err.Error())
+		}
+	}
+	return val
+}
+
 func GetExecDirPath() string {
-	if envDir := os.Getenv("MADOCK_EXEC_DIR"); envDir != "" {
+	if envDir := getEnvWithValidation("MADOCK_EXEC_DIR"); envDir != "" {
 		return envDir
 	}
 
@@ -41,7 +61,7 @@ func GetExecDirNameByPath(path string) string {
 }
 
 func GetRunDirPath() string {
-	if envDir := os.Getenv("MADOCK_RUN_DIR"); envDir != "" {
+	if envDir := getEnvWithValidation("MADOCK_RUN_DIR"); envDir != "" {
 		return envDir
 	}
 
