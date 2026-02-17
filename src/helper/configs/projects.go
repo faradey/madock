@@ -15,6 +15,17 @@ var generalConfig map[string]string
 var projectConfig map[string]string
 var nameOfProject string
 
+// ProjectNameResolver allows enterprise to customize how project names are derived.
+// For example, to include git branch name for per-branch environments.
+type ProjectNameResolver func() string
+
+var projectNameResolver ProjectNameResolver
+
+// SetProjectNameResolver sets a custom resolver for project name derivation.
+func SetProjectNameResolver(r ProjectNameResolver) {
+	projectNameResolver = r
+}
+
 func CleanCache() {
 	generalConfig = nil
 	projectConfig = nil
@@ -156,6 +167,9 @@ func PrepareDirsForProject(projectName string) {
 }
 
 func GetProjectName() string {
+	if nameOfProject == "" && projectNameResolver != nil {
+		nameOfProject = projectNameResolver()
+	}
 	suffix := ""
 	if nameOfProject == "" {
 		for i := 2; i < 1000; i++ {
