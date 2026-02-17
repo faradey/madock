@@ -1,13 +1,17 @@
 package project
 
+func init() {
+	RegisterDockerConfGenerator("prestashop", MakeConfPrestashop)
+}
+
 func MakeConfPrestashop(projectName string) {
-	makePhpDockerfile(projectName)
-	makeNodeJsDockerfile(projectName)
-	makeDBDockerfile(projectName)
-	makeElasticDockerfile(projectName)
-	makeOpenSearchDockerfile(projectName)
-	makeRedisDockerfile(projectName)
-	makeKibanaConf(projectName)
-	makeScriptsConf(projectName)
-	makeClaudeDockerfile(projectName)
+	MakePhpDockerfile(projectName)
+	MakeNodeJsDockerfile(projectName)
+	MakeDBDockerfile(projectName)
+	MakeElasticDockerfile(projectName)
+	MakeOpenSearchDockerfile(projectName)
+	MakeRedisDockerfile(projectName)
+	MakeKibanaConf(projectName)
+	MakeScriptsConf(projectName)
+	MakeClaudeDockerfile(projectName)
 }

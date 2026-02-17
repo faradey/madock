@@ -1,9 +1,13 @@
 package project
 
+func init() {
+	RegisterDockerConfGenerator("shopify", MakeConfShopify)
+}
+
 func MakeConfShopify(projectName string) {
-	makePhpDockerfile(projectName)
-	makeDBDockerfile(projectName)
-	makeRedisDockerfile(projectName)
-	makeScriptsConf(projectName)
-	makeClaudeDockerfile(projectName)
+	MakePhpDockerfile(projectName)
+	MakeDBDockerfile(projectName)
+	MakeRedisDockerfile(projectName)
+	MakeScriptsConf(projectName)
+	MakeClaudeDockerfile(projectName)
 }

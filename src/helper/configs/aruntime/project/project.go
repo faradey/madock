@@ -36,21 +36,13 @@ func MakeConf(projectName string) {
 	makeNginxDockerfile(projectName)
 	makeNginxConf(projectName)
 	makeDockerCompose(projectName)
-	if projectConf["platform"] == "magento2" {
-		MakeConfMagento2(projectName)
-	} else if projectConf["platform"] == "shopify" {
-		MakeConfShopify(projectName)
-	} else if projectConf["platform"] == "custom" {
-		MakeConfCustom(projectName)
-	} else if projectConf["platform"] == "shopware" {
-		MakeConfShopware(projectName)
-	} else if projectConf["platform"] == "prestashop" {
-		MakeConfPrestashop(projectName)
+	if gen, ok := dockerConfGenerators[projectConf["platform"]]; ok {
+		gen(projectName)
 	}
 	processOtherCTXFiles(projectName)
 }
 
-func makeScriptsConf(projectName string) {
+func MakeScriptsConf(projectName string) {
 	exPath := paths.GetExecDirPath()
 	pp := paths.NewProjectPaths(projectName)
 	src := pp.CtxDir() + "/scripts"
@@ -74,7 +66,7 @@ func makeScriptsConf(projectName string) {
 	}
 }
 
-func makeKibanaConf(projectName string) {
+func MakeKibanaConf(projectName string) {
 	file := GetDockerConfigFile(projectName, "kibana/kibana.yml", "")
 
 	b, err := os.ReadFile(file)
@@ -95,7 +87,7 @@ func makeKibanaConf(projectName string) {
 }
 
 func makeNginxDockerfile(projectName string) {
-	makeDockerfile(projectName, "nginx/Dockerfile", "nginx.Dockerfile")
+	MakeDockerfile(projectName, "nginx/Dockerfile", "nginx.Dockerfile")
 }
 
 func makeNginxConf(projectName string) {
@@ -146,7 +138,7 @@ func makeNginxConf(projectName string) {
 	}
 }
 
-func makePhpDockerfile(projectName string) {
+func MakePhpDockerfile(projectName string) {
 	dockerDefFile := GetDockerConfigFile(projectName, "php/Dockerfile", "")
 
 	b, err := os.ReadFile(dockerDefFile)
@@ -187,7 +179,7 @@ func makePhpDockerfile(projectName string) {
 	}
 }
 
-func makeMainContainerDockerfile(projectName string) {
+func MakeMainContainerDockerfile(projectName string) {
 	projectConf := configs.GetProjectConfig(projectName)
 	language := projectConf["language"]
 	if language == "" {
@@ -198,15 +190,15 @@ func makeMainContainerDockerfile(projectName string) {
 	case "php":
 		makeCustomPhpDockerfile(projectName)
 	case "nodejs":
-		makeDockerfile(projectName, "Dockerfile", "nodejs.Dockerfile")
+		MakeDockerfile(projectName, "Dockerfile", "nodejs.Dockerfile")
 	case "python":
-		makeDockerfile(projectName, "Dockerfile", "python.Dockerfile")
+		MakeDockerfile(projectName, "Dockerfile", "python.Dockerfile")
 	case "golang":
-		makeDockerfile(projectName, "Dockerfile", "golang.Dockerfile")
+		MakeDockerfile(projectName, "Dockerfile", "golang.Dockerfile")
 	case "ruby":
-		makeDockerfile(projectName, "Dockerfile", "ruby.Dockerfile")
+		MakeDockerfile(projectName, "Dockerfile", "ruby.Dockerfile")
 	case "none":
-		makeDockerfile(projectName, "Dockerfile", "app.Dockerfile")
+		MakeDockerfile(projectName, "Dockerfile", "app.Dockerfile")
 	default:
 		makeCustomPhpDockerfile(projectName)
 	}
@@ -342,7 +334,7 @@ func replacePortPlaceholders(str, projectName string) string {
 	return str
 }
 
-func makeDBDockerfile(projectName string) {
+func MakeDBDockerfile(projectName string) {
 	dockerDefFile := GetDockerConfigFile(projectName, "/db/Dockerfile", "")
 
 	b, err := os.ReadFile(dockerDefFile)
@@ -381,27 +373,27 @@ func makeDBDockerfile(projectName string) {
 	}
 }
 
-func makeElasticDockerfile(projectName string) {
-	makeDockerfile(projectName, "elasticsearch/Dockerfile", "elasticsearch.Dockerfile")
+func MakeElasticDockerfile(projectName string) {
+	MakeDockerfile(projectName, "elasticsearch/Dockerfile", "elasticsearch.Dockerfile")
 }
 
-func makeOpenSearchDockerfile(projectName string) {
-	makeDockerfile(projectName, "opensearch/Dockerfile", "opensearch.Dockerfile")
+func MakeOpenSearchDockerfile(projectName string) {
+	MakeDockerfile(projectName, "opensearch/Dockerfile", "opensearch.Dockerfile")
 }
 
-func makeRedisDockerfile(projectName string) {
-	makeDockerfile(projectName, "redis/Dockerfile", "redis.Dockerfile")
+func MakeRedisDockerfile(projectName string) {
+	MakeDockerfile(projectName, "redis/Dockerfile", "redis.Dockerfile")
 }
 
-func makeNodeJsDockerfile(projectName string) {
-	makeDockerfile(projectName, "nodejs/Dockerfile", "nodejs.Dockerfile")
+func MakeNodeJsDockerfile(projectName string) {
+	MakeDockerfile(projectName, "nodejs/Dockerfile", "nodejs.Dockerfile")
 }
 
-func makeClaudeDockerfile(projectName string) {
-	makeDockerfile(projectName, "claude/Dockerfile", "claude.Dockerfile")
+func MakeClaudeDockerfile(projectName string) {
+	MakeDockerfile(projectName, "claude/Dockerfile", "claude.Dockerfile")
 }
 
-func makeDockerfile(projectName, path, fileName string) {
+func MakeDockerfile(projectName, path, fileName string) {
 	dockerDefFile := GetDockerConfigFile(projectName, path, "")
 
 	b, err := os.ReadFile(dockerDefFile)
