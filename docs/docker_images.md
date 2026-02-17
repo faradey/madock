@@ -13,6 +13,15 @@ This document lists the Docker images used by Madock.
 ### NodeJS
 * [node](https://hub.docker.com/_/node)
 
+### Python
+* Created automatically from Dockerfile based on Ubuntu with customizable Python version
+
+### Golang
+* Created automatically from Dockerfile based on [golang](https://hub.docker.com/_/golang) with customizable Go version
+
+### Ruby
+* Created automatically from Dockerfile based on Ubuntu with customizable Ruby version
+
 ## Database
 
 ### MySQL / MariaDB

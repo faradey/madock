@@ -16,8 +16,15 @@ Default list of properties that can be customised:
 
 ### Custom properties paths
 
-* `<MADOCK_ROOT>/docker/...` - Origin Properties. This files cannot be changed
-* `<MADOCK_ROOT>/projects/<PROJECT_NAME>/docker/...` - You can copy the original file to the project folder while keeping the original path. Changes to this file will be applied when you run the command `madock rebuild`
+Docker configuration files are resolved using a fallback chain (first found wins):
+
+1. `<PROJECT_ROOT>/.madock/docker/...` - In-project overrides (highest priority)
+2. `<MADOCK_ROOT>/projects/<PROJECT_NAME>/docker/...` - Per-project overrides
+3. `<MADOCK_ROOT>/docker/<PLATFORM>/...` - Platform-specific defaults (e.g., `magento2`, `shopware`)
+4. `<MADOCK_ROOT>/docker/languages/<LANGUAGE>/...` - Language-specific defaults (e.g., `php`, `python`, `golang`)
+5. `<MADOCK_ROOT>/docker/general/service/...` - General service defaults (lowest priority)
+
+To customize a Docker file, copy it from its origin to one of the override paths while keeping the relative path. Changes will be applied when you run `madock rebuild`.
 
 Default list of properties that can be customised:
 

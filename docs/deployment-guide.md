@@ -117,6 +117,43 @@ bin/console assets:install
 exit
 ```
 
+## Custom Platform
+
+madock supports custom projects with different programming languages.
+
+```bash
+# 1. Clone the repository
+git clone <repository-url> project-name
+cd project-name
+
+# 2. Configure the project
+madock setup
+# Select platform: custom
+# Select language: php, nodejs, python, golang, ruby, or none
+# Configure language version and other settings
+# Enter host (e.g.: myproject.test)
+
+# 3. Start containers (with rebuild)
+madock rebuild
+
+# 4. Work inside the container
+madock bash
+# Your application code is available at the configured workdir
+```
+
+**Supported languages:**
+
+| Language | Main container | Nginx config |
+|----------|---------------|--------------|
+| PHP | PHP-FPM (FastCGI) | `fastcgi_pass php:9000` |
+| Node.js | Node.js | `proxy_pass http://nodejs:3000` |
+| Python | Ubuntu + Python | `proxy_pass http://python:3000` |
+| Go | golang image | `proxy_pass http://golang:3000` |
+| Ruby | Ubuntu + Ruby | `proxy_pass http://ruby:3000` |
+| None | Ubuntu (bare) | `proxy_pass http://app:3000` |
+
+For non-PHP languages, nginx uses reverse proxy to port 3000 of the main container.
+
 ## Database Import Notes
 
 - **Supported formats**: `.sql`, `.sql.gz`, `.sql.zip`
