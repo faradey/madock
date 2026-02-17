@@ -2,8 +2,6 @@ package install
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 
 	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -115,11 +113,7 @@ func Magento(projectName, platformVer string) {
 	}
 	installCommand += " && bin/magento setup:upgrade && bin/magento cache:clean && bin/magento indexer:reindex | bin/magento cache:flush"
 	fmt.Println(installCommand)
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -171,11 +165,7 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 	installCommand += "&& bin/console es:index "
 
 	fmt.Println(installCommand)
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -213,11 +203,7 @@ func PrestaShop(projectName, platformVer string, isSampleData bool) {
 	}
 
 	fmt.Println(installCommand)
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
 	if err != nil {
 		logger.Fatal(err)
 	}

@@ -119,11 +119,7 @@ func (h *BaseHandler) executeChown(projectName string, projectConf map[string]st
 	}
 
 	containerName := docker.GetContainerName(projectConf, projectName, ResolveMainService(projectConf, h.GetMainContainer()))
-	cmd := exec.Command("docker", "exec", "-it", "-u", "root", containerName, "bash", "-c", chownCmd)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
+	err = docker.ContainerExec(containerName, "root", true, "bash", "-c", chownCmd)
 	if err != nil {
 		logger.Fatal(err)
 	}

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"os"
-	"os/exec"
 
 	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/controller/platform"
@@ -29,21 +28,13 @@ func Execute() {
 
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", "")
 
-	interactivePlusTTY := "-it"
-
-	if os.Getenv("MADOCK_TTY_ENABLED") == "0" {
-		interactivePlusTTY = "-i"
-	}
+	interactive := os.Getenv("MADOCK_TTY_ENABLED") != "0"
 
 	if workdir != "" {
 		workdir = "cd " + workdir + " && "
 	}
 
-	cmd := exec.Command("docker", "exec", interactivePlusTTY, "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash", "-c", workdir+flag)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, service), user, interactive, "bash", "-c", workdir+flag)
 	if err != nil {
 		logger.Fatal(err)
 	}

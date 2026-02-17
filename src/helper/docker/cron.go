@@ -3,9 +3,6 @@ package docker
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"os/exec"
 	"sort"
 	"strings"
 
@@ -22,17 +19,10 @@ func CronExecute(projectName string, flag, manual bool) {
 
 	service, userOS, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
 
-	var cmd *exec.Cmd
-	var bOut io.Writer
-	var bErr io.Writer
 	if flag {
-		cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, service), "service", "cron", "start")
-		cmd.Stdout = bOut
-		cmd.Stderr = bErr
-		err := cmd.Run()
+		err := ContainerExec(GetContainerName(projectConf, projectName, service), userOS, false, "service", "cron", "start")
 		if manual {
 			if err != nil {
-				fmt.Println(bErr)
 				logger.Fatal(err)
 			} else {
 				fmt.Println("Cron was started")
@@ -44,10 +34,7 @@ func CronExecute(projectName string, flag, manual bool) {
 
 		// Then, platform-specific cron setup
 		if projectConf["platform"] == "magento2" {
-			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:install && php bin/magento cron:run")
-			cmdSub.Stdout = os.Stdout
-			cmdSub.Stderr = os.Stderr
-			err = cmdSub.Run()
+			err = ContainerExec(GetContainerName(projectConf, projectName, "php"), "www-data", false, "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:install && php bin/magento cron:run")
 			if err != nil {
 				logger.Println(err)
 				fmtc.WarningLn(err.Error())
@@ -65,10 +52,7 @@ func CronExecute(projectName string, flag, manual bool) {
 			}
 
 			conf := string(data)
-			cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", containerName, "php", "/var/www/scripts/php/shopify-crontab.php", conf, "0")
-			cmdSub.Stdout = os.Stdout
-			cmdSub.Stderr = os.Stderr
-			err = cmdSub.Run()
+			err = ContainerExec(containerName, "www-data", false, "php", "/var/www/scripts/php/shopify-crontab.php", conf, "0")
 			if err != nil {
 				logger.Println(err)
 				fmtc.WarningLn(err.Error())
@@ -77,23 +61,16 @@ func CronExecute(projectName string, flag, manual bool) {
 			}
 		}
 	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, service), "service", "cron", "status")
-		cmd.Stdout = bOut
-		cmd.Stderr = bErr
-		err := cmd.Run()
+		err := ContainerExec(GetContainerName(projectConf, projectName, service), userOS, false, "service", "cron", "status")
 		if err == nil {
 			// First, remove config-based jobs (for all platforms)
 			removeCronJobsFromConfig(projectConf, projectName, manual)
 
 			// Then, platform-specific cron removal
 			if projectConf["platform"] == "magento2" {
-				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove")
-				cmdSub.Stdout = bOut
-				cmdSub.Stderr = bErr
-				err := cmdSub.Run()
+				err := ContainerExec(GetContainerName(projectConf, projectName, "php"), "www-data", false, "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove")
 				if manual {
 					if err != nil {
-						logger.Println(bErr)
 						logger.Println(err)
 					} else {
 						fmt.Println("Cron was removed from Magento")
@@ -111,10 +88,7 @@ func CronExecute(projectName string, flag, manual bool) {
 				}
 
 				conf := string(data)
-				cmdSub := exec.Command("docker", "exec", "-i", "-u", "www-data", containerName, "php", "/var/www/scripts/php/shopify-crontab.php", conf, "1")
-				cmdSub.Stdout = os.Stdout
-				cmdSub.Stderr = os.Stderr
-				err = cmdSub.Run()
+				err = ContainerExec(containerName, "www-data", false, "php", "/var/www/scripts/php/shopify-crontab.php", conf, "1")
 				if manual {
 					if err != nil {
 						logger.Println(err)
@@ -125,13 +99,9 @@ func CronExecute(projectName string, flag, manual bool) {
 				}
 			}
 
-			cmd = exec.Command("docker", "exec", "-i", "-u", userOS, GetContainerName(projectConf, projectName, service), "service", "cron", "stop")
-			cmd.Stdout = bOut
-			cmd.Stderr = bErr
-			err = cmd.Run()
+			err = ContainerExec(GetContainerName(projectConf, projectName, service), userOS, false, "service", "cron", "stop")
 			if manual {
 				if err != nil {
-					fmt.Println(bErr)
 					logger.Fatal(err)
 				} else {
 					fmt.Println("Cron was stopped from System (container)")
@@ -206,11 +176,8 @@ func installCronJobsFromConfig(projectConf map[string]string, projectName string
 	crontabContent := strings.Join(jobs, "\n") + "\n"
 
 	// Install crontab for www-data user
-	cmdSub := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "bash", "-c",
+	err := ContainerExec(containerName, "root", false, "bash", "-c",
 		fmt.Sprintf("echo '%s' | crontab -u www-data -", crontabContent))
-	cmdSub.Stdout = os.Stdout
-	cmdSub.Stderr = os.Stderr
-	err := cmdSub.Run()
 
 	if manual {
 		if err != nil {
@@ -227,10 +194,7 @@ func removeCronJobsFromConfig(projectConf map[string]string, projectName string,
 	containerName := GetContainerName(projectConf, projectName, resolveMainService(projectConf))
 
 	// Remove crontab for www-data user
-	cmdSub := exec.Command("docker", "exec", "-i", "-u", "root", containerName, "crontab", "-u", "www-data", "-r")
-	cmdSub.Stdout = os.Stdout
-	cmdSub.Stderr = os.Stderr
-	err := cmdSub.Run()
+	err := ContainerExec(containerName, "root", false, "crontab", "-u", "www-data", "-r")
 
 	if manual {
 		if err != nil {

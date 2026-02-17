@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -68,10 +67,14 @@ func Export() {
 		mysqldumpCommandName = "mariadb-dump"
 	}
 
-	cmd := exec.Command("docker", "exec", "-i", "-u", user, containerName, "bash", "-c", mysqldumpCommandName+" -u root -p"+projectConf["db/root_password"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["db/database"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
+	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", mysqldumpCommandName+" -u root -p"+projectConf["db/root_password"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["db/database"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
+	if prepErr != nil {
+		logger.Fatal(prepErr)
+	}
 	cmd.Stdout = writer
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
+	docker.NotifyExecDone(containerName, []string{"bash", "-c", "mysqldump..."}, err)
 	if err != nil {
 		logger.Fatal(err)
 	}

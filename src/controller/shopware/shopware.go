@@ -2,7 +2,6 @@ package shopware
 
 import (
 	"os"
-	"os/exec"
 
 	"github.com/faradey/madock/src/command"
 	cliHelper "github.com/faradey/madock/src/helper/cli"
@@ -30,11 +29,7 @@ func Execute() {
 	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/console "+flag)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/console "+flag)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -44,11 +39,7 @@ func ExecuteBin() {
 	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
-	cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && bin/"+flag)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && bin/"+flag)
 	if err != nil {
 		logger.Fatal(err)
 	}
