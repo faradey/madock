@@ -7,6 +7,10 @@ import (
 	"github.com/faradey/madock/src/model/versions"
 )
 
+func init() {
+	RegisterEnvWriter("shopify", Shopify)
+}
+
 func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	config.Set("php/enabled", "true")
 	config.Set("php/version", defVersions.Php)

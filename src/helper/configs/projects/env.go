@@ -29,17 +29,8 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	if _, ok := projectConf["platform"]; ok {
 		platform = projectConf["platform"]
 	}
-	switch platform {
-	case "magento2":
-		Magento2(config, defVersions, generalConf, projectConf)
-	case "shopify":
-		Shopify(config, defVersions, generalConf, projectConf)
-	case "custom":
-		Custom(config, defVersions, generalConf, projectConf)
-	case "shopware":
-		Shopware(config, defVersions, generalConf, projectConf)
-	case "prestashop":
-		PrestaShop(config, defVersions, generalConf, projectConf)
+	if writer, ok := GetEnvWriter(platform); ok {
+		writer(config, defVersions, generalConf, projectConf)
 	}
 
 	config.Set("cron/enabled", configs2.GetOption("cron/enabled", generalConf, projectConf))

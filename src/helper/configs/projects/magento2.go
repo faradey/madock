@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+func init() {
+	RegisterEnvWriter("magento2", Magento2)
+}
+
 func Magento2(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	if _, ok := projectConf["public_dir"]; !ok {
 		config.Set("public_dir", "pub")

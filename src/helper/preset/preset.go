@@ -12,6 +12,13 @@ type Preset struct {
 	Versions    versions.ToolsVersions
 }
 
+var presetProviders = map[string]func() []Preset{}
+
+// RegisterPresets registers a preset provider for a platform.
+func RegisterPresets(platform string, fn func() []Preset) {
+	presetProviders[platform] = fn
+}
+
 // GetMagentoPresets returns available Magento presets
 func GetMagentoPresets() []Preset {
 	return []Preset{
@@ -105,16 +112,17 @@ func GetShopwarePresets() []Preset {
 	}
 }
 
-// GetPresetsByPlatform returns presets for a specific platform
+func init() {
+	RegisterPresets("magento2", GetMagentoPresets)
+	RegisterPresets("shopware", GetShopwarePresets)
+}
+
+// GetPresetsByPlatform returns presets for a specific platform.
 func GetPresetsByPlatform(platform string) []Preset {
-	switch platform {
-	case "magento2":
-		return GetMagentoPresets()
-	case "shopware":
-		return GetShopwarePresets()
-	default:
-		return nil
+	if fn, ok := presetProviders[platform]; ok {
+		return fn()
 	}
+	return nil
 }
 
 // CustomPreset represents the "Custom configuration" option
