@@ -120,12 +120,12 @@ func TestSetXmlMap(t *testing.T) {
 			expectExist: true,
 		},
 		{
-			name: "2-level key ignored",
+			name: "2-level key creates nested structure",
 			input: map[string]interface{}{
 				"some/key": "value",
 			},
 			checkKey:    "some",
-			expectExist: false,
+			expectExist: true,
 		},
 	}
 
