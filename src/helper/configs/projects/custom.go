@@ -7,6 +7,10 @@ import (
 	"github.com/faradey/madock/src/model/versions"
 )
 
+func init() {
+	RegisterEnvWriter("custom", Custom)
+}
+
 func Custom(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	if _, ok := projectConf["public_dir"]; !ok {
 		config.Set("public_dir", "public")

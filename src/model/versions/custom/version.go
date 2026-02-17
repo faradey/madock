@@ -5,6 +5,12 @@ import (
 	"github.com/faradey/madock/src/model/versions/languages"
 )
 
+func init() {
+	versions.RegisterProvider("custom", func(_ string) versions.ToolsVersions {
+		return GetVersions()
+	})
+}
+
 func GetVersions() versions.ToolsVersions {
 	phpVer := GetPhpVersion()
 	langDefaults := languages.GetAllDefaults()

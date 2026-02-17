@@ -4,6 +4,12 @@ import (
 	"github.com/faradey/madock/src/model/versions"
 )
 
+func init() {
+	versions.RegisterProvider("shopify", func(_ string) versions.ToolsVersions {
+		return GetVersions()
+	})
+}
+
 func GetVersions() versions.ToolsVersions {
 	return versions.ToolsVersions{
 		Platform: "shopify",

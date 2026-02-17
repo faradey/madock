@@ -10,10 +10,18 @@ import (
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/model/versions/magento2"
-	"github.com/faradey/madock/src/model/versions/prestashop"
-	"github.com/faradey/madock/src/model/versions/shopware"
+	"github.com/faradey/madock/src/model/versions"
 )
+
+// InstallHandler is called to install a platform for a given project.
+type InstallHandler func(projectName, platformVersion string, projectConf map[string]string)
+
+var installHandlers = map[string]InstallHandler{}
+
+// RegisterInstallHandler registers an install handler for a platform.
+func RegisterInstallHandler(platform string, handler InstallHandler) {
+	installHandlers[platform] = handler
+}
 
 func init() {
 	command.Register(&command.Definition{
@@ -22,22 +30,35 @@ func init() {
 		Help:     "Install Magento",
 		Category: "general",
 	})
+
+	RegisterInstallHandler("magento2", func(projectName, platformVersion string, _ map[string]string) {
+		Magento(projectName, platformVersion)
+	})
+	RegisterInstallHandler("shopware", func(projectName, platformVersion string, _ map[string]string) {
+		Shopware(projectName, platformVersion, false)
+	})
+	RegisterInstallHandler("prestashop", func(projectName, platformVersion string, _ map[string]string) {
+		PrestaShop(projectName, platformVersion, false)
+	})
 }
 
 func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()
-	if projectConf["platform"] == "magento2" {
-		toolsDefVersions := magento2.GetVersions("")
-		Magento(configs.GetProjectName(), toolsDefVersions.PlatformVersion)
-	} else if projectConf["platform"] == "shopware" {
-		toolsDefVersions := shopware.GetVersions("")
-		Shopware(configs.GetProjectName(), toolsDefVersions.PlatformVersion, false)
-	} else if projectConf["platform"] == "prestashop" {
-		toolsDefVersions := prestashop.GetVersions("")
-		PrestaShop(configs.GetProjectName(), toolsDefVersions.PlatformVersion, false)
-	} else {
-		fmtc.Warning("This command is not supported for " + projectConf["platform"])
+	platform := projectConf["platform"]
+	projectName := configs.GetProjectName()
+
+	handler, ok := installHandlers[platform]
+	if !ok {
+		fmtc.Warning("This command is not supported for " + platform)
+		return
 	}
+
+	platformVersion := ""
+	if tv, found := versions.GetVersionsForPlatform(platform, ""); found {
+		platformVersion = tv.PlatformVersion
+	}
+
+	handler(projectName, platformVersion, projectConf)
 }
 
 func Magento(projectName, platformVer string) {

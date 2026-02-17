@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+func init() {
+	RegisterEnvWriter("shopware", Shopware)
+}
+
 func Shopware(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	if _, ok := projectConf["public_dir"]; !ok {
 		config.Set("public_dir", "public")

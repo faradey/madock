@@ -6,6 +6,10 @@ import (
 	"github.com/faradey/madock/src/model/versions"
 )
 
+func init() {
+	versions.RegisterProvider("shopware", GetVersions)
+}
+
 func GetVersions(ver string) versions.ToolsVersions {
 	swVersion := ""
 	if ver != "" {

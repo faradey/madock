@@ -9,6 +9,10 @@ import (
 	"github.com/faradey/madock/src/model/versions"
 )
 
+func init() {
+	versions.RegisterProvider("magento2", GetVersions)
+}
+
 func GetVersions(ver string) versions.ToolsVersions {
 	mageVersion := ""
 	if ver == "" {
