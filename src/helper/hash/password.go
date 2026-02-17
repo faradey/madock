@@ -1,9 +1,9 @@
 package hash
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 	"strings"
-	"time"
 )
 
 var (
@@ -14,36 +14,60 @@ var (
 	allCharSet     = lowerCharSet + upperCharSet + specialCharSet + numberSet
 )
 
+// PasswordGenerator allows enterprise to provide a custom password generation strategy.
+type PasswordGenerator func(length int) (string, error)
+
+var passwordGenerator PasswordGenerator
+
+// SetPasswordGenerator sets a custom password generator.
+func SetPasswordGenerator(gen PasswordGenerator) {
+	passwordGenerator = gen
+}
+
 func GeneratePassword(passwordLength, minSpecialChar, minNum, minUpperCase int) string {
-	rand.Seed(time.Now().Unix())
+	if passwordGenerator != nil {
+		if pw, err := passwordGenerator(passwordLength); err == nil {
+			return pw
+		}
+	}
+
 	var password strings.Builder
 
-	//Set special character
 	for i := 0; i < minSpecialChar; i++ {
-		random := rand.Intn(len(specialCharSet))
-		password.WriteString(string(specialCharSet[random]))
+		password.WriteByte(specialCharSet[cryptoRandIntn(len(specialCharSet))])
 	}
 
-	//Set numeric
 	for i := 0; i < minNum; i++ {
-		random := rand.Intn(len(numberSet))
-		password.WriteString(string(numberSet[random]))
+		password.WriteByte(numberSet[cryptoRandIntn(len(numberSet))])
 	}
 
-	//Set uppercase
 	for i := 0; i < minUpperCase; i++ {
-		random := rand.Intn(len(upperCharSet))
-		password.WriteString(string(upperCharSet[random]))
+		password.WriteByte(upperCharSet[cryptoRandIntn(len(upperCharSet))])
 	}
 
 	remainingLength := passwordLength - minSpecialChar - minNum - minUpperCase
 	for i := 0; i < remainingLength; i++ {
-		random := rand.Intn(len(allCharSet))
-		password.WriteString(string(allCharSet[random]))
+		password.WriteByte(allCharSet[cryptoRandIntn(len(allCharSet))])
 	}
+
 	inRune := []rune(password.String())
-	rand.Shuffle(len(inRune), func(i, j int) {
-		inRune[i], inRune[j] = inRune[j], inRune[i]
-	})
+	cryptoShuffle(inRune)
 	return string(inRune)
+}
+
+// cryptoRandIntn returns a cryptographically secure random int in [0, n).
+func cryptoRandIntn(n int) int {
+	val, err := rand.Int(rand.Reader, big.NewInt(int64(n)))
+	if err != nil {
+		panic("crypto/rand failed: " + err.Error())
+	}
+	return int(val.Int64())
+}
+
+// cryptoShuffle performs a Fisher-Yates shuffle using crypto/rand.
+func cryptoShuffle(s []rune) {
+	for i := len(s) - 1; i > 0; i-- {
+		j := cryptoRandIntn(i + 1)
+		s[i], s[j] = s[j], s[i]
+	}
 }
