@@ -3,7 +3,7 @@
 # madock
 Local development environment based on Docker
 
-Supported platforms: Magento2, PWA, Shopify, Shopware, Custom PHP projects.
+Supported platforms: Magento2, PWA, Shopify, Shopware, Custom projects (PHP, Node.js, Python, Go, Ruby).
 
 [![GoDoc](https://godoc.org/github.com/faradey/madock?status.svg)](https://godoc.org/github.com/faradey/madock)
 [![Go Report Card](https://goreportcard.com/badge/github.com/faradey/madock)](https://goreportcard.com/report/github.com/faradey/madock)
@@ -12,7 +12,7 @@ Supported platforms: Magento2, PWA, Shopify, Shopware, Custom PHP projects.
 [![GitHub issues](https://img.shields.io/github/issues/faradey/madock.svg)](https://github.com/faradey/madock/issues)
 
 ## Description
-`madock` is a local Docker-based environment that allows you to run PHP projects.
+`madock` is a local Docker-based environment that allows you to run web projects.
 This project is written on Golang, and it is distributed under a MIT License.
 
 ## Key Features
@@ -21,7 +21,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * **Magento** as a separate service. Works by default. Learn [more](docs/magento.md)
 * **PWA Studio** as a separate service
 * **Shopify** as a separate service. Learn [more](docs/shopify.md)
-* **Custom PHP project** as a separate service
+* **Custom project** as a separate service (PHP, Node.js, Python, Go, Ruby)
 * **Shopware** as a separate service. Learn [more](docs/shopware.md)
 * **PrestaShop** as a separate service. Learn [more](docs/prestashop.md)
 * Cron support

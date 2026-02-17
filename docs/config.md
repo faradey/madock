@@ -70,4 +70,19 @@ Settings are inherited in this order (later overrides earlier):
 3. `~/.madock/projects/{project_name}/config.xml` (project settings)
 4. `{project_root}/.madock/config.xml` (local project settings)
 
+## Key Configuration Options
+
+| Key | Description | Default |
+|-----|-------------|---------|
+| `platform` | Project platform (`magento2`, `shopware`, `prestashop`, `shopify`, `pwa`, `custom`) | `magento2` |
+| `language` | Programming language for custom platform (`php`, `nodejs`, `python`, `golang`, `ruby`, `none`) | `php` |
+| `timezone` | Container timezone | `Europe/Kiev` |
+| `php/enabled` | Enable PHP container | `false` (set `true` by setup for PHP-based platforms) |
+| `php/version` | PHP version | `8.2` |
+| `php/nodejs/enabled` | Node.js inside PHP container | `false` |
+| `nodejs/enabled` | Standalone Node.js container | `false` |
+| `python/version` | Python version (custom platform) | `3.12` |
+| `go/version` | Go version (custom platform) | `1.22` |
+| `ruby/version` | Ruby version (custom platform) | `3.3` |
+
 See also: [Scopes](./scopes.md) for managing multiple environments per project.

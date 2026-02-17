@@ -1,3 +1,63 @@
+**v3.3.0**
+
+Added:
+- Snippet-based Dockerfiles for all languages (Python, Go, Ruby, Node.js, None) using reusable common snippets
+- Common Docker snippets: `header-ubuntu`, `cron`, `mkdir`, `chown`, `cleanup`, `footer`
+- `php/enabled` conditional guard for PHP services in docker-compose
+- Dynamic `depends_on` in nginx with `{{{main_service}}}` placeholder
+- Interactive version selectors for Python, Go, Ruby during `madock setup`
+- Nginx snippet system (`php.conf`, `proxy.conf`) for language-specific configurations
+- Migration v3.3.0 for automatic config key migration
+
+Changed:
+- Moved PHP Dockerfile from `docker/custom/php/` to `docker/languages/php/`
+- Renamed config key `php/timezone` → `timezone` across all platforms
+- Split `nodejs/enabled` into standalone (language) and `php/nodejs/enabled` (embedded in PHP container)
+- All languages now use unified fallback chain through `docker/languages/<language>/`
+- Moved `<timezone>` from `<php>` to top level in default config.xml
+
+**v3.2.0**
+
+Added:
+- Multi-language support for custom platform: PHP, Node.js, Python, Go, Ruby, and language-less (`none`) projects
+- Configurable cron jobs support for all platforms
+- `info:ports` command to show allocated ports for the project
+- File path argument support for `db:import` command
+- JSON output support for CLI commands (`--output=json`)
+- MySQL 8.4+ support, removed deprecated `db/type` config
+- VPS installation script
+- `xdg-utils` to base PHP image for all platforms
+- Hot reload ports for Shopware storefront
+- Port mappings for proxy services (Grafana, Kibana, OpenSearch Dashboards, phpMyAdmin, Selenium, Varnish)
+- RabbitMQ monitoring dashboard to Grafana
+- Deployment guide for Magento 2 and Shopware
+- Documentation for Magento, PrestaShop, Shopware, custom cron jobs, JSON output
+
+Refactored:
+- Command registry pattern replacing switch statement in `main.go`
+- Platform handler interface to eliminate code duplication
+- Split `docker.go` into focused modules
+- `SetXmlMap` refactored to use recursion instead of hardcoded switch cases
+- Path builder utility to centralize path construction
+- Replaced `panic(err)` with `log.Fatal` for proper error handling
+- Reuse `removeCronJobsFromConfig` in install function
+
+Fixed:
+- `patch:create` command to work without TTY
+- `cron:enable/disable` not saving config status
+- Duplicate project entries in domain check
+- Varnish proxy configuration
+- Nginx proxy configuration issues
+- Network configuration for dashboard services
+- Grafana configuration for dashboards and networking
+
+Improved:
+- Instant key response for setup confirmation prompt
+- Increased proxy rate limit defaults
+- Verbose CLI output for Shopify cron enable/disable
+- Auto-detect artisan location for Shopify cron setup
+- Duplicate domain error messages now show all affected projects
+
 **v3.1.0**
 
 Added:

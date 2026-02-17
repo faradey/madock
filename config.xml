@@ -33,12 +33,13 @@
             <workdir>/var/www/html</workdir>
             <public_dir>public</public_dir>
             <composer_dir></composer_dir>
+            <timezone>Europe/Kiev</timezone>
             <php>
+                <enabled>false</enabled>
                 <version>8.2</version>
                 <composer>
                     <version>2</version>
                 </composer>
-                <timezone>Europe/Kiev</timezone>
                 <xdebug>
                     <version>3</version>
                     <ide_key>PHPSTORM</ide_key>
