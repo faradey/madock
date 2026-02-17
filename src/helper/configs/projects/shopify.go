@@ -8,6 +8,7 @@ import (
 )
 
 func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
+	config.Set("php/enabled", "true")
 	config.Set("php/version", defVersions.Php)
 	config.Set("php/composer/version", defVersions.Composer)
 	config.Set("timezone", configs2.GetOption("timezone", generalConf, projectConf))
