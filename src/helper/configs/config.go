@@ -44,6 +44,14 @@ func SaveInFile(file string, data map[string]string, activeScope string) {
 	for key, value := range data {
 		resultData["scopes/"+activeScope+"/"+key] = value
 	}
+
+	// Encrypt secret values before writing to XML
+	for key, value := range resultData {
+		if strVal, ok := value.(string); ok {
+			resultData[key] = encryptIfSecret(key, strVal)
+		}
+	}
+
 	resultMapData := SetXmlMap(resultData)
 	w := &bytes.Buffer{}
 	w.WriteString(xml.Header)
