@@ -200,6 +200,11 @@ func GetRegistry() *Registry {
 	return globalRegistry
 }
 
+// ResetRegistry clears the global registry so it will be re-initialized on next use.
+func ResetRegistry() {
+	globalRegistry = nil
+}
+
 // GetPort is a convenience function to get or allocate a port
 func GetPort(projectName, serviceName string) int {
 	return GetRegistry().GetOrAllocate(projectName, serviceName)

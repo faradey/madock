@@ -1,9 +1,11 @@
 package projects
 
 import (
+	"os"
 	"testing"
 
 	configs2 "github.com/faradey/madock/src/helper/configs"
+	magento2 "github.com/faradey/madock/src/model/versions/magento2"
 	"github.com/faradey/madock/src/model/versions"
 )
 
@@ -235,6 +237,112 @@ func TestPrestaShopConfigSets(t *testing.T) {
 
 	if config.Lines == nil {
 		t.Fatal("Config lines should not be nil")
+	}
+}
+
+func TestMagento2_248_ConfigValues(t *testing.T) {
+	defVersions := magento2.GetVersions("2.4.8")
+	config := new(configs2.ConfigLines)
+	generalConf := map[string]string{
+		"timezone":            "Europe/Kiev",
+		"php/xdebug/ide_key":  "PHPSTORM",
+		"php/xdebug/enabled":  "false",
+		"php/ioncube/enabled": "false",
+		"db/root_password":    "password",
+		"db/user":             "magento",
+		"db/password":         "magento",
+		"db/database":         "magento",
+		"redis/enabled":       "false",
+		"nodejs/enabled":      "false",
+		"nodejs/version":      "18.15.0",
+		"rabbitmq/enabled":    "false",
+	}
+	projectConf := map[string]string{}
+
+	Magento2(config, defVersions, generalConf, projectConf)
+
+	expected := map[string]string{
+		"php/version":                "8.4",
+		"php/enabled":                "true",
+		"php/composer/version":       "2",
+		"db/version":                 "11.4",
+		"search/engine":              "OpenSearch",
+		"search/opensearch/enabled":  "true",
+		"search/opensearch/version":  "2.19.0",
+		"search/elasticsearch/enabled": "false",
+		"redis/version":              "8.0",
+		"rabbitmq/version":           "4.1",
+		"public_dir":                 "pub",
+	}
+
+	for key, want := range expected {
+		got, ok := config.Lines[key]
+		if !ok {
+			t.Errorf("config key %q not set", key)
+			continue
+		}
+		if got != want {
+			t.Errorf("config[%q] = %q, want %q", key, got, want)
+		}
+	}
+}
+
+func TestMagento2_248_ConfigSaveRoundTrip(t *testing.T) {
+	defVersions := magento2.GetVersions("2.4.8")
+	config := new(configs2.ConfigLines)
+	generalConf := map[string]string{
+		"timezone":            "Europe/Kiev",
+		"php/xdebug/ide_key":  "PHPSTORM",
+		"php/xdebug/enabled":  "false",
+		"php/ioncube/enabled": "false",
+		"db/root_password":    "password",
+		"db/user":             "magento",
+		"db/password":         "magento",
+		"db/database":         "magento",
+		"redis/enabled":       "false",
+		"nodejs/enabled":      "false",
+		"nodejs/version":      "18.15.0",
+		"rabbitmq/enabled":    "false",
+	}
+	projectConf := map[string]string{}
+
+	Magento2(config, defVersions, generalConf, projectConf)
+
+	// Save to temp file
+	tmpFile, err := os.CreateTemp("", "madock-config-*.xml")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	tmpFile.Close()
+
+	configs2.SaveInFile(tmpFile.Name(), config.Lines, "default")
+
+	// Parse back
+	parsed := configs2.ParseXmlFile(tmpFile.Name())
+
+	// Verify key values survive the round-trip (stored under scopes/default/)
+	checks := map[string]string{
+		"scopes/default/php/version":               "8.4",
+		"scopes/default/php/enabled":                "true",
+		"scopes/default/db/version":                 "11.4",
+		"scopes/default/search/engine":              "OpenSearch",
+		"scopes/default/search/opensearch/enabled":  "true",
+		"scopes/default/search/opensearch/version":  "2.19.0",
+		"scopes/default/redis/version":              "8.0",
+		"scopes/default/rabbitmq/version":           "4.1",
+		"scopes/default/public_dir":                 "pub",
+	}
+
+	for key, want := range checks {
+		got, ok := parsed[key]
+		if !ok {
+			t.Errorf("parsed config missing key %q", key)
+			continue
+		}
+		if got != want {
+			t.Errorf("parsed[%q] = %q, want %q", key, got, want)
+		}
 	}
 }
 
