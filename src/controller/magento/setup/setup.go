@@ -31,9 +31,10 @@ func (h *Handler) Execute(ctx *setupreg.SetupContext) {
 
 func init() {
 	setupreg.Register(setupreg.PlatformInfo{
-		Name:     "magento2",
-		Language: "php",
-		Order:    10,
+		Name:        "magento2",
+		DisplayName: "Magento 2",
+		Language:    "php",
+		Order:       10,
 	}, &Handler{})
 }
 

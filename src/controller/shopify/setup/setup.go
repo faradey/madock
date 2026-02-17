@@ -22,9 +22,10 @@ func (h *Handler) Execute(ctx *setupreg.SetupContext) {
 
 func init() {
 	setupreg.Register(setupreg.PlatformInfo{
-		Name:     "shopify",
-		Language: "php",
-		Order:    30,
+		Name:        "shopify",
+		DisplayName: "Shopify",
+		Language:    "php",
+		Order:       30,
 	}, &Handler{})
 }
 

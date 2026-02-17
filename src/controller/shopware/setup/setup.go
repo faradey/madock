@@ -28,9 +28,10 @@ func (h *Handler) Execute(ctx *setupreg.SetupContext) {
 
 func init() {
 	setupreg.Register(setupreg.PlatformInfo{
-		Name:     "shopware",
-		Language: "php",
-		Order:    40,
+		Name:        "shopware",
+		DisplayName: "Shopware",
+		Language:    "php",
+		Order:       40,
 	}, &Handler{})
 }
 
