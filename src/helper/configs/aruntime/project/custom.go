@@ -2,6 +2,10 @@ package project
 
 import "github.com/faradey/madock/src/helper/configs"
 
+func init() {
+	RegisterDockerConfGenerator("custom", MakeConfCustom)
+}
+
 func MakeConfCustom(projectName string) {
 	projectConf := configs.GetProjectConfig(projectName)
 	language := projectConf["language"]
@@ -9,17 +13,17 @@ func MakeConfCustom(projectName string) {
 		language = "php"
 	}
 
-	makeMainContainerDockerfile(projectName)
+	MakeMainContainerDockerfile(projectName)
 
 	if language == "php" {
-		makeNodeJsDockerfile(projectName)
+		MakeNodeJsDockerfile(projectName)
 	}
 
-	makeDBDockerfile(projectName)
-	makeElasticDockerfile(projectName)
-	makeOpenSearchDockerfile(projectName)
-	makeRedisDockerfile(projectName)
-	makeKibanaConf(projectName)
-	makeScriptsConf(projectName)
-	makeClaudeDockerfile(projectName)
+	MakeDBDockerfile(projectName)
+	MakeElasticDockerfile(projectName)
+	MakeOpenSearchDockerfile(projectName)
+	MakeRedisDockerfile(projectName)
+	MakeKibanaConf(projectName)
+	MakeScriptsConf(projectName)
+	MakeClaudeDockerfile(projectName)
 }
