@@ -17,6 +17,15 @@ import (
 	"github.com/go-xmlfmt/xmlfmt"
 )
 
+// ConfigFilePermissions controls the file mode used when writing config XML files.
+// Default is 0644 (owner read/write, others read). Enterprise can override via SetConfigFilePermissions.
+var ConfigFilePermissions os.FileMode = 0644
+
+// SetConfigFilePermissions overrides the file mode for config XML files.
+func SetConfigFilePermissions(perm os.FileMode) {
+	ConfigFilePermissions = perm
+}
+
 type ConfigLines struct {
 	Lines       map[string]string
 	EnvFile     string
@@ -60,7 +69,7 @@ func SaveInFile(file string, data map[string]string, activeScope string) {
 		logger.Fatalln(err)
 	}
 
-	err = os.WriteFile(file, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
+	err = os.WriteFile(file, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), ConfigFilePermissions)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
