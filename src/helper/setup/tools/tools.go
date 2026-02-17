@@ -37,11 +37,27 @@ func CompleteProgress() {
 	}
 }
 
-func Platform(platforms []string) string {
-	defVersion := platforms[0]
+// PlatformChoice represents a platform option in the interactive selector.
+type PlatformChoice struct {
+	Name        string // internal name, e.g. "magento2"
+	DisplayName string // human-readable, e.g. "Magento 2"
+}
+
+func Platform(choices []PlatformChoice) string {
+	displayNames := make([]string, len(choices))
+	displayToName := make(map[string]string, len(choices))
+	for i, c := range choices {
+		displayNames[i] = c.DisplayName
+		displayToName[c.DisplayName] = c.Name
+	}
+
+	defVersion := displayNames[0]
 
 	fmt.Println("")
-	SelectInteractive("Platform", platforms, &defVersion)
+	SelectInteractive("Platform", displayNames, &defVersion)
+	if name, ok := displayToName[defVersion]; ok {
+		return name
+	}
 	return defVersion
 }
 

@@ -25,9 +25,10 @@ func (h *Handler) Execute(ctx *setupreg.SetupContext) {
 
 func init() {
 	setupreg.Register(setupreg.PlatformInfo{
-		Name:     "custom",
-		Language: "",
-		Order:    20,
+		Name:        "custom",
+		DisplayName: "Custom",
+		Language:    "",
+		Order:       20,
 	}, &Handler{})
 }
 

@@ -23,9 +23,10 @@ type SetupHandler interface {
 
 // PlatformInfo describes a platform available for setup.
 type PlatformInfo struct {
-	Name     string // internal name, e.g. "magento2"
-	Language string // default language; empty means prompt user
-	Order    int    // display order in the interactive wizard
+	Name        string // internal name, e.g. "magento2"
+	DisplayName string // human-readable name, e.g. "Magento 2"
+	Language    string // default language; empty means prompt user
+	Order       int    // display order in the interactive wizard
 }
 
 var handlers = map[string]SetupHandler{}

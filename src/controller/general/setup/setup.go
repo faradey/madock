@@ -95,7 +95,12 @@ func Execute() {
 	}
 
 	if platform == "" {
-		platform = tools.Platform(setupreg.PlatformNames())
+		infos := setupreg.Platforms()
+		choices := make([]tools.PlatformChoice, len(infos))
+		for i, p := range infos {
+			choices[i] = tools.PlatformChoice{Name: p.Name, DisplayName: p.DisplayName}
+		}
+		platform = tools.Platform(choices)
 	}
 
 	// Determine the language for the project
