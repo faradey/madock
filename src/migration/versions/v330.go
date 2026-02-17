@@ -30,10 +30,25 @@ func V330() {
 		}
 
 		projectConf := configs.GetProjectConfigOnly(projectName)
+
+		// Migrate PWA platform to custom+nodejs
+		migratePWAToCustom(configPath, projectConf)
+
+		// Also check in-project config for PWA migration
+		projectPath := projectConf["path"]
+		if projectPath != "" {
+			inProjectConfig := projectPath + "/.madock/config.xml"
+			if paths.IsFileExist(inProjectConfig) {
+				inProjectConf := configs.ParseXmlFile(inProjectConfig)
+				migratePWAToCustom(inProjectConfig, inProjectConf)
+			}
+		}
+
+		// Re-read config after potential PWA migration
+		projectConf = configs.GetProjectConfigOnly(projectName)
 		migrateProjectConfig(configPath, projectConf)
 
-		// Also check in-project config
-		projectPath := projectConf["path"]
+		// Check in-project config for other migrations
 		if projectPath != "" {
 			inProjectConfig := projectPath + "/.madock/config.xml"
 			if paths.IsFileExist(inProjectConfig) {
@@ -48,9 +63,33 @@ func V330() {
 	inProjectConfig := currentPath + "/.madock/config.xml"
 	if paths.IsFileExist(inProjectConfig) {
 		rawConf := configs.ParseXmlFile(inProjectConfig)
+		// Migrate PWA platform to custom+nodejs
+		migratePWAToCustom(inProjectConfig, rawConf)
+		// Re-read after potential migration
+		rawConf = configs.ParseXmlFile(inProjectConfig)
 		// For current dir config, get the merged project config for context
 		migrateInProjectConfig(inProjectConfig, rawConf, rawConf)
 	}
+}
+
+func migratePWAToCustom(configPath string, projectConf map[string]string) bool {
+	platform := projectConf["platform"]
+	if platform != "pwa" {
+		return false
+	}
+
+	config := new(configs.ConfigLines)
+	config.EnvFile = configPath
+	config.ActiveScope = "default"
+	if scope, ok := projectConf["activeScope"]; ok {
+		config.ActiveScope = scope
+	}
+
+	config.Set("platform", "custom")
+	config.Set("language", "nodejs")
+	config.Set("nodejs/enabled", "true")
+	config.Save()
+	return true
 }
 
 func migrateProjectConfig(configPath string, projectConf map[string]string) {

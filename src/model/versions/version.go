@@ -14,7 +14,6 @@ type ToolsVersions struct {
 	RabbitMQ,
 	Xdebug,
 	Hosts,
-	PwaBackendUrl,
 	PlatformVersion,
 	NodeJs,
 	Yarn,

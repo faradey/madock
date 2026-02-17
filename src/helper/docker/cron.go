@@ -158,9 +158,6 @@ func resolveMainService(projectConf map[string]string) string {
 			return "app"
 		}
 	}
-	if projectConf["platform"] == "pwa" {
-		return "nodejs"
-	}
 	return "php"
 }
 

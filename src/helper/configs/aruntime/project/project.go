@@ -38,8 +38,6 @@ func MakeConf(projectName string) {
 	makeDockerCompose(projectName)
 	if projectConf["platform"] == "magento2" {
 		MakeConfMagento2(projectName)
-	} else if projectConf["platform"] == "pwa" {
-		MakeConfPWA(projectName)
 	} else if projectConf["platform"] == "shopify" {
 		MakeConfShopify(projectName)
 	} else if projectConf["platform"] == "custom" {

@@ -158,9 +158,6 @@
     <proxy>
         <enabled>PROXY_ENABLED</enabled>
     </proxy>
-    <pwa>
-        <backend_url>PWA_BACKEND_URL</backend_url>
-    </pwa>
     <container_name_prefix>CONTAINER_NAME_PREFIX</container_name_prefix>
     <cache_hash>CACHE_HASH</cache_hash>
     <path>PATH</path>

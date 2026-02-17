@@ -1,6 +1,7 @@
 **v3.3.0**
 
 Added:
+- Migration guide for PWA Studio projects to custom+nodejs platform
 - Snippet-based Dockerfiles for all languages (Python, Go, Ruby, Node.js, None) using reusable common snippets
 - Common Docker snippets: `header-ubuntu`, `cron`, `mkdir`, `chown`, `cleanup`, `footer`
 - `php/enabled` conditional guard for PHP services in docker-compose
@@ -8,6 +9,9 @@ Added:
 - Interactive version selectors for Python, Go, Ruby during `madock setup`
 - Nginx snippet system (`php.conf`, `proxy.conf`) for language-specific configurations
 - Migration v3.3.0 for automatic config key migration
+
+Removed:
+- PWA as a standalone platform (use custom+nodejs instead)
 
 Changed:
 - Moved PHP Dockerfile from `docker/custom/php/` to `docker/languages/php/`

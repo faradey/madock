@@ -1,2 +1,0 @@
-{{{include snippets/dockerfile/grafana/promtail-config.yml}}}
-{{{include snippets/dockerfile/grafana/promtail-scrape-config.yml}}}

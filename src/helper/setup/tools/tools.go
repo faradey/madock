@@ -39,7 +39,7 @@ func CompleteProgress() {
 
 func Platform() string {
 	defVersion := "magento2"
-	availableVersions := []string{"magento2", "pwa", "custom", "shopify", "shopware", "prestashop"}
+	availableVersions := []string{"magento2", "custom", "shopify", "shopware", "prestashop"}
 
 	fmt.Println("")
 	SelectInteractive("Platform", availableVersions, &defVersion)

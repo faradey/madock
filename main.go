@@ -58,7 +58,6 @@ import (
 	_ "github.com/faradey/madock/src/controller/magento/mftf"
 	_ "github.com/faradey/madock/src/controller/magento/n98"
 	_ "github.com/faradey/madock/src/controller/prestashop"
-	_ "github.com/faradey/madock/src/controller/pwa"
 	_ "github.com/faradey/madock/src/controller/shopify"
 	_ "github.com/faradey/madock/src/controller/shopify/frontend"
 	_ "github.com/faradey/madock/src/controller/shopify/web"

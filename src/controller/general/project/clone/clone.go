@@ -64,9 +64,7 @@ func Execute() {
 	paths.MakeDirsByPath(clonePath)
 	configs.SetParam(cloneName, "path", clonePath, projectConf["activeScope"], "")
 	cloneProjectConf := configs.GetProjectConfig(cloneName)
-	if projectConf["platform"] != "pwa" {
-		create.GetDB(projectConf, projectName, dest)
-	}
+	create.GetDB(projectConf, projectName, dest)
 	create.GetFiles(projectConf, projectName, dest)
 	containerName := docker.GetContainerName(cloneProjectConf, cloneName, "snapshot")
 	if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {

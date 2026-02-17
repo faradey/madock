@@ -43,15 +43,6 @@ func Info() {
 	projectConf := configs2.GetCurrentProjectConfig()
 	projectName := configs2.GetProjectName()
 
-	if projectConf["platform"] == "pwa" {
-		if args.Json {
-			output.PrintJSONError("This command is not supported for " + projectConf["platform"])
-		} else {
-			fmtc.Warning("This command is not supported for " + projectConf["platform"])
-		}
-		return
-	}
-
 	db1Port := ports.GetPort(projectName, ports.ServiceDB)
 	db2Port := ports.GetPort(projectName, ports.ServiceDB2)
 
