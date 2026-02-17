@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/src/helper/dockertransform"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/ports"
@@ -154,6 +155,7 @@ func MakePhpDockerfile(projectName string) {
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
+	str = dockertransform.ApplyDockerfileTransform("php.Dockerfile", str)
 	pp := paths.NewProjectPaths(projectName)
 	nginxFile := paths.MakeDirsByPath(pp.CtxDir()) + "/php.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
@@ -171,6 +173,7 @@ func MakePhpDockerfile(projectName string) {
 		b = ProcessSnippets(b, projectName)
 		str = string(b)
 		str = configs.ReplaceConfigValue(projectName, str)
+		str = dockertransform.ApplyDockerfileTransform("php.DockerfileWithoutXdebug", str)
 		nginxFile = paths.MakeDirsByPath(pp.CtxDir()) + "/php.DockerfileWithoutXdebug"
 		err = os.WriteFile(nginxFile, []byte(str), 0755)
 		if err != nil {
@@ -220,6 +223,7 @@ func makeCustomPhpDockerfile(projectName string) {
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
+	str = dockertransform.ApplyDockerfileTransform("php.Dockerfile", str)
 	pp := paths.NewProjectPaths(projectName)
 	phpFile := paths.MakeDirsByPath(pp.CtxDir()) + "/php.Dockerfile"
 	err = os.WriteFile(phpFile, []byte(str), 0755)
@@ -237,6 +241,7 @@ func makeCustomPhpDockerfile(projectName string) {
 		b = ProcessSnippets(b, projectName)
 		str = string(b)
 		str = configs.ReplaceConfigValue(projectName, str)
+		str = dockertransform.ApplyDockerfileTransform("php.DockerfileWithoutXdebug", str)
 		phpFile = paths.MakeDirsByPath(pp.CtxDir()) + "/php.DockerfileWithoutXdebug"
 		err = os.WriteFile(phpFile, []byte(str), 0755)
 		if err != nil {
@@ -279,6 +284,8 @@ func makeDockerCompose(projectName string) {
 
 		str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
 		str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
+
+		str = dockertransform.ApplyComposeTransform(key, str)
 
 		pp := paths.NewProjectPaths(projectName)
 		resultFile := paths.MakeDirsByPath(pp.RuntimeDir()) + "/" + key
@@ -345,6 +352,7 @@ func MakeDBDockerfile(projectName string) {
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
+	str = dockertransform.ApplyDockerfileTransform("db.Dockerfile", str)
 	pp := paths.NewProjectPaths(projectName)
 	nginxFile := paths.MakeDirsByPath(pp.CtxDir()) + "/db.Dockerfile"
 	err = os.WriteFile(nginxFile, []byte(str), 0755)
@@ -404,6 +412,8 @@ func MakeDockerfile(projectName, path, fileName string) {
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
+	str = dockertransform.ApplyDockerfileTransform(fileName, str)
+
 	pp := paths.NewProjectPaths(projectName)
 	dockerFile := paths.MakeDirsByPath(pp.CtxDir()) + "/" + fileName
 	err = os.WriteFile(dockerFile, []byte(str), 0755)
