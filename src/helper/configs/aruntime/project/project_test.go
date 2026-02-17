@@ -3,6 +3,8 @@ package project
 import (
 	"os"
 	"testing"
+
+	"github.com/faradey/madock/src/helper/configs"
 )
 
 func TestCompareVersions(t *testing.T) {
@@ -145,7 +147,7 @@ func TestCompareVersions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := CompareVersions(tt.v1, tt.v2)
+			got := configs.CompareVersions(tt.v1, tt.v2)
 			if got != tt.expected {
 				t.Errorf("CompareVersions(%q, %q) = %d, want %d", tt.v1, tt.v2, got, tt.expected)
 			}
@@ -160,8 +162,8 @@ func TestCompareVersionsSymmetry(t *testing.T) {
 	for i := 0; i < len(versions); i++ {
 		for j := 0; j < len(versions); j++ {
 			v1, v2 := versions[i], versions[j]
-			r1 := CompareVersions(v1, v2)
-			r2 := CompareVersions(v2, v1)
+			r1 := configs.CompareVersions(v1, v2)
+			r2 := configs.CompareVersions(v2, v1)
 
 			if r1 != -r2 {
 				t.Errorf("Symmetry broken: CompareVersions(%q, %q)=%d but CompareVersions(%q, %q)=%d",
