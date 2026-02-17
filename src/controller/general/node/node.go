@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/faradey/madock/src/command"
@@ -34,11 +33,7 @@ func Execute() {
 
 	isMutation := checkMutation(projectName, flag, service, user, workdir, projectConf)
 	if !isMutation {
-		cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash", "-c", "cd "+workdir+" && "+flag)
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
+		err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, service), user, true, "bash", "-c", "cd "+workdir+" && "+flag)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -94,11 +89,7 @@ func checkMutation(projectName, command, service, user, workdir string, projectC
 					return false
 				}
 				for key, theme := range themes.X {
-					cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "bash", "-c", "cd "+workdir+" && grunt --force clean:"+key)
-					cmd.Stdin = os.Stdin
-					cmd.Stdout = os.Stdout
-					cmd.Stderr = os.Stderr
-					err := cmd.Run()
+					err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, service), user, true, "bash", "-c", "cd "+workdir+" && grunt --force clean:"+key)
 					if err != nil {
 						logger.Fatal(err)
 					}
@@ -107,11 +98,7 @@ func checkMutation(projectName, command, service, user, workdir string, projectC
 					for _, file := range files.([]interface{}) {
 						joinedFiles += file.(string) + " "
 					}
-					cmd = exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+workdir+" && php bin/magento dev:source-theme:deploy "+joinedFiles+" --type=less --locale="+theme.(map[string]interface{})["locale"].(string)+" --area="+theme.(map[string]interface{})["area"].(string)+" --theme="+theme.(map[string]interface{})["name"].(string))
-					cmd.Stdin = os.Stdin
-					cmd.Stdout = os.Stdout
-					cmd.Stderr = os.Stderr
-					err = cmd.Run()
+					err = docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), user, true, "bash", "-c", "cd "+workdir+" && php bin/magento dev:source-theme:deploy "+joinedFiles+" --type=less --locale="+theme.(map[string]interface{})["locale"].(string)+" --area="+theme.(map[string]interface{})["area"].(string)+" --theme="+theme.(map[string]interface{})["name"].(string))
 					if err != nil {
 						logger.Fatal(err)
 					}

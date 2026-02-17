@@ -1,8 +1,6 @@
 package bash
 
 import (
-	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/faradey/madock/src/command"
@@ -56,11 +54,7 @@ func Execute() {
 			return
 		}
 	}
-	cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), shell)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, service), user, true, shell)
 	if err != nil {
 		logger.Fatal(err)
 	}

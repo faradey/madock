@@ -2,8 +2,6 @@ package clean_cache
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 	"sync"
 
 	"github.com/faradey/madock/src/command"
@@ -38,11 +36,7 @@ func Execute() {
 
 	if projectConf["platform"] == "magento2" {
 		commands := []string{"rm -f pub/static/deployed_version.txt", "rm -Rf pub/static/frontend", "rm -Rf pub/static/adminhtml", "rm -Rf var/view_preprocessed/pub", "rm -Rf generated/code"}
-		cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+"php bin/magento c:f")
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
+		err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), user, true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+"php bin/magento c:f")
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -53,11 +47,7 @@ func Execute() {
 			command := command
 			go func() {
 				defer waitGroup.Done()
-				cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && "+command)
-				cmd.Stdin = os.Stdin
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
-				err := cmd.Run()
+				err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), user, true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+command)
 				if err != nil {
 					fmt.Println("Error: " + err.Error())
 				}

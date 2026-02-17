@@ -108,10 +108,7 @@ func StopNginx(force bool) {
 
 // ReloadNginx reloads the nginx configuration
 func ReloadNginx() {
-	cmd := exec.Command("docker", "exec", "aruntime-nginx", "nginx", "-s", "reload")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err := ContainerExec("aruntime-nginx", "", false, "nginx", "-s", "reload")
 	if err != nil {
 		fmt.Println(err)
 	}

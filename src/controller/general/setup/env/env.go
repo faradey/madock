@@ -11,8 +11,6 @@ import (
 	"github.com/faradey/madock/src/helper/docker"
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
-	"os"
-	"os/exec"
 )
 
 func init() {
@@ -41,11 +39,7 @@ func Execute() {
 		projectName := configs.GetProjectName()
 		projectConf := configs.GetCurrentProjectConfig()
 		service, user, _ := cli.GetEnvForUserServiceWorkdir("php", "www-data", "")
-		cmd := exec.Command("docker", "exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/env-create.php", conf, host)
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
+		err = docker.ContainerExec(docker.GetContainerName(projectConf, projectName, service), user, true, "php", "/var/www/scripts/php/env-create.php", conf, host)
 		if err != nil {
 			logger.Fatal(err)
 		}

@@ -2,7 +2,6 @@ package cloud
 
 import (
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/faradey/madock/src/command"
@@ -36,11 +35,7 @@ func Execute() {
 		flag = strings.Replace(flag, "$project", projectConf["magento/cloud/project_name"], -1)
 
 		projectName := configs.GetProjectName()
-		cmd := exec.Command("docker", "exec", "-it", "-u", "www-data", docker.GetContainerName(projectConf, projectName, "php"), "bash", "-c", "cd "+projectConf["workdir"]+" && magento-cloud "+flag)
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
+		err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && magento-cloud "+flag)
 		if err != nil {
 			logger.Fatal(err)
 		}

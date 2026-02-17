@@ -173,15 +173,18 @@ func Import() {
 		mysqlCommandName = "mariadb"
 	}
 
-	var cmd *exec.Cmd
-	cmdFKeys := exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["db/database"])
-	if err := cmdFKeys.Run(); err != nil {
+	fkCmd, fkErr := docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["db/database"])
+	if fkErr != nil {
+		logger.Fatalln("Failed to prepare foreign key command:", fkErr)
+	}
+	if err := fkCmd.Run(); err != nil {
 		logger.Fatalln("Failed to disable foreign key checks:", err)
 	}
+	var cmd *exec.Cmd
 	if option != "" {
-		cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, option, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
+		cmd, _ = docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, option, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
 	} else {
-		cmd = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
+		cmd, _ = docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
 	}
 
 	progress := &progressReader{
@@ -208,8 +211,8 @@ func Import() {
 
 	err = cmd.Run()
 	close(done)
-	cmdFKeys = exec.Command("docker", "exec", "-i", "-u", user, containerName, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["db/database"])
-	if fkErr := cmdFKeys.Run(); fkErr != nil {
+	fkCmd2, _ := docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["db/database"])
+	if fkErr := fkCmd2.Run(); fkErr != nil {
 		logger.Fatalln("Failed to enable foreign key checks:", fkErr)
 	}
 	if err != nil {
