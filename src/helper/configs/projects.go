@@ -259,7 +259,7 @@ func SetScope(projectName, scope string) bool {
 	if err != nil {
 		logger.Fatalln(err)
 	}
-	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
+	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), ConfigFilePermissions)
 	if err != nil {
 		return false
 	}
@@ -287,7 +287,7 @@ func AddScope(projectName, scope string) bool {
 	if err != nil {
 		logger.Fatalln(err)
 	}
-	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), 0755)
+	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), ConfigFilePermissions)
 	if err != nil {
 		return false
 	}
