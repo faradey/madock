@@ -14,7 +14,22 @@ import (
 	"github.com/faradey/madock/src/model/versions"
 	"github.com/faradey/madock/src/model/versions/custom"
 	"github.com/faradey/madock/src/model/versions/languages"
+	setupreg "github.com/faradey/madock/src/setup"
 )
+
+type Handler struct{}
+
+func (h *Handler) Execute(ctx *setupreg.SetupContext) {
+	Execute(ctx.ProjectName, ctx.ProjectConf, ctx.ContinueSetup, ctx.Args, ctx.Language)
+}
+
+func init() {
+	setupreg.Register(setupreg.PlatformInfo{
+		Name:     "custom",
+		Language: "",
+		Order:    20,
+	}, &Handler{})
+}
 
 func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup, language string) {
 	toolsDefVersions := custom.GetVersions()

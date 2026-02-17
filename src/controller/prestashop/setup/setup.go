@@ -17,7 +17,22 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions/prestashop"
+	setupreg "github.com/faradey/madock/src/setup"
 )
+
+type Handler struct{}
+
+func (h *Handler) Execute(ctx *setupreg.SetupContext) {
+	Execute(ctx.ProjectName, ctx.ProjectConf, ctx.ContinueSetup, ctx.Args)
+}
+
+func init() {
+	setupreg.Register(setupreg.PlatformInfo{
+		Name:     "prestashop",
+		Language: "php",
+		Order:    50,
+	}, &Handler{})
+}
 
 func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
 	toolsDefVersions := prestashop.GetVersions("")

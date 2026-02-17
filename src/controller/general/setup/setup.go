@@ -5,11 +5,6 @@ import (
 	"strings"
 
 	"github.com/faradey/madock/src/command"
-	setupCustom "github.com/faradey/madock/src/controller/custom/setup"
-	setupMagento "github.com/faradey/madock/src/controller/magento/setup"
-	setupPrestashop "github.com/faradey/madock/src/controller/prestashop/setup"
-	setupShopify "github.com/faradey/madock/src/controller/shopify/setup"
-	setupShopware "github.com/faradey/madock/src/controller/shopware/setup"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/src/helper/cli/attr"
 	"github.com/faradey/madock/src/helper/cli/fmtc"
@@ -18,6 +13,7 @@ import (
 	"github.com/faradey/madock/src/helper/logger"
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
+	setupreg "github.com/faradey/madock/src/setup"
 )
 
 func init() {
@@ -99,7 +95,7 @@ func Execute() {
 	}
 
 	if platform == "" {
-		platform = tools.Platform()
+		platform = tools.Platform(setupreg.PlatformNames())
 	}
 
 	// Determine the language for the project
@@ -107,27 +103,29 @@ func Execute() {
 	if language == "" && detectedLanguage != "" {
 		language = detectedLanguage
 	}
-	switch platform {
-	case "magento2", "shopware", "prestashop", "shopify":
-		language = "php"
-	case "custom":
-		if language == "" && continueSetup {
-			language = tools.Language()
-		}
-		if language == "" {
-			language = "php"
+	if info, ok := setupreg.GetPlatformInfo(platform); ok {
+		if info.Language != "" {
+			language = info.Language
+		} else {
+			if language == "" && continueSetup {
+				language = tools.Language()
+			}
+			if language == "" {
+				language = "php"
+			}
 		}
 	}
 
-	if platform == "magento2" {
-		setupMagento.ExecuteWithVersion(projectName, projectConf, continueSetup, args, detectedVersion)
-	} else if platform == "shopify" {
-		setupShopify.Execute(projectName, projectConf, continueSetup, args)
-	} else if platform == "custom" {
-		setupCustom.Execute(projectName, projectConf, continueSetup, args, language)
-	} else if platform == "shopware" {
-		setupShopware.Execute(projectName, projectConf, continueSetup, args)
-	} else if platform == "prestashop" {
-		setupPrestashop.Execute(projectName, projectConf, continueSetup, args)
+	if handler, ok := setupreg.Get(platform); ok {
+		handler.Execute(&setupreg.SetupContext{
+			ProjectName:     projectName,
+			ProjectConf:     projectConf,
+			ContinueSetup:  continueSetup,
+			Args:            args,
+			DetectedVersion: detectedVersion,
+			Language:        language,
+		})
+	} else {
+		fmtc.ErrorLn("Unknown platform: " + platform)
 	}
 }

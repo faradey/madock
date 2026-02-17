@@ -11,7 +11,22 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions/shopify"
+	setupreg "github.com/faradey/madock/src/setup"
 )
+
+type Handler struct{}
+
+func (h *Handler) Execute(ctx *setupreg.SetupContext) {
+	Execute(ctx.ProjectName, ctx.ProjectConf, ctx.ContinueSetup, ctx.Args)
+}
+
+func init() {
+	setupreg.Register(setupreg.PlatformInfo{
+		Name:     "shopify",
+		Language: "php",
+		Order:    30,
+	}, &Handler{})
+}
 
 func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
 	toolsDefVersions := shopify.GetVersions()
