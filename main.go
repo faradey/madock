@@ -1,86 +1,14 @@
 package main
 
 import (
-	"log"
-	"os"
-	"strings"
+	"github.com/faradey/madock/src/app"
 
-	"github.com/faradey/madock/src/command"
-	"github.com/faradey/madock/src/controller/general/help"
-	"github.com/faradey/madock/src/controller/general/isnotdefine"
-	"github.com/faradey/madock/src/migration"
-
-	// Self-registering controller packages (blank imports trigger init())
-	_ "github.com/faradey/madock/src/controller/general/bash"
-	_ "github.com/faradey/madock/src/controller/general/claude"
-	_ "github.com/faradey/madock/src/controller/general/clean_cache"
-	_ "github.com/faradey/madock/src/controller/general/cli"
-	_ "github.com/faradey/madock/src/controller/general/composer"
-	_ "github.com/faradey/madock/src/controller/general/config"
-	_ "github.com/faradey/madock/src/controller/general/cron"
-	_ "github.com/faradey/madock/src/controller/general/db/export"
-	_ "github.com/faradey/madock/src/controller/general/db/import"
-	_ "github.com/faradey/madock/src/controller/general/db/info"
-	_ "github.com/faradey/madock/src/controller/general/debug"
-	_ "github.com/faradey/madock/src/controller/general/diff"
-	_ "github.com/faradey/madock/src/controller/general/info"
-	_ "github.com/faradey/madock/src/controller/general/info/ports"
-	_ "github.com/faradey/madock/src/controller/general/install"
-	_ "github.com/faradey/madock/src/controller/general/logs"
-	_ "github.com/faradey/madock/src/controller/general/node"
-	_ "github.com/faradey/madock/src/controller/general/open"
-	_ "github.com/faradey/madock/src/controller/general/patch"
-	_ "github.com/faradey/madock/src/controller/general/project/clone"
-	_ "github.com/faradey/madock/src/controller/general/project/remove"
-	_ "github.com/faradey/madock/src/controller/general/proxy"
-	_ "github.com/faradey/madock/src/controller/general/prune"
-	_ "github.com/faradey/madock/src/controller/general/rebuild"
-	_ "github.com/faradey/madock/src/controller/general/remote_sync/db"
-	_ "github.com/faradey/madock/src/controller/general/remote_sync/file"
-	_ "github.com/faradey/madock/src/controller/general/remote_sync/media"
-	_ "github.com/faradey/madock/src/controller/general/restart"
-	_ "github.com/faradey/madock/src/controller/general/scope/add"
-	_ "github.com/faradey/madock/src/controller/general/scope/list"
-	_ "github.com/faradey/madock/src/controller/general/scope/set"
-	_ "github.com/faradey/madock/src/controller/general/service/disable"
-	_ "github.com/faradey/madock/src/controller/general/service/enable"
-	_ "github.com/faradey/madock/src/controller/general/service/list"
-	_ "github.com/faradey/madock/src/controller/general/setup"
-	_ "github.com/faradey/madock/src/controller/general/setup/env"
-	_ "github.com/faradey/madock/src/controller/general/snapshot/create"
-	_ "github.com/faradey/madock/src/controller/general/snapshot/restore"
-	_ "github.com/faradey/madock/src/controller/general/ssl"
-	_ "github.com/faradey/madock/src/controller/general/start"
-	_ "github.com/faradey/madock/src/controller/general/status"
-	_ "github.com/faradey/madock/src/controller/general/stop"
-	_ "github.com/faradey/madock/src/controller/magento"
-	_ "github.com/faradey/madock/src/controller/magento/cloud"
-	_ "github.com/faradey/madock/src/controller/magento/mftf"
-	_ "github.com/faradey/madock/src/controller/magento/n98"
-	_ "github.com/faradey/madock/src/controller/prestashop"
-	_ "github.com/faradey/madock/src/controller/shopify"
-	_ "github.com/faradey/madock/src/controller/shopify/frontend"
-	_ "github.com/faradey/madock/src/controller/shopify/web"
-	_ "github.com/faradey/madock/src/controller/shopware"
-	_ "github.com/faradey/madock/src/helper/compress"
+	// Register all built-in controllers
+	_ "github.com/faradey/madock/src/controller/all"
 )
 
 var appVersion = "3.3.0"
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
-	migration.Apply(appVersion)
-
-	if len(os.Args) <= 1 {
-		help.Execute()
-		return
-	}
-
-	cmdName := strings.ToLower(os.Args[1])
-
-	if def, ok := command.Get(cmdName); ok {
-		def.Handler()
-	} else {
-		isnotdefine.Execute(cmdName)
-	}
+	app.Run(appVersion)
 }

@@ -17,7 +17,22 @@ import (
 	"github.com/faradey/madock/src/helper/paths"
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions/shopware"
+	setupreg "github.com/faradey/madock/src/setup"
 )
+
+type Handler struct{}
+
+func (h *Handler) Execute(ctx *setupreg.SetupContext) {
+	Execute(ctx.ProjectName, ctx.ProjectConf, ctx.ContinueSetup, ctx.Args)
+}
+
+func init() {
+	setupreg.Register(setupreg.PlatformInfo{
+		Name:     "shopware",
+		Language: "php",
+		Order:    40,
+	}, &Handler{})
+}
 
 func Execute(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup) {
 	toolsDefVersions := shopware.GetVersions("")

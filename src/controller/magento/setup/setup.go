@@ -20,7 +20,22 @@ import (
 	"github.com/faradey/madock/src/helper/setup/tools"
 	"github.com/faradey/madock/src/model/versions"
 	"github.com/faradey/madock/src/model/versions/magento2"
+	setupreg "github.com/faradey/madock/src/setup"
 )
+
+type Handler struct{}
+
+func (h *Handler) Execute(ctx *setupreg.SetupContext) {
+	ExecuteWithVersion(ctx.ProjectName, ctx.ProjectConf, ctx.ContinueSetup, ctx.Args, ctx.DetectedVersion)
+}
+
+func init() {
+	setupreg.Register(setupreg.PlatformInfo{
+		Name:     "magento2",
+		Language: "php",
+		Order:    10,
+	}, &Handler{})
+}
 
 func ExecuteWithVersion(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup, detectedVersion string) {
 	toolsDefVersions := magento2.GetVersions("")
