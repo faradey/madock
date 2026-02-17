@@ -1,10 +1,32 @@
 package service
 
 import (
+	"strings"
+
 	"github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/helper/logger"
-	"strings"
 )
+
+var serviceMap = map[string]string{
+	"db/phpmyadmin":                  "phpmyadmin",
+	"db2/phpmyadmin":                 "phpmyadmin2",
+	"magento/cloud":                  "cloud",
+	"magento/mftf":                   "mftf",
+	"magento/n98magerun":             "n98magerun",
+	"nginx/ssl":                      "ssl",
+	"nodejs/yarn":                    "yarn",
+	"php/ioncube":                    "ioncube",
+	"php/xdebug":                     "xdebug",
+	"search/elasticsearch":           "elasticsearch",
+	"search/elasticsearch/dashboard": "elasticsearch_dashboard",
+	"search/opensearch":              "opensearch",
+	"search/opensearch/dashboard":    "opensearch_dashboard",
+}
+
+// RegisterService adds a service mapping (config key → short name).
+func RegisterService(configKey, shortName string) {
+	serviceMap[configKey] = shortName
+}
 
 func IsService(name string) bool {
 	name = strings.ToLower(name)
@@ -23,27 +45,16 @@ func IsService(name string) bool {
 }
 
 func GetMap() map[string]string {
-	return map[string]string{
-		"db/phpmyadmin":                  "phpmyadmin",
-		"db2/phpmyadmin":                 "phpmyadmin2",
-		"magento/cloud":                  "cloud",
-		"magento/mftf":                   "mftf",
-		"magento/n98magerun":             "n98magerun",
-		"nginx/ssl":                      "ssl",
-		"nodejs/yarn":                    "yarn",
-		"php/ioncube":                    "ioncube",
-		"php/xdebug":                     "xdebug",
-		"search/elasticsearch":           "elasticsearch",
-		"search/elasticsearch/dashboard": "elasticsearch_dashboard",
-		"search/opensearch":              "opensearch",
-		"search/opensearch/dashboard":    "opensearch_dashboard",
+	result := make(map[string]string, len(serviceMap))
+	for k, v := range serviceMap {
+		result[k] = v
 	}
+	return result
 }
 
 func GetByLong(longName string) string {
-	mapNames := GetMap()
 	longName = strings.ToLower(longName)
-	if val, ok := mapNames[longName]; ok {
+	if val, ok := serviceMap[longName]; ok {
 		longName = val
 	}
 
@@ -51,9 +62,8 @@ func GetByLong(longName string) string {
 }
 
 func GetByShort(shortName string) string {
-	mapNames := GetMap()
 	shortName = strings.ToLower(shortName)
-	for key, val := range mapNames {
+	for key, val := range serviceMap {
 		if val == shortName {
 			shortName = key
 			break
