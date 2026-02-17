@@ -28,7 +28,7 @@ func ParseXmlFile(path string) (conf map[string]string) {
 	}
 
 	for key, value := range mappingData {
-		conf[key] = value
+		conf[key] = decryptIfSecret(key, value)
 	}
 
 	return conf
