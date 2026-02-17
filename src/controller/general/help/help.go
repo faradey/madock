@@ -2,6 +2,8 @@ package help
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/faradey/madock/src/command"
 	"github.com/faradey/madock/src/helper/cli/arg_struct"
@@ -24,181 +26,71 @@ func Execute() {
 	fmtc.WarningLn("Usage:")
 	tab()
 	fmt.Println("command [arguments]")
+
+	// Collect and deduplicate commands
+	defs := command.GetAll()
+
+	type entry struct {
+		primary string
+		aliases string
+		help    string
+	}
+
+	var entries []entry
+	for _, def := range defs {
+		if len(def.Aliases) == 0 || def.Help == "" {
+			continue
+		}
+		primary := def.Aliases[0]
+		aliasStr := ""
+		if len(def.Aliases) > 1 {
+			aliasStr = strings.Join(def.Aliases[1:], ", ")
+		}
+		entries = append(entries, entry{
+			primary: primary,
+			aliases: aliasStr,
+			help:    def.Help,
+		})
+	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].primary < entries[j].primary
+	})
+
+	// Find max command width for alignment
+	maxWidth := 0
+	for _, e := range entries {
+		w := len(e.primary)
+		if e.aliases != "" {
+			w += len(e.aliases) + 3 // " (aliases)"
+		}
+		if w > maxWidth {
+			maxWidth = w
+		}
+	}
+
 	fmtc.Warning("Available commands:")
-	describeByLevel("bash", "Connect into container using bash", 0)
-	describeByLevel("--service-name, -s", "Name of container. Optional. Default container: php. For example: php, node, db, db2, nginx", 1)
-	describeByLevel("--user, -u", "User", 1)
-	describeByLevel("--shell", "Shell. Example: bash, sh. Default: bash", 1)
-	describeByLevel("c:f", "Cleaning up static and generated files", 0)
-	describeByLevel("cli", "Execute any commands inside php container. If you want to run several commands you can cover them in the quotes", 0)
-	describeByLevel("cloud", "Executing commands to work with Magento Cloud. Also, can be used the long command: magento-cloud", 0)
-	describeByLevel("composer", "Execute composer inside php container", 0)
-	describeByLevel("compress", "Compress a project to archive", 0)
-	describeByLevel("config:cache:clean", "Clearing internal Madock cache", 0)
-	describeByLevel("c:c:c", "The short alias of `config:cache:clean` command", 0)
-	describeByLevel("config:list", "List all project environment settings", 0)
-	describeByLevel("--json, -j", "Output in JSON format", 1)
-	describeByLevel("config:set", "Set a new value for parameter", 0)
-	describeByLevel("--name, -n", "Parameter name", 1)
-	describeByLevel("--value, -v", "Parameter value", 1)
-	describeByLevel("cron:enable", "Enable cron", 0)
-	describeByLevel("cron:disable", "Disable cron", 0)
-	describeByLevel("db:import", "Import database", 0)
-	describeByLevel("-f", "Force mode", 1)
-	describeByLevel("--service-name, -s", "DB container name. Optional. Default container: db. Example: db2", 1)
-	describeByLevel("db:export", "Export database", 0)
-	describeByLevel("--name, -n", "Name of the DB export file.", 1)
-	describeByLevel("--service-name, -s", "DB container name. Optional. Default container: db. Example: db2", 1)
-	describeByLevel("--ignore-table, -i", "Ignore the table when exporting. The specified table will not be included in the backup file. To specify multiple tables, specify this option multiple times.", 1)
-	describeByLevel("db:info", "Information about credentials and remote host and port", 0)
-	describeByLevel("--json, -j", "Output in JSON format", 1)
-	describeByLevel("debug:enable", "Enable xdebug", 0)
-	describeByLevel("debug:disable", "Disable xdebug", 0)
-	describeByLevel("debug:profile:enable", "Enable xdebug profiling", 0)
-	describeByLevel("debug:profile:disable", "Disable xdebug profiling", 0)
-	describeByLevel("diff", "Generate code diffs between two versions or paths for a platform", 0)
-	describeByLevel("--platform", "Target platform (currently supports: magento)", 1)
-	describeByLevel("--old, -o", "OLD version or path", 1)
-	describeByLevel("--new, -n", "NEW version or path", 1)
-	describeByLevel("--path, -p", "Public output directory relative to site root (default: diffs)", 1)
-	describeByLevel("info", "Show information about third-parties modules (name, current version, latest version, status)", 0)
-	describeByLevel("info:ports", "Show allocated ports for the current project", 0)
-	describeByLevel("--json, -j", "Output in JSON format", 1)
-	describeByLevel("install", "Install Magento, Shopware, etc.", 0)
-	describeByLevel("help", "Display help for commands", 0)
-	describeByLevel("logs", "View logs of a container", 0)
-	describeByLevel("[name of container]", "Container name. Optional. Default container: php. Example: php", 1)
-	describeByLevel("magento", "Execute Magento command inside php container", 0)
-	describeByLevel("m", "The short alias of `magento` command", 0)
-	describeByLevel("mftf", "Execute MFTF command inside php container. For example: `madock mftf generate:tests`", 0)
-	describeByLevel("mftf:init", "Init MFTF configuration. For example: `madock mftf:init`", 0)
-	describeByLevel("n98", "Execute n98 command inside php container. For example: `madock n98 sys:info`", 0)
-	describeByLevel("node", "Execute NodeJs command inside php container", 0)
-	describeByLevel("open", "Open project in browser", 0)
-	describeByLevel("--service, -s", "Open a specific project service in the browser. For example: phpmyadmin", 1)
-	describeByLevel("patch:create", "Create patch. The patch can be used with the composer plugin cweagans/composer-patches", 0)
-	describeByLevel("--file", "Path of changed file. For example: vendor/magento/module-analytics/Cron/CollectData.php", 1)
-	describeByLevel("--name, -n", "Name of the patch file", 1)
-	describeByLevel("--title, -t", "Title of the patch", 1)
-	describeByLevel("--force, -f", "Replace patch if it already exists", 1)
-	describeByLevel("prestashop", "Execute PrestaShop command inside php container", 0)
-	describeByLevel("ps", "The short alias of `prestashop` command", 0)
-	describeByLevel("project:clone", "Clone project. For example: madock project:clone --name=project_name", 0)
-	describeByLevel("--name, -n", "Name of the new project", 1)
-	describeByLevel("project:remove", "Remove project (project folder, Madock project configuration, volumes, images, containers)", 0)
-	describeByLevel("proxy:start", "Start a proxy server", 0)
-	describeByLevel("proxy:stop", "Stop a proxy server", 0)
-	describeByLevel("proxy:restart", "Restart a proxy server", 0)
-	describeByLevel("proxy:rebuild", "Rebuild a proxy server", 0)
-	describeByLevel("proxy:reload", "Gracefully reload nginx configuration without downtime", 0)
-	describeByLevel("proxy:prune", "Prune a proxy server", 0)
-	describeByLevel("prune", "Stop and delete running project containers and networks", 0)
-	describeByLevel("--with-volumes, -v", "Remove volumes, too", 1)
-	describeByLevel("rebuild", "Recreation of all containers in the project. All containers are re-created and the images from the Dockerfile are rebuilt", 0)
-	describeByLevel("remote:sync:media", "Synchronization media files from remote host", 0)
-	describeByLevel("--images-only, -i", "Synchronization images only", 1)
-	describeByLevel("--compress, -c", "Apply lossy compression. Images will have weight equals 30% of original", 1)
-	describeByLevel("--ssh-type, -s", "SSH type (dev, stage, prod)", 1)
-	describeByLevel("remote:sync:db", "Create and download dump of DB from remote host", 0)
-	describeByLevel("--name, -n", "Name of the DB export file.", 1)
-	describeByLevel("--ignore-table, -i", "Ignore the table when exporting. The specified table will not be included in the backup file. To specify multiple tables, specify this option multiple times.", 1)
-	describeByLevel("--ssh-type, -s", "SSH type (dev, stage, prod)", 1)
-	describeByLevel("--db-host", "DB host (optional)", 1)
-	describeByLevel("--db-port", "DB port (optional)", 1)
-	describeByLevel("--db-user", "DB user (optional)", 1)
-	describeByLevel("--db-password", "DB password (optional)", 1)
-	describeByLevel("--db-name", "DB name (optional)", 1)
-	describeByLevel("remote:sync:file", "Download a file from remote host", 0)
-	describeByLevel("--path", "Path to file on server (from Magento root)", 1)
-	describeByLevel("--ssh-type, -s", "SSH type (dev, stage, prod)", 1)
-	describeByLevel("restart", "Restarting all containers and services. Stop all containers and start them again", 0)
-	describeByLevel("scope:add", "Add and activate a new config scope", 0)
-	describeByLevel("[scope name]", "Scope name", 1)
-	describeByLevel("scope:list", "Show all config scopes", 0)
-	describeByLevel("--json, -j", "Output in JSON format", 1)
-	describeByLevel("scope:set", "Set config scope", 0)
-	describeByLevel("[scope name]", "Scope name", 1)
-	describeByLevel("service:list", "Show all services", 0)
-	describeByLevel("--json, -j", "Output in JSON format", 1)
-	describeByLevel("service:enable", "Enable the service", 0)
-	describeByLevel("[service name]", "Service name", 1)
-	describeByLevel("--global, -g", "Enable the service globally", 1)
-	describeByLevel("service:disable", "Disable the service", 0)
-	describeByLevel("[service name]", "Service name", 1)
-	describeByLevel("--global, -g", "Disable the service globally", 1)
-	describeByLevel("setup", "Initial project setup", 0)
-	describeByLevel("--download, -d", "Download the specific Magento version from Composer to the container", 1)
-	describeByLevel("--install, -i", "Install Magento, Shopware, etc. from the source code", 1)
-	describeByLevel("--sample-data, -s", "Install Sample Data for Magento, Shopware, etc.", 1)
-	describeByLevel("--yes, -y", "Skip confirmation prompts", 1)
-	describeByLevel("--preset", "Use a preset configuration (e.g., 'magento-247', 'magento-246', 'shopware-65')", 1)
-	describeByLevel("--platform", "Platform (magento2, shopify, custom, etc.)", 1)
-	describeByLevel("--language, -l", "Primary language for custom platform (php, nodejs, python, golang, ruby, none)", 1)
-	describeByLevel("--platform-edition", "Platform edition (community or enterprise for Magento 2)", 1)
-	describeByLevel("--platform-version", "Platform version", 1)
-	describeByLevel("--php", "PHP version", 1)
-	describeByLevel("--db", "DB version", 1)
-	describeByLevel("--composer", "Composer version", 1)
-	describeByLevel("--search-engine", "Search Engine", 1)
-	describeByLevel("--search-engine-version", "Search Engine version", 1)
-	describeByLevel("--redis", "Redis version", 1)
-	describeByLevel("--valkey", "Valkey version", 1)
-	describeByLevel("--rabbitmq", "RabbitMQ version", 1)
-	describeByLevel("--hosts", "Hosts", 1)
-	describeByLevel("--nodejs", "Node.js version", 1)
-	describeByLevel("--yarn", "Yarn version", 1)
-	describeByLevel("setup:env", "Generate app/etc/env.php", 0)
-	describeByLevel("-f", "Force re-create the file", 1)
-	describeByLevel("--host, -h", "Default host", 1)
-	describeByLevel("shopify", "Execute the Shopify command inside the php container. For example: `madock shopify yarn create @shopify/app --template php`", 0)
-	describeByLevel("sy", "The short alias of `shopify` command", 0)
-	describeByLevel("shopify:web", "Execute the Shopify command inside the php container in 'web' folder. For example: `madock shopify:web composer install`", 0)
-	describeByLevel("sy:w", "The short alias of `shopify:web` command", 0)
-	describeByLevel("shopify:web:frontend", "Execute the Shopify command inside the php container in 'web/frontend' folder. For example: `madock shopify:web:frontend SHOPIFY_API_KEY=REPLACE_ME yarn build`", 0)
-	describeByLevel("sy:w:f", "The short alias of `shopify:web:frontend` command", 0)
-	describeByLevel("shopware", "Execute the Shopware command inside the php container. For example: `madock shopware es:index`", 0)
-	describeByLevel("sw", "The short alias of `shopware` command", 0)
-	describeByLevel("snapshot:create", "To create a snapshot of the project. The snapshot will include databases and project files", 0)
-	describeByLevel("--name, -n", "Name of the snapshot", 1)
-	describeByLevel("ssl:rebuild", "Rebuild SSL Certificates", 0)
-	describeByLevel("start", "Starting all containers and services", 0)
-	describeByLevel("status", "Display the status of the project", 0)
-	describeByLevel("--json, -j", "Output in JSON format", 1)
-	describeByLevel("stop", "Stopping all containers and services", 0)
-	describeByLevel("uncompress", "Uncompress a project from archive", 0)
+	for _, e := range entries {
+		tabln()
+		tab()
+		name := e.primary
+		if e.aliases != "" {
+			name += " (" + e.aliases + ")"
+		}
+		fmtc.Success(name)
+		// Pad to align descriptions
+		padding := max(maxWidth-len(name)+2, 2)
+		fmt.Print(strings.Repeat(" ", padding))
+		fmt.Println(e.help)
+	}
 
 	fmt.Println("")
 }
 
-func describeByLevel(name, desc string, level int) {
-	switch level {
-	case 0:
-		tabln()
-		tab()
-		fmtc.Success(name)
-	case 1:
-		tab()
-		fmtc.Warning(name)
-	case 2:
-		tab()
-		tab()
-		fmtc.Title(name)
-	case 3:
-		tab()
-		tab()
-		tab()
-		fmtc.Purple(name)
-	}
-	tab()
-	fmt.Println(desc)
-	tab()
-	tab()
-}
-
 func tab() {
-	fmt.Print("	")
+	fmt.Print("\t")
 }
 
 func tabln() {
-	fmt.Println("	")
+	fmt.Println("\t")
 }
