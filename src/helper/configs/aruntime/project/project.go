@@ -428,7 +428,6 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 		platform = projectConf["platform"]
 	}
 	language := projectConf["language"]
-	var err error
 	dockerDefFile := paths.GetRunDirPath() + "/.madock/docker/" + strings.Trim(path, "/")
 	if !paths.IsFileExist(dockerDefFile) {
 		dockerDefFile = paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + strings.Trim(path, "/")
@@ -442,7 +441,7 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 				if !paths.IsFileExist(dockerDefFile) {
 					dockerDefFile = paths.GetExecDirPath() + "/docker/general/service/" + strings.Trim(path, "/")
 					if !paths.IsFileExist(dockerDefFile) {
-						logger.Fatal(err)
+						logger.Fatal(fmt.Errorf("docker config file not found: %s (platform=%s, language=%s)", path, platform, language))
 					}
 				}
 			}
