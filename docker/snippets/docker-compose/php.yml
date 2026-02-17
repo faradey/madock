@@ -1,4 +1,5 @@
-php:
+<<<if{{{php/enabled}}}>>>
+  php:
     build:
       context: ctx
       dockerfile: php.Dockerfile
@@ -21,3 +22,4 @@ php:
     <<<if{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>
     restart: {{{restart_policy}}}
+<<<endif>>>

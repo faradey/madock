@@ -23,7 +23,7 @@ func TestMagento2ConfigSets(t *testing.T) {
 		RabbitMQ:        "3.13",
 	}
 	generalConf := map[string]string{
-		"php/timezone":       "Europe/Kiev",
+		"timezone":       "Europe/Kiev",
 		"php/xdebug/ide_key": "PHPSTORM",
 		"php/xdebug/enabled": "false",
 		"php/ioncube/enabled": "false",
@@ -67,7 +67,7 @@ func TestMagento2WithElasticsearch(t *testing.T) {
 		RabbitMQ:        "3.9",
 	}
 	generalConf := map[string]string{
-		"php/timezone":        "UTC",
+		"timezone":        "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -105,7 +105,7 @@ func TestMagento2WithCustomDbRepo(t *testing.T) {
 		RabbitMQ:        "3.13",
 	}
 	generalConf := map[string]string{
-		"php/timezone":        "UTC",
+		"timezone":        "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -156,7 +156,7 @@ func TestShopifyConfigSets(t *testing.T) {
 		NodeJs:   "18.15.0",
 	}
 	generalConf := map[string]string{
-		"php/timezone":        "UTC",
+		"timezone":        "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -179,7 +179,7 @@ func TestCustomConfigSets(t *testing.T) {
 		Db:       "10.6",
 	}
 	generalConf := map[string]string{
-		"php/timezone":        "UTC",
+		"timezone":        "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -208,7 +208,7 @@ func TestShopwareConfigSets(t *testing.T) {
 		Db:       "10.6",
 	}
 	generalConf := map[string]string{
-		"php/timezone":        "UTC",
+		"timezone":        "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -237,7 +237,7 @@ func TestPrestaShopConfigSets(t *testing.T) {
 		Db:       "10.6",
 	}
 	generalConf := map[string]string{
-		"php/timezone":        "UTC",
+		"timezone":        "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",

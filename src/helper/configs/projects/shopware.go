@@ -17,7 +17,7 @@ func Shopware(config *configs2.ConfigLines, defVersions versions.ToolsVersions, 
 
 	config.Set("php/version", defVersions.Php)
 	config.Set("php/composer/version", defVersions.Composer)
-	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))
+	config.Set("timezone", configs2.GetOption("timezone", generalConf, projectConf))
 
 	config.Set("php/xdebug/version", versions.GetXdebugVersion(defVersions.Php))
 	config.Set("php/xdebug/remote_host", "host.docker.internal")

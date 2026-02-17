@@ -3,7 +3,7 @@ FROM {{{os/name}}}:{{{os/version}}}
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NOWARNINGS="yes"
 
-RUN ln -snf /usr/share/zoneinfo/{{{php/timezone}}} /etc/localtime && echo {{{php/timezone}}} > /etc/timezone \
+RUN ln -snf /usr/share/zoneinfo/{{{timezone}}} /etc/localtime && echo {{{timezone}}} > /etc/timezone \
     && apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y locales \
     curl \
     ca-certificates \

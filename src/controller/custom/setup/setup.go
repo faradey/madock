@@ -28,7 +28,13 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 			setupPhpTools(&toolsDefVersions, args)
 		case "nodejs":
 			setupNodeJsTools(&toolsDefVersions, args)
-		case "python", "golang", "ruby", "none":
+		case "python":
+			setupPythonTools(&toolsDefVersions, args)
+		case "golang":
+			setupGolangTools(&toolsDefVersions, args)
+		case "ruby":
+			setupRubyTools(&toolsDefVersions, args)
+		case "none":
 			// No language-specific interactive selectors needed
 		}
 
@@ -121,6 +127,24 @@ func setupNodeJsTools(toolsDefVersions *versions.ToolsVersions, args *arg_struct
 	} else {
 		toolsDefVersions.Yarn = args.Yarn
 	}
+}
+
+func setupPythonTools(toolsDefVersions *versions.ToolsVersions, _ *arg_struct.ControllerGeneralSetup) {
+	defVersions := languages.GetDefaultVersions("python")
+	toolsDefVersions.Python = defVersions["python/version"]
+	tools.PythonVersion(&toolsDefVersions.Python)
+}
+
+func setupGolangTools(toolsDefVersions *versions.ToolsVersions, _ *arg_struct.ControllerGeneralSetup) {
+	defVersions := languages.GetDefaultVersions("golang")
+	toolsDefVersions.Golang = defVersions["go/version"]
+	tools.GoVersion(&toolsDefVersions.Golang)
+}
+
+func setupRubyTools(toolsDefVersions *versions.ToolsVersions, _ *arg_struct.ControllerGeneralSetup) {
+	defVersions := languages.GetDefaultVersions("ruby")
+	toolsDefVersions.Ruby = defVersions["ruby/version"]
+	tools.RubyVersion(&toolsDefVersions.Ruby)
 }
 
 func hostsCustom(projectName string, defVersion *string, projectConf map[string]string) {

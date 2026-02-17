@@ -1,0 +1,3 @@
+RUN apt-get install -y ruby-full
+
+RUN gem install bundler
