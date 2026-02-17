@@ -3,8 +3,8 @@ package configs
 import (
 	"bytes"
 	"encoding/xml"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/go-xmlfmt/xmlfmt"
 	"os"
 	"strconv"

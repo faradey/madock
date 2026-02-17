@@ -4,11 +4,11 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/faradey/madock/src/command"
-	"github.com/faradey/madock/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/src/helper/cli/attr"
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/v3/src/command"
+	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/logger"
 )
 
 func init() {

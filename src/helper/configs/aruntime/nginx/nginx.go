@@ -14,12 +14,12 @@ import (
 	"strings"
 	"time"
 
-	configs2 "github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/configs/aruntime/project"
-	"github.com/faradey/madock/src/helper/finder"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
-	"github.com/faradey/madock/src/helper/ports"
+	configs2 "github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/v3/src/helper/finder"
+	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/ports"
 )
 
 func MakeConf(projectName string) {

@@ -2,7 +2,7 @@ package configs
 
 import (
 	"bufio"
-	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/logger"
 	"os"
 	"strings"
 )

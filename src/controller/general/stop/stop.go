@@ -1,11 +1,11 @@
 package stop
 
 import (
-	"github.com/faradey/madock/src/command"
-	"github.com/faradey/madock/src/controller/general/proxy"
-	"github.com/faradey/madock/src/controller/platform"
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/v3/src/command"
+	"github.com/faradey/madock/v3/src/controller/general/proxy"
+	"github.com/faradey/madock/v3/src/controller/platform"
+	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/paths"
 )
 
 func init() {

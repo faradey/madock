@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/faradey/madock/src/helper/cli/color"
+	"github.com/faradey/madock/v3/src/helper/cli/color"
 )
 
 // Spinner displays an animated spinner with a message

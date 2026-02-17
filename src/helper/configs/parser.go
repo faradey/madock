@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/xml"
 	"fmt"
-	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/sbabiv/xml2map"
 	"os"
 	"sort"
@@ -78,10 +78,15 @@ func GetXmlMap(path string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	return GetXmlMapFromBytes(dataByte)
+}
+
+func GetXmlMapFromBytes(dataByte []byte) (map[string]interface{}, error) {
 	data := string(dataByte)
 	result := make(map[string]interface{})
 	if data != "" {
 		decoder := xml2map.NewDecoder(strings.NewReader(data))
+		var err error
 		result, err = decoder.Decode()
 		if err != nil {
 			return nil, err

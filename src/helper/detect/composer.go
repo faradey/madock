@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/paths"
 )
 
 // ComposerJSON represents the structure of composer.json

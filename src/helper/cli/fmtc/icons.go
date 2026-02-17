@@ -3,7 +3,7 @@ package fmtc
 import (
 	"fmt"
 
-	"github.com/faradey/madock/src/helper/cli/color"
+	"github.com/faradey/madock/v3/src/helper/cli/color"
 )
 
 // Icons for CLI output

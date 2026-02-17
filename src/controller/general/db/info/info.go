@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/faradey/madock/src/command"
-	"github.com/faradey/madock/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/src/helper/cli/attr"
-	"github.com/faradey/madock/src/helper/cli/fmtc"
-	"github.com/faradey/madock/src/helper/cli/output"
-	configs2 "github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/ports"
+	"github.com/faradey/madock/v3/src/command"
+	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v3/src/helper/cli/output"
+	configs2 "github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/ports"
 )
 
 type DbInfoOutput struct {

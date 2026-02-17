@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/faradey/madock/src/helper/paths"
-	"github.com/faradey/madock/src/model/versions"
+	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v3/src/model/versions"
 )
 
 func init() {

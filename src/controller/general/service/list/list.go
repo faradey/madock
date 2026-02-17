@@ -4,13 +4,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/faradey/madock/src/command"
-	service2 "github.com/faradey/madock/src/controller/general/service"
-	"github.com/faradey/madock/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/src/helper/cli/attr"
-	"github.com/faradey/madock/src/helper/cli/fmtc"
-	"github.com/faradey/madock/src/helper/cli/output"
-	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/v3/src/command"
+	service2 "github.com/faradey/madock/v3/src/controller/general/service"
+	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v3/src/helper/cli/output"
+	"github.com/faradey/madock/v3/src/helper/configs"
 )
 
 func init() {

@@ -1,10 +1,10 @@
 package migration
 
 import (
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
-	configs2 "github.com/faradey/madock/src/migration/versions/v240/configs"
+	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/paths"
+	configs2 "github.com/faradey/madock/v3/src/migration/versions/v240/configs"
 	"os"
 )
 

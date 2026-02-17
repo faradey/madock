@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/dockertransform"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
-	"github.com/faradey/madock/src/helper/ports"
+	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/dockertransform"
+	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/ports"
 )
 
 func MakeConf(projectName string) {

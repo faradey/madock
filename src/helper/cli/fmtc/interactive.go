@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/faradey/madock/src/helper/cli/color"
+	"github.com/faradey/madock/v3/src/helper/cli/color"
 	"golang.org/x/term"
 )
 

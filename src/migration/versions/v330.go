@@ -3,8 +3,8 @@ package versions
 import (
 	"os"
 
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/paths"
 )
 
 // V330 migrates config for the language unification:

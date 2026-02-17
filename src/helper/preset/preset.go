@@ -1,7 +1,7 @@
 package preset
 
 import (
-	"github.com/faradey/madock/src/model/versions"
+	"github.com/faradey/madock/v3/src/model/versions"
 )
 
 // Preset represents a pre-configured setup

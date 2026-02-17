@@ -1,9 +1,9 @@
 package restart
 
 import (
-	"github.com/faradey/madock/src/command"
-	"github.com/faradey/madock/src/controller/general/start"
-	"github.com/faradey/madock/src/controller/general/stop"
+	"github.com/faradey/madock/v3/src/command"
+	"github.com/faradey/madock/v3/src/controller/general/start"
+	"github.com/faradey/madock/v3/src/controller/general/stop"
 )
 
 func init() {

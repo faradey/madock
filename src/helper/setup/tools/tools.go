@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/faradey/madock/src/helper/cli/fmtc"
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/paths"
 )
 
 // Global progress tracker for setup process

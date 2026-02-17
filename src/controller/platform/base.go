@@ -5,10 +5,10 @@ import (
 	"os/exec"
 	"os/user"
 
-	"github.com/faradey/madock/src/helper/cli/fmtc"
-	"github.com/faradey/madock/src/helper/docker"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v3/src/helper/docker"
+	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/paths"
 )
 
 // BaseHandler provides default implementation for common operations

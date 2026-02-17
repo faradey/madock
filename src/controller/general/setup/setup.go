@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/faradey/madock/src/command"
-	"github.com/faradey/madock/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/src/helper/cli/attr"
-	"github.com/faradey/madock/src/helper/cli/fmtc"
-	configs2 "github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/detect"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
-	"github.com/faradey/madock/src/helper/setup/tools"
-	setupreg "github.com/faradey/madock/src/setup"
+	"github.com/faradey/madock/v3/src/command"
+	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
+	configs2 "github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/detect"
+	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/setup/tools"
+	setupreg "github.com/faradey/madock/v3/src/setup"
 )
 
 func init() {

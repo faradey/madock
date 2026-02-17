@@ -3,8 +3,8 @@ package compress
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/faradey/madock/src/helper/cli/attr"
-	"github.com/faradey/madock/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/paths"
 	"os"
 )
 

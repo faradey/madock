@@ -3,7 +3,7 @@ package setup
 import (
 	"sort"
 
-	"github.com/faradey/madock/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 )
 
 // SetupContext provides all data a platform setup handler needs.

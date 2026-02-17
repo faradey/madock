@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/faradey/madock/src/helper/cli/color"
+	"github.com/faradey/madock/v3/src/helper/cli/color"
 )
 
 // PresetOption represents a preset option for selection

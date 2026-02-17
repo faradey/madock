@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/faradey/madock/src/helper/paths"
-	"github.com/faradey/madock/src/helper/ports"
+	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/ports"
 )
 
 const (

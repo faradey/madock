@@ -1,6 +1,6 @@
 package configs
 
-import "github.com/faradey/madock/src/helper/paths"
+import "github.com/faradey/madock/v3/src/helper/paths"
 
 const MainConfigCode = ":config:"
 const MadockLevelConfigCode = ":madockconfig:"

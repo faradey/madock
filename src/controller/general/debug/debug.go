@@ -1,10 +1,10 @@
 package debug
 
 import (
-	"github.com/faradey/madock/src/command"
-	"github.com/faradey/madock/src/controller/general/rebuild"
-	"github.com/faradey/madock/src/helper/cli/attr"
-	"github.com/faradey/madock/src/helper/configs"
+	"github.com/faradey/madock/v3/src/command"
+	"github.com/faradey/madock/v3/src/controller/general/rebuild"
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/configs"
 )
 
 type ArgsStruct struct {

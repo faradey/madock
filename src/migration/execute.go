@@ -1,6 +1,6 @@
 package migration
 
-import "github.com/faradey/madock/src/migration/versions"
+import "github.com/faradey/madock/v3/src/migration/versions"
 
 func Execute(oldAppVersion string) {
 	if oldAppVersion < "1.4.0" {

@@ -6,9 +6,9 @@ import (
 	"os/exec"
 	"os/user"
 
-	configs2 "github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
+	configs2 "github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/paths"
 )
 
 // UpWithBuild starts both nginx proxy and project containers with build

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/ports"
+	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/ports"
 )
 
 // findProjectRoot locates the madock project root by walking up from the current test file.

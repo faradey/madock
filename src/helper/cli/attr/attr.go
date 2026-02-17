@@ -2,7 +2,7 @@ package attr
 
 import (
 	"github.com/alexflint/go-arg"
-	"github.com/faradey/madock/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/logger"
 	"os"
 )
 

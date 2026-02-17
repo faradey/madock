@@ -3,15 +3,15 @@ package setup
 import (
 	"fmt"
 
-	"github.com/faradey/madock/src/controller/general/rebuild"
-	"github.com/faradey/madock/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/src/helper/cli/fmtc"
-	"github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/configs/projects"
-	"github.com/faradey/madock/src/helper/paths"
-	"github.com/faradey/madock/src/helper/setup/tools"
-	"github.com/faradey/madock/src/model/versions/shopify"
-	setupreg "github.com/faradey/madock/src/setup"
+	"github.com/faradey/madock/v3/src/controller/general/rebuild"
+	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/configs/projects"
+	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v3/src/helper/setup/tools"
+	"github.com/faradey/madock/v3/src/model/versions/shopify"
+	setupreg "github.com/faradey/madock/v3/src/setup"
 )
 
 type Handler struct{}

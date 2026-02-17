@@ -2,22 +2,26 @@ package versions
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/xml"
-	config2 "github.com/faradey/madock/src/helper/configs"
-	"github.com/faradey/madock/src/helper/logger"
-	"github.com/faradey/madock/src/helper/paths"
-	"github.com/faradey/madock/src/migration/versions/v240/configs"
+	config2 "github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v3/src/migration/versions/v240/configs"
 	"github.com/go-xmlfmt/xmlfmt"
 	"os"
 	"strconv"
 	"strings"
 )
 
+//go:embed v240/migration_v240_config_map.xml
+var migrationV240ConfigMapXML []byte
+
 func V240() {
 	execPath := paths.GetExecDirPath() + "/projects/"
 	execProjectsDirs := paths.GetDirs(execPath)
 
-	mapping, err := config2.GetXmlMap(paths.GetExecDirPath() + "/src/migration/versions/v240/migration_v240_config_map.xml")
+	mapping, err := config2.GetXmlMapFromBytes(migrationV240ConfigMapXML)
 
 	if err != nil {
 		logger.Fatalln(err)

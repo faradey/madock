@@ -1,8 +1,8 @@
 package custom
 
 import (
-	"github.com/faradey/madock/src/model/versions"
-	"github.com/faradey/madock/src/model/versions/languages"
+	"github.com/faradey/madock/v3/src/model/versions"
+	"github.com/faradey/madock/v3/src/model/versions/languages"
 )
 
 func init() {
