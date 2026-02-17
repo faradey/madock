@@ -12,6 +12,10 @@ import (
 )
 
 func GetExecDirPath() string {
+	if envDir := os.Getenv("MADOCK_EXEC_DIR"); envDir != "" {
+		return envDir
+	}
+
 	var dirAbsPath string
 
 	ex, err := os.Executable()
@@ -37,6 +41,10 @@ func GetExecDirNameByPath(path string) string {
 }
 
 func GetRunDirPath() string {
+	if envDir := os.Getenv("MADOCK_RUN_DIR"); envDir != "" {
+		return envDir
+	}
+
 	dir, err := os.Getwd()
 	if err != nil {
 		return ""
