@@ -12,7 +12,7 @@ nginx:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}
     depends_on:
-      - php
+      - {{{main_service}}}
     <<<if{{{isolation/enabled}}}>>>networks:
       - opened
       - isolated<<<endif>>>

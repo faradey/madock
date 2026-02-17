@@ -135,6 +135,10 @@ func makeNginxConf(projectName string) {
 	str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
 	str = strings.Replace(str, "{{{nginx/host_names_with_codes}}}", hostNameWebsites, -1)
 
+	// Replace main_service placeholder for proxy-based configs
+	mainService := resolveMainService(projectConf)
+	str = strings.Replace(str, "{{{main_service}}}", mainService, -1)
+
 	pp := paths.NewProjectPaths(projectName)
 	paths.MakeDirsByPath(pp.CtxDir())
 	nginxFile := paths.MakeDirsByPath(pp.CtxDir()) + "/nginx.conf"
@@ -167,9 +171,9 @@ func makePhpDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	if paths.IsFileExist(paths.GetExecDirPath() + "/docker/" + projectConf["platform"] + "/php/DockerfileWithoutXdebug") {
-		dockerDefFile = GetDockerConfigFile(projectName, "php/DockerfileWithoutXdebug", "")
-		b, err = os.ReadFile(dockerDefFile)
+	dockerDefFileWithoutXdebug := GetDockerConfigFileOptional(projectName, "php/DockerfileWithoutXdebug", "")
+	if dockerDefFileWithoutXdebug != "" {
+		b, err = os.ReadFile(dockerDefFileWithoutXdebug)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -194,10 +198,9 @@ func makeMainContainerDockerfile(projectName string) {
 
 	switch language {
 	case "php":
-		makePhpDockerfile(projectName)
+		makeCustomPhpDockerfile(projectName)
 	case "nodejs":
-		// For standalone Node.js projects, build the nodejs Dockerfile as the main container
-		makeDockerfile(projectName, "nodejs/Dockerfile", "nodejs.Dockerfile")
+		makeDockerfile(projectName, "Dockerfile", "nodejs.Dockerfile")
 	case "python":
 		makeDockerfile(projectName, "Dockerfile", "python.Dockerfile")
 	case "golang":
@@ -207,7 +210,48 @@ func makeMainContainerDockerfile(projectName string) {
 	case "none":
 		makeDockerfile(projectName, "Dockerfile", "app.Dockerfile")
 	default:
-		makePhpDockerfile(projectName)
+		makeCustomPhpDockerfile(projectName)
+	}
+}
+
+func makeCustomPhpDockerfile(projectName string) {
+	dockerDefFile := GetDockerConfigFile(projectName, "Dockerfile", "")
+
+	b, err := os.ReadFile(dockerDefFile)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	projectConf := configs.GetProjectConfig(projectName)
+	nodeMajorVersion := strings.Split(projectConf["nodejs/version"], ".")
+	if len(nodeMajorVersion) > 0 {
+		projectConf["nodejs/major_version"] = nodeMajorVersion[0]
+	}
+
+	b = ProcessSnippets(b, projectName)
+	str := string(b)
+	str = configs.ReplaceConfigValue(projectName, str)
+	pp := paths.NewProjectPaths(projectName)
+	phpFile := paths.MakeDirsByPath(pp.CtxDir()) + "/php.Dockerfile"
+	err = os.WriteFile(phpFile, []byte(str), 0755)
+	if err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
+
+	dockerDefFileWithoutXdebug := GetDockerConfigFileOptional(projectName, "DockerfileWithoutXdebug", "")
+	if dockerDefFileWithoutXdebug != "" {
+		b, err = os.ReadFile(dockerDefFileWithoutXdebug)
+		if err != nil {
+			logger.Fatal(err)
+		}
+
+		b = ProcessSnippets(b, projectName)
+		str = string(b)
+		str = configs.ReplaceConfigValue(projectName, str)
+		phpFile = paths.MakeDirsByPath(pp.CtxDir()) + "/php.DockerfileWithoutXdebug"
+		err = os.WriteFile(phpFile, []byte(str), 0755)
+		if err != nil {
+			log.Fatalf("Unable to write file: %v", err)
+		}
 	}
 }
 
@@ -236,6 +280,10 @@ func makeDockerCompose(projectName string) {
 		str = configs.ReplaceConfigValue(projectName, str)
 		str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
 
+		// Replace main_service placeholder for nginx depends_on
+		mainService := resolveMainService(projectConf)
+		str = strings.Replace(str, "{{{main_service}}}", mainService, -1)
+
 		// Dynamic port placeholder replacement - scans for any {{{port/XXX}}} pattern
 		str = replacePortPlaceholders(str, projectName)
 
@@ -248,6 +296,25 @@ func makeDockerCompose(projectName string) {
 		if err != nil {
 			log.Fatalf("Unable to write file: %v", err)
 		}
+	}
+}
+
+// resolveMainService determines the main service name based on the language config
+func resolveMainService(projectConf map[string]string) string {
+	language := projectConf["language"]
+	switch language {
+	case "nodejs":
+		return "nodejs"
+	case "python":
+		return "python"
+	case "golang":
+		return "golang"
+	case "ruby":
+		return "ruby"
+	case "none":
+		return "app"
+	default:
+		return "php"
 	}
 }
 
@@ -368,14 +435,42 @@ func GetDockerConfigFile(projectName, path, platform string) string {
 		if !paths.IsFileExist(dockerDefFile) {
 			dockerDefFile = paths.GetExecDirPath() + "/docker/" + platform + "/" + strings.Trim(path, "/")
 			if !paths.IsFileExist(dockerDefFile) {
-				// Language-specific fallback (for non-PHP languages on custom platform)
-				if language != "" && language != "php" {
+				// Language-specific fallback (for all languages on custom platform)
+				if language != "" {
 					dockerDefFile = paths.GetExecDirPath() + "/docker/languages/" + language + "/" + strings.Trim(path, "/")
 				}
 				if !paths.IsFileExist(dockerDefFile) {
 					dockerDefFile = paths.GetExecDirPath() + "/docker/general/service/" + strings.Trim(path, "/")
 					if !paths.IsFileExist(dockerDefFile) {
 						logger.Fatal(err)
+					}
+				}
+			}
+		}
+	}
+
+	return dockerDefFile
+}
+
+func GetDockerConfigFileOptional(projectName, path, platform string) string {
+	projectConf := configs.GetProjectConfig(projectName)
+	if platform == "" {
+		platform = projectConf["platform"]
+	}
+	language := projectConf["language"]
+	dockerDefFile := paths.GetRunDirPath() + "/.madock/docker/" + strings.Trim(path, "/")
+	if !paths.IsFileExist(dockerDefFile) {
+		dockerDefFile = paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + strings.Trim(path, "/")
+		if !paths.IsFileExist(dockerDefFile) {
+			dockerDefFile = paths.GetExecDirPath() + "/docker/" + platform + "/" + strings.Trim(path, "/")
+			if !paths.IsFileExist(dockerDefFile) {
+				if language != "" {
+					dockerDefFile = paths.GetExecDirPath() + "/docker/languages/" + language + "/" + strings.Trim(path, "/")
+				}
+				if !paths.IsFileExist(dockerDefFile) {
+					dockerDefFile = paths.GetExecDirPath() + "/docker/general/service/" + strings.Trim(path, "/")
+					if !paths.IsFileExist(dockerDefFile) {
+						return ""
 					}
 				}
 			}

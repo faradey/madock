@@ -1,0 +1,3 @@
+WORKDIR {{{workdir}}}
+
+CMD ["node"]

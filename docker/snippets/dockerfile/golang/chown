@@ -1,0 +1,4 @@
+RUN useradd -u {{{os/user/uid}}} -o -m www-data 2>/dev/null; \
+    groupmod -g {{{os/user/guid}}} -o www-data 2>/dev/null; \
+    usermod -u {{{os/user/uid}}} -o www-data 2>/dev/null; \
+    chown -R {{{os/user/uid}}}:{{{os/user/guid}}} /var/www

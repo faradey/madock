@@ -1,10 +1,10 @@
 package projects
 
 import (
+	"strings"
+
 	configs2 "github.com/faradey/madock/src/helper/configs"
 	"github.com/faradey/madock/src/model/versions"
-	"github.com/faradey/madock/src/model/versions/languages"
-	"strings"
 )
 
 func Custom(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
@@ -22,6 +22,9 @@ func Custom(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	}
 
 	// Reset all language-specific enabled flags
+	config.Set("php/enabled", "false")
+	config.Set("php/xdebug/enabled", "false")
+	config.Set("nodejs/enabled", "false")
 	config.Set("python/enabled", "false")
 	config.Set("golang/enabled", "false")
 	config.Set("ruby/enabled", "false")
@@ -29,18 +32,19 @@ func Custom(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 
 	switch language {
 	case "php":
+		config.Set("php/enabled", "true")
 		customPhpConfig(config, defVersions, generalConf, projectConf)
 	case "nodejs":
 		customNodeJsConfig(config, defVersions, generalConf, projectConf)
 	case "python":
 		config.Set("python/enabled", "true")
-		customPythonConfig(config, generalConf, projectConf)
+		customPythonConfig(config, defVersions, generalConf, projectConf)
 	case "golang":
 		config.Set("golang/enabled", "true")
-		customGolangConfig(config, generalConf, projectConf)
+		customGolangConfig(config, defVersions, generalConf, projectConf)
 	case "ruby":
 		config.Set("ruby/enabled", "true")
-		customRubyConfig(config, generalConf, projectConf)
+		customRubyConfig(config, defVersions, generalConf, projectConf)
 	case "none":
 		config.Set("app/enabled", "true")
 		customNoneConfig(config, generalConf, projectConf)
@@ -80,7 +84,7 @@ func Custom(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 func customPhpConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	config.Set("php/version", defVersions.Php)
 	config.Set("php/composer/version", defVersions.Composer)
-	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))
+	config.Set("timezone", configs2.GetOption("timezone", generalConf, projectConf))
 
 	config.Set("php/xdebug/version", versions.GetXdebugVersion(defVersions.Php))
 	config.Set("php/xdebug/remote_host", "host.docker.internal")
@@ -93,7 +97,7 @@ func customPhpConfig(config *configs2.ConfigLines, defVersions versions.ToolsVer
 		config.Set("nodejs/major_version", nodeMajorVersion[0])
 	}
 
-	config.Set("nodejs/enabled", configs2.GetOption("nodejs/enabled", generalConf, projectConf))
+	config.Set("php/nodejs/enabled", configs2.GetOption("php/nodejs/enabled", generalConf, projectConf))
 	config.Set("nodejs/version", generalConf["nodejs/version"])
 }
 
@@ -105,29 +109,26 @@ func customNodeJsConfig(config *configs2.ConfigLines, defVersions versions.Tools
 		config.Set("nodejs/major_version", nodeMajorVersion[0])
 	}
 	config.Set("nodejs/yarn/version", defVersions.Yarn)
-	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))
+	config.Set("timezone", configs2.GetOption("timezone", generalConf, projectConf))
 }
 
-func customPythonConfig(config *configs2.ConfigLines, generalConf, projectConf map[string]string) {
-	defVersions := languages.GetDefaultVersions("python")
-	config.Set("python/version", defVersions["python/version"])
-	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))
+func customPythonConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
+	config.Set("python/version", defVersions.Python)
+	config.Set("timezone", configs2.GetOption("timezone", generalConf, projectConf))
 }
 
-func customGolangConfig(config *configs2.ConfigLines, generalConf, projectConf map[string]string) {
-	defVersions := languages.GetDefaultVersions("golang")
-	config.Set("go/version", defVersions["go/version"])
-	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))
+func customGolangConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
+	config.Set("go/version", defVersions.Golang)
+	config.Set("timezone", configs2.GetOption("timezone", generalConf, projectConf))
 }
 
-func customRubyConfig(config *configs2.ConfigLines, generalConf, projectConf map[string]string) {
-	defVersions := languages.GetDefaultVersions("ruby")
-	config.Set("ruby/version", defVersions["ruby/version"])
-	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))
+func customRubyConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
+	config.Set("ruby/version", defVersions.Ruby)
+	config.Set("timezone", configs2.GetOption("timezone", generalConf, projectConf))
 }
 
 func customNoneConfig(config *configs2.ConfigLines, generalConf, projectConf map[string]string) {
-	config.Set("php/timezone", configs2.GetOption("php/timezone", generalConf, projectConf))
+	config.Set("timezone", configs2.GetOption("timezone", generalConf, projectConf))
 }
 
 func customDbConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {

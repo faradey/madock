@@ -17,7 +17,10 @@ type ToolsVersions struct {
 	PwaBackendUrl,
 	PlatformVersion,
 	NodeJs,
-	Yarn string
+	Yarn,
+	Python,
+	Golang,
+	Ruby string
 }
 
 func GetXdebugVersion(phpVer string) string {

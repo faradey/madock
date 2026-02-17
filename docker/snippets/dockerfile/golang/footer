@@ -1,0 +1,5 @@
+WORKDIR {{{workdir}}}
+
+EXPOSE 8080 3000
+
+CMD ["bash"]

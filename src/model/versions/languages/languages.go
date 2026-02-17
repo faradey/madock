@@ -1,5 +1,14 @@
 package languages
 
+// GetAllDefaults returns the default versions for all languages
+func GetAllDefaults() map[string]string {
+	return map[string]string{
+		"python": GetDefaultVersions("python")["python/version"],
+		"golang": GetDefaultVersions("golang")["go/version"],
+		"ruby":   GetDefaultVersions("ruby")["ruby/version"],
+	}
+}
+
 // GetDefaultVersions returns the default tool versions for a given language
 func GetDefaultVersions(language string) map[string]string {
 	switch language {

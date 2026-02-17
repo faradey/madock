@@ -2,10 +2,12 @@ package custom
 
 import (
 	"github.com/faradey/madock/src/model/versions"
+	"github.com/faradey/madock/src/model/versions/languages"
 )
 
 func GetVersions() versions.ToolsVersions {
 	phpVer := GetPhpVersion()
+	langDefaults := languages.GetAllDefaults()
 	return versions.ToolsVersions{
 		Platform:     "custom",
 		Language:     "php",
@@ -19,6 +21,9 @@ func GetVersions() versions.ToolsVersions {
 		Valkey:       GetValkeyVersion(),
 		RabbitMQ:     GetRabbitMQVersion(),
 		Xdebug:       GetXdebugVersion(phpVer),
+		Python:       langDefaults["python"],
+		Golang:       langDefaults["golang"],
+		Ruby:         langDefaults["ruby"],
 	}
 }
 

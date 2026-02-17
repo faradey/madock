@@ -1,0 +1,5 @@
+WORKDIR {{{workdir}}}
+
+EXPOSE 3000 4567
+
+CMD ["bash"]
