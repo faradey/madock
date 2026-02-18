@@ -1,6 +1,18 @@
 **v3.3.0**
 
 Added:
+- `<<<else>>>` support in template engine for conditional blocks (`<<<if>>>...<<<else>>>...<<<endif>>>`)
+- Centralized service credentials in `config.xml` for RabbitMQ, Grafana, Redis, Valkey, Elasticsearch, OpenSearch
+- Auth config blocks (`auth/enabled`, `auth/user`, `auth/password`) for Grafana, Redis, Valkey, Elasticsearch, OpenSearch
+- Secret key registration for all new service passwords
+
+Changed:
+- RabbitMQ docker snippet now uses `{{{rabbitmq/user}}}` and `{{{rabbitmq/password}}}` placeholders instead of hardcoded `guest:guest`
+- Grafana docker snippet uses `<<<if>>><<<else>>>` conditional for anonymous vs credential-based auth
+- Grafana RabbitMQ exporter uses config placeholders for RabbitMQ credentials
+- MySQL exporter config uses `{{{db/root_password}}}` placeholder instead of hardcoded password
+
+
 - Migration guide for PWA Studio projects to custom+nodejs platform
 - Snippet-based Dockerfiles for all languages (Python, Go, Ruby, Node.js, None) using reusable common snippets
 - Common Docker snippets: `header-ubuntu`, `cron`, `mkdir`, `chown`, `cleanup`, `footer`
