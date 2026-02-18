@@ -11,7 +11,6 @@ import (
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
-	"golang.org/x/term"
 )
 
 func init() {
@@ -43,7 +42,7 @@ func Execute() {
 	}
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 	dockerArgs := []string{"exec", "-i"}
-	if term.IsTerminal(int(os.Stdin.Fd())) {
+	if docker.IsTTYAvailable() {
 		dockerArgs = []string{"exec", "-it"}
 	}
 	dockerArgs = append(dockerArgs, "-u", user, docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/patch-create.php", workdir, filePath, patchName, title, isForce)

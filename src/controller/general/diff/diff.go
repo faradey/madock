@@ -51,7 +51,11 @@ func runMagentoDiff(args *arg_struct.ControllerGeneralDiff) {
 	projectConf := configs.GetCurrentProjectConfig()
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 
-	cmdArgs := []string{"exec", "-it", "-u", user, docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/diff.php", workdir, args.Old, args.New, args.Path, args.Platform}
+	ttyFlag := "-i"
+	if docker.IsTTYAvailable() {
+		ttyFlag = "-it"
+	}
+	cmdArgs := []string{"exec", ttyFlag, "-u", user, docker.GetContainerName(projectConf, projectName, service), "php", "/var/www/scripts/php/diff.php", workdir, args.Old, args.New, args.Path, args.Platform}
 
 	cmd := exec.Command("docker", cmdArgs...)
 	cmd.Stdin = os.Stdin

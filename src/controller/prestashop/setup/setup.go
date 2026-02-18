@@ -146,9 +146,13 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 func DownloadPrestashop(projectName, version string) {
 	projectConf := configs2.GetCurrentProjectConfig()
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
+	ttyFlag := "-i"
+	if docker.IsTTYAvailable() {
+		ttyFlag = "-it"
+	}
 	command := []string{
 		"exec",
-		"-it",
+		ttyFlag,
 		"-u",
 		user,
 		docker.GetContainerName(projectConf, projectName, service),

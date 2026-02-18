@@ -147,9 +147,13 @@ func DownloadShopware(projectName, version string, isSampleData bool) {
 	projectConf := configs2.GetCurrentProjectConfig()
 	sampleData := ""
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
+	ttyFlag := "-i"
+	if docker.IsTTYAvailable() {
+		ttyFlag = "-it"
+	}
 	command := []string{
 		"exec",
-		"-it",
+		ttyFlag,
 		"-u",
 		user,
 		docker.GetContainerName(projectConf, projectName, service),

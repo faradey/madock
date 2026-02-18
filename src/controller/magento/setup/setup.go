@@ -302,9 +302,13 @@ func DownloadMagento(projectName, edition, version string, isSampleData bool) {
 		sampleData = " && bin/magento sampledata:deploy"
 	}
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
+	ttyFlag := "-i"
+	if docker.IsTTYAvailable() {
+		ttyFlag = "-it"
+	}
 	command := []string{
 		"exec",
-		"-it",
+		ttyFlag,
 		"-u",
 		user,
 		docker.GetContainerName(projectConf, projectName, service),

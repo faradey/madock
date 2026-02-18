@@ -3,6 +3,8 @@ package docker
 import (
 	"os"
 	"os/exec"
+
+	"golang.org/x/term"
 )
 
 // CommandInterceptor allows enterprise to intercept docker exec commands
@@ -13,6 +15,19 @@ type CommandInterceptor interface {
 }
 
 var commandInterceptor CommandInterceptor
+
+// IsTTYAvailable checks whether a TTY is available for docker exec.
+// It respects the MADOCK_TTY_ENABLED env var (0=off, 1=on) and
+// falls back to checking if stdin is a terminal.
+func IsTTYAvailable() bool {
+	switch os.Getenv("MADOCK_TTY_ENABLED") {
+	case "0":
+		return false
+	case "1":
+		return true
+	}
+	return term.IsTerminal(int(os.Stdin.Fd()))
+}
 
 // SetCommandInterceptor sets a custom interceptor for docker exec commands.
 func SetCommandInterceptor(i CommandInterceptor) {
@@ -45,7 +60,7 @@ func PrepareContainerExec(container, user string, interactive bool, command ...s
 	}
 
 	args := []string{"exec"}
-	if interactive {
+	if interactive && IsTTYAvailable() {
 		args = append(args, "-it")
 	} else {
 		args = append(args, "-i")

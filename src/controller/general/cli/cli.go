@@ -28,13 +28,11 @@ func Execute() {
 
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir(service, "www-data", "")
 
-	interactive := os.Getenv("MADOCK_TTY_ENABLED") != "0"
-
 	if workdir != "" {
 		workdir = "cd " + workdir + " && "
 	}
 
-	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, service), user, interactive, "bash", "-c", workdir+flag)
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, service), user, true, "bash", "-c", workdir+flag)
 	if err != nil {
 		logger.Fatal(err)
 	}
