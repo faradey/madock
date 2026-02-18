@@ -2,8 +2,8 @@
   rabbitmq:
     image: {{{rabbitmq/repository}}}:{{{rabbitmq/version}}}-management
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: {{{rabbitmq/user}}}
+      RABBITMQ_DEFAULT_PASS: {{{rabbitmq/password}}}
     ports:
       - "{{{port/rabbitmq}}}:5672"
       - "{{{port/rabbitmq_management}}}:15672"

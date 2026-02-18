@@ -1,5 +1,5 @@
 [client]
 user=root
-password=password
+password={{{db/root_password}}}
 host=db
 port=3306

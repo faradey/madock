@@ -196,6 +196,7 @@ func ReplaceConfigValue(projectName, str string) string {
 }
 
 // processConditionals handles nested <<<if...>>>...<<<endif>>> blocks
+// with optional <<<else>>> support
 func processConditionals(str string) string {
 	for {
 		// Find the first <<<if...>>> tag
@@ -237,13 +238,27 @@ func processConditionals(str string) string {
 			endPos = len(str)
 		}
 
-		// Build the replacement
-		var replacement string
-		if shouldKeep {
-			// Recursively process nested conditionals in the content
-			replacement = processConditionals(content)
+		// Check for <<<else>>> at this nesting depth
+		elsePos := findElseAtDepth(content)
+
+		if elsePos != -1 {
+			// Has else branch
+			trueBranch := content[:elsePos]
+			falseBranch := content[elsePos+10:] // 10 = len("<<<else>>>")
+
+			var replacement string
+			if shouldKeep {
+				replacement = processConditionals(trueBranch)
+			} else {
+				replacement = processConditionals(falseBranch)
+			}
+			str = str[:ifStart] + replacement + str[endPos:]
+		} else if shouldKeep {
+			// No else, condition true: keep content
+			replacement := processConditionals(content)
 			str = str[:ifStart] + replacement + str[endPos:]
 		} else {
+			// No else, condition false: remove block
 			// When removing, also remove leading whitespace on the same line
 			lineStart := ifStart
 			for lineStart > 0 && str[lineStart-1] != '\n' {
@@ -267,6 +282,63 @@ func processConditionals(str string) string {
 	}
 
 	return str
+}
+
+// findElseAtDepth scans content for <<<else>>> at nesting depth 0.
+// Returns the position of <<<else>>> or -1 if not found at the top level.
+func findElseAtDepth(content string) int {
+	depth := 0
+	pos := 0
+
+	for pos < len(content) {
+		nextIf := strings.Index(content[pos:], "<<<if")
+		nextEndif := strings.Index(content[pos:], "<<<endif>>>")
+		nextElse := strings.Index(content[pos:], "<<<else>>>")
+
+		// Find the earliest tag
+		type tagInfo struct {
+			pos  int
+			kind string
+		}
+		var earliest *tagInfo
+
+		if nextIf != -1 {
+			abs := pos + nextIf
+			earliest = &tagInfo{abs, "if"}
+		}
+		if nextEndif != -1 {
+			abs := pos + nextEndif
+			if earliest == nil || abs < earliest.pos {
+				earliest = &tagInfo{abs, "endif"}
+			}
+		}
+		if nextElse != -1 {
+			abs := pos + nextElse
+			if earliest == nil || abs < earliest.pos {
+				earliest = &tagInfo{abs, "else"}
+			}
+		}
+
+		if earliest == nil {
+			break // No more tags
+		}
+
+		switch earliest.kind {
+		case "if":
+			depth++
+			pos = earliest.pos + 5 // Move past <<<if
+		case "endif":
+			depth--
+			pos = earliest.pos + 11 // Move past <<<endif>>>
+		case "else":
+			if depth == 0 {
+				return earliest.pos // Found else at our depth
+			}
+			pos = earliest.pos + 10 // Move past <<<else>>>
+		}
+	}
+
+	return -1
 }
 
 // findMatchingEndif finds the position of <<<endif>>> that matches the opening tag

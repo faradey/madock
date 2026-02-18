@@ -3,8 +3,8 @@
     image: kbudde/rabbitmq-exporter
     environment:
       RABBIT_URL: http://rabbitmq:15672
-      RABBIT_USER: guest
-      RABBIT_PASSWORD: guest
+      RABBIT_USER: {{{rabbitmq/user}}}
+      RABBIT_PASSWORD: {{{rabbitmq/password}}}
       PUBLISH_PORT: 9419
       OUTPUT_FORMAT: prometheus
     depends_on:

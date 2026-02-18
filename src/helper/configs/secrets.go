@@ -2,13 +2,19 @@ package configs
 
 // SecretKeys contains config keys that hold sensitive data.
 var SecretKeys = map[string]bool{
-	"db/root_password":               true,
-	"db/password":                    true,
-	"ssh/password":                   true,
-	"ssh/key_path":                   true,
-	"magento/admin_password":         true,
-	"magento/cloud/password":         true,
-	"magento/mftf/otp_shared_secret": true,
+	"db/root_password":                  true,
+	"db/password":                       true,
+	"ssh/password":                      true,
+	"ssh/key_path":                      true,
+	"magento/admin_password":            true,
+	"magento/cloud/password":            true,
+	"magento/mftf/otp_shared_secret":    true,
+	"rabbitmq/password":                 true,
+	"grafana/auth/password":             true,
+	"redis/auth/password":               true,
+	"valkey/auth/password":              true,
+	"search/elasticsearch/auth/password": true,
+	"search/opensearch/auth/password":    true,
 }
 
 // RegisterSecretKey marks an additional config key as secret.

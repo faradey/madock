@@ -7,12 +7,17 @@
       GF_SERVER_ROOT_URL: "https://{{{nginx/host_name_default}}}/grafana/"
       GF_SERVER_DOMAIN: "{{{nginx/host_name_default}}}"
       GF_INSTALL_PLUGINS: grafana-clock-panel,redis-datasource,redis-app,redis-explorer-app
-      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
-      GF_AUTH_ANONYMOUS_ENABLED: true
       GF_SERVE_FROM_SUB_PATH: true
       GF_SERVER_PROTOCOL: http
+<<<if{{{grafana/auth/enabled}}}>>>
+      GF_SECURITY_ADMIN_USER: {{{grafana/auth/user}}}
+      GF_SECURITY_ADMIN_PASSWORD: {{{grafana/auth/password}}}
+<<<else>>>
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_ANONYMOUS_ENABLED: true
       GF_AUTH_BASIC_ENABLED: false
       GF_AUTH_DISABLE_LOGIN_FORM: true
+<<<endif>>>
       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
     volumes:
       - grafanadata:/var/lib/grafana
