@@ -69,9 +69,9 @@ func Magento(projectName, platformVer string) {
 	installCommand := "bin/magento setup:install " +
 		"--base-url=https://" + host + " " +
 		"--db-host=db " +
-		"--db-name=magento " +
-		"--db-user=magento " +
-		"--db-password=magento " +
+		"--db-name=" + projectConf["db/database"] + " " +
+		"--db-user=" + projectConf["db/user"] + " " +
+		"--db-password=" + projectConf["db/password"] + " " +
 		"--admin-firstname=" + projectConf["magento/admin_first_name"] + " " +
 		"--admin-lastname=" + projectConf["magento/admin_last_name"] + " " +
 		"--admin-email=" + projectConf["magento/admin_email"] + " " +
@@ -133,7 +133,7 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 	}
 
 	installCommand := "sed -i 's/APP_URL=http:\\/\\/127.0.0.1:8000/APP_URL=https:\\/\\/" + host + "/g' .env "
-	installCommand += "&& sed -i 's/DATABASE_URL=mysql:\\/\\/root:root@localhost\\/shopware/DATABASE_URL=mysql:\\/\\/magento:magento@db:3306\\/magento/g' .env "
+	installCommand += "&& sed -i 's/DATABASE_URL=mysql:\\/\\/root:root@localhost\\/shopware/DATABASE_URL=mysql:\\/\\/" + projectConf["db/user"] + ":" + projectConf["db/password"] + "@db:3306\\/" + projectConf["db/database"] + "/g' .env "
 	searchEngine := projectConf["search/engine"]
 	if searchEngine == "Elasticsearch" {
 		installCommand += "&& sed -i 's/SHOPWARE_ES_ENABLED=0/SHOPWARE_ES_ENABLED=1/g' .env "
@@ -187,9 +187,9 @@ func PrestaShop(projectName, platformVer string, isSampleData bool) {
 	installCommand := "php install/index_cli.php " +
 		"--domain=" + host + " " +
 		"--db_server=db " +
-		"--db_name=magento " +
-		"--db_user=magento " +
-		"--db_password=magento " +
+		"--db_name=" + projectConf["db/database"] + " " +
+		"--db_user=" + projectConf["db/user"] + " " +
+		"--db_password=" + projectConf["db/password"] + " " +
 		"--firstname=" + projectConf["magento/admin_first_name"] + " " +
 		"--lastname=" + projectConf["magento/admin_last_name"] + " " +
 		"--email=" + projectConf["magento/admin_email"] + " " +

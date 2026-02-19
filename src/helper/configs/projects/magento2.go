@@ -100,4 +100,10 @@ func Magento2(config *configs2.ConfigLines, defVersions versions.ToolsVersions, 
 	} else {
 		config.Set("rabbitmq/version", defVersions.RabbitMQ)
 	}
+	config.Set("rabbitmq/user", configs2.GetOption("rabbitmq/user", generalConf, projectConf))
+	config.Set("rabbitmq/password", configs2.GetOption("rabbitmq/password", generalConf, projectConf))
+
+	config.Set("grafana/auth/enabled", configs2.GetOption("grafana/auth/enabled", generalConf, projectConf))
+	config.Set("grafana/auth/user", configs2.GetOption("grafana/auth/user", generalConf, projectConf))
+	config.Set("grafana/auth/password", configs2.GetOption("grafana/auth/password", generalConf, projectConf))
 }

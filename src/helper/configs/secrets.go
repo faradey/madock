@@ -4,6 +4,8 @@ package configs
 var SecretKeys = map[string]bool{
 	"db/root_password":                  true,
 	"db/password":                       true,
+	"db2/root_password":                 true,
+	"db2/password":                      true,
 	"ssh/password":                      true,
 	"ssh/key_path":                      true,
 	"magento/admin_password":            true,
