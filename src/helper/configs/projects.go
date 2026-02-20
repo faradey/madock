@@ -30,6 +30,11 @@ func SetProjectNameResolver(r ProjectNameResolver) {
 	projectNameResolver = r
 }
 
+// GetDefaultConfigXML returns the raw embedded config_defaults.xml bytes.
+func GetDefaultConfigXML() []byte {
+	return defaultConfigXML
+}
+
 func CleanCache() {
 	generalConfig = nil
 	projectConfig = nil
