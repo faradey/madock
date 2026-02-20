@@ -184,7 +184,7 @@ func PrestaShop(projectName, platformVer string, isSampleData bool) {
 		host = hosts[0]["name"]
 	}
 
-	installCommand := "php install/index_cli.php " +
+	installCommand := "php install-dev/index_cli.php " +
 		"--domain=" + host + " " +
 		"--db_server=db " +
 		"--db_name=" + projectConf["db/database"] + " " +
