@@ -47,14 +47,23 @@ func GetGeneralConfig() map[string]string {
 }
 
 func GetOriginalGeneralConfig() map[string]string {
-	configPath := paths.GetExecDirPath() + "/config.xml"
 	origGeneralConfig := make(map[string]string)
-	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
-		origGeneralConfig = ParseXmlFile(configPath)
-	} else {
+
+	// Always start with embedded defaults
+	if len(defaultConfigXML) > 0 {
 		origGeneralConfig = ParseXmlBytes(defaultConfigXML)
+		origGeneralConfig = getConfigByScope(origGeneralConfig, "default")
 	}
-	origGeneralConfig = getConfigByScope(origGeneralConfig, "default")
+
+	// Overlay filesystem config.xml — file values win, embedded fills gaps
+	configPath := paths.GetExecDirPath() + "/config.xml"
+	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
+		fileConfig := ParseXmlFile(configPath)
+		fileConfig = getConfigByScope(fileConfig, "default")
+		GeneralConfigMapping(origGeneralConfig, fileConfig)
+		origGeneralConfig = fileConfig
+	}
+
 	return origGeneralConfig
 }
 
