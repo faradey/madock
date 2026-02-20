@@ -1,6 +1,7 @@
 **v3.3.0**
 
 Added:
+- Exported `GetDefaultConfigXML()` in `configs` package — returns raw embedded config defaults for enterprise config layering
 - Exported `version.Version` constant in `src/version/` package so downstream consumers can read the madock version without hardcoding it
 - Tests for `GetOriginalGeneralConfig()` merge behavior (embedded-only, file-over-embedded, empty-value gap-fill)
 
