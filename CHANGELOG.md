@@ -1,6 +1,13 @@
 **v3.3.0**
 
 Added:
+- Exported `version.Version` constant in `src/version/` package so downstream consumers can read the madock version without hardcoding it
+- Tests for `GetOriginalGeneralConfig()` merge behavior (embedded-only, file-over-embedded, empty-value gap-fill)
+
+Changed:
+- `main.go` uses `version.Version` instead of local `appVersion` var
+
+
 - `<<<else>>>` support in template engine for conditional blocks (`<<<if>>>...<<<else>>>...<<<endif>>>`)
 - Centralized service credentials in `config.xml` for RabbitMQ, Grafana, Redis, Valkey, Elasticsearch, OpenSearch
 - Auth config blocks (`auth/enabled`, `auth/user`, `auth/password`) for Grafana, Redis, Valkey, Elasticsearch, OpenSearch
