@@ -2,6 +2,7 @@ package configs
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/xml"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
@@ -10,6 +11,9 @@ import (
 	"strconv"
 	"strings"
 )
+
+//go:embed config_defaults.xml
+var defaultConfigXML []byte
 
 var generalConfig map[string]string
 var projectConfig map[string]string
@@ -47,8 +51,10 @@ func GetOriginalGeneralConfig() map[string]string {
 	origGeneralConfig := make(map[string]string)
 	if _, err := os.Stat(configPath); !os.IsNotExist(err) && err == nil {
 		origGeneralConfig = ParseXmlFile(configPath)
-		origGeneralConfig = getConfigByScope(origGeneralConfig, "default")
+	} else {
+		origGeneralConfig = ParseXmlBytes(defaultConfigXML)
 	}
+	origGeneralConfig = getConfigByScope(origGeneralConfig, "default")
 	return origGeneralConfig
 }
 

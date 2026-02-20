@@ -34,6 +34,29 @@ func ParseXmlFile(path string) (conf map[string]string) {
 	return conf
 }
 
+func ParseXmlBytes(data []byte) (conf map[string]string) {
+	mapping, err := GetXmlMapFromBytes(data)
+
+	if err != nil {
+		logger.Fatalln(err)
+	}
+
+	mappingData := make(map[string]string)
+	if _, ok := mapping["config"]; ok {
+		mappingData = ComposeConfigMap(mapping["config"].(map[string]interface{}))
+	}
+
+	if conf == nil {
+		conf = make(map[string]string)
+	}
+
+	for key, value := range mappingData {
+		conf[key] = decryptIfSecret(key, value)
+	}
+
+	return conf
+}
+
 func ParseFile(path string) (conf map[string]string) {
 	conf = make(map[string]string)
 	lines := getLines(path)
