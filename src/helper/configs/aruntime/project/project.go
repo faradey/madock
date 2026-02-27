@@ -360,24 +360,30 @@ func MakeDBDockerfile(projectName string) {
 		log.Fatalf("Unable to write file: %v", err)
 	}
 
-	myCnfFile := GetDockerConfigFile(projectName, "db/my.cnf", "")
-	if !paths.IsFileExist(myCnfFile) {
-		logger.Fatal(err)
-	}
+	projectConf := configs.GetProjectConfig(projectName)
+	dbType := configs.GetDbType(projectConf)
 
-	b, err = os.ReadFile(myCnfFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	b = ProcessSnippets(b, projectName)
+	// my.cnf is only needed for MySQL/MariaDB
+	if dbType == "mysql" {
+		myCnfFile := GetDockerConfigFile(projectName, "db/my.cnf", "")
+		if !paths.IsFileExist(myCnfFile) {
+			logger.Fatal(err)
+		}
 
-	if strings.ToLower(configs.GetProjectConfig(projectName)["db/repository"]) == "mariadb" && configs.CompareVersions(configs.GetProjectConfig(projectName)["db/version"], "10.4") >= 0 {
-		b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
-	}
+		b, err = os.ReadFile(myCnfFile)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		b = ProcessSnippets(b, projectName)
 
-	err = os.WriteFile(pp.CtxDir()+"/my.cnf", b, 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
+		if strings.ToLower(projectConf["db/repository"]) == "mariadb" && configs.CompareVersions(projectConf["db/version"], "10.4") >= 0 {
+			b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
+		}
+
+		err = os.WriteFile(pp.CtxDir()+"/my.cnf", b, 0755)
+		if err != nil {
+			log.Fatalf("Unable to write file: %v", err)
+		}
 	}
 }
 

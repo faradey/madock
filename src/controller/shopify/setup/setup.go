@@ -41,7 +41,17 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 			toolsDefVersions.Php = args.Php
 		}
 		if args.Db == "" {
-			tools.Db(&toolsDefVersions.Db)
+			tools.DbEngine(&toolsDefVersions.DbType)
+			switch toolsDefVersions.DbType {
+			case "MySQL":
+				tools.DbMysql(&toolsDefVersions.Db)
+			case "PostgreSQL":
+				tools.DbPostgresql(&toolsDefVersions.Db)
+			case "MongoDB":
+				tools.DbMongodb(&toolsDefVersions.Db)
+			default:
+				tools.Db(&toolsDefVersions.Db)
+			}
 		} else {
 			toolsDefVersions.Db = args.Db
 		}

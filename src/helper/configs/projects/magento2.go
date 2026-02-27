@@ -35,11 +35,17 @@ func Magento2(config *configs2.ConfigLines, defVersions versions.ToolsVersions, 
 		config.Set("nodejs/major_version", nodeMajorVersion[0])
 	}
 
+	dbType, dbRepo := resolveDbTypeAndRepo(defVersions)
+	config.Set("db/type", dbType)
+
 	repoVersion := strings.Split(defVersions.Db, ":")
 	if len(repoVersion) > 1 {
 		config.Set("db/repository", repoVersion[0])
 		config.Set("db/version", repoVersion[1])
 	} else {
+		if dbRepo != "" {
+			config.Set("db/repository", dbRepo)
+		}
 		config.Set("db/version", defVersions.Db)
 	}
 

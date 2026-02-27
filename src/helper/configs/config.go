@@ -158,6 +158,20 @@ func ReplaceConfigValue(projectName, str string) string {
 	}
 	projectConf["db/use_default_auth_plugin"] = useDefaultAuthPlugin
 
+	// Compute db/type_is_* flags for conditional templates
+	dbType := GetDbType(projectConf)
+	projectConf["db/type_is_mysql"] = "false"
+	projectConf["db/type_is_postgresql"] = "false"
+	projectConf["db/type_is_mongodb"] = "false"
+	switch dbType {
+	case "postgresql":
+		projectConf["db/type_is_postgresql"] = "true"
+	case "mongodb":
+		projectConf["db/type_is_mongodb"] = "true"
+	default:
+		projectConf["db/type_is_mysql"] = "true"
+	}
+
 	for key, val := range projectConf {
 		str = strings.Replace(str, "{{{"+key+"}}}", val, -1)
 	}

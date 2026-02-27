@@ -1,3 +1,23 @@
+**v3.4.0**
+
+Added:
+- PostgreSQL support: docker-compose snippet, Dockerfile, `db:export` via `pg_dump`, `db:import` via `psql`, `db:info` with type display
+- MongoDB support: docker-compose snippet, Dockerfile, `db:export` via `mongodump`, `db:import` via `mongorestore`
+- Database engine selector in `madock setup`: MariaDB, MySQL, PostgreSQL, MongoDB
+- `db/type` config key for explicit database type (`mysql`, `postgresql`, `mongodb`) with auto-detection from `db/repository` for backward compatibility
+- Template flags `db/type_is_mysql`, `db/type_is_postgresql`, `db/type_is_mongodb` for conditional docker-compose/Dockerfile sections
+- pgAdmin service (`db/pgadmin`) for PostgreSQL admin UI
+- Mongo Express service (`db/mongo_express`) for MongoDB admin UI
+- `remote:sync:db` support for PostgreSQL (`pg_dump`) and MongoDB (`mongodump`)
+- `DbType` field in `ToolsVersions` struct
+- Version selectors: MySQL (9.2, 9.1, 8.4, 8.0), PostgreSQL (17, 16, 15, 14, 13), MongoDB (8.0, 7.0, 6.0, 5.0)
+
+Changed:
+- `db:export`, `db:import`, `db:info` commands now dispatch by database type from config
+- All platform env writers set `db/type` and `db/repository` based on selected engine
+- `MakeDBDockerfile` skips `my.cnf` generation for non-MySQL databases
+- `db.yml` docker-compose snippet wrapped in `<<<if{{{db/type_is_mysql}}}>>>` conditional
+
 **v3.3.0**
 
 Added:

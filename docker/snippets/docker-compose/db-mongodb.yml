@@ -1,0 +1,13 @@
+<<<if{{{db/type_is_mongodb}}}>>>
+  db:
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    ports:
+      - "{{{port/db}}}:27017"
+    volumes:
+      - dbdata:/data/db
+    <<<if{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
+    restart: {{{restart_policy}}}
+<<<endif>>>

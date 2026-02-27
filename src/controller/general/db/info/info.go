@@ -3,6 +3,7 @@ package info
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
@@ -19,11 +20,12 @@ type DbInfoOutput struct {
 
 type DatabaseInfo struct {
 	Name         string `json:"name"`
+	Type         string `json:"type"`
 	Host         string `json:"host"`
 	Database     string `json:"database"`
 	User         string `json:"user"`
 	Password     string `json:"password"`
-	RootPassword string `json:"root_password"`
+	RootPassword string `json:"root_password,omitempty"`
 	RemoteHost   string `json:"remote_host"`
 	RemotePort   int    `json:"remote_port"`
 }
@@ -43,31 +45,40 @@ func Info() {
 	projectConf := configs2.GetCurrentProjectConfig()
 	projectName := configs2.GetProjectName()
 
+	dbType := configs2.GetDbType(projectConf)
+
 	db1Port := ports.GetPort(projectName, ports.ServiceDB)
 	db2Port := ports.GetPort(projectName, ports.ServiceDB2)
 
-	databases := []DatabaseInfo{
-		{
-			Name:         "First DB",
-			Host:         "db",
-			Database:     projectConf["db/database"],
-			User:         projectConf["db/user"],
-			Password:     projectConf["db/password"],
-			RootPassword: projectConf["db/root_password"],
-			RemoteHost:   "localhost",
-			RemotePort:   db1Port,
-		},
-		{
-			Name:         "Second DB",
-			Host:         "db2",
-			Database:     projectConf["db2/database"],
-			User:         projectConf["db2/user"],
-			Password:     projectConf["db2/password"],
-			RootPassword: projectConf["db2/root_password"],
-			RemoteHost:   "localhost",
-			RemotePort:   db2Port,
-		},
+	db1 := DatabaseInfo{
+		Name:       "First DB",
+		Type:       dbType,
+		Host:       "db",
+		Database:   projectConf["db/database"],
+		User:       projectConf["db/user"],
+		Password:   projectConf["db/password"],
+		RemoteHost: "localhost",
+		RemotePort: db1Port,
 	}
+	// root_password is only relevant for MySQL/MariaDB
+	if dbType == "mysql" {
+		db1.RootPassword = projectConf["db/root_password"]
+	}
+
+	databases := []DatabaseInfo{db1}
+
+	// db2 is always MySQL
+	databases = append(databases, DatabaseInfo{
+		Name:         "Second DB",
+		Type:         "mysql",
+		Host:         "db2",
+		Database:     projectConf["db2/database"],
+		User:         projectConf["db2/user"],
+		Password:     projectConf["db2/password"],
+		RootPassword: projectConf["db2/root_password"],
+		RemoteHost:   "localhost",
+		RemotePort:   db2Port,
+	})
 
 	if args.Json {
 		output.PrintJSON(DbInfoOutput{Databases: databases})
@@ -76,15 +87,19 @@ func Info() {
 
 	// Text output
 	fmtc.SuccessLn("First DB")
+	fmtc.SuccessLn("   type: " + strings.ToUpper(dbType))
 	fmtc.SuccessLn("   host: db")
 	fmtc.SuccessLn("   name: " + projectConf["db/database"])
 	fmtc.SuccessLn("   user: " + projectConf["db/user"])
 	fmtc.SuccessLn("   password: " + projectConf["db/password"])
-	fmtc.SuccessLn("   root password: " + projectConf["db/root_password"])
+	if dbType == "mysql" {
+		fmtc.SuccessLn("   root password: " + projectConf["db/root_password"])
+	}
 	fmtc.SuccessLn("   remote HOST:PORT: " + "localhost:" + strconv.Itoa(db1Port))
 
 	fmt.Println("")
 	fmtc.SuccessLn("Second DB")
+	fmtc.SuccessLn("   type: MYSQL")
 	fmtc.SuccessLn("   host: db2")
 	fmtc.SuccessLn("   name: " + projectConf["db2/database"])
 	fmtc.SuccessLn("   user: " + projectConf["db2/user"])

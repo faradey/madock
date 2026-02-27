@@ -10,6 +10,8 @@ import (
 var serviceMap = map[string]string{
 	"db/phpmyadmin":                  "phpmyadmin",
 	"db2/phpmyadmin":                 "phpmyadmin2",
+	"db/pgadmin":                     "pgadmin",
+	"db/mongo_express":               "mongo_express",
 	"magento/cloud":                  "cloud",
 	"magento/mftf":                   "mftf",
 	"magento/n98magerun":             "n98magerun",

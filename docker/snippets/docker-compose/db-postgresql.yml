@@ -1,0 +1,13 @@
+<<<if{{{db/type_is_postgresql}}}>>>
+  db:
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    ports:
+      - "{{{port/db}}}:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    <<<if{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
+    restart: {{{restart_policy}}}
+<<<endif>>>

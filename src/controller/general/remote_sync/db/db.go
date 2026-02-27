@@ -85,18 +85,48 @@ func Execute() {
 		if len(name) > 0 {
 			name += "_"
 		}
-		dumpName := "remote_" + name + curDateTime + ".sql.gz"
 
-		ignoreTablesStr := ""
-		ignoreTables := args.IgnoreTable
-		if len(ignoreTables) > 0 {
-			ignoreTablesStr = " --ignore-table=" + dbAuthData.Dbname + "." + strings.Join(ignoreTables, " --ignore-table="+dbAuthData.Dbname+".")
+		dbType := configs.GetDbType(projectConf)
+		var dumpName string
+		var dumpCmd string
+
+		switch dbType {
+		case "postgresql":
+			dumpName = "remote_" + name + curDateTime + ".sql.gz"
+			dbPort := ""
+			if dbAuthData.Port != "" {
+				dbPort = " -p " + dbAuthData.Port
+			}
+			ignoreTablesStr := ""
+			ignoreTables := args.IgnoreTable
+			if len(ignoreTables) > 0 {
+				for _, t := range ignoreTables {
+					ignoreTablesStr += " --exclude-table=" + t
+				}
+			}
+			dumpCmd = "PGPASSWORD=\"" + dbAuthData.Password + "\" pg_dump -U \"" + dbAuthData.Username + "\" -h " + dbAuthData.Host + dbPort + ignoreTablesStr + " " + dbAuthData.Dbname + " | gzip > /tmp/" + dumpName
+		case "mongodb":
+			dumpName = "remote_" + name + curDateTime + ".archive.gz"
+			dbPort := ""
+			if dbAuthData.Port != "" {
+				dbPort = " --port=" + dbAuthData.Port
+			}
+			dumpCmd = "mongodump --username=\"" + dbAuthData.Username + "\" --password=\"" + dbAuthData.Password + "\" --host=" + dbAuthData.Host + dbPort + " --authenticationDatabase=admin --db=" + dbAuthData.Dbname + " --archive --gzip > /tmp/" + dumpName
+		default:
+			dumpName = "remote_" + name + curDateTime + ".sql.gz"
+			ignoreTablesStr := ""
+			ignoreTables := args.IgnoreTable
+			if len(ignoreTables) > 0 {
+				ignoreTablesStr = " --ignore-table=" + dbAuthData.Dbname + "." + strings.Join(ignoreTables, " --ignore-table="+dbAuthData.Dbname+".")
+			}
+			dbPort := ""
+			if dbAuthData.Port != "" {
+				dbPort = " -P " + dbAuthData.Port
+			}
+			dumpCmd = "mysqldump -u \"" + dbAuthData.Username + "\" -p\"" + dbAuthData.Password + "\" -h " + dbAuthData.Host + dbPort + " --quick --lock-tables=false --no-tablespaces --triggers" + ignoreTablesStr + " " + dbAuthData.Dbname + " | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > /tmp/" + dumpName
 		}
-		dbPort := ""
-		if dbAuthData.Port != "" {
-			dbPort = " -P " + dbAuthData.Port
-		}
-		result = remote_sync.RunCommand(conn, "mysqldump -u \""+dbAuthData.Username+"\" -p\""+dbAuthData.Password+"\" -h "+dbAuthData.Host+dbPort+" --quick --lock-tables=false --no-tablespaces --triggers"+ignoreTablesStr+" "+dbAuthData.Dbname+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > "+"/tmp/"+dumpName)
+
+		result = remote_sync.RunCommand(conn, dumpCmd)
 		sc, err := sftp.NewClient(conn)
 		if err != nil {
 			logger.Fatal(err)

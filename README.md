@@ -29,7 +29,9 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Simple viewing of logs with one command
 * Debug support
 * Synchronization of the local database and media files with the dev site
-* Additional services: phpmyadmin, redis, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
+* Multiple database engines: MariaDB, MySQL, PostgreSQL, MongoDB
+* Admin UI: phpMyAdmin, pgAdmin, Mongo Express
+* Additional services: redis, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
 * LiveReload. Learn [more](docs/livereload.md)
 * Mailpit (email testing tool for developers)
 * Magento Cloud

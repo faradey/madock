@@ -55,6 +55,7 @@
                 </nodejs>
             </php>
             <db>
+                <type>mysql</type>
                 <repository>mariadb</repository>
                 <root_password>password</root_password>
                 <user>magento</user>
@@ -65,6 +66,18 @@
                     <repository>phpmyadmin/phpmyadmin</repository>
                     <version>5.2.1</version>
                 </phpmyadmin>
+                <pgadmin>
+                    <enabled>false</enabled>
+                    <repository>dpage/pgadmin4</repository>
+                    <version>latest</version>
+                    <email>admin@admin.com</email>
+                    <password>admin</password>
+                </pgadmin>
+                <mongo_express>
+                    <enabled>false</enabled>
+                    <repository>mongo-express</repository>
+                    <version>latest</version>
+                </mongo_express>
             </db>
             <db2>
                 <enabled>false</enabled>

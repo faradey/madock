@@ -68,11 +68,44 @@ func Php(defVersion *string) {
 	SelectInteractive("PHP Version", availableVersions, defVersion)
 }
 
+// DbEngine lets the user choose the database engine.
+// Returns "MariaDB", "MySQL", "PostgreSQL", or "MongoDB".
+func DbEngine(defEngine *string) {
+	if *defEngine == "" {
+		*defEngine = "MariaDB"
+	}
+	availableVersions := []string{"MariaDB", "MySQL", "PostgreSQL", "MongoDB"}
+
+	fmt.Println("")
+	SelectInteractive("Database Engine", availableVersions, defEngine)
+}
+
 func Db(defVersion *string) {
 	availableVersions := []string{"Custom", "11.4", "11.1", "10.6", "10.4", "10.3", "10.2"}
 
 	fmt.Println("")
 	SelectInteractive("Database (MariaDB)", availableVersions, defVersion)
+}
+
+func DbMysql(defVersion *string) {
+	availableVersions := []string{"Custom", "9.2", "9.1", "8.4", "8.0"}
+
+	fmt.Println("")
+	SelectInteractive("Database (MySQL)", availableVersions, defVersion)
+}
+
+func DbPostgresql(defVersion *string) {
+	availableVersions := []string{"Custom", "17", "16", "15", "14", "13"}
+
+	fmt.Println("")
+	SelectInteractive("Database (PostgreSQL)", availableVersions, defVersion)
+}
+
+func DbMongodb(defVersion *string) {
+	availableVersions := []string{"Custom", "8.0", "7.0", "6.0", "5.0"}
+
+	fmt.Println("")
+	SelectInteractive("Database (MongoDB)", availableVersions, defVersion)
 }
 
 func Composer(defVersion *string) {

@@ -1,0 +1,15 @@
+<<<if{{{db/pgadmin/enabled}}}>>>
+  pgadmin:
+    image: {{{db/pgadmin/repository}}}:{{{db/pgadmin/version}}}
+    ports:
+      - "{{{port/pgadmin}}}:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: {{{db/pgadmin/email}}}
+      PGADMIN_DEFAULT_PASSWORD: {{{db/pgadmin/password}}}
+    depends_on:
+      - db
+    networks:
+      - default
+<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
+    restart: {{{restart_policy}}}
+<<<endif>>>

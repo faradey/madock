@@ -164,10 +164,20 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 			}
 			currentStep++
 
-			// Step 3: Database Version
+			// Step 3: Database Engine & Version
 			tools.SetProgressStep(currentStep)
 			if args.Db == "" {
-				tools.Db(&toolsDefVersions.Db)
+				tools.DbEngine(&toolsDefVersions.DbType)
+				switch toolsDefVersions.DbType {
+				case "MySQL":
+					tools.DbMysql(&toolsDefVersions.Db)
+				case "PostgreSQL":
+					tools.DbPostgresql(&toolsDefVersions.Db)
+				case "MongoDB":
+					tools.DbMongodb(&toolsDefVersions.Db)
+				default:
+					tools.Db(&toolsDefVersions.Db)
+				}
 			} else {
 				toolsDefVersions.Db = args.Db
 			}
@@ -342,7 +352,7 @@ func displayConfigSummary(v versions.ToolsVersions, projectName string) {
 				Items: []fmtc.SectionItem{
 					{Key: "Platform", Value: "Magento " + v.PlatformVersion},
 					{Key: "PHP", Value: v.Php},
-					{Key: "Database", Value: "MariaDB " + v.Db},
+					{Key: "Database", Value: dbDisplayName(v)},
 					{Key: "Composer", Value: v.Composer},
 				},
 			},
@@ -383,6 +393,19 @@ func getSearchEngineItems(v versions.ToolsVersions) []fmtc.SectionItem {
 	}
 	return []fmtc.SectionItem{
 		{Key: "Engine", Value: "Not configured"},
+	}
+}
+
+func dbDisplayName(v versions.ToolsVersions) string {
+	switch v.DbType {
+	case "MySQL":
+		return "MySQL " + v.Db
+	case "PostgreSQL":
+		return "PostgreSQL " + v.Db
+	case "MongoDB":
+		return "MongoDB " + v.Db
+	default:
+		return "MariaDB " + v.Db
 	}
 }
 

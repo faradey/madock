@@ -1,8 +1,20 @@
 FROM {{{db/repository}}}:{{{db/version}}}
 
+<<<if{{{db/type_is_mysql}}}>>>
 ENV MYSQL_ROOT_PASSWORD={{{db/root_password}}}
 ENV MYSQL_DATABASE={{{db/database}}}
 ENV MYSQL_USER={{{db/user}}}
 ENV MYSQL_PASSWORD={{{db/password}}}
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 RUN usermod -u {{{os/user/uid}}} -o mysql && groupmod -g {{{os/user/guid}}} -o mysql
+<<<endif>>>
+<<<if{{{db/type_is_postgresql}}}>>>
+ENV POSTGRES_DB={{{db/database}}}
+ENV POSTGRES_USER={{{db/user}}}
+ENV POSTGRES_PASSWORD={{{db/password}}}
+<<<endif>>>
+<<<if{{{db/type_is_mongodb}}}>>>
+ENV MONGO_INITDB_ROOT_USERNAME={{{db/user}}}
+ENV MONGO_INITDB_ROOT_PASSWORD={{{db/password}}}
+ENV MONGO_INITDB_DATABASE={{{db/database}}}
+<<<endif>>>

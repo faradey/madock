@@ -142,11 +142,18 @@ func customNoneConfig(config *configs2.ConfigLines, generalConf, projectConf map
 }
 
 func customDbConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
+	// Set db/type and db/repository based on DbType
+	dbType, dbRepo := resolveDbTypeAndRepo(defVersions)
+	config.Set("db/type", dbType)
+
 	repoVersion := strings.Split(defVersions.Db, ":")
 	if len(repoVersion) > 1 {
 		config.Set("db/repository", repoVersion[0])
 		config.Set("db/version", repoVersion[1])
 	} else {
+		if dbRepo != "" {
+			config.Set("db/repository", dbRepo)
+		}
 		config.Set("db/version", defVersions.Db)
 	}
 
@@ -154,6 +161,21 @@ func customDbConfig(config *configs2.ConfigLines, defVersions versions.ToolsVers
 	config.Set("db/user", configs2.GetOption("db/user", generalConf, projectConf))
 	config.Set("db/password", configs2.GetOption("db/password", generalConf, projectConf))
 	config.Set("db/database", configs2.GetOption("db/database", generalConf, projectConf))
+}
+
+// resolveDbTypeAndRepo maps the user-facing DbType to config values.
+// Returns (db/type value, default repository).
+func resolveDbTypeAndRepo(defVersions versions.ToolsVersions) (string, string) {
+	switch defVersions.DbType {
+	case "MySQL":
+		return "mysql", "mysql"
+	case "PostgreSQL":
+		return "postgresql", "postgres"
+	case "MongoDB":
+		return "mongodb", "mongo"
+	default:
+		return "mysql", ""
+	}
 }
 
 func customSearchConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {

@@ -31,11 +31,17 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 	config.Set("php/xdebug/enabled", configs2.GetOption("php/xdebug/enabled", generalConf, projectConf))
 	config.Set("php/ioncube/enabled", configs2.GetOption("php/ioncube/enabled", generalConf, projectConf))
 
+	dbType, dbRepo := resolveDbTypeAndRepo(defVersions)
+	config.Set("db/type", dbType)
+
 	repoVersion := strings.Split(defVersions.Db, ":")
 	if len(repoVersion) > 1 {
 		config.Set("db/repository", repoVersion[0])
 		config.Set("db/version", repoVersion[1])
 	} else {
+		if dbRepo != "" {
+			config.Set("db/repository", dbRepo)
+		}
 		config.Set("db/version", defVersions.Db)
 	}
 

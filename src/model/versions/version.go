@@ -4,6 +4,7 @@ type ToolsVersions struct {
 	Platform,
 	Language,
 	Php,
+	DbType,
 	Db,
 	SearchEngine,
 	Elastic,
