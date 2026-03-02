@@ -120,3 +120,36 @@ For DB exporting run command:
 madock db:export
 ```
 The files of DB dumps are stored in `madock/projects/{projects_name}/backup/db`
+
+### Sharing a database between two projects
+
+If you need two projects to use the same database (for example, a storefront and an admin panel working with one DB), you can do this without any extra configuration in madock.
+
+1. Start **Project A** (the one that owns the database)
+2. Get the database connection info:
+   ```
+   cd /path/to/project-a
+   madock db:info
+   ```
+   Note the **port** number from the output.
+
+3. In **Project B**, configure your application to connect to Project A's database using:
+   - **Host:** `host.docker.internal`
+   - **Port:** the port from step 2
+   - **User/Password/Database:** credentials from Project A's `db:info` output
+
+For example, in Magento 2 `app/etc/env.php`:
+```php
+'db' => [
+    'connection' => [
+        'default' => [
+            'host' => 'host.docker.internal:17004', // port from Project A
+            'dbname' => 'magento',
+            'username' => 'magento',
+            'password' => 'magento',
+        ],
+    ],
+],
+```
+
+> **Note:** Project B will still start its own database container. You can ignore it — your application will connect to Project A's database through the host-mapped port.
