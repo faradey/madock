@@ -22,6 +22,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Setup project",
 		Category: "setup",
+		ArgsType: new(arg_struct.ControllerGeneralSetup),
 	})
 }
 

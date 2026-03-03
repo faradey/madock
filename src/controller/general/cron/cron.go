@@ -17,12 +17,14 @@ func init() {
 		Handler:  Enable,
 		Help:     "Enable cron",
 		Category: "cron",
+		ArgsType: new(ArgsStruct),
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"cron:disable"},
 		Handler:  Disable,
 		Help:     "Disable cron",
 		Category: "cron",
+		ArgsType: new(ArgsStruct),
 	})
 }
 

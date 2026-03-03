@@ -4,6 +4,7 @@ import "github.com/faradey/madock/v3/src/helper/cli/attr"
 
 type ControllerGeneralHelp struct {
 	attr.Arguments
+	Command string `arg:"positional" help:"Command name to show detailed help for"`
 }
 
 type ControllerGeneralSetup struct {
@@ -176,6 +177,13 @@ type ControllerGeneralScopeList struct {
 
 type ControllerGeneralServiceList struct {
 	attr.Arguments
+}
+
+type ControllerGeneralDbExecute struct {
+	attr.Arguments
+	DBServiceName string `arg:"-s,--service" help:"DB service name. For example: db"`
+	User          string `arg:"-u,--user" help:"User"`
+	Query         string `arg:"positional,required" help:"SQL query to execute"`
 }
 
 type ControllerGeneralDbInfo struct {

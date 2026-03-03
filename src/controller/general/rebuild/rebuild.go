@@ -22,6 +22,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Rebuild containers",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralRebuild),
 	})
 }
 

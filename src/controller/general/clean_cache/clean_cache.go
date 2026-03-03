@@ -19,6 +19,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Flush cache",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralCleanCache),
 	})
 }
 

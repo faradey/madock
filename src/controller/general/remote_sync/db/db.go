@@ -23,6 +23,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Sync remote database",
 		Category: "remote",
+		ArgsType: new(arg_struct.ControllerGeneralRemoteSyncDb),
 	})
 }
 

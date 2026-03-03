@@ -12,6 +12,7 @@ type Definition struct {
 	Handler  Handler
 	Help     string
 	Category string
+	ArgsType interface{}
 	Before   []Handler
 	After    []Handler
 }

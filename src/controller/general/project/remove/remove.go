@@ -28,6 +28,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Remove project",
 		Category: "project",
+		ArgsType: new(ArgsStruct),
 	})
 }
 

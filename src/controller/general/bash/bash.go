@@ -19,6 +19,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute bash in container",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralBash),
 	})
 }
 

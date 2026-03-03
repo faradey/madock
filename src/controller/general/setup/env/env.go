@@ -19,6 +19,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Setup environment",
 		Category: "setup",
+		ArgsType: new(arg_struct.ControllerGeneralSetupEnv),
 	})
 }
 

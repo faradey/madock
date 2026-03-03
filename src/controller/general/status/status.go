@@ -22,6 +22,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Show container status. Supports --json (-j) output",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralStatus),
 	})
 }
 

@@ -81,6 +81,7 @@ func init() {
 		Handler:  Import,
 		Help:     "Import database",
 		Category: "database",
+		ArgsType: new(arg_struct.ControllerGeneralDbImport),
 	})
 }
 

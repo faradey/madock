@@ -17,24 +17,28 @@ func init() {
 		Handler:  Enable,
 		Help:     "Enable debug mode",
 		Category: "debug",
+		ArgsType: new(ArgsStruct),
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"debug:disable"},
 		Handler:  Disable,
 		Help:     "Disable debug mode",
 		Category: "debug",
+		ArgsType: new(ArgsStruct),
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"debug:profile:enable"},
 		Handler:  ProfileEnable,
 		Help:     "Enable profiler",
 		Category: "debug",
+		ArgsType: new(ArgsStruct),
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"debug:profile:disable"},
 		Handler:  ProfileDisable,
 		Help:     "Disable profiler",
 		Category: "debug",
+		ArgsType: new(ArgsStruct),
 	})
 }
 

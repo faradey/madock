@@ -23,6 +23,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Clone project",
 		Category: "project",
+		ArgsType: new(arg_struct.ControllerGeneralProjectClone),
 	})
 }
 

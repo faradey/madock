@@ -36,6 +36,7 @@ func init() {
 		Handler:  Info,
 		Help:     "Show database info. Supports --json (-j) output",
 		Category: "database",
+		ArgsType: new(arg_struct.ControllerGeneralDbInfo),
 	})
 }
 

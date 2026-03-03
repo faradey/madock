@@ -27,6 +27,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "List scopes. Supports --json (-j) output",
 		Category: "scope",
+		ArgsType: new(arg_struct.ControllerGeneralScopeList),
 	})
 }
 

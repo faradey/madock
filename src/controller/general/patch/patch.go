@@ -19,6 +19,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Create patch file",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralPatch),
 	})
 }
 

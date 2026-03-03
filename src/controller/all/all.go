@@ -13,6 +13,7 @@ import (
 	_ "github.com/faradey/madock/v3/src/controller/general/composer"
 	_ "github.com/faradey/madock/v3/src/controller/general/config"
 	_ "github.com/faradey/madock/v3/src/controller/general/cron"
+	_ "github.com/faradey/madock/v3/src/controller/general/db/execute"
 	_ "github.com/faradey/madock/v3/src/controller/general/db/export"
 	_ "github.com/faradey/madock/v3/src/controller/general/db/import"
 	_ "github.com/faradey/madock/v3/src/controller/general/db/info"

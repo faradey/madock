@@ -17,6 +17,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Prune Docker resources",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralPrune),
 	})
 }
 

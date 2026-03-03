@@ -29,6 +29,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Show project ports. Supports --json (-j) output",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralInfoPorts),
 	})
 }
 

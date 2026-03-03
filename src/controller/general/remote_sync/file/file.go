@@ -19,6 +19,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Sync remote file",
 		Category: "remote",
+		ArgsType: new(arg_struct.ControllerGeneralRemoteSyncFile),
 	})
 }
 

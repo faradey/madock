@@ -20,6 +20,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Sync remote media",
 		Category: "remote",
+		ArgsType: new(arg_struct.ControllerGeneralRemoteSyncMedia),
 	})
 }
 

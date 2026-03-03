@@ -16,6 +16,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Disable service",
 		Category: "service",
+		ArgsType: new(arg_struct.ControllerGeneralServiceDisable),
 	})
 }
 

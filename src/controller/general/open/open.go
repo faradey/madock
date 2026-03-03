@@ -17,6 +17,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Open project in browser",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralOpen),
 	})
 }
 

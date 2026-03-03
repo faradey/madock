@@ -20,6 +20,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Show diff",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralDiff),
 	})
 }
 

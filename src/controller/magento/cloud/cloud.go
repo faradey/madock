@@ -19,6 +19,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Magento Cloud CLI",
 		Category: "magento",
+		ArgsType: new(ArgsStruct),
 	})
 }
 

@@ -22,6 +22,7 @@ func init() {
 		Handler:  Export,
 		Help:     "Export database",
 		Category: "database",
+		ArgsType: new(arg_struct.ControllerGeneralDbExport),
 	})
 }
 

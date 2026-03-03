@@ -19,6 +19,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "List services. Supports --json (-j) output",
 		Category: "service",
+		ArgsType: new(arg_struct.ControllerGeneralServiceList),
 	})
 }
 

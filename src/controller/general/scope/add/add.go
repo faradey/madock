@@ -17,6 +17,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Add scope",
 		Category: "scope",
+		ArgsType: new(ArgsStruct),
 	})
 }
 

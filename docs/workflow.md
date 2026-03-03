@@ -140,6 +140,15 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--ignore-table, -i`  Ignore the table when exporting. The specified table will not be included in the backup file. To specify multiple tables, specify this option multiple times.
 
 
+* `db:execute` or `db:e`      Execute SQL query in the database container. For example: `madock db:e "SELECT 1"`
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`[query]`  SQL query to execute (required)
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--service, -s`  DB container name. Optional. Default container: db. Example: db2
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--user, -u`  User
+
+
 * `db:info`      Information about credentials and remote host and port
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--json, -j`     Output in JSON format

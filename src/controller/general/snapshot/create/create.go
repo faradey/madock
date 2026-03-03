@@ -21,6 +21,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Create snapshot",
 		Category: "snapshot",
+		ArgsType: new(arg_struct.ControllerGeneralSnapshotCreate),
 	})
 }
 

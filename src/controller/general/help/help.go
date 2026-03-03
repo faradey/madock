@@ -2,9 +2,11 @@ package help
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
+	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
@@ -17,11 +19,17 @@ func init() {
 		Handler:  Execute,
 		Help:     "Show help",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralHelp),
 	})
 }
 
 func Execute() {
-	attr.Parse(new(arg_struct.ControllerGeneralHelp))
+	args := attr.Parse(new(arg_struct.ControllerGeneralHelp)).(*arg_struct.ControllerGeneralHelp)
+
+	if args.Command != "" {
+		showCommandHelp(args.Command)
+		return
+	}
 
 	fmtc.WarningLn("Usage:")
 	tab()
@@ -85,6 +93,42 @@ func Execute() {
 	}
 
 	fmt.Println("")
+	fmtc.WarningLn("Use 'madock help <command>' for more information about a command.")
+}
+
+func showCommandHelp(name string) {
+	def, ok := command.Get(name)
+	if !ok {
+		fmtc.ErrorLn("Unknown command: " + name)
+		os.Exit(1)
+	}
+
+	primary := def.Aliases[0]
+	fmt.Println()
+	fmtc.WarningLn("Command: " + primary)
+	fmt.Println("  " + def.Help)
+
+	if len(def.Aliases) > 1 {
+		fmt.Println()
+		fmtc.WarningLn("Aliases:")
+		fmt.Println("  " + strings.Join(def.Aliases[1:], ", "))
+	}
+
+	if def.ArgsType != nil {
+		fmt.Println()
+		fmtc.WarningLn("Arguments:")
+		p, err := arg.NewParser(arg.Config{
+			Program:   "madock " + primary,
+			IgnoreEnv: true,
+		}, def.ArgsType)
+		if err != nil {
+			fmtc.ErrorLn("Failed to parse arguments: " + err.Error())
+			return
+		}
+		p.WriteHelp(os.Stdout)
+	}
+
+	fmt.Println()
 }
 
 func tab() {

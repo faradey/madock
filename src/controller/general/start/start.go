@@ -18,6 +18,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Start containers",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralStart),
 	})
 }
 

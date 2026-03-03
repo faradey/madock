@@ -15,36 +15,42 @@ func init() {
 		Handler:  func() { Execute("start") },
 		Help:     "Start proxy",
 		Category: "proxy",
+		ArgsType: new(arg_struct.ControllerGeneralProxy),
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"proxy:stop"},
 		Handler:  func() { Execute("stop") },
 		Help:     "Stop proxy",
 		Category: "proxy",
+		ArgsType: new(arg_struct.ControllerGeneralProxy),
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"proxy:restart"},
 		Handler:  func() { Execute("restart") },
 		Help:     "Restart proxy",
 		Category: "proxy",
+		ArgsType: new(arg_struct.ControllerGeneralProxy),
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"proxy:rebuild"},
 		Handler:  func() { Execute("rebuild") },
 		Help:     "Rebuild proxy",
 		Category: "proxy",
+		ArgsType: new(arg_struct.ControllerGeneralProxy),
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"proxy:reload"},
 		Handler:  func() { Execute("reload") },
 		Help:     "Reload proxy config",
 		Category: "proxy",
+		ArgsType: new(arg_struct.ControllerGeneralProxy),
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"proxy:prune"},
 		Handler:  func() { Execute("prune") },
 		Help:     "Prune proxy",
 		Category: "proxy",
+		ArgsType: new(arg_struct.ControllerGeneralProxy),
 	})
 }
 

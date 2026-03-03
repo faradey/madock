@@ -19,6 +19,7 @@ func init() {
 		Handler:  Execute,
 		Help:     "Show container logs",
 		Category: "general",
+		ArgsType: new(arg_struct.ControllerGeneralLogs),
 	})
 }
 

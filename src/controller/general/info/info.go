@@ -20,6 +20,7 @@ func init() {
 		Handler:  Info,
 		Help:     "Show project info",
 		Category: "general",
+		ArgsType: new(ArgsStruct),
 	})
 }
 
