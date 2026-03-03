@@ -8,6 +8,7 @@ import (
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/controller/general/help"
 	"github.com/faradey/madock/v3/src/controller/general/isnotdefine"
+	"github.com/faradey/madock/v3/src/helper/embedded"
 	"github.com/faradey/madock/v3/src/migration"
 )
 
@@ -16,6 +17,7 @@ import (
 // to the appropriate registered handler.
 func Run(appVersion string) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
+	embedded.ExtractIfNeeded(appVersion)
 	migration.Apply(appVersion)
 
 	if len(os.Args) <= 1 {

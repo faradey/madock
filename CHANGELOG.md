@@ -1,3 +1,10 @@
+**v3.5.2**
+
+Added:
+- Embed `docker/` and `scripts/` into the binary via `go:embed` — the binary is now self-contained
+- Auto-extract embedded assets to disk on first run or version change (`.embedded_version` marker)
+- `src/helper/embedded` package with `ExtractIfNeeded()` for version-aware asset extraction
+
 **v3.5.1**
 
 Added:
