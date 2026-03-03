@@ -61,6 +61,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 			}
 		}
 
+		tools.PopulateFromConfig(&toolsDefVersions, projectConf)
+
 		fmt.Println("")
 		fmtc.Title("Your Shopware version is " + toolsDefVersions.PlatformVersion)
 

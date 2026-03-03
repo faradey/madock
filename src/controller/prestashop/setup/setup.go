@@ -61,6 +61,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 
 	if continueSetup {
+		tools.PopulateFromConfig(&toolsDefVersions, projectConf)
+
 		fmt.Println("")
 		fmtc.Title("Your PrestaShop version is " + toolsDefVersions.PlatformVersion)
 

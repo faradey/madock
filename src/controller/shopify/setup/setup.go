@@ -33,6 +33,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	toolsDefVersions := shopify.GetVersions()
 
 	if continueSetup {
+		tools.PopulateFromConfig(&toolsDefVersions, projectConf)
+
 		fmt.Println("")
 
 		if args.Php == "" {

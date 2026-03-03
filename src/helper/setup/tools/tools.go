@@ -12,10 +12,17 @@ import (
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v3/src/model/versions"
 )
 
 // Global progress tracker for setup process
 var setupProgress *fmtc.StepProgress
+
+// reconfigureMode enables per-option "Change?" confirmations during setup reconfigure
+var reconfigureMode bool
+
+// SetReconfigure enables or disables reconfigure mode
+func SetReconfigure(v bool) { reconfigureMode = v }
 
 // InitProgress initializes the progress tracker with given steps
 func InitProgress(steps []string) {
@@ -51,14 +58,17 @@ func Platform(choices []PlatformChoice) string {
 		displayToName[c.DisplayName] = c.Name
 	}
 
-	defVersion := displayNames[0]
-
 	fmt.Println("")
-	SelectInteractive("Platform", displayNames, &defVersion)
-	if name, ok := displayToName[defVersion]; ok {
+
+	// Use the interactive selector directly — platform names are fixed
+	// choices, so "Custom" here is a real platform, not a free-text option.
+	selector := fmtc.NewInteractiveSelector("Platform", displayNames, 0)
+	_, value := selector.Run()
+
+	if name, ok := displayToName[value]; ok {
 		return name
 	}
-	return defVersion
+	return value
 }
 
 func Php(defVersion *string) {
@@ -190,8 +200,11 @@ func Yarn(defVersion *string) {
 	SelectInteractive("Yarn Version", availableVersions, defVersion)
 }
 
-func Language() string {
-	defVersion := "php"
+func Language(current string) string {
+	defVersion := current
+	if defVersion == "" {
+		defVersion = "php"
+	}
 	availableVersions := []string{"php", "nodejs", "python", "golang", "ruby", "none"}
 
 	fmt.Println("")
@@ -259,6 +272,13 @@ func PrepareVersionsStyled(title string, availableVersions []string, recommended
 
 // SelectInteractive runs an interactive selector and returns the selected value
 func SelectInteractive(title string, availableVersions []string, defVersion *string) {
+	// In reconfigure mode, ask whether to change the current value
+	if reconfigureMode && *defVersion != "" {
+		if !fmtc.Confirm(title+": "+*defVersion+" — Change?", false) {
+			return
+		}
+	}
+
 	// Find recommended index
 	recommendedIdx := -1
 	for i, ver := range availableVersions {
@@ -273,7 +293,7 @@ func SelectInteractive(title string, availableVersions []string, defVersion *str
 
 	// Handle "Custom" option
 	if value == "Custom" {
-		fmt.Print("Enter custom value: ")
+		fmt.Printf("Enter %s: ", title)
 		buf := bufio.NewReader(os.Stdin)
 		sentence, err := buf.ReadBytes('\n')
 		if err != nil {
@@ -338,6 +358,67 @@ func setSelectedVersion(defVersion *string, availableVersions []string, selected
 	} else {
 		fmtc.WarningLn("Choose one of the options offered")
 		WaiterAndProceed(defVersion, availableVersions)
+	}
+}
+
+// PopulateFromConfig fills ToolsVersions fields from existing project config
+// so that reconfigure mode shows the correct current values.
+func PopulateFromConfig(tv *versions.ToolsVersions, conf map[string]string) {
+	if v := conf["php/version"]; v != "" {
+		tv.Php = v
+	}
+	if v := conf["db/version"]; v != "" {
+		tv.Db = v
+	}
+	if v := conf["php/composer/version"]; v != "" {
+		tv.Composer = v
+	}
+	if v := conf["search/engine"]; v != "" {
+		tv.SearchEngine = v
+	}
+	if v := conf["search/elasticsearch/version"]; v != "" {
+		tv.Elastic = v
+	}
+	if v := conf["search/opensearch/version"]; v != "" {
+		tv.OpenSearch = v
+	}
+	if v := conf["redis/version"]; v != "" {
+		tv.Redis = v
+	}
+	if v := conf["valkey/version"]; v != "" {
+		tv.Valkey = v
+	}
+	if v := conf["rabbitmq/version"]; v != "" {
+		tv.RabbitMQ = v
+	}
+	if v := conf["nodejs/version"]; v != "" {
+		tv.NodeJs = v
+	}
+	if v := conf["nodejs/yarn/version"]; v != "" {
+		tv.Yarn = v
+	}
+	if v := conf["python/version"]; v != "" {
+		tv.Python = v
+	}
+	if v := conf["go/version"]; v != "" {
+		tv.Golang = v
+	}
+	if v := conf["ruby/version"]; v != "" {
+		tv.Ruby = v
+	}
+	if v := conf["db/type"]; v != "" {
+		switch v {
+		case "mysql":
+			if conf["db/repository"] == "mysql" {
+				tv.DbType = "MySQL"
+			} else {
+				tv.DbType = "MariaDB"
+			}
+		case "postgresql":
+			tv.DbType = "PostgreSQL"
+		case "mongodb":
+			tv.DbType = "MongoDB"
+		}
 	}
 }
 

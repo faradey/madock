@@ -37,6 +37,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	toolsDefVersions.Language = language
 
 	if continueSetup {
+		tools.PopulateFromConfig(&toolsDefVersions, projectConf)
+
 		fmt.Println("")
 
 		switch language {
@@ -183,12 +185,11 @@ func hostsCustom(projectName string, defVersion *string, projectConf map[string]
 		}
 		host = strings.Join(hostItems, " ")
 	}
-	fmtc.TitleLn("Hosts")
-	fmt.Println("Input format: a.example.com b.example.com")
-	fmt.Println("Recommended host: " + host)
+
 	*defVersion = host
 	availableVersions := []string{"Custom", projectName + projectConf["nginx/default_host_first_level"], "loc." + projectName + ".com"}
-	tools.PrepareVersions(availableVersions)
-	tools.Invitation(defVersion)
-	tools.WaiterAndProceed(defVersion, availableVersions)
+
+	fmt.Println("")
+	fmt.Printf("%sFormat: domain.com%s\n", fmtc.Gray(), fmtc.ResetColor())
+	tools.SelectInteractive("Hosts Configuration", availableVersions, defVersion)
 }

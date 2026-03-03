@@ -104,6 +104,11 @@ func Execute() {
 		platform = tools.Platform(choices)
 	}
 
+	if hasConfig && continueSetup {
+		tools.SetReconfigure(true)
+		defer tools.SetReconfigure(false)
+	}
+
 	// Determine the language for the project
 	language := args.Language
 	if language == "" && detectedLanguage != "" {
@@ -113,8 +118,9 @@ func Execute() {
 		if info.Language != "" {
 			language = info.Language
 		} else {
+			configLanguage := projectConf["language"]
 			if language == "" && continueSetup {
-				language = tools.Language()
+				language = tools.Language(configLanguage)
 			}
 			if language == "" {
 				language = "php"

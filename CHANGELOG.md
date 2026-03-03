@@ -1,3 +1,16 @@
+**v3.5.1**
+
+Added:
+- Per-option confirmation in setup reconfigure mode: when re-running `madock setup` on a project with existing config, each option shows "Current: X — Change? [y/N]" instead of re-asking everything from scratch
+- `PopulateFromConfig` helper to fill ToolsVersions from existing project config
+- `SetReconfigure` flag to enable/disable reconfigure mode in setup tools
+- `Language()` now accepts current value parameter for correct display in reconfigure mode
+
+Changed:
+- `SelectInteractive` shows "Change?" confirmation in reconfigure mode, skipping selector if user declines
+- `hostsCustom` in custom platform converted to use `SelectInteractive` for consistent reconfigure behavior
+- All platform setup handlers (Magento, Custom, Shopware, Shopify, PrestaShop) call `PopulateFromConfig` before interactive questions
+
 **v3.4.0**
 
 Added:

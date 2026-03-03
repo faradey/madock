@@ -142,6 +142,8 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 	}
 
 	if continueSetup {
+		tools.PopulateFromConfig(&toolsDefVersions, projectConf)
+
 		fmt.Println("")
 		fmtc.Title("Your Magento version is " + toolsDefVersions.PlatformVersion)
 
