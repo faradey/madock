@@ -140,6 +140,34 @@ func TestSetXmlMap(t *testing.T) {
 	}
 }
 
+func TestSetXmlMap_EmptyLeafPromotedToBranch(t *testing.T) {
+	// Simulates the case when ParseXmlFile returns "scopes/default" = ""
+	// from <default></default>, and then SaveInFile adds a nested key
+	// like "scopes/default/dnsmasq/domain" = "test".
+	// The empty leaf must be promoted to a branch (map) so the nested key is preserved.
+	input := map[string]interface{}{
+		"scopes/default":                    "",
+		"scopes/default/dnsmasq/domain":     "test",
+	}
+	got := SetXmlMap(input)
+
+	scopes, ok := got["scopes"].(map[string]interface{})
+	if !ok {
+		t.Fatal("scopes should be a map")
+	}
+	def, ok := scopes["default"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("scopes.default should be a map, got %T", scopes["default"])
+	}
+	dns, ok := def["dnsmasq"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("scopes.default.dnsmasq should be a map, got %T", def["dnsmasq"])
+	}
+	if dns["domain"] != "test" {
+		t.Errorf("domain = %v, want test", dns["domain"])
+	}
+}
+
 func TestMarshalXML(t *testing.T) {
 	tests := []struct {
 		name     string

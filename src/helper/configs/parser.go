@@ -136,17 +136,26 @@ func setNestedValue(m map[string]interface{}, keys []string, value interface{}) 
 	}
 
 	if len(keys) == 1 {
-		// Leaf node - set the value
+		// Leaf node — only set if there is no nested map already at this key.
+		// A nested map (branch) takes priority over a leaf value.
+		if _, isBranch := m[keys[0]].(map[string]interface{}); isBranch {
+			return
+		}
 		m[keys[0]] = value
 		return
 	}
 
-	// Intermediate node - create nested map if needed
-	if _, ok := m[keys[0]]; !ok {
+	// Intermediate node — create or promote to nested map.
+	existing, exists := m[keys[0]]
+	if !exists {
+		m[keys[0]] = make(map[string]interface{})
+	} else if _, ok := existing.(map[string]interface{}); !ok {
+		// Current value is a leaf (e.g. empty string from <default></default>),
+		// but we need a branch here — promote to map.
 		m[keys[0]] = make(map[string]interface{})
 	}
 
-	// Recurse into the nested map
+	// Recurse into the nested map.
 	if nested, ok := m[keys[0]].(map[string]interface{}); ok {
 		setNestedValue(nested, keys[1:], value)
 	}

@@ -1,3 +1,8 @@
+**v3.5.3**
+
+Fixed:
+- Fix XML config parser losing data when adding keys to empty scope — `<default></default>` (empty element) blocked `SetParam` from writing nested keys. Now empty leaf nodes are promoted to branch nodes when nested keys are added.
+
 **v3.5.2**
 
 Added:
