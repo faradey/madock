@@ -140,12 +140,7 @@ func GetCurrentProjectConfigPath(projectName string) string {
 	if projectName == "" {
 		projectName = GetProjectName()
 	}
-	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
-	if paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
-		envFile = paths.GetRunDirPath() + "/.madock/config.xml"
-	}
-
-	return envFile
+	return paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
 }
 
 func GetProjectConfigInProject(projectPath string) map[string]string {

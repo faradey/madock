@@ -10,9 +10,6 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 	generalConf := configs2.GetGeneralConfig()
 	config := new(configs2.ConfigLines)
 	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
-	if paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
-		envFile = paths.GetRunDirPath() + "/.madock/config.xml"
-	}
 	config.EnvFile = envFile
 	config.ActiveScope = "default"
 	if _, ok := projectConf["activeScope"]; ok {
