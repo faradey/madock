@@ -1,3 +1,8 @@
+**v3.5.7**
+
+Fixed:
+- Fix remaining `.madock/config.xml` write paths — `SetEnvForProject` (setup) and `GetCurrentProjectConfigPath` (scope:set/add) now correctly write to `projects/<projectname>/config.xml`
+
 **v3.5.6**
 
 Added:
