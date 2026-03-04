@@ -1,3 +1,8 @@
+**v3.5.4**
+
+Added:
+- `llms.txt` — structured context file for AI agents (Claude Code, Cursor, Copilot) with full command reference, config format, and architecture overview
+
 **v3.5.3**
 
 Fixed:

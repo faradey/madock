@@ -1,0 +1,199 @@
+# madock
+
+> madock is a Docker-based local development environment tool written in Go. It automates project setup with Docker Compose, supports multiple simultaneous projects via an nginx proxy, and provides platform-specific workflows for Magento 2, Shopware, Shopify, PrestaShop, and custom (PHP/Node.js/Python/Go/Ruby) projects.
+
+## Commands
+
+All commands are run as `madock <command>`.
+
+### Project Lifecycle
+- `setup` — interactive project setup (auto-detects platform). Flags: `--platform`, `--language`, `--yes`, `--download`, `--install`
+- `start` — start containers
+- `stop` — stop containers
+- `restart` — restart containers
+- `rebuild` — rebuild containers (recreates docker-compose and Dockerfiles)
+- `status` — show container status (supports `--json`)
+- `install` — install platform (Magento/Shopware/PrestaShop)
+- `project:remove` — remove project (flags: `--force`, `--name`)
+
+### Shell & Execution
+- `bash` — open shell in container (flags: `--service`, `--user`, `--shell`)
+- `cli` — execute command in container
+- `composer` — run composer command
+- `magento` / `m` — run Magento CLI command
+- `node` — run node/npm command
+
+### Database
+- `db:import` — import database
+- `db:export` — export database
+- `db:info` — show database connection info (supports `--json`)
+
+### Configuration
+- `config:set` — set a config option
+- `config:list` — list configuration (supports `--json`)
+- `config:cache:clean` / `c:c:c` — clean config cache
+
+### Cron
+- `cron:enable` — enable cron
+- `cron:disable` — disable cron
+
+### Debug (Xdebug)
+- `debug:enable` — enable Xdebug
+- `debug:disable` — disable Xdebug
+- `debug:profile:enable` — enable profiler
+- `debug:profile:disable` — disable profiler
+
+### Scopes (multi-site)
+- `scope:add <name>` — add scope
+- `scope:list` — list scopes
+- `scope:set` — set active scope
+
+### Snapshots
+- `snapshot:create` — create snapshot (flag: `--name`)
+- `snapshot:restore` — restore snapshot
+
+### Proxy
+- `proxy:start` — start nginx proxy
+- `proxy:stop` — stop proxy
+- `proxy:restart` — restart proxy
+- `proxy:rebuild` — rebuild proxy
+- `proxy:reload` — reload proxy config
+- `proxy:prune` — prune proxy
+
+### Services
+- `service:enable` — enable a service
+- `service:disable` — disable a service
+
+### Other
+- `logs` — show container logs (flag: `--service`)
+- `open` — open project in browser (flag: `--service`)
+- `ssl:rebuild` — rebuild SSL certificates
+- `remote_sync` — synchronize with remote (db, files, media)
+- `c:f` / `flush_cache` — flush cache (flag: `--user`)
+- `prune` — prune Docker resources (flag: `--with-volumes`)
+- `patch:create` — create patch file (flags: `--file`, `--name`, `--title`, `--force`)
+- `diff` — show diff between platform versions (flags: `--platform`, `--old`, `--new`)
+
+## Configuration
+
+Config is stored in `.madock/config.xml` (project-level) as hierarchical XML with `/`-separated keys.
+
+### Core Settings
+- `platform` — magento2, shopware, shopify, prestashop, custom
+- `language` — php, nodejs, python, golang, ruby, none
+- `workdir` — working directory inside container (e.g. `/var/www/html`)
+- `public_dir` — public directory path
+- `timezone` — timezone setting
+
+### PHP
+- `php/version` — PHP version (e.g. 8.2)
+- `php/composer/version` — Composer version
+- `php/xdebug/enabled` — enable Xdebug (true/false)
+- `php/xdebug/mode` — Xdebug mode (debug/profile)
+- `php/xdebug/ide_key` — IDE key for debugging
+- `php/ioncube/enabled` — enable ionCube loader
+
+### Database
+- `db/type` — mysql, postgresql, or mongodb
+- `db/repository` — Docker image (e.g. mariadb)
+- `db/version` — database version
+- `db/database` — database name
+- `db/user` — database user
+- `db/password` — database password
+- `db/root_password` — root password
+- `db/phpmyadmin` — enable phpMyAdmin (true/false)
+- `db/pgadmin` — enable pgAdmin (true/false)
+- `db/mongo_express` — enable Mongo Express (true/false)
+- `db2/enabled` — enable second database (always MySQL)
+
+### Search Engine
+- `search/engine` — elasticsearch or opensearch
+- `search/elasticsearch/enabled`, `search/elasticsearch/version`
+- `search/opensearch/enabled`, `search/opensearch/version`
+
+### Redis
+- `redis/enabled` — enable Redis
+- `redis/version` — Redis version
+
+### Node.js
+- `nodejs/enabled` — enable Node.js container
+- `nodejs/version` — Node.js version
+- `nodejs/yarn/enabled` — enable Yarn
+
+### RabbitMQ
+- `rabbitmq/enabled` — enable RabbitMQ
+- `rabbitmq/version` — RabbitMQ version
+- `rabbitmq/user`, `rabbitmq/password` — credentials
+
+### Nginx
+- `nginx/ssl` — enable SSL (true/false)
+- `nginx/hosts/{code}/name` — domain name (multiple hosts supported)
+
+### Varnish
+- `varnish/enabled` — enable Varnish cache
+
+### Cron
+- `cron/enabled` — enable cron
+- `cron/jobs/d0`, `cron/jobs/d1`, ... — custom cron job entries
+
+### Magento-Specific
+- `magento/admin_user`, `magento/admin_password` — admin credentials
+- `magento/admin_email`, `magento/admin_frontname` — admin URL path
+- `magento/locale`, `magento/currency`, `magento/timezone`
+- `magento/cloud` — Magento Cloud mode
+- `magento/mftf` — enable MFTF testing
+- `magento/n98magerun` — enable n98-magerun
+
+### Scopes
+- `scopes/{scope_name}/{option}` — scope-specific config overrides
+- `activeScope` — currently active scope (default: "default")
+
+### Custom Commands
+- `custom_commands/{name}/alias` — command alias
+- `custom_commands/{name}/origin` — command to execute
+
+## Supported Platforms
+
+- **Magento 2** — full support: setup, install, cron, cache, admin, cloud, MFTF, n98-magerun
+- **Shopware** — setup, install, cron
+- **Shopify** — setup with Node.js support
+- **PrestaShop** — setup, install
+- **Custom** — any language (PHP, Node.js, Python, Go, Ruby) with configurable services
+
+## Architecture
+
+### How It Works
+1. `madock setup` creates `.madock/config.xml` with project settings
+2. On `start`/`rebuild`, madock generates `docker-compose.yml` from embedded templates
+3. An nginx proxy routes requests by domain to the correct project containers
+4. Multiple projects run simultaneously, each with its own containers and network
+
+### Docker Services
+Each project can use: php, nginx, db (MySQL/MariaDB/PostgreSQL/MongoDB), db2, redis, valkey, elasticsearch, opensearch, rabbitmq, varnish, nodejs, mailpit, phpmyadmin, pgadmin, mongo_express, grafana, kibana.
+
+### Container Naming
+Containers are named: `{container_name_prefix}{project_name}-{service}-1`
+
+### Project Structure
+- `.madock/config.xml` — project configuration
+- `docker-compose.yml` — generated Docker Compose file (do not edit manually)
+- `docker-compose.override.yml` — local overrides (user-editable)
+
+### Extension Points
+madock supports enterprise extensions via hooks registered in `init()`:
+- `command.Register()` — register new commands
+- `command.AddBefore()` / `command.AddAfter()` — lifecycle hooks on existing commands
+- `command.Use()` — global middleware
+- Platform/setup/service registries for custom platform support
+
+## Build
+
+```bash
+go build -o madock .
+go test ./...
+```
+
+## Optional
+
+- [README](https://github.com/faradey/madock/blob/main/README.md): Full README with installation instructions and screenshots
+- [ENTERPRISE_HOOKS.md](https://github.com/faradey/madock/blob/main/ENTERPRISE_HOOKS.md): API reference for all 18 extension points

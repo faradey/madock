@@ -4,6 +4,7 @@
 !/README.md
 !/install.sh
 !/CHANGELOG.md
+!/llms.txt
 !/go.mod
 !/go.mod/*
 !/go.sum
