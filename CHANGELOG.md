@@ -1,3 +1,11 @@
+**v3.5.6**
+
+Added:
+- Mailpit (mailcatcher) is now a toggleable service — disabled via `madock service:disable mailpit --global`, enabled by default for backward compatibility
+
+Changed:
+- `.madock/config.xml` is now read-only for madock — all automatic config changes (`service:enable/disable`, `config:set`, `debug:enable/disable`, `cron:enable/disable`) write to `projects/<projectname>/config.xml` instead. This allows `.madock/config.xml` to be committed to the repository without unexpected modifications on servers
+
 **v3.5.5**
 
 Fixed:

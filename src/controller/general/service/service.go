@@ -16,6 +16,7 @@ var serviceMap = map[string]string{
 	"magento/mftf":                   "mftf",
 	"magento/n98magerun":             "n98magerun",
 	"nginx/ssl":                      "ssl",
+	"proxy/mailpit":                  "mailpit",
 	"nodejs/yarn":                    "yarn",
 	"php/ioncube":                    "ioncube",
 	"php/xdebug":                     "xdebug",

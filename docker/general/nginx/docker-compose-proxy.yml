@@ -19,6 +19,7 @@ services:
       - default
     restart: {{{restart_policy}}}
 
+<<<if{{{proxy/mailpit/enabled}}}>>>
   mailcatcher:
     image: axllent/mailpit:latest
     ports:
@@ -28,6 +29,7 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
     restart: {{{restart_policy}}}
+<<<endif>>>
 
 networks:
   madock-proxy:

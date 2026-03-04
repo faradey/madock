@@ -199,6 +199,9 @@
                     <rate>1000</rate>
                     <burst>2000</burst>
                 </rate_limit>
+                <mailpit>
+                    <enabled>true</enabled>
+                </mailpit>
             </proxy>
             <container_name_prefix>madock_</container_name_prefix>
             <isolation>
