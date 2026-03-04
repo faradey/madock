@@ -108,7 +108,7 @@ func customPhpConfig(config *configs2.ConfigLines, defVersions versions.ToolsVer
 	}
 
 	config.Set("php/nodejs/enabled", configs2.GetOption("php/nodejs/enabled", generalConf, projectConf))
-	config.Set("nodejs/version", generalConf["nodejs/version"])
+	config.Set("nodejs/version", configs2.GetOption("nodejs/version", generalConf, projectConf))
 }
 
 func customNodeJsConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {

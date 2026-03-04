@@ -1,3 +1,8 @@
+**v3.5.5**
+
+Fixed:
+- Fix nodejs version in PHP container ignoring project config — `customPhpConfig` used `generalConf` directly instead of `GetOption`, always defaulting to 18.x regardless of project settings
+
 **v3.5.4**
 
 Added:
