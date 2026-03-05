@@ -27,4 +27,7 @@ func Execute(oldAppVersion string) {
 	if oldAppVersion < "3.3.0" {
 		versions.V330()
 	}
+	if oldAppVersion < "3.4.0" {
+		versions.V340()
+	}
 }
