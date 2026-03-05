@@ -1,3 +1,9 @@
+**v3.5.9**
+
+Fixed:
+- Fix db/type migration not running for users upgrading from v3.4.0+ — migration was guarded by `< "3.4.0"` and version.go was not bumped, so the migration never executed for existing users
+- Bump version.go to 3.5.9
+
 **v3.5.8**
 
 Added:
