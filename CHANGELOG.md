@@ -1,3 +1,9 @@
+**v3.5.8**
+
+Added:
+- v3.4.0 migration: adds `db/type` field to existing project configs based on `db/repository` (mysql, postgresql, mongodb)
+- Sync `config_defaults.xml` with `config.xml`: add `db/type`, `db/pgadmin`, `db/mongo_express` defaults
+
 **v3.5.7**
 
 Fixed:
