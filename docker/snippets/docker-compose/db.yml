@@ -7,6 +7,11 @@
       dockerfile: db.Dockerfile
     ports:
       - "{{{port/db}}}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "{{{db/root_password}}}"
+      MYSQL_DATABASE: "{{{db/database}}}"
+      MYSQL_USER: "{{{db/user}}}"
+      MYSQL_PASSWORD: "{{{db/password}}}"
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated

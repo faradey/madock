@@ -5,6 +5,10 @@
       dockerfile: db.Dockerfile
     ports:
       - "{{{port/db}}}:5432"
+    environment:
+      POSTGRES_DB: "{{{db/database}}}"
+      POSTGRES_USER: "{{{db/user}}}"
+      POSTGRES_PASSWORD: "{{{db/password}}}"
     volumes:
       - dbdata:/var/lib/postgresql/data
     <<<if{{{isolation/enabled}}}>>>networks:

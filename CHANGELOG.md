@@ -1,3 +1,8 @@
+**v3.6.0**
+
+Changed:
+- Move database credentials from Dockerfile ENV to docker-compose environment — passwords are no longer baked into Docker image layers (visible via `docker history`), instead passed at runtime through docker-compose environment variables. Affects mysql, postgresql, mongodb, and db2 services.
+
 **v3.5.9**
 
 Fixed:

@@ -5,6 +5,10 @@
       dockerfile: db.Dockerfile
     ports:
       - "{{{port/db}}}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "{{{db/user}}}"
+      MONGO_INITDB_ROOT_PASSWORD: "{{{db/password}}}"
+      MONGO_INITDB_DATABASE: "{{{db/database}}}"
     volumes:
       - dbdata:/data/db
     <<<if{{{isolation/enabled}}}>>>networks:
