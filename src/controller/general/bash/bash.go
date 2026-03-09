@@ -5,6 +5,7 @@ import (
 
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/controller/platform"
+	"github.com/faradey/madock/v3/src/helper/cli"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
@@ -37,6 +38,8 @@ func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()
 	service := platform.GetMainService(projectConf)
 	user := "root"
+
+	service, user, _ = cli.GetEnvForUserServiceWorkdir(service, user, "")
 
 	if args.Service != "" {
 		service = args.Service

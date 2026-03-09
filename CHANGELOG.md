@@ -1,3 +1,8 @@
+**v3.6.1**
+
+Fixed:
+- Fix `MADOCK_USER` environment variable not working with `madock bash` — the bash controller now respects env overrides via `GetEnvForUserServiceWorkdir`
+
 **v3.6.0**
 
 Changed:
