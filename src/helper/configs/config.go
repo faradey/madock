@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"log"
-	"net"
 	"os"
 	"os/user"
 	"runtime"
@@ -201,7 +200,7 @@ func ReplaceConfigValue(projectName, str string) string {
 	hosts := GetHosts(projectConf)
 	if len(hosts) > 0 {
 		for _, host := range hosts {
-			onlyHosts = append(onlyHosts, "- \""+host["name"]+":"+GetOutboundIP()+"\"")
+			onlyHosts = append(onlyHosts, "- \""+host["name"]+":host-gateway\"")
 		}
 	}
 
@@ -419,17 +418,6 @@ func evaluateCondition(condition string) bool {
 	return true
 }
 
-func GetOutboundIP() string {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		return "172.17.0.1"
-	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	return localAddr.IP.String()
-}
 
 // CompareVersions compares two version strings (e.g., "8.4" vs "8.3.1")
 // Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
