@@ -1,3 +1,11 @@
+**v3.6.5**
+
+Fixed:
+- Fix search engine config not applied when using presets — setup controllers now pass search engine type to project config generators
+- Remove trailing slash from root path variables in nginx configs
+- Use host-gateway instead of outbound IP for container host resolution — removes unreliable `GetOutboundIP()` UDP dial, uses Docker's built-in `host-gateway`
+- Bump version.go to 3.6.5 (was stuck at 3.6.1 since v3.6.2–v3.6.4)
+
 **v3.6.1**
 
 Fixed:
