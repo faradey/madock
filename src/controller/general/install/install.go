@@ -2,6 +2,7 @@ package install
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
@@ -83,14 +84,14 @@ func Magento(projectName, platformVer string) {
 		"--timezone=" + projectConf["magento/timezone"] + " " +
 		"--use-rewrites=1 "
 	if platformVer >= "2.3.7" {
-		searchEngine := projectConf["search/engine"]
-		if searchEngine == "Elasticsearch" {
+		searchEngine := strings.ToLower(projectConf["search/engine"])
+		if searchEngine == "elasticsearch" {
 			installCommand += "--search-engine=elasticsearch7 " +
 				"--elasticsearch-host=elasticsearch " +
 				"--elasticsearch-port=9200 " +
 				"--elasticsearch-index-prefix=magento2 " +
 				"--elasticsearch-timeout=15 "
-		} else if searchEngine == "OpenSearch" {
+		} else if searchEngine == "opensearch" {
 			if platformVer >= "2.4.6" {
 				installCommand += "--search-engine=opensearch " +
 					"--opensearch-host=opensearch " +
@@ -134,13 +135,13 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 
 	installCommand := "sed -i 's/APP_URL=http:\\/\\/127.0.0.1:8000/APP_URL=https:\\/\\/" + host + "/g' .env "
 	installCommand += "&& sed -i 's/DATABASE_URL=mysql:\\/\\/root:root@localhost\\/shopware/DATABASE_URL=mysql:\\/\\/" + projectConf["db/user"] + ":" + projectConf["db/password"] + "@db:3306\\/" + projectConf["db/database"] + "/g' .env "
-	searchEngine := projectConf["search/engine"]
-	if searchEngine == "Elasticsearch" {
+	searchEngine := strings.ToLower(projectConf["search/engine"])
+	if searchEngine == "elasticsearch" {
 		installCommand += "&& sed -i 's/SHOPWARE_ES_ENABLED=0/SHOPWARE_ES_ENABLED=1/g' .env "
 		installCommand += "&& sed -i 's/OPENSEARCH_URL=http:\\/\\/localhost:9200/OPENSEARCH_URL=http:\\/\\/elasticsearch:9200/g' .env "
 		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEXING_ENABLED=0/SHOPWARE_ES_INDEXING_ENABLED=1/g' .env "
 		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEX_PREFIX=sw/SHOPWARE_ES_INDEX_PREFIX=swlocal/g' .env "
-	} else if searchEngine == "OpenSearch" {
+	} else if searchEngine == "opensearch" {
 		installCommand += "&& sed -i 's/SHOPWARE_ES_ENABLED=0/SHOPWARE_ES_ENABLED=1/g' .env "
 		installCommand += "&& sed -i 's/OPENSEARCH_URL=http:\\/\\/localhost:9200/OPENSEARCH_URL=opensearch:9200/g' .env "
 		installCommand += "&& sed -i 's/SHOPWARE_ES_INDEXING_ENABLED=0/SHOPWARE_ES_INDEXING_ENABLED=1/g' .env "

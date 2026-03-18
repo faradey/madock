@@ -55,7 +55,8 @@ func PrestaShop(config *configs2.ConfigLines, defVersions versions.ToolsVersions
 	config.Set("db/database", configs2.GetOption("db/database", generalConf, projectConf))
 
 	config.Set("search/engine", defVersions.SearchEngine)
-	if defVersions.SearchEngine == "Elasticsearch" {
+	searchEngine := strings.ToLower(defVersions.SearchEngine)
+	if searchEngine == "elasticsearch" {
 		config.Set("search/opensearch/enabled", "false")
 		config.Set("search/opensearch/version", defVersions.OpenSearch)
 
@@ -67,7 +68,7 @@ func PrestaShop(config *configs2.ConfigLines, defVersions versions.ToolsVersions
 		} else {
 			config.Set("search/elasticsearch/version", defVersions.Elastic)
 		}
-	} else if defVersions.SearchEngine == "OpenSearch" {
+	} else if searchEngine == "opensearch" {
 		config.Set("search/elasticsearch/enabled", "false")
 		config.Set("search/elasticsearch/version", defVersions.Elastic)
 

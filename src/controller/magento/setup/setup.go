@@ -142,7 +142,9 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 	}
 
 	if continueSetup {
-		tools.PopulateFromConfig(&toolsDefVersions, projectConf)
+		if !usePreset {
+			tools.PopulateFromConfig(&toolsDefVersions, projectConf)
+		}
 
 		fmt.Println("")
 		fmtc.Title("Your Magento version is " + toolsDefVersions.PlatformVersion)
@@ -205,13 +207,13 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 
 			// Step 6: Search Engine Version
 			tools.SetProgressStep(currentStep)
-			if toolsDefVersions.SearchEngine == "Elasticsearch" {
+			if strings.EqualFold(toolsDefVersions.SearchEngine, "Elasticsearch") {
 				if args.SearchEngineVersion == "" {
 					tools.Elastic(&toolsDefVersions.Elastic)
 				} else {
 					toolsDefVersions.Elastic = args.SearchEngineVersion
 				}
-			} else if toolsDefVersions.SearchEngine == "OpenSearch" {
+			} else if strings.EqualFold(toolsDefVersions.SearchEngine, "OpenSearch") {
 				if args.SearchEngineVersion == "" {
 					tools.OpenSearch(&toolsDefVersions.OpenSearch)
 				} else {
@@ -382,12 +384,12 @@ func displayConfigSummary(v versions.ToolsVersions, projectName string) {
 }
 
 func getSearchEngineItems(v versions.ToolsVersions) []fmtc.SectionItem {
-	if v.SearchEngine == "Elasticsearch" {
+	if strings.EqualFold(v.SearchEngine, "Elasticsearch") {
 		return []fmtc.SectionItem{
 			{Key: "Engine", Value: "Elasticsearch"},
 			{Key: "Version", Value: v.Elastic},
 		}
-	} else if v.SearchEngine == "OpenSearch" {
+	} else if strings.EqualFold(v.SearchEngine, "OpenSearch") {
 		return []fmtc.SectionItem{
 			{Key: "Engine", Value: "OpenSearch"},
 			{Key: "Version", Value: v.OpenSearch},

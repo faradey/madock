@@ -79,13 +79,13 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 			} else {
 				toolsDefVersions.SearchEngine = args.SearchEngine
 			}
-			if toolsDefVersions.SearchEngine == "Elasticsearch" {
+			if strings.EqualFold(toolsDefVersions.SearchEngine, "Elasticsearch") {
 				if args.SearchEngineVersion == "" {
 					tools.Elastic(&toolsDefVersions.Elastic)
 				} else {
 					toolsDefVersions.Elastic = args.SearchEngineVersion
 				}
-			} else if toolsDefVersions.SearchEngine == "OpenSearch" {
+			} else if strings.EqualFold(toolsDefVersions.SearchEngine, "OpenSearch") {
 				if args.SearchEngineVersion == "" {
 					tools.OpenSearch(&toolsDefVersions.OpenSearch)
 				} else {
