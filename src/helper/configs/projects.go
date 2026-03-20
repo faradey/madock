@@ -269,6 +269,27 @@ func GetScopes(projectName string) map[string]string {
 	return scopes
 }
 
+func saveProjectConfig(configPath string, config map[string]string) bool {
+	resultData := make(map[string]any)
+	for key, value := range config {
+		resultData[key] = value
+	}
+	resultMapData := SetXmlMap(resultData)
+	w := &bytes.Buffer{}
+	w.WriteString(xml.Header)
+	encoder := xml.NewEncoder(w)
+	defer func() { _ = encoder.Close() }()
+	err := MarshalXML(resultMapData, encoder, "config")
+	if err != nil {
+		logger.Fatalln(err)
+	}
+	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), ConfigFilePermissions)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 func SetScope(projectName, scope string) bool {
 	configPath := GetCurrentProjectConfigPath(projectName)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) && err != nil {
@@ -277,23 +298,7 @@ func SetScope(projectName, scope string) bool {
 
 	config := ParseXmlFile(configPath)
 	config["activeScope"] = scope
-	resultData := make(map[string]interface{})
-	for key, value := range config {
-		resultData[key] = value
-	}
-	resultMapData := SetXmlMap(resultData)
-	w := &bytes.Buffer{}
-	w.WriteString(xml.Header)
-	err := MarshalXML(resultMapData, xml.NewEncoder(w), "config")
-	if err != nil {
-		logger.Fatalln(err)
-	}
-	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), ConfigFilePermissions)
-	if err != nil {
-		return false
-	}
-
-	return true
+	return saveProjectConfig(configPath, config)
 }
 
 func AddScope(projectName, scope string) bool {
@@ -304,24 +309,8 @@ func AddScope(projectName, scope string) bool {
 
 	config := ParseXmlFile(configPath)
 	config["activeScope"] = scope
-	config[scope] = ""
-	resultData := make(map[string]interface{})
-	for key, value := range config {
-		resultData[key] = value
-	}
-	resultMapData := SetXmlMap(resultData)
-	w := &bytes.Buffer{}
-	w.WriteString(xml.Header)
-	err := MarshalXML(resultMapData, xml.NewEncoder(w), "config")
-	if err != nil {
-		logger.Fatalln(err)
-	}
-	err = os.WriteFile(configPath, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), ConfigFilePermissions)
-	if err != nil {
-		return false
-	}
-
-	return true
+	config["scopes/"+scope] = ""
+	return saveProjectConfig(configPath, config)
 }
 
 func GetActiveScope(projectName string, withDefault bool, prefix string) string {
