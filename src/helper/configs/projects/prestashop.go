@@ -54,7 +54,6 @@ func PrestaShop(config *configs2.ConfigLines, defVersions versions.ToolsVersions
 	config.Set("db/password", configs2.GetOption("db/password", generalConf, projectConf))
 	config.Set("db/database", configs2.GetOption("db/database", generalConf, projectConf))
 
-	config.Set("search/engine", defVersions.SearchEngine)
 	searchEngine := strings.ToLower(defVersions.SearchEngine)
 	if searchEngine == "elasticsearch" {
 		config.Set("search/opensearch/enabled", "false")

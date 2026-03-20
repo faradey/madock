@@ -179,7 +179,6 @@ func resolveDbTypeAndRepo(defVersions versions.ToolsVersions) (string, string) {
 }
 
 func customSearchConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
-	config.Set("search/engine", defVersions.SearchEngine)
 	searchEngine := strings.ToLower(defVersions.SearchEngine)
 	if searchEngine == "elasticsearch" {
 		config.Set("search/opensearch/enabled", "false")

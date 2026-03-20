@@ -373,8 +373,10 @@ func PopulateFromConfig(tv *versions.ToolsVersions, conf map[string]string) {
 	if v := conf["php/composer/version"]; v != "" {
 		tv.Composer = v
 	}
-	if v := conf["search/engine"]; v != "" {
-		tv.SearchEngine = v
+	if conf["search/opensearch/enabled"] == "true" {
+		tv.SearchEngine = "OpenSearch"
+	} else if conf["search/elasticsearch/enabled"] == "true" {
+		tv.SearchEngine = "Elasticsearch"
 	}
 	if v := conf["search/elasticsearch/version"]; v != "" {
 		tv.Elastic = v
