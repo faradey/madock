@@ -1,35 +1,40 @@
 package dockertransform
 
-// DockerSecretsInjector allows enterprise to transform generated Docker files
-// to replace ENV-based secrets with Docker secrets or mount-based injection.
-type DockerSecretsInjector interface {
+// DockerTransformer allows enterprise to transform generated Docker files
+// (Dockerfiles and docker-compose) before they are written to disk.
+type DockerTransformer interface {
 	// TransformCompose modifies docker-compose content before writing.
 	TransformCompose(serviceName, content string) string
 	// TransformDockerfile modifies Dockerfile content before writing.
 	TransformDockerfile(serviceName, content string) string
 }
 
-var secretsInjector DockerSecretsInjector
+var transformer DockerTransformer
 
-// SetSecretsInjector sets a custom injector for Docker secrets.
-func SetSecretsInjector(i DockerSecretsInjector) {
-	secretsInjector = i
+// SetDockerTransformer sets a custom transformer for Docker files.
+func SetDockerTransformer(t DockerTransformer) {
+	transformer = t
 }
 
-// ApplyComposeTransform applies the secrets injector to docker-compose content.
-// Returns content unchanged if no injector is set.
+// Deprecated: Use SetDockerTransformer instead.
+func SetSecretsInjector(i DockerTransformer) {
+	SetDockerTransformer(i)
+}
+
+// ApplyComposeTransform applies the transformer to docker-compose content.
+// Returns content unchanged if no transformer is set.
 func ApplyComposeTransform(serviceName, content string) string {
-	if secretsInjector != nil {
-		return secretsInjector.TransformCompose(serviceName, content)
+	if transformer != nil {
+		return transformer.TransformCompose(serviceName, content)
 	}
 	return content
 }
 
-// ApplyDockerfileTransform applies the secrets injector to Dockerfile content.
-// Returns content unchanged if no injector is set.
+// ApplyDockerfileTransform applies the transformer to Dockerfile content.
+// Returns content unchanged if no transformer is set.
 func ApplyDockerfileTransform(serviceName, content string) string {
-	if secretsInjector != nil {
-		return secretsInjector.TransformDockerfile(serviceName, content)
+	if transformer != nil {
+		return transformer.TransformDockerfile(serviceName, content)
 	}
 	return content
 }

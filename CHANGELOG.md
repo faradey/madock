@@ -1,3 +1,8 @@
+**v3.6.8**
+
+Changed:
+- Rename `DockerSecretsInjector` interface to `DockerTransformer` — more general name for the Docker file transformation hook, backward-compatible `SetSecretsInjector` wrapper retained
+
 **v3.6.5**
 
 Fixed:
