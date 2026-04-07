@@ -1,3 +1,13 @@
+**v3.6.9**
+
+Added:
+- `db:import` now detects MySQL `GTID_PURGED cannot be changed` errors and offers an interactive resolution: run `RESET MASTER` (or `RESET BINARY LOGS AND GTIDS` on MySQL 8.4+) and retry, or retry with GTID statements stripped from the dump on the fly
+- `--reset-gtid` flag for `db:import` to perform the GTID reset automatically before import (useful for CI/scripts)
+
+Fixed:
+- `db:import` now restores `FOREIGN_KEY_CHECKS=1` even when the import fails
+- `db:import` stderr is now captured for analysis while still being streamed to the terminal
+
 **v3.6.8**
 
 Changed:

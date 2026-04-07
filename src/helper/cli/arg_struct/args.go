@@ -88,6 +88,7 @@ type ControllerGeneralDbImport struct {
 	Force         bool   `arg:"-f,--force" help:"Force"`
 	DBServiceName string `arg:"-s,--service" help:"DB service name. For example: db"`
 	User          string `arg:"-u,--user" help:"User"`
+	ResetGtid     bool   `arg:"--reset-gtid" help:"Reset GTID state before import (RESET MASTER / RESET BINARY LOGS AND GTIDS) to avoid GTID_PURGED conflicts"`
 	File          string `arg:"positional" help:"Path to database file"`
 }
 

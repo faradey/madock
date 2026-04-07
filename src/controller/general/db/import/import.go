@@ -1,7 +1,10 @@
 package _import
 
 import (
+	"bufio"
+	"bytes"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -178,11 +181,6 @@ func resolveImportFilePath(args *arg_struct.ControllerGeneralDbImport, projectNa
 }
 
 func importMysql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbImport, service string, selectedFile *os.File, ext string, totalSize int64) {
-	option := ""
-	if args.Force {
-		option = "-f"
-	}
-
 	user := "mysql"
 	if args.User != "" {
 		user = args.User
@@ -193,51 +191,161 @@ func importMysql(containerName string, projectConf map[string]string, args *arg_
 		mysqlCommandName = "mariadb"
 	}
 
-	fkCmd, fkErr := docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=0;", projectConf["db/database"])
-	if fkErr != nil {
-		logger.Fatalln("Failed to prepare foreign key command:", fkErr)
+	runQuery := func(query string) error {
+		c, e := docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", query, projectConf["db/database"])
+		if e != nil {
+			return e
+		}
+		return c.Run()
 	}
-	if err := fkCmd.Run(); err != nil {
+
+	if err := runQuery("SET FOREIGN_KEY_CHECKS=0;"); err != nil {
 		logger.Fatalln("Failed to disable foreign key checks:", err)
 	}
-	var cmd *exec.Cmd
-	if option != "" {
-		cmd, _ = docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, option, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
-	} else {
-		cmd, _ = docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
-	}
 
-	progress := &progressReader{
-		totalBytes: totalSize,
-	}
-
-	if ext == ".gz" {
-		out, err := gzip.NewReader(selectedFile)
-		if err != nil {
-			logger.Fatal(err)
+	if args.ResetGtid {
+		if err := runQuery(gtidResetStatement(projectConf) + ";"); err != nil {
+			logger.Fatalln("Failed to reset GTID state:", err)
 		}
-		defer out.Close()
-		progress.reader = out
-	} else {
-		progress.reader = selectedFile
 	}
 
-	cmd.Stdin = progress
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	runImport := func(filterGtid bool) (string, error) {
+		if _, seekErr := selectedFile.Seek(0, io.SeekStart); seekErr != nil {
+			return "", seekErr
+		}
 
-	done := make(chan struct{})
-	go progress.printProgress(done)
+		var cmd *exec.Cmd
+		if args.Force {
+			cmd, _ = docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-f", "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
+		} else {
+			cmd, _ = docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
+		}
 
-	err := cmd.Run()
-	close(done)
-	fkCmd2, _ := docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", "SET FOREIGN_KEY_CHECKS=1;", projectConf["db/database"])
-	if fkErr := fkCmd2.Run(); fkErr != nil {
+		progress := &progressReader{totalBytes: totalSize}
+
+		var src io.Reader = selectedFile
+		if ext == ".gz" {
+			gz, gerr := gzip.NewReader(selectedFile)
+			if gerr != nil {
+				return "", gerr
+			}
+			defer gz.Close()
+			src = gz
+		}
+		progress.reader = src
+
+		var stdin io.Reader = progress
+		if filterGtid {
+			stdin = filterGtidReader(progress)
+		}
+
+		cmd.Stdin = stdin
+		cmd.Stdout = os.Stdout
+		var stderrBuf bytes.Buffer
+		cmd.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
+
+		done := make(chan struct{})
+		go progress.printProgress(done)
+
+		runErr := cmd.Run()
+		close(done)
+		return stderrBuf.String(), runErr
+	}
+
+	stderr, err := runImport(false)
+	if err != nil && isGtidPurgedError(stderr) {
+		err = handleGtidConflict(projectConf, runQuery, runImport)
+	}
+
+	if fkErr := runQuery("SET FOREIGN_KEY_CHECKS=1;"); fkErr != nil {
 		logger.Fatalln("Failed to enable foreign key checks:", fkErr)
 	}
 	if err != nil {
 		logger.Fatal(err)
 	}
+}
+
+func isGtidPurgedError(stderr string) bool {
+	if stderr == "" {
+		return false
+	}
+	return strings.Contains(stderr, "GTID_PURGED cannot be changed") ||
+		(strings.Contains(stderr, "@@GLOBAL.GTID_PURGED") && strings.Contains(stderr, "@@GLOBAL.GTID_EXECUTED"))
+}
+
+func gtidResetStatement(projectConf map[string]string) string {
+	if projectConf["db/repository"] == "mysql" && configs.CompareVersions(projectConf["db/version"], "8.4") >= 0 {
+		return "RESET BINARY LOGS AND GTIDS"
+	}
+	return "RESET MASTER"
+}
+
+func handleGtidConflict(projectConf map[string]string, runQuery func(string) error, runImport func(bool) (string, error)) error {
+	fmt.Println()
+	fmtc.WarningLn("Detected GTID_PURGED conflict during import.")
+	fmt.Println("The dump contains GTID metadata that conflicts with the local server state.")
+	fmt.Println("You can re-run with --reset-gtid to skip this prompt next time.")
+	fmt.Println()
+
+	resetStmt := gtidResetStatement(projectConf)
+	options := []string{
+		"Run " + resetStmt + " and retry import",
+		"Retry import with GTID statements stripped from the dump",
+		"Cancel",
+	}
+	selector := fmtc.NewInteractiveSelector("Resolve GTID conflict", options, 0)
+	idx, _ := selector.Run()
+
+	switch idx {
+	case 0:
+		if err := runQuery(resetStmt + ";"); err != nil {
+			return fmt.Errorf("failed to execute %s: %w", resetStmt, err)
+		}
+		_, err := runImport(false)
+		return err
+	case 1:
+		_, err := runImport(true)
+		return err
+	default:
+		return errors.New("import cancelled by user")
+	}
+}
+
+// filterGtidReader returns a reader that drops mysqldump GTID statements which
+// commonly cause GTID_PURGED conflicts on a server with non-empty GTID_EXECUTED.
+func filterGtidReader(r io.Reader) io.Reader {
+	pr, pw := io.Pipe()
+	go func() {
+		defer pw.Close()
+		scanner := bufio.NewScanner(r)
+		// Allow very large lines (mysqldump extended INSERTs can be huge).
+		scanner.Buffer(make([]byte, 1024*1024), 256*1024*1024)
+
+		skipUntilSemicolon := false
+		for scanner.Scan() {
+			line := scanner.Bytes()
+			if skipUntilSemicolon {
+				if bytes.HasSuffix(bytes.TrimRight(line, " \t\r"), []byte(";")) {
+					skipUntilSemicolon = false
+				}
+				continue
+			}
+			if bytes.Contains(line, []byte("@@GLOBAL.GTID_PURGED")) {
+				if !bytes.HasSuffix(bytes.TrimRight(line, " \t\r"), []byte(";")) {
+					skipUntilSemicolon = true
+				}
+				continue
+			}
+			if _, err := pw.Write(append(line, '\n')); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			pw.CloseWithError(err)
+		}
+	}()
+	return pr
 }
 
 func importPostgresql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbImport, service string, selectedFile *os.File, ext string, totalSize int64) {
