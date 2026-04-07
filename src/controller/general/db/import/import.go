@@ -209,13 +209,13 @@ func importMysql(containerName string, projectConf map[string]string, args *arg_
 		}
 	}
 
-	runImport := func(filterGtid bool) (string, error) {
+	runImport := func(filterGtid, forceOverride bool) (string, error) {
 		if _, seekErr := selectedFile.Seek(0, io.SeekStart); seekErr != nil {
 			return "", seekErr
 		}
 
 		var cmd *exec.Cmd
-		if args.Force {
+		if args.Force || forceOverride {
 			cmd, _ = docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-f", "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
 		} else {
 			cmd, _ = docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
@@ -252,9 +252,13 @@ func importMysql(containerName string, projectConf map[string]string, args *arg_
 		return stderrBuf.String(), runErr
 	}
 
-	stderr, err := runImport(false)
+	stderr, err := runImport(false, false)
 	if err != nil && isGtidPurgedError(stderr) {
 		err = handleGtidConflict(projectConf, runQuery, runImport)
+		stderr = ""
+	}
+	if err != nil && isDuplicateEntryError(stderr) {
+		err = handleDuplicateEntry(runImport)
 	}
 
 	if fkErr := runQuery("SET FOREIGN_KEY_CHECKS=1;"); fkErr != nil {
@@ -280,7 +284,7 @@ func gtidResetStatement(projectConf map[string]string) string {
 	return "RESET MASTER"
 }
 
-func handleGtidConflict(projectConf map[string]string, runQuery func(string) error, runImport func(bool) (string, error)) error {
+func handleGtidConflict(projectConf map[string]string, runQuery func(string) error, runImport func(bool, bool) (string, error)) error {
 	fmt.Println()
 	fmtc.WarningLn("Detected GTID_PURGED conflict during import.")
 	fmt.Println("The dump contains GTID metadata that conflicts with the local server state.")
@@ -301,10 +305,40 @@ func handleGtidConflict(projectConf map[string]string, runQuery func(string) err
 		if err := runQuery(resetStmt + ";"); err != nil {
 			return fmt.Errorf("failed to execute %s: %w", resetStmt, err)
 		}
-		_, err := runImport(false)
+		_, err := runImport(false, false)
 		return err
 	case 1:
-		_, err := runImport(true)
+		_, err := runImport(true, false)
+		return err
+	default:
+		return errors.New("import cancelled by user")
+	}
+}
+
+func isDuplicateEntryError(stderr string) bool {
+	if stderr == "" {
+		return false
+	}
+	return strings.Contains(stderr, "ERROR 1062") || strings.Contains(stderr, "Duplicate entry")
+}
+
+func handleDuplicateEntry(runImport func(bool, bool) (string, error)) error {
+	fmt.Println()
+	fmtc.WarningLn("Detected duplicate entry error during import.")
+	fmt.Println("The dump tries to insert rows that already exist in the target database.")
+	fmt.Println("You can re-run with --force to skip this prompt next time.")
+	fmt.Println()
+
+	options := []string{
+		"Retry import in force mode (skip duplicate-entry errors)",
+		"Cancel",
+	}
+	selector := fmtc.NewInteractiveSelector("Resolve duplicate entry", options, 0)
+	idx, _ := selector.Run()
+
+	switch idx {
+	case 0:
+		_, err := runImport(false, true)
 		return err
 	default:
 		return errors.New("import cancelled by user")

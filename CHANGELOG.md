@@ -3,6 +3,7 @@
 Added:
 - `db:import` now detects MySQL `GTID_PURGED cannot be changed` errors and offers an interactive resolution: run `RESET MASTER` (or `RESET BINARY LOGS AND GTIDS` on MySQL 8.4+) and retry, or retry with GTID statements stripped from the dump on the fly
 - `--reset-gtid` flag for `db:import` to perform the GTID reset automatically before import (useful for CI/scripts)
+- `db:import` now detects MySQL `ERROR 1062 Duplicate entry` errors and offers to retry the import in force mode (`-f`) so duplicate-row errors are skipped instead of aborting
 
 Fixed:
 - `db:import` now restores `FOREIGN_KEY_CHECKS=1` even when the import fails
