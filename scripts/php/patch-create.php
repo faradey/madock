@@ -113,6 +113,14 @@ if(file_exists($filePatch)){
                                     print("The patch with same title or name has already been created.\n");
                                 }
                             }
+                        } elseif(empty($composerJsonData['extra']['patches-search'])) {
+                            if(!isset($composerJsonData['extra'])) {
+                                $composerJsonData['extra'] = [];
+                            }
+                            $composerJsonData['extra']['patches'] = [];
+                            $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
+                            file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                            print("\nThe patch was created successfully\n");
                         }
                         exec("rm -r ".$vendorPath."/" . $moduleRoot[0]."/".$moduleRoot[1]);
                         recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
