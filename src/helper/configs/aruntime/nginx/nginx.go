@@ -17,6 +17,7 @@ import (
 	configs2 "github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/v3/src/helper/finder"
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/faradey/madock/v3/src/helper/ports"
@@ -338,8 +339,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 
 		if doGenerateSsl || force {
 			cmd := exec.Command("openssl", "req", "-x509", "-newkey", "rsa:4096", "-keyout", ctxPath+"/madockCA.key", "-out", ctxPath+"/madockCA.pem", "-sha256", "-days", "365", "-nodes", "-subj", "/CN=madock")
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
+			attr.AttachOutput(cmd)
 			err = cmd.Run()
 			if err != nil {
 				logger.Fatal(err)
@@ -349,13 +349,11 @@ func GenerateSslCert(ctxPath string, force bool) {
 
 			if runtime.GOOS == "darwin" {
 				cmd = exec.Command("sudo", "security", "delete-certificate", "-c", "madock")
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
+				attr.AttachOutput(cmd)
 				_ = cmd.Run()
 
 				cmd = exec.Command("sudo", "security", "add-trusted-cert", "-d", "-r", "trustRoot", "-k", "/Library/Keychains/System.keychain", ctxPath+"/madockCA.pem")
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
+				attr.AttachOutput(cmd)
 				err = cmd.Run()
 				if err != nil {
 					logger.Fatal(err)
@@ -389,16 +387,14 @@ func GenerateSslCert(ctxPath string, force bool) {
 				}
 
 				cmd = exec.Command("sudo", "cp", ctxPath+"/madockCA.pem", certPath+"/madockCA.crt")
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
+				attr.AttachOutput(cmd)
 				err = cmd.Run()
 				if err != nil {
 					logger.Fatal(err)
 				}
 
 				cmd = exec.Command("sudo", "chmod", "644", certPath+"/madockCA.crt")
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
+				attr.AttachOutput(cmd)
 				err = cmd.Run()
 				if err != nil {
 					logger.Fatal(err)
@@ -421,8 +417,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 					selected = strings.TrimSpace(string(sentence))
 					if selected == "y" {
 						cmd = exec.Command("sudo", "apt", "install", "-y", "libnss3-tools")
-						cmd.Stdout = os.Stdout
-						cmd.Stderr = os.Stderr
+						attr.AttachOutput(cmd)
 						err = cmd.Run()
 						if err != nil {
 							logger.Fatal(err)
@@ -437,14 +432,12 @@ func GenerateSslCert(ctxPath string, force bool) {
 						err = os.WriteFile(ctxPath+"/certutil_db_passwd.txt", []byte(""), 0755)
 						if err != nil {
 							cmd = exec.Command("certutil", "-d", usr.HomeDir+"/.pki/nssdb", "-N", ctxPath+"/certutil_db_passwd.txt")
-							cmd.Stdout = os.Stdout
-							cmd.Stderr = os.Stderr
+							attr.AttachOutput(cmd)
 							_ = cmd.Run()
 						}
 					}
 					cmd = exec.Command("certutil", "-d", "sql:"+usr.HomeDir+"/.pki/nssdb", "-A", "-t", "C,,", "-n", "madocklocalkey", "-i", ctxPath+"/madockCA.pem")
-					cmd.Stdout = os.Stdout
-					cmd.Stderr = os.Stderr
+					attr.AttachOutput(cmd)
 					err = cmd.Run()
 					if err != nil {
 						logger.Fatal(err)
@@ -452,8 +445,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 				}
 
 				cmd = exec.Command("sudo", updateCertCommand...)
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
+				attr.AttachOutput(cmd)
 				err = cmd.Run()
 				if err != nil {
 					logger.Fatal(err)
@@ -462,24 +454,21 @@ func GenerateSslCert(ctxPath string, force bool) {
 		}
 
 		cmd := exec.Command("openssl", "req", "-newkey", "rsa:4096", "-keyout", ctxPath+"/madock.local.key", "-out", ctxPath+"/madock.local.csr", "-nodes", "-subj", "/CN=madocklocalkey")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		attr.AttachOutput(cmd)
 		err = cmd.Run()
 		if err != nil {
 			logger.Fatal(err)
 		}
 
 		cmd = exec.Command("openssl", "x509", "-req", "-in", ctxPath+"/madock.local.csr", "-CA", ctxPath+"/madockCA.pem", "-CAkey", ctxPath+"/madockCA.key", "-CAcreateserial", "-out", ctxPath+"/madock.local.crt", "-days", "365", "-sha256", "-extfile", ctxPath+"/madock.ca.ext")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		attr.AttachOutput(cmd)
 		err = cmd.Run()
 		if err != nil {
 			logger.Fatal(err)
 		}
 
 		cmd = exec.Command("bash", "-c", "cat "+ctxPath+"/madock.local.crt "+ctxPath+"/madockCA.pem > "+ctxPath+"/fullchain.crt")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		attr.AttachOutput(cmd)
 		err = cmd.Run()
 		if err != nil {
 			logger.Fatal(err)

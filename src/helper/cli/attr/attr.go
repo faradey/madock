@@ -1,9 +1,11 @@
 package attr
 
 import (
+	"os"
+	"os/exec"
+
 	"github.com/alexflint/go-arg"
 	"github.com/faradey/madock/v3/src/helper/logger"
-	"os"
 )
 
 var IsParseArgs = true
@@ -16,6 +18,14 @@ type Arguments struct {
 
 func (a *Arguments) GetQuiet() bool {
 	return a.Quiet
+}
+
+// AttachOutput connects cmd stdout/stderr to os.Stdout/os.Stderr unless quiet mode is active
+func AttachOutput(cmd *exec.Cmd) {
+	if !IsQuiet {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
 }
 
 type ArgumentsWithArgs struct {

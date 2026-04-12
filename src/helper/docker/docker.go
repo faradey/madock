@@ -194,10 +194,7 @@ func dockerComposePull(composeFiles []string) {
 
 // attachOutput connects cmd stdout/stderr to os.Stdout/os.Stderr unless quiet mode is active
 func attachOutput(cmd *exec.Cmd) {
-	if !attr.IsQuiet {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
+	attr.AttachOutput(cmd)
 }
 
 // UpSnapshot starts snapshot container
