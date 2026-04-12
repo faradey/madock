@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"os/user"
 
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
@@ -60,8 +61,10 @@ func (h *BaseHandler) Start(projectName string, withChown bool, projectConf map[
 	}
 
 	cmd := exec.Command("docker", profilesOn...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	if !attr.IsQuiet {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
 	err := cmd.Run()
 
 	if err != nil {
@@ -93,8 +96,10 @@ func (h *BaseHandler) Stop(projectName string) {
 	}
 
 	cmd := exec.Command("docker", profilesOn...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	if !attr.IsQuiet {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
 	err := cmd.Run()
 	if err != nil {
 		logger.Fatal(err)

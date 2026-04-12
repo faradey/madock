@@ -61,8 +61,7 @@ func UpNginxWithBuild(projectName string, force bool) {
 			command = append(command, "--build", "--force-recreate")
 		}
 		cmd := exec.Command("docker", command...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		attachOutput(cmd)
 		err := cmd.Run()
 		if err != nil {
 			logger.Println(err)
@@ -79,8 +78,7 @@ func DownNginx(force bool) {
 			command = "kill"
 		}
 		cmd := exec.Command("docker", "compose", "-f", composeFile, command)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		attachOutput(cmd)
 		err := cmd.Run()
 		if err != nil {
 			fmt.Println(err)
@@ -97,8 +95,7 @@ func StopNginx(force bool) {
 			command = "kill"
 		}
 		cmd := exec.Command("docker", "compose", "-f", composeFile, command)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		attachOutput(cmd)
 		err := cmd.Run()
 		if err != nil {
 			fmt.Println(err)

@@ -7,6 +7,7 @@ import (
 	"os/user"
 
 	configs2 "github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
 )
@@ -40,8 +41,7 @@ func Down(projectName string, withVolumes bool) {
 		}
 
 		cmd := exec.Command("docker", profilesOn...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		attachOutput(cmd)
 		err := cmd.Run()
 		if err != nil {
 			fmt.Println(err)
@@ -66,8 +66,7 @@ func Kill(projectName string) {
 		profilesOn = append(profilesOn, "kill")
 
 		cmd := exec.Command("docker", profilesOn...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		attachOutput(cmd)
 		err := cmd.Run()
 		if err != nil {
 			fmt.Println(err)
@@ -155,8 +154,7 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 	}
 	dockerComposePull([]string{"compose", "-f", composeFile, "-f", composeFileOS})
 	cmd := exec.Command("docker", profilesOn...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	attachOutput(cmd)
 	err = cmd.Run()
 	if err != nil {
 		logger.Fatal(err)
@@ -183,12 +181,22 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 // dockerComposePull pulls images for docker-compose
 func dockerComposePull(composeFiles []string) {
 	composeFiles = append(composeFiles, "pull")
+	if attr.IsQuiet {
+		composeFiles = append(composeFiles, "--quiet")
+	}
 	cmd := exec.Command("docker", composeFiles...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	attachOutput(cmd)
 	err := cmd.Run()
 	if err != nil {
 		logger.Fatal(err)
+	}
+}
+
+// attachOutput connects cmd stdout/stderr to os.Stdout/os.Stderr unless quiet mode is active
+func attachOutput(cmd *exec.Cmd) {
+	if !attr.IsQuiet {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 	}
 }
 
@@ -209,8 +217,7 @@ func UpSnapshot(projectName string) {
 	}
 	dockerComposePull([]string{"compose", "-f", composerFile})
 	cmd := exec.Command("docker", profilesOn...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	attachOutput(cmd)
 	err := cmd.Run()
 	if err != nil {
 		logger.Fatal(err)
@@ -224,8 +231,7 @@ func StopSnapshot(projectName string) {
 	if paths.IsFileExist(composerFile) {
 		command := "stop"
 		cmd := exec.Command("docker", "compose", "-f", composerFile, command)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		attachOutput(cmd)
 		err := cmd.Run()
 		if err != nil {
 			fmt.Println(err)
