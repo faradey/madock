@@ -1,6 +1,7 @@
 **v3.6.9**
 
 Added:
+- `--quiet` / `-q` flag available on all commands — suppresses Docker build/pull output (useful in JediTerm and other IDEs to avoid flood output). Affects `start`, `rebuild`, `setup`, `debug:enable`, `debug:disable` and any other command that triggers Docker operations
 - `db:import` now detects MySQL `GTID_PURGED cannot be changed` errors and offers an interactive resolution: run `RESET MASTER` (or `RESET BINARY LOGS AND GTIDS` on MySQL 8.4+) and retry, or retry with GTID statements stripped from the dump on the fly
 - `--reset-gtid` flag for `db:import` to perform the GTID reset automatically before import (useful for CI/scripts)
 - `db:import` now detects MySQL `ERROR 1062 Duplicate entry` errors and offers to retry the import in force mode (`-f`) so duplicate-row errors are skipped instead of aborting
