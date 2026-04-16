@@ -64,8 +64,11 @@ func ListFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 		name = f.Name()
 		subdirName := strings.Trim(subdir+name, "/")
 		if f.IsDir() {
-			if subdirName != "catalog/product/cache" &&
+			if subdirName != "analytics" &&
+				subdirName != "catalog/product/cache" &&
 				subdirName != "cache" &&
+				subdirName != "captcha" &&
+				subdirName != "export" &&
 				subdirName != "images/cache" &&
 				subdirName != "sitemap" &&
 				subdirName != "tmp" &&
