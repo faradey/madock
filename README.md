@@ -45,6 +45,10 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Custom commands [more](docs/custom_commands.md)
 * MCP Server for AI assistants (Claude Code, Cursor, VS Code) [more](docs/mcp.md)
 
+## IDE Plugins
+
+* [Madock Integration for JetBrains](https://plugins.jetbrains.com/plugin/31208-madock-integration) — PhpStorm / IntelliJ plugin for managing madock projects directly from the IDE
+
 ## Tested on
 * Linux (Ubuntu 20.04)
 * macOS (Monterey, Sonoma)
