@@ -1,3 +1,8 @@
+**v3.7.0**
+
+Added:
+- `madock mcp` — built-in MCP (Model Context Protocol) server for AI assistants (Claude Code, Cursor, VS Code). Provides 30 tools: container lifecycle, configuration, database operations, service management, Composer/Magento CLI, remote sync, and more. See [docs/mcp.md](docs/mcp.md)
+
 **v3.6.9**
 
 Added:
