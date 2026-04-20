@@ -20,8 +20,24 @@ All commands are run as `madock <command>`.
 - `bash` — open shell in container (flags: `--service`, `--user`, `--shell`)
 - `cli` — execute command in container
 - `composer` — run composer command
-- `magento` / `m` — run Magento CLI command
 - `node` — run node/npm command
+
+### Platform-Specific CLI Commands
+
+Each platform has its own CLI command(s). Use the one matching the project's platform:
+
+| Command | Aliases | Platform | What it runs |
+|---------|---------|----------|--------------|
+| `magento` | `m` | Magento 2 | `php bin/magento <args>` |
+| `n98` | — | Magento 2 | n98-magerun2 |
+| `magento-cloud` | `cloud` | Magento 2 | Magento Cloud CLI |
+| `wp` | — | WooCommerce | WP-CLI |
+| `shopware` | `sw` | Shopware | `php bin/console <args>` |
+| `shopware:bin` | `sw:b` | Shopware | `bin/<args>` (e.g. build-js.sh) |
+| `shopify` | `sy` | Shopify | execute command in workdir |
+| `shopify:web` | `sy:w` | Shopify | execute command in `web/` |
+| `shopify:web:frontend` | `sy:w:f` | Shopify | execute command in `web/frontend/` |
+| `prestashop` | `ps` | PrestaShop | `php bin/console <args>` |
 
 ### Database
 - `db:import` — import database
@@ -154,12 +170,12 @@ Config is stored in `.madock/config.xml` (project-level) as hierarchical XML wit
 
 ## Supported Platforms
 
-- **Magento 2** — full support: setup, install, cron, cache, admin, cloud, MFTF, n98-magerun
-- **Shopware** — setup, install, cron
-- **Shopify** — setup with Node.js support
-- **PrestaShop** — setup, install
-- **WooCommerce** — setup, install, WP-CLI integration
-- **Custom** — any language (PHP, Node.js, Python, Go, Ruby) with configurable services
+- **Magento 2** (`platform: magento2`) — full support: setup, install, cron, cache, admin, cloud, MFTF, n98-magerun. CLI: `magento`, `n98`, `cloud`
+- **Shopware** (`platform: shopware`) — setup, install, cron. CLI: `shopware`, `shopware:bin`
+- **Shopify** (`platform: shopify`) — setup with Node.js support. CLI: `shopify`, `shopify:web`, `shopify:web:frontend`
+- **PrestaShop** (`platform: prestashop`) — setup, install. CLI: `prestashop`
+- **WooCommerce** (`platform: woocommerce`) — setup, install, WP-CLI integration. CLI: `wp`
+- **Custom** (`platform: custom`) — any language (PHP, Node.js, Python, Go, Ruby) with configurable services
 
 ## Architecture
 

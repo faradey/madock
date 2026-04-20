@@ -250,6 +250,78 @@ func registerTools(s *server.MCPServer) {
 		),
 	), handleMagento)
 
+	s.AddTool(mcp.NewTool("madock_n98",
+		mcp.WithDescription("Run n98-magerun command inside the PHP container. Only available for Magento 2 projects."),
+		mcp.WithString("args",
+			mcp.Required(),
+			mcp.Description("n98-magerun arguments (e.g. 'db:info', 'sys:info', 'dev:console')"),
+		),
+	), handleN98)
+
+	s.AddTool(mcp.NewTool("madock_cloud",
+		mcp.WithDescription("Run Magento Cloud CLI command inside the PHP container. Only available for Magento 2 projects. Use $project as placeholder for configured project name."),
+		mcp.WithString("args",
+			mcp.Required(),
+			mcp.Description("Magento Cloud CLI arguments (e.g. 'environment:list', 'ssh', 'db:dump')"),
+		),
+	), handleCloud)
+
+	s.AddTool(mcp.NewTool("madock_wp",
+		mcp.WithDescription("Run a WP-CLI command inside the PHP container. Only available for WooCommerce/WordPress projects."),
+		mcp.WithString("args",
+			mcp.Required(),
+			mcp.Description("WP-CLI arguments (e.g. 'plugin list', 'cache flush', 'db check', 'option get siteurl')"),
+		),
+	), handleWp)
+
+	s.AddTool(mcp.NewTool("madock_shopware",
+		mcp.WithDescription("Run a Shopware CLI command (bin/console) inside the PHP container. Only available for Shopware projects."),
+		mcp.WithString("args",
+			mcp.Required(),
+			mcp.Description("Shopware CLI arguments (e.g. 'cache:clear', 'plugin:list', 'theme:compile')"),
+		),
+	), handleShopware)
+
+	s.AddTool(mcp.NewTool("madock_shopware_bin",
+		mcp.WithDescription("Run a Shopware bin/* command inside the PHP container. Only available for Shopware projects."),
+		mcp.WithString("args",
+			mcp.Required(),
+			mcp.Description("Shopware bin command and arguments (e.g. 'build-js.sh', 'watch-storefront.sh')"),
+		),
+	), handleShopwareBin)
+
+	s.AddTool(mcp.NewTool("madock_shopify",
+		mcp.WithDescription("Execute a command inside the Shopify project container (in the workdir root). Only available for Shopify projects."),
+		mcp.WithString("args",
+			mcp.Required(),
+			mcp.Description("Command to execute (e.g. 'npm install', 'node app.js', 'ls -la')"),
+		),
+	), handleShopify)
+
+	s.AddTool(mcp.NewTool("madock_shopify_web",
+		mcp.WithDescription("Execute a command inside the Shopify project container in the web/ directory. Only available for Shopify projects."),
+		mcp.WithString("args",
+			mcp.Required(),
+			mcp.Description("Command to execute in web/ directory (e.g. 'npm install', 'npm run dev')"),
+		),
+	), handleShopifyWeb)
+
+	s.AddTool(mcp.NewTool("madock_shopify_web_frontend",
+		mcp.WithDescription("Execute a command inside the Shopify project container in the web/frontend/ directory. Only available for Shopify projects."),
+		mcp.WithString("args",
+			mcp.Required(),
+			mcp.Description("Command to execute in web/frontend/ directory (e.g. 'npm install', 'npm run build')"),
+		),
+	), handleShopifyWebFrontend)
+
+	s.AddTool(mcp.NewTool("madock_prestashop",
+		mcp.WithDescription("Run a PrestaShop CLI command (bin/console) inside the PHP container. Only available for PrestaShop projects."),
+		mcp.WithString("args",
+			mcp.Required(),
+			mcp.Description("PrestaShop CLI arguments (e.g. 'cache:clear', 'prestashop:module list')"),
+		),
+	), handlePrestaShop)
+
 	s.AddTool(mcp.NewTool("madock_flush_cache",
 		mcp.WithDescription("Flush all caches for the current project (platform-specific: Magento cache, OPcache, etc.)."),
 		mcp.WithDestructiveHintAnnotation(false),
@@ -606,6 +678,96 @@ func handleMagento(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	args := append([]string{"magento"}, strings.Fields(rawArgs)...)
 	r, runErr := runMadock(ctx, args...)
 	return toolResult(r, runErr, "run magento CLI")
+}
+
+func handleN98(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	rawArgs, err := request.RequireString("args")
+	if err != nil {
+		return mcp.NewToolResultError("Missing required parameter: args"), nil
+	}
+	args := append([]string{"n98"}, strings.Fields(rawArgs)...)
+	r, runErr := runMadock(ctx, args...)
+	return toolResult(r, runErr, "run n98-magerun")
+}
+
+func handleCloud(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	rawArgs, err := request.RequireString("args")
+	if err != nil {
+		return mcp.NewToolResultError("Missing required parameter: args"), nil
+	}
+	args := append([]string{"cloud"}, strings.Fields(rawArgs)...)
+	r, runErr := runMadock(ctx, args...)
+	return toolResult(r, runErr, "run magento cloud CLI")
+}
+
+func handleWp(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	rawArgs, err := request.RequireString("args")
+	if err != nil {
+		return mcp.NewToolResultError("Missing required parameter: args"), nil
+	}
+	args := append([]string{"wp"}, strings.Fields(rawArgs)...)
+	r, runErr := runMadock(ctx, args...)
+	return toolResult(r, runErr, "run WP-CLI")
+}
+
+func handleShopware(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	rawArgs, err := request.RequireString("args")
+	if err != nil {
+		return mcp.NewToolResultError("Missing required parameter: args"), nil
+	}
+	args := append([]string{"shopware"}, strings.Fields(rawArgs)...)
+	r, runErr := runMadock(ctx, args...)
+	return toolResult(r, runErr, "run shopware CLI")
+}
+
+func handleShopwareBin(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	rawArgs, err := request.RequireString("args")
+	if err != nil {
+		return mcp.NewToolResultError("Missing required parameter: args"), nil
+	}
+	args := append([]string{"shopware:bin"}, strings.Fields(rawArgs)...)
+	r, runErr := runMadock(ctx, args...)
+	return toolResult(r, runErr, "run shopware bin command")
+}
+
+func handleShopify(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	rawArgs, err := request.RequireString("args")
+	if err != nil {
+		return mcp.NewToolResultError("Missing required parameter: args"), nil
+	}
+	args := append([]string{"shopify"}, strings.Fields(rawArgs)...)
+	r, runErr := runMadock(ctx, args...)
+	return toolResult(r, runErr, "run shopify command")
+}
+
+func handleShopifyWeb(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	rawArgs, err := request.RequireString("args")
+	if err != nil {
+		return mcp.NewToolResultError("Missing required parameter: args"), nil
+	}
+	args := append([]string{"shopify:web"}, strings.Fields(rawArgs)...)
+	r, runErr := runMadock(ctx, args...)
+	return toolResult(r, runErr, "run shopify web command")
+}
+
+func handleShopifyWebFrontend(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	rawArgs, err := request.RequireString("args")
+	if err != nil {
+		return mcp.NewToolResultError("Missing required parameter: args"), nil
+	}
+	args := append([]string{"shopify:web:frontend"}, strings.Fields(rawArgs)...)
+	r, runErr := runMadock(ctx, args...)
+	return toolResult(r, runErr, "run shopify web frontend command")
+}
+
+func handlePrestaShop(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	rawArgs, err := request.RequireString("args")
+	if err != nil {
+		return mcp.NewToolResultError("Missing required parameter: args"), nil
+	}
+	args := append([]string{"prestashop"}, strings.Fields(rawArgs)...)
+	r, runErr := runMadock(ctx, args...)
+	return toolResult(r, runErr, "run prestashop CLI")
 }
 
 func handleFlushCache(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
