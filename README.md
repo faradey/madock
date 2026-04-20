@@ -43,6 +43,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Isolation mode [more](docs/isolation.md)
 * Varnish Cache [more](docs/varnish.md)
 * Custom commands [more](docs/custom_commands.md)
+* MCP Server for AI assistants (Claude Code, Cursor, VS Code) [more](docs/mcp.md)
 
 ## Tested on
 * Linux (Ubuntu 20.04)
@@ -176,6 +177,7 @@ IMPORTANT: Please, read all items before starting work.
 * Kibana. URL http://{you_domain_name}/kibana
 * Mailpit. Default URL http://localhost:8025
 * [Store scopes](docs/store_scopes.md): website vs store
+* [MCP Server](docs/mcp.md) (AI integration for Claude Code, Cursor, VS Code)
 
 ## Donations
 If you find it useful and want to invite us for a beer, just click on the donation button. Thanks!

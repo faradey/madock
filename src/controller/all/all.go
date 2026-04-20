@@ -24,6 +24,7 @@ import (
 	_ "github.com/faradey/madock/v3/src/controller/general/info/ports"
 	_ "github.com/faradey/madock/v3/src/controller/general/install"
 	_ "github.com/faradey/madock/v3/src/controller/general/logs"
+	_ "github.com/faradey/madock/v3/src/controller/general/mcp"
 	_ "github.com/faradey/madock/v3/src/controller/general/node"
 	_ "github.com/faradey/madock/v3/src/controller/general/open"
 	_ "github.com/faradey/madock/v3/src/controller/general/patch"
