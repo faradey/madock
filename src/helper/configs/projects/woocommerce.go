@@ -11,9 +11,7 @@ func init() {
 }
 
 func WooCommerce(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
-	if _, ok := projectConf["public_dir"]; !ok {
-		config.Set("public_dir", "")
-	}
+	config.Set("public_dir", "")
 
 	if _, ok := projectConf["composer_dir"]; !ok {
 		config.Set("composer_dir", "")
