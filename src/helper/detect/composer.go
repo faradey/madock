@@ -91,6 +91,14 @@ func DetectFromComposer(projectPath string) DetectionResult {
 		return result
 	}
 
+	// Check for WooCommerce
+	if _, ok := composer.Require["wpackagist-plugin/woocommerce"]; ok {
+		result.Platform = "woocommerce"
+		result.Detected = true
+		result.Source = "wpackagist-plugin/woocommerce"
+		return result
+	}
+
 	// Check project type
 	if composer.Type == "magento2-module" || composer.Type == "magento2-theme" {
 		result.Platform = "magento2"
@@ -209,6 +217,15 @@ func Detect(projectPath string) DetectionResult {
 	// Fall back to composer.json
 	if result := DetectFromComposer(projectPath); result.Detected {
 		return result
+	}
+
+	// Try WordPress file-based detection
+	if paths.IsFileExist(projectPath+"/wp-config.php") || paths.IsFileExist(projectPath+"/wp-content") {
+		return DetectionResult{
+			Platform: "woocommerce",
+			Detected: true,
+			Source:   "wp-config.php",
+		}
 	}
 
 	// Try language-based detection

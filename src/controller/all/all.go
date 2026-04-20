@@ -67,5 +67,7 @@ import (
 	_ "github.com/faradey/madock/v3/src/controller/shopify/frontend"
 	_ "github.com/faradey/madock/v3/src/controller/shopify/web"
 	_ "github.com/faradey/madock/v3/src/controller/shopware"
+	_ "github.com/faradey/madock/v3/src/controller/woocommerce"
+	_ "github.com/faradey/madock/v3/src/controller/woocommerce/setup"
 	_ "github.com/faradey/madock/v3/src/helper/compress"
 )

@@ -38,6 +38,9 @@ func init() {
 	RegisterInstallHandler("prestashop", func(projectName, platformVersion string, _ map[string]string) {
 		PrestaShop(projectName, platformVersion, false)
 	})
+	RegisterInstallHandler("woocommerce", func(projectName, platformVersion string, _ map[string]string) {
+		WooCommerce(projectName, platformVersion, false)
+	})
 }
 
 func Execute() {
@@ -172,6 +175,51 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 	fmtc.SuccessLn("[SUCCESS]: Shopware Admin URI: /admin")
 	fmtc.SuccessLn("[SUCCESS]: Shopware Admin User: admin")
 	fmtc.SuccessLn("[SUCCESS]: Shopware Admin Password: shopware")
+}
+
+func WooCommerce(projectName, platformVer string, isSampleData bool) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+
+	installCommand := "wp config create " +
+		"--dbname=" + projectConf["db/database"] + " " +
+		"--dbuser=" + projectConf["db/user"] + " " +
+		"--dbpass=" + projectConf["db/password"] + " " +
+		"--dbhost=db " +
+		"--path=" + projectConf["workdir"] + " " +
+		"--force " +
+		"&& wp core install " +
+		"--url=https://" + host + " " +
+		"--title='WooCommerce Store' " +
+		"--admin_user=" + projectConf["magento/admin_user"] + " " +
+		"--admin_password=" + projectConf["magento/admin_password"] + " " +
+		"--admin_email=" + projectConf["magento/admin_email"] + " " +
+		"--path=" + projectConf["workdir"] + " " +
+		"&& wp plugin install woocommerce --activate " +
+		"--path=" + projectConf["workdir"] + " " +
+		"&& wp rewrite structure '/%postname%/' " +
+		"--path=" + projectConf["workdir"] + " "
+
+	if isSampleData {
+		installCommand += "&& wp plugin install flavor flavor-starter --activate " +
+			"--path=" + projectConf["workdir"] + " "
+	}
+
+	fmt.Println(installCommand)
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: WooCommerce installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: WooCommerce Store URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: WordPress Admin URI: /wp-admin")
+	fmtc.SuccessLn("[SUCCESS]: WordPress Admin User: " + projectConf["magento/admin_user"])
+	fmtc.SuccessLn("[SUCCESS]: WordPress Admin Password: " + projectConf["magento/admin_password"])
 }
 
 func PrestaShop(projectName, platformVer string, isSampleData bool) {

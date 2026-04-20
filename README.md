@@ -3,7 +3,7 @@
 # madock
 Local development environment based on Docker
 
-Supported platforms: Magento2, Shopify, Shopware, PrestaShop, Custom projects (PHP, Node.js, Python, Go, Ruby).
+Supported platforms: Magento2, Shopify, Shopware, PrestaShop, WooCommerce, Custom projects (PHP, Node.js, Python, Go, Ruby).
 
 [![GoDoc](https://godoc.org/github.com/faradey/madock?status.svg)](https://godoc.org/github.com/faradey/madock)
 [![Go Report Card](https://goreportcard.com/badge/github.com/faradey/madock)](https://goreportcard.com/report/github.com/faradey/madock)
@@ -23,6 +23,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * **Custom project** as a separate service (PHP, Node.js, Python, Go, Ruby)
 * **Shopware** as a separate service. Learn [more](docs/shopware.md)
 * **PrestaShop** as a separate service. Learn [more](docs/prestashop.md)
+* **WooCommerce** as a separate service (WordPress + WooCommerce + WP-CLI)
 * Cron support
 * Flexible configuration for each project
 * Database import and export in two clicks

@@ -1,6 +1,6 @@
 # madock
 
-> madock is a Docker-based local development environment tool written in Go. It automates project setup with Docker Compose, supports multiple simultaneous projects via an nginx proxy, and provides platform-specific workflows for Magento 2, Shopware, Shopify, PrestaShop, and custom (PHP/Node.js/Python/Go/Ruby) projects.
+> madock is a Docker-based local development environment tool written in Go. It automates project setup with Docker Compose, supports multiple simultaneous projects via an nginx proxy, and provides platform-specific workflows for Magento 2, Shopware, Shopify, PrestaShop, WooCommerce, and custom (PHP/Node.js/Python/Go/Ruby) projects.
 
 ## Commands
 
@@ -158,6 +158,7 @@ Config is stored in `.madock/config.xml` (project-level) as hierarchical XML wit
 - **Shopware** — setup, install, cron
 - **Shopify** — setup with Node.js support
 - **PrestaShop** — setup, install
+- **WooCommerce** — setup, install, WP-CLI integration
 - **Custom** — any language (PHP, Node.js, Python, Go, Ruby) with configurable services
 
 ## Architecture

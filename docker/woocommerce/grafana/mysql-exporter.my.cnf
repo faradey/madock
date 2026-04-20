@@ -1,0 +1,1 @@
+{{{include snippets/dockerfile/grafana/mysql-exporter.my.cnf}}}
