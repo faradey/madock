@@ -2,6 +2,8 @@
 
 Added:
 - `madock mcp` — built-in MCP (Model Context Protocol) server for AI assistants (Claude Code, Cursor, VS Code). Provides 30 tools: container lifecycle, configuration, database operations, service management, Composer/Magento CLI, remote sync, and more. See [docs/mcp.md](docs/mcp.md)
+- WooCommerce platform support: `madock setup --platform woocommerce`, WP-CLI via `madock wp`, auto-detection by `wp-config.php`
+- JetBrains IDE plugin: [Madock Integration](https://plugins.jetbrains.com/plugin/31208-madock-integration)
 
 **v3.6.9**
 
