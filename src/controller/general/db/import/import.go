@@ -199,10 +199,6 @@ func importMysql(containerName string, projectConf map[string]string, args *arg_
 		return c.Run()
 	}
 
-	if err := runQuery("SET FOREIGN_KEY_CHECKS=0;"); err != nil {
-		logger.Fatalln("Failed to disable foreign key checks:", err)
-	}
-
 	if args.ResetGtid {
 		if err := runQuery(gtidResetStatement(projectConf) + ";"); err != nil {
 			logger.Fatalln("Failed to reset GTID state:", err)
@@ -214,12 +210,13 @@ func importMysql(containerName string, projectConf map[string]string, args *arg_
 			return "", seekErr
 		}
 
-		var cmd *exec.Cmd
+		baseArgs := []string{mysqlCommandName}
 		if args.Force || forceOverride {
-			cmd, _ = docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-f", "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
-		} else {
-			cmd, _ = docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", projectConf["db/database"])
+			baseArgs = append(baseArgs, "-f")
 		}
+		baseArgs = append(baseArgs, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", "--init-command", "SET FOREIGN_KEY_CHECKS=0", projectConf["db/database"])
+		var cmd *exec.Cmd
+		cmd, _ = docker.PrepareContainerExec(containerName, user, false, baseArgs...)
 
 		progress := &progressReader{totalBytes: totalSize}
 
@@ -261,9 +258,6 @@ func importMysql(containerName string, projectConf map[string]string, args *arg_
 		err = handleDuplicateEntry(runImport)
 	}
 
-	if fkErr := runQuery("SET FOREIGN_KEY_CHECKS=1;"); fkErr != nil {
-		logger.Fatalln("Failed to enable foreign key checks:", fkErr)
-	}
 	if err != nil {
 		logger.Fatal(err)
 	}
