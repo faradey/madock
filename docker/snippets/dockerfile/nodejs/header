@@ -1,3 +1,5 @@
 FROM {{{nodejs/repository}}}:{{{nodejs/version}}}
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
+
+RUN apt-get update && apt-get install -y --no-install-recommends xdg-utils && rm -rf /var/lib/apt/lists/*
