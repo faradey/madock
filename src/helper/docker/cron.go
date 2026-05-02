@@ -131,7 +131,7 @@ func CronExecute(projectName string, flag, manual bool) {
 			}
 		}
 	} else {
-		err := ContainerExec(GetContainerName(projectConf, projectName, service), userOS, false, "service", "cron", "status")
+		_, err := containerExecSilent(GetContainerName(projectConf, projectName, service), userOS, "service", "cron", "status")
 		if err == nil {
 			// First, remove config-based jobs (for all platforms)
 			removeCronJobsFromConfig(projectConf, projectName, manual)

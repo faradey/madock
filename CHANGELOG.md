@@ -1,3 +1,12 @@
+**v3.7.1**
+
+Fixed:
+- Fix nodejs language Dockerfile build failure: `chown 501:20 /var/www` failed because `node` base image has no `/var/www` directory — `mkdir -p /var/www` added before chown
+- Suppress noisy `cron: unrecognized service` stderr from cron stop probe — `service cron status` now runs silently when used as availability probe
+
+Added:
+- Cron support in nodejs language container: `apt-get install -y cron` added to nodejs Dockerfile, enabling `cron.enabled=true` and `cron/jobs/*` for nodejs-only projects
+
 **v3.7.0**
 
 Added:
