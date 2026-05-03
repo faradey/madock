@@ -1,5 +1,6 @@
 <<<if{{{grafana/enabled}}}>>>
   dbexporter:
+    init: true
     image: prom/mysqld-exporter
     volumes:
       - ./ctx/grafana/mysql-exporter.my.cnf:/.my.cnf

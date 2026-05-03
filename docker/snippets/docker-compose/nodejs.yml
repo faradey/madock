@@ -1,5 +1,6 @@
 <<<if{{{nodejs/enabled}}}>>>
   nodejs:
+    init: true
     build:
       context: ctx
       dockerfile: nodejs.Dockerfile

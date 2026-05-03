@@ -1,5 +1,6 @@
 <<<if{{{redis/enabled}}}>>>
   redisdb:
+    init: true
     build:
       context: ctx
       dockerfile: redis.Dockerfile

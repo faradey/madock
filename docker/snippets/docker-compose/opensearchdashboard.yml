@@ -1,5 +1,6 @@
 <<<if{{{search/opensearch/dashboard/enabled}}}>>>
   opensearchdashboard:
+    init: true
     platform: linux/x86_64
     image: {{{search/opensearch/dashboard/repository}}}:{{{search/opensearch/version}}}
     ports:

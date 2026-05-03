@@ -1,5 +1,6 @@
 <<<if{{{valkey/enabled}}}>>>
   valkeydb:
+    init: true
     image: {{{valkey/repository}}}:{{{valkey/version}}}
     restart: {{{restart_policy}}}
 <<<endif>>>

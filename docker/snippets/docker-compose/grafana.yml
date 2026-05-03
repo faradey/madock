@@ -1,5 +1,6 @@
 <<<if{{{grafana/enabled}}}>>>
   grafana:
+    init: true
     image: {{{grafana/repository}}}:{{{grafana/version}}}
     ports:
       - "{{{port/grafana}}}:3000"

@@ -1,5 +1,6 @@
 <<<if{{{db/phpmyadmin/enabled}}}>>>
   phpmyadmin:
+    init: true
     image: {{{db/phpmyadmin/repository}}}:{{{db/phpmyadmin/version}}}
     ports:
       - "{{{port/phpmyadmin}}}:80"

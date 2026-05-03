@@ -1,5 +1,6 @@
   <<<if{{{claude/enabled}}}>>>
   claude:
+    init: true
     build:
       context: ctx
       dockerfile: claude.Dockerfile

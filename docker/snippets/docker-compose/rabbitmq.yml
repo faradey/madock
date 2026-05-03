@@ -1,5 +1,6 @@
 <<<if{{{rabbitmq/enabled}}}>>>
   rabbitmq:
+    init: true
     image: {{{rabbitmq/repository}}}:{{{rabbitmq/version}}}-management
     environment:
       RABBITMQ_DEFAULT_USER: {{{rabbitmq/user}}}

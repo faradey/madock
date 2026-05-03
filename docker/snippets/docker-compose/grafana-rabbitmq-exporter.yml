@@ -1,5 +1,6 @@
 <<<if{{{grafana/enabled}}}{{{rabbitmq/enabled}}}>>>
   rabbitmqexporter:
+    init: true
     image: kbudde/rabbitmq-exporter
     environment:
       RABBIT_URL: http://rabbitmq:15672

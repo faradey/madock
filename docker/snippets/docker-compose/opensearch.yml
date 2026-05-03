@@ -1,5 +1,6 @@
 <<<if{{{search/opensearch/enabled}}}>>>
   opensearch:
+    init: true
     build:
       context: ctx
       dockerfile: opensearch.Dockerfile

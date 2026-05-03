@@ -1,5 +1,6 @@
 <<<if{{{db/type_is_postgresql}}}>>>
   db:
+    init: true
     build:
       context: ctx
       dockerfile: db.Dockerfile

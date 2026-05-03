@@ -1,5 +1,6 @@
 <<<if{{{golang/enabled}}}>>>
   golang:
+    init: true
     build:
       context: ctx
       dockerfile: golang.Dockerfile

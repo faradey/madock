@@ -1,5 +1,6 @@
 <<<if{{{db/pgadmin/enabled}}}>>>
   pgadmin:
+    init: true
     image: {{{db/pgadmin/repository}}}:{{{db/pgadmin/version}}}
     ports:
       - "{{{port/pgadmin}}}:80"

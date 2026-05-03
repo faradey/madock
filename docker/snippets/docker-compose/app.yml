@@ -1,5 +1,6 @@
 <<<if{{{app/enabled}}}>>>
   app:
+    init: true
     build:
       context: ctx
       dockerfile: app.Dockerfile

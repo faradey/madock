@@ -1,5 +1,6 @@
 <<<if{{{db2/enabled}}}>>>
   db2:
+    init: true
 <<<if{{{db/use_default_auth_plugin}}}>>>    command:
       --default-authentication-plugin=mysql_native_password
 <<<endif>>>    build:

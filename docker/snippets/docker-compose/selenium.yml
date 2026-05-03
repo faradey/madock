@@ -1,5 +1,6 @@
 <<<if{{{magento/mftf/enabled}}}>>>
   selenium:
+    init: true
     image: selenium/standalone-chrome:latest
     platform: linux/amd64
     ports:

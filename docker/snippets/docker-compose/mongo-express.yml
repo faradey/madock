@@ -1,5 +1,6 @@
 <<<if{{{db/mongo_express/enabled}}}>>>
   mongo-express:
+    init: true
     image: {{{db/mongo_express/repository}}}:{{{db/mongo_express/version}}}
     ports:
       - "{{{port/mongo_express}}}:8081"

@@ -1,4 +1,5 @@
 nginx:
+    init: true
     build:
       context: ctx
       dockerfile: nginx.Dockerfile

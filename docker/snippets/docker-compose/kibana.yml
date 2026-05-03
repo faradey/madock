@@ -1,5 +1,6 @@
 <<<if{{{search/elasticsearch/dashboard/enabled}}}>>>
   kibana:
+    init: true
     platform: linux/x86_64
     image: {{{search/elasticsearch/dashboard/repository}}}:{{{search/elasticsearch/version}}}
     ports:

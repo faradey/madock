@@ -1,5 +1,6 @@
 <<<if{{{php/enabled}}}>>>
   php:
+    init: true
     build:
       context: ctx
       dockerfile: php.Dockerfile

@@ -1,5 +1,6 @@
 <<<if{{{varnish/enabled}}}>>>
   varnish:
+    init: true
     image: {{{varnish/repository}}}:{{{varnish/version}}}
     ports:
       - "{{{port/varnish}}}:6081"

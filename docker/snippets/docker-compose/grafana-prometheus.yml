@@ -1,5 +1,6 @@
 <<<if{{{grafana/enabled}}}>>>
   prometheus:
+    init: true
     image: prom/prometheus
     command: --config.file=/etc/prometheus/prometheus-config.yml
     volumes:

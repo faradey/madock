@@ -1,5 +1,6 @@
 <<<if{{{grafana/enabled}}}>>>
   promtail:
+    init: true
     image: grafana/promtail:2.9.10
     volumes:
       - ./ctx/grafana/promtail-config.yml:/etc/promtail/config.yml

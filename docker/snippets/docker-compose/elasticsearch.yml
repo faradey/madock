@@ -1,5 +1,6 @@
 <<<if{{{search/elasticsearch/enabled}}}>>>
   elasticsearch:
+    init: true
     build:
       context: ctx
       dockerfile: elasticsearch.Dockerfile

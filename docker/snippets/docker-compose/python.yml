@@ -1,5 +1,6 @@
 <<<if{{{python/enabled}}}>>>
   python:
+    init: true
     build:
       context: ctx
       dockerfile: python.Dockerfile

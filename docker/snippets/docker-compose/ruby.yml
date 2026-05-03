@@ -1,5 +1,6 @@
 <<<if{{{ruby/enabled}}}>>>
   ruby:
+    init: true
     build:
       context: ctx
       dockerfile: ruby.Dockerfile
