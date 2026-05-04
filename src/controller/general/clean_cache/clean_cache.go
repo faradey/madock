@@ -37,7 +37,7 @@ func Execute() {
 
 	if projectConf["platform"] == "magento2" {
 		commands := []string{"rm -f pub/static/deployed_version.txt", "rm -Rf pub/static/frontend", "rm -Rf pub/static/adminhtml", "rm -Rf var/view_preprocessed/pub", "rm -Rf generated/code"}
-		err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), user, true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+"php bin/magento c:f")
+		err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), user, true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+"php bin/magento cache:flush")
 		if err != nil {
 			logger.Fatal(err)
 		}
