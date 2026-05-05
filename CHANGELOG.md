@@ -1,3 +1,13 @@
+**v3.7.2**
+
+Fixed:
+- Fix `service "nginx" depends on undefined service "php"` and `service "php_without_xdebug" depends on undefined service "php"` errors when project config lacks `php/enabled` — nginx `depends_on` is now gated by a new `main_service_enabled` placeholder, and the `php_without_xdebug` snippet now requires both `php/enabled` and `php/xdebug/enabled` ([#40](https://github.com/faradey/madock/issues/40))
+- Use full `php bin/magento cache:flush` instead of the `c:f` shorthand inside `madock c:f` to avoid Symfony console ambiguity in setup-only mode
+
+Changed:
+- V366 migration now also covers `woocommerce` and `shopify` platforms
+- New V372 migration backfills `php/enabled=true` for projects upgraded from versions in the 3.6.7..3.7.1 range, which the V366 trigger (`< 3.6.7`) had missed
+
 **v3.7.1**
 
 Fixed:
