@@ -1,3 +1,8 @@
+**v3.7.3**
+
+Fixed:
+- Fix `host not found in upstream "php_without_xdebug:9000"` nginx error after upgrading to 3.7.2 with `php/enabled=false` and `php/xdebug/enabled=true` — nginx confs in all platform templates now gate the `fastcgi_backend_xdebug_true` upstream on the same dual condition (`php/enabled` AND `php/xdebug/enabled`) used by the `php_without_xdebug` compose snippet ([#40](https://github.com/faradey/madock/issues/40))
+
 **v3.7.2**
 
 Fixed:
