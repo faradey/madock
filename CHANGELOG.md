@@ -1,3 +1,8 @@
+**v3.7.4**
+
+Fixed:
+- Fix `host not found in upstream "php_without_xdebug:9000"` nginx error caused by the `<<<if{{{main_service_enabled}}}>>>` block in `nginx.yml` always being stripped — `main_service` and `main_service_enabled` placeholders are now substituted before `ReplaceConfigValue` runs `processConditionals`, so the conditional sees the concrete value (`true`/`false`) instead of an unresolved placeholder. Without this fix the `depends_on: php` block in nginx was always removed, letting nginx start before `php_without_xdebug` and fail upstream DNS resolution. Affects all projects on 3.7.2/3.7.3, regardless of `php/enabled` value ([#40](https://github.com/faradey/madock/issues/40))
+
 **v3.7.3**
 
 Fixed:

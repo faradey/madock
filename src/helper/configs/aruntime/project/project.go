@@ -102,6 +102,16 @@ func makeNginxConf(projectName string) {
 
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
+
+	// Resolve main_service / main_service_enabled BEFORE ReplaceConfigValue so
+	// that processConditionals (run inside ReplaceConfigValue) sees the
+	// concrete values when evaluating <<<if{{{main_service_enabled}}}>>>
+	// blocks. Otherwise the unresolved placeholder makes the condition
+	// evaluate to false and the block is always stripped.
+	mainService := resolveMainService(projectConf)
+	str = strings.Replace(str, "{{{main_service}}}", mainService, -1)
+	str = strings.Replace(str, "{{{main_service_enabled}}}", resolveMainServiceEnabled(projectConf, mainService), -1)
+
 	str = configs.ReplaceConfigValue(projectName, str)
 	hostName := "loc." + projectName + ".com"
 	hostNameWebsites := "loc." + projectName + ".com base;"
@@ -125,11 +135,6 @@ func makeNginxConf(projectName string) {
 
 	str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
 	str = strings.Replace(str, "{{{nginx/host_names_with_codes}}}", hostNameWebsites, -1)
-
-	// Replace main_service placeholder for proxy-based configs
-	mainService := resolveMainService(projectConf)
-	str = strings.Replace(str, "{{{main_service}}}", mainService, -1)
-	str = strings.Replace(str, "{{{main_service_enabled}}}", resolveMainServiceEnabled(projectConf, mainService), -1)
 
 	pp := paths.NewProjectPaths(projectName)
 	paths.MakeDirsByPath(pp.CtxDir())
@@ -273,13 +278,16 @@ func makeDockerCompose(projectName string) {
 		if len(hosts) > 0 {
 			hostName = hosts[0]["name"]
 		}
-		str = configs.ReplaceConfigValue(projectName, str)
-		str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
 
-		// Replace main_service placeholder for nginx depends_on
+		// Resolve main_service / main_service_enabled BEFORE ReplaceConfigValue
+		// so processConditionals sees the concrete value when evaluating
+		// <<<if{{{main_service_enabled}}}>>> blocks.
 		mainService := resolveMainService(projectConf)
 		str = strings.Replace(str, "{{{main_service}}}", mainService, -1)
 		str = strings.Replace(str, "{{{main_service_enabled}}}", resolveMainServiceEnabled(projectConf, mainService), -1)
+
+		str = configs.ReplaceConfigValue(projectName, str)
+		str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
 
 		// Dynamic port placeholder replacement - scans for any {{{port/XXX}}} pattern
 		str = replacePortPlaceholders(str, projectName)
