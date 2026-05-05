@@ -1,4 +1,4 @@
-<<<if{{{php/xdebug/enabled}}}>>>
+<<<if{{{php/enabled}}}{{{php/xdebug/enabled}}}>>>
   php_without_xdebug:
     init: true
     build:

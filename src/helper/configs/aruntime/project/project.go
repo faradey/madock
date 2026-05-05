@@ -129,6 +129,7 @@ func makeNginxConf(projectName string) {
 	// Replace main_service placeholder for proxy-based configs
 	mainService := resolveMainService(projectConf)
 	str = strings.Replace(str, "{{{main_service}}}", mainService, -1)
+	str = strings.Replace(str, "{{{main_service_enabled}}}", resolveMainServiceEnabled(projectConf, mainService), -1)
 
 	pp := paths.NewProjectPaths(projectName)
 	paths.MakeDirsByPath(pp.CtxDir())
@@ -278,6 +279,7 @@ func makeDockerCompose(projectName string) {
 		// Replace main_service placeholder for nginx depends_on
 		mainService := resolveMainService(projectConf)
 		str = strings.Replace(str, "{{{main_service}}}", mainService, -1)
+		str = strings.Replace(str, "{{{main_service_enabled}}}", resolveMainServiceEnabled(projectConf, mainService), -1)
 
 		// Dynamic port placeholder replacement - scans for any {{{port/XXX}}} pattern
 		str = replacePortPlaceholders(str, projectName)
@@ -294,6 +296,25 @@ func makeDockerCompose(projectName string) {
 			log.Fatalf("Unable to write file: %v", err)
 		}
 	}
+}
+
+// resolveMainServiceEnabled returns "true" if the main service container will be
+// emitted in docker-compose, "false" otherwise. Used to gate depends_on lines so
+// that nginx (and similar) don't reference an undefined service.
+func resolveMainServiceEnabled(projectConf map[string]string, mainService string) string {
+	switch mainService {
+	case "php":
+		if projectConf["php/enabled"] == "true" {
+			return "true"
+		}
+		return "false"
+	case "nodejs":
+		if projectConf["nodejs/enabled"] == "true" {
+			return "true"
+		}
+		return "false"
+	}
+	return "true"
 }
 
 // resolveMainService determines the main service name based on the language config

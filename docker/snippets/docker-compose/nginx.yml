@@ -12,8 +12,8 @@ nginx:
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}
-    depends_on:
-      - {{{main_service}}}
+    <<<if{{{main_service_enabled}}}>>>depends_on:
+      - {{{main_service}}}<<<endif>>>
     <<<if{{{isolation/enabled}}}>>>networks:
       - opened
       - isolated<<<endif>>>

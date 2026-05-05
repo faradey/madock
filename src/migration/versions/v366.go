@@ -13,9 +13,11 @@ import (
 // docker-compose when xdebug or nginx depends on the php service.
 func V366() {
 	phpPlatforms := map[string]bool{
-		"magento2":   true,
-		"shopware":   true,
-		"prestashop": true,
+		"magento2":    true,
+		"shopware":    true,
+		"prestashop":  true,
+		"woocommerce": true,
+		"shopify":     true,
 	}
 
 	projectsDir := paths.GetExecDirPath() + "/projects"
