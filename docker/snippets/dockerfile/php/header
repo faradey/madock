@@ -85,3 +85,9 @@ RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{php/version}}}-fpm.pid/" /etc/p
     && sed -i "s/listen = .*/listen = 9000/" /etc/php/{{{php/version}}}/fpm/pool.d/www.conf \
     && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/{{{php/version}}}/fpm/pool.d/www.conf
 
+# Unlock ImageMagick PDF coder (default Debian/Ubuntu policy blocks PDF reads,
+# which breaks Imagick-based PDF previews in PHP apps). Local dev only.
+RUN if [ -f /etc/ImageMagick-6/policy.xml ]; then \
+        sed -i 's#rights="none" pattern="PDF"#rights="read|write" pattern="PDF"#' /etc/ImageMagick-6/policy.xml; \
+    fi
+

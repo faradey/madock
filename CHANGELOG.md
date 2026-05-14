@@ -2,6 +2,7 @@
 
 Fixed:
 - Fix `host not found in upstream "php_without_xdebug:9000"` nginx error caused by the `<<<if{{{main_service_enabled}}}>>>` block in `nginx.yml` always being stripped — `main_service` and `main_service_enabled` placeholders are now substituted before `ReplaceConfigValue` runs `processConditionals`, so the conditional sees the concrete value (`true`/`false`) instead of an unresolved placeholder. Without this fix the `depends_on: php` block in nginx was always removed, letting nginx start before `php_without_xdebug` and fail upstream DNS resolution. Affects all projects on 3.7.2/3.7.3, regardless of `php/enabled` value ([#40](https://github.com/faradey/madock/issues/40))
+- Unlock the ImageMagick PDF coder in php Dockerfile snippets — default Debian/Ubuntu `/etc/ImageMagick-6/policy.xml` blocks PDF reads, which breaks Imagick-based PDF preview generation in PHP apps (e.g. Magento label rendering). The `rights="none" pattern="PDF"` policy is now switched to `rights="read|write"` during image build
 
 **v3.7.3**
 
