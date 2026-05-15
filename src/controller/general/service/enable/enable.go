@@ -27,6 +27,7 @@ func init() {
 var versionPrompts = map[string]func(*string){
 	"valkey":  tools.Valkey,
 	"artemis": tools.Artemis,
+	"xdebug":  tools.Xdebug,
 }
 
 func Execute() {

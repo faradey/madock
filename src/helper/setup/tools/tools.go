@@ -167,6 +167,13 @@ func Artemis(defVersion *string) {
 	SelectInteractive("ActiveMQ Artemis Version", availableVersions, defVersion)
 }
 
+func Xdebug(defVersion *string) {
+	availableVersions := []string{"Custom", "3.5.0", "3.4.4", "3.3.1", "3.2.2", "3.1.6", "2.7.2"}
+
+	fmt.Println("")
+	SelectInteractive("Xdebug Version", availableVersions, defVersion)
+}
+
 func RabbitMQ(defVersion *string) {
 	availableVersions := []string{"Custom", "4.1", "3.13", "3.12", "3.9", "3.8", "3.7"}
 
