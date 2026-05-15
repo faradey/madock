@@ -2,7 +2,7 @@
 
 Added:
 - Magento 2.4.9 support: PHP 8.5 + Xdebug 3.5.0, MariaDB 11.8, RabbitMQ 4.2, Valkey 9.0.0. OpenSearch 3.0.0 was already wired. Composer stays on the `"2"` major (ondrej apt resolves the latest 2.9.x). Project and proxy nginx bumped to 1.28
-- ActiveMQ Artemis 2 as an opt-in service. Enable with `madock service:enable artemis` — wired only on the Magento 2 platform. Defaults: `apache/activemq-artemis:2.42.0`, user/password `artemis/artemis`. Not part of the `setup` wizard
+- ActiveMQ Artemis 2 as an opt-in service. Enable with `madock service:enable artemis` — wired on all platforms (magento2, shopware, prestashop, woocommerce, shopify, custom). Defaults: `apache/activemq-artemis:2.42.0`, user/password `artemis/artemis`. Not part of the `setup` wizard
 - `service:enable --version <ver>` flag. For services that have a version (currently `valkey`, `artemis`), enable prompts an interactive version picker (same selector as `setup`) unless `--version` is given, then persists `<service>/version` to the project config
 
 Changed:
