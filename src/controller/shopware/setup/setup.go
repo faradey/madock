@@ -117,12 +117,6 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 			toolsDefVersions.Redis = args.Redis
 		}
 
-		if args.Valkey == "" {
-			tools.Valkey(&toolsDefVersions.Valkey)
-		} else {
-			toolsDefVersions.Valkey = args.Valkey
-		}
-
 		if args.RabbitMQ == "" {
 			tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
 		} else {

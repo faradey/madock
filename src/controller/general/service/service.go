@@ -24,6 +24,7 @@ var serviceMap = map[string]string{
 	"search/elasticsearch/dashboard": "elasticsearch_dashboard",
 	"search/opensearch":              "opensearch",
 	"search/opensearch/dashboard":    "opensearch_dashboard",
+	"artemis":                        "artemis",
 }
 
 // RegisterService adds a service mapping (config key → short name).

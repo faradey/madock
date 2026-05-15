@@ -1,0 +1,15 @@
+<<<if{{{artemis/enabled}}}>>>
+  artemis:
+    init: true
+    image: {{{artemis/repository}}}:{{{artemis/version}}}
+    environment:
+      ARTEMIS_USER: {{{artemis/user}}}
+      ARTEMIS_PASSWORD: {{{artemis/password}}}
+    ports:
+      - "{{{port/artemis}}}:61616"
+      - "{{{port/artemis_console}}}:8161"
+    networks:
+      - default
+<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
+    restart: {{{restart_policy}}}
+<<<endif>>>

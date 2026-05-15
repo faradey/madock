@@ -1,7 +1,12 @@
 **v3.7.4**
 
 Added:
-- Magento 2.4.9 support: PHP 8.5 + Xdebug 3.5.0, MariaDB 11.8, RabbitMQ 4.2, Valkey 9.0.0. OpenSearch 3.0.0 was already wired. Composer stays on the `"2"` major (ondrej apt resolves the latest 2.9.x). Project and proxy nginx bumped to 1.28. ActiveMQ Artemis and New Relic are out of scope (not managed by madock)
+- Magento 2.4.9 support: PHP 8.5 + Xdebug 3.5.0, MariaDB 11.8, RabbitMQ 4.2, Valkey 9.0.0. OpenSearch 3.0.0 was already wired. Composer stays on the `"2"` major (ondrej apt resolves the latest 2.9.x). Project and proxy nginx bumped to 1.28
+- ActiveMQ Artemis 2 as an opt-in service. Enable with `madock service:enable artemis` — wired only on the Magento 2 platform. Defaults: `apache/activemq-artemis:2.42.0`, user/password `artemis/artemis`. Not part of the `setup` wizard
+- `service:enable --version <ver>` flag. For services that have a version (currently `valkey`, `artemis`), enable prompts an interactive version picker (same selector as `setup`) unless `--version` is given, then persists `<service>/version` to the project config
+
+Changed:
+- `setup` wizard no longer prompts for Valkey version. The Valkey container stays opt-in via `service:enable valkey [--version <ver>]`, matching the new pattern. Existing `<valkey>` config blocks remain unchanged
 
 Fixed:
 - Fix `host not found in upstream "php_without_xdebug:9000"` nginx error caused by the `<<<if{{{main_service_enabled}}}>>>` block in `nginx.yml` always being stripped — `main_service` and `main_service_enabled` placeholders are now substituted before `ReplaceConfigValue` runs `processConditionals`, so the conditional sees the concrete value (`true`/`false`) instead of an unresolved placeholder. Without this fix the `depends_on: php` block in nginx was always removed, letting nginx start before `php_without_xdebug` and fail upstream DNS resolution. Affects all projects on 3.7.2/3.7.3, regardless of `php/enabled` value ([#40](https://github.com/faradey/madock/issues/40))

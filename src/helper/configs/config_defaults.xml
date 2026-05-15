@@ -157,6 +157,13 @@
                 <user>guest</user>
                 <password>guest</password>
             </rabbitmq>
+            <artemis>
+                <enabled>false</enabled>
+                <repository>apache/activemq-artemis</repository>
+                <version>2.42.0</version>
+                <user>artemis</user>
+                <password>artemis</password>
+            </artemis>
             <cron>
                 <enabled>false</enabled>
                 <!--<jobs>

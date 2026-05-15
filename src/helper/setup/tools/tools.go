@@ -154,10 +154,17 @@ func Redis(defVersion *string) {
 }
 
 func Valkey(defVersion *string) {
-	availableVersions := []string{"Custom", "8.1.3"}
+	availableVersions := []string{"Custom", "9.0.0", "8.1.3"}
 
 	fmt.Println("")
 	SelectInteractive("Valkey Version", availableVersions, defVersion)
+}
+
+func Artemis(defVersion *string) {
+	availableVersions := []string{"Custom", "2.42.0", "2.41.0", "2.40.0"}
+
+	fmt.Println("")
+	SelectInteractive("ActiveMQ Artemis Version", availableVersions, defVersion)
 }
 
 func RabbitMQ(defVersion *string) {

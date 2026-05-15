@@ -8,6 +8,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/setup/tools"
 )
 
 func init() {
@@ -20,6 +21,14 @@ func init() {
 	})
 }
 
+// versionPrompts maps a service short name to the tools function that
+// interactively asks the user for a version. Only services that support
+// version selection at enable time appear here.
+var versionPrompts = map[string]func(*string){
+	"valkey":  tools.Valkey,
+	"artemis": tools.Artemis,
+}
+
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralServiceEnable)).(*arg_struct.ControllerGeneralServiceEnable)
 
@@ -29,14 +38,33 @@ func Execute() {
 	}
 
 	for _, name := range args.Args {
-		if service.IsService(name) {
-			serviceName := service.GetByShort(name) + "/enabled"
-			projectName := configs.GetProjectName()
-			projectConfig := configs.GetProjectConfig(projectName)
-			configs.SetParam(projectName, serviceName, "true", projectConfig["activeScope"], "")
+		if !service.IsService(name) {
+			continue
+		}
+		configKey := service.GetByShort(name)
+		serviceName := configKey + "/enabled"
+		projectName := configs.GetProjectName()
+		projectConfig := configs.GetProjectConfig(projectName)
+		configs.SetParam(projectName, serviceName, "true", projectConfig["activeScope"], "")
 
-			if args.Global {
-				configs.SetParam(projectName, serviceName, "true", "default", configs.MainConfigCode)
+		if args.Global {
+			configs.SetParam(projectName, serviceName, "true", "default", configs.MainConfigCode)
+		}
+
+		// If the service supports version selection, either accept --version
+		// or prompt interactively, then persist <service>/version.
+		if prompt, ok := versionPrompts[name]; ok {
+			versionKey := configKey + "/version"
+			version := args.Version
+			if version == "" {
+				version = projectConfig[versionKey]
+				prompt(&version)
+			}
+			if version != "" {
+				configs.SetParam(projectName, versionKey, version, projectConfig["activeScope"], "")
+				if args.Global {
+					configs.SetParam(projectName, versionKey, version, "default", configs.MainConfigCode)
+				}
 			}
 		}
 	}

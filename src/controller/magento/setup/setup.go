@@ -114,7 +114,6 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 		"Search Engine",
 		"Search Engine Version",
 		"Redis Version",
-		"Valkey Version",
 		"RabbitMQ Version",
 		"Hosts Configuration",
 	}
@@ -151,7 +150,7 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 
 		if usePreset {
 			// Skip to hosts configuration when using preset
-			currentStep = 10
+			currentStep = 9
 			tools.SetProgressStep(currentStep)
 			if args.Hosts == "" {
 				tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
@@ -231,16 +230,7 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 			}
 			currentStep++
 
-			// Step 8: Valkey Version
-			tools.SetProgressStep(currentStep)
-			if args.Valkey == "" {
-				tools.Valkey(&toolsDefVersions.Valkey)
-			} else {
-				toolsDefVersions.Valkey = args.Valkey
-			}
-			currentStep++
-
-			// Step 9: RabbitMQ Version
+			// Step 8: RabbitMQ Version
 			tools.SetProgressStep(currentStep)
 			if args.RabbitMQ == "" {
 				tools.RabbitMQ(&toolsDefVersions.RabbitMQ)
@@ -249,7 +239,7 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 			}
 			currentStep++
 
-			// Step 10: Hosts Configuration
+			// Step 9: Hosts Configuration
 			tools.SetProgressStep(currentStep)
 			if args.Hosts == "" {
 				tools.Hosts(projectName, &toolsDefVersions.Hosts, projectConf)
@@ -368,7 +358,6 @@ func displayConfigSummary(v versions.ToolsVersions, projectName string) {
 				Name: "Cache & Queue",
 				Items: []fmtc.SectionItem{
 					{Key: "Redis", Value: v.Redis},
-					{Key: "Valkey", Value: v.Valkey},
 					{Key: "RabbitMQ", Value: v.RabbitMQ},
 				},
 			},

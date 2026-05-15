@@ -49,7 +49,8 @@ type ControllerGeneralSetupEnv struct {
 
 type ControllerGeneralServiceEnable struct {
 	attr.ArgumentsWithArgs
-	Global bool `arg:"-g,--global" help:"Global"`
+	Global  bool   `arg:"-g,--global" help:"Global"`
+	Version string `arg:"--version" help:"Service version (for services that support it, e.g. valkey, artemis)"`
 }
 
 type ControllerGeneralServiceDisable struct {
