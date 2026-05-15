@@ -1,5 +1,8 @@
 **v3.7.4**
 
+Added:
+- Magento 2.4.9 support: PHP 8.5 + Xdebug 3.5.0, MariaDB 11.8, RabbitMQ 4.2, Valkey 9.0.0. OpenSearch 3.0.0 was already wired. Composer stays on the `"2"` major (ondrej apt resolves the latest 2.9.x). Project and proxy nginx bumped to 1.28. ActiveMQ Artemis and New Relic are out of scope (not managed by madock)
+
 Fixed:
 - Fix `host not found in upstream "php_without_xdebug:9000"` nginx error caused by the `<<<if{{{main_service_enabled}}}>>>` block in `nginx.yml` always being stripped — `main_service` and `main_service_enabled` placeholders are now substituted before `ReplaceConfigValue` runs `processConditionals`, so the conditional sees the concrete value (`true`/`false`) instead of an unresolved placeholder. Without this fix the `depends_on: php` block in nginx was always removed, letting nginx start before `php_without_xdebug` and fail upstream DNS resolution. Affects all projects on 3.7.2/3.7.3, regardless of `php/enabled` value ([#40](https://github.com/faradey/madock/issues/40))
 - Unlock the ImageMagick PDF coder in php Dockerfile snippets — default Debian/Ubuntu `/etc/ImageMagick-6/policy.xml` blocks PDF reads, which breaks Imagick-based PDF preview generation in PHP apps (e.g. Magento label rendering). The `rights="none" pattern="PDF"` policy is now switched to `rights="read|write"` during image build

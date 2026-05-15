@@ -56,7 +56,9 @@ func getMagentoVersion() (edition, version string) {
 }
 
 func GetPhpVersion(mageVer string) string {
-	if mageVer >= "2.4.8" {
+	if mageVer >= "2.4.9" {
+		return "8.5"
+	} else if mageVer >= "2.4.8" {
 		return "8.4"
 	} else if mageVer >= "2.4.7" {
 		return "8.3"
@@ -78,7 +80,9 @@ func GetPhpVersion(mageVer string) string {
 }
 
 func GetDBVersion(mageVer string) string {
-	if mageVer >= "2.4.8" {
+	if mageVer >= "2.4.9" {
+		return "11.8"
+	} else if mageVer >= "2.4.8" {
 		return "11.4"
 	} else if mageVer >= "2.4.7" {
 		return "10.6"
@@ -196,11 +200,16 @@ func GetRedisVersion(mageVer string) string {
 }
 
 func GetValkeyVersion(mageVer string) string {
+	if mageVer >= "2.4.9" {
+		return "9.0.0"
+	}
 	return "8.1.3"
 }
 
 func GetRabbitMQVersion(mageVer string) string {
-	if mageVer >= "2.4.7-p5" {
+	if mageVer >= "2.4.9" {
+		return "4.2"
+	} else if mageVer >= "2.4.7-p5" {
 		return "4.1"
 	} else if mageVer >= "2.4.7" {
 		return "3.13"

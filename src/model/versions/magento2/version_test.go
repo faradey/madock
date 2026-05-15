@@ -8,6 +8,7 @@ func TestGetPhpVersion(t *testing.T) {
 		expected string
 	}{
 		// Latest versions
+		{"2.4.9", "8.5"},
 		{"2.4.8", "8.4"},
 		{"2.4.8-p1", "8.4"},
 		{"2.4.7", "8.3"},
@@ -54,6 +55,7 @@ func TestGetDBVersion(t *testing.T) {
 		mageVer  string
 		expected string
 	}{
+		{"2.4.9", "11.8"},
 		{"2.4.8", "11.4"},
 		{"2.4.7", "10.6"},
 		{"2.4.6", "10.4"},
@@ -242,6 +244,7 @@ func TestGetRabbitMQVersion(t *testing.T) {
 		mageVer  string
 		expected string
 	}{
+		{"2.4.9", "4.2"},
 		{"2.4.8", "4.1"},
 		{"2.4.7-p5", "4.1"},
 		{"2.4.7-p4", "3.13"},
@@ -273,6 +276,7 @@ func TestGetValkeyVersion(t *testing.T) {
 		mageVer  string
 		expected string
 	}{
+		{"2.4.9", "9.0.0"},
 		{"2.4.8", "8.1.3"},
 		{"2.4.7", "8.1.3"},
 		{"2.0.0", "8.1.3"},
