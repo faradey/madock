@@ -162,7 +162,8 @@ type ControllerGeneralRemoteSyncMedia struct {
 
 type ControllerGeneralProjectClone struct {
 	attr.Arguments
-	Name string `arg:"-n,--name,required" help:"Name of the project"`
+	Name         string `arg:"-n,--name,required" help:"Name of the project"`
+	DomainSuffix string `arg:"-s,--domain-suffix,required" help:"Suffix appended to each host before the TLD dot (e.g. -update turns shop.test into shop-update.test). Required to avoid domain collisions with the source project"`
 }
 
 type ControllerGeneralStatus struct {

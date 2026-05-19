@@ -35,6 +35,15 @@ func Execute() {
 		fmtc.ErrorLn("The project folder name cannot contain a period or space")
 		return
 	}
+	domainSuffix := strings.TrimSpace(args.DomainSuffix)
+	if domainSuffix == "" {
+		fmtc.ErrorLn("--domain-suffix is required and cannot be empty")
+		return
+	}
+	if strings.Contains(domainSuffix, ".") || strings.Contains(domainSuffix, " ") {
+		fmtc.ErrorLn("--domain-suffix cannot contain a period or space")
+		return
+	}
 	projectsPath := paths.GetExecDirPath() + "/projects"
 	dirs := paths.GetDirs(projectsPath)
 	for _, val := range dirs {
@@ -63,6 +72,15 @@ func Execute() {
 	clonePath := strings.Join(clonePathParts[:len(clonePathParts)-1], "/") + "/" + cloneName
 	paths.MakeDirsByPath(clonePath)
 	configs.SetParam(cloneName, "path", clonePath, projectConf["activeScope"], "")
+	// Rewrite cloned hosts so they don't collide with the source project.
+	// Suffix is inserted before the TLD dot: shop.test + "-update" -> shop-update.test
+	cloneProjectConfTmp := configs.GetProjectConfig(cloneName)
+	for key, val := range cloneProjectConfTmp {
+		if val == "" || !strings.Contains(key, "/hosts/") || !strings.HasSuffix(key, "/name") {
+			continue
+		}
+		configs.SetParam(cloneName, key, applyDomainSuffix(val, domainSuffix), projectConf["activeScope"], "")
+	}
 	cloneProjectConf := configs.GetProjectConfig(cloneName)
 	create.GetDB(projectConf, projectName, dest)
 	create.GetFiles(projectConf, projectName, dest)
@@ -163,4 +181,14 @@ func Execute() {
 	docker.StopSnapshot(cloneName)
 
 	fmtc.SuccessLn("Project cloned successfully.\nThe new project name is " + cloneName + ".\nThe path to the project is " + clonePath)
+}
+
+// applyDomainSuffix inserts suffix before the last dot of domain. If domain
+// has no dot the suffix is appended. shop.test + "-update" -> shop-update.test
+func applyDomainSuffix(domain, suffix string) string {
+	idx := strings.LastIndex(domain, ".")
+	if idx == -1 {
+		return domain + suffix
+	}
+	return domain[:idx] + suffix + domain[idx:]
 }
