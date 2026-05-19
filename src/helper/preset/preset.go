@@ -23,8 +23,25 @@ func RegisterPresets(platform string, fn func() []Preset) {
 func GetMagentoPresets() []Preset {
 	return []Preset{
 		{
-			Name:        "Magento 2.4.8 (Latest)",
-			Description: "Latest stable with PHP 8.4, OpenSearch 2.19, Redis 8.0",
+			Name:        "Magento 2.4.9 (Latest)",
+			Description: "Latest stable with PHP 8.5, OpenSearch 3.0, Redis 8.0, MariaDB 11.8",
+			Platform:    "magento2",
+			Versions: versions.ToolsVersions{
+				Platform:        "magento2",
+				PlatformVersion: "2.4.9",
+				Php:             "8.5",
+				Db:              "11.8",
+				Composer:        "2",
+				SearchEngine:    "OpenSearch",
+				OpenSearch:      "3.0.0",
+				Redis:           "8.0",
+				Valkey:          "9.0.0",
+				RabbitMQ:        "4.2",
+			},
+		},
+		{
+			Name:        "Magento 2.4.8 (Previous)",
+			Description: "Previous stable with PHP 8.4, OpenSearch 2.19, Redis 8.0",
 			Platform:    "magento2",
 			Versions: versions.ToolsVersions{
 				Platform:        "magento2",
