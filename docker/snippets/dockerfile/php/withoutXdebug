@@ -34,23 +34,28 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install -y php{{{php/ve
     php{{{php/version}}}-intl \
     php{{{php/version}}}-mbstring \
     php{{{php/version}}}-mysql \
-    php{{{php/version}}}-opcache \
     php{{{php/version}}}-soap \
     php{{{php/version}}}-sqlite3 \
     php{{{php/version}}}-xml \
-    php{{{php/version}}}-xmlrpc \
     php{{{php/version}}}-xsl \
     php{{{php/version}}}-zip \
     php{{{php/version}}}-imagick \
     php{{{php/version}}}-redis
 
+# Optional packages: not all PHP versions ship them as separate packages
+# (e.g. php8.5-opcache is bundled into php8.5-common, php-xmlrpc may be
+# missing in newer ondrej builds). Install each in its own line so a
+# missing package does not abort the build.
+RUN apt-get install -y php{{{php/version}}}-opcache || true
+RUN apt-get install -y php{{{php/version}}}-xmlrpc || true
+
 SHELL ["/bin/bash", "-c"]
 RUN IFS='.' read major minor patch <<< "{{{php/version}}}" \
-    && if [[ "${major}" = "8" && "${minor}" = "4" ]]; then \
-        # Special handling for PHP 8.4
+    && if [[ "${major}" -ge "9" ]] || [[ "${major}" = "8" && "${minor}" -ge "4" ]]; then \
+        # PHP 8.4+ — no compatible pecl mcrypt release, skip it
         apt-get install -y pkg-config libmcrypt-dev \
         && pecl channel-update pecl.php.net \
-        && echo "Installing alternative to mcrypt for PHP 8.4" \
+        && echo "Skipping pecl mcrypt for PHP ${major}.${minor} (no compatible release)" \
     ; elif [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then \
         pecl install mcrypt-1.0.7 \
         && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
