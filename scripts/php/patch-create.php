@@ -41,7 +41,8 @@ function setPatchEntry(array &$patches, string $module, string $title, string $p
         if(!isset($patches[$module]) || !is_array($patches[$module])){
             $patches[$module] = [];
         }
-        foreach($patches[$module] as $existing){
+        $duplicate = false;
+        foreach($patches[$module] as $idx => $existing){
             if(is_array($existing) && (
                 ($existing['description'] ?? '') === $title ||
                 ($existing['url'] ?? '') === $path
@@ -49,7 +50,12 @@ function setPatchEntry(array &$patches, string $module, string $title, string $p
                 if(!$force){
                     return false;
                 }
+                unset($patches[$module][$idx]);
+                $duplicate = true;
             }
+        }
+        if($duplicate){
+            $patches[$module] = array_values($patches[$module]);
         }
         $patches[$module][] = [
             'description' => $title,
