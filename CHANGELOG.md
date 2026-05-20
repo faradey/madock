@@ -1,3 +1,12 @@
+**v3.7.5**
+
+Added:
+- Medusa.js platform support: `madock setup --platform medusa` (Node.js + PostgreSQL + Redis), `madock medusa <cmd>` to run the Medusa CLI inside the nodejs container, `madock install` scaffolds `.env` + runs `db:migrate` + creates an admin user. Auto-detection via `package.json` (`@medusajs/medusa` or `@medusajs/framework`). Default versions: Node 20.18, PostgreSQL 16.4, Redis 7.2, Yarn 4.5
+
+Changed:
+- Default DB credentials changed from `magento`/`magento`/`magento` to DDEV-style `db`/`db`/`db` (`db/root_password` stays `password`). Affects new projects only; existing projects keep their stored values
+- New V375 migration backfills `db/user`/`db/password`/`db/database` = `magento` for projects whose `config.xml` relied on the previous embedded defaults, so their Docker volumes and DB users keep working after the upgrade
+
 **v3.7.4**
 
 Added:

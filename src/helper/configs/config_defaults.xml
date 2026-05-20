@@ -58,9 +58,9 @@
                 <type>mysql</type>
                 <repository>mariadb</repository>
                 <root_password>password</root_password>
-                <user>magento</user>
-                <password>magento</password>
-                <database>magento</database>
+                <user>db</user>
+                <password>db</password>
+                <database>db</database>
                 <phpmyadmin>
                     <enabled>false</enabled>
                     <repository>phpmyadmin/phpmyadmin</repository>
@@ -83,9 +83,9 @@
                 <enabled>false</enabled>
                 <repository>mariadb</repository>
                 <root_password>password</root_password>
-                <user>magento</user>
-                <password>magento</password>
-                <database>magento</database>
+                <user>db</user>
+                <password>db</password>
+                <database>db</database>
                 <phpmyadmin>
                     <enabled>false</enabled>
                     <repository>phpmyadmin/phpmyadmin</repository>

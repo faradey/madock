@@ -16,7 +16,7 @@ func TestGetOriginalGeneralConfig_EmbeddedOnly(t *testing.T) {
 	// Embedded defaults should provide these values
 	checks := map[string]string{
 		"db/root_password": "password",
-		"db/password":      "magento",
+		"db/password":      "db",
 		"php/version":      "8.2",
 		"platform":         "magento2",
 		"db/repository":    "mariadb",
