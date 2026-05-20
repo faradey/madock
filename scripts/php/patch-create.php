@@ -9,7 +9,66 @@ $patchName = $argv[3]??"";
 $patchTitle = $argv[4]?:$patchName;
 $force = $argv[5]??"";
 
+function detectComposerPatchesMajor(string $siteRootPath): int {
+    $lockPath = $siteRootPath."/composer.lock";
+    if(!file_exists($lockPath)){
+        return 1;
+    }
+    $lock = json_decode(file_get_contents($lockPath), true);
+    if(!is_array($lock)){
+        return 1;
+    }
+    foreach(['packages', 'packages-dev'] as $section){
+        if(empty($lock[$section]) || !is_array($lock[$section])){
+            continue;
+        }
+        foreach($lock[$section] as $pkg){
+            if(($pkg['name'] ?? '') !== 'cweagans/composer-patches'){
+                continue;
+            }
+            $version = ltrim((string)($pkg['version'] ?? ''), 'v');
+            $parts = explode('.', $version);
+            if(isset($parts[0]) && is_numeric($parts[0])){
+                return (int)$parts[0];
+            }
+        }
+    }
+    return 1;
+}
+
+function setPatchEntry(array &$patches, string $module, string $title, string $path, int $major, bool $force): bool {
+    if($major >= 2){
+        if(!isset($patches[$module]) || !is_array($patches[$module])){
+            $patches[$module] = [];
+        }
+        foreach($patches[$module] as $existing){
+            if(is_array($existing) && (
+                ($existing['description'] ?? '') === $title ||
+                ($existing['url'] ?? '') === $path
+            )){
+                if(!$force){
+                    return false;
+                }
+            }
+        }
+        $patches[$module][] = [
+            'description' => $title,
+            'url'         => $path,
+        ];
+        return true;
+    }
+    if(!$force && !empty($patches[$module][$title])){
+        return false;
+    }
+    if(!isset($patches[$module]) || !is_array($patches[$module])){
+        $patches[$module] = [];
+    }
+    $patches[$module][$title] = $path;
+    return true;
+}
+
 if(file_exists($filePatch)){
+    $composerPatchesMajor = detectComposerPatchesMajor($siteRootPath);
     $moduleRoot = explode("vendor", $filePatch, 2)[1]??null;
     if($moduleRoot){
         $moduleRoot = explode("/", trim($moduleRoot, "/"), 3);
@@ -89,9 +148,13 @@ if(file_exists($filePatch)){
                         }
                         file_put_contents($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName, $patchContent);
 
+                        $module = $moduleRoot[0]."/".$moduleRoot[1];
+                        $relPath = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
                         if(isset($composerJsonData['extra']['patches'])) {
-                            if(!empty($force) || empty($composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
-                                $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
+                            if(!is_array($composerJsonData['extra']['patches'])){
+                                $composerJsonData['extra']['patches'] = [];
+                            }
+                            if(setPatchEntry($composerJsonData['extra']['patches'], $module, $patchTitle, $relPath, $composerPatchesMajor, !empty($force))){
                                 file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
                                 print("\nThe patch was created successfully\n");
                             } else {
@@ -104,21 +167,24 @@ if(file_exists($filePatch)){
                             }
                             $composerPatchesFile = $siteRootPath."/".$patchesFile;
                             $composerPatchesJsonData = json_decode(file_get_contents($composerPatchesFile), true);
-                            if(isset($composerPatchesJsonData['patches'])) {
-                                if(!empty($force) || empty($composerPatchesJsonData['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle])){
-                                    $composerPatchesJsonData['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
-                                    file_put_contents($composerPatchesFile, json_encode($composerPatchesJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
-                                    print("\nThe patch was created successfully\n");
-                                } else {
-                                    print("The patch with same title or name has already been created.\n");
-                                }
+                            if(!is_array($composerPatchesJsonData)){
+                                $composerPatchesJsonData = [];
+                            }
+                            if(!isset($composerPatchesJsonData['patches']) || !is_array($composerPatchesJsonData['patches'])){
+                                $composerPatchesJsonData['patches'] = [];
+                            }
+                            if(setPatchEntry($composerPatchesJsonData['patches'], $module, $patchTitle, $relPath, $composerPatchesMajor, !empty($force))){
+                                file_put_contents($composerPatchesFile, json_encode($composerPatchesJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                                print("\nThe patch was created successfully\n");
+                            } else {
+                                print("The patch with same title or name has already been created.\n");
                             }
                         } elseif(empty($composerJsonData['extra']['patches-search'])) {
                             if(!isset($composerJsonData['extra'])) {
                                 $composerJsonData['extra'] = [];
                             }
                             $composerJsonData['extra']['patches'] = [];
-                            $composerJsonData['extra']['patches'][$moduleRoot[0]."/".$moduleRoot[1]][$patchTitle] = "patches/composer/".$moduleRoot[0]."/".$moduleRoot[1]."/".$patchName;
+                            setPatchEntry($composerJsonData['extra']['patches'], $module, $patchTitle, $relPath, $composerPatchesMajor, true);
                             file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
                             print("\nThe patch was created successfully\n");
                         }
