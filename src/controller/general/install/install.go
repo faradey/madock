@@ -41,6 +41,9 @@ func init() {
 	RegisterInstallHandler("woocommerce", func(projectName, platformVersion string, _ map[string]string) {
 		WooCommerce(projectName, platformVersion, false)
 	})
+	RegisterInstallHandler("medusa", func(projectName, platformVersion string, _ map[string]string) {
+		Medusa(projectName, platformVersion)
+	})
 }
 
 func Execute() {
@@ -220,6 +223,45 @@ func WooCommerce(projectName, platformVer string, isSampleData bool) {
 	fmtc.SuccessLn("[SUCCESS]: WordPress Admin URI: /wp-admin")
 	fmtc.SuccessLn("[SUCCESS]: WordPress Admin User: " + projectConf["magento/admin_user"])
 	fmtc.SuccessLn("[SUCCESS]: WordPress Admin Password: " + projectConf["magento/admin_password"])
+}
+
+func Medusa(projectName, platformVer string) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+
+	dbURL := "postgres://" + projectConf["db/user"] + ":" + projectConf["db/password"] + "@db:5432/" + projectConf["db/database"]
+	redisURL := "redis://redis:6379"
+
+	envWrite := "cat > .env <<EOF\n" +
+		"DATABASE_URL=" + dbURL + "\n" +
+		"REDIS_URL=" + redisURL + "\n" +
+		"JWT_SECRET=supersecret\n" +
+		"COOKIE_SECRET=supersecret\n" +
+		"STORE_CORS=https://" + host + "\n" +
+		"ADMIN_CORS=https://" + host + "\n" +
+		"AUTH_CORS=https://" + host + "\n" +
+		"EOF"
+
+	installCommand := envWrite +
+		" && yarn install" +
+		" && npx medusa db:migrate" +
+		" && npx medusa user --email admin@example.com --password admin"
+
+	fmt.Println(installCommand)
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "nodejs"), "node", true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Medusa installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Medusa Storefront URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Medusa Admin URI: /app")
+	fmtc.SuccessLn("[SUCCESS]: Medusa Admin User: admin@example.com")
+	fmtc.SuccessLn("[SUCCESS]: Medusa Admin Password: admin")
 }
 
 func PrestaShop(projectName, platformVer string, isSampleData bool) {

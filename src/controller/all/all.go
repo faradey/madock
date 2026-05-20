@@ -63,6 +63,7 @@ import (
 	_ "github.com/faradey/madock/v3/src/controller/magento/cloud"
 	_ "github.com/faradey/madock/v3/src/controller/magento/mftf"
 	_ "github.com/faradey/madock/v3/src/controller/magento/n98"
+	_ "github.com/faradey/madock/v3/src/controller/medusa"
 	_ "github.com/faradey/madock/v3/src/controller/prestashop"
 	_ "github.com/faradey/madock/v3/src/controller/shopify"
 	_ "github.com/faradey/madock/v3/src/controller/shopify/frontend"

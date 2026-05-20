@@ -219,6 +219,11 @@ func Detect(projectPath string) DetectionResult {
 		return result
 	}
 
+	// Node.js platforms (Medusa, etc.)
+	if result := DetectFromPackageJSON(projectPath); result.Detected {
+		return result
+	}
+
 	// Try WordPress file-based detection
 	if paths.IsFileExist(projectPath+"/wp-config.php") || paths.IsFileExist(projectPath+"/wp-content") {
 		return DetectionResult{
