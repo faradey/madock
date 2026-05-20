@@ -33,7 +33,7 @@
             <workdir>/var/www/html</workdir>
             <public_dir>public</public_dir>
             <composer_dir></composer_dir>
-            <timezone>Europe/Kiev</timezone>
+            <timezone>UTC</timezone>
             <php>
                 <enabled>false</enabled>
                 <version>8.2</version>

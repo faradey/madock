@@ -6,6 +6,7 @@ Added:
 Changed:
 - Default DB credentials changed from `magento`/`magento`/`magento` to DDEV-style `db`/`db`/`db` (`db/root_password` stays `password`). Affects new projects only; existing projects keep their stored values
 - New V375 migration backfills `db/user`/`db/password`/`db/database` = `magento` for projects whose `config.xml` relied on the previous embedded defaults, so their Docker volumes and DB users keep working after the upgrade
+- Default `timezone` switched from deprecated `Europe/Kiev` to `UTC`. IANA renamed `Europe/Kiev` to `Europe/Kyiv` in tzdata 2022b; UTC is the standard server default and avoids DST surprises in logs. Existing projects keep their stored timezone
 
 **v3.7.4**
 
