@@ -49,6 +49,7 @@ import (
 	// Platform setup handlers (self-register with the setup registry)
 	_ "github.com/faradey/madock/v3/src/controller/custom/setup"
 	_ "github.com/faradey/madock/v3/src/controller/magento/setup"
+	_ "github.com/faradey/madock/v3/src/controller/medusa/setup"
 	_ "github.com/faradey/madock/v3/src/controller/prestashop/setup"
 	_ "github.com/faradey/madock/v3/src/controller/shopify/setup"
 	_ "github.com/faradey/madock/v3/src/controller/shopware/setup"
