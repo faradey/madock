@@ -220,6 +220,17 @@
                     <region>us</region>
                 </storefront>
             </medusa>
+            <saleor>
+                <dashboard>
+                    <enabled>false</enabled>
+                    <repository>ghcr.io/saleor/saleor-dashboard</repository>
+                    <version>3.23</version>
+                    <api_url>https://loc.local.test/graphql/</api_url>
+                </dashboard>
+                <worker>
+                    <enabled>false</enabled>
+                </worker>
+            </saleor>
             <proxy>
                 <enabled>true</enabled>
                 <timeout>

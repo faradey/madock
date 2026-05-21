@@ -1,0 +1,25 @@
+<<<if{{{saleor/worker/enabled}}}>>>
+  worker:
+    init: true
+    build:
+      context: ctx
+      dockerfile: python.Dockerfile
+    tty: true
+    working_dir: {{{workdir}}}
+    volumes:
+      - ./src:{{{workdir}}}:cached
+    environment:
+      DATABASE_URL: "postgres://{{{db/user}}}:{{{db/password}}}@db:5432/{{{db/database}}}?sslmode=disable"
+      REDIS_URL: "redis://redisdb:6379/1"
+      CELERY_BROKER_URL: "redis://redisdb:6379/1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      WATCHDOG_USE_POLLING: "true"
+    command: ["sh", "-c", "if [ ! -d .venv ] && ! python -c 'import saleor' 2>/dev/null; then echo '[madock] worker idle: run madock install first'; exec sleep infinity; fi; PREFIX=''; if [ -f uv.lock ] && command -v uv >/dev/null 2>&1; then PREFIX='uv run'; fi; echo '[madock] starting: celery -A saleor worker -B'; exec $PREFIX celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+    restart: {{{restart_policy}}}
+<<<endif>>>
+    <<<if{{{saleor/worker/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

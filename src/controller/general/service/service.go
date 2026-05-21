@@ -26,6 +26,8 @@ var serviceMap = map[string]string{
 	"search/opensearch/dashboard":    "opensearch_dashboard",
 	"search/meilisearch":             "meilisearch",
 	"medusa/storefront":              "storefront",
+	"saleor/dashboard":               "dashboard",
+	"saleor/worker":                  "worker",
 	"artemis":                        "artemis",
 }
 
