@@ -5,6 +5,12 @@
       context: ctx
       dockerfile: nodejs.Dockerfile
     tty: true
+    environment:
+      NODE_ENV: "development"
+      # Polling-based file watching for macOS bind mounts (no inotify forwarding).
+      # Harmless on Linux. Picked up by next/webpack/chokidar/medusa watcher.
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./src:/var/www/html:cached
     extra_hosts:
