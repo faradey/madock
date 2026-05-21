@@ -83,15 +83,20 @@ if [ -f uv.lock ] || [ -f pyproject.toml ]; then
   fi
 fi
 
-deps_ready=0
-[ -d .venv ] && deps_ready=1
-$RUN_PREFIX python -c 'import saleor' 2>/dev/null && deps_ready=1
-$RUN_PREFIX python -c 'import django' 2>/dev/null && deps_ready=1
+deps_ready() {
+  [ -d .venv ] && return 0
+  $RUN_PREFIX python -c 'import saleor' 2>/dev/null && return 0
+  $RUN_PREFIX python -c 'import django' 2>/dev/null && return 0
+  return 1
+}
 
-if [ "$deps_ready" -eq 0 ]; then
-  echo "[madock] Python deps missing in $(pwd). Run \"madock install\" to bootstrap (uv sync + migrate + populatedb)."
-  echo "[madock] Container will idle; nothing to run."
-  exec sleep infinity
+if ! deps_ready; then
+  echo "[madock] Python deps missing in $(pwd) — waiting."
+  echo "[madock] Run \"madock install\" to bootstrap (uv sync + migrate + populatedb); the server will start automatically once deps are installed."
+  while ! deps_ready; do
+    sleep 5
+  done
+  echo "[madock] Python deps detected — starting server."
 fi
 
 # Run the Saleor / Django dev server. Saleor 3.x always ships

@@ -24,9 +24,12 @@ if [ -z "$script" ]; then
 fi
 
 if [ ! -d node_modules ]; then
-  echo "[madock] node_modules missing in $(pwd). Run \"madock install\" to bootstrap (yarn install + db:migrate)."
-  echo "[madock] Container will idle; nothing to run."
-  exec sleep infinity
+  echo "[madock] node_modules missing in $(pwd) — waiting."
+  echo "[madock] Run \"madock install\" (or yarn install) to bootstrap; the dev server will start automatically the moment node_modules appears."
+  while [ ! -d node_modules ]; do
+    sleep 5
+  done
+  echo "[madock] node_modules detected — starting dev server."
 fi
 
 if [ -f yarn.lock ]; then
