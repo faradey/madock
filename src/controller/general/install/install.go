@@ -2,6 +2,7 @@ package install
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
@@ -10,6 +11,12 @@ import (
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/model/versions"
 )
+
+// shellSingleQuote wraps s for safe use inside a bash single-quoted string:
+// every embedded ' is replaced with '\'' (close quote, escaped quote, reopen).
+func shellSingleQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
 
 // InstallHandler is called to install a platform for a given project.
 type InstallHandler func(projectName, platformVersion string, projectConf map[string]string)
@@ -233,18 +240,20 @@ func Medusa(projectName, platformVer string) {
 		host = hosts[0]["name"]
 	}
 
-	dbURL := "postgres://" + projectConf["db/user"] + ":" + projectConf["db/password"] + "@db:5432/" + projectConf["db/database"]
+	dbURL := "postgres://" + projectConf["db/user"] + ":" + projectConf["db/password"] + "@db:5432/" + projectConf["db/database"] + "?sslmode=disable"
 	redisURL := "redis://redisdb:6379"
 
-	envWrite := "cat > .env <<EOF\n" +
-		"DATABASE_URL=" + dbURL + "\n" +
+	// Use printf instead of a heredoc — embedding EOF inside a Go string
+	// concatenated with `&& yarn install` puts the terminator on the same
+	// line as the next command and bash never closes the heredoc.
+	envBody := "DATABASE_URL=" + dbURL + "\n" +
 		"REDIS_URL=" + redisURL + "\n" +
 		"JWT_SECRET=supersecret\n" +
 		"COOKIE_SECRET=supersecret\n" +
 		"STORE_CORS=https://" + host + "\n" +
 		"ADMIN_CORS=https://" + host + "\n" +
-		"AUTH_CORS=https://" + host + "\n" +
-		"EOF"
+		"AUTH_CORS=https://" + host + "\n"
+	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env"
 
 	installCommand := envWrite +
 		" && yarn install" +
