@@ -234,7 +234,7 @@ func Medusa(projectName, platformVer string) {
 	}
 
 	dbURL := "postgres://" + projectConf["db/user"] + ":" + projectConf["db/password"] + "@db:5432/" + projectConf["db/database"]
-	redisURL := "redis://redis:6379"
+	redisURL := "redis://redisdb:6379"
 
 	envWrite := "cat > .env <<EOF\n" +
 		"DATABASE_URL=" + dbURL + "\n" +
