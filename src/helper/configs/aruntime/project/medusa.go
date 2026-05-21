@@ -6,6 +6,7 @@ func init() {
 
 func MakeConfMedusa(projectName string) {
 	MakeDockerfile(projectName, "Dockerfile", "nodejs.Dockerfile")
+	MakeDockerfile(projectName, "storefront/Dockerfile", "storefront.Dockerfile")
 	MakeDBDockerfile(projectName)
 	MakeRedisDockerfile(projectName)
 	MakeScriptsConf(projectName)

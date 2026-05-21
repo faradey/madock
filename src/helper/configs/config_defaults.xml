@@ -101,6 +101,15 @@
                     <version>1.22.19</version>
                 </yarn>
             </nodejs>
+            <storefront>
+                <enabled>false</enabled>
+                <repository>node</repository>
+                <version>22.11.0</version>
+                <path>storefront</path>
+                <workdir>/var/www/storefront</workdir>
+                <public_url>http://localhost:8000</public_url>
+                <region>us</region>
+            </storefront>
             <search>
                 <engine>elasticsearch</engine>
                 <elasticsearch>

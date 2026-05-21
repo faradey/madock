@@ -25,6 +25,10 @@ func Medusa(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	config.Set("golang/enabled", "false")
 	config.Set("ruby/enabled", "false")
 
+	// Medusa backend listens on port 9000. Make sure the nginx proxy.conf
+	// template uses it as the upstream port instead of the default 3000.
+	config.Set("main_service_port", "9000")
+
 	config.Set("nodejs/enabled", "true")
 	config.Set("nodejs/version", defVersions.NodeJs)
 	nodeMajorVersion := strings.Split(defVersions.NodeJs, ".")
