@@ -2,8 +2,11 @@ package setup
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 
+	"github.com/faradey/madock/v3/src/controller/general/install"
 	"github.com/faradey/madock/v3/src/controller/general/rebuild"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
@@ -141,7 +144,54 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-	rebuild.Execute()
+	if args.Download || args.Install || continueSetup {
+		rebuild.Execute()
+	}
+
+	if args.Download {
+		DownloadMedusa(projectName)
+	}
+
+	if args.Install {
+		install.Medusa(projectName, toolsDefVersions.PlatformVersion)
+	}
+}
+
+// DownloadMedusa clones the official Medusa starter into the project
+// root when the directory is empty. The user can then run `madock
+// install` (or use `-i` on setup) to apply migrations and create the
+// admin user.
+func DownloadMedusa(projectName string) {
+	target := paths.GetRunDirPath()
+	if !isDirEmpty(target) {
+		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
+		return
+	}
+	repo := "https://github.com/medusajs/medusa-starter-default.git"
+	fmtc.InfoIconLn("Cloning " + repo + " into " + target)
+	cmd := exec.Command("git", "clone", "--depth", "1", repo, ".")
+	cmd.Dir = target
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmtc.WarningLn("Failed to clone Medusa starter: " + err.Error())
+	}
+}
+
+// isDirEmpty returns true when path doesn't exist or holds no entries
+// besides dotfiles madock itself may have created (.madock/).
+func isDirEmpty(path string) bool {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return true
+	}
+	for _, e := range entries {
+		if e.Name() == ".madock" || e.Name() == "." || e.Name() == ".." {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 // findPresetByName resolves --preset value to a Medusa preset.

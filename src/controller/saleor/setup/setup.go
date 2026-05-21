@@ -2,8 +2,11 @@ package setup
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 
+	"github.com/faradey/madock/v3/src/controller/general/install"
 	"github.com/faradey/madock/v3/src/controller/general/rebuild"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
@@ -121,7 +124,70 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-	rebuild.Execute()
+	if args.Download || args.Install || continueSetup {
+		rebuild.Execute()
+	}
+
+	if args.Download {
+		DownloadSaleor(toolsDefVersions.PlatformVersion)
+	}
+
+	if args.Install {
+		install.Saleor(projectName, toolsDefVersions.PlatformVersion)
+	}
+}
+
+// DownloadSaleor clones the upstream saleor/saleor repo into the
+// current project root. Branch defaults to the platform version's
+// major.minor (e.g. 3.23.6 -> branch "3.23"); falls back to `main`
+// when the version is empty or doesn't look like a Saleor release tag.
+func DownloadSaleor(platformVersion string) {
+	target := paths.GetRunDirPath()
+	if !isDirEmpty(target) {
+		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
+		return
+	}
+	branch := branchFromVersion(platformVersion)
+	repo := "https://github.com/saleor/saleor.git"
+	fmtc.InfoIconLn("Cloning " + repo + "@" + branch + " into " + target)
+	cmd := exec.Command("git", "clone", "--depth", "1", "--branch", branch, repo, ".")
+	cmd.Dir = target
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmtc.WarningLn("Failed to clone Saleor: " + err.Error())
+	}
+}
+
+// branchFromVersion derives the `3.<minor>` upstream branch name from
+// a Saleor platform version string. Anything that doesn't start with
+// `3.` falls back to `main`.
+func branchFromVersion(v string) string {
+	v = strings.TrimSpace(v)
+	if !strings.HasPrefix(v, "3.") {
+		return "main"
+	}
+	parts := strings.Split(v, ".")
+	if len(parts) < 2 {
+		return "main"
+	}
+	return parts[0] + "." + parts[1]
+}
+
+// isDirEmpty returns true when path doesn't exist or holds no entries
+// besides dotfiles madock itself may have created (.madock/).
+func isDirEmpty(path string) bool {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return true
+	}
+	for _, e := range entries {
+		if e.Name() == ".madock" || e.Name() == "." || e.Name() == ".." {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 func findPresetByName(name string) *preset.Preset {
