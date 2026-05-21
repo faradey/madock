@@ -1,0 +1,19 @@
+<<<if{{{search/meilisearch/enabled}}}>>>
+  meilisearch:
+    image: {{{search/meilisearch/repository}}}:v{{{search/meilisearch/version}}}
+    init: true
+    ports:
+      - "{{{port/meilisearch}}}:7700"
+    environment:
+      MEILI_MASTER_KEY: "{{{search/meilisearch/master_key}}}"
+      MEILI_ENV: "development"
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meilisearch_vlm_{{{search/meilisearch/version}}}:/meili_data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+    restart: {{{restart_policy}}}
+<<<endif>>>
+    <<<if{{{search/meilisearch/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

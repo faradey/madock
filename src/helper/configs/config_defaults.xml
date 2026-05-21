@@ -131,6 +131,12 @@
                         <repository>opensearchproject/opensearch-dashboards</repository>
                     </dashboard>
                 </opensearch>
+                <meilisearch>
+                    <enabled>false</enabled>
+                    <repository>getmeili/meilisearch</repository>
+                    <version>1.11.3</version>
+                    <master_key>masterKey</master_key>
+                </meilisearch>
             </search>
             <redis>
                 <enabled>false</enabled>
