@@ -101,6 +101,80 @@ The Medusa storefront container ships with `WATCHPACK_POLLING=true` and `CHOKIDA
 
 For the backend (`nodejs` service running `medusa develop`) and any other container that watches files, see the general guide [macos-hmr.md](macos-hmr.md). It covers Next.js, Chokidar, nodemon, ts-node-dev, tsc, vite, gulp, and grunt.
 
+## Common gotchas
+
+### Admin UI returns "Blocked request" / 403
+
+Medusa v2 serves the admin app through Vite's dev server, which rejects unknown `Host` headers by default. After running `madock setup` once, edit your project's `medusa-config.ts` and add:
+
+```ts
+admin: {
+  vite: () => ({
+    server: {
+      allowedHosts: true,   // or ["loc.<project>.com"]
+    },
+  }),
+},
+```
+
+Restart the backend (`madock restart`). The admin UI at `https://loc.<project>.com/app` will load.
+
+### Storefront fails with "Missing required environment variables: NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY"
+
+Medusa v2 requires every storefront request to carry a publishable API key. After `madock install`, create one via the admin API and write it into `storefront/.env`:
+
+```bash
+TOKEN=$(curl -sk https://loc.<project>.com/auth/user/emailpass \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@example.com","password":"admin"}' | jq -r .token)
+
+KEY=$(curl -sk -X POST https://loc.<project>.com/admin/api-keys \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"title":"storefront","type":"publishable"}' | jq -r .api_key.token)
+
+cat >> storefront/.env <<EOF
+NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=$KEY
+NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://loc.<project>.com
+EOF
+
+madock restart
+```
+
+### Backend logs PostgreSQL SSL errors
+
+The bundled `postgres` image does not run with TLS. `madock install` writes `DATABASE_URL` with `?sslmode=disable` so the pg driver skips negotiation. If you wrote the `.env` file yourself, append `?sslmode=disable` to the URL.
+
+### "redisUrl not found. A fake redis instance will be used."
+
+Medusa v2 does not read `REDIS_URL` from the environment. Wire the running Redis container into `medusa-config.ts` explicitly:
+
+```ts
+projectConfig: {
+  databaseUrl: process.env.DATABASE_URL,
+  redisUrl: process.env.REDIS_URL,   // madock writes redis://redisdb:6379
+  workerMode: "shared",
+  http: { ... },
+},
+modules: [
+  {
+    resolve: "@medusajs/medusa/cache-redis",
+    options: { redisUrl: process.env.REDIS_URL },
+  },
+  {
+    resolve: "@medusajs/medusa/event-bus-redis",
+    options: { redisUrl: process.env.REDIS_URL },
+  },
+  {
+    resolve: "@medusajs/medusa/workflow-engine-redis",
+    options: {
+      redis: { url: process.env.REDIS_URL },
+    },
+  },
+],
+```
+
+Restart the backend after editing. The `Local Event Bus installed. This is not recommended for production.` warning will go away too.
+
 ## Tips
 
 * Run `madock medusa db:migrate` after updating dependencies — keeps the database in sync with the latest module schemas.
