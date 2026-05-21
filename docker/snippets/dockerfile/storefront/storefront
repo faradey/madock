@@ -1,4 +1,4 @@
-FROM {{{storefront/repository}}}:{{{storefront/version}}}
+FROM {{{medusa/storefront/repository}}}:{{{medusa/storefront/version}}}
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
@@ -10,6 +10,6 @@ RUN usermod -u {{{os/user/uid}}} -o node && groupmod -g {{{os/user/guid}}} -o no
 
 USER node
 
-WORKDIR {{{storefront/workdir}}}
+WORKDIR {{{medusa/storefront/workdir}}}
 
 CMD ["sh", "-c", "if [ -f package.json ]; then yarn install && yarn dev; else echo 'storefront/ folder missing or empty — see docs/medusa.md'; sleep infinity; fi"]

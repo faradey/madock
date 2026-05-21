@@ -85,6 +85,13 @@ func Medusa(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	config.Set("rabbitmq/user", configs2.GetOption("rabbitmq/user", generalConf, projectConf))
 	config.Set("rabbitmq/password", configs2.GetOption("rabbitmq/password", generalConf, projectConf))
 
+	config.Set("medusa/storefront/enabled", configs2.GetOption("medusa/storefront/enabled", generalConf, projectConf))
+	config.Set("medusa/storefront/repository", configs2.GetOption("medusa/storefront/repository", generalConf, projectConf))
+	config.Set("medusa/storefront/version", configs2.GetOption("medusa/storefront/version", generalConf, projectConf))
+	config.Set("medusa/storefront/path", configs2.GetOption("medusa/storefront/path", generalConf, projectConf))
+	config.Set("medusa/storefront/workdir", configs2.GetOption("medusa/storefront/workdir", generalConf, projectConf))
+	config.Set("medusa/storefront/region", configs2.GetOption("medusa/storefront/region", generalConf, projectConf))
+
 	config.Set("grafana/auth/enabled", configs2.GetOption("grafana/auth/enabled", generalConf, projectConf))
 	config.Set("grafana/auth/user", configs2.GetOption("grafana/auth/user", generalConf, projectConf))
 	config.Set("grafana/auth/password", configs2.GetOption("grafana/auth/password", generalConf, projectConf))

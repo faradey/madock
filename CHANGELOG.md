@@ -1,12 +1,16 @@
 **v3.7.5**
 
 Added:
-- Medusa.js platform support: `madock setup --platform medusa` (Node.js + PostgreSQL + Redis), `madock medusa <cmd>` to run the Medusa CLI inside the nodejs container, `madock install` scaffolds `.env` + runs `db:migrate` + creates an admin user. Auto-detection via `package.json` (`@medusajs/medusa` or `@medusajs/framework`). Default versions: Node 20.18, PostgreSQL 16.4, Redis 7.2, Yarn 4.5
+- Medusa.js platform support: `madock setup --platform medusa` (Node.js + PostgreSQL + Redis), `madock medusa <cmd>` to run the Medusa CLI inside the nodejs container, `madock install` scaffolds `.env` + runs `db:migrate` + creates an admin user. Auto-detection via `package.json` (`@medusajs/medusa` or `@medusajs/framework`). Default versions: Node 20.18, PostgreSQL 16.4, Redis 7.2, Yarn 4.5. See [docs/medusa.md](docs/medusa.md)
+- Medusa setup presets: `--preset latest` (Medusa 2.x: Node 22, Postgres 17, Redis 7.4), `--preset stable` (Medusa 2.0 baseline), `--preset legacy` (Medusa 1.x: Node 18, Postgres 14, Redis 7.0). Interactive preset wizard in `madock setup --platform medusa` mirrors the Magento flow
+- `service:enable meilisearch` — Meilisearch as an opt-in search engine container across all platforms (`getmeili/meilisearch:v1.11.3`, master key `masterKey`). Wired into the Medusa compose template
+- `service:enable storefront` — optional Next.js storefront container for Medusa v2. Mounts the project's `<project>/storefront/` folder into `/var/www/storefront`, internal port 8000, host port auto-allocated via `{{{port/storefront}}}`. Env vars wire `MEDUSA_BACKEND_URL` to the internal `nodejs:9000`. Configurable via `medusa/storefront/*` keys in `config.xml`
 
 Changed:
 - Default DB credentials changed from `magento`/`magento`/`magento` to DDEV-style `db`/`db`/`db` (`db/root_password` stays `password`). Affects new projects only; existing projects keep their stored values
 - New V375 migration backfills `db/user`/`db/password`/`db/database` = `magento` for projects whose `config.xml` relied on the previous embedded defaults, so their Docker volumes and DB users keep working after the upgrade
 - Default `timezone` switched from deprecated `Europe/Kiev` to `UTC`. IANA renamed `Europe/Kiev` to `Europe/Kyiv` in tzdata 2022b; UTC is the standard server default and avoids DST surprises in logs. Existing projects keep their stored timezone
+- Shared nginx `proxy.conf` no longer hardcodes upstream port `3000`. It now uses `{{{main_service_port}}}`, resolved per platform from the project config (Medusa env writer sets it to `9000`; existing custom/nodejs projects fall back to `3000`, matching the old behaviour)
 
 **v3.7.4**
 

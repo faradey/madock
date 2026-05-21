@@ -1,25 +1,25 @@
-<<<if{{{storefront/enabled}}}>>>
+<<<if{{{medusa/storefront/enabled}}}>>>
   storefront:
     init: true
     build:
       context: ctx
       dockerfile: storefront.Dockerfile
     tty: true
-    working_dir: {{{storefront/workdir}}}
+    working_dir: {{{medusa/storefront/workdir}}}
     ports:
       - "{{{port/storefront}}}:8000"
     volumes:
-      - ./src/{{{storefront/path}}}:{{{storefront/workdir}}}:cached
+      - ./src/{{{medusa/storefront/path}}}:{{{medusa/storefront/workdir}}}:cached
     environment:
       NODE_ENV: "development"
       MEDUSA_BACKEND_URL: "http://nodejs:9000"
       NEXT_PUBLIC_MEDUSA_BACKEND_URL: "http://nodejs:9000"
       NEXT_PUBLIC_BASE_URL: "http://localhost:{{{port/storefront}}}"
-      NEXT_PUBLIC_DEFAULT_REGION: "{{{storefront/region}}}"
+      NEXT_PUBLIC_DEFAULT_REGION: "{{{medusa/storefront/region}}}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}
     restart: {{{restart_policy}}}
 <<<endif>>>
-    <<<if{{{storefront/enabled}}}{{{isolation/enabled}}}>>>networks:
+    <<<if{{{medusa/storefront/enabled}}}{{{isolation/enabled}}}>>>networks:
       - isolated<<<endif>>>
