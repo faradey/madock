@@ -36,17 +36,40 @@ function detectComposerPatchesMajor(string $siteRootPath): int {
     return 1;
 }
 
+function invalidatePatchesLock(string $siteRootPath, int $major): void {
+    if($major < 2){
+        return;
+    }
+    $lockPath = $siteRootPath."/patches.lock.json";
+    if(file_exists($lockPath)){
+        @unlink($lockPath);
+        print("patches.lock.json removed (cweagans >=2). Run `composer install` or `composer patches-relock` to regenerate.\n");
+    }
+}
+
 function setPatchEntry(array &$patches, string $module, string $title, string $path, int $major, bool $force): bool {
     if($major >= 2){
         if(!isset($patches[$module]) || !is_array($patches[$module])){
             $patches[$module] = [];
         }
+        $normalized = [];
+        foreach($patches[$module] as $key => $existing){
+            if(is_array($existing)){
+                $normalized[] = [
+                    'description' => (string)($existing['description'] ?? (is_string($key) ? $key : '')),
+                    'url'         => (string)($existing['url'] ?? ''),
+                ];
+            } elseif(is_string($existing)){
+                $normalized[] = [
+                    'description' => is_string($key) ? $key : '',
+                    'url'         => $existing,
+                ];
+            }
+        }
+        $patches[$module] = $normalized;
         $duplicate = false;
         foreach($patches[$module] as $idx => $existing){
-            if(is_array($existing) && (
-                ($existing['description'] ?? '') === $title ||
-                ($existing['url'] ?? '') === $path
-            )){
+            if(($existing['description'] ?? '') === $title || ($existing['url'] ?? '') === $path){
                 if(!$force){
                     return false;
                 }
@@ -102,7 +125,7 @@ if(file_exists($filePatch)){
             
                 $output = null;
                 $responseCode = 0;
-                exec("cd ".$siteRootPath." && composer install --no-plugins --ignore-platform-reqs", $output, $responseCode);
+                exec("cd ".$siteRootPath." && composer install --no-plugins --no-scripts --ignore-platform-reqs", $output, $responseCode);
                 if($responseCode != 0){
                     recurseCopy($patchContainerPath."/".$composerModuleNameDir, $vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]);
                     if(file_exists($patchContainerPath."/".$composerModuleNameDir)){
@@ -117,7 +140,7 @@ if(file_exists($filePatch)){
 
                     $output = null;
                     $responseCode = 0;
-                    exec("cd ".$siteRootPath." && composer install --no-plugins --ignore-platform-reqs", $output, $responseCode);
+                    exec("cd ".$siteRootPath." && composer install --no-plugins --no-scripts --ignore-platform-reqs", $output, $responseCode);
                     
                     if($responseCode != 0){
                         exec("rm -r ".$vendorPath."/" . $moduleRoot[0]."/".$moduleRoot[1]);
@@ -149,6 +172,25 @@ if(file_exists($filePatch)){
                         $patchContent = file_get_contents($patchMagentoPath . "/" . $moduleRoot[0]."/".$moduleRoot[1]."/".$patchName);
                         $patchContent = str_replace($vendorPath . "/" . $moduleRoot[0]."/".$moduleRoot[1], "", $patchContent);
                         $patchContent = str_replace($patchContainerPath."/".$composerModuleNameDir, "", $patchContent);
+                        $patchContent = preg_replace_callback(
+                            '/^(---|\+\+\+)[ \t]+(\S+)(?:[ \t]+[^\n]*)?$/m',
+                            function($m){
+                                $prefix = $m[1] === '---' ? 'a' : 'b';
+                                $path = $m[2];
+                                if($path === '/dev/null' || $path === 'dev/null'){
+                                    return $m[1].' /dev/null';
+                                }
+                                if(preg_match('#^[ab]/#', $path)){
+                                    return $m[1].' '.$path;
+                                }
+                                $rel = ltrim($path, '/');
+                                if($rel === ''){
+                                    return $m[1].' /dev/null';
+                                }
+                                return $m[1].' '.$prefix.'/'.$rel;
+                            },
+                            $patchContent
+                        );
                         if(!empty($composerJsonData['extra']['patches-search'])) {
                             $patchContent = "@package ".$moduleRoot[0]."/".$moduleRoot[1]."\n\n".$patchContent;
                         }
@@ -162,6 +204,7 @@ if(file_exists($filePatch)){
                             }
                             if(setPatchEntry($composerJsonData['extra']['patches'], $module, $patchTitle, $relPath, $composerPatchesMajor, !empty($force))){
                                 file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                                invalidatePatchesLock($siteRootPath, $composerPatchesMajor);
                                 print("\nThe patch was created successfully\n");
                             } else {
                                 print("The patch with same title or name has already been created.\n");
@@ -181,6 +224,7 @@ if(file_exists($filePatch)){
                             }
                             if(setPatchEntry($composerPatchesJsonData['patches'], $module, $patchTitle, $relPath, $composerPatchesMajor, !empty($force))){
                                 file_put_contents($composerPatchesFile, json_encode($composerPatchesJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                                invalidatePatchesLock($siteRootPath, $composerPatchesMajor);
                                 print("\nThe patch was created successfully\n");
                             } else {
                                 print("The patch with same title or name has already been created.\n");
@@ -192,6 +236,7 @@ if(file_exists($filePatch)){
                             $composerJsonData['extra']['patches'] = [];
                             setPatchEntry($composerJsonData['extra']['patches'], $module, $patchTitle, $relPath, $composerPatchesMajor, true);
                             file_put_contents($composerFile, json_encode($composerJsonData, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+                            invalidatePatchesLock($siteRootPath, $composerPatchesMajor);
                             print("\nThe patch was created successfully\n");
                         }
                         exec("rm -r ".$vendorPath."/" . $moduleRoot[0]."/".$moduleRoot[1]);
@@ -234,35 +279,12 @@ function deleteDirectory($dir) {
 
 function recurseCopy(
     string $sourceDirectory,
-    string $destinationDirectory,
-    string $childFolder = ''
+    string $destinationDirectory
 ) {
     $directory = opendir($sourceDirectory);
 
     if (is_dir($destinationDirectory) === false) {
         mkdir($destinationDirectory, 0755, true);
-    }
-
-    if ($childFolder !== '') {
-        if (is_dir($destinationDirectory."/".$childFolder) === false) {
-            mkdir($destinationDirectory."/".$childFolder, 0755, true);
-        }
-
-        while (($file = readdir($directory)) !== false) {
-            if ($file === '.' || $file === '..') {
-                continue;
-            }
-
-            if (is_dir($sourceDirectory."/".$file) === true) {
-                recurseCopy($sourceDirectory."/".$file, $destinationDirectory."/".$childFolder/$file);
-            } else {
-                copy($sourceDirectory."/".$file, $destinationDirectory."/".$childFolder."/".$file);
-            }
-        }
-
-        closedir($directory);
-
-        return;
     }
 
     while (($file = readdir($directory)) !== false) {

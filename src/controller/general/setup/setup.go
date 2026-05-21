@@ -29,6 +29,11 @@ func init() {
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralSetup)).(*arg_struct.ControllerGeneralSetup)
 
+	// Propagate -y to per-option selectors so SelectInteractive does not block
+	// on stdin for tool versions (Redis/Valkey/Artemis/etc.).
+	tools.SetNonInteractive(args.Yes)
+	defer tools.SetNonInteractive(false)
+
 	// Display setup banner
 	fmt.Println("")
 	fmtc.Banner("MADOCK SETUP", "Docker Environment Configuration")
