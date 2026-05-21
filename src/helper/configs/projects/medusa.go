@@ -46,7 +46,11 @@ func Medusa(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	dbType, dbRepo := resolveDbTypeAndRepo(defVersions)
 	config.Set("db/type", dbType)
 
-	repoVersion := strings.Split(defVersions.Db, ":")
+	dbVersion := defVersions.Db
+	if dbVersion == "" {
+		dbVersion = configs2.GetOption("db/version", generalConf, projectConf)
+	}
+	repoVersion := strings.Split(dbVersion, ":")
 	if len(repoVersion) > 1 {
 		config.Set("db/repository", repoVersion[0])
 		config.Set("db/version", repoVersion[1])
@@ -54,7 +58,7 @@ func Medusa(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 		if dbRepo != "" {
 			config.Set("db/repository", dbRepo)
 		}
-		config.Set("db/version", defVersions.Db)
+		config.Set("db/version", dbVersion)
 	}
 	config.Set("db/root_password", configs2.GetOption("db/root_password", generalConf, projectConf))
 	config.Set("db/user", configs2.GetOption("db/user", generalConf, projectConf))
@@ -66,21 +70,32 @@ func Medusa(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 
 	// Medusa uses Redis for events/workflow state.
 	config.Set("redis/enabled", "true")
-	repoVersion = strings.Split(defVersions.Redis, ":")
+	redisVersion := defVersions.Redis
+	if redisVersion == "" {
+		redisVersion = configs2.GetOption("redis/version", generalConf, projectConf)
+	}
+	repoVersion = strings.Split(redisVersion, ":")
 	if len(repoVersion) > 1 {
 		config.Set("redis/repository", repoVersion[0])
 		config.Set("redis/version", repoVersion[1])
 	} else {
-		config.Set("redis/version", defVersions.Redis)
+		config.Set("redis/version", redisVersion)
 	}
 
 	config.Set("rabbitmq/enabled", configs2.GetOption("rabbitmq/enabled", generalConf, projectConf))
-	repoVersion = strings.Split(defVersions.RabbitMQ, ":")
+	rabbitVersion := defVersions.RabbitMQ
+	if rabbitVersion == "" {
+		// Preset didn't pin a RabbitMQ version. Fall back to the
+		// current project / global default so we don't blank out a
+		// previously-stored version when the user re-runs setup.
+		rabbitVersion = configs2.GetOption("rabbitmq/version", generalConf, projectConf)
+	}
+	repoVersion = strings.Split(rabbitVersion, ":")
 	if len(repoVersion) > 1 {
 		config.Set("rabbitmq/repository", repoVersion[0])
 		config.Set("rabbitmq/version", repoVersion[1])
 	} else {
-		config.Set("rabbitmq/version", defVersions.RabbitMQ)
+		config.Set("rabbitmq/version", rabbitVersion)
 	}
 	config.Set("rabbitmq/user", configs2.GetOption("rabbitmq/user", generalConf, projectConf))
 	config.Set("rabbitmq/password", configs2.GetOption("rabbitmq/password", generalConf, projectConf))

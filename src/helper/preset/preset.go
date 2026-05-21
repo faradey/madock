@@ -126,6 +126,7 @@ func GetMedusaPresets() []Preset {
 				DbType:          "PostgreSQL",
 				Db:              "postgres:17",
 				Redis:           "7.4",
+				RabbitMQ:        "4.2",
 			},
 		},
 		{
@@ -141,6 +142,7 @@ func GetMedusaPresets() []Preset {
 				DbType:          "PostgreSQL",
 				Db:              "postgres:16.4",
 				Redis:           "7.2.1",
+				RabbitMQ:        "3.13.10",
 			},
 		},
 		{
@@ -156,6 +158,7 @@ func GetMedusaPresets() []Preset {
 				DbType:          "PostgreSQL",
 				Db:              "postgres:14.13",
 				Redis:           "7.0",
+				RabbitMQ:        "3.12.10",
 			},
 		},
 	}
