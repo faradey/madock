@@ -2,6 +2,8 @@ package install
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
@@ -10,6 +12,12 @@ import (
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/model/versions"
 )
+
+// shellSingleQuote wraps s for safe use inside a bash single-quoted string:
+// every embedded ' is replaced with '\'' (close quote, escaped quote, reopen).
+func shellSingleQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
 
 // InstallHandler is called to install a platform for a given project.
 type InstallHandler func(projectName, platformVersion string, projectConf map[string]string)
@@ -40,6 +48,9 @@ func init() {
 	})
 	RegisterInstallHandler("woocommerce", func(projectName, platformVersion string, _ map[string]string) {
 		WooCommerce(projectName, platformVersion, false)
+	})
+	RegisterInstallHandler("medusa", func(projectName, platformVersion string, _ map[string]string) {
+		Medusa(projectName, platformVersion)
 	})
 }
 
@@ -220,6 +231,62 @@ func WooCommerce(projectName, platformVer string, isSampleData bool) {
 	fmtc.SuccessLn("[SUCCESS]: WordPress Admin URI: /wp-admin")
 	fmtc.SuccessLn("[SUCCESS]: WordPress Admin User: " + projectConf["magento/admin_user"])
 	fmtc.SuccessLn("[SUCCESS]: WordPress Admin Password: " + projectConf["magento/admin_password"])
+}
+
+func Medusa(projectName, platformVer string) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+
+	// URL-encode credentials in case they contain reserved characters
+	// like `@`, `:`, `/`, `?`, `#`. Without escaping the pg client
+	// misparses the URL (e.g. a `@` in the password gets treated as
+	// the user/host separator).
+	dbUser := url.QueryEscape(projectConf["db/user"])
+	dbPassword := url.QueryEscape(projectConf["db/password"])
+	dbName := projectConf["db/database"]
+	if dbName == "" {
+		dbName = "db"
+	}
+	dbURL := "postgres://" + dbUser + ":" + dbPassword + "@db:5432/" + dbName + "?sslmode=disable"
+	redisURL := "redis://redisdb:6379"
+
+	// Use printf instead of a heredoc — embedding EOF inside a Go string
+	// concatenated with `&& yarn install` puts the terminator on the same
+	// line as the next command and bash never closes the heredoc.
+	envBody := "DATABASE_URL=" + dbURL + "\n" +
+		"REDIS_URL=" + redisURL + "\n" +
+		"JWT_SECRET=supersecret\n" +
+		"COOKIE_SECRET=supersecret\n" +
+		"STORE_CORS=https://" + host + "\n" +
+		"ADMIN_CORS=https://" + host + "\n" +
+		"AUTH_CORS=https://" + host + "\n"
+	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env"
+
+	installCommand := envWrite +
+		" && yarn install" +
+		" && npx medusa db:migrate" +
+		" && npx medusa user --email admin@example.com --password admin"
+
+	workdir := projectConf["workdir"]
+	if workdir == "" {
+		workdir = "/var/www/html"
+	}
+
+	fmt.Println(installCommand)
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "nodejs"), "node", true, "bash", "-c", "cd "+workdir+" && "+installCommand)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Medusa installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Medusa Storefront URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Medusa Admin URI: /app")
+	fmtc.SuccessLn("[SUCCESS]: Medusa Admin User: admin@example.com")
+	fmtc.SuccessLn("[SUCCESS]: Medusa Admin Password: admin")
 }
 
 func PrestaShop(projectName, platformVer string, isSampleData bool) {

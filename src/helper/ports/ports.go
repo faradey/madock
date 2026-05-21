@@ -1,10 +1,13 @@
 package ports
 
 import (
+	"net"
 	"os"
+	"os/exec"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
@@ -37,8 +40,14 @@ const (
 
 // Registry holds the port allocations
 type Registry struct {
-	ports    map[string]int
-	filePath string
+	ports map[string]int
+	// dockerClaimed caches the set of host ports claimed by docker
+	// containers. Populated lazily on the first allocation that needs
+	// it; reused for the remaining allocations of the same process so
+	// we don't shell out to `docker ps`/`docker inspect` once per new
+	// service. nil means "not yet probed".
+	dockerClaimed map[int]bool
+	filePath      string
 }
 
 // NewRegistry creates a new port registry
@@ -129,21 +138,102 @@ func (r *Registry) GetOrAllocate(projectName, serviceName string) int {
 	return port
 }
 
-// findAvailablePort finds the first available port starting from BasePort
+// findAvailablePort finds the first port that is:
+//   - unused in this registry,
+//   - not currently bound on the host (active listener), and
+//   - not claimed by any docker container's port mapping (even stopped
+//     containers reserve their published ports for their next start).
+//
+// The host-bind probe catches non-docker processes and containers
+// outside madock's docker-compose stacks. The docker scan catches
+// stopped containers whose port reservations come back into effect
+// the moment they restart.
 func (r *Registry) findAvailablePort() int {
 	usedPorts := make(map[int]bool)
 	for _, port := range r.ports {
 		usedPorts[port] = true
 	}
 
+	if r.dockerClaimed == nil {
+		r.dockerClaimed = dockerClaimedPorts()
+	}
+
 	for port := BasePort; port < MaxPort; port++ {
-		if !usedPorts[port] {
-			return port
+		if usedPorts[port] {
+			continue
 		}
+		if r.dockerClaimed[port] {
+			continue
+		}
+		if !isHostPortFree(port) {
+			continue
+		}
+		return port
 	}
 
 	// Fallback (should never happen)
 	return BasePort
+}
+
+// dockerClaimedPorts returns the set of host ports that any docker
+// container (running or stopped) has declared in its port mappings.
+// Stopped containers still hold those reservations until removed —
+// `docker ps --format {{.Ports}}` shows an empty column for them, so
+// we read HostConfig.PortBindings via `docker inspect` instead, which
+// returns the configured bindings regardless of run state.
+// Returns an empty set when docker is unavailable — in that case we
+// simply skip this check and rely on the host-bind probe.
+func dockerClaimedPorts() map[int]bool {
+	claimed := make(map[int]bool)
+
+	idsOut, err := exec.Command("docker", "ps", "-aq").Output()
+	if err != nil {
+		return claimed
+	}
+	ids := strings.Fields(strings.TrimSpace(string(idsOut)))
+	if len(ids) == 0 {
+		return claimed
+	}
+
+	args := append([]string{
+		"inspect",
+		"--format",
+		"{{range $port, $b := .HostConfig.PortBindings}}{{range $b}}{{.HostPort}}\n{{end}}{{end}}",
+	}, ids...)
+	out, err := exec.Command("docker", args...).Output()
+	if err != nil {
+		return claimed
+	}
+	for _, line := range strings.Split(string(out), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if p, err := strconv.Atoi(line); err == nil {
+			claimed[p] = true
+		}
+	}
+	return claimed
+}
+
+// isHostPortFree returns true if the given TCP port is not currently
+// bound on the local host. We try listening on both IPv4 and IPv6
+// because docker may bind on either family.
+func isHostPortFree(port int) bool {
+	addrs := []string{"0.0.0.0:" + strconv.Itoa(port), "[::]:" + strconv.Itoa(port)}
+	for _, addr := range addrs {
+		l, err := net.Listen("tcp", addr)
+		if err != nil {
+			return false
+		}
+		// Close immediately; we only needed the binding probe.
+		// SO_REUSEADDR will let docker grab the same port a moment later.
+		_ = l.Close()
+	}
+	// Short delay so the kernel fully releases the socket before
+	// docker tries to bind it from the next compose up.
+	time.Sleep(10 * time.Millisecond)
+	return true
 }
 
 // Get returns port for a service, 0 if not found

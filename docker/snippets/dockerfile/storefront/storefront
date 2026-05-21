@@ -1,0 +1,15 @@
+FROM {{{medusa/storefront/repository}}}:{{{medusa/storefront/version}}}
+
+RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
+
+RUN apt-get update && apt-get install -y --no-install-recommends xdg-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN usermod -u {{{os/user/uid}}} -o node && groupmod -g {{{os/user/guid}}} -o node \
+    && mkdir -p /var/www && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www
+
+USER node
+
+WORKDIR {{{medusa/storefront/workdir}}}
+
+CMD ["sh", "-c", "if [ ! -f package.json ]; then echo '[madock] storefront/ folder missing or empty — see docs/medusa.md'; exec sleep infinity; fi; [ -d node_modules ] || yarn install; exec yarn dev"]

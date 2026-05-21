@@ -33,7 +33,7 @@
             <workdir>/var/www/html</workdir>
             <public_dir>public</public_dir>
             <composer_dir></composer_dir>
-            <timezone>Europe/Kiev</timezone>
+            <timezone>UTC</timezone>
             <php>
                 <enabled>false</enabled>
                 <version>8.2</version>
@@ -58,9 +58,9 @@
                 <type>mysql</type>
                 <repository>mariadb</repository>
                 <root_password>password</root_password>
-                <user>magento</user>
-                <password>magento</password>
-                <database>magento</database>
+                <user>db</user>
+                <password>db</password>
+                <database>db</database>
                 <phpmyadmin>
                     <enabled>false</enabled>
                     <repository>phpmyadmin/phpmyadmin</repository>
@@ -83,9 +83,9 @@
                 <enabled>false</enabled>
                 <repository>mariadb</repository>
                 <root_password>password</root_password>
-                <user>magento</user>
-                <password>magento</password>
-                <database>magento</database>
+                <user>db</user>
+                <password>db</password>
+                <database>db</database>
                 <phpmyadmin>
                     <enabled>false</enabled>
                     <repository>phpmyadmin/phpmyadmin</repository>
@@ -131,6 +131,12 @@
                         <repository>opensearchproject/opensearch-dashboards</repository>
                     </dashboard>
                 </opensearch>
+                <meilisearch>
+                    <enabled>false</enabled>
+                    <repository>getmeili/meilisearch</repository>
+                    <version>1.11.3</version>
+                    <master_key>masterKey</master_key>
+                </meilisearch>
             </search>
             <redis>
                 <enabled>false</enabled>
@@ -204,6 +210,16 @@
                     <enabled>false</enabled>
                 </n98magerun>
             </magento>
+            <medusa>
+                <storefront>
+                    <enabled>false</enabled>
+                    <repository>node</repository>
+                    <version>22.11.0</version>
+                    <path>storefront</path>
+                    <workdir>/var/www/storefront</workdir>
+                    <region>us</region>
+                </storefront>
+            </medusa>
             <proxy>
                 <enabled>true</enabled>
                 <timeout>

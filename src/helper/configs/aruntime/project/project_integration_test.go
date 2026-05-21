@@ -106,7 +106,7 @@ func setupTestEnvironment(t *testing.T, projectName, hostName string) *testEnv {
 		"php/xdebug/mode":              "debug",
 		"php/ioncube/enabled":          "false",
 		"php/nodejs/enabled":           "false",
-		"timezone":                     "Europe/Kiev",
+		"timezone":                     "UTC",
 		"workdir":                      "/var/www/html",
 		"public_dir":                   "pub",
 		"composer_dir":                 "",

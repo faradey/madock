@@ -39,4 +39,7 @@ func Execute(oldAppVersion string) {
 	if oldAppVersion < "3.7.2" {
 		versions.V372()
 	}
+	if oldAppVersion < "3.7.5" {
+		versions.V375()
+	}
 }

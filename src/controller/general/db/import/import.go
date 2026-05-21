@@ -382,7 +382,7 @@ func importPostgresql(containerName string, projectConf map[string]string, args 
 		user = args.User
 	}
 
-	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "psql", "-U", projectConf["db/user"], "-h", service, projectConf["db/database"])
+	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", "PGPASSWORD='"+projectConf["db/password"]+"' psql -U "+projectConf["db/user"]+" -h "+service+" "+projectConf["db/database"])
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}

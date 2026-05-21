@@ -110,6 +110,60 @@ func GetMagentoPresets() []Preset {
 	}
 }
 
+// GetMedusaPresets returns available Medusa presets
+func GetMedusaPresets() []Preset {
+	return []Preset{
+		{
+			Name:        "Medusa 2.x (Latest)",
+			Description: "Latest Medusa.js v2 with Node 22, PostgreSQL 17, Redis 7.4",
+			Platform:    "medusa",
+			Versions: versions.ToolsVersions{
+				Platform:        "medusa",
+				PlatformVersion: "2",
+				Language:        "nodejs",
+				NodeJs:          "22.11.0",
+				Yarn:            "4.5.0",
+				DbType:          "PostgreSQL",
+				Db:              "postgres:17",
+				Redis:           "7.4",
+				RabbitMQ:        "4.2",
+			},
+		},
+		{
+			Name:        "Medusa 2.0 (Stable)",
+			Description: "Medusa.js v2 baseline with Node 20, PostgreSQL 16, Redis 7.2",
+			Platform:    "medusa",
+			Versions: versions.ToolsVersions{
+				Platform:        "medusa",
+				PlatformVersion: "2.0",
+				Language:        "nodejs",
+				NodeJs:          "20.18.0",
+				Yarn:            "4.5.0",
+				DbType:          "PostgreSQL",
+				Db:              "postgres:16.4",
+				Redis:           "7.2.1",
+				RabbitMQ:        "3.13.10",
+			},
+		},
+		{
+			Name:        "Medusa 1.x (Legacy)",
+			Description: "Medusa.js v1 with Node 18, PostgreSQL 14, Redis 7.0",
+			Platform:    "medusa",
+			Versions: versions.ToolsVersions{
+				Platform:        "medusa",
+				PlatformVersion: "1",
+				Language:        "nodejs",
+				NodeJs:          "18.20.0",
+				Yarn:            "1.22.22",
+				DbType:          "PostgreSQL",
+				Db:              "postgres:14.13",
+				Redis:           "7.0",
+				RabbitMQ:        "3.12.10",
+			},
+		},
+	}
+}
+
 // GetShopwarePresets returns available Shopware presets
 func GetShopwarePresets() []Preset {
 	return []Preset{
@@ -132,6 +186,7 @@ func GetShopwarePresets() []Preset {
 func init() {
 	RegisterPresets("magento2", GetMagentoPresets)
 	RegisterPresets("shopware", GetShopwarePresets)
+	RegisterPresets("medusa", GetMedusaPresets)
 }
 
 // GetPresetsByPlatform returns presets for a specific platform.

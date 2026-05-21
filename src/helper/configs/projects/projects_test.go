@@ -25,7 +25,7 @@ func TestMagento2ConfigSets(t *testing.T) {
 		RabbitMQ:        "3.13",
 	}
 	generalConf := map[string]string{
-		"timezone":       "Europe/Kiev",
+		"timezone":       "UTC",
 		"php/xdebug/ide_key": "PHPSTORM",
 		"php/xdebug/enabled": "false",
 		"php/ioncube/enabled": "false",
@@ -244,7 +244,7 @@ func TestMagento2_248_ConfigValues(t *testing.T) {
 	defVersions := magento2.GetVersions("2.4.8")
 	config := new(configs2.ConfigLines)
 	generalConf := map[string]string{
-		"timezone":            "Europe/Kiev",
+		"timezone":            "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -290,7 +290,7 @@ func TestMagento2_248_ConfigSaveRoundTrip(t *testing.T) {
 	defVersions := magento2.GetVersions("2.4.8")
 	config := new(configs2.ConfigLines)
 	generalConf := map[string]string{
-		"timezone":            "Europe/Kiev",
+		"timezone":            "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",

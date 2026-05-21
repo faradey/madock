@@ -111,6 +111,7 @@ func makeNginxConf(projectName string) {
 	mainService := resolveMainService(projectConf)
 	str = strings.Replace(str, "{{{main_service}}}", mainService, -1)
 	str = strings.Replace(str, "{{{main_service_enabled}}}", resolveMainServiceEnabled(projectConf, mainService), -1)
+	str = strings.Replace(str, "{{{main_service_port}}}", resolveMainServicePort(projectConf), -1)
 
 	str = configs.ReplaceConfigValue(projectName, str)
 	hostName := "loc." + projectName + ".com"
@@ -323,6 +324,18 @@ func resolveMainServiceEnabled(projectConf map[string]string, mainService string
 		return "false"
 	}
 	return "true"
+}
+
+// resolveMainServicePort returns the upstream port for the proxy.conf
+// nginx template. Defaults to 3000 (Node.js/Express convention) so
+// existing custom platform projects keep working; platforms with
+// different conventions (Medusa = 9000, etc.) override it by writing
+// main_service_port into the project config.
+func resolveMainServicePort(projectConf map[string]string) string {
+	if v := projectConf["main_service_port"]; v != "" {
+		return v
+	}
+	return "3000"
 }
 
 // resolveMainService determines the main service name based on the language config

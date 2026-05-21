@@ -1,3 +1,46 @@
 WORKDIR {{{workdir}}}
 
-CMD ["node"]
+# madock smart entrypoint:
+#   - if package.json has a "dev" script, run it (preferred)
+#   - else if "start" exists, run it
+#   - else fall back to plain `node` REPL
+# Picks the package manager from lockfiles (yarn/pnpm/npm).
+# Refuses to start the dev server when node_modules is missing —
+# the user should run `madock install` first.
+RUN cat > /usr/local/bin/madock-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local/bin/madock-entrypoint
+#!/bin/sh
+set -e
+
+cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html
+
+if [ ! -f package.json ]; then
+  exec node
+fi
+
+script=$(node -e 'try{var p=require("./package.json").scripts||{};process.stdout.write(p.dev?"dev":(p.start?"start":""))}catch(e){}' 2>/dev/null)
+
+if [ -z "$script" ]; then
+  exec node
+fi
+
+if [ ! -d node_modules ]; then
+  echo "[madock] node_modules missing in $(pwd). Run \"madock install\" to bootstrap (yarn install + db:migrate)."
+  echo "[madock] Container will idle; nothing to run."
+  exec sleep infinity
+fi
+
+if [ -f yarn.lock ]; then
+  pm="yarn"
+elif [ -f pnpm-lock.yaml ]; then
+  pm="pnpm"
+else
+  pm="npm run"
+fi
+
+echo "[madock] starting: $pm $script"
+exec $pm $script
+MADOCK_EOF
+
+ENV WORKDIR={{{workdir}}}
+
+CMD ["/usr/local/bin/madock-entrypoint"]

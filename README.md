@@ -3,7 +3,7 @@
 # madock
 Local development environment based on Docker
 
-Supported platforms: Magento2, Shopify, Shopware, PrestaShop, WooCommerce, Custom projects (PHP, Node.js, Python, Go, Ruby).
+Supported platforms: Magento2, Shopify, Shopware, PrestaShop, WooCommerce, Medusa.js, Custom projects (PHP, Node.js, Python, Go, Ruby).
 
 [![GoDoc](https://godoc.org/github.com/faradey/madock?status.svg)](https://godoc.org/github.com/faradey/madock)
 [![Go Report Card](https://goreportcard.com/badge/github.com/faradey/madock)](https://goreportcard.com/report/github.com/faradey/madock)
@@ -24,6 +24,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * **Shopware** as a separate service. Learn [more](docs/shopware.md)
 * **PrestaShop** as a separate service. Learn [more](docs/prestashop.md)
 * **WooCommerce** as a separate service (WordPress + WooCommerce + WP-CLI)
+* **Medusa.js** as a separate service (Node.js + PostgreSQL + Redis, optional Meilisearch and Next.js storefront). Learn [more](docs/medusa.md)
 * Cron support
 * Flexible configuration for each project
 * Database import and export in two clicks
@@ -34,6 +35,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Admin UI: phpMyAdmin, pgAdmin, Mongo Express
 * Additional services: redis, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
 * LiveReload. Learn [more](docs/livereload.md)
+* HMR / file watching on macOS (Next.js, Chokidar, nodemon, vite, …). Learn [more](docs/macos-hmr.md)
 * Mailpit (email testing tool for developers)
 * Magento Cloud
 * Composer patches in two clicks
