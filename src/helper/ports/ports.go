@@ -4,7 +4,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -17,24 +16,8 @@ import (
 const (
 	BasePort  = 17000
 	MaxPort   = 65535
-	// LegacyPortsFile is the old per-exec-dir location used before 3.7.6.
-	// It is auto-migrated into the global location on first load.
-	LegacyPortsFile = "/aruntime/ports.conf"
+	PortsFile = "/aruntime/ports.conf"
 )
-
-// globalPortsFile returns the host-wide ports.conf path
-// ($HOME/.madock/ports.conf). One file per machine, shared by every
-// madock binary on the system — moving the registry out of the binary's
-// install directory removes the multi-binary collision class where two
-// installations independently allocated the same host port.
-func globalPortsFile() string {
-	home, err := os.UserHomeDir()
-	if err != nil || home == "" {
-		// Fallback to legacy location if the home dir is unknown.
-		return paths.GetExecDirPath() + LegacyPortsFile
-	}
-	return filepath.Join(home, ".madock", "ports.conf")
-}
 
 // Service names for port allocation
 const (
@@ -61,119 +44,14 @@ type Registry struct {
 	filePath string
 }
 
-// NewRegistry creates a new port registry backed by the host-wide
-// ports.conf file. On first run the legacy per-exec-dir file (used
-// before 3.7.6) is auto-migrated into the global location so existing
-// allocations are preserved.
+// NewRegistry creates a new port registry
 func NewRegistry() *Registry {
 	r := &Registry{
 		ports:    make(map[string]int),
-		filePath: globalPortsFile(),
+		filePath: paths.GetExecDirPath() + PortsFile,
 	}
-	r.migrateLegacy()
 	r.load()
 	return r
-}
-
-// migrateLegacy copies a legacy per-exec-dir ports.conf into the global
-// location if the global file doesn't exist yet. Older entries from
-// other madock installations on the same host are merged in too: any
-// `<dir>/aruntime/ports.conf` discovered next to madock binaries on
-// PATH is read, and its allocations are taken into account.
-func (r *Registry) migrateLegacy() {
-	if paths.IsFileExist(r.filePath) {
-		return
-	}
-
-	merged := make(map[string]int)
-
-	// Local legacy file (this binary's exec_dir).
-	legacy := paths.GetExecDirPath() + LegacyPortsFile
-	if paths.IsFileExist(legacy) {
-		readPortsFile(legacy, merged)
-	}
-
-	// Any other madock binary on PATH may have its own legacy file.
-	for _, p := range otherMadockLegacyFiles() {
-		readPortsFile(p, merged)
-	}
-
-	if len(merged) == 0 {
-		return
-	}
-
-	if err := os.MkdirAll(filepath.Dir(r.filePath), 0755); err != nil {
-		return
-	}
-	r.ports = merged
-	r.save()
-}
-
-// otherMadockLegacyFiles discovers legacy ports.conf paths next to all
-// madock binaries reachable via the user's PATH. Symlinks (e.g. Homebrew
-// /opt/homebrew/bin/madock → real binary) are resolved so the lookup
-// lands on the actual install directory.
-func otherMadockLegacyFiles() []string {
-	pathEnv := os.Getenv("PATH")
-	if pathEnv == "" {
-		return nil
-	}
-	seen := map[string]bool{}
-	var result []string
-	for _, dir := range strings.Split(pathEnv, string(os.PathListSeparator)) {
-		if dir == "" {
-			continue
-		}
-		bin := filepath.Join(dir, "madock")
-		info, err := os.Lstat(bin)
-		if err != nil || info.IsDir() {
-			continue
-		}
-		real, err := filepath.EvalSymlinks(bin)
-		if err != nil {
-			real = bin
-		}
-		legacy := filepath.Join(filepath.Dir(real), "aruntime", "ports.conf")
-		if seen[legacy] {
-			continue
-		}
-		seen[legacy] = true
-		if paths.IsFileExist(legacy) {
-			result = append(result, legacy)
-		}
-	}
-	return result
-}
-
-// readPortsFile parses a ports.conf into the given map. Existing keys
-// are kept on conflict — first reader wins, which matches the order we
-// pass files in (local legacy before PATH-discovered ones).
-func readPortsFile(path string, into map[string]int) {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return
-	}
-	for _, line := range strings.Split(string(content), "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		key := strings.TrimSpace(parts[0])
-		if !strings.Contains(key, "/") {
-			continue
-		}
-		port, err := strconv.Atoi(strings.TrimSpace(parts[1]))
-		if err != nil {
-			continue
-		}
-		if _, exists := into[key]; !exists {
-			into[key] = port
-		}
-	}
 }
 
 // load reads the ports.conf file
@@ -216,9 +94,7 @@ func (r *Registry) load() {
 
 // save writes the ports.conf file
 func (r *Registry) save() {
-	if err := os.MkdirAll(filepath.Dir(r.filePath), 0755); err != nil {
-		logger.Fatal(err)
-	}
+	paths.MakeDirsByPath(paths.RuntimeBase())
 
 	// Sort keys for consistent output
 	var keys []string
