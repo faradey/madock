@@ -92,14 +92,17 @@ func Medusa(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	config.Set("medusa/storefront/workdir", configs2.GetOption("medusa/storefront/workdir", generalConf, projectConf))
 	config.Set("medusa/storefront/region", configs2.GetOption("medusa/storefront/region", generalConf, projectConf))
 
-	// Browser-side backend URL for the Next.js storefront. Defaults to the
-	// project's first nginx host (https://loc.<project>.com); the user can
-	// override it in config.xml when they want a different scheme or domain.
+	// Browser-side backend URL for the Next.js storefront. Defaults to
+	// the project's first nginx host (https://loc.<project>.com); the
+	// user can override it in config.xml when they want a different
+	// scheme or domain. SetEnvForProject calls this writer BEFORE it
+	// writes `<hosts>` to the project config, so we read the host from
+	// `defVersions.Hosts` (populated by the setup wizard) rather than
+	// from projectConf, which is still stale at this point.
 	publicBackendURL := configs2.GetOption("medusa/storefront/public_backend_url", generalConf, projectConf)
-	if publicBackendURL == "" {
-		if hosts := configs2.GetHosts(projectConf); len(hosts) > 0 {
-			publicBackendURL = "https://" + hosts[0]["name"]
-		}
+	if publicBackendURL == "" && defVersions.Hosts != "" {
+		firstHost := strings.Fields(defVersions.Hosts)[0]
+		publicBackendURL = "https://" + firstHost
 	}
 	config.Set("medusa/storefront/public_backend_url", publicBackendURL)
 

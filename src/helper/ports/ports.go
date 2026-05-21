@@ -40,8 +40,14 @@ const (
 
 // Registry holds the port allocations
 type Registry struct {
-	ports    map[string]int
-	filePath string
+	ports map[string]int
+	// dockerClaimed caches the set of host ports claimed by docker
+	// containers. Populated lazily on the first allocation that needs
+	// it; reused for the remaining allocations of the same process so
+	// we don't shell out to `docker ps`/`docker inspect` once per new
+	// service. nil means "not yet probed".
+	dockerClaimed map[int]bool
+	filePath      string
 }
 
 // NewRegistry creates a new port registry
@@ -138,25 +144,25 @@ func (r *Registry) GetOrAllocate(projectName, serviceName string) int {
 //   - not claimed by any docker container's port mapping (even stopped
 //     containers reserve their published ports for their next start).
 //
-// The triple check guards against the multi-binary scenario: a second
-// madock installation running from a different exec_dir keeps its own
-// ports.conf, and a project from that other installation may be stopped
-// at the moment we allocate — the host-bind probe would say the port is
-// free, but the moment the other project starts again it collides. The
-// docker scan covers those quiescent reservations.
+// The host-bind probe catches non-docker processes and containers
+// outside madock's docker-compose stacks. The docker scan catches
+// stopped containers whose port reservations come back into effect
+// the moment they restart.
 func (r *Registry) findAvailablePort() int {
 	usedPorts := make(map[int]bool)
 	for _, port := range r.ports {
 		usedPorts[port] = true
 	}
 
-	dockerClaimed := dockerClaimedPorts()
+	if r.dockerClaimed == nil {
+		r.dockerClaimed = dockerClaimedPorts()
+	}
 
 	for port := BasePort; port < MaxPort; port++ {
 		if usedPorts[port] {
 			continue
 		}
-		if dockerClaimed[port] {
+		if r.dockerClaimed[port] {
 			continue
 		}
 		if !isHostPortFree(port) {

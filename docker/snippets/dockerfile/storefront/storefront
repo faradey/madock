@@ -12,4 +12,4 @@ USER node
 
 WORKDIR {{{medusa/storefront/workdir}}}
 
-CMD ["sh", "-c", "if [ -f package.json ]; then yarn install && yarn dev; else echo 'storefront/ folder missing or empty — see docs/medusa.md'; sleep infinity; fi"]
+CMD ["sh", "-c", "if [ ! -f package.json ]; then echo '[madock] storefront/ folder missing or empty — see docs/medusa.md'; exec sleep infinity; fi; [ -d node_modules ] || yarn install; exec yarn dev"]

@@ -2,6 +2,7 @@ package install
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/faradey/madock/v3/src/command"
@@ -240,7 +241,17 @@ func Medusa(projectName, platformVer string) {
 		host = hosts[0]["name"]
 	}
 
-	dbURL := "postgres://" + projectConf["db/user"] + ":" + projectConf["db/password"] + "@db:5432/" + projectConf["db/database"] + "?sslmode=disable"
+	// URL-encode credentials in case they contain reserved characters
+	// like `@`, `:`, `/`, `?`, `#`. Without escaping the pg client
+	// misparses the URL (e.g. a `@` in the password gets treated as
+	// the user/host separator).
+	dbUser := url.QueryEscape(projectConf["db/user"])
+	dbPassword := url.QueryEscape(projectConf["db/password"])
+	dbName := projectConf["db/database"]
+	if dbName == "" {
+		dbName = "db"
+	}
+	dbURL := "postgres://" + dbUser + ":" + dbPassword + "@db:5432/" + dbName + "?sslmode=disable"
 	redisURL := "redis://redisdb:6379"
 
 	// Use printf instead of a heredoc — embedding EOF inside a Go string
@@ -260,8 +271,13 @@ func Medusa(projectName, platformVer string) {
 		" && npx medusa db:migrate" +
 		" && npx medusa user --email admin@example.com --password admin"
 
+	workdir := projectConf["workdir"]
+	if workdir == "" {
+		workdir = "/var/www/html"
+	}
+
 	fmt.Println(installCommand)
-	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "nodejs"), "node", true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "nodejs"), "node", true, "bash", "-c", "cd "+workdir+" && "+installCommand)
 	if err != nil {
 		logger.Fatal(err)
 	}
