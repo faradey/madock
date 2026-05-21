@@ -45,14 +45,20 @@ func Execute() {
 	var services []ServiceInfo
 	for _, key := range keys {
 		serviceName := strings.SplitN(key, "/enabled", 2)
-		if serviceName[0] != key {
-			service := service2.GetByLong(serviceName[0])
-			enabled := configData[key] == "true"
-			services = append(services, ServiceInfo{
-				Name:    service,
-				Enabled: enabled,
-			})
+		if serviceName[0] == key {
+			continue
 		}
+		// Skip scope-shadowed copies — scopes/<name>/... are overrides,
+		// not first-class services.
+		if strings.HasPrefix(key, "scopes/") {
+			continue
+		}
+		service := service2.GetByLong(serviceName[0])
+		enabled := configData[key] == "true"
+		services = append(services, ServiceInfo{
+			Name:    service,
+			Enabled: enabled,
+		})
 	}
 
 	if args.Json {

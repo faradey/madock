@@ -21,8 +21,20 @@ var setupProgress *fmtc.StepProgress
 // reconfigureMode enables per-option "Change?" confirmations during setup reconfigure
 var reconfigureMode bool
 
+// nonInteractive disables all interactive prompts (used by --yes / -y).
+// SelectInteractive and Platform skip selectors and keep defaults silently.
+var nonInteractive bool
+
 // SetReconfigure enables or disables reconfigure mode
 func SetReconfigure(v bool) { reconfigureMode = v }
+
+// SetNonInteractive enables or disables non-interactive mode.
+// When enabled, SelectInteractive keeps an existing default silently, or picks
+// the first concrete option (skipping "Custom" / "Do not use") when no default.
+func SetNonInteractive(v bool) { nonInteractive = v }
+
+// IsNonInteractive reports whether non-interactive mode is active.
+func IsNonInteractive() bool { return nonInteractive }
 
 // InitProgress initializes the progress tracker with given steps
 func InitProgress(steps []string) {
@@ -56,6 +68,14 @@ func Platform(choices []PlatformChoice) string {
 	for i, c := range choices {
 		displayNames[i] = c.DisplayName
 		displayToName[c.DisplayName] = c.Name
+	}
+
+	if nonInteractive {
+		if len(choices) == 0 {
+			return ""
+		}
+		fmtc.SuccessLn("Platform: " + choices[0].DisplayName)
+		return choices[0].Name
 	}
 
 	fmt.Println("")
@@ -288,9 +308,38 @@ func PrepareVersionsStyled(title string, availableVersions []string, recommended
 func SelectInteractive(title string, availableVersions []string, defVersion *string) {
 	// In reconfigure mode, ask whether to change the current value
 	if reconfigureMode && *defVersion != "" {
+		if nonInteractive {
+			fmtc.SuccessLn(title + ": " + *defVersion)
+			return
+		}
 		if !fmtc.Confirm(title+": "+*defVersion+" — Change?", false) {
 			return
 		}
+	}
+
+	// Non-interactive: keep existing default if set; otherwise pick first
+	// concrete option (skip "Custom" and "Do not use" sentinels).
+	if nonInteractive {
+		if *defVersion != "" {
+			fmtc.SuccessLn(title + ": " + *defVersion)
+			return
+		}
+		for _, ver := range availableVersions {
+			if ver == "" || ver == "Custom" || strings.EqualFold(ver, "Do not use") {
+				continue
+			}
+			*defVersion = ver
+			fmtc.SuccessLn(title + ": " + ver)
+			return
+		}
+		for _, ver := range availableVersions {
+			if ver != "" {
+				*defVersion = ver
+				fmtc.SuccessLn(title + ": " + ver)
+				return
+			}
+		}
+		return
 	}
 
 	// Find recommended index
