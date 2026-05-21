@@ -1,3 +1,12 @@
+**v3.7.6**
+
+Added:
+- Saleor platform support: `madock setup --platform saleor` (Python 3.12 + PostgreSQL + Redis + uvicorn/runserver). `madock saleor <cmd>` to run `manage.py` inside the python container (uses `uv run` when `uv.lock` is present). `madock install` writes `.env` (SECRET_KEY, DATABASE_URL, REDIS_URL, CELERY_BROKER_URL, ALLOWED_HOSTS, PUBLIC_URL), runs `uv sync --frozen` (or `pip install` for older releases), `manage.py migrate`, and `manage.py populatedb --createsuperuser` for the default `admin@example.com` / `admin` account. Auto-detection via `pyproject.toml` / `uv.lock` / `poetry.lock` / `requirements.txt`. See [docs/saleor.md](docs/saleor.md)
+- Saleor presets: `--preset latest` (Saleor 3.23 / Python 3.12 / PostgreSQL 15 / Redis 7.2), `--preset stable` (Saleor 3.20). Interactive preset wizard mirrors the Medusa flow
+- `service:enable dashboard` — optional Saleor Dashboard SPA container (`ghcr.io/saleor/saleor-dashboard:3.23`), host port auto-allocated via `{{{port/saleor_dashboard}}}`, `API_URL` wired to the project nginx host
+- `service:enable worker` — optional Celery worker (with beat embedded) sharing the python image, runs `celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B`
+- Smart Python entrypoint in the saleor python container: sources `.env` (Saleor reads config from `os.environ`, does NOT auto-load `.env`), detects `manage.py` + `saleor.asgi:application` and prefers `uvicorn` for ASGI, falls back to `manage.py runserver`. Idles with a clear message when dependencies are missing
+
 **v3.7.5**
 
 Added:

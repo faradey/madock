@@ -15,7 +15,7 @@
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
       WATCHDOG_USE_POLLING: "true"
-    command: ["sh", "-c", "if [ ! -d .venv ] && ! python -c 'import saleor' 2>/dev/null; then echo '[madock] worker idle: run madock install first'; exec sleep infinity; fi; PREFIX=''; if [ -f uv.lock ] && command -v uv >/dev/null 2>&1; then PREFIX='uv run'; fi; echo '[madock] starting: celery -A saleor worker -B'; exec $PREFIX celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B"]
+    command: ["sh", "-c", "set -a; [ -f .env ] && . ./.env; set +a; if [ ! -d .venv ] && ! python -c 'import saleor' 2>/dev/null; then echo '[madock] worker idle: run madock install first'; exec sleep infinity; fi; PREFIX=''; if [ -f uv.lock ] && command -v uv >/dev/null 2>&1; then PREFIX='uv run'; fi; echo \"[madock] starting: $$PREFIX celery -A saleor worker -B\"; exec $$PREFIX celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B"]
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}
