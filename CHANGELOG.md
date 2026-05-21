@@ -1,3 +1,9 @@
+**v3.7.7**
+
+Fixed:
+- `madock setup -d -i` for Medusa and Saleor: the Node.js / Saleor python entrypoints used to `exec sleep infinity` when `node_modules` / `.venv` was missing, then `madock install` populated those folders inside the same container via `docker exec`, but PID 1 stayed asleep. The dev server never started and nginx returned 502 Bad Gateway. The entrypoint now poll-waits for deps and exec's `yarn dev` / `uvicorn` / `manage.py runserver` the moment they appear
+- Medusa and Saleor `setup` controllers now honour `-d` (download) and `-i` (install) flags. Previously only Magento setup looked at them, so `madock setup -d -i -s` on a Medusa/Saleor project rebuilt containers and exited without cloning the starter or running migrations. Medusa setup clones `medusajs/medusa-starter-default`; Saleor setup clones `saleor/saleor` at the branch derived from the selected version
+
 **v3.7.6**
 
 Added:
