@@ -1,3 +1,8 @@
+**v3.7.6**
+
+Added:
+- `ProxyConfTransformer` extension point (`src/helper/configs/aruntime/proxytransform/`) — lets downstream consumers post-process the fully assembled `proxy.conf` before it lands on disk. Symmetric with the existing `DockerTransformer` hook for `docker-compose.yml`. Use case: enterprise add-ons rewriting service location prefixes (e.g. suffixing `/phpmyadmin/` with a per-project hash), adding extra server blocks for cross-domain admin tools, injecting `auth_request` directives, etc. API: `proxytransform.SetProxyConfTransformer(t ProxyConfTransformer)` where `ProxyConfTransformer.TransformProxyConf(content string) string`. Default behaviour unchanged when no transformer is registered
+
 **v3.7.5**
 
 Added:

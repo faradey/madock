@@ -16,6 +16,7 @@ import (
 
 	configs2 "github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/v3/src/helper/configs/aruntime/proxytransform"
 	"github.com/faradey/madock/v3/src/helper/finder"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/logger"
@@ -207,6 +208,7 @@ func makeProxy(projectName string) {
 	allFileData += "\nserver {\n    listen       " + generalConfig["nginx/port/unsecure"] + "  default_server;\n    listen " + generalConfig["nginx/port/secure"] + " default_server ssl;" + http2DefaultDirective + "\n    server_name  _;\n    return       444;\n    ssl_certificate /sslcert/fullchain.crt;\n    ssl_certificate_key /sslcert/madock.local.key;\n    include /sslcert/options-ssl-nginx.conf; \n}\n"
 	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.CtxDir()) + "/proxy.conf"
+	allFileData = proxytransform.Apply(allFileData)
 	err := os.WriteFile(nginxFile, []byte(allFileData), 0755)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
