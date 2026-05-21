@@ -92,6 +92,17 @@ func Medusa(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	config.Set("medusa/storefront/workdir", configs2.GetOption("medusa/storefront/workdir", generalConf, projectConf))
 	config.Set("medusa/storefront/region", configs2.GetOption("medusa/storefront/region", generalConf, projectConf))
 
+	// Browser-side backend URL for the Next.js storefront. Defaults to the
+	// project's first nginx host (https://loc.<project>.com); the user can
+	// override it in config.xml when they want a different scheme or domain.
+	publicBackendURL := configs2.GetOption("medusa/storefront/public_backend_url", generalConf, projectConf)
+	if publicBackendURL == "" {
+		if hosts := configs2.GetHosts(projectConf); len(hosts) > 0 {
+			publicBackendURL = "https://" + hosts[0]["name"]
+		}
+	}
+	config.Set("medusa/storefront/public_backend_url", publicBackendURL)
+
 	config.Set("grafana/auth/enabled", configs2.GetOption("grafana/auth/enabled", generalConf, projectConf))
 	config.Set("grafana/auth/user", configs2.GetOption("grafana/auth/user", generalConf, projectConf))
 	config.Set("grafana/auth/password", configs2.GetOption("grafana/auth/password", generalConf, projectConf))

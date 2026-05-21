@@ -12,10 +12,18 @@
       - ./src/{{{medusa/storefront/path}}}:{{{medusa/storefront/workdir}}}:cached
     environment:
       NODE_ENV: "development"
+      # Server-side calls (Next.js SSR) hit the backend inside the docker network.
       MEDUSA_BACKEND_URL: "http://nodejs:9000"
-      NEXT_PUBLIC_MEDUSA_BACKEND_URL: "http://nodejs:9000"
+      # Browser-side calls (CSR) cannot resolve the docker hostname, so route
+      # them through the project's public nginx host. Override with
+      # medusa/storefront/public_backend_url if you use a different scheme.
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: "{{{medusa/storefront/public_backend_url}}}"
       NEXT_PUBLIC_BASE_URL: "http://localhost:{{{port/storefront}}}"
       NEXT_PUBLIC_DEFAULT_REGION: "{{{medusa/storefront/region}}}"
+      # macOS Docker bind mounts don't forward inotify events; polling keeps
+      # HMR working on both macOS and Linux. Harmless on Linux (small CPU cost).
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{nginx/host_gateways}}}

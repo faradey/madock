@@ -75,10 +75,11 @@ The storefront service runs the Medusa Next.js storefront starter (or your custo
 
 On first start the container runs `yarn install && yarn dev`. The container env vars wire it to the backend:
 
-* `MEDUSA_BACKEND_URL=http://nodejs:9000`
-* `NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://nodejs:9000`
+* `MEDUSA_BACKEND_URL=http://nodejs:9000` — server-side (SSR) calls inside the docker network
+* `NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://loc.<project>.com` — browser-side (CSR) calls go through the public nginx host, because the browser cannot resolve docker hostnames. Override via `medusa/storefront/public_backend_url`
 * `NEXT_PUBLIC_BASE_URL=http://localhost:<host_port>`
 * `NEXT_PUBLIC_DEFAULT_REGION=us` (override via `medusa/storefront/region` in config)
+* `WATCHPACK_POLLING=true`, `CHOKIDAR_USEPOLLING=true` — keep HMR working on macOS bind mounts where inotify events aren't forwarded. See [HMR / file watching on macOS](#hmr--file-watching-on-macos) below
 
 > **Note**: storefront is a Medusa-specific service. Its config keys live under the `<medusa>` section in `config.xml` (`medusa/storefront/*`), following the same convention as Magento-specific services like `magento/cloud` and `magento/mftf`. The `service:enable storefront` short name maps to the `medusa/storefront/enabled` config key and works only when the project platform is `medusa`.
 
@@ -93,6 +94,12 @@ Meilisearch is a popular search backend for Medusa via [`@rokmohar/medusa-plugin
 * Master key: `masterKey` (override `search/meilisearch/master_key` in `config.xml` before enabling).
 
 Add the plugin to your Medusa backend, configure it with `host: http://meilisearch:7700` and the master key, and you're set.
+
+## HMR / file watching on macOS
+
+The Medusa storefront container ships with `WATCHPACK_POLLING=true` and `CHOKIDAR_USEPOLLING=true` so that Next.js HMR works on macOS bind mounts (where Docker Desktop does not forward inotify events).
+
+For the backend (`nodejs` service running `medusa develop`) and any other container that watches files, see the general guide [macos-hmr.md](macos-hmr.md). It covers Next.js, Chokidar, nodemon, ts-node-dev, tsc, vite, gulp, and grunt.
 
 ## Tips
 

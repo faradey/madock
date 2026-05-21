@@ -35,6 +35,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * Admin UI: phpMyAdmin, pgAdmin, Mongo Express
 * Additional services: redis, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
 * LiveReload. Learn [more](docs/livereload.md)
+* HMR / file watching on macOS (Next.js, Chokidar, nodemon, vite, …). Learn [more](docs/macos-hmr.md)
 * Mailpit (email testing tool for developers)
 * Magento Cloud
 * Composer patches in two clicks

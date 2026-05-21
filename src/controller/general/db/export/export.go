@@ -118,7 +118,7 @@ func exportPostgresql(containerName string, projectConf map[string]string, args 
 		}
 	}
 
-	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", "pg_dump -U "+projectConf["db/user"]+" -h "+service+ignoreTablesStr+" "+projectConf["db/database"])
+	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", "PGPASSWORD='"+projectConf["db/password"]+"' pg_dump -U "+projectConf["db/user"]+" -h "+service+ignoreTablesStr+" "+projectConf["db/database"])
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}
