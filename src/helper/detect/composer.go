@@ -224,6 +224,11 @@ func Detect(projectPath string) DetectionResult {
 		return result
 	}
 
+	// Python platforms (Saleor, etc.)
+	if result := DetectFromPyproject(projectPath); result.Detected {
+		return result
+	}
+
 	// Try WordPress file-based detection
 	if paths.IsFileExist(projectPath+"/wp-config.php") || paths.IsFileExist(projectPath+"/wp-content") {
 		return DetectionResult{

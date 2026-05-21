@@ -8,6 +8,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/go-xmlfmt/xmlfmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -185,46 +186,69 @@ func GetProjectName() string {
 	if nameOfProject == "" && projectNameResolver != nil {
 		nameOfProject = projectNameResolver()
 	}
+	if nameOfProject != "" {
+		return nameOfProject
+	}
+
+	currentPath := canonicalProjectPath(paths.GetRunDirPath())
 	suffix := ""
-	if nameOfProject == "" {
-		for i := 2; i < 1000; i++ {
-			nameOfProject = paths.GetRunDirName() + suffix
-			if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + nameOfProject + "/config.xml") {
-				projectConf := GetProjectConfigOnly(nameOfProject)
-				val, ok := projectConf["path"]
-				if ok {
-					val = strings.TrimPrefix(strings.TrimSuffix(strings.TrimSpace(val), "/"), "/")
-					currentPath := strings.TrimPrefix(strings.TrimSuffix(strings.TrimSpace(paths.GetRunDirPath()), "/"), "/")
-					if val != currentPath {
-						suffix = "-" + strconv.Itoa(i)
-					}
-				} else {
-					break
-				}
-			} else {
-				break
-			}
+	for i := 2; i < 1000; i++ {
+		nameOfProject = paths.GetRunDirName() + suffix
+		configPath := paths.GetExecDirPath() + "/projects/" + nameOfProject + "/config.xml"
+		if !paths.IsFileExist(configPath) {
+			// No clash — this name is free for the current directory.
+			break
 		}
+		projectConf := GetProjectConfigOnly(nameOfProject)
+		stored, ok := projectConf["path"]
+		if !ok {
+			// Legacy project without `path` recorded — assume it owns this name.
+			break
+		}
+		if canonicalProjectPath(stored) == currentPath {
+			// Same project (just running it from a possibly different
+			// path representation, e.g. /tmp vs /private/tmp on macOS).
+			break
+		}
+		suffix = "-" + strconv.Itoa(i)
 	}
 
 	return nameOfProject
 }
 
+// canonicalProjectPath normalises a project path for comparison: trim
+// whitespace and trailing slashes, then resolve symlinks when the path
+// still exists on disk. On macOS `/tmp` is a symlink to `/private/tmp`,
+// so two recordings of "the same" directory can differ textually; we
+// want them to compare equal so GetProjectName doesn't auto-suffix a
+// project that's actually the user's current one.
+func canonicalProjectPath(p string) string {
+	p = strings.TrimSpace(p)
+	p = strings.TrimRight(p, "/")
+	if resolved, err := filepath.EvalSymlinks(p); err == nil {
+		return strings.TrimRight(resolved, "/")
+	}
+	return p
+}
+
 func IsProjectNameExists(name string) bool {
+	currentPath := canonicalProjectPath(paths.GetRunDirPath())
 	suffix := ""
 	for i := 2; i < 1000; i++ {
 		nameOfProject = paths.GetRunDirName() + suffix
-		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + nameOfProject + "/config.xml") {
-			projectConf := GetProjectConfigOnly(nameOfProject)
-			val, ok := projectConf["path"]
-			if ok && val != paths.GetRunDirPath() {
-				suffix = "-" + strconv.Itoa(i)
-			} else {
-				break
-			}
-		} else {
+		configPath := paths.GetExecDirPath() + "/projects/" + nameOfProject + "/config.xml"
+		if !paths.IsFileExist(configPath) {
 			break
 		}
+		projectConf := GetProjectConfigOnly(nameOfProject)
+		stored, ok := projectConf["path"]
+		if !ok {
+			break
+		}
+		if canonicalProjectPath(stored) == currentPath {
+			break
+		}
+		suffix = "-" + strconv.Itoa(i)
 	}
 
 	return false

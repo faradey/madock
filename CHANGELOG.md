@@ -1,7 +1,16 @@
 **v3.7.6**
 
 Added:
+- Saleor platform support: `madock setup --platform saleor` (Python 3.12 + PostgreSQL + Redis + uvicorn/runserver). `madock saleor <cmd>` to run `manage.py` inside the python container (uses `uv run` when `uv.lock` is present). `madock install` writes `.env` (SECRET_KEY, DATABASE_URL, REDIS_URL, CELERY_BROKER_URL, ALLOWED_HOSTS, PUBLIC_URL), runs `uv sync --frozen` (or `pip install` for older releases), `manage.py migrate`, and `manage.py populatedb --createsuperuser` for the default `admin@example.com` / `admin` account. Auto-detection via `pyproject.toml` / `uv.lock` / `poetry.lock` / `requirements.txt`. See [docs/saleor.md](docs/saleor.md)
+- Saleor presets: `--preset latest` (Saleor 3.23 / Python 3.12 / PostgreSQL 15 / Redis 7.2), `--preset stable` (Saleor 3.20). Interactive preset wizard mirrors the Medusa flow
+- `service:enable dashboard` — optional Saleor Dashboard SPA container (`ghcr.io/saleor/saleor-dashboard:3.23`), host port auto-allocated via `{{{port/saleor_dashboard}}}`, `API_URL` wired to the project nginx host
+- `service:enable worker` — optional Celery worker (with beat embedded) sharing the python image, runs `celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B`
+- Smart Python entrypoint in the saleor python container: sources `.env` (Saleor reads config from `os.environ`, does NOT auto-load `.env`), detects `manage.py` + `saleor.asgi:application` and prefers `uvicorn` for ASGI, falls back to `manage.py runserver`. Idles with a clear message when dependencies are missing
 - `ProxyConfTransformer` extension point (`src/helper/configs/aruntime/proxytransform/`) — lets downstream consumers post-process the fully assembled `proxy.conf` before it lands on disk. Symmetric with the existing `DockerTransformer` hook for `docker-compose.yml`. Use case: enterprise add-ons rewriting service location prefixes (e.g. suffixing `/phpmyadmin/` with a per-project hash), adding extra server blocks for cross-domain admin tools, injecting `auth_request` directives, etc. API: `proxytransform.SetProxyConfTransformer(t ProxyConfTransformer)` where `ProxyConfTransformer.TransformProxyConf(content string) string`. Default behaviour unchanged when no transformer is registered
+
+Changed:
+- `docker.Down` / `docker.Kill`: label-based fallback (`com.docker.compose.project=madock_<name>`) so containers/volumes/networks/images get cleaned even when the compose file is missing. Previously these were silent no-ops when the project state directory had already been removed
+- `GetProjectName`: resolve symlinks (`filepath.EvalSymlinks`) before comparing the stored project `path` against the current working directory. On macOS `/tmp` is a symlink to `/private/tmp`, so revisiting a project through the symlinked path no longer auto-suffixes the name to `<project>-2`. Also tightens the suffix loop to actually exit on a match
 
 **v3.7.5**
 

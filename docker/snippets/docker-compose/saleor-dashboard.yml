@@ -1,0 +1,16 @@
+<<<if{{{saleor/dashboard/enabled}}}>>>
+  dashboard:
+    image: {{{saleor/dashboard/repository}}}:{{{saleor/dashboard/version}}}
+    init: true
+    ports:
+      - "{{{port/saleor_dashboard}}}:80"
+    environment:
+      API_URL: "{{{saleor/dashboard/api_url}}}"
+      APP_MOUNT_URI: "/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+    restart: {{{restart_policy}}}
+<<<endif>>>
+    <<<if{{{saleor/dashboard/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

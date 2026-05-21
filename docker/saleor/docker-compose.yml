@@ -1,0 +1,15 @@
+{{{include snippets/docker-compose/container-name.yml}}}
+services:
+  {{{include snippets/docker-compose/nginx.yml}}}
+  {{{include snippets/docker-compose/python.yml}}}
+  {{{include snippets/docker-compose/saleor-worker.yml}}}
+  {{{include snippets/docker-compose/saleor-dashboard.yml}}}
+  {{{include snippets/docker-compose/db.yml}}}
+  {{{include snippets/docker-compose/db-postgresql.yml}}}
+  {{{include snippets/docker-compose/redis.yml}}}
+  {{{include snippets/docker-compose/valkey.yml}}}
+  {{{include snippets/docker-compose/pgadmin.yml}}}
+  {{{include snippets/docker-compose/claude.yml}}}
+
+{{{include snippets/docker-compose/volumes.yml}}}
+{{{include snippets/docker-compose/networks.yml}}}

@@ -164,6 +164,40 @@ func GetMedusaPresets() []Preset {
 	}
 }
 
+// GetSaleorPresets returns available Saleor presets
+func GetSaleorPresets() []Preset {
+	return []Preset{
+		{
+			Name:        "Saleor 3.23 (Latest)",
+			Description: "Saleor 3.23.x with Python 3.12, PostgreSQL 15, Redis 7.2",
+			Platform:    "saleor",
+			Versions: versions.ToolsVersions{
+				Platform:        "saleor",
+				PlatformVersion: "3.23",
+				Language:        "python",
+				Python:          "3.12",
+				DbType:          "PostgreSQL",
+				Db:              "postgres:15",
+				Redis:           "7.2.5",
+			},
+		},
+		{
+			Name:        "Saleor 3.20 (Stable)",
+			Description: "Saleor 3.20.x with Python 3.12, PostgreSQL 15, Redis 7.0",
+			Platform:    "saleor",
+			Versions: versions.ToolsVersions{
+				Platform:        "saleor",
+				PlatformVersion: "3.20",
+				Language:        "python",
+				Python:          "3.12",
+				DbType:          "PostgreSQL",
+				Db:              "postgres:15",
+				Redis:           "7.0",
+			},
+		},
+	}
+}
+
 // GetShopwarePresets returns available Shopware presets
 func GetShopwarePresets() []Preset {
 	return []Preset{
@@ -187,6 +221,7 @@ func init() {
 	RegisterPresets("magento2", GetMagentoPresets)
 	RegisterPresets("shopware", GetShopwarePresets)
 	RegisterPresets("medusa", GetMedusaPresets)
+	RegisterPresets("saleor", GetSaleorPresets)
 }
 
 // GetPresetsByPlatform returns presets for a specific platform.

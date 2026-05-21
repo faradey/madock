@@ -52,6 +52,9 @@ func init() {
 	RegisterInstallHandler("medusa", func(projectName, platformVersion string, _ map[string]string) {
 		Medusa(projectName, platformVersion)
 	})
+	RegisterInstallHandler("saleor", func(projectName, platformVersion string, _ map[string]string) {
+		Saleor(projectName, platformVersion)
+	})
 }
 
 func Execute() {
@@ -240,6 +243,9 @@ func Medusa(projectName, platformVer string) {
 	if len(hosts) > 0 {
 		host = hosts[0]["name"]
 	}
+	if host == "" {
+		host = "loc." + projectName + ".com"
+	}
 
 	// URL-encode credentials in case they contain reserved characters
 	// like `@`, `:`, `/`, `?`, `#`. Without escaping the pg client
@@ -287,6 +293,82 @@ func Medusa(projectName, platformVer string) {
 	fmtc.SuccessLn("[SUCCESS]: Medusa Admin URI: /app")
 	fmtc.SuccessLn("[SUCCESS]: Medusa Admin User: admin@example.com")
 	fmtc.SuccessLn("[SUCCESS]: Medusa Admin Password: admin")
+}
+
+func Saleor(projectName, platformVer string) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+	if host == "" {
+		host = "loc." + projectName + ".com"
+	}
+
+	// URL-encode db creds — same rationale as Medusa.
+	dbUser := url.QueryEscape(projectConf["db/user"])
+	dbPassword := url.QueryEscape(projectConf["db/password"])
+	dbName := projectConf["db/database"]
+	if dbName == "" {
+		dbName = "saleor"
+	}
+	dbURL := "postgres://" + dbUser + ":" + dbPassword + "@db:5432/" + dbName + "?sslmode=disable"
+	redisURL := "redis://redisdb:6379/0"
+	celeryBroker := "redis://redisdb:6379/1"
+
+	envBody := "SECRET_KEY=changeme-madock-dev\n" +
+		"DEBUG=True\n" +
+		"DATABASE_URL=" + dbURL + "\n" +
+		"REDIS_URL=" + redisURL + "\n" +
+		"CACHE_URL=" + redisURL + "\n" +
+		"CELERY_BROKER_URL=" + celeryBroker + "\n" +
+		"ALLOWED_HOSTS=*\n" +
+		"ALLOWED_CLIENT_HOSTS=" + host + ",localhost\n" +
+		"DEFAULT_FROM_EMAIL=noreply@" + host + "\n" +
+		"EMAIL_URL=smtp://mailpit:1025\n" +
+		"PUBLIC_URL=https://" + host + "\n"
+	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env"
+
+	// Pick `uv` when the project ships a uv.lock (Saleor 3.21+);
+	// fall back to pip for older releases.
+	bootstrap := "if [ -f uv.lock ] && command -v uv >/dev/null 2>&1; then" +
+		" uv sync --frozen;" +
+		" RUN_PY='uv run python';" +
+		"else" +
+		" if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt;" +
+		" elif [ -f requirements.txt ]; then pip install -r requirements.txt;" +
+		" elif [ -f pyproject.toml ]; then pip install -e .;" +
+		" fi;" +
+		" RUN_PY='python';" +
+		"fi"
+
+	// `bootstrap` may export RUN_PY=… inside its `if` branches; ensure
+	// every subsequent step also picks up the .env values that Saleor
+	// expects in process env.
+	loadEnv := "set -a && . ./.env && set +a"
+	installCommand := envWrite +
+		" && " + loadEnv +
+		" && " + bootstrap +
+		" && $RUN_PY manage.py migrate" +
+		" && $RUN_PY manage.py populatedb --createsuperuser"
+
+	workdir := projectConf["workdir"]
+	if workdir == "" {
+		workdir = "/var/www/html"
+	}
+
+	fmt.Println(installCommand)
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "python"), "saleor", true, "bash", "-c", "cd "+workdir+" && "+installCommand)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Saleor installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Saleor API URL: https://" + host + "/graphql/")
+	fmtc.SuccessLn("[SUCCESS]: Saleor Admin User: admin@example.com")
+	fmtc.SuccessLn("[SUCCESS]: Saleor Admin Password: admin")
+	fmtc.SuccessLn("[SUCCESS]: Dashboard: enable with `madock service:enable dashboard`")
 }
 
 func PrestaShop(projectName, platformVer string, isSampleData bool) {
