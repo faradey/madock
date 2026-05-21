@@ -338,7 +338,12 @@ func Saleor(projectName, platformVer string) {
 		" RUN_PY='python';" +
 		"fi"
 
+	// `bootstrap` may export RUN_PY=… inside its `if` branches; ensure
+	// every subsequent step also picks up the .env values that Saleor
+	// expects in process env.
+	loadEnv := "set -a && . ./.env && set +a"
 	installCommand := envWrite +
+		" && " + loadEnv +
 		" && " + bootstrap +
 		" && $RUN_PY manage.py migrate" +
 		" && $RUN_PY manage.py populatedb --createsuperuser"

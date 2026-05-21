@@ -48,6 +48,15 @@ set -e
 
 cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html
 
+# Saleor (and most Django projects) read configuration from process env
+# rather than from .env directly. Source the .env file when present so
+# DATABASE_URL / REDIS_URL / SECRET_KEY end up in the environment.
+if [ -f .env ]; then
+  set -a
+  . ./.env
+  set +a
+fi
+
 # Detect if this looks like a Saleor / Django project.
 has_manage=0
 [ -f manage.py ] && has_manage=1
