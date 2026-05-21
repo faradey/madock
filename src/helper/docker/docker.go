@@ -117,7 +117,8 @@ func Down(projectName string, withVolumes bool) {
 	forceRemoveByLabel(projectName, withVolumes)
 }
 
-// Kill forcefully stops project containers
+// Kill forcefully stops project containers. Falls back to a
+// label-based `docker kill` if the compose file is missing.
 func Kill(projectName string) {
 	pp := paths.NewProjectPaths(projectName)
 	composeFile := pp.DockerCompose()
@@ -139,6 +140,13 @@ func Kill(projectName string) {
 		if err != nil {
 			fmt.Println(err)
 		}
+		return
+	}
+
+	// No compose file — kill running containers by compose project label.
+	labelFilter := "label=com.docker.compose.project=" + composeProjectName(projectName)
+	if ids := dockerQuery("ps", "-q", "--filter", labelFilter); len(ids) > 0 {
+		dockerRun("kill", ids...)
 	}
 }
 

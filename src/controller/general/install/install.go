@@ -243,6 +243,9 @@ func Medusa(projectName, platformVer string) {
 	if len(hosts) > 0 {
 		host = hosts[0]["name"]
 	}
+	if host == "" {
+		host = "loc." + projectName + ".com"
+	}
 
 	// URL-encode credentials in case they contain reserved characters
 	// like `@`, `:`, `/`, `?`, `#`. Without escaping the pg client
@@ -299,6 +302,9 @@ func Saleor(projectName, platformVer string) {
 	if len(hosts) > 0 {
 		host = hosts[0]["name"]
 	}
+	if host == "" {
+		host = "loc." + projectName + ".com"
+	}
 
 	// URL-encode db creds — same rationale as Medusa.
 	dbUser := url.QueryEscape(projectConf["db/user"])
@@ -328,7 +334,6 @@ func Saleor(projectName, platformVer string) {
 	// fall back to pip for older releases.
 	bootstrap := "if [ -f uv.lock ] && command -v uv >/dev/null 2>&1; then" +
 		" uv sync --frozen;" +
-		" alias mpm='uv run';" +
 		" RUN_PY='uv run python';" +
 		"else" +
 		" if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt;" +

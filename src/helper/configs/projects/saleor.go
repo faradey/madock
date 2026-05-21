@@ -83,6 +83,18 @@ func Saleor(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	config.Set("saleor/dashboard/repository", configs2.GetOption("saleor/dashboard/repository", generalConf, projectConf))
 	config.Set("saleor/dashboard/version", configs2.GetOption("saleor/dashboard/version", generalConf, projectConf))
 
+	// Dashboard talks to the GraphQL endpoint via the project's public
+	// nginx host. SetEnvForProject runs this writer BEFORE it writes
+	// `<hosts>` into the project config, so read the host from
+	// `defVersions.Hosts` (just collected by the setup wizard) rather
+	// than from projectConf, which is still stale at this point.
+	apiURL := configs2.GetOption("saleor/dashboard/api_url", generalConf, projectConf)
+	if apiURL == "" && defVersions.Hosts != "" {
+		firstHost := strings.Fields(defVersions.Hosts)[0]
+		apiURL = "https://" + firstHost + "/graphql/"
+	}
+	config.Set("saleor/dashboard/api_url", apiURL)
+
 	// Optional celery worker container (same image as the API, separate process).
 	config.Set("saleor/worker/enabled", configs2.GetOption("saleor/worker/enabled", generalConf, projectConf))
 

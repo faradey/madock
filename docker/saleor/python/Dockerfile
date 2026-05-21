@@ -72,18 +72,10 @@ fi
 
 # Dependencies must be present. uv installs into .venv by default; pip
 # users have site-packages or a venv. We probe for either.
-deps_ready=0
-if [ -d .venv ]; then deps_ready=1; fi
-if python -c 'import saleor' 2>/dev/null; then deps_ready=1; fi
-if python -c 'import django' 2>/dev/null; then deps_ready=1; fi
-
-if [ "$deps_ready" -eq 0 ]; then
-  echo "[madock] Python deps missing in $(pwd). Run \"madock install\" to bootstrap (uv sync + migrate + populatedb)."
-  echo "[madock] Container will idle; nothing to run."
-  exec sleep infinity
-fi
-
 # Prefer uv if a uv.lock / pyproject is present. Otherwise plain python.
+# Picking the prefix BEFORE the deps probe so that `python -c "import …"`
+# below runs through `uv run` and actually sees the .venv-installed
+# packages rather than the bare system interpreter.
 RUN_PREFIX=""
 if [ -f uv.lock ] || [ -f pyproject.toml ]; then
   if command -v uv >/dev/null 2>&1; then
@@ -91,10 +83,21 @@ if [ -f uv.lock ] || [ -f pyproject.toml ]; then
   fi
 fi
 
-# Run the Saleor / Django dev server. Use uvicorn for ASGI (Saleor's
-# default) when saleor.asgi:application is importable, otherwise fall
-# back to Django's runserver.
-if [ "$has_manage" -eq 1 ] && python -c 'import saleor.asgi' 2>/dev/null; then
+deps_ready=0
+[ -d .venv ] && deps_ready=1
+$RUN_PREFIX python -c 'import saleor' 2>/dev/null && deps_ready=1
+$RUN_PREFIX python -c 'import django' 2>/dev/null && deps_ready=1
+
+if [ "$deps_ready" -eq 0 ]; then
+  echo "[madock] Python deps missing in $(pwd). Run \"madock install\" to bootstrap (uv sync + migrate + populatedb)."
+  echo "[madock] Container will idle; nothing to run."
+  exec sleep infinity
+fi
+
+# Run the Saleor / Django dev server. Saleor 3.x always ships
+# saleor/asgi.py; if that file is present we go through uvicorn (the
+# upstream default), otherwise we fall back to Django's runserver.
+if [ "$has_manage" -eq 1 ] && [ -f saleor/asgi.py ]; then
   echo "[madock] starting: uvicorn saleor.asgi:application on 0.0.0.0:8000"
   exec $RUN_PREFIX uvicorn saleor.asgi:application --host 0.0.0.0 --port 8000 --reload --lifespan auto --ws none
 fi

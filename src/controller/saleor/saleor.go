@@ -35,8 +35,13 @@ func Execute() {
 		workdir = "/var/www/html"
 	}
 
+	// Saleor reads config from os.environ, not from .env directly.
+	// Source the file before invoking manage.py so commands like
+	// `migrate`, `dbshell`, `shell`, etc. see DATABASE_URL/REDIS_URL.
+	loadEnv := "set -a; [ -f .env ] && . ./.env; set +a"
+
 	// Prefer `uv run` when a uv.lock is present; otherwise plain python.
-	cmd := "cd " + workdir + " && if [ -f uv.lock ] && command -v uv >/dev/null 2>&1; then uv run python manage.py " + flag + "; else python manage.py " + flag + "; fi"
+	cmd := "cd " + workdir + " && " + loadEnv + " && if [ -f uv.lock ] && command -v uv >/dev/null 2>&1; then uv run python manage.py " + flag + "; else python manage.py " + flag + "; fi"
 
 	err := docker.ContainerExec(
 		docker.GetContainerName(projectConf, projectName, "python"),

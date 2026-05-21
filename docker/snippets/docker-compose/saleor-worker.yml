@@ -9,9 +9,11 @@
     volumes:
       - ./src:{{{workdir}}}:cached
     environment:
-      DATABASE_URL: "postgres://{{{db/user}}}:{{{db/password}}}@db:5432/{{{db/database}}}?sslmode=disable"
-      REDIS_URL: "redis://redisdb:6379/1"
-      CELERY_BROKER_URL: "redis://redisdb:6379/1"
+      # DATABASE_URL / REDIS_URL / CELERY_BROKER_URL come from the
+      # project's .env (sourced in `command:` below). The install
+      # handler URL-encodes credentials for us; the compose template
+      # has no equivalent escape, so we deliberately don't shadow
+      # those keys here.
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
       WATCHDOG_USE_POLLING: "true"
