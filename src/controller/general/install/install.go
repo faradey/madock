@@ -1,10 +1,14 @@
 package install
 
 import (
+	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
@@ -318,12 +322,176 @@ func Medusa(projectName, platformVer string) {
 		fmtc.WarningLn("Could not restart nodejs container automatically: " + rerr.Error() + ". Run `madock restart` manually if the dev server doesn't pick up.")
 	}
 
+	// Create a default publishable API key so /store/* endpoints are
+	// usable out of the box. Medusa v2 rejects every storefront
+	// request without an x-publishable-api-key header (HTTP 400),
+	// and the key can only be created through the admin API once the
+	// server is up. Wait for /health, log in as the admin we just
+	// created, create the key, and write it into both the project
+	// .env and the storefront/.env (when the storefront subfolder is
+	// present). Best-effort: a failure here only prints a warning.
+	publishableKey := createPublishableKey(nodejsContainer, host, workdir)
+
 	fmt.Println("")
 	fmtc.SuccessLn("[SUCCESS]: Medusa installation complete.")
 	fmtc.SuccessLn("[SUCCESS]: Medusa Storefront URL: https://" + host)
 	fmtc.SuccessLn("[SUCCESS]: Medusa Admin URI: /app")
 	fmtc.SuccessLn("[SUCCESS]: Medusa Admin User: admin@example.com")
 	fmtc.SuccessLn("[SUCCESS]: Medusa Admin Password: admin")
+	if publishableKey != "" {
+		fmtc.SuccessLn("[SUCCESS]: Publishable API key: " + publishableKey)
+	}
+}
+
+// createPublishableKey waits for the Medusa dev server, logs in as the
+// default admin, reuses an existing publishable API key (Medusa's
+// `db:setup` seeds one bound to the default sales channel) or creates
+// one and binds it, then writes the token into the project .env (and
+// storefront/.env when the folder exists). Returns the key string on
+// success, empty string on any failure — the caller just logs a
+// warning and continues.
+func createPublishableKey(nodejsContainer, host, workdir string) string {
+	healthURL := "https://" + host + "/health"
+	authURL := "https://" + host + "/auth/user/emailpass"
+	keysURL := "https://" + host + "/admin/api-keys"
+	channelsURL := "https://" + host + "/admin/sales-channels"
+
+	httpClient := &http.Client{
+		Timeout: 15 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: insecureTLSConfig(),
+		},
+	}
+
+	// Wait up to 3 minutes for /health to return 200 — fresh Medusa
+	// dev boot can take 60-90s while the admin Vite bundle compiles.
+	deadline := time.Now().Add(3 * time.Minute)
+	for time.Now().Before(deadline) {
+		resp, err := httpClient.Get(healthURL)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == 200 {
+				break
+			}
+		}
+		time.Sleep(3 * time.Second)
+	}
+
+	loginBody := strings.NewReader(`{"email":"admin@example.com","password":"admin"}`)
+	loginReq, _ := http.NewRequest("POST", authURL, loginBody)
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginResp, err := httpClient.Do(loginReq)
+	if err != nil {
+		fmtc.WarningLn("Could not log in to seed the publishable API key: " + err.Error() + ". Create one manually from the admin UI.")
+		return ""
+	}
+	defer loginResp.Body.Close()
+	var loginPayload struct {
+		Token string `json:"token"`
+	}
+	if err := json.NewDecoder(loginResp.Body).Decode(&loginPayload); err != nil || loginPayload.Token == "" {
+		fmtc.WarningLn("Admin login returned an unexpected payload while seeding the publishable API key.")
+		return ""
+	}
+	bearer := "Bearer " + loginPayload.Token
+
+	// Look for an existing publishable key already bound to a sales
+	// channel. Medusa's `db:setup` seeds "Default Publishable API Key"
+	// bound to the default sales channel — reuse it rather than
+	// stacking a second key that storefronts would have to pick from.
+	type apiKey struct {
+		ID            string `json:"id"`
+		Token         string `json:"token"`
+		Type          string `json:"type"`
+		SalesChannels []struct {
+			ID string `json:"id"`
+		} `json:"sales_channels"`
+	}
+	listReq, _ := http.NewRequest("GET", keysURL+"?type=publishable&limit=50", nil)
+	listReq.Header.Set("Authorization", bearer)
+	if listResp, lerr := httpClient.Do(listReq); lerr == nil {
+		defer listResp.Body.Close()
+		var listPayload struct {
+			APIKeys []apiKey `json:"api_keys"`
+		}
+		if json.NewDecoder(listResp.Body).Decode(&listPayload) == nil {
+			for _, k := range listPayload.APIKeys {
+				if k.Token != "" && len(k.SalesChannels) > 0 {
+					writeKeyToEnv(nodejsContainer, workdir, k.Token)
+					return k.Token
+				}
+			}
+		}
+	}
+
+	// No usable key — create one and bind it to the default sales
+	// channel so /store/* requests with this token pass the v2
+	// publishable-key gate.
+	keyBody := strings.NewReader(`{"title":"madock-default","type":"publishable"}`)
+	keyReq, _ := http.NewRequest("POST", keysURL, keyBody)
+	keyReq.Header.Set("Content-Type", "application/json")
+	keyReq.Header.Set("Authorization", bearer)
+	keyResp, err := httpClient.Do(keyReq)
+	if err != nil {
+		fmtc.WarningLn("Could not create a publishable API key: " + err.Error())
+		return ""
+	}
+	defer keyResp.Body.Close()
+	var keyPayload struct {
+		APIKey apiKey `json:"api_key"`
+	}
+	if err := json.NewDecoder(keyResp.Body).Decode(&keyPayload); err != nil || keyPayload.APIKey.Token == "" {
+		fmtc.WarningLn("Publishable API key endpoint returned an unexpected payload.")
+		return ""
+	}
+
+	chReq, _ := http.NewRequest("GET", channelsURL+"?limit=1", nil)
+	chReq.Header.Set("Authorization", bearer)
+	chResp, cerr := httpClient.Do(chReq)
+	if cerr == nil {
+		defer chResp.Body.Close()
+		var chPayload struct {
+			SalesChannels []struct {
+				ID string `json:"id"`
+			} `json:"sales_channels"`
+		}
+		if json.NewDecoder(chResp.Body).Decode(&chPayload) == nil && len(chPayload.SalesChannels) > 0 {
+			bindBody := strings.NewReader(`{"add":["` + chPayload.SalesChannels[0].ID + `"]}`)
+			bindReq, _ := http.NewRequest("POST", keysURL+"/"+keyPayload.APIKey.ID+"/sales-channels", bindBody)
+			bindReq.Header.Set("Content-Type", "application/json")
+			bindReq.Header.Set("Authorization", bearer)
+			if bindResp, berr := httpClient.Do(bindReq); berr == nil {
+				bindResp.Body.Close()
+			}
+		}
+	}
+
+	writeKeyToEnv(nodejsContainer, workdir, keyPayload.APIKey.Token)
+	return keyPayload.APIKey.Token
+}
+
+// writeKeyToEnv appends NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY to the
+// in-container .env (and storefront/.env when the storefront subfolder
+// exists). Uses `docker exec` so we don't have to know which host path
+// is bind mounted — the container always sees .env at workdir.
+//
+// The leading newline guards against the case where Medusa's CLI
+// leaves the file without a trailing \n (observed: `db:setup` rewrites
+// .env and appends `DB_NAME=<db>` without a final newline). Without
+// it, our line would glue onto the previous key.
+func writeKeyToEnv(nodejsContainer, workdir, token string) {
+	cmd := "cd " + workdir +
+		" && (grep -q '^NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=' .env 2>/dev/null || printf '\\nNEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=%s\\n' " + token + " >> .env)" +
+		" && (! [ -f storefront/package.json ] || (grep -q '^NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=' storefront/.env 2>/dev/null || printf '\\nNEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=%s\\n' " + token + " >> storefront/.env))"
+	_ = exec.Command("docker", "exec", "-u", "node", nodejsContainer, "bash", "-c", cmd).Run()
+}
+
+// insecureTLSConfig returns a tls.Config that skips verification, used
+// for the local self-signed nginx cert. madock's proxy uses a local CA
+// the host shell trusts via the SSL install step, but the install
+// command runs while that trust may not yet be in place.
+func insecureTLSConfig() *tls.Config {
+	return &tls.Config{InsecureSkipVerify: true}
 }
 
 func Saleor(projectName, platformVer string) {
