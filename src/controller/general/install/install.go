@@ -272,8 +272,17 @@ func Medusa(projectName, platformVer string) {
 		"AUTH_CORS=https://" + host + "\n"
 	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env"
 
+	// Patch medusa-config.ts to allow the project's nginx host in
+	// Medusa Admin's bundled Vite dev server. Vite 5+ rejects requests
+	// whose Host header isn't in the allowedHosts list, which means
+	// the project's *.test domain returns a "Blocked request" error
+	// page until the user manually edits the config. Idempotent: skip
+	// when the marker `allowedHosts` is already present.
+	patchConfig := `node -e "const fs=require('fs');const p='medusa-config.ts';if(!fs.existsSync(p)){process.exit(0)}let c=fs.readFileSync(p,'utf8');if(c.includes('allowedHosts'))process.exit(0);if(!/\}\)\s*$/.test(c.trimEnd())){process.exit(0)}c=c.replace(/\}\)\s*$/,'  ,\n  admin: { vite: () => ({ server: { allowedHosts: true } }) },\n})');fs.writeFileSync(p,c);console.log('[madock] medusa-config.ts: admin.vite.server.allowedHosts=true');"`
+
 	installCommand := envWrite +
 		" && yarn install" +
+		" && " + patchConfig +
 		" && npx medusa db:migrate" +
 		" && npx medusa user --email admin@example.com --password admin"
 
