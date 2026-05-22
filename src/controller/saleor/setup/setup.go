@@ -124,12 +124,16 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-	if args.Download || args.Install || continueSetup {
-		rebuild.Execute()
-	}
-
+	// Download BEFORE rebuild so containers start with the code already
+	// mounted. Otherwise the python entrypoint sees an empty
+	// /var/www/html, drops to its idle branch, and never recovers when
+	// the install handler later populates the directory.
 	if args.Download {
 		DownloadSaleor(toolsDefVersions.PlatformVersion)
+	}
+
+	if args.Download || args.Install || continueSetup {
+		rebuild.Execute()
 	}
 
 	if args.Install {

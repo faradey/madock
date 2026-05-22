@@ -13,8 +13,17 @@ set -e
 
 cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html
 
+# Wait for the project code to appear. madock setup -d clones the
+# starter AFTER the container starts; rather than dropping to a Node
+# REPL and never recovering, idle here until package.json shows up.
+# A bare `node` container (no project) waits forever — that's fine,
+# the user can `docker exec` in or run madock setup -d to populate.
 if [ ! -f package.json ]; then
-  exec node
+  echo "[madock] no package.json in $(pwd) — waiting for project code."
+  while [ ! -f package.json ]; do
+    sleep 5
+  done
+  echo "[madock] package.json detected — continuing."
 fi
 
 script=$(node -e 'try{var p=require("./package.json").scripts||{};process.stdout.write(p.dev?"dev":(p.start?"start":""))}catch(e){}' 2>/dev/null)

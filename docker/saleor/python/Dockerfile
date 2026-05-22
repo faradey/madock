@@ -57,18 +57,23 @@ if [ -f .env ]; then
   set +a
 fi
 
-# Detect if this looks like a Saleor / Django project.
+# Wait for the project code to appear. madock setup -d clones the
+# starter AFTER the container starts; rather than idling forever the
+# moment the container boots, poll for project markers and continue
+# the moment they show up.
+if [ ! -f manage.py ] && [ ! -f pyproject.toml ]; then
+  echo "[madock] no manage.py / pyproject.toml in $(pwd) — waiting for project code."
+  while [ ! -f manage.py ] && [ ! -f pyproject.toml ]; do
+    sleep 5
+  done
+  echo "[madock] project files detected — continuing."
+fi
+
 has_manage=0
 [ -f manage.py ] && has_manage=1
 
 has_pyproject=0
 [ -f pyproject.toml ] && has_pyproject=1
-
-# Project not detected — drop to a shell so the user can poke around.
-if [ "$has_manage" -eq 0 ] && [ "$has_pyproject" -eq 0 ]; then
-  echo "[madock] no manage.py / pyproject.toml found in $(pwd) — sleeping; nothing to run."
-  exec sleep infinity
-fi
 
 # Dependencies must be present. uv installs into .venv by default; pip
 # users have site-packages or a venv. We probe for either.
