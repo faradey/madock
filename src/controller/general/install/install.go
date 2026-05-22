@@ -3,6 +3,7 @@ package install
 import (
 	"fmt"
 	"net/url"
+	"os/exec"
 	"strings"
 
 	"github.com/faradey/madock/v3/src/command"
@@ -280,10 +281,17 @@ func Medusa(projectName, platformVer string) {
 	// when the marker `allowedHosts` is already present.
 	patchConfig := `node -e "const fs=require('fs');const p='medusa-config.ts';if(!fs.existsSync(p)){process.exit(0)}let c=fs.readFileSync(p,'utf8');if(c.includes('allowedHosts'))process.exit(0);if(!/\}\)\s*$/.test(c.trimEnd())){process.exit(0)}c=c.replace(/\}\)\s*$/,'  ,\n  admin: { vite: () => ({ server: { allowedHosts: true } }) },\n})');fs.writeFileSync(p,c);console.log('[madock] medusa-config.ts: admin.vite.server.allowedHosts=true');"`
 
+	// `db:setup` is the umbrella command that creates the database
+	// (no-op when it already exists), runs all module migrations,
+	// runs the standalone migration scripts (e.g. seed roles), and
+	// syncs links. `db:migrate` alone leaves the migration scripts
+	// pending, so post-install boot hits "Loaders for module Tax
+	// failed: relation tax_provider does not exist" until a separate
+	// db:migrate:scripts run kicks them off.
 	installCommand := envWrite +
 		" && yarn install" +
 		" && " + patchConfig +
-		" && npx medusa db:migrate" +
+		" && npx medusa db:setup --db " + dbName +
 		" && npx medusa user --email admin@example.com --password admin"
 
 	workdir := projectConf["workdir"]
@@ -292,10 +300,24 @@ func Medusa(projectName, platformVer string) {
 	}
 
 	fmt.Println(installCommand)
-	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "nodejs"), "node", true, "bash", "-c", "cd "+workdir+" && "+installCommand)
+	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
+	err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+installCommand)
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	// Restart the nodejs container so the smart entrypoint runs again
+	// from scratch and starts `yarn dev` against the freshly migrated
+	// database. Without the restart, PID 1 is still parked in the
+	// wait-for-deps loop at the moment install completes; it does
+	// fall through to yarn dev on its own, but that boot race
+	// against the final migration scripts can leave Medusa with
+	// cached "tax_provider does not exist" loader failures that
+	// stick around until the container is recreated.
+	if rerr := exec.Command("docker", "restart", nodejsContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart nodejs container automatically: " + rerr.Error() + ". Run `madock restart` manually if the dev server doesn't pick up.")
+	}
+
 	fmt.Println("")
 	fmtc.SuccessLn("[SUCCESS]: Medusa installation complete.")
 	fmtc.SuccessLn("[SUCCESS]: Medusa Storefront URL: https://" + host)
