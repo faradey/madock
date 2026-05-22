@@ -32,13 +32,29 @@ if [ -z "$script" ]; then
   exec node
 fi
 
-if [ ! -d node_modules ]; then
-  echo "[madock] node_modules missing in $(pwd) — waiting."
-  echo "[madock] Run \"madock install\" (or yarn install) to bootstrap; the dev server will start automatically the moment node_modules appears."
-  while [ ! -d node_modules ]; do
+deps_installed() {
+  # node_modules dir is created EARLY in yarn/npm install (during the
+  # link step) — it's not a reliable "install finished" signal. Look
+  # for a real completion marker instead:
+  #   yarn 4: .yarn/install-state.gz written on successful install
+  #   yarn 1: .yarn-integrity hash file in node_modules
+  #   npm:    node_modules/.package-lock.json
+  #   pnpm:   node_modules/.modules.yaml
+  [ -d node_modules ] || return 1
+  [ -f .yarn/install-state.gz ] && return 0
+  [ -f node_modules/.yarn-integrity ] && return 0
+  [ -f node_modules/.package-lock.json ] && return 0
+  [ -f node_modules/.modules.yaml ] && return 0
+  return 1
+}
+
+if ! deps_installed; then
+  echo "[madock] node_modules not ready in $(pwd) — waiting."
+  echo "[madock] Run \"madock install\" (or yarn install) to bootstrap; the dev server will start automatically once the install completes."
+  while ! deps_installed; do
     sleep 5
   done
-  echo "[madock] node_modules detected — starting dev server."
+  echo "[madock] node_modules ready — starting dev server."
 fi
 
 if [ -f yarn.lock ]; then
