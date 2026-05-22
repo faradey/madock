@@ -8,8 +8,73 @@ RUN apt-get update && apt-get install -y --no-install-recommends xdg-utils \
 RUN usermod -u {{{os/user/uid}}} -o node && groupmod -g {{{os/user/guid}}} -o node \
     && mkdir -p /var/www && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www
 
-USER node
-
 WORKDIR {{{medusa/storefront/workdir}}}
 
-CMD ["sh", "-c", "if [ ! -f package.json ]; then echo '[madock] storefront/ folder missing or empty — see docs/medusa.md'; exec sleep infinity; fi; [ -d node_modules ] || yarn install; exec yarn dev"]
+# madock smart entrypoint (storefront variant):
+#   - waits for package.json (clone happens AFTER container start)
+#   - waits for install completion marker (yarn 4: .yarn/install-state.gz,
+#     yarn 1: .yarn-integrity, npm: .package-lock.json, pnpm: .modules.yaml)
+#   - sources .env / .env.local right before exec so the install handler
+#     can write MEDUSA_BACKEND_URL + publishable key without racing the
+#     dev server boot.
+RUN cat > /usr/local/bin/madock-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local/bin/madock-entrypoint
+#!/bin/sh
+set -e
+
+cd "${WORKDIR:-/var/www/html/storefront}" 2>/dev/null || cd /var/www/html/storefront
+
+if [ ! -f package.json ]; then
+  echo "[madock] storefront: no package.json in $(pwd) — waiting for project code."
+  while [ ! -f package.json ]; do
+    sleep 5
+  done
+  echo "[madock] storefront: package.json detected — continuing."
+fi
+
+script=$(node -e 'try{var p=require("./package.json").scripts||{};process.stdout.write(p.dev?"dev":(p.start?"start":""))}catch(e){}' 2>/dev/null)
+
+if [ -z "$script" ]; then
+  exec node
+fi
+
+deps_installed() {
+  [ -d node_modules ] || return 1
+  [ -f .yarn/install-state.gz ] && return 0
+  [ -f node_modules/.yarn-integrity ] && return 0
+  [ -f node_modules/.package-lock.json ] && return 0
+  [ -f node_modules/.modules.yaml ] && return 0
+  return 1
+}
+
+if ! deps_installed; then
+  echo "[madock] storefront: node_modules not ready in $(pwd) — waiting."
+  echo "[madock] Run \"madock install\" (or yarn install) in the storefront folder to bootstrap."
+  while ! deps_installed; do
+    sleep 5
+  done
+  echo "[madock] storefront: node_modules ready — starting dev server."
+fi
+
+if [ -f yarn.lock ]; then
+  pm="yarn"
+elif [ -f pnpm-lock.yaml ]; then
+  pm="pnpm"
+else
+  pm="npm run"
+fi
+
+for envfile in .env .env.local; do
+  if [ -f "$envfile" ]; then
+    set -a
+    . "./$envfile"
+    set +a
+  fi
+done
+
+echo "[madock] storefront starting: $pm $script"
+exec $pm $script
+MADOCK_EOF
+
+ENV WORKDIR={{{medusa/storefront/workdir}}}
+
+CMD ["/usr/local/bin/madock-entrypoint"]

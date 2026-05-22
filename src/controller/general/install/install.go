@@ -285,6 +285,17 @@ func Medusa(projectName, platformVer string) {
 	// when the marker `allowedHosts` is already present.
 	patchConfig := `node -e "const fs=require('fs');const p='medusa-config.ts';if(!fs.existsSync(p)){process.exit(0)}let c=fs.readFileSync(p,'utf8');if(c.includes('allowedHosts'))process.exit(0);if(!/\}\)\s*$/.test(c.trimEnd())){process.exit(0)}c=c.replace(/\}\)\s*$/,'  ,\n  admin: { vite: () => ({ server: { allowedHosts: true } }) },\n})');fs.writeFileSync(p,c);console.log('[madock] medusa-config.ts: admin.vite.server.allowedHosts=true');"`
 
+	// Medusa's develop watcher chokidar hardcodes the ignore list and
+	// only ignores top-level `node_modules`, not nested ones. With the
+	// Next.js storefront cloned into ./storefront/, every file written
+	// by storefront's `yarn install` triggers a backend reload, which
+	// keeps the backend stuck in a restart loop and starves /health.
+	// Inject regex literals (the existing entries already mix regex
+	// and string forms) so the matcher catches any `/storefront/` and
+	// any `/node_modules/` segment regardless of nesting depth.
+	// Idempotent and best-effort.
+	patchWatcher := `node -e "const fs=require('fs');const p='node_modules/@medusajs/medusa/dist/commands/develop.js';if(!fs.existsSync(p))process.exit(0);let c=fs.readFileSync(p,'utf8');if(c.includes('madock-watch-patch'))process.exit(0);if(!c.includes('\"src/admin\"'))process.exit(0);c=c.replace(/\"src\/admin\",/,'\"src/admin\",new RegExp(\"storefront\"),new RegExp(\"node_modules\"),/* madock-watch-patch */ ');fs.writeFileSync(p,c);console.log('[madock] medusa develop.js: storefront and nested node_modules added to watch ignore');"`
+
 	// `db:setup` is the umbrella command that creates the database
 	// (no-op when it already exists), runs all module migrations,
 	// runs the standalone migration scripts (e.g. seed roles), and
@@ -292,11 +303,21 @@ func Medusa(projectName, platformVer string) {
 	// pending, so post-install boot hits "Loaders for module Tax
 	// failed: relation tax_provider does not exist" until a separate
 	// db:migrate:scripts run kicks them off.
+	// `yarn seed` runs the starter's bundled seed.ts when present —
+	// it provisions the Europe region, sales channel, shipping
+	// options, and demo products that the Next.js storefront expects.
+	// Without it the storefront middleware errors out with "No
+	// regions found" before any page renders. Guarded by package.json
+	// so non-starter projects don't fail when the script is missing.
+	seedIfPresent := "if node -e \"process.exit(((require('./package.json').scripts||{}).seed)?0:1)\" 2>/dev/null; then yarn seed; fi"
+
 	installCommand := envWrite +
 		" && yarn install" +
 		" && " + patchConfig +
+		" && " + patchWatcher +
 		" && npx medusa db:setup --db " + dbName +
-		" && npx medusa user --email admin@example.com --password admin"
+		" && npx medusa user --email admin@example.com --password admin" +
+		" && " + seedIfPresent
 
 	workdir := projectConf["workdir"]
 	if workdir == "" {
@@ -331,6 +352,15 @@ func Medusa(projectName, platformVer string) {
 	// .env and the storefront/.env (when the storefront subfolder is
 	// present). Best-effort: a failure here only prints a warning.
 	publishableKey := createPublishableKey(nodejsContainer, host, workdir)
+
+	// Install the Next.js storefront when it was cloned alongside the
+	// backend. The storefront container shares the same project src/
+	// mount, so .env.local + node_modules end up on the host
+	// filesystem. After install we restart the storefront container so
+	// its smart entrypoint picks up the freshly seeded env + deps.
+	if projectConf["medusa/storefront/enabled"] == "true" {
+		installStorefront(projectConf, projectName, host, publishableKey)
+	}
 
 	fmt.Println("")
 	fmtc.SuccessLn("[SUCCESS]: Medusa installation complete.")
@@ -471,9 +501,9 @@ func createPublishableKey(nodejsContainer, host, workdir string) string {
 }
 
 // writeKeyToEnv appends NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY to the
-// in-container .env (and storefront/.env when the storefront subfolder
-// exists). Uses `docker exec` so we don't have to know which host path
-// is bind mounted — the container always sees .env at workdir.
+// backend .env. Uses `docker exec` so we don't have to know which host
+// path is bind mounted — the container always sees .env at workdir.
+// installStorefront owns the storefront's .env.local separately.
 //
 // The leading newline guards against the case where Medusa's CLI
 // leaves the file without a trailing \n (observed: `db:setup` rewrites
@@ -481,9 +511,53 @@ func createPublishableKey(nodejsContainer, host, workdir string) string {
 // it, our line would glue onto the previous key.
 func writeKeyToEnv(nodejsContainer, workdir, token string) {
 	cmd := "cd " + workdir +
-		" && (grep -q '^NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=' .env 2>/dev/null || printf '\\nNEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=%s\\n' " + token + " >> .env)" +
-		" && (! [ -f storefront/package.json ] || (grep -q '^NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=' storefront/.env 2>/dev/null || printf '\\nNEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=%s\\n' " + token + " >> storefront/.env))"
+		" && (grep -q '^NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=' .env 2>/dev/null || printf '\\nNEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=%s\\n' " + token + " >> .env)"
 	_ = exec.Command("docker", "exec", "-u", "node", nodejsContainer, "bash", "-c", cmd).Run()
+}
+
+// installStorefront runs `yarn install` inside the storefront container
+// and writes .env.local with the backend URLs + publishable key so the
+// Next.js dev server starts cleanly on port 8000. Best-effort: any
+// failure prints a warning, the rest of the Medusa install still
+// succeeds.
+func installStorefront(projectConf map[string]string, projectName, host, publishableKey string) {
+	storefrontWorkdir := projectConf["medusa/storefront/workdir"]
+	if storefrontWorkdir == "" {
+		storefrontWorkdir = "/var/www/html/storefront"
+	}
+	region := projectConf["medusa/storefront/region"]
+	if region == "" {
+		region = "gb"
+	}
+	publicBackendURL := projectConf["medusa/storefront/public_backend_url"]
+	if publicBackendURL == "" {
+		publicBackendURL = "https://" + host
+	}
+
+	// Browser-side calls use the public host (HTTPS through nginx);
+	// server-side (SSR) calls hit the backend on the docker network.
+	envBody := "NEXT_PUBLIC_MEDUSA_BACKEND_URL=" + publicBackendURL + "\n" +
+		"MEDUSA_BACKEND_URL=http://nodejs:9000\n" +
+		"NEXT_PUBLIC_BASE_URL=" + publicBackendURL + "\n" +
+		"NEXT_PUBLIC_DEFAULT_REGION=" + region + "\n"
+	if publishableKey != "" {
+		envBody += "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=" + publishableKey + "\n"
+	}
+	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env.local"
+	installCommand := envWrite + " && yarn install"
+
+	storefrontContainer := docker.GetContainerName(projectConf, projectName, "storefront")
+	fmtc.InfoIconLn("Installing Medusa storefront in " + storefrontContainer)
+	if err := docker.ContainerExec(storefrontContainer, "node", true, "bash", "-c", "cd "+storefrontWorkdir+" && "+installCommand); err != nil {
+		fmtc.WarningLn("Storefront install failed: " + err.Error() + ". Inspect with `madock logs storefront`.")
+		return
+	}
+
+	// Restart so the smart entrypoint picks up the freshly written
+	// .env.local and node_modules and boots `yarn dev`.
+	if rerr := exec.Command("docker", "restart", storefrontContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart storefront container automatically: " + rerr.Error() + ". Run `madock restart` manually if the dev server doesn't pick up.")
+	}
 }
 
 // insecureTLSConfig returns a tls.Config that skips verification, used

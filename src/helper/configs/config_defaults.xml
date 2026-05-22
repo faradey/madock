@@ -212,12 +212,13 @@
             </magento>
             <medusa>
                 <storefront>
-                    <enabled>false</enabled>
+                    <enabled>true</enabled>
                     <repository>node</repository>
-                    <version>22.11.0</version>
+                    <version>20.18.0</version>
                     <path>storefront</path>
-                    <workdir>/var/www/storefront</workdir>
-                    <region>us</region>
+                    <workdir>/var/www/html/storefront</workdir>
+                    <region>gb</region>
+                    <git_url>https://github.com/medusajs/nextjs-starter-medusa.git</git_url>
                 </storefront>
             </medusa>
             <saleor>

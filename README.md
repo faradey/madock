@@ -24,7 +24,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * **Shopware** as a separate service. Learn [more](docs/shopware.md)
 * **PrestaShop** as a separate service. Learn [more](docs/prestashop.md)
 * **WooCommerce** as a separate service (WordPress + WooCommerce + WP-CLI)
-* **Medusa.js** as a separate service (Node.js + PostgreSQL + Redis, optional Meilisearch and Next.js storefront). Learn [more](docs/medusa.md)
+* **Medusa.js** as a separate service (Node.js backend + auto-provisioned Next.js storefront + PostgreSQL + Redis, optional Meilisearch). Learn [more](docs/medusa.md)
 * **Saleor** as a separate service (Python 3.12 + PostgreSQL + Redis + uvicorn, optional Celery worker and Saleor Dashboard). Learn [more](docs/saleor.md)
 * Cron support
 * Flexible configuration for each project

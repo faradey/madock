@@ -100,12 +100,55 @@ func Medusa(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	config.Set("rabbitmq/user", configs2.GetOption("rabbitmq/user", generalConf, projectConf))
 	config.Set("rabbitmq/password", configs2.GetOption("rabbitmq/password", generalConf, projectConf))
 
-	config.Set("medusa/storefront/enabled", configs2.GetOption("medusa/storefront/enabled", generalConf, projectConf))
-	config.Set("medusa/storefront/repository", configs2.GetOption("medusa/storefront/repository", generalConf, projectConf))
-	config.Set("medusa/storefront/version", configs2.GetOption("medusa/storefront/version", generalConf, projectConf))
-	config.Set("medusa/storefront/path", configs2.GetOption("medusa/storefront/path", generalConf, projectConf))
-	config.Set("medusa/storefront/workdir", configs2.GetOption("medusa/storefront/workdir", generalConf, projectConf))
-	config.Set("medusa/storefront/region", configs2.GetOption("medusa/storefront/region", generalConf, projectConf))
+	// Storefront defaults — Medusa v2 ships Admin UI in the backend
+	// (`/app`) but the storefront (browsable shop) is a separate
+	// Next.js app at github.com/medusajs/nextjs-starter-medusa.
+	// Enable by default; the same nodejs image hosts it on port 8000.
+	storefrontEnabled := configs2.GetOption("medusa/storefront/enabled", generalConf, projectConf)
+	if storefrontEnabled == "" {
+		storefrontEnabled = "true"
+	}
+	config.Set("medusa/storefront/enabled", storefrontEnabled)
+
+	storefrontRepo := configs2.GetOption("medusa/storefront/repository", generalConf, projectConf)
+	if storefrontRepo == "" {
+		storefrontRepo = "node"
+	}
+	config.Set("medusa/storefront/repository", storefrontRepo)
+
+	storefrontVer := configs2.GetOption("medusa/storefront/version", generalConf, projectConf)
+	if storefrontVer == "" {
+		// Match the backend node image so we don't pull two base
+		// layers. defVersions.NodeJs is e.g. "20.18.0".
+		storefrontVer = defVersions.NodeJs
+	}
+	config.Set("medusa/storefront/version", storefrontVer)
+
+	storefrontPath := configs2.GetOption("medusa/storefront/path", generalConf, projectConf)
+	if storefrontPath == "" {
+		storefrontPath = "storefront"
+	}
+	config.Set("medusa/storefront/path", storefrontPath)
+
+	storefrontWorkdir := configs2.GetOption("medusa/storefront/workdir", generalConf, projectConf)
+	if storefrontWorkdir == "" {
+		storefrontWorkdir = "/var/www/html/storefront"
+	}
+	config.Set("medusa/storefront/workdir", storefrontWorkdir)
+
+	storefrontRegion := configs2.GetOption("medusa/storefront/region", generalConf, projectConf)
+	if storefrontRegion == "" {
+		// Match the country list seeded by medusa-starter-default's
+		// `yarn seed` (gb, de, dk, se, fr, es, it) — first entry.
+		storefrontRegion = "gb"
+	}
+	config.Set("medusa/storefront/region", storefrontRegion)
+
+	storefrontGitURL := configs2.GetOption("medusa/storefront/git_url", generalConf, projectConf)
+	if storefrontGitURL == "" {
+		storefrontGitURL = "https://github.com/medusajs/nextjs-starter-medusa.git"
+	}
+	config.Set("medusa/storefront/git_url", storefrontGitURL)
 
 	// Browser-side backend URL for the Next.js storefront. Defaults to
 	// the project's first nginx host (https://loc.<project>.com); the
@@ -117,6 +160,12 @@ func Medusa(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	publicBackendURL := configs2.GetOption("medusa/storefront/public_backend_url", generalConf, projectConf)
 	if publicBackendURL == "" && defVersions.Hosts != "" {
 		firstHost := strings.Fields(defVersions.Hosts)[0]
+		// Hosts come in as "domain.test:code" pairs (where `code` is
+		// the runCode used to namespace nginx/hosts/<code>/name);
+		// strip the code suffix so we end up with a plain URL.
+		if idx := strings.Index(firstHost, ":"); idx != -1 {
+			firstHost = firstHost[:idx]
+		}
 		publicBackendURL = "https://" + firstHost
 	}
 	config.Set("medusa/storefront/public_backend_url", publicBackendURL)

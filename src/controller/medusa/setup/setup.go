@@ -162,9 +162,10 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 }
 
 // DownloadMedusa clones the official Medusa starter into the project
-// root when the directory is empty. The user can then run `madock
-// install` (or use `-i` on setup) to apply migrations and create the
-// admin user.
+// root when the directory is empty, then clones the Next.js storefront
+// starter into ./storefront/ when storefront is enabled in config.
+// The user can then run `madock install` (or use `-i` on setup) to
+// apply migrations and create the admin user.
 func DownloadMedusa(projectName string) {
 	target := paths.GetRunDirPath()
 	if !isDirEmpty(target) {
@@ -179,6 +180,36 @@ func DownloadMedusa(projectName string) {
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		fmtc.WarningLn("Failed to clone Medusa starter: " + err.Error())
+		return
+	}
+
+	// Storefront clone. Read the URL + folder name from project
+	// config so a user-overridden fork / branch still works. Skip
+	// silently when storefront is disabled.
+	projectConf := configs.GetCurrentProjectConfig()
+	if projectConf["medusa/storefront/enabled"] != "true" {
+		return
+	}
+	storefrontGitURL := projectConf["medusa/storefront/git_url"]
+	if storefrontGitURL == "" {
+		storefrontGitURL = "https://github.com/medusajs/nextjs-starter-medusa.git"
+	}
+	storefrontDir := projectConf["medusa/storefront/path"]
+	if storefrontDir == "" {
+		storefrontDir = "storefront"
+	}
+	storefrontTarget := target + "/" + storefrontDir
+	if _, err := os.Stat(storefrontTarget); err == nil {
+		fmtc.WarningLn("Skipping storefront download — " + storefrontTarget + " already exists.")
+		return
+	}
+	fmtc.InfoIconLn("Cloning " + storefrontGitURL + " into " + storefrontTarget)
+	scmd := exec.Command("git", "clone", "--depth", "1", storefrontGitURL, storefrontDir)
+	scmd.Dir = target
+	scmd.Stdout = os.Stdout
+	scmd.Stderr = os.Stderr
+	if err := scmd.Run(); err != nil {
+		fmtc.WarningLn("Failed to clone Medusa storefront: " + err.Error())
 	}
 }
 
