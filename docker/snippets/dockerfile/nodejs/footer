@@ -65,6 +65,18 @@ else
   pm="npm run"
 fi
 
+# Source .env right before exec so the dev server sees DATABASE_URL /
+# REDIS_URL / SECRET_KEY etc. in process env. We can't source earlier
+# because madock setup -d writes .env only during the install phase,
+# which runs AFTER the container starts — at boot the file does not
+# exist yet. By this point the install has completed (we already
+# waited for its marker), so .env is guaranteed to be present.
+if [ -f .env ]; then
+  set -a
+  . ./.env
+  set +a
+fi
+
 echo "[madock] starting: $pm $script"
 exec $pm $script
 MADOCK_EOF
