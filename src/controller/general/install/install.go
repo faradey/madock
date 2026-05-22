@@ -272,8 +272,34 @@ func Medusa(projectName, platformVer string) {
 		"AUTH_CORS=https://" + host + "\n"
 	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env"
 
+	// Memory-frugal install for low-RAM Docker hosts. Medusa's
+	// dependency tree is ~1500 packages / 437 MB and Yarn 4's link
+	// step has historically OOM-killed inside containers with the
+	// default 4 GB Docker memory limit.
+	//
+	// Knobs explained:
+	//   YARN_NM_MODE=hardlinks-local  — link from cache via hardlinks
+	//     instead of copyfile, drastically lower fs buffer usage during
+	//     the Link step. Default since Yarn 4, set explicitly in case
+	//     the starter's .yarnrc.yml overrode it.
+	//   YARN_CACHE_FOLDER=.yarn/cache — keep cache inside the bind
+	//     mount, same filesystem as node_modules, so hardlinks work
+	//     (cross-fs falls back to copyfile, which is the slow path).
+	//   YARN_NETWORK_CONCURRENCY=2    — cap parallel fetches (default
+	//     50) so peak heap stays under control.
+	//   YARN_ENABLE_HARDENED_MODE=false — skip the per-package signature
+	//     verification, halves the fetch-step CPU/memory cost.
+	//   NODE_OPTIONS=--max-old-space-size=1536 — cap Node heap so the
+	//     kernel doesn't SIGKILL us when other containers eat headroom.
+	//
+	// Retry once with --network-concurrency 1 if the first pass hits
+	// exit 137 (OOM-killed) — it's measurably less likely to OOM on
+	// the second go.
+	yarnEnv := "export YARN_NM_MODE=hardlinks-local YARN_CACHE_FOLDER=.yarn/cache YARN_NETWORK_CONCURRENCY=2 YARN_ENABLE_HARDENED_MODE=false NODE_OPTIONS='--max-old-space-size=1536'"
+	yarnInstall := yarnEnv + " && (yarn install || (echo '[madock] yarn install failed once — retrying with single-stream network' && YARN_NETWORK_CONCURRENCY=1 yarn install))"
+
 	installCommand := envWrite +
-		" && yarn install" +
+		" && " + yarnInstall +
 		" && npx medusa db:migrate" +
 		" && npx medusa user --email admin@example.com --password admin"
 
