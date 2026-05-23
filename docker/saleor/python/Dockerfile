@@ -48,15 +48,6 @@ set -e
 
 cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html
 
-# Saleor (and most Django projects) read configuration from process env
-# rather than from .env directly. Source the .env file when present so
-# DATABASE_URL / REDIS_URL / SECRET_KEY end up in the environment.
-if [ -f .env ]; then
-  set -a
-  . ./.env
-  set +a
-fi
-
 # Wait for the project code to appear. madock setup -d clones the
 # starter AFTER the container starts; rather than idling forever the
 # moment the container boots, poll for project markers and continue
@@ -102,6 +93,18 @@ if ! deps_ready; then
     sleep 5
   done
   echo "[madock] Python deps detected — starting server."
+fi
+
+# Source .env right before exec so the dev server sees DATABASE_URL /
+# REDIS_URL / SECRET_KEY etc. in process env. We can't source earlier
+# because madock setup -d writes .env only during the install phase,
+# which runs AFTER the container starts — at boot the file does not
+# exist yet. By this point the install has completed (we already
+# waited for the deps marker), so .env is guaranteed to be present.
+if [ -f .env ]; then
+  set -a
+  . ./.env
+  set +a
 fi
 
 # Run the Saleor / Django dev server. Saleor 3.x always ships
