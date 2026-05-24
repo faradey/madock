@@ -61,9 +61,15 @@ nginx serves PHP-FPM via FastCGI from `<project>/public/` (Symfony front control
 
 * `madock sylius <command>` — runs `php bin/console <command>` inside the PHP container (e.g. `madock sylius cache:clear`, `madock sylius doctrine:migrations:migrate`, `madock sylius sylius:fixtures:load`).
 * `madock composer <command>` — runs Composer in the PHP container.
-* `madock install` — full pipeline above. Re-run after pulling new Sylius releases / running `composer require`.
+* `madock install` — full pipeline above. Re-run after pulling new Sylius releases / running `composer require`. **Idempotent**: a `.madock-installed` marker file in the project root suppresses the first-run-only `sylius:install` + `sylius:fixtures:load` steps so repeated runs don't duplicate channels/products/admins. Delete the marker to force a re-install.
 * `madock start` / `madock stop` / `madock restart` — same as for other platforms.
-* `madock db:export` / `madock db:import` — MariaDB dumps.
+* `madock db:export` / `madock db:import` — MariaDB / PostgreSQL dumps.
+* `madock service:enable messenger` / `disable` — toggle the Symfony Messenger consumer container (background worker for async + scheduler transports).
+* `madock service:enable encore` / `disable` — toggle the Webpack Encore watcher container (`yarn watch`, live asset rebuilds on `assets/` change).
+
+## Flags
+
+* `--sample-data` — load the full Sylius `default` fixture suite (channels + taxa + 87 sample products + customers + sample orders + promotions). Default behaviour without the flag is the `minimum` suite (channel + locale + currency only).
 
 ## Services
 
@@ -71,10 +77,14 @@ nginx serves PHP-FPM via FastCGI from `<project>/public/` (Symfony front control
 |---------------|---------|-----------------------------|------------------------------------------------------------|
 | PHP-FPM       | on      | 8.3 (Latest preset)         | Internal port 9000, served via nginx FastCGI               |
 | nginx         | on      | latest stable               | Project's TLS host (`https://loc.<project>.com`)           |
-| MariaDB       | on      | mariadb:11.4                | Volume `dbdata`                                            |
+| MariaDB       | on      | mariadb:11.4                | Volume `dbdata`. PostgreSQL also supported — pick via the setup wizard or `db/type` in `config.xml` |
 | Redis         | on      | 7.4                         | Symfony cache + Doctrine result cache                      |
 | Node + Yarn   | on      | Node 22, Yarn 1.x           | Bundled into the PHP image for Webpack Encore builds       |
-| Mailpit       | on      | global madock service       | Catches outbound email at `host.docker.internal:1025`      |
+| Mailpit       | on      | global madock service       | Catches outbound email at `host.docker.internal:1025`. Web UI at `http://localhost:8025` |
+| Messenger     | off     | reuses PHP image            | Enable with `service:enable messenger`. Auto-consumes `main`, `payment_request`, `catalog_promotion_removal` transports. Override with `SYLIUS_MESSENGER_TRANSPORTS` env on the service. Picks up `scheduler_*` transports when symfony/scheduler is wired |
+| Encore watch  | off     | reuses PHP image            | Enable with `service:enable encore`. Runs `yarn watch` against the project src — admin/shop/app bundles rebuild on save. `WATCHPACK_POLLING=true` keeps it responsive on macOS bind mounts |
+| Elasticsearch | off     | 8.11.4                      | Enable with `service:enable elasticsearch`. For `sylius/elasticsearch-plugin` / custom search integrations |
+| OpenSearch    | off     | 2.12.0                      | Enable with `service:enable opensearch`                    |
 | phpMyAdmin    | off     | latest                      | DB browser, enable with `service:enable phpmyadmin`        |
 | RabbitMQ      | off     | latest stable               | For Symfony Messenger backed by AMQP, enable manually      |
 

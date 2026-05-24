@@ -7,6 +7,8 @@ func init() {
 func MakeConfSylius(projectName string) {
 	MakePhpDockerfile(projectName)
 	MakeDBDockerfile(projectName)
+	MakeElasticDockerfile(projectName)
+	MakeOpenSearchDockerfile(projectName)
 	MakeRedisDockerfile(projectName)
 	MakeScriptsConf(projectName)
 	MakeClaudeDockerfile(projectName)

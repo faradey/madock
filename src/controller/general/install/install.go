@@ -940,18 +940,35 @@ func Sylius(projectName, platformVer string, isSampleData bool) {
 	if dbName == "" {
 		dbName = "sylius"
 	}
-	// MariaDB version segment is required by Doctrine 3. Pin a
-	// 3-segment value (major.minor.patch) — Doctrine's regex bails
-	// when the patch part is missing (e.g. "11.4" → "Invalid platform
-	// version" / "FileLoader.php line 190").
+	// Doctrine serverVersion needs a 3-segment value (`major.minor.patch`)
+	// — its regex bails on shorter strings ("Invalid platform version"
+	// in FileLoader.php line 190). Pad incomplete versions before
+	// building the DSN.
 	dbVer := projectConf["db/version"]
 	if dbVer == "" {
 		dbVer = "11.4.0"
-	} else if !strings.Contains(strings.TrimPrefix(dbVer, "mariadb-"), ".") || strings.Count(dbVer, ".") < 2 {
+	} else if strings.Count(dbVer, ".") < 2 {
 		dbVer = dbVer + ".0"
 	}
-	dbURL := "mysql://" + dbUser + ":" + dbPassword + "@db:3306/" + dbName + "?serverVersion=mariadb-" + dbVer + "&charset=utf8mb4"
-	mailerDSN := "smtp://mailpit:1025"
+
+	// Pick the DSN scheme + version prefix from the user-selected
+	// engine. Sylius supports both via Doctrine — MariaDB/MySQL is
+	// the upstream default, PostgreSQL works once the DSN is right.
+	var dbURL string
+	switch strings.ToLower(projectConf["db/type"]) {
+	case "postgresql", "postgres":
+		dbURL = "postgresql://" + dbUser + ":" + dbPassword + "@db:5432/" + dbName + "?serverVersion=" + dbVer
+	case "mysql":
+		dbURL = "mysql://" + dbUser + ":" + dbPassword + "@db:3306/" + dbName + "?serverVersion=" + dbVer + "&charset=utf8mb4"
+	default:
+		// MariaDB (default for Sylius)
+		dbURL = "mysql://" + dbUser + ":" + dbPassword + "@db:3306/" + dbName + "?serverVersion=mariadb-" + dbVer + "&charset=utf8mb4"
+	}
+	// Mailpit runs as a shared aruntime container on the host (not on
+	// the per-project docker network), bound to port 1025. The PHP
+	// container reaches it through host.docker.internal which compose
+	// already pins via extra_hosts.
+	mailerDSN := "smtp://host.docker.internal:1025"
 
 	// Patch .env (or .env.local — Symfony's standard layering) so
 	// Doctrine + Messenger + Mailer point at the docker hostnames.
@@ -988,22 +1005,99 @@ func Sylius(projectName, platformVer string, isSampleData bool) {
 	//                                            /admin/login throws
 	//                                            "entrypoints.json not
 	//                                            found"
-	hostQuoted := strings.ReplaceAll(host, "'", "''")
-	pinChannel := "php bin/console doctrine:query:sql \"UPDATE sylius_channel SET hostname='" + hostQuoted + "'\""
+	sqlEsc := func(s string) string { return strings.ReplaceAll(s, "'", "''") }
+	pinChannel := "php bin/console doctrine:query:sql \"UPDATE sylius_channel SET hostname='" + sqlEsc(host) + "'\""
+
+	// Fixture suite selection:
+	//   --sample-data       -> "default"  (full demo: products,
+	//                                      orders, customers, promotions)
+	//   no flag (the default) -> "minimum" (channel/zone/locale only —
+	//                                       enough for the storefront to
+	//                                       resolve a channel without
+	//                                       loading hundreds of demo
+	//                                       rows). `minimum` is a
+	//                                       built-in Sylius suite.
+	// Both suites still trigger the channel.hostname rewrite below so
+	// the storefront resolves the seeded channel.
+	fixtureSuite := "minimum"
+	if isSampleData {
+		fixtureSuite = "default"
+	}
+
+	// Admin credentials come from the shared magento/admin_* config
+	// (same defaults as Magento/Shopware/PrestaShop). Sylius's
+	// fixture suite seeds a `sylius`/`sylius` admin row; we rewrite
+	// its username/email/password/first_name/last_name to match the
+	// project config so users have one set of creds across platforms.
+	//
+	// Hash via Symfony's `security:hash-password` helper (Argon2id),
+	// then UPDATE the seeded row. WHERE clause covers both the
+	// fixture-named admin (username='sylius') and a generic "lone
+	// admin" fallback when a non-default suite renamed it.
+	//
+	// The `minimum` fixture suite does NOT seed an admin row, so this
+	// UPDATE is a no-op there — users on that path keep the empty
+	// state and create their admin manually via
+	// `madock sylius sylius:admin-user:create`.
+	adminUser := projectConf["magento/admin_user"]
+	if adminUser == "" {
+		adminUser = "admin"
+	}
+	adminPass := projectConf["magento/admin_password"]
+	if adminPass == "" {
+		adminPass = "admin123"
+	}
+	adminEmail := projectConf["magento/admin_email"]
+	if adminEmail == "" {
+		adminEmail = "admin@admin.com"
+	}
+	adminFN := projectConf["magento/admin_first_name"]
+	if adminFN == "" {
+		adminFN = "admin"
+	}
+	adminLN := projectConf["magento/admin_last_name"]
+	if adminLN == "" {
+		adminLN = "admin"
+	}
+	adminPatch := "HASH=$(php bin/console security:hash-password " +
+		shellSingleQuote(adminPass) +
+		` 'Sylius\Component\Core\Model\AdminUser' --no-ansi 2>/dev/null | grep -oE '[$]argon2[^ ]+' | head -1) && ` +
+		`php bin/console doctrine:query:sql "UPDATE sylius_admin_user SET username='` + sqlEsc(adminUser) +
+		`', email='` + sqlEsc(adminEmail) +
+		`', password='${HASH}', first_name='` + sqlEsc(adminFN) +
+		`', last_name='` + sqlEsc(adminLN) +
+		`' WHERE username='sylius' OR id=(SELECT MIN(id) FROM (SELECT id FROM sylius_admin_user) t)"`
+
+	// Idempotency: the .madock-installed marker prevents
+	// `sylius:install` + `sylius:fixtures:load` from re-running on
+	// subsequent `madock install` invocations. Both commands create
+	// new rows (channels, taxa, products, orders, admin) without
+	// checking for existing data — re-running them duplicates the
+	// catalog and breaks the storefront. Everything else (composer,
+	// migrations, channel pin, admin patch, yarn, cache:warmup) is
+	// already idempotent so it runs every time and stays in sync
+	// with the latest config.
+	//
+	// Delete the marker to force a re-install: `rm -f .madock-installed`
+	// inside the project directory.
+	initialSetup := "if [ ! -f .madock-installed ]; then" +
+		" php bin/console sylius:install --no-interaction" +
+		" && php bin/console sylius:fixtures:load --no-interaction " + fixtureSuite +
+		" && touch .madock-installed;" +
+		" fi"
 
 	installCommand := envWrite +
 		" && composer install --no-interaction --prefer-dist" +
 		" && php bin/console doctrine:database:create --if-not-exists --no-interaction" +
 		" && php bin/console doctrine:migrations:migrate --no-interaction" +
-		" && php bin/console sylius:install --no-interaction" +
-		" && php bin/console sylius:fixtures:load --no-interaction default" +
+		" && " + initialSetup +
 		" && " + pinChannel +
+		" && " + adminPatch +
 		" && (command -v yarn >/dev/null 2>&1 && yarn install || true)" +
 		" && (command -v yarn >/dev/null 2>&1 && yarn build || true)" +
 		" && php bin/console assets:install --symlink --no-interaction" +
 		" && php bin/console cache:clear --no-warmup" +
 		" && php bin/console cache:warmup"
-	_ = isSampleData
 
 	workdir := projectConf["workdir"]
 	if workdir == "" {
@@ -1021,6 +1115,7 @@ func Sylius(projectName, platformVer string, isSampleData bool) {
 	fmtc.SuccessLn("[SUCCESS]: Sylius installation complete.")
 	fmtc.SuccessLn("[SUCCESS]: Sylius Storefront URL: https://" + host)
 	fmtc.SuccessLn("[SUCCESS]: Sylius Admin URI: /admin")
-	fmtc.SuccessLn("[SUCCESS]: Sylius Admin User: sylius")
-	fmtc.SuccessLn("[SUCCESS]: Sylius Admin Password: sylius")
+	fmtc.SuccessLn("[SUCCESS]: Sylius Admin User: " + adminUser)
+	fmtc.SuccessLn("[SUCCESS]: Sylius Admin Password: " + adminPass)
+	fmtc.SuccessLn("[SUCCESS]: Sylius Admin Email: " + adminEmail)
 }

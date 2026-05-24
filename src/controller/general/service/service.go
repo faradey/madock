@@ -28,6 +28,10 @@ var serviceMap = map[string]string{
 	"medusa/storefront":              "storefront",
 	"saleor/dashboard":               "dashboard",
 	"saleor/worker":                  "worker",
+	"spree/sidekiq":                  "sidekiq",
+	"spree/storefront":               "storefront",
+	"sylius/messenger":               "messenger",
+	"sylius/encore":                  "encore",
 	"artemis":                        "artemis",
 }
 

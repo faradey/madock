@@ -73,8 +73,31 @@ func Sylius(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	config.Set("db/password", configs2.GetOption("db/password", generalConf, projectConf))
 	config.Set("db/database", configs2.GetOption("db/database", generalConf, projectConf))
 
-	config.Set("search/elasticsearch/enabled", "false")
-	config.Set("search/opensearch/enabled", "false")
+	// Search engines are off by default. Sylius supports Elasticsearch
+	// via the `sylius/elasticsearch-plugin` (or the v2 built-in search
+	// when configured). Users opt in with `madock service:enable
+	// elasticsearch` / `opensearch` and wire the plugin themselves.
+	searchEsEnabled := configs2.GetOption("search/elasticsearch/enabled", generalConf, projectConf)
+	if searchEsEnabled == "" {
+		searchEsEnabled = "false"
+	}
+	config.Set("search/elasticsearch/enabled", searchEsEnabled)
+	if v := configs2.GetOption("search/elasticsearch/version", generalConf, projectConf); v != "" {
+		config.Set("search/elasticsearch/version", v)
+	} else {
+		config.Set("search/elasticsearch/version", "8.11.4")
+	}
+
+	searchOsEnabled := configs2.GetOption("search/opensearch/enabled", generalConf, projectConf)
+	if searchOsEnabled == "" {
+		searchOsEnabled = "false"
+	}
+	config.Set("search/opensearch/enabled", searchOsEnabled)
+	if v := configs2.GetOption("search/opensearch/version", generalConf, projectConf); v != "" {
+		config.Set("search/opensearch/version", v)
+	} else {
+		config.Set("search/opensearch/version", "2.12.0")
+	}
 
 	// Sylius uses Symfony Messenger; redis is optional but recommended
 	// for the Doctrine cache + Messenger transport.
@@ -97,6 +120,16 @@ func Sylius(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	}
 	config.Set("rabbitmq/user", configs2.GetOption("rabbitmq/user", generalConf, projectConf))
 	config.Set("rabbitmq/password", configs2.GetOption("rabbitmq/password", generalConf, projectConf))
+
+	// Optional Symfony Messenger consumer container — reuses the PHP
+	// image and runs `messenger:consume async` against the shared
+	// Doctrine transport. Enable with `madock service:enable messenger`.
+	config.Set("sylius/messenger/enabled", configs2.GetOption("sylius/messenger/enabled", generalConf, projectConf))
+
+	// Optional Webpack Encore watcher container — reuses the PHP
+	// image and runs `yarn watch` for live rebuilds on assets/ change.
+	// Enable with `madock service:enable encore`.
+	config.Set("sylius/encore/enabled", configs2.GetOption("sylius/encore/enabled", generalConf, projectConf))
 
 	config.Set("grafana/auth/enabled", configs2.GetOption("grafana/auth/enabled", generalConf, projectConf))
 	config.Set("grafana/auth/user", configs2.GetOption("grafana/auth/user", generalConf, projectConf))
