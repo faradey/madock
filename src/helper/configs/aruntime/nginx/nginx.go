@@ -75,8 +75,13 @@ func makeProxy(projectName string) {
 		allFileData += "# Gzip compression\ngzip on;\ngzip_vary on;\ngzip_proxied any;\ngzip_comp_level 6;\ngzip_min_length 1000;\ngzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;\n"
 	}
 
-	// Global map for WebSocket upgrade (used by Grafana Live, etc.)
-	allFileData += "# WebSocket upgrade map\nmap $http_upgrade $connection_upgrade {\n  default upgrade;\n  '' close;\n}\n"
+	// Global map for WebSocket upgrade. Used by Grafana Live AND by
+	// the main `location /` proxy in default-proxy.conf so Next.js /
+	// Vite / Rails Action Cable HMR sockets pass through unchanged
+	// instead of being demoted to plain HTTP. The empty default keeps
+	// `Connection:` empty for non-WS traffic so upstream keepalive
+	// still works (close would force a new TCP per request).
+	allFileData += "# WebSocket upgrade map\nmap $http_upgrade $connection_upgrade {\n  default upgrade;\n  '' '';\n}\n"
 
 	// Global log format and access log
 	allFileData += "# Access log format\nlog_format main '$remote_addr - $host [$time_local] \"$request\" '\n                '$status $body_bytes_sent \"$http_referer\" '\n                '\"$http_user_agent\" $request_time';\n"

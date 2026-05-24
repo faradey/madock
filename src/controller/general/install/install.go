@@ -747,11 +747,17 @@ func Spree(projectName, platformVer string) {
 	// nginx terminates TLS and proxies to puma over plain HTTP inside
 	// the docker network. Without `config.assume_ssl = true` Rails
 	// generates http:// in every redirect (login, callbacks, etc) and
-	// browsers warn / lose the secure cookie flag. Patch
-	// development.rb once at install time; idempotent.
+	// browsers warn / lose the secure cookie flag. Also clear
+	// `config.hosts` so the Next.js storefront's server-side fetches
+	// to `http://ruby:3000` (inside the docker network) don't trip
+	// Rails' HostAuthorization middleware — it ships a default
+	// whitelist of .localhost / 127.0.0.1 / ::1 and rejects any other
+	// hostname with "Blocked hosts" 403, which then surfaces in the
+	// storefront as JSON parse errors and meta-refresh loops.
+	// Idempotent.
 	patchSsl := `if [ -f config/environments/development.rb ]; then ` +
 		`grep -q 'madock-ssl-patch' config/environments/development.rb 2>/dev/null || ` +
-		`sed -i '/^Rails.application.configure do$/a\  # madock-ssl-patch\n  config.assume_ssl = true' config/environments/development.rb; ` +
+		`sed -i '/^Rails.application.configure do$/a\  # madock-ssl-patch\n  config.assume_ssl = true\n  config.hosts.clear' config/environments/development.rb; ` +
 		`fi`
 
 	// Spree admin uses tailwindcss-rails. spree_starter's Procfile.dev
@@ -863,7 +869,17 @@ func installSpreeStorefront(projectConf map[string]string, projectName, host, ru
 		envBody += "SPREE_PUBLISHABLE_KEY=\"" + publishableKey + "\"\n"
 	}
 	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env.local"
-	installCommand := envWrite + " && yarn install"
+
+	// Patch next.config.ts (or .js/.mjs) to whitelist the project's
+	// nginx host under `allowedDevOrigins`. Next.js 15+ blocks
+	// cross-origin HMR WebSocket requests during dev — the storefront
+	// sees its own origin as `spree.test` (the nginx host) while the
+	// dev server binds to localhost, so /_next/webpack-hmr returns
+	// 403 and the browser console spams `WebSocket connection failed`.
+	// Idempotent via marker comment.
+	patchNextConfig := `node -e "const fs=require('fs');for(const p of ['next.config.ts','next.config.js','next.config.mjs']){if(!fs.existsSync(p))continue;let c=fs.readFileSync(p,'utf8');if(c.includes('madock-allowed-host')){process.exit(0)}if(!/allowedDevOrigins\s*:\s*\[/.test(c)){process.exit(0)}c=c.replace(/allowedDevOrigins\s*:\s*\[/,'allowedDevOrigins: [\"` + host + `\", \"*.test\", /* madock-allowed-host */ ');fs.writeFileSync(p,c);console.log('[madock] '+p+': added '+'` + host + `'+' to allowedDevOrigins');break}"`
+
+	installCommand := envWrite + " && " + patchNextConfig + " && yarn install"
 
 	storefrontContainer := docker.GetContainerName(projectConf, projectName, "storefront")
 	fmtc.InfoIconLn("Installing Spree storefront in " + storefrontContainer)
