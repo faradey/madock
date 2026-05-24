@@ -2,3 +2,4 @@
 RUN mkdir /var/www/.npm && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www/.npm
 <<<if{{{php/nodejs/enabled}}}>>>RUN apt install nodejs -y<<<endif>>>
 <<<if{{{php/nodejs/enabled}}}>>>RUN npm install -g grunt-cli<<<endif>>>
+<<<if{{{php/yarn/enabled}}}>>>RUN npm install -g yarn<<<endif>>>

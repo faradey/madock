@@ -82,6 +82,26 @@ func DetectFromComposer(projectPath string) DetectionResult {
 		return result
 	}
 
+	// Check for Sylius — Sylius-Standard requires `sylius/sylius` directly;
+	// downstream projects typically require `sylius/sylius` or one of the
+	// component bundles.
+	if version, ok := composer.Require["sylius/sylius"]; ok {
+		result.Platform = "sylius"
+		result.Language = "php"
+		result.PlatformVersion = cleanVersion(version)
+		result.Detected = true
+		result.Source = "sylius/sylius"
+		return result
+	}
+	if version, ok := composer.Require["sylius/sylius-standard"]; ok {
+		result.Platform = "sylius"
+		result.Language = "php"
+		result.PlatformVersion = cleanVersion(version)
+		result.Detected = true
+		result.Source = "sylius/sylius-standard"
+		return result
+	}
+
 	// Check for PrestaShop
 	if version, ok := composer.Require["prestashop/prestashop"]; ok {
 		result.Platform = "prestashop"
@@ -147,6 +167,13 @@ func DetectFromComposerLock(projectPath string) DetectionResult {
 			return result
 		case "shopware/core":
 			result.Platform = "shopware"
+			result.PlatformVersion = cleanVersion(pkg.Version)
+			result.Detected = true
+			result.Source = pkg.Name + " (from lock)"
+			return result
+		case "sylius/sylius", "sylius/sylius-standard":
+			result.Platform = "sylius"
+			result.Language = "php"
 			result.PlatformVersion = cleanVersion(pkg.Version)
 			result.Detected = true
 			result.Source = pkg.Name + " (from lock)"

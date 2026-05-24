@@ -63,6 +63,9 @@ func init() {
 	RegisterInstallHandler("spree", func(projectName, platformVersion string, _ map[string]string) {
 		Spree(projectName, platformVersion)
 	})
+	RegisterInstallHandler("sylius", func(projectName, platformVersion string, _ map[string]string) {
+		Sylius(projectName, platformVersion, false)
+	})
 }
 
 func Execute() {
@@ -916,4 +919,217 @@ func extractSprePublishableKey(rubyContainer, workdir string) string {
 		}
 	}
 	return ""
+}
+
+func Sylius(projectName, platformVer string, isSampleData bool) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+	if host == "" {
+		host = "loc." + projectName + ".com"
+	}
+
+	// URL-encode db creds — passwords with `@:/?#` would otherwise
+	// break the Doctrine DSN parser.
+	dbUser := url.QueryEscape(projectConf["db/user"])
+	dbPassword := url.QueryEscape(projectConf["db/password"])
+	dbName := projectConf["db/database"]
+	if dbName == "" {
+		dbName = "sylius"
+	}
+	// Doctrine serverVersion needs a 3-segment value (`major.minor.patch`)
+	// — its regex bails on shorter strings ("Invalid platform version"
+	// in FileLoader.php line 190). Pad incomplete versions before
+	// building the DSN.
+	dbVer := projectConf["db/version"]
+	if dbVer == "" {
+		dbVer = "11.4.0"
+	} else if strings.Count(dbVer, ".") < 2 {
+		dbVer = dbVer + ".0"
+	}
+
+	// Pick the DSN scheme + version prefix from the user-selected
+	// engine. Sylius supports both via Doctrine — MariaDB/MySQL is
+	// the upstream default, PostgreSQL works once the DSN is right.
+	var dbURL string
+	switch strings.ToLower(projectConf["db/type"]) {
+	case "postgresql", "postgres":
+		dbURL = "postgresql://" + dbUser + ":" + dbPassword + "@db:5432/" + dbName + "?serverVersion=" + dbVer
+	case "mysql":
+		dbURL = "mysql://" + dbUser + ":" + dbPassword + "@db:3306/" + dbName + "?serverVersion=" + dbVer + "&charset=utf8mb4"
+	default:
+		// MariaDB (default for Sylius)
+		dbURL = "mysql://" + dbUser + ":" + dbPassword + "@db:3306/" + dbName + "?serverVersion=mariadb-" + dbVer + "&charset=utf8mb4"
+	}
+	// Mailpit runs as a shared aruntime container on the host (not on
+	// the per-project docker network), bound to port 1025. The PHP
+	// container reaches it through host.docker.internal which compose
+	// already pins via extra_hosts.
+	mailerDSN := "smtp://host.docker.internal:1025"
+
+	// Patch .env (or .env.local — Symfony's standard layering) so
+	// Doctrine + Messenger + Mailer point at the docker hostnames.
+	// Idempotent: we always (re)write .env.local with our values,
+	// leaving .env untouched as the upstream baseline.
+	envBody := "APP_ENV=dev\n" +
+		"APP_DEBUG=1\n" +
+		"APP_SECRET=changeme-madock-dev-secret\n" +
+		"DATABASE_URL=\"" + dbURL + "\"\n" +
+		"MAILER_DSN=\"" + mailerDSN + "\"\n" +
+		"MAILER_URL=\"" + mailerDSN + "\"\n" +
+		"MESSENGER_TRANSPORT_DSN=\"doctrine://default?auto_setup=0\"\n" +
+		"SYLIUS_STORE_URL=\"https://" + host + "\"\n"
+	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env.local"
+
+	// Sylius bootstrap:
+	//   composer install                       - PHP deps
+	//   doctrine:database:create + migrate     - schema
+	//   sylius:install --no-interaction        - admin user + base config
+	//   sylius:fixtures:load default           - channels, taxa, products,
+	//                                            promotions. Always runs;
+	//                                            without it the storefront
+	//                                            500s with "Channel could
+	//                                            not be found!"
+	//   doctrine:query:sql UPDATE channel host - point the seeded channels
+	//                                            at the project's nginx
+	//                                            host (Sylius resolves
+	//                                            channels by hostname; the
+	//                                            default fixtures use
+	//                                            "localhost" / wildcards
+	//                                            that don't match *.test)
+	//   yarn install + yarn build              - Webpack Encore frontend
+	//                                            assets — without them
+	//                                            /admin/login throws
+	//                                            "entrypoints.json not
+	//                                            found"
+	sqlEsc := func(s string) string { return strings.ReplaceAll(s, "'", "''") }
+	pinChannel := "php bin/console doctrine:query:sql \"UPDATE sylius_channel SET hostname='" + sqlEsc(host) + "'\""
+
+	// Sylius-Standard ships exactly one fixture suite — `default` —
+	// which seeds channels, products, customers, orders, promotions.
+	// `sylius:install --no-interaction` falls back to it anyway when
+	// no `--fixture-suite` is passed. The `--sample-data` flag is
+	// honored for API consistency with other PHP platforms but maps
+	// to the same suite either way (upstream Sylius doesn't expose a
+	// bare-bones alternative — projects that want a slim demo
+	// register their own suite in `config/packages/sylius_fixtures.yaml`
+	// and override via `sylius/install/fixture_suite` in config.xml).
+	fixtureSuite := configs.GetCurrentProjectConfig()["sylius/install/fixture_suite"]
+	if fixtureSuite == "" {
+		fixtureSuite = "default"
+	}
+	_ = isSampleData
+
+	// Admin credentials come from the shared magento/admin_* config
+	// (same defaults as Magento/Shopware/PrestaShop). Sylius's
+	// fixture suite seeds a `sylius`/`sylius` admin row; we rewrite
+	// its username/email/password/first_name/last_name to match the
+	// project config so users have one set of creds across platforms.
+	//
+	// Hash via Symfony's `security:hash-password` helper (Argon2id),
+	// then UPDATE the seeded row. WHERE clause covers both the
+	// fixture-named admin (username='sylius') and a generic "lone
+	// admin" fallback when a non-default suite renamed it.
+	//
+	// The `minimum` fixture suite does NOT seed an admin row, so this
+	// UPDATE is a no-op there — users on that path keep the empty
+	// state and create their admin manually via
+	// `madock sylius sylius:admin-user:create`.
+	adminUser := projectConf["magento/admin_user"]
+	if adminUser == "" {
+		adminUser = "admin"
+	}
+	adminPass := projectConf["magento/admin_password"]
+	if adminPass == "" {
+		adminPass = "admin123"
+	}
+	adminEmail := projectConf["magento/admin_email"]
+	if adminEmail == "" {
+		adminEmail = "admin@admin.com"
+	}
+	adminFN := projectConf["magento/admin_first_name"]
+	if adminFN == "" {
+		adminFN = "admin"
+	}
+	adminLN := projectConf["magento/admin_last_name"]
+	if adminLN == "" {
+		adminLN = "admin"
+	}
+	// Update BOTH `username`/`email` AND `username_canonical`/
+	// `email_canonical` — Sylius's login lookup hits the canonical
+	// columns (FOSUserBundle convention), so leaving the canonical
+	// rows as `sylius`/`sylius@example.com` from fixtures fails the
+	// login with "Invalid credentials" even when the password hash
+	// is right. Sylius canonicalizes via lowercase, so we mirror.
+	adminUserCanon := strings.ToLower(adminUser)
+	adminEmailCanon := strings.ToLower(adminEmail)
+	adminPatch := "HASH=$(php bin/console security:hash-password " +
+		shellSingleQuote(adminPass) +
+		` 'Sylius\Component\Core\Model\AdminUser' --no-ansi 2>/dev/null | grep -oE '[$]argon2[^ ]+' | head -1) && ` +
+		`php bin/console doctrine:query:sql "UPDATE sylius_admin_user SET username='` + sqlEsc(adminUser) +
+		`', username_canonical='` + sqlEsc(adminUserCanon) +
+		`', email='` + sqlEsc(adminEmail) +
+		`', email_canonical='` + sqlEsc(adminEmailCanon) +
+		`', password='${HASH}', first_name='` + sqlEsc(adminFN) +
+		`', last_name='` + sqlEsc(adminLN) +
+		`', enabled=1 WHERE username='sylius' OR id=(SELECT MIN(id) FROM (SELECT id FROM sylius_admin_user) t)"`
+
+	// Idempotency: the .madock-installed marker prevents
+	// `sylius:install` + `sylius:fixtures:load` from re-running on
+	// subsequent `madock install` invocations. Both commands create
+	// new rows (channels, taxa, products, orders, admin) without
+	// checking for existing data — re-running them duplicates the
+	// catalog and breaks the storefront. Everything else (composer,
+	// migrations, channel pin, admin patch, yarn, cache:warmup) is
+	// already idempotent so it runs every time and stays in sync
+	// with the latest config.
+	//
+	// Delete the marker to force a re-install: `rm -f .madock-installed`
+	// inside the project directory.
+	// `sylius:install` is a wizard that, in non-interactive mode
+	// without --fixture-suite, defaults to the `default` suite (87
+	// products + sample orders). Pass the selected suite explicitly
+	// so the --sample-data flag actually toggles the data set.
+	// `sylius:install` calls fixtures internally, so we don't run
+	// `sylius:fixtures:load` separately.
+	initialSetup := "if [ ! -f .madock-installed ]; then" +
+		" php bin/console sylius:install --no-interaction --fixture-suite=" + fixtureSuite +
+		" && touch .madock-installed;" +
+		" fi"
+
+	installCommand := envWrite +
+		" && composer install --no-interaction --prefer-dist" +
+		" && php bin/console doctrine:database:create --if-not-exists --no-interaction" +
+		" && php bin/console doctrine:migrations:migrate --no-interaction" +
+		" && " + initialSetup +
+		" && " + pinChannel +
+		" && " + adminPatch +
+		" && (command -v yarn >/dev/null 2>&1 && yarn install || true)" +
+		" && (command -v yarn >/dev/null 2>&1 && yarn build || true)" +
+		" && php bin/console assets:install --symlink --no-interaction" +
+		" && php bin/console cache:clear --no-warmup" +
+		" && php bin/console cache:warmup"
+
+	workdir := projectConf["workdir"]
+	if workdir == "" {
+		workdir = "/var/www/html"
+	}
+
+	fmt.Println(installCommand)
+	phpContainer := docker.GetContainerName(projectConf, projectName, "php")
+	err := docker.ContainerExec(phpContainer, "www-data", true, "bash", "-c", "cd "+workdir+" && "+installCommand)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Sylius installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Sylius Storefront URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Sylius Admin URI: /admin")
+	fmtc.SuccessLn("[SUCCESS]: Sylius Admin User: " + adminUser)
+	fmtc.SuccessLn("[SUCCESS]: Sylius Admin Password: " + adminPass)
+	fmtc.SuccessLn("[SUCCESS]: Sylius Admin Email: " + adminEmail)
 }

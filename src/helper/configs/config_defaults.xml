@@ -248,6 +248,14 @@
                     <git_url>https://github.com/spree/storefront.git</git_url>
                 </storefront>
             </spree>
+            <sylius>
+                <messenger>
+                    <enabled>false</enabled>
+                </messenger>
+                <encore>
+                    <enabled>false</enabled>
+                </encore>
+            </sylius>
             <proxy>
                 <enabled>true</enabled>
                 <timeout>
