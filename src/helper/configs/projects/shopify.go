@@ -83,7 +83,16 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 		config.Set("db/root_password", configs2.GetOption("db/root_password", generalConf, projectConf))
 		config.Set("db/user", configs2.GetOption("db/user", generalConf, projectConf))
 		config.Set("db/password", configs2.GetOption("db/password", generalConf, projectConf))
-		config.Set("db/database", configs2.GetOption("db/database", generalConf, projectConf))
+		// Default database name for PHP-stack Shopify presets when
+		// neither global nor project config supplies one. Keeps the
+		// db container's MYSQL_DATABASE non-empty so Laravel /
+		// shopify-api scripts can connect on first install (the
+		// install handler falls back to the same "shopify" string).
+		dbDatabase := configs2.GetOption("db/database", generalConf, projectConf)
+		if dbDatabase == "" {
+			dbDatabase = "shopify"
+		}
+		config.Set("db/database", dbDatabase)
 
 		// Redis on by default for PHP presets — Laravel +
 		// shopify-api SDK both ship Redis-backed session/cache

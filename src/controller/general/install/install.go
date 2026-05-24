@@ -1182,32 +1182,142 @@ func shopifyInstallHydrogen(projectConf map[string]string, projectName, host, wo
 	// Hydrogen's default `dev` script binds to 127.0.0.1, so nginx
 	// gets 502. Patch package.json to add `--host 0.0.0.0` so the
 	// proxy can reach the dev server. Idempotent via marker.
-	// `shopify hydrogen dev --host` is a boolean flag that exposes
-	// the dev server on the local network (0.0.0.0). Without it the
-	// server binds to 127.0.0.1 and nginx gets 502. Idempotent via
-	// includes-check on the existing scripts.dev line.
-	patchDev := `node -e "const fs=require('fs');const p='package.json';if(!fs.existsSync(p))process.exit(0);const j=JSON.parse(fs.readFileSync(p,'utf8'));if(!j.scripts||!j.scripts.dev)process.exit(0);if(j.scripts.dev.includes('--host'))process.exit(0);j.scripts.dev=j.scripts.dev+' --host';fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('[madock] package.json: added --host to dev script');"`
+	// All three patches written to a single temp JS file inside the
+	// container via heredoc — avoids the bash double-quote +
+	// node -e escape nightmare and makes each patch idempotent +
+	// noisy-on-skip so future Hydrogen / Vite upgrades surface as
+	// install-time warnings instead of silent failures.
+	//
+	// Patches:
+	//   1. package.json scripts.dev: append `--host` so Hydrogen's
+	//      dev server binds 0.0.0.0 (default: 127.0.0.1 → nginx 502)
+	//   2. vite.config.{ts,js,mjs}: inject server.allowedHosts:true
+	//      so Vite host header check doesn't 403 the project's
+	//      *.test domain. Multiple defineConfig / export default
+	//      patterns supported
+	//   3. node_modules/vite/.../*.js: short-circuit
+	//      isHostAllowedInternal to return true. Belt-and-suspenders
+	//      for when Hydrogen's Oxygen plugin clobbers the vite
+	//      config patch. File location varies across Vite versions
+	//      so we glob node_modules/vite/dist for any .js that
+	//      contains the function definition
+	hydrogenPatches := `cat > /tmp/madock-hydrogen-patch.js <<'PATCH_EOF'
+'use strict';
+const fs = require('fs');
+const path = require('path');
 
-	// Patch vite.config.{ts,js} to set `server.allowedHosts: true`
-	// (or merge into existing server config). Without it Vite — which
-	// Hydrogen wraps — blocks requests with unknown `Host` header
-	// ("Blocked request. This host ... is not allowed. Add to
-	// server.allowedHosts."). Idempotent via marker comment.
-	patchVite := `node -e "const fs=require('fs');for(const p of ['vite.config.ts','vite.config.js']){if(!fs.existsSync(p))continue;let c=fs.readFileSync(p,'utf8');if(c.includes('madock-allowed-hosts'))process.exit(0);if(c.includes('defineConfig({')){c=c.replace('defineConfig({','defineConfig({\\n  server: { allowedHosts: true }, /* madock-allowed-hosts */');fs.writeFileSync(p,c);console.log('[madock] '+p+': added server.allowedHosts=true');}break;}"`
+// --- 1. package.json scripts.dev --------------------------------
+(function patchDev() {
+  const p = 'package.json';
+  if (!fs.existsSync(p)) {
+    console.warn('[madock] hydrogen-patch: package.json missing — skipped');
+    return;
+  }
+  const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+  if (!j.scripts || !j.scripts.dev) {
+    console.warn('[madock] hydrogen-patch: scripts.dev missing — skipped');
+    return;
+  }
+  if (j.scripts.dev.includes('--host')) {
+    return; // already patched (or user already added --host)
+  }
+  j.scripts.dev = j.scripts.dev + ' --host';
+  fs.writeFileSync(p, JSON.stringify(j, null, 2));
+  console.log('[madock] package.json: appended --host to scripts.dev');
+})();
 
-	// Belt-and-suspenders: Hydrogen's Oxygen plugin sometimes
-	// rebuilds the Vite server with options that ignore the user's
-	// vite.config.ts server settings. Patch Vite's internal
-	// isHostAllowedInternal to short-circuit to `true` so the host
-	// check is effectively bypassed inside the container. Idempotent
-	// via marker. Pure dev convenience — this patches node_modules,
-	// not the published package.
-	patchViteCore := `node -e "const fs=require('fs');const path='node_modules/vite/dist/node/chunks/node.js';if(!fs.existsSync(path))process.exit(0);let c=fs.readFileSync(path,'utf8');if(c.includes('madock-host-allow-all'))process.exit(0);c=c.replace('function isHostAllowedInternal(hostHeader, allowedHosts) {','function isHostAllowedInternal(hostHeader, allowedHosts) {\\n  return true; /* madock-host-allow-all */');fs.writeFileSync(path,c);console.log('[madock] vite: isHostAllowedInternal short-circuited to true');"`
+// --- 2. vite.config.{ts,js,mjs} ---------------------------------
+(function patchViteConfig() {
+  const tries = ['vite.config.ts', 'vite.config.js', 'vite.config.mjs'];
+  const inject = 'server: { allowedHosts: true }, /* madock-allowed-hosts */';
+  for (const p of tries) {
+    if (!fs.existsSync(p)) continue;
+    let c = fs.readFileSync(p, 'utf8');
+    if (c.includes('madock-allowed-hosts')) {
+      return; // already patched
+    }
+    const patterns = [
+      // defineConfig({, with optional whitespace, optional generic type arg
+      [/defineConfig\s*(?:<[^>]+>)?\s*\(\s*\{/, function (m) { return m + '\n  ' + inject + '\n  '; }],
+      // export default { (no defineConfig wrapper)
+      [/export\s+default\s+\{/, function (m) { return m + '\n  ' + inject + '\n  '; }],
+    ];
+    for (const [re, repl] of patterns) {
+      const m = c.match(re);
+      if (m) {
+        c = c.replace(re, repl(m[0]));
+        fs.writeFileSync(p, c);
+        console.log('[madock] ' + p + ': added server.allowedHosts:true');
+        return;
+      }
+    }
+    console.warn('[madock] ' + p + ": no defineConfig/export default pattern matched — add server.allowedHosts manually");
+    return;
+  }
+  console.warn('[madock] hydrogen-patch: vite.config.{ts,js,mjs} not found — skipped');
+})();
+
+// --- 3. node_modules/vite/dist/**/*.js (isHostAllowedInternal) --
+(function patchViteCore() {
+  const root = 'node_modules/vite/dist';
+  if (!fs.existsSync(root)) {
+    console.warn('[madock] hydrogen-patch: node_modules/vite/dist missing — skipped');
+    return;
+  }
+  const stack = [root];
+  const matches = [];
+  while (stack.length) {
+    const dir = stack.pop();
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+    catch (_) { continue; }
+    for (const e of entries) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        stack.push(full);
+      } else if (e.isFile() && e.name.endsWith('.js')) {
+        matches.push(full);
+      }
+    }
+  }
+  let patchedCount = 0;
+  for (const f of matches) {
+    let c;
+    try { c = fs.readFileSync(f, 'utf8'); }
+    catch (_) { continue; }
+    if (c.includes('madock-host-allow-all')) {
+      patchedCount++;
+      continue;
+    }
+    // Match any function signature that contains "isHostAllowedInternal"
+    // — Vite changes minified/non-minified output between versions.
+    const re = /function\s+isHostAllowedInternal\s*\([^)]*\)\s*\{/;
+    const m = c.match(re);
+    if (!m) continue;
+    c = c.replace(re, m[0] + '\n  return true; /* madock-host-allow-all */');
+    fs.writeFileSync(f, c);
+    console.log('[madock] vite: short-circuited isHostAllowedInternal in ' + f);
+    patchedCount++;
+  }
+  if (patchedCount === 0) {
+    console.warn('[madock] hydrogen-patch: isHostAllowedInternal not found in any node_modules/vite/dist/**/*.js — Vite layout changed?');
+  }
+})();
+PATCH_EOF
+node /tmp/madock-hydrogen-patch.js && rm -f /tmp/madock-hydrogen-patch.js`
 
 	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
-	cmd := patchDev + " && " + patchVite +
+	// Stage of operations:
+	//   1. Pre-install patches: package.json + vite.config.ts
+	//   2. Install deps (npm install / yarn install)
+	//   3. Post-install patch: node_modules/vite — needs vendor on disk
+	//
+	// Patch #3 is run a second time inside the same node script
+	// (above) but we also invoke it explicitly post-install in case
+	// the first pass returned the "vite missing" warning.
+	cmd := hydrogenPatches +
 		" && (test -f yarn.lock && yarn install || npm install)" +
-		" && " + patchViteCore
+		" && " + hydrogenPatches
 	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
 		fmtc.WarningLn("Hydrogen install failed: " + err.Error())
 	}
@@ -1230,9 +1340,28 @@ func shopifyInstallAppRemix(projectConf map[string]string, projectName, host, wo
 	// ngrok-style tunnel — neither of which work from a non-tty
 	// container. Rewrite the script to `sleep infinity` so the
 	// container stays up after install; users open `madock bash` and
-	// run `npx shopify app dev` to start the real dev server when
+	// run `npm run dev:shopify` to start the real dev server when
 	// they've signed in to the Partner CLI.
-	patchDev := `node -e "const fs=require('fs');const p='package.json';if(!fs.existsSync(p))process.exit(0);const j=JSON.parse(fs.readFileSync(p,'utf8'));if(j.scripts&&j.scripts.dev&&!j.scripts.dev.includes('madock-idle')){j.scripts['dev:shopify']=j.scripts.dev;j.scripts.dev='echo madock-idle; sleep infinity';fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('[madock] package.json: parked scripts.dev as scripts.dev:shopify; run via madock bash');}"`
+	//
+	// Idempotency rules:
+	//   - if scripts.dev already contains 'madock-idle' → no-op
+	//   - if scripts['dev:shopify'] already exists → no-op (user
+	//     can edit scripts.dev freely after first install)
+	//   - else save current scripts.dev into scripts['dev:shopify']
+	//     and park scripts.dev as `sleep infinity`
+	patchDev := `node -e "
+const fs=require('fs');
+const p='package.json';
+if(!fs.existsSync(p)) process.exit(0);
+const j=JSON.parse(fs.readFileSync(p,'utf8'));
+if(!j.scripts||!j.scripts.dev) process.exit(0);
+if(j.scripts.dev.includes('madock-idle')) process.exit(0);
+if(j.scripts['dev:shopify']){console.log('[madock] package.json: scripts.dev:shopify already exists, leaving scripts.dev untouched');process.exit(0);}
+j.scripts['dev:shopify']=j.scripts.dev;
+j.scripts.dev='echo madock-idle; sleep infinity';
+fs.writeFileSync(p,JSON.stringify(j,null,2));
+console.log('[madock] package.json: parked scripts.dev as scripts.dev:shopify');
+"`
 
 	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
 	installCommand := patchDev +
@@ -1277,28 +1406,54 @@ func shopifyInstallLaravel(projectConf map[string]string, projectName, host, wor
 	// Laravel `.env` is line-based, not URL-based. Laravel 11+ ships
 	// the DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD lines
 	// commented out by default (relying on the sqlite default). Sed
-	// patterns must match both `^DB_FOO=` and `^# *DB_FOO=` forms so
-	// our values land regardless of whether the upstream skeleton
-	// commented them.
+	// patterns must match both `^DB_FOO=` and `^# *DB_FOO=` forms.
+	//
+	// Sed replacement-side escaping: dbUser + dbPassword are
+	// url.QueryEscape'd so `&` `|` `/` `\` end up percent-encoded —
+	// safe to drop into the sed `s|...|<repl>|` block. dbName isn't
+	// percent-encoded (mysql identifiers don't allow most special
+	// chars anyway), but escape sed metacharacters just in case the
+	// project config carries an unusual database name.
+	sedRepl := func(s string) string {
+		s = strings.ReplaceAll(s, `\`, `\\`)
+		s = strings.ReplaceAll(s, `|`, `\|`)
+		s = strings.ReplaceAll(s, `&`, `\&`)
+		return s
+	}
+	dbNameEsc := sedRepl(dbName)
+	hostEsc := sedRepl(host)
+
 	envPatch := "(test -f .env || cp .env.example .env)" +
-		" && sed -i 's|^APP_URL=.*|APP_URL=https://" + host + "|' .env" +
-		" && sed -i 's|^# *APP_URL=.*|APP_URL=https://" + host + "|' .env" +
+		" && sed -i 's|^APP_URL=.*|APP_URL=https://" + hostEsc + "|' .env" +
+		" && sed -i 's|^# *APP_URL=.*|APP_URL=https://" + hostEsc + "|' .env" +
 		" && sed -i 's|^DB_CONNECTION=.*|DB_CONNECTION=mysql|' .env" +
 		" && sed -i 's|^# *DB_CONNECTION=.*|DB_CONNECTION=mysql|' .env" +
 		" && sed -i 's|^DB_HOST=.*|DB_HOST=db|' .env" +
 		" && sed -i 's|^# *DB_HOST=.*|DB_HOST=db|' .env" +
 		" && sed -i 's|^DB_PORT=.*|DB_PORT=3306|' .env" +
 		" && sed -i 's|^# *DB_PORT=.*|DB_PORT=3306|' .env" +
-		" && sed -i 's|^DB_DATABASE=.*|DB_DATABASE=" + dbName + "|' .env" +
-		" && sed -i 's|^# *DB_DATABASE=.*|DB_DATABASE=" + dbName + "|' .env" +
+		" && sed -i 's|^DB_DATABASE=.*|DB_DATABASE=" + dbNameEsc + "|' .env" +
+		" && sed -i 's|^# *DB_DATABASE=.*|DB_DATABASE=" + dbNameEsc + "|' .env" +
 		" && sed -i 's|^DB_USERNAME=.*|DB_USERNAME=" + dbUser + "|' .env" +
 		" && sed -i 's|^# *DB_USERNAME=.*|DB_USERNAME=" + dbUser + "|' .env" +
 		" && sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=" + dbPassword + "|' .env" +
 		" && sed -i 's|^# *DB_PASSWORD=.*|DB_PASSWORD=" + dbPassword + "|' .env"
 
+	// Robust laravel-shopify require: check the actual vendor dir,
+	// not just `composer show` (a partial install leaves composer.json
+	// with the dep listed but vendor/ missing or corrupted, and
+	// `composer show` still exits 0 in that state, skipping require).
+	// `composer dump-autoload -o` after require ensures the autoloader
+	// picks up the new package even if a previous install left a
+	// stale optimized autoload.
+	requireLaravelShopify := "if [ ! -f vendor/kyon147/laravel-shopify/composer.json ]; then" +
+		" composer require kyon147/laravel-shopify --no-interaction;" +
+		" composer dump-autoload -o;" +
+		" fi"
+
 	installCommand := envPatch +
 		" && composer install --no-interaction --prefer-dist" +
-		" && (composer show kyon147/laravel-shopify >/dev/null 2>&1 || composer require kyon147/laravel-shopify --no-interaction)" +
+		" && " + requireLaravelShopify +
 		" && php artisan key:generate --force" +
 		" && php artisan migrate --force" +
 		" && php artisan vendor:publish --tag=shopify-config --force" +
