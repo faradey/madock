@@ -1058,14 +1058,24 @@ func Sylius(projectName, platformVer string, isSampleData bool) {
 	if adminLN == "" {
 		adminLN = "admin"
 	}
+	// Update BOTH `username`/`email` AND `username_canonical`/
+	// `email_canonical` — Sylius's login lookup hits the canonical
+	// columns (FOSUserBundle convention), so leaving the canonical
+	// rows as `sylius`/`sylius@example.com` from fixtures fails the
+	// login with "Invalid credentials" even when the password hash
+	// is right. Sylius canonicalizes via lowercase, so we mirror.
+	adminUserCanon := strings.ToLower(adminUser)
+	adminEmailCanon := strings.ToLower(adminEmail)
 	adminPatch := "HASH=$(php bin/console security:hash-password " +
 		shellSingleQuote(adminPass) +
 		` 'Sylius\Component\Core\Model\AdminUser' --no-ansi 2>/dev/null | grep -oE '[$]argon2[^ ]+' | head -1) && ` +
 		`php bin/console doctrine:query:sql "UPDATE sylius_admin_user SET username='` + sqlEsc(adminUser) +
+		`', username_canonical='` + sqlEsc(adminUserCanon) +
 		`', email='` + sqlEsc(adminEmail) +
+		`', email_canonical='` + sqlEsc(adminEmailCanon) +
 		`', password='${HASH}', first_name='` + sqlEsc(adminFN) +
 		`', last_name='` + sqlEsc(adminLN) +
-		`' WHERE username='sylius' OR id=(SELECT MIN(id) FROM (SELECT id FROM sylius_admin_user) t)"`
+		`', enabled=1 WHERE username='sylius' OR id=(SELECT MIN(id) FROM (SELECT id FROM sylius_admin_user) t)"`
 
 	// Idempotency: the .madock-installed marker prevents
 	// `sylius:install` + `sylius:fixtures:load` from re-running on
