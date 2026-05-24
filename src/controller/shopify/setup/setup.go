@@ -209,9 +209,14 @@ func DownloadShopify(presetCode string) {
 		cmd = exec.Command("npm", "create", "-y", "@shopify/hydrogen@latest", "--",
 			"--path", ".", "--quickstart", "--language", "ts", "--no-install-deps")
 	case "app-remix":
-		fmtc.InfoIconLn("Scaffolding Shopify App (Remix) into " + target)
-		cmd = exec.Command("npm", "init", "-y", "@shopify/app@latest", "--",
-			"--name", "shopify-app", "--template", "remix", "--no-install-deps")
+		fmtc.InfoIconLn("Cloning Shopify App Remix template into " + target)
+		// `npm init @shopify/app` argument parsing is fragile across
+		// CLI versions (`--template`, `--name`, `--no-install-deps`
+		// were renamed several times in 2024). Clone the upstream
+		// template directly — it's the same content `npm init` would
+		// scaffold, just without the wizard step.
+		cmd = exec.Command("git", "clone", "--depth", "1",
+			"https://github.com/Shopify/shopify-app-template-remix.git", ".")
 	case "laravel-shopify":
 		fmtc.InfoIconLn("Scaffolding Laravel + Kyon147/laravel-shopify into " + target)
 		// Two-step: laravel skeleton, then composer require the
@@ -221,10 +226,12 @@ func DownloadShopify(presetCode string) {
 			"laravel/laravel", ".")
 	default:
 		fmtc.InfoIconLn("Initialising shopify-api-php project in " + target)
+		// Pin to ^6.0 — Shopify's PHP SDK latest stable is the v6
+		// line (v7 isn't published yet on Packagist as of writing).
 		cmd = exec.Command("composer", "init", "--no-interaction",
 			"--name=shopify/api-project",
 			"--type=project",
-			"--require=shopify/shopify-api:^7.0",
+			"--require=shopify/shopify-api:^6.0",
 			"--stability=stable")
 	}
 	cmd.Dir = target

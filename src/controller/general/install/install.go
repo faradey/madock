@@ -1195,8 +1195,19 @@ func shopifyInstallHydrogen(projectConf map[string]string, projectName, host, wo
 	// server.allowedHosts."). Idempotent via marker comment.
 	patchVite := `node -e "const fs=require('fs');for(const p of ['vite.config.ts','vite.config.js']){if(!fs.existsSync(p))continue;let c=fs.readFileSync(p,'utf8');if(c.includes('madock-allowed-hosts'))process.exit(0);if(c.includes('defineConfig({')){c=c.replace('defineConfig({','defineConfig({\\n  server: { allowedHosts: true }, /* madock-allowed-hosts */');fs.writeFileSync(p,c);console.log('[madock] '+p+': added server.allowedHosts=true');}break;}"`
 
+	// Belt-and-suspenders: Hydrogen's Oxygen plugin sometimes
+	// rebuilds the Vite server with options that ignore the user's
+	// vite.config.ts server settings. Patch Vite's internal
+	// isHostAllowedInternal to short-circuit to `true` so the host
+	// check is effectively bypassed inside the container. Idempotent
+	// via marker. Pure dev convenience — this patches node_modules,
+	// not the published package.
+	patchViteCore := `node -e "const fs=require('fs');const path='node_modules/vite/dist/node/chunks/node.js';if(!fs.existsSync(path))process.exit(0);let c=fs.readFileSync(path,'utf8');if(c.includes('madock-host-allow-all'))process.exit(0);c=c.replace('function isHostAllowedInternal(hostHeader, allowedHosts) {','function isHostAllowedInternal(hostHeader, allowedHosts) {\\n  return true; /* madock-host-allow-all */');fs.writeFileSync(path,c);console.log('[madock] vite: isHostAllowedInternal short-circuited to true');"`
+
 	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
-	cmd := patchDev + " && " + patchVite + " && (test -f yarn.lock && yarn install || npm install)"
+	cmd := patchDev + " && " + patchVite +
+		" && (test -f yarn.lock && yarn install || npm install)" +
+		" && " + patchViteCore
 	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
 		fmtc.WarningLn("Hydrogen install failed: " + err.Error())
 	}
@@ -1211,11 +1222,21 @@ func shopifyInstallHydrogen(projectConf map[string]string, projectName, host, wo
 
 func shopifyInstallAppRemix(projectConf map[string]string, projectName, host, workdir string) {
 	// Shopify App template uses Prisma with SQLite by default — no DB
-	// container needed. `npm install` + `npx prisma migrate dev` to
-	// create the session store, then the smart entrypoint starts
-	// `npm run dev` (which spawns shopify CLI tunnel).
+	// container needed. `npm install` + prisma generate + migrate
+	// deploy primes the session store.
+	//
+	// The template's `dev` script is `shopify app dev` which expects
+	// the Shopify CLI on PATH AND needs interactive Partner auth +
+	// ngrok-style tunnel — neither of which work from a non-tty
+	// container. Rewrite the script to `sleep infinity` so the
+	// container stays up after install; users open `madock bash` and
+	// run `npx shopify app dev` to start the real dev server when
+	// they've signed in to the Partner CLI.
+	patchDev := `node -e "const fs=require('fs');const p='package.json';if(!fs.existsSync(p))process.exit(0);const j=JSON.parse(fs.readFileSync(p,'utf8'));if(j.scripts&&j.scripts.dev&&!j.scripts.dev.includes('madock-idle')){j.scripts['dev:shopify']=j.scripts.dev;j.scripts.dev='echo madock-idle; sleep infinity';fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('[madock] package.json: parked scripts.dev as scripts.dev:shopify; run via madock bash');}"`
+
 	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
-	installCommand := "(test -f yarn.lock && yarn install || npm install)" +
+	installCommand := patchDev +
+		" && (test -f yarn.lock && yarn install || npm install)" +
 		" && (test -f prisma/schema.prisma && (npx prisma generate && npx prisma migrate deploy) || true)"
 	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+installCommand); err != nil {
 		fmtc.WarningLn("Shopify App install failed: " + err.Error())
@@ -1225,16 +1246,18 @@ func shopifyInstallAppRemix(projectConf map[string]string, projectName, host, wo
 	}
 	fmt.Println("")
 	fmtc.SuccessLn("[SUCCESS]: Shopify App (Remix) installed.")
-	fmtc.SuccessLn("[SUCCESS]: Dev URL: https://" + host)
-	fmtc.SuccessLn("[SUCCESS]: Run `madock bash` then `npx shopify app dev` to start the Partner tunnel + Admin install flow.")
+	fmtc.SuccessLn("[SUCCESS]: Container is idle (Shopify App dev needs interactive Partner auth + tunnel).")
+	fmtc.SuccessLn("[SUCCESS]: Run `madock bash` then `npm run dev:shopify` to start the Partner tunnel + Admin install flow.")
 }
 
 func shopifyInstallApiPhp(projectConf map[string]string, projectName, host, workdir string) {
 	// shopify-api-php is a library, not a framework — there's nothing
-	// to migrate. Just `composer install` so the autoloader is ready
-	// for scripts/cron jobs the user writes against the SDK.
+	// to migrate. `composer install` if a composer.lock exists,
+	// otherwise `composer update` to resolve from composer.json (the
+	// download step seeds composer.json without a lock).
 	phpContainer := docker.GetContainerName(projectConf, projectName, "php")
-	if err := docker.ContainerExec(phpContainer, "www-data", true, "bash", "-c", "cd "+workdir+" && composer install --no-interaction --prefer-dist"); err != nil {
+	cmd := "if [ -f composer.lock ]; then composer install --no-interaction --prefer-dist; else composer update --no-interaction --prefer-dist; fi"
+	if err := docker.ContainerExec(phpContainer, "www-data", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
 		fmtc.WarningLn("composer install failed: " + err.Error())
 	}
 	fmt.Println("")
@@ -1251,16 +1274,27 @@ func shopifyInstallLaravel(projectConf map[string]string, projectName, host, wor
 		dbName = "shopify"
 	}
 
-	// Laravel `.env` is line-based, not URL-based. Use sed to set the
-	// DB connection params + APP_URL so artisan picks them up.
+	// Laravel `.env` is line-based, not URL-based. Laravel 11+ ships
+	// the DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD lines
+	// commented out by default (relying on the sqlite default). Sed
+	// patterns must match both `^DB_FOO=` and `^# *DB_FOO=` forms so
+	// our values land regardless of whether the upstream skeleton
+	// commented them.
 	envPatch := "(test -f .env || cp .env.example .env)" +
 		" && sed -i 's|^APP_URL=.*|APP_URL=https://" + host + "|' .env" +
+		" && sed -i 's|^# *APP_URL=.*|APP_URL=https://" + host + "|' .env" +
 		" && sed -i 's|^DB_CONNECTION=.*|DB_CONNECTION=mysql|' .env" +
+		" && sed -i 's|^# *DB_CONNECTION=.*|DB_CONNECTION=mysql|' .env" +
 		" && sed -i 's|^DB_HOST=.*|DB_HOST=db|' .env" +
+		" && sed -i 's|^# *DB_HOST=.*|DB_HOST=db|' .env" +
 		" && sed -i 's|^DB_PORT=.*|DB_PORT=3306|' .env" +
+		" && sed -i 's|^# *DB_PORT=.*|DB_PORT=3306|' .env" +
 		" && sed -i 's|^DB_DATABASE=.*|DB_DATABASE=" + dbName + "|' .env" +
+		" && sed -i 's|^# *DB_DATABASE=.*|DB_DATABASE=" + dbName + "|' .env" +
 		" && sed -i 's|^DB_USERNAME=.*|DB_USERNAME=" + dbUser + "|' .env" +
-		" && sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=" + dbPassword + "|' .env"
+		" && sed -i 's|^# *DB_USERNAME=.*|DB_USERNAME=" + dbUser + "|' .env" +
+		" && sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=" + dbPassword + "|' .env" +
+		" && sed -i 's|^# *DB_PASSWORD=.*|DB_PASSWORD=" + dbPassword + "|' .env"
 
 	installCommand := envPatch +
 		" && composer install --no-interaction --prefer-dist" +

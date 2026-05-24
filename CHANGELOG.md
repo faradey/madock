@@ -1,6 +1,45 @@
 **v3.7.11**
 
+Shopify presets — post-tracer hardening:
+- Hydrogen now renders `/` end-to-end. Two issues that fought the
+  initial tracer:
+  - Hydrogen's Oxygen plugin ignores user-set `server.allowedHosts`
+    in vite.config.ts. Install now also patches Vite's internal
+    `isHostAllowedInternal` in `node_modules/vite/dist/node/chunks/
+    node.js` to short-circuit to `true`. Marker-gated so re-running
+    install is idempotent. Pure dev convenience — patches
+    node_modules only
+  - Hydrogen's Miniflare/undici client rejects `Connection: upgrade`
+    on non-WS requests ("invalid connection header"). Project nginx
+    for Node-only presets now uses an in-block `map $http_upgrade
+    $node_connection_upgrade { default upgrade; '' ''; }` so the
+    Connection header is empty for plain HTTP and only forwarded as
+    `upgrade` for genuine WS handshakes
+- app-remix template clone switched from `npm init @shopify/app@latest`
+  to `git clone shopify-app-template-remix` — the npm init argument
+  parser changed across CLI versions in 2024 and was producing an
+  empty directory. Install also parks the template's `dev` script
+  (which is `shopify app dev`, an interactive Partner-CLI command)
+  as `dev:shopify` and replaces `dev` with `sleep infinity` so the
+  container stays up after install; users start the real dev server
+  via `madock bash` + `npm run dev:shopify` (needs interactive
+  Shopify Partner auth + tunnel — can't run from a non-tty container)
+- laravel-shopify install now correctly rewrites Laravel 11+
+  `.env` files where the DB_* lines ship commented out by default
+  (Laravel switched to SQLite default in 2024). Sed patches handle
+  both `^DB_*=` and `^# *DB_*=` forms
+- api-php composer require pinned to `^6.0` (v7 isn't published yet
+  on Packagist). Install also picks `composer install` vs `composer
+  update` based on whether composer.lock exists — fresh `composer
+  init` projects only have composer.json so update is correct
+- `docker/shopify/php/Dockerfile` no longer hand-rolls the yarn
+  install via GPG keyserver (which was failing with `gpg: keyserver
+  receive failed` on every fresh build). Uses the shared
+  `snippets/dockerfile/php/nodejs` snippet that installs Node + Yarn
+  via npm when `php/nodejs/enabled` / `php/yarn/enabled` are set
+
 Added:
+- Shopify platform now ships with 4 SDK/framework presets so users can pick a stack at setup time instead of inheriting the legacy PHP-only default:
 - Shopify platform now ships with 4 SDK/framework presets so users can pick a stack at setup time instead of inheriting the legacy PHP-only default:
   - `--preset hydrogen` (Node 22 + Remix on Vite, TypeScript) — official headless storefront, deploys to Shopify Oxygen
   - `--preset app-remix` (Node 22 + Remix + Prisma/SQLite) — official embedded Shopify App template
