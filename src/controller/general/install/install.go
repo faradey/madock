@@ -66,6 +66,16 @@ func init() {
 	RegisterInstallHandler("sylius", func(projectName, platformVersion string, _ map[string]string) {
 		Sylius(projectName, platformVersion, false)
 	})
+	RegisterInstallHandler("shopify", func(projectName, platformVersion string, conf map[string]string) {
+		preset := platformVersion
+		if preset == "" {
+			preset = conf["shopify/preset"]
+		}
+		if preset == "" {
+			preset = "api-php"
+		}
+		Shopify(projectName, preset)
+	})
 }
 
 func Execute() {
@@ -1132,4 +1142,141 @@ func Sylius(projectName, platformVer string, isSampleData bool) {
 	fmtc.SuccessLn("[SUCCESS]: Sylius Admin User: " + adminUser)
 	fmtc.SuccessLn("[SUCCESS]: Sylius Admin Password: " + adminPass)
 	fmtc.SuccessLn("[SUCCESS]: Sylius Admin Email: " + adminEmail)
+}
+
+// Shopify dispatches to a preset-specific install routine. Each SDK
+// preset bootstraps with a different toolchain (npm/yarn vs composer)
+// so we keep them in small dedicated handlers instead of one mega
+// switch + shell soup.
+func Shopify(projectName, presetCode string) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+	if host == "" {
+		host = "loc." + projectName + ".com"
+	}
+	workdir := projectConf["workdir"]
+	if workdir == "" {
+		workdir = "/var/www/html"
+	}
+
+	switch presetCode {
+	case "hydrogen":
+		shopifyInstallHydrogen(projectConf, projectName, host, workdir)
+	case "app-remix":
+		shopifyInstallAppRemix(projectConf, projectName, host, workdir)
+	case "laravel-shopify":
+		shopifyInstallLaravel(projectConf, projectName, host, workdir)
+	default:
+		shopifyInstallApiPhp(projectConf, projectName, host, workdir)
+	}
+}
+
+func shopifyInstallHydrogen(projectConf map[string]string, projectName, host, workdir string) {
+	// Hydrogen ships its own dev server. Just yarn/npm install — the
+	// smart nodejs entrypoint then runs `yarn dev` (or npm run dev).
+	//
+	// Hydrogen's default `dev` script binds to 127.0.0.1, so nginx
+	// gets 502. Patch package.json to add `--host 0.0.0.0` so the
+	// proxy can reach the dev server. Idempotent via marker.
+	// `shopify hydrogen dev --host` is a boolean flag that exposes
+	// the dev server on the local network (0.0.0.0). Without it the
+	// server binds to 127.0.0.1 and nginx gets 502. Idempotent via
+	// includes-check on the existing scripts.dev line.
+	patchDev := `node -e "const fs=require('fs');const p='package.json';if(!fs.existsSync(p))process.exit(0);const j=JSON.parse(fs.readFileSync(p,'utf8'));if(!j.scripts||!j.scripts.dev)process.exit(0);if(j.scripts.dev.includes('--host'))process.exit(0);j.scripts.dev=j.scripts.dev+' --host';fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('[madock] package.json: added --host to dev script');"`
+
+	// Patch vite.config.{ts,js} to set `server.allowedHosts: true`
+	// (or merge into existing server config). Without it Vite — which
+	// Hydrogen wraps — blocks requests with unknown `Host` header
+	// ("Blocked request. This host ... is not allowed. Add to
+	// server.allowedHosts."). Idempotent via marker comment.
+	patchVite := `node -e "const fs=require('fs');for(const p of ['vite.config.ts','vite.config.js']){if(!fs.existsSync(p))continue;let c=fs.readFileSync(p,'utf8');if(c.includes('madock-allowed-hosts'))process.exit(0);if(c.includes('defineConfig({')){c=c.replace('defineConfig({','defineConfig({\\n  server: { allowedHosts: true }, /* madock-allowed-hosts */');fs.writeFileSync(p,c);console.log('[madock] '+p+': added server.allowedHosts=true');}break;}"`
+
+	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
+	cmd := patchDev + " && " + patchVite + " && (test -f yarn.lock && yarn install || npm install)"
+	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
+		fmtc.WarningLn("Hydrogen install failed: " + err.Error())
+	}
+	if rerr := exec.Command("docker", "restart", nodejsContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart nodejs container: " + rerr.Error())
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Hydrogen storefront installed.")
+	fmtc.SuccessLn("[SUCCESS]: Storefront URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: To wire it to a real Shopify store edit shopify.config.ts + .env (PUBLIC_STORE_DOMAIN, PUBLIC_STOREFRONT_API_TOKEN).")
+}
+
+func shopifyInstallAppRemix(projectConf map[string]string, projectName, host, workdir string) {
+	// Shopify App template uses Prisma with SQLite by default — no DB
+	// container needed. `npm install` + `npx prisma migrate dev` to
+	// create the session store, then the smart entrypoint starts
+	// `npm run dev` (which spawns shopify CLI tunnel).
+	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
+	installCommand := "(test -f yarn.lock && yarn install || npm install)" +
+		" && (test -f prisma/schema.prisma && (npx prisma generate && npx prisma migrate deploy) || true)"
+	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+installCommand); err != nil {
+		fmtc.WarningLn("Shopify App install failed: " + err.Error())
+	}
+	if rerr := exec.Command("docker", "restart", nodejsContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart nodejs container: " + rerr.Error())
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Shopify App (Remix) installed.")
+	fmtc.SuccessLn("[SUCCESS]: Dev URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Run `madock bash` then `npx shopify app dev` to start the Partner tunnel + Admin install flow.")
+}
+
+func shopifyInstallApiPhp(projectConf map[string]string, projectName, host, workdir string) {
+	// shopify-api-php is a library, not a framework — there's nothing
+	// to migrate. Just `composer install` so the autoloader is ready
+	// for scripts/cron jobs the user writes against the SDK.
+	phpContainer := docker.GetContainerName(projectConf, projectName, "php")
+	if err := docker.ContainerExec(phpContainer, "www-data", true, "bash", "-c", "cd "+workdir+" && composer install --no-interaction --prefer-dist"); err != nil {
+		fmtc.WarningLn("composer install failed: " + err.Error())
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: shopify-api-php project initialised.")
+	fmtc.SuccessLn("[SUCCESS]: Project URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Use `Shopify\\Context::initialize(...)` in your scripts. Docs: https://github.com/Shopify/shopify-api-php")
+}
+
+func shopifyInstallLaravel(projectConf map[string]string, projectName, host, workdir string) {
+	dbUser := url.QueryEscape(projectConf["db/user"])
+	dbPassword := url.QueryEscape(projectConf["db/password"])
+	dbName := projectConf["db/database"]
+	if dbName == "" {
+		dbName = "shopify"
+	}
+
+	// Laravel `.env` is line-based, not URL-based. Use sed to set the
+	// DB connection params + APP_URL so artisan picks them up.
+	envPatch := "(test -f .env || cp .env.example .env)" +
+		" && sed -i 's|^APP_URL=.*|APP_URL=https://" + host + "|' .env" +
+		" && sed -i 's|^DB_CONNECTION=.*|DB_CONNECTION=mysql|' .env" +
+		" && sed -i 's|^DB_HOST=.*|DB_HOST=db|' .env" +
+		" && sed -i 's|^DB_PORT=.*|DB_PORT=3306|' .env" +
+		" && sed -i 's|^DB_DATABASE=.*|DB_DATABASE=" + dbName + "|' .env" +
+		" && sed -i 's|^DB_USERNAME=.*|DB_USERNAME=" + dbUser + "|' .env" +
+		" && sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=" + dbPassword + "|' .env"
+
+	installCommand := envPatch +
+		" && composer install --no-interaction --prefer-dist" +
+		" && (composer show kyon147/laravel-shopify >/dev/null 2>&1 || composer require kyon147/laravel-shopify --no-interaction)" +
+		" && php artisan key:generate --force" +
+		" && php artisan migrate --force" +
+		" && php artisan vendor:publish --tag=shopify-config --force" +
+		" && php artisan vendor:publish --tag=shopify-routes --force"
+
+	phpContainer := docker.GetContainerName(projectConf, projectName, "php")
+	if err := docker.ContainerExec(phpContainer, "www-data", true, "bash", "-c", "cd "+workdir+" && "+installCommand); err != nil {
+		fmtc.WarningLn("Laravel + Kyon147/laravel-shopify install failed: " + err.Error())
+	}
+
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Laravel + Kyon147/laravel-shopify installed.")
+	fmtc.SuccessLn("[SUCCESS]: Project URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Edit config/shopify-app.php (API key/secret/scopes), then visit /authenticate?shop=<your-store>.myshopify.com to wire OAuth.")
 }

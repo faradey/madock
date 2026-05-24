@@ -1,7 +1,9 @@
 {{{include snippets/docker-compose/container-name.yml}}}
 services:
   {{{include snippets/docker-compose/php.yml}}}
+  {{{include snippets/docker-compose/nodejs.yml}}}
   {{{include snippets/docker-compose/nginx.yml}}}
+<<<if{{{php/enabled}}}>>>
   {{{include snippets/docker-compose/db.yml}}}
   {{{include snippets/docker-compose/db-postgresql.yml}}}
   {{{include snippets/docker-compose/db-mongodb.yml}}}
@@ -20,6 +22,7 @@ services:
   {{{include snippets/docker-compose/grafana-prometheus.yml}}}
   {{{include snippets/docker-compose/grafana-mysql-exporter.yml}}}
   {{{include snippets/docker-compose/grafana-rabbitmq-exporter.yml}}}
+<<<endif>>>
   {{{include snippets/docker-compose/claude.yml}}}
 
 {{{include snippets/docker-compose/volumes.yml}}}
