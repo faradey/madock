@@ -60,6 +60,9 @@ func init() {
 	RegisterInstallHandler("saleor", func(projectName, platformVersion string, _ map[string]string) {
 		Saleor(projectName, platformVersion)
 	})
+	RegisterInstallHandler("spree", func(projectName, platformVersion string, _ map[string]string) {
+		Spree(projectName, platformVersion)
+	})
 }
 
 func Execute() {
@@ -680,4 +683,221 @@ func PrestaShop(projectName, platformVer string, isSampleData bool) {
 	fmtc.SuccessLn("[SUCCESS]: PrestaShop Admin URI: /admin")
 	fmtc.SuccessLn("[SUCCESS]: PrestaShop Admin User: " + projectConf["magento/admin_email"])
 	fmtc.SuccessLn("[SUCCESS]: PrestaShop Admin Password: " + projectConf["magento/admin_password"])
+}
+
+func Spree(projectName, platformVer string) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+	if host == "" {
+		host = "loc." + projectName + ".com"
+	}
+
+	// URL-encode db creds — same rationale as Medusa/Saleor: characters
+	// like `@`, `:`, `/`, `?`, `#` would otherwise misparse in the
+	// connection URL.
+	dbUser := url.QueryEscape(projectConf["db/user"])
+	dbPassword := url.QueryEscape(projectConf["db/password"])
+	dbName := projectConf["db/database"]
+	if dbName == "" {
+		dbName = "spree"
+	}
+	dbURL := "postgresql://" + dbUser + ":" + dbPassword + "@db:5432/" + dbName
+	redisURL := "redis://redisdb:6379/0"
+
+	// SECRET_KEY_BASE is deterministic-but-not-secret in a local dev
+	// env: Rails refuses to boot without it once RAILS_ENV is set, but
+	// nothing about a madock-local project should be reachable from
+	// the public internet, so the hex value being checked in is fine.
+	envBody := "DATABASE_URL=" + dbURL + "\n" +
+		"REDIS_URL=" + redisURL + "\n" +
+		"RAILS_ENV=development\n" +
+		"NODE_ENV=development\n" +
+		"SECRET_KEY_BASE=changeme0000000000000000000000000000000000000000000000000000000000madocklocaldev\n" +
+		"DISABLE_SPRING=1\n" +
+		"BINDING=0.0.0.0\n" +
+		"PORT=3000\n" +
+		"ADMIN_EMAIL=admin@example.com\n" +
+		"ADMIN_PASSWORD=spree123\n" +
+		"SPREE_ADMIN_EMAIL=admin@example.com\n" +
+		"SPREE_ADMIN_PASSWORD=spree123\n" +
+		"STORE_URL=https://" + host + "\n"
+	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env"
+
+	// spree_starter ships a `bin/setup` script, but it tries to
+	// `sudo apt-get install libpq-dev libvips-dev` and shells out to
+	// mise/brew — none of which exist in our slim ruby image (sudo is
+	// missing too). We bring the equivalent system packages in the
+	// Dockerfile, so run the install steps directly. The
+	// `spree:search:reindex` task is optional; ignore failures so a
+	// search backend mismatch doesn't break the whole install.
+	//
+	// Pin `.ruby-version` and Gemfile.lock's RUBY VERSION line to the
+	// image's actual Ruby so bundler doesn't bail with "Your Ruby
+	// version is X, but your Gemfile specified Y" — Spree starter
+	// pins a patch level (e.g. 4.0.1) that docker hub doesn't always
+	// ship.
+	pinRuby := `RUBY_VER=$(ruby -e "print RUBY_VERSION"); ` +
+		`if [ -f .ruby-version ]; then echo "$RUBY_VER" > .ruby-version; fi; ` +
+		`if [ -f Gemfile.lock ]; then sed -i "s/^   ruby [0-9.]*p*[0-9]*$/   ruby $RUBY_VER/" Gemfile.lock; fi`
+
+	// nginx terminates TLS and proxies to puma over plain HTTP inside
+	// the docker network. Without `config.assume_ssl = true` Rails
+	// generates http:// in every redirect (login, callbacks, etc) and
+	// browsers warn / lose the secure cookie flag. Patch
+	// development.rb once at install time; idempotent.
+	patchSsl := `if [ -f config/environments/development.rb ]; then ` +
+		`grep -q 'madock-ssl-patch' config/environments/development.rb 2>/dev/null || ` +
+		`sed -i '/^Rails.application.configure do$/a\  # madock-ssl-patch\n  config.assume_ssl = true' config/environments/development.rb; ` +
+		`fi`
+
+	// Spree admin uses tailwindcss-rails. spree_starter's Procfile.dev
+	// runs `bin/rails spree:admin:tailwindcss:watch` alongside puma;
+	// we build it once during install so the admin UI loads on first
+	// request. Without it `/admin_user/sign_in` 500s with
+	// `Propshaft::MissingAssetError (spree/admin/application.css)`.
+	bootstrap := pinRuby +
+		" && " + patchSsl +
+		" && bundle install" +
+		" && bundle exec rails db:prepare" +
+		" && (bundle exec rails spree:admin:tailwindcss:build || true)" +
+		" && (bundle exec rails spree:search:reindex || true)" +
+		" && (bundle exec rails spree_sample:load || true)"
+
+	loadEnv := "set -a && . ./.env && set +a"
+	installCommand := envWrite +
+		" && " + loadEnv +
+		" && " + bootstrap
+
+	workdir := projectConf["workdir"]
+	if workdir == "" {
+		workdir = "/var/www/html"
+	}
+
+	fmt.Println(installCommand)
+	rubyContainer := docker.GetContainerName(projectConf, projectName, "ruby")
+	err := docker.ContainerExec(rubyContainer, "ruby", true, "bash", "-c", "cd "+workdir+" && "+installCommand)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	// Restart the ruby container so the smart entrypoint runs again
+	// from scratch and starts `rails server` against the freshly
+	// migrated database.
+	if rerr := exec.Command("docker", "restart", rubyContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart ruby container automatically: " + rerr.Error() + ". Run `madock restart` manually if the dev server doesn't pick up.")
+	}
+
+	// Install the Next.js storefront when it was cloned alongside the
+	// backend. The storefront container shares the same project src/
+	// mount, so .env.local + node_modules end up on the host
+	// filesystem. After install we restart the storefront container so
+	// its smart entrypoint picks up the freshly seeded env + deps.
+	publishableKey := ""
+	if projectConf["spree/storefront/enabled"] == "true" {
+		publishableKey = installSpreeStorefront(projectConf, projectName, host, rubyContainer, workdir)
+	}
+
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Spree installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Spree Storefront URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Spree Admin URI: /admin")
+	fmtc.SuccessLn("[SUCCESS]: Spree Admin User: admin@example.com")
+	fmtc.SuccessLn("[SUCCESS]: Spree Admin Password: spree123")
+	if publishableKey != "" {
+		fmtc.SuccessLn("[SUCCESS]: Spree Publishable API key: " + publishableKey)
+	}
+}
+
+// installSpreeStorefront runs `yarn install` inside the storefront
+// container and writes storefront/.env.local with the backend URL +
+// publishable API key + locale defaults so the Next.js dev server
+// starts cleanly on port 3001. Returns the publishable key that was
+// wired in (empty when extraction failed).
+func installSpreeStorefront(projectConf map[string]string, projectName, host, rubyContainer, backendWorkdir string) string {
+	storefrontWorkdir := projectConf["spree/storefront/workdir"]
+	if storefrontWorkdir == "" {
+		storefrontWorkdir = "/var/www/html/storefront"
+	}
+	country := projectConf["spree/storefront/country"]
+	if country == "" {
+		country = "us"
+	}
+	locale := projectConf["spree/storefront/locale"]
+	if locale == "" {
+		locale = "en"
+	}
+	storeName := projectConf["spree/storefront/store_name"]
+	if storeName == "" {
+		storeName = "Spree Store"
+	}
+	siteURL := projectConf["spree/storefront/site_url"]
+	if siteURL == "" {
+		siteURL = "https://" + host
+	}
+
+	// Pull the publishable API key seeded by `spree_sample:load` (or
+	// the one Spree provisions during db:prepare). Fall back to an
+	// empty string + warning when nothing is found — the storefront
+	// will surface a clear error and the user can paste a key.
+	publishableKey := extractSprePublishableKey(rubyContainer, backendWorkdir)
+	if publishableKey == "" {
+		fmtc.WarningLn("Could not extract a Spree publishable API key from the backend. The storefront will boot but API calls will fail until you set SPREE_PUBLISHABLE_KEY in storefront/.env.local manually.")
+	}
+
+	// Quote values so the smart entrypoint's `set -a; . ./.env.local`
+	// doesn't blow up on values containing spaces (e.g. the default
+	// store name "Spree Store" — POSIX sh would otherwise parse the
+	// line as `NEXT_PUBLIC_STORE_NAME=Spree` followed by `Store` as
+	// a command). All values are also useful as Next.js env vars
+	// either way, since Next reads .env.local directly.
+	envBody := "SPREE_API_URL=\"http://ruby:3000\"\n" +
+		"NEXT_PUBLIC_SITE_URL=\"" + siteURL + "\"\n" +
+		"NEXT_PUBLIC_DEFAULT_COUNTRY=\"" + country + "\"\n" +
+		"NEXT_PUBLIC_DEFAULT_LOCALE=\"" + locale + "\"\n" +
+		"NEXT_PUBLIC_STORE_NAME=\"" + storeName + "\"\n"
+	if publishableKey != "" {
+		envBody += "SPREE_PUBLISHABLE_KEY=\"" + publishableKey + "\"\n"
+	}
+	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env.local"
+	installCommand := envWrite + " && yarn install"
+
+	storefrontContainer := docker.GetContainerName(projectConf, projectName, "storefront")
+	fmtc.InfoIconLn("Installing Spree storefront in " + storefrontContainer)
+	if err := docker.ContainerExec(storefrontContainer, "node", true, "bash", "-c", "cd "+storefrontWorkdir+" && "+installCommand); err != nil {
+		fmtc.WarningLn("Storefront install failed: " + err.Error() + ". Inspect with `madock logs storefront`.")
+		return publishableKey
+	}
+
+	if rerr := exec.Command("docker", "restart", storefrontContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart storefront container automatically: " + rerr.Error() + ". Run `madock restart` manually if the dev server doesn't pick up.")
+	}
+
+	return publishableKey
+}
+
+// extractSprePublishableKey runs `rails runner` against the backend
+// container to grab the first publishable Spree::ApiKey token (Spree 5
+// seeds one during sample data load, bound to the default store).
+// Returns empty string when nothing is found or rails errors out.
+func extractSprePublishableKey(rubyContainer, workdir string) string {
+	script := `set -a && [ -f .env ] && . ./.env && set +a; ` +
+		`bundle exec rails runner "k = Spree::ApiKey.where(key_type: 'publishable', revoked_at: nil).order(:id).first; puts(k ? k.token : '')" 2>/dev/null`
+	out, err := exec.Command("docker", "exec", "-u", "ruby", "-w", workdir, rubyContainer, "bash", "-lc", script).Output()
+	if err != nil {
+		return ""
+	}
+	// rails runner can print warnings before the actual output; take
+	// the last non-empty line that starts with "pk_".
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	for i := len(lines) - 1; i >= 0; i-- {
+		line := strings.TrimSpace(lines[i])
+		if strings.HasPrefix(line, "pk_") {
+			return line
+		}
+	}
+	return ""
 }

@@ -198,6 +198,40 @@ func GetSaleorPresets() []Preset {
 	}
 }
 
+// GetSpreePresets returns available Spree presets
+func GetSpreePresets() []Preset {
+	return []Preset{
+		{
+			Name:        "Spree 5.x (Latest)",
+			Description: "Spree 5.x with Ruby 4.0, PostgreSQL 16, Redis 7.2 (Rails 8)",
+			Platform:    "spree",
+			Versions: versions.ToolsVersions{
+				Platform:        "spree",
+				PlatformVersion: "5.0",
+				Language:        "ruby",
+				Ruby:            "4.0.5",
+				DbType:          "PostgreSQL",
+				Db:              "postgres:16.4",
+				Redis:           "7.2.5",
+			},
+		},
+		{
+			Name:        "Spree 4.x (Stable)",
+			Description: "Spree 4.10.x with Ruby 3.2, PostgreSQL 15, Redis 7.0 (Rails 7.1)",
+			Platform:    "spree",
+			Versions: versions.ToolsVersions{
+				Platform:        "spree",
+				PlatformVersion: "4.10",
+				Language:        "ruby",
+				Ruby:            "3.2.6",
+				DbType:          "PostgreSQL",
+				Db:              "postgres:15",
+				Redis:           "7.0",
+			},
+		},
+	}
+}
+
 // GetShopwarePresets returns available Shopware presets
 func GetShopwarePresets() []Preset {
 	return []Preset{
@@ -222,6 +256,7 @@ func init() {
 	RegisterPresets("shopware", GetShopwarePresets)
 	RegisterPresets("medusa", GetMedusaPresets)
 	RegisterPresets("saleor", GetSaleorPresets)
+	RegisterPresets("spree", GetSpreePresets)
 }
 
 // GetPresetsByPlatform returns presets for a specific platform.

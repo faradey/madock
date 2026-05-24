@@ -1,0 +1,33 @@
+<<<if{{{spree/storefront/enabled}}}>>>
+  storefront:
+    init: true
+    build:
+      context: ctx
+      dockerfile: storefront.Dockerfile
+    tty: true
+    working_dir: {{{spree/storefront/workdir}}}
+    ports:
+      - "{{{port/storefront}}}:3001"
+    volumes:
+      - ./src/{{{spree/storefront/path}}}:{{{spree/storefront/workdir}}}:cached
+    environment:
+      NODE_ENV: "development"
+      # Server-side calls (Next.js SSR) hit the Rails backend inside
+      # the docker network.
+      SPREE_API_URL: "http://ruby:3000"
+      # Public-facing storefront URL for SEO meta tags.
+      NEXT_PUBLIC_SITE_URL: "{{{spree/storefront/site_url}}}"
+      NEXT_PUBLIC_DEFAULT_COUNTRY: "{{{spree/storefront/country}}}"
+      NEXT_PUBLIC_DEFAULT_LOCALE: "{{{spree/storefront/locale}}}"
+      NEXT_PUBLIC_STORE_NAME: "{{{spree/storefront/store_name}}}"
+      # macOS Docker bind mounts don't forward inotify events; polling
+      # keeps HMR working. Harmless on Linux.
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+    restart: {{{restart_policy}}}
+<<<endif>>>
+    <<<if{{{spree/storefront/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

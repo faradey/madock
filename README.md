@@ -3,7 +3,7 @@
 # madock
 Local development environment based on Docker
 
-Supported platforms: Magento2, Shopify, Shopware, PrestaShop, WooCommerce, Medusa.js, Saleor, Custom projects (PHP, Node.js, Python, Go, Ruby).
+Supported platforms: Magento2, Shopify, Shopware, PrestaShop, WooCommerce, Medusa.js, Saleor, Spree Commerce, Custom projects (PHP, Node.js, Python, Go, Ruby).
 
 [![GoDoc](https://godoc.org/github.com/faradey/madock?status.svg)](https://godoc.org/github.com/faradey/madock)
 [![Go Report Card](https://goreportcard.com/badge/github.com/faradey/madock)](https://goreportcard.com/report/github.com/faradey/madock)
@@ -26,6 +26,7 @@ This project is written on Golang, and it is distributed under a MIT License.
 * **WooCommerce** as a separate service (WordPress + WooCommerce + WP-CLI)
 * **Medusa.js** as a separate service (Node.js backend + auto-provisioned Next.js storefront + PostgreSQL + Redis, optional Meilisearch). Learn [more](docs/medusa.md)
 * **Saleor** as a separate service (Python 3.12 + PostgreSQL + Redis + uvicorn, optional Celery worker and Saleor Dashboard). Learn [more](docs/saleor.md)
+* **Spree Commerce** as a separate service (Ruby on Rails admin + auto-provisioned Next.js storefront + PostgreSQL + Redis, optional Sidekiq worker). Learn [more](docs/spree.md)
 * Cron support
 * Flexible configuration for each project
 * Database import and export in two clicks
