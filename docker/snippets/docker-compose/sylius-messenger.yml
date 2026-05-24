@@ -26,6 +26,20 @@
         set -a
         [ -f .env.local ] && . ./.env.local
         set +a
+        # Wait for the DB to accept connections — the messenger worker
+        # starts in parallel with the db container on `rebuild`, and a
+        # cold messenger:consume against an unready DB exits 1 with
+        # "Connection refused" from the Doctrine transport receiver.
+        # Port comes from DATABASE_URL scheme (mysql→3306, postgres→5432);
+        # bash /dev/tcp avoids requiring nc in the base image.
+        DB_PORT=3306
+        case "$${DATABASE_URL:-}" in
+          postgres*) DB_PORT=5432 ;;
+        esac
+        until (echo >/dev/tcp/db/$$DB_PORT) 2>/dev/null; do
+          echo '[madock] messenger: waiting for DB'
+          sleep 3
+        done
         # Sylius 2 ships `main`, `payment_request`,
         # `catalog_promotion_removal` transports via vendor bundles
         # (not visible in the project's messenger.yaml). Consume the

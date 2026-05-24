@@ -1008,21 +1008,20 @@ func Sylius(projectName, platformVer string, isSampleData bool) {
 	sqlEsc := func(s string) string { return strings.ReplaceAll(s, "'", "''") }
 	pinChannel := "php bin/console doctrine:query:sql \"UPDATE sylius_channel SET hostname='" + sqlEsc(host) + "'\""
 
-	// Fixture suite selection:
-	//   --sample-data       -> "default"  (full demo: products,
-	//                                      orders, customers, promotions)
-	//   no flag (the default) -> "minimum" (channel/zone/locale only —
-	//                                       enough for the storefront to
-	//                                       resolve a channel without
-	//                                       loading hundreds of demo
-	//                                       rows). `minimum` is a
-	//                                       built-in Sylius suite.
-	// Both suites still trigger the channel.hostname rewrite below so
-	// the storefront resolves the seeded channel.
-	fixtureSuite := "minimum"
-	if isSampleData {
+	// Sylius-Standard ships exactly one fixture suite — `default` —
+	// which seeds channels, products, customers, orders, promotions.
+	// `sylius:install --no-interaction` falls back to it anyway when
+	// no `--fixture-suite` is passed. The `--sample-data` flag is
+	// honored for API consistency with other PHP platforms but maps
+	// to the same suite either way (upstream Sylius doesn't expose a
+	// bare-bones alternative — projects that want a slim demo
+	// register their own suite in `config/packages/sylius_fixtures.yaml`
+	// and override via `sylius/install/fixture_suite` in config.xml).
+	fixtureSuite := configs.GetCurrentProjectConfig()["sylius/install/fixture_suite"]
+	if fixtureSuite == "" {
 		fixtureSuite = "default"
 	}
+	_ = isSampleData
 
 	// Admin credentials come from the shared magento/admin_* config
 	// (same defaults as Magento/Shopware/PrestaShop). Sylius's
@@ -1080,9 +1079,14 @@ func Sylius(projectName, platformVer string, isSampleData bool) {
 	//
 	// Delete the marker to force a re-install: `rm -f .madock-installed`
 	// inside the project directory.
+	// `sylius:install` is a wizard that, in non-interactive mode
+	// without --fixture-suite, defaults to the `default` suite (87
+	// products + sample orders). Pass the selected suite explicitly
+	// so the --sample-data flag actually toggles the data set.
+	// `sylius:install` calls fixtures internally, so we don't run
+	// `sylius:fixtures:load` separately.
 	initialSetup := "if [ ! -f .madock-installed ]; then" +
-		" php bin/console sylius:install --no-interaction" +
-		" && php bin/console sylius:fixtures:load --no-interaction " + fixtureSuite +
+		" php bin/console sylius:install --no-interaction --fixture-suite=" + fixtureSuite +
 		" && touch .madock-installed;" +
 		" fi"
 
