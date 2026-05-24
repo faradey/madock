@@ -229,6 +229,11 @@ func Detect(projectPath string) DetectionResult {
 		return result
 	}
 
+	// Ruby platforms (Spree, etc.)
+	if result := DetectFromGemfile(projectPath); result.Detected {
+		return result
+	}
+
 	// Try WordPress file-based detection
 	if paths.IsFileExist(projectPath+"/wp-config.php") || paths.IsFileExist(projectPath+"/wp-content") {
 		return DetectionResult{

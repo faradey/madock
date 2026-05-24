@@ -232,6 +232,22 @@
                     <enabled>false</enabled>
                 </worker>
             </saleor>
+            <spree>
+                <sidekiq>
+                    <enabled>false</enabled>
+                </sidekiq>
+                <storefront>
+                    <enabled>true</enabled>
+                    <repository>node</repository>
+                    <version>22.20.0</version>
+                    <path>storefront</path>
+                    <workdir>/var/www/html/storefront</workdir>
+                    <country>us</country>
+                    <locale>en</locale>
+                    <store_name>Spree Store</store_name>
+                    <git_url>https://github.com/spree/storefront.git</git_url>
+                </storefront>
+            </spree>
             <proxy>
                 <enabled>true</enabled>
                 <timeout>
