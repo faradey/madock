@@ -36,7 +36,6 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 
 	nodeOnly := preset == "hydrogen" || preset == "app-remix"
 	phpEnabled := !nodeOnly
-	nodeEnabled := nodeOnly || preset == "laravel-shopify"
 
 	// PHP stack (api-php, laravel-shopify, legacy).
 	if phpEnabled {
@@ -44,23 +43,23 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 		config.Set("php/version", defVersions.Php)
 		config.Set("php/composer/version", defVersions.Composer)
 
-		// Hydrogen / Remix presets serve from the project root; PHP
-		// presets use Symfony/Laravel-style `public/` (api-php legacy
-		// kept `web/public`). Laravel-shopify uses `public/` by
-		// convention.
+		// Web roots:
+		//   laravel-shopify : Laravel default `public/`, composer
+		//                     at root
+		//   api-php         : composer init scaffolds at the root
+		//                     (no `web/` subdir); the SDK is a
+		//                     library, not a framework — `public/`
+		//                     stays empty unless the user writes a
+		//                     front controller
+		// Legacy projects (previous madock Shopify-PHP template
+		// using `web/public/` + composer at `web/`) keep their old
+		// values because the `!ok` check preserves whatever's
+		// already in projectConf.
 		if _, ok := projectConf["public_dir"]; !ok {
-			if preset == "laravel-shopify" {
-				config.Set("public_dir", "public")
-			} else {
-				config.Set("public_dir", "web/public")
-			}
+			config.Set("public_dir", "public")
 		}
 		if _, ok := projectConf["composer_dir"]; !ok {
-			if preset == "laravel-shopify" {
-				config.Set("composer_dir", "")
-			} else {
-				config.Set("composer_dir", "web")
-			}
+			config.Set("composer_dir", "")
 		}
 
 		config.Set("php/xdebug/version", versions.GetXdebugVersion(defVersions.Php))
@@ -86,7 +85,16 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 		config.Set("db/password", configs2.GetOption("db/password", generalConf, projectConf))
 		config.Set("db/database", configs2.GetOption("db/database", generalConf, projectConf))
 
-		config.Set("redis/enabled", "true")
+		// Redis on by default for PHP presets — Laravel +
+		// shopify-api SDK both ship Redis-backed session/cache
+		// helpers. Project-level `<redis><enabled>false</enabled>`
+		// can still disable explicitly via setup wizard, but the
+		// global default (off) is ignored here.
+		redisEnabled := projectConf["redis/enabled"]
+		if redisEnabled == "" {
+			redisEnabled = "true"
+		}
+		config.Set("redis/enabled", redisEnabled)
 		repoVersion = strings.Split(defVersions.Redis, ":")
 		if len(repoVersion) > 1 {
 			config.Set("redis/repository", repoVersion[0])
@@ -101,34 +109,56 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 		// the Storefront API directly, app-remix uses Prisma+SQLite by
 		// default. Skip db/redis containers entirely.
 		config.Set("redis/enabled", "false")
+		// Clear the PHP front-controller pointers in case the user
+		// previously had a PHP-stack preset configured. nginx for
+		// Node presets ignores these, but db:export and similar
+		// helpers may still consult them.
+		config.Set("db/type", "")
 	}
 
-	// Node stack (hydrogen, app-remix, laravel-shopify for asset
-	// pipeline).
-	if nodeEnabled {
-		// For Hydrogen / app-remix the nodejs container IS the main
-		// service. For laravel-shopify Node is just the asset
-		// pipeline embedded into the PHP image.
-		if nodeOnly {
-			config.Set("nodejs/enabled", "true")
-			// Hydrogen dev server listens on 3000, app-remix uses 3000
-			// (via shopify CLI tunnel). Match nginx upstream.
-			config.Set("main_service_port", "3000")
-		} else {
-			config.Set("php/nodejs/enabled", "true")
-			config.Set("php/yarn/enabled", "true")
-		}
-		config.Set("nodejs/version", defVersions.NodeJs)
-		nodeMajorVersion := strings.Split(defVersions.NodeJs, ".")
+	// Node stack. Two flavours:
+	//   - nodeOnly (hydrogen, app-remix) - dedicated nodejs container
+	//                                       is the main service
+	//   - PHP-stack presets - Node + Yarn baked into the PHP image
+	//                          so asset pipelines (Webpack Encore,
+	//                          Mix, Vite, the legacy Shopify
+	//                          PHP-template's web/frontend) keep
+	//                          working. Includes api-php for
+	//                          backwards compatibility — pre-branch
+	//                          shopify projects had node + yarn in
+	//                          the PHP image, removing them would
+	//                          break existing tooling
+	nodeVer := defVersions.NodeJs
+	if nodeVer == "" {
+		nodeVer = "22.20.0"
+	}
+	if nodeOnly {
+		config.Set("nodejs/enabled", "true")
+		// Hydrogen dev server listens on 3000, app-remix uses 3000
+		// (via shopify CLI tunnel). Match nginx upstream.
+		config.Set("main_service_port", "3000")
+		config.Set("nodejs/version", nodeVer)
+		nodeMajorVersion := strings.Split(nodeVer, ".")
 		if len(nodeMajorVersion) > 0 {
 			config.Set("nodejs/major_version", nodeMajorVersion[0])
 		}
-		config.Set("nodejs/yarn/enabled", "true")
-		if defVersions.Yarn != "" {
-			config.Set("nodejs/yarn/version", defVersions.Yarn)
-		}
 	} else {
+		// PHP-stack preset (api-php / laravel-shopify / legacy)
 		config.Set("nodejs/enabled", "false")
+		config.Set("php/nodejs/enabled", "true")
+		config.Set("php/yarn/enabled", "true")
+		config.Set("nodejs/version", nodeVer)
+		nodeMajorVersion := strings.Split(nodeVer, ".")
+		if len(nodeMajorVersion) > 0 {
+			config.Set("nodejs/major_version", nodeMajorVersion[0])
+		}
+		// Reset stale Node-only setting if user switched away from
+		// hydrogen/app-remix back to a PHP preset.
+		config.Set("main_service_port", "")
+	}
+	config.Set("nodejs/yarn/enabled", "true")
+	if defVersions.Yarn != "" {
+		config.Set("nodejs/yarn/version", defVersions.Yarn)
 	}
 
 	// RabbitMQ + Grafana stay opt-in across all presets.

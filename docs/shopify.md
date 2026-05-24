@@ -57,7 +57,7 @@ The Shopify CLI prompts for the Partner account + creates an ngrok-style tunnel.
 
 ### `api-php` — Backend integration SDK
 
-Scaffolds a `composer init` project pinned to `shopify/shopify-api:^7.0`. No framework — just the SDK. Install runs `composer install`. Use case: cron jobs / ETL scripts that sync Shopify orders with an existing PHP backend.
+Scaffolds a `composer init` project pinned to `shopify/shopify-api:^6.0` (current stable on Packagist). No framework — just the SDK. Install runs `composer install` (or `composer update` if no lock yet). Use case: cron jobs / ETL scripts that sync Shopify orders with an existing PHP backend.
 
 Bootstrap your scripts with:
 
@@ -144,7 +144,10 @@ The default `dev` script in package.json binds to 127.0.0.1, so nginx can't reac
 
 ### Legacy: previous madock Shopify defaults
 
-Older madock versions used the `shopify/shopify-app-template-php` Laravel template as the default. That flow is preserved by the `api-php` and `laravel-shopify` presets. The old `madock shopify:web` / `madock shopify:web:frontend` shortcuts still work — they target the PHP-container subdirectories as before.
+Older madock versions used the `shopify/shopify-app-template-php` Laravel template (with `web/` + `web/frontend/` subdirs) as the default. The `madock shopify:web` / `madock shopify:web:frontend` shortcuts still target those subdirectories — they're useful only if your project still follows that layout. For fresh projects, the new presets place files at the project root (no `web/` subdir):
+
+* If your existing project has `web/composer.json`, your config.xml already has `composer_dir=web` + `public_dir=web/public` set, and the env writer preserves them.
+* For fresh installs, defaults are `composer_dir=""` + `public_dir=public`. Override in config.xml if you want the old layout.
 
 ## Tips
 
