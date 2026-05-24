@@ -251,12 +251,51 @@ func GetShopwarePresets() []Preset {
 	}
 }
 
+// GetSyliusPresets returns available Sylius presets
+func GetSyliusPresets() []Preset {
+	return []Preset{
+		{
+			Name:        "Sylius 2.0 (Latest)",
+			Description: "Sylius 2.0.x with PHP 8.3, MariaDB 11.4, Redis 7.4, Node 22, Yarn",
+			Platform:    "sylius",
+			Versions: versions.ToolsVersions{
+				Platform:        "sylius",
+				PlatformVersion: "2.0",
+				Language:        "php",
+				Php:             "8.3",
+				Db:              "mariadb:11.4",
+				Composer:        "2",
+				Redis:           "7.4",
+				NodeJs:          "22.20.0",
+				Yarn:            "1.22.22",
+			},
+		},
+		{
+			Name:        "Sylius 1.13 (Stable)",
+			Description: "Sylius 1.13.x with PHP 8.2, MariaDB 10.11, Redis 7.2, Node 20",
+			Platform:    "sylius",
+			Versions: versions.ToolsVersions{
+				Platform:        "sylius",
+				PlatformVersion: "1.13",
+				Language:        "php",
+				Php:             "8.2",
+				Db:              "mariadb:10.11",
+				Composer:        "2",
+				Redis:           "7.2",
+				NodeJs:          "20.16.0",
+				Yarn:            "1.22.22",
+			},
+		},
+	}
+}
+
 func init() {
 	RegisterPresets("magento2", GetMagentoPresets)
 	RegisterPresets("shopware", GetShopwarePresets)
 	RegisterPresets("medusa", GetMedusaPresets)
 	RegisterPresets("saleor", GetSaleorPresets)
 	RegisterPresets("spree", GetSpreePresets)
+	RegisterPresets("sylius", GetSyliusPresets)
 }
 
 // GetPresetsByPlatform returns presets for a specific platform.

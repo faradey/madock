@@ -1,3 +1,12 @@
+**v3.7.10**
+
+Added:
+- Sylius platform support: `madock setup --platform sylius` (PHP 8.3 / Symfony + MariaDB + Redis + Node + Yarn baked into the PHP image for Webpack Encore). `madock sylius <cmd>` runs `php bin/console <cmd>` inside the PHP container. `madock install` writes `.env.local` (DATABASE_URL with `serverVersion=mariadb-<major.minor.patch>` so Doctrine 3 doesn't reject the lockfile, MAILER_DSN, MESSENGER_TRANSPORT_DSN, SYLIUS_STORE_URL), runs `composer install`, `doctrine:database:create`, `doctrine:migrations:migrate`, `sylius:install --no-interaction`, `sylius:fixtures:load default` (channels, taxa, products, promotions, demo customers/orders/payments — always runs because the storefront 500s with "Channel could not be found!" without it), updates `sylius_channel.hostname` to the project's nginx host (Sylius resolves channels by hostname; the default fixtures use `localhost`/wildcards that don't match `*.test`), then `yarn install` + `yarn build` for the admin/shop/app Encore bundles, plus `assets:install` and cache warmup. Auto-detection via `composer.json` / `composer.lock` declaring `sylius/sylius` or `sylius/sylius-standard`. See [docs/sylius.md](docs/sylius.md)
+- Sylius presets: `--preset 2` (Latest, Sylius 2.0.x / PHP 8.3 / MariaDB 11.4 / Redis 7.4 / Node 22), `--preset 1` (Stable, Sylius 1.13.x / PHP 8.2 / MariaDB 10.11 / Redis 7.2 / Node 20). Interactive preset wizard mirrors the Medusa/Saleor/Spree flow
+
+Changed:
+- `php/nodejs` Dockerfile snippet now installs Yarn as well when `php/yarn/enabled=true`. PHP-based platforms with Webpack/Encore pipelines (Sylius today; Shopware/PrestaShop tomorrow if they opt in) get yarn in the same image as composer instead of needing a separate container
+
 **v3.7.9**
 
 Added:

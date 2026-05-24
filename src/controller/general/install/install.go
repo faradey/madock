@@ -63,6 +63,9 @@ func init() {
 	RegisterInstallHandler("spree", func(projectName, platformVersion string, _ map[string]string) {
 		Spree(projectName, platformVersion)
 	})
+	RegisterInstallHandler("sylius", func(projectName, platformVersion string, _ map[string]string) {
+		Sylius(projectName, platformVersion, false)
+	})
 }
 
 func Execute() {
@@ -916,4 +919,108 @@ func extractSprePublishableKey(rubyContainer, workdir string) string {
 		}
 	}
 	return ""
+}
+
+func Sylius(projectName, platformVer string, isSampleData bool) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+	if host == "" {
+		host = "loc." + projectName + ".com"
+	}
+
+	// URL-encode db creds — passwords with `@:/?#` would otherwise
+	// break the Doctrine DSN parser.
+	dbUser := url.QueryEscape(projectConf["db/user"])
+	dbPassword := url.QueryEscape(projectConf["db/password"])
+	dbName := projectConf["db/database"]
+	if dbName == "" {
+		dbName = "sylius"
+	}
+	// MariaDB version segment is required by Doctrine 3. Pin a
+	// 3-segment value (major.minor.patch) — Doctrine's regex bails
+	// when the patch part is missing (e.g. "11.4" → "Invalid platform
+	// version" / "FileLoader.php line 190").
+	dbVer := projectConf["db/version"]
+	if dbVer == "" {
+		dbVer = "11.4.0"
+	} else if !strings.Contains(strings.TrimPrefix(dbVer, "mariadb-"), ".") || strings.Count(dbVer, ".") < 2 {
+		dbVer = dbVer + ".0"
+	}
+	dbURL := "mysql://" + dbUser + ":" + dbPassword + "@db:3306/" + dbName + "?serverVersion=mariadb-" + dbVer + "&charset=utf8mb4"
+	mailerDSN := "smtp://mailpit:1025"
+
+	// Patch .env (or .env.local — Symfony's standard layering) so
+	// Doctrine + Messenger + Mailer point at the docker hostnames.
+	// Idempotent: we always (re)write .env.local with our values,
+	// leaving .env untouched as the upstream baseline.
+	envBody := "APP_ENV=dev\n" +
+		"APP_DEBUG=1\n" +
+		"APP_SECRET=changeme-madock-dev-secret\n" +
+		"DATABASE_URL=\"" + dbURL + "\"\n" +
+		"MAILER_DSN=\"" + mailerDSN + "\"\n" +
+		"MAILER_URL=\"" + mailerDSN + "\"\n" +
+		"MESSENGER_TRANSPORT_DSN=\"doctrine://default?auto_setup=0\"\n" +
+		"SYLIUS_STORE_URL=\"https://" + host + "\"\n"
+	envWrite := "printf '%s' " + shellSingleQuote(envBody) + " > .env.local"
+
+	// Sylius bootstrap:
+	//   composer install                       - PHP deps
+	//   doctrine:database:create + migrate     - schema
+	//   sylius:install --no-interaction        - admin user + base config
+	//   sylius:fixtures:load default           - channels, taxa, products,
+	//                                            promotions. Always runs;
+	//                                            without it the storefront
+	//                                            500s with "Channel could
+	//                                            not be found!"
+	//   doctrine:query:sql UPDATE channel host - point the seeded channels
+	//                                            at the project's nginx
+	//                                            host (Sylius resolves
+	//                                            channels by hostname; the
+	//                                            default fixtures use
+	//                                            "localhost" / wildcards
+	//                                            that don't match *.test)
+	//   yarn install + yarn build              - Webpack Encore frontend
+	//                                            assets — without them
+	//                                            /admin/login throws
+	//                                            "entrypoints.json not
+	//                                            found"
+	hostQuoted := strings.ReplaceAll(host, "'", "''")
+	pinChannel := "php bin/console doctrine:query:sql \"UPDATE sylius_channel SET hostname='" + hostQuoted + "'\""
+
+	installCommand := envWrite +
+		" && composer install --no-interaction --prefer-dist" +
+		" && php bin/console doctrine:database:create --if-not-exists --no-interaction" +
+		" && php bin/console doctrine:migrations:migrate --no-interaction" +
+		" && php bin/console sylius:install --no-interaction" +
+		" && php bin/console sylius:fixtures:load --no-interaction default" +
+		" && " + pinChannel +
+		" && (command -v yarn >/dev/null 2>&1 && yarn install || true)" +
+		" && (command -v yarn >/dev/null 2>&1 && yarn build || true)" +
+		" && php bin/console assets:install --symlink --no-interaction" +
+		" && php bin/console cache:clear --no-warmup" +
+		" && php bin/console cache:warmup"
+	_ = isSampleData
+
+	workdir := projectConf["workdir"]
+	if workdir == "" {
+		workdir = "/var/www/html"
+	}
+
+	fmt.Println(installCommand)
+	phpContainer := docker.GetContainerName(projectConf, projectName, "php")
+	err := docker.ContainerExec(phpContainer, "www-data", true, "bash", "-c", "cd "+workdir+" && "+installCommand)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Sylius installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Sylius Storefront URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Sylius Admin URI: /admin")
+	fmtc.SuccessLn("[SUCCESS]: Sylius Admin User: sylius")
+	fmtc.SuccessLn("[SUCCESS]: Sylius Admin Password: sylius")
 }
