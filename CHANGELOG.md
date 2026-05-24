@@ -1,3 +1,72 @@
+**v3.7.11**
+
+Shopify presets — post-tracer hardening:
+- Hydrogen now renders `/` end-to-end. Two issues that fought the
+  initial tracer:
+  - Hydrogen's Oxygen plugin ignores user-set `server.allowedHosts`
+    in vite.config.ts. Install now also patches Vite's internal
+    `isHostAllowedInternal` in `node_modules/vite/dist/node/chunks/
+    node.js` to short-circuit to `true`. Marker-gated so re-running
+    install is idempotent. Pure dev convenience — patches
+    node_modules only
+  - Hydrogen's Miniflare/undici client rejects `Connection: upgrade`
+    on non-WS requests ("invalid connection header"). Project nginx
+    for Node-only presets now uses an in-block `map $http_upgrade
+    $node_connection_upgrade { default upgrade; '' ''; }` so the
+    Connection header is empty for plain HTTP and only forwarded as
+    `upgrade` for genuine WS handshakes
+- app-remix template clone switched from `npm init @shopify/app@latest`
+  to `git clone shopify-app-template-remix` — the npm init argument
+  parser changed across CLI versions in 2024 and was producing an
+  empty directory. Install also parks the template's `dev` script
+  (which is `shopify app dev`, an interactive Partner-CLI command)
+  as `dev:shopify` and replaces `dev` with `sleep infinity` so the
+  container stays up after install; users start the real dev server
+  via `madock bash` + `npm run dev:shopify` (needs interactive
+  Shopify Partner auth + tunnel — can't run from a non-tty container)
+- laravel-shopify install now correctly rewrites Laravel 11+
+  `.env` files where the DB_* lines ship commented out by default
+  (Laravel switched to SQLite default in 2024). Sed patches handle
+  both `^DB_*=` and `^# *DB_*=` forms
+- api-php composer require pinned to `^6.0` (v7 isn't published yet
+  on Packagist). Install also picks `composer install` vs `composer
+  update` based on whether composer.lock exists — fresh `composer
+  init` projects only have composer.json so update is correct
+- `docker/shopify/php/Dockerfile` no longer hand-rolls the yarn
+  install via GPG keyserver (which was failing with `gpg: keyserver
+  receive failed` on every fresh build). Uses the shared
+  `snippets/dockerfile/php/nodejs` snippet that installs Node + Yarn
+  via npm when `php/nodejs/enabled` / `php/yarn/enabled` are set
+
+Added:
+- Shopify platform now ships with 4 SDK/framework presets so users can pick a stack at setup time instead of inheriting the legacy PHP-only default:
+- Shopify platform now ships with 4 SDK/framework presets so users can pick a stack at setup time instead of inheriting the legacy PHP-only default:
+  - `--preset hydrogen` (Node 22 + Remix on Vite, TypeScript) — official headless storefront, deploys to Shopify Oxygen
+  - `--preset app-remix` (Node 22 + Remix + Prisma/SQLite) — official embedded Shopify App template
+  - `--preset api-php` (PHP 8.3 + MariaDB + Redis) — raw `shopify/shopify-api` Composer SDK for backend integrations
+  - `--preset laravel-shopify` (PHP 8.3 + Laravel + Node + MariaDB + Redis) — full Shopify App on Laravel via `Kyon147/laravel-shopify`
+  Interactive preset wizard mirrors the Medusa/Saleor/Spree/Sylius flow. Aliases honored (`node` → hydrogen, `app`/`remix` → app-remix, `php`/`api` → api-php, `laravel` → laravel-shopify)
+- Shopify env writer rewires the container stack per preset. Node-only presets (hydrogen, app-remix) drop PHP/MariaDB/Redis entirely — no zombie containers and no `FROM mariadb:{{{db/version}}}` build errors when the DB block is skipped. PHP presets keep the legacy full stack
+- Shopify install handler dispatches per preset:
+  - Hydrogen: `npm install`, patches `package.json` (adds `--host` to the `dev` script so Vite binds 0.0.0.0 instead of 127.0.0.1), patches `vite.config.ts` (adds `server.allowedHosts: true` so the project's `*.test` host doesn't trip Vite's host-header guard), then restarts the nodejs container
+  - app-remix: `npm install` + `npx prisma generate && npx prisma migrate deploy` (Prisma uses SQLite by default — no DB container needed)
+  - api-php: `composer install` (or `composer update` when no lock present) against a `composer init`-generated project pinned to `shopify/shopify-api:^6.0`
+  - laravel-shopify: rewrites Laravel `.env` (APP_URL, DB_CONNECTION=mysql, DB_HOST=db, DB credentials from project config), `composer install`, `composer require kyon147/laravel-shopify`, `php artisan key:generate`, `migrate`, `vendor:publish --tag=shopify-config --tag=shopify-routes`
+- Per-preset `DownloadShopify` scaffolders:
+  - hydrogen: `npm create -y @shopify/hydrogen@latest -- --path . --quickstart --language ts --no-install-deps`
+  - app-remix: `git clone --depth 1 https://github.com/Shopify/shopify-app-template-remix.git .` (the npm init argument parser changed across CLI versions in 2024 and was producing an empty directory; cloning the upstream template is the same content without the wizard step)
+  - api-php: `composer init --no-interaction --require=shopify/shopify-api:^6.0`
+  - laravel-shopify: `composer create-project --no-install laravel/laravel .`
+
+Changed:
+- `docker/shopify/docker-compose.yml` wraps the DB/Redis/RabbitMQ/Grafana service block in `<<<if{{{php/enabled}}}>>>` so Node-only presets don't try to build a DB image with un-substituted `{{{db/version}}}` templates
+- `docker/shopify/nginx/conf/default.conf` swaps between FastCGI (PHP backend) and a Node-only proxy server block based on `php/enabled` / `nodejs/enabled`. The Node block declares an in-block `map $http_upgrade $node_connection_upgrade { default upgrade; '' ''; }` so the `Connection` header is empty on plain HTTP (Hydrogen's Miniflare/undici rejects `Connection: upgrade` on non-WS requests with "invalid connection header") and only `upgrade` for genuine WS handshakes. For hydrogen / app-remix the env writer pins `main_service_port=3000` to match the dev server upstream
+- `MakeConfShopify` only materialises the Dockerfiles the selected preset actually uses (PHP, NodeJS, DB, Redis are now conditional), so Node-only presets don't ship a half-substituted db.Dockerfile that breaks `docker compose build`
+- Added `nodejs.yml` snippet include to `docker/shopify/docker-compose.yml` + `docker/shopify/nodejs/Dockerfile` so the Node service has a real Dockerfile to build from
+
+Docs:
+- `docs/shopify.md` rewritten: preset matrix, install pipeline per preset, per-preset services table, switching presets, gotchas (Hydrogen Vite allowedHosts, Remix Partner auth, Laravel routes 404)
+
 **v3.7.10**
 
 Added:

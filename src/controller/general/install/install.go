@@ -66,6 +66,16 @@ func init() {
 	RegisterInstallHandler("sylius", func(projectName, platformVersion string, _ map[string]string) {
 		Sylius(projectName, platformVersion, false)
 	})
+	RegisterInstallHandler("shopify", func(projectName, platformVersion string, conf map[string]string) {
+		preset := platformVersion
+		if preset == "" {
+			preset = conf["shopify/preset"]
+		}
+		if preset == "" {
+			preset = "api-php"
+		}
+		Shopify(projectName, preset)
+	})
 }
 
 func Execute() {
@@ -1132,4 +1142,330 @@ func Sylius(projectName, platformVer string, isSampleData bool) {
 	fmtc.SuccessLn("[SUCCESS]: Sylius Admin User: " + adminUser)
 	fmtc.SuccessLn("[SUCCESS]: Sylius Admin Password: " + adminPass)
 	fmtc.SuccessLn("[SUCCESS]: Sylius Admin Email: " + adminEmail)
+}
+
+// Shopify dispatches to a preset-specific install routine. Each SDK
+// preset bootstraps with a different toolchain (npm/yarn vs composer)
+// so we keep them in small dedicated handlers instead of one mega
+// switch + shell soup.
+func Shopify(projectName, presetCode string) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+	if host == "" {
+		host = "loc." + projectName + ".com"
+	}
+	workdir := projectConf["workdir"]
+	if workdir == "" {
+		workdir = "/var/www/html"
+	}
+
+	switch presetCode {
+	case "hydrogen":
+		shopifyInstallHydrogen(projectConf, projectName, host, workdir)
+	case "app-remix":
+		shopifyInstallAppRemix(projectConf, projectName, host, workdir)
+	case "laravel-shopify":
+		shopifyInstallLaravel(projectConf, projectName, host, workdir)
+	default:
+		shopifyInstallApiPhp(projectConf, projectName, host, workdir)
+	}
+}
+
+func shopifyInstallHydrogen(projectConf map[string]string, projectName, host, workdir string) {
+	// Hydrogen ships its own dev server. Just yarn/npm install — the
+	// smart nodejs entrypoint then runs `yarn dev` (or npm run dev).
+	//
+	// Hydrogen's default `dev` script binds to 127.0.0.1, so nginx
+	// gets 502. Patch package.json to add `--host 0.0.0.0` so the
+	// proxy can reach the dev server. Idempotent via marker.
+	// All three patches written to a single temp JS file inside the
+	// container via heredoc — avoids the bash double-quote +
+	// node -e escape nightmare and makes each patch idempotent +
+	// noisy-on-skip so future Hydrogen / Vite upgrades surface as
+	// install-time warnings instead of silent failures.
+	//
+	// Patches:
+	//   1. package.json scripts.dev: append `--host` so Hydrogen's
+	//      dev server binds 0.0.0.0 (default: 127.0.0.1 → nginx 502)
+	//   2. vite.config.{ts,js,mjs}: inject server.allowedHosts:true
+	//      so Vite host header check doesn't 403 the project's
+	//      *.test domain. Multiple defineConfig / export default
+	//      patterns supported
+	//   3. node_modules/vite/.../*.js: short-circuit
+	//      isHostAllowedInternal to return true. Belt-and-suspenders
+	//      for when Hydrogen's Oxygen plugin clobbers the vite
+	//      config patch. File location varies across Vite versions
+	//      so we glob node_modules/vite/dist for any .js that
+	//      contains the function definition
+	hydrogenPatches := `cat > /tmp/madock-hydrogen-patch.js <<'PATCH_EOF'
+'use strict';
+const fs = require('fs');
+const path = require('path');
+
+// --- 1. package.json scripts.dev --------------------------------
+(function patchDev() {
+  const p = 'package.json';
+  if (!fs.existsSync(p)) {
+    console.warn('[madock] hydrogen-patch: package.json missing — skipped');
+    return;
+  }
+  const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+  if (!j.scripts || !j.scripts.dev) {
+    console.warn('[madock] hydrogen-patch: scripts.dev missing — skipped');
+    return;
+  }
+  if (j.scripts.dev.includes('--host')) {
+    return; // already patched (or user already added --host)
+  }
+  j.scripts.dev = j.scripts.dev + ' --host';
+  fs.writeFileSync(p, JSON.stringify(j, null, 2));
+  console.log('[madock] package.json: appended --host to scripts.dev');
+})();
+
+// --- 2. vite.config.{ts,js,mjs} ---------------------------------
+(function patchViteConfig() {
+  const tries = ['vite.config.ts', 'vite.config.js', 'vite.config.mjs'];
+  const inject = 'server: { allowedHosts: true }, /* madock-allowed-hosts */';
+  for (const p of tries) {
+    if (!fs.existsSync(p)) continue;
+    let c = fs.readFileSync(p, 'utf8');
+    if (c.includes('madock-allowed-hosts')) {
+      return; // already patched
+    }
+    const patterns = [
+      // defineConfig({, with optional whitespace, optional generic type arg
+      [/defineConfig\s*(?:<[^>]+>)?\s*\(\s*\{/, function (m) { return m + '\n  ' + inject + '\n  '; }],
+      // export default { (no defineConfig wrapper)
+      [/export\s+default\s+\{/, function (m) { return m + '\n  ' + inject + '\n  '; }],
+    ];
+    for (const [re, repl] of patterns) {
+      const m = c.match(re);
+      if (m) {
+        c = c.replace(re, repl(m[0]));
+        fs.writeFileSync(p, c);
+        console.log('[madock] ' + p + ': added server.allowedHosts:true');
+        return;
+      }
+    }
+    console.warn('[madock] ' + p + ": no defineConfig/export default pattern matched — add server.allowedHosts manually");
+    return;
+  }
+  console.warn('[madock] hydrogen-patch: vite.config.{ts,js,mjs} not found — skipped');
+})();
+
+// --- 3. node_modules/vite/dist/**/*.js (isHostAllowedInternal) --
+(function patchViteCore() {
+  const root = 'node_modules/vite/dist';
+  if (!fs.existsSync(root)) {
+    console.warn('[madock] hydrogen-patch: node_modules/vite/dist missing — skipped');
+    return;
+  }
+  const stack = [root];
+  const matches = [];
+  while (stack.length) {
+    const dir = stack.pop();
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+    catch (_) { continue; }
+    for (const e of entries) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        stack.push(full);
+      } else if (e.isFile() && e.name.endsWith('.js')) {
+        matches.push(full);
+      }
+    }
+  }
+  let patchedCount = 0;
+  for (const f of matches) {
+    let c;
+    try { c = fs.readFileSync(f, 'utf8'); }
+    catch (_) { continue; }
+    if (c.includes('madock-host-allow-all')) {
+      patchedCount++;
+      continue;
+    }
+    // Match any function signature that contains "isHostAllowedInternal"
+    // — Vite changes minified/non-minified output between versions.
+    const re = /function\s+isHostAllowedInternal\s*\([^)]*\)\s*\{/;
+    const m = c.match(re);
+    if (!m) continue;
+    c = c.replace(re, m[0] + '\n  return true; /* madock-host-allow-all */');
+    fs.writeFileSync(f, c);
+    console.log('[madock] vite: short-circuited isHostAllowedInternal in ' + f);
+    patchedCount++;
+  }
+  if (patchedCount === 0) {
+    console.warn('[madock] hydrogen-patch: isHostAllowedInternal not found in any node_modules/vite/dist/**/*.js — Vite layout changed?');
+  }
+})();
+PATCH_EOF
+node /tmp/madock-hydrogen-patch.js && rm -f /tmp/madock-hydrogen-patch.js`
+
+	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
+	// Stage of operations:
+	//   1. Pre-install patches: package.json + vite.config.ts
+	//   2. Install deps (npm install / yarn install)
+	//   3. Post-install patch: node_modules/vite — needs vendor on disk
+	//
+	// Patch #3 is run a second time inside the same node script
+	// (above) but we also invoke it explicitly post-install in case
+	// the first pass returned the "vite missing" warning.
+	cmd := hydrogenPatches +
+		" && (test -f yarn.lock && yarn install || npm install)" +
+		" && " + hydrogenPatches
+	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
+		fmtc.WarningLn("Hydrogen install failed: " + err.Error())
+	}
+	if rerr := exec.Command("docker", "restart", nodejsContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart nodejs container: " + rerr.Error())
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Hydrogen storefront installed.")
+	fmtc.SuccessLn("[SUCCESS]: Storefront URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: To wire it to a real Shopify store edit shopify.config.ts + .env (PUBLIC_STORE_DOMAIN, PUBLIC_STOREFRONT_API_TOKEN).")
+}
+
+func shopifyInstallAppRemix(projectConf map[string]string, projectName, host, workdir string) {
+	// Shopify App template uses Prisma with SQLite by default — no DB
+	// container needed. `npm install` + prisma generate + migrate
+	// deploy primes the session store.
+	//
+	// The template's `dev` script is `shopify app dev` which expects
+	// the Shopify CLI on PATH AND needs interactive Partner auth +
+	// ngrok-style tunnel — neither of which work from a non-tty
+	// container. Rewrite the script to `sleep infinity` so the
+	// container stays up after install; users open `madock bash` and
+	// run `npm run dev:shopify` to start the real dev server when
+	// they've signed in to the Partner CLI.
+	//
+	// Idempotency rules:
+	//   - if scripts.dev already contains 'madock-idle' → no-op
+	//   - if scripts['dev:shopify'] already exists → no-op (user
+	//     can edit scripts.dev freely after first install)
+	//   - else save current scripts.dev into scripts['dev:shopify']
+	//     and park scripts.dev as `sleep infinity`
+	patchDev := `node -e "
+const fs=require('fs');
+const p='package.json';
+if(!fs.existsSync(p)) process.exit(0);
+const j=JSON.parse(fs.readFileSync(p,'utf8'));
+if(!j.scripts||!j.scripts.dev) process.exit(0);
+if(j.scripts.dev.includes('madock-idle')) process.exit(0);
+if(j.scripts['dev:shopify']){console.log('[madock] package.json: scripts.dev:shopify already exists, leaving scripts.dev untouched');process.exit(0);}
+j.scripts['dev:shopify']=j.scripts.dev;
+j.scripts.dev='echo madock-idle; sleep infinity';
+fs.writeFileSync(p,JSON.stringify(j,null,2));
+console.log('[madock] package.json: parked scripts.dev as scripts.dev:shopify');
+"`
+
+	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
+	installCommand := patchDev +
+		" && (test -f yarn.lock && yarn install || npm install)" +
+		" && (test -f prisma/schema.prisma && (npx prisma generate && npx prisma migrate deploy) || true)"
+	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+installCommand); err != nil {
+		fmtc.WarningLn("Shopify App install failed: " + err.Error())
+	}
+	if rerr := exec.Command("docker", "restart", nodejsContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart nodejs container: " + rerr.Error())
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Shopify App (Remix) installed.")
+	fmtc.SuccessLn("[SUCCESS]: Container is idle (Shopify App dev needs interactive Partner auth + tunnel).")
+	fmtc.SuccessLn("[SUCCESS]: Run `madock bash` then `npm run dev:shopify` to start the Partner tunnel + Admin install flow.")
+}
+
+func shopifyInstallApiPhp(projectConf map[string]string, projectName, host, workdir string) {
+	// shopify-api-php is a library, not a framework — there's nothing
+	// to migrate. `composer install` if a composer.lock exists,
+	// otherwise `composer update` to resolve from composer.json (the
+	// download step seeds composer.json without a lock).
+	phpContainer := docker.GetContainerName(projectConf, projectName, "php")
+	cmd := "if [ -f composer.lock ]; then composer install --no-interaction --prefer-dist; else composer update --no-interaction --prefer-dist; fi"
+	if err := docker.ContainerExec(phpContainer, "www-data", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
+		fmtc.WarningLn("composer install failed: " + err.Error())
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: shopify-api-php project initialised.")
+	fmtc.SuccessLn("[SUCCESS]: Project URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Use `Shopify\\Context::initialize(...)` in your scripts. Docs: https://github.com/Shopify/shopify-api-php")
+}
+
+func shopifyInstallLaravel(projectConf map[string]string, projectName, host, workdir string) {
+	dbUser := url.QueryEscape(projectConf["db/user"])
+	dbPassword := url.QueryEscape(projectConf["db/password"])
+	dbName := projectConf["db/database"]
+	if dbName == "" {
+		dbName = "shopify"
+	}
+
+	// Laravel `.env` is line-based, not URL-based. Laravel 11+ ships
+	// the DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD lines
+	// commented out by default (relying on the sqlite default). Sed
+	// patterns must match both `^DB_FOO=` and `^# *DB_FOO=` forms.
+	//
+	// Sed replacement-side escaping: dbUser + dbPassword are
+	// url.QueryEscape'd so `&` `|` `/` `\` end up percent-encoded —
+	// safe to drop into the sed `s|...|<repl>|` block. dbName isn't
+	// percent-encoded (mysql identifiers don't allow most special
+	// chars anyway), but escape sed metacharacters just in case the
+	// project config carries an unusual database name.
+	sedRepl := func(s string) string {
+		s = strings.ReplaceAll(s, `\`, `\\`)
+		s = strings.ReplaceAll(s, `|`, `\|`)
+		s = strings.ReplaceAll(s, `&`, `\&`)
+		return s
+	}
+	dbNameEsc := sedRepl(dbName)
+	hostEsc := sedRepl(host)
+
+	envPatch := "(test -f .env || cp .env.example .env)" +
+		" && sed -i 's|^APP_URL=.*|APP_URL=https://" + hostEsc + "|' .env" +
+		" && sed -i 's|^# *APP_URL=.*|APP_URL=https://" + hostEsc + "|' .env" +
+		" && sed -i 's|^DB_CONNECTION=.*|DB_CONNECTION=mysql|' .env" +
+		" && sed -i 's|^# *DB_CONNECTION=.*|DB_CONNECTION=mysql|' .env" +
+		" && sed -i 's|^DB_HOST=.*|DB_HOST=db|' .env" +
+		" && sed -i 's|^# *DB_HOST=.*|DB_HOST=db|' .env" +
+		" && sed -i 's|^DB_PORT=.*|DB_PORT=3306|' .env" +
+		" && sed -i 's|^# *DB_PORT=.*|DB_PORT=3306|' .env" +
+		" && sed -i 's|^DB_DATABASE=.*|DB_DATABASE=" + dbNameEsc + "|' .env" +
+		" && sed -i 's|^# *DB_DATABASE=.*|DB_DATABASE=" + dbNameEsc + "|' .env" +
+		" && sed -i 's|^DB_USERNAME=.*|DB_USERNAME=" + dbUser + "|' .env" +
+		" && sed -i 's|^# *DB_USERNAME=.*|DB_USERNAME=" + dbUser + "|' .env" +
+		" && sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=" + dbPassword + "|' .env" +
+		" && sed -i 's|^# *DB_PASSWORD=.*|DB_PASSWORD=" + dbPassword + "|' .env"
+
+	// Robust laravel-shopify require: check the actual vendor dir,
+	// not just `composer show` (a partial install leaves composer.json
+	// with the dep listed but vendor/ missing or corrupted, and
+	// `composer show` still exits 0 in that state, skipping require).
+	// `composer dump-autoload -o` after require ensures the autoloader
+	// picks up the new package even if a previous install left a
+	// stale optimized autoload.
+	requireLaravelShopify := "if [ ! -f vendor/kyon147/laravel-shopify/composer.json ]; then" +
+		" composer require kyon147/laravel-shopify --no-interaction;" +
+		" composer dump-autoload -o;" +
+		" fi"
+
+	installCommand := envPatch +
+		" && composer install --no-interaction --prefer-dist" +
+		" && " + requireLaravelShopify +
+		" && php artisan key:generate --force" +
+		" && php artisan migrate --force" +
+		" && php artisan vendor:publish --tag=shopify-config --force" +
+		" && php artisan vendor:publish --tag=shopify-routes --force"
+
+	phpContainer := docker.GetContainerName(projectConf, projectName, "php")
+	if err := docker.ContainerExec(phpContainer, "www-data", true, "bash", "-c", "cd "+workdir+" && "+installCommand); err != nil {
+		fmtc.WarningLn("Laravel + Kyon147/laravel-shopify install failed: " + err.Error())
+	}
+
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Laravel + Kyon147/laravel-shopify installed.")
+	fmtc.SuccessLn("[SUCCESS]: Project URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Edit config/shopify-app.php (API key/secret/scopes), then visit /authenticate?shop=<your-store>.myshopify.com to wire OAuth.")
 }

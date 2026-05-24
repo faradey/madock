@@ -232,6 +232,71 @@ func GetSpreePresets() []Preset {
 	}
 }
 
+// GetShopifyPresets returns available Shopify SDK / framework presets.
+// Each preset wires a different stack flavour:
+//   - hydrogen        : Node + Hydrogen storefront (Remix on Vite)
+//   - app-remix       : Node + Shopify App template (Remix + Prisma)
+//   - api-php         : PHP + official shopify-api Composer SDK
+//   - laravel-shopify : PHP + Laravel + Kyon147/laravel-shopify package
+func GetShopifyPresets() []Preset {
+	return []Preset{
+		{
+			Name:        "Hydrogen (Node.js storefront)",
+			Description: "Official headless storefront — Remix on Vite, Node 22, TypeScript. Deploys to Shopify Oxygen.",
+			Platform:    "shopify",
+			Versions: versions.ToolsVersions{
+				Platform:        "shopify",
+				PlatformVersion: "hydrogen",
+				Language:        "nodejs",
+				NodeJs:          "22.20.0",
+				Yarn:            "1.22.22",
+			},
+		},
+		{
+			Name:        "Shopify App (Node.js / Remix)",
+			Description: "Official embedded app template — Remix + Prisma + App Bridge, Node 22, TypeScript.",
+			Platform:    "shopify",
+			Versions: versions.ToolsVersions{
+				Platform:        "shopify",
+				PlatformVersion: "app-remix",
+				Language:        "nodejs",
+				NodeJs:          "22.20.0",
+				Yarn:            "1.22.22",
+			},
+		},
+		{
+			Name:        "PHP API SDK (shopify-api-php)",
+			Description: "Backend integration via official shopify/shopify-api Composer package. PHP 8.3, MariaDB, Redis.",
+			Platform:    "shopify",
+			Versions: versions.ToolsVersions{
+				Platform:        "shopify",
+				PlatformVersion: "api-php",
+				Language:        "php",
+				Php:             "8.3",
+				Db:              "mariadb:11.4",
+				Composer:        "2",
+				Redis:           "7.4",
+			},
+		},
+		{
+			Name:        "Laravel Shopify App (Kyon147/laravel-shopify)",
+			Description: "Full embedded Shopify App on Laravel — OAuth, billing, webhooks, AppBridge wired. PHP 8.3, MariaDB, Redis, Node for assets.",
+			Platform:    "shopify",
+			Versions: versions.ToolsVersions{
+				Platform:        "shopify",
+				PlatformVersion: "laravel-shopify",
+				Language:        "php",
+				Php:             "8.3",
+				Db:              "mariadb:11.4",
+				Composer:        "2",
+				Redis:           "7.4",
+				NodeJs:          "22.20.0",
+				Yarn:            "1.22.22",
+			},
+		},
+	}
+}
+
 // GetShopwarePresets returns available Shopware presets
 func GetShopwarePresets() []Preset {
 	return []Preset{
@@ -296,6 +361,7 @@ func init() {
 	RegisterPresets("saleor", GetSaleorPresets)
 	RegisterPresets("spree", GetSpreePresets)
 	RegisterPresets("sylius", GetSyliusPresets)
+	RegisterPresets("shopify", GetShopifyPresets)
 }
 
 // GetPresetsByPlatform returns presets for a specific platform.
