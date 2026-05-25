@@ -8,10 +8,12 @@ import (
 
 	"github.com/faradey/madock/v3/src/controller/general/install"
 	"github.com/faradey/madock/v3/src/controller/general/rebuild"
+	"github.com/faradey/madock/v3/src/helper/cli"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/projects"
+	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/faradey/madock/v3/src/helper/preset"
 	"github.com/faradey/madock/v3/src/helper/setup/tools"
@@ -176,12 +178,14 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-	if args.Download {
-		DownloadShopify(presetCode)
-	}
-
+	// Containers up first so all scaffolding (npm/git/composer) runs
+	// inside the project containers, not on the host. Mirrors Magento.
 	if args.Download || args.Install || continueSetup {
 		rebuild.Execute()
+	}
+
+	if args.Download {
+		DownloadShopify(projectName, presetCode)
 	}
 
 	if args.Install {
@@ -189,56 +193,72 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 }
 
-// DownloadShopify scaffolds the project based on the selected preset.
-// Hydrogen / app-remix run their official npx scaffolders; api-php and
-// laravel-shopify use composer create-project / init.
-func DownloadShopify(presetCode string) {
+// DownloadShopify scaffolds the project inside its containers based
+// on the selected preset. Hydrogen / app-remix run inside the nodejs
+// container; api-php / laravel-shopify run inside the php container.
+// No host-side dependency on node / composer / git.
+func DownloadShopify(projectName, presetCode string) {
 	target := paths.GetRunDirPath()
 	if !isDirEmpty(target) {
 		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
 		return
 	}
+	projectConf := configs.GetCurrentProjectConfig()
 
-	var cmd *exec.Cmd
+	stage := "download-shopify123456789"
 	switch presetCode {
 	case "hydrogen":
 		fmtc.InfoIconLn("Scaffolding Hydrogen storefront into " + target)
-		// `npm create @shopify/hydrogen@latest` runs the CLI in
-		// quickstart mode; the storefront ends up in ./<name>/ so we
-		// move files up after the clone.
-		cmd = exec.Command("npm", "create", "-y", "@shopify/hydrogen@latest", "--",
-			"--path", ".", "--quickstart", "--language", "ts", "--no-install-deps")
+		script := "rm -rf ./" + stage +
+			" && mkdir ./" + stage +
+			" && npm create -y @shopify/hydrogen@latest -- --path ./" + stage + " --quickstart --language ts --no-install-deps" +
+			" && shopt -s dotglob" +
+			" && mv ./" + stage + "/* ./ 2>/dev/null || true" +
+			" && rm -rf ./" + stage
+		runShopifyInContainer(projectConf, projectName, "nodejs", "node", script)
 	case "app-remix":
 		fmtc.InfoIconLn("Cloning Shopify App Remix template into " + target)
-		// `npm init @shopify/app` argument parsing is fragile across
-		// CLI versions (`--template`, `--name`, `--no-install-deps`
-		// were renamed several times in 2024). Clone the upstream
-		// template directly — it's the same content `npm init` would
-		// scaffold, just without the wizard step.
-		cmd = exec.Command("git", "clone", "--depth", "1",
-			"https://github.com/Shopify/shopify-app-template-remix.git", ".")
+		script := "rm -rf ./" + stage +
+			" && git clone --depth 1 https://github.com/Shopify/shopify-app-template-remix.git ./" + stage +
+			" && shopt -s dotglob" +
+			" && mv ./" + stage + "/* ./ 2>/dev/null || true" +
+			" && rm -rf ./" + stage
+		runShopifyInContainer(projectConf, projectName, "nodejs", "node", script)
 	case "laravel-shopify":
 		fmtc.InfoIconLn("Scaffolding Laravel + Kyon147/laravel-shopify into " + target)
-		// Two-step: laravel skeleton, then composer require the
-		// shopify package. Both run inside the host since the PHP
-		// container isn't up yet.
-		cmd = exec.Command("composer", "create-project", "--no-install",
-			"laravel/laravel", ".")
+		script := "rm -rf ./" + stage +
+			" && composer create-project --no-install --no-interaction laravel/laravel ./" + stage +
+			" && shopt -s dotglob" +
+			" && mv ./" + stage + "/* ./ 2>/dev/null || true" +
+			" && rm -rf ./" + stage
+		runShopifyInContainer(projectConf, projectName, "php", "www-data", script)
 	default:
 		fmtc.InfoIconLn("Initialising shopify-api-php project in " + target)
 		// Pin to ^6.0 — Shopify's PHP SDK latest stable is the v6
 		// line (v7 isn't published yet on Packagist as of writing).
-		cmd = exec.Command("composer", "init", "--no-interaction",
-			"--name=shopify/api-project",
-			"--type=project",
-			"--require=shopify/shopify-api:^6.0",
-			"--stability=stable")
+		runShopifyInContainer(projectConf, projectName, "php", "www-data",
+			"composer init --no-interaction "+
+				"--name=shopify/api-project "+
+				"--type=project "+
+				"--require=shopify/shopify-api:^6.0 "+
+				"--stability=stable")
 	}
-	cmd.Dir = target
+}
+
+func runShopifyInContainer(projectConf map[string]string, projectName, serviceHint, userHint, script string) {
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir(serviceHint, userHint, projectConf["workdir"])
+	ttyFlag := "-i"
+	if docker.IsTTYAvailable() {
+		ttyFlag = "-it"
+	}
+	cmd := exec.Command("docker", "exec", ttyFlag, "-u", user,
+		docker.GetContainerName(projectConf, projectName, service),
+		"bash", "-c", "cd "+workdir+" && "+script)
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmtc.WarningLn("Download failed: " + err.Error() + ". You can scaffold the project manually inside " + target + " and re-run `madock install`.")
+		fmtc.WarningLn("Download step failed: " + err.Error())
 	}
 }
 

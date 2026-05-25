@@ -8,10 +8,12 @@ import (
 
 	"github.com/faradey/madock/v3/src/controller/general/install"
 	"github.com/faradey/madock/v3/src/controller/general/rebuild"
+	"github.com/faradey/madock/v3/src/helper/cli"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/projects"
+	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/faradey/madock/v3/src/helper/preset"
 	"github.com/faradey/madock/v3/src/helper/setup/tools"
@@ -124,16 +126,15 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-	// Download BEFORE rebuild so containers start with the code already
-	// mounted. Otherwise the ruby entrypoint sees an empty
-	// /var/www/html, drops to its idle branch, and never recovers when
-	// the install handler later populates the directory.
-	if args.Download {
-		DownloadSpree()
-	}
-
+	// Containers up first so git clone runs inside the ruby /
+	// storefront containers, not on the host. Entrypoints poll for
+	// project files so an empty workdir at boot is safe.
 	if args.Download || args.Install || continueSetup {
 		rebuild.Execute()
+	}
+
+	if args.Download {
+		DownloadSpree(projectName)
 	}
 
 	if args.Install {
@@ -142,30 +143,25 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 }
 
 // DownloadSpree clones the upstream spree/spree_starter (Rails admin)
-// into the project root, then clones spree/storefront (Next.js
-// headless storefront) into ./storefront/ when the storefront is
-// enabled in config.
-func DownloadSpree() {
+// via the ruby container, then clones spree/storefront via the
+// storefront (nodejs) container when storefront is enabled.
+func DownloadSpree(projectName string) {
 	target := paths.GetRunDirPath()
 	if !isDirEmpty(target) {
 		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
 		return
 	}
+	projectConf := configs.GetCurrentProjectConfig()
 	repo := "https://github.com/spree/spree_starter.git"
 	fmtc.InfoIconLn("Cloning " + repo + " into " + target)
-	cmd := exec.Command("git", "clone", "--depth", "1", repo, ".")
-	cmd.Dir = target
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		fmtc.WarningLn("Failed to clone Spree starter: " + err.Error())
-		return
-	}
+	stage := "download-spree123456789"
+	mainScript := "rm -rf ./" + stage +
+		" && git clone --depth 1 " + repo + " ./" + stage +
+		" && shopt -s dotglob" +
+		" && mv ./" + stage + "/* ./ 2>/dev/null || true" +
+		" && rm -rf ./" + stage
+	runSpreeInContainer(projectConf, projectName, "ruby", "ruby", mainScript)
 
-	// Storefront clone. Read the URL + folder name from project config
-	// so a user-overridden fork / branch still works. Skip silently
-	// when the storefront is disabled.
-	projectConf := configs.GetCurrentProjectConfig()
 	if projectConf["spree/storefront/enabled"] != "true" {
 		return
 	}
@@ -183,12 +179,26 @@ func DownloadSpree() {
 		return
 	}
 	fmtc.InfoIconLn("Cloning " + storefrontGitURL + " into " + storefrontTarget)
-	scmd := exec.Command("git", "clone", "--depth", "1", storefrontGitURL, storefrontDir)
-	scmd.Dir = target
-	scmd.Stdout = os.Stdout
-	scmd.Stderr = os.Stderr
-	if err := scmd.Run(); err != nil {
-		fmtc.WarningLn("Failed to clone Spree storefront: " + err.Error())
+	// Storefront clone goes alongside the rails app — run as the ruby
+	// user so the storefront subdir is owned by the same project user.
+	storefrontScript := "git clone --depth 1 " + storefrontGitURL + " " + storefrontDir
+	runSpreeInContainer(projectConf, projectName, "ruby", "ruby", storefrontScript)
+}
+
+func runSpreeInContainer(projectConf map[string]string, projectName, serviceHint, userHint, script string) {
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir(serviceHint, userHint, projectConf["workdir"])
+	ttyFlag := "-i"
+	if docker.IsTTYAvailable() {
+		ttyFlag = "-it"
+	}
+	cmd := exec.Command("docker", "exec", ttyFlag, "-u", user,
+		docker.GetContainerName(projectConf, projectName, service),
+		"bash", "-c", "cd "+workdir+" && "+script)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmtc.WarningLn("Download step failed: " + err.Error())
 	}
 }
 

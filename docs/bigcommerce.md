@@ -6,7 +6,7 @@ madock can scaffold a BigCommerce project from any of four SDK/framework presets
 |-------------|-------------|-----------------------------------------------------------|------------------------------------|
 | `catalyst`  | Node + TS   | Official headless storefront (Next.js monorepo)           | Node 22 + pnpm                     |
 | `stencil`   | Node + Handlebars | Legacy theme dev with @bigcommerce/stencil-cli      | Node 22 + Stencil CLI              |
-| `api-php`   | PHP         | Backend integration via bigcommerce/api-client Composer SDK | PHP 8.3 + MariaDB + Redis        |
+| `api-php`   | PHP         | Backend integration via bigcommerce/api Composer SDK | PHP 8.3 + MariaDB + Redis        |
 | `app-node`  | Node + TS   | Embedded App Marketplace template (Express + Next.js)     | Node 22                            |
 
 ## Quick start
@@ -57,7 +57,7 @@ stencil start --tunnel      # opens an ngrok-style tunnel against the live store
 
 ### `api-php` — Backend integration SDK
 
-Scaffolds a `composer init` project pinned to `bigcommerce/api-client:^0.4`. No framework — just the SDK. Use case: cron jobs / ETL scripts syncing BigCommerce orders with an existing PHP backend.
+Scaffolds a `composer init` project pinned to `bigcommerce/api:^3.3`. No framework — just the SDK. Use case: cron jobs / ETL scripts syncing BigCommerce orders with an existing PHP backend.
 
 ```php
 use Bigcommerce\Api\Client;

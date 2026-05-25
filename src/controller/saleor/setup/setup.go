@@ -8,10 +8,12 @@ import (
 
 	"github.com/faradey/madock/v3/src/controller/general/install"
 	"github.com/faradey/madock/v3/src/controller/general/rebuild"
+	"github.com/faradey/madock/v3/src/helper/cli"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/projects"
+	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/faradey/madock/v3/src/helper/preset"
 	"github.com/faradey/madock/v3/src/helper/setup/tools"
@@ -124,16 +126,15 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-	// Download BEFORE rebuild so containers start with the code already
-	// mounted. Otherwise the python entrypoint sees an empty
-	// /var/www/html, drops to its idle branch, and never recovers when
-	// the install handler later populates the directory.
-	if args.Download {
-		DownloadSaleor(toolsDefVersions.PlatformVersion)
-	}
-
+	// Containers up first so git clone runs inside the python
+	// container, not on the host. Saleor's entrypoint polls for
+	// manage.py / pyproject.toml, so an empty workdir at boot is safe.
 	if args.Download || args.Install || continueSetup {
 		rebuild.Execute()
+	}
+
+	if args.Download {
+		DownloadSaleor(projectName, toolsDefVersions.PlatformVersion)
 	}
 
 	if args.Install {
@@ -142,24 +143,43 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 }
 
 // DownloadSaleor clones the upstream saleor/saleor repo into the
-// current project root. Branch defaults to the platform version's
+// current project root via the python container so the host has no
+// git dependency. Branch defaults to the platform version's
 // major.minor (e.g. 3.23.6 -> branch "3.23"); falls back to `main`
 // when the version is empty or doesn't look like a Saleor release tag.
-func DownloadSaleor(platformVersion string) {
+func DownloadSaleor(projectName, platformVersion string) {
 	target := paths.GetRunDirPath()
 	if !isDirEmpty(target) {
 		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
 		return
 	}
+	projectConf := configs.GetCurrentProjectConfig()
 	branch := branchFromVersion(platformVersion)
 	repo := "https://github.com/saleor/saleor.git"
 	fmtc.InfoIconLn("Cloning " + repo + "@" + branch + " into " + target)
-	cmd := exec.Command("git", "clone", "--depth", "1", "--branch", branch, repo, ".")
-	cmd.Dir = target
+	stage := "download-saleor123456789"
+	script := "rm -rf ./" + stage +
+		" && git clone --depth 1 --branch " + branch + " " + repo + " ./" + stage +
+		" && shopt -s dotglob" +
+		" && mv ./" + stage + "/* ./ 2>/dev/null || true" +
+		" && rm -rf ./" + stage
+	runSaleorInContainer(projectConf, projectName, "python", "saleor", script)
+}
+
+func runSaleorInContainer(projectConf map[string]string, projectName, serviceHint, userHint, script string) {
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir(serviceHint, userHint, projectConf["workdir"])
+	ttyFlag := "-i"
+	if docker.IsTTYAvailable() {
+		ttyFlag = "-it"
+	}
+	cmd := exec.Command("docker", "exec", ttyFlag, "-u", user,
+		docker.GetContainerName(projectConf, projectName, service),
+		"bash", "-c", "cd "+workdir+" && "+script)
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmtc.WarningLn("Failed to clone Saleor: " + err.Error())
+		fmtc.WarningLn("Download step failed: " + err.Error())
 	}
 }
 

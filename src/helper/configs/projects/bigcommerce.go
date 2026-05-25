@@ -15,7 +15,7 @@ func init() {
 //   - catalyst : Node-only (Next.js storefront)
 //   - stencil  : Node-only (Stencil CLI for theme dev — proxies the
 //                live store, no DB needed locally)
-//   - api-php  : PHP + MariaDB + Redis (raw bigcommerce/api-client)
+//   - api-php  : PHP + MariaDB + Redis (raw bigcommerce/api SDK)
 //   - app-node : Node-only (Express + Next.js embedded app, OAuth
 //                session storage via SQLite/JSON file by default)
 //

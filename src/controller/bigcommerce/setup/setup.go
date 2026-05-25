@@ -8,10 +8,12 @@ import (
 
 	"github.com/faradey/madock/v3/src/controller/general/install"
 	"github.com/faradey/madock/v3/src/controller/general/rebuild"
+	"github.com/faradey/madock/v3/src/helper/cli"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/projects"
+	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/faradey/madock/v3/src/helper/preset"
 	"github.com/faradey/madock/v3/src/helper/setup/tools"
@@ -152,12 +154,16 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-	if args.Download {
-		DownloadBigcommerce(presetCode)
-	}
-
+	// Containers must be up before Download so all platform-specific
+	// scaffolding (git clone, composer init) runs inside the project
+	// containers — the host needs only `docker`. Mirrors Magento's
+	// order: rebuild → DownloadX (docker exec) → install.
 	if args.Download || args.Install || continueSetup {
 		rebuild.Execute()
+	}
+
+	if args.Download {
+		DownloadBigcommerce(projectName, presetCode)
 	}
 
 	if args.Install {
@@ -165,52 +171,77 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 }
 
-// DownloadBigcommerce scaffolds the project based on the selected
-// preset. Each preset clones / scaffolds a different upstream
-// template — catalyst via npx, stencil via git clone, api-php via
-// composer init, app-node via git clone.
-func DownloadBigcommerce(presetCode string) {
+// DownloadBigcommerce scaffolds the project inside the project
+// container based on the selected preset. Catalyst / Stencil /
+// app-node clone via git in the nodejs container; api-php writes a
+// minimal composer.json via the php container. Matches Magento's
+// "docker exec into the workdir" pattern so madock has no host-side
+// dependency on git / composer / npm.
+func DownloadBigcommerce(projectName, presetCode string) {
 	target := paths.GetRunDirPath()
 	if !isDirEmpty(target) {
 		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
 		return
 	}
+	projectConf := configs.GetCurrentProjectConfig()
 
-	var cmd *exec.Cmd
+	var serviceName, userName, repoURL, label string
 	switch presetCode {
 	case "catalyst":
-		fmtc.InfoIconLn("Cloning BigCommerce Catalyst storefront into " + target)
-		// `npm create @bigcommerce/catalyst@latest` parses
-		// arguments inconsistently across releases — clone the
-		// upstream monorepo's `apps/core` template directly. Easy
-		// to maintain, no CLI version pinning required.
-		cmd = exec.Command("git", "clone", "--depth", "1",
-			"https://github.com/bigcommerce/catalyst.git", ".")
+		serviceName, userName = "nodejs", "node"
+		repoURL = "https://github.com/bigcommerce/catalyst.git"
+		label = "BigCommerce Catalyst storefront"
 	case "stencil":
-		fmtc.InfoIconLn("Cloning BigCommerce Cornerstone theme into " + target)
-		// Stencil CLI works against any Cornerstone-based theme.
-		// Cornerstone is the canonical starting point.
-		cmd = exec.Command("git", "clone", "--depth", "1",
-			"https://github.com/bigcommerce/cornerstone.git", ".")
+		serviceName, userName = "nodejs", "node"
+		repoURL = "https://github.com/bigcommerce/cornerstone.git"
+		label = "BigCommerce Cornerstone theme"
 	case "app-node":
-		fmtc.InfoIconLn("Cloning BigCommerce sample Node app into " + target)
-		// Express + Next.js embedded app — official sample.
-		cmd = exec.Command("git", "clone", "--depth", "1",
-			"https://github.com/bigcommerce/sample-app-nodejs.git", ".")
+		serviceName, userName = "nodejs", "node"
+		repoURL = "https://github.com/bigcommerce/sample-app-nodejs.git"
+		label = "BigCommerce sample Node app"
 	default:
 		// api-php
-		fmtc.InfoIconLn("Initialising bigcommerce/api-client project in " + target)
-		cmd = exec.Command("composer", "init", "--no-interaction",
-			"--name=bigcommerce/api-project",
-			"--type=project",
-			"--require=bigcommerce/api-client:^0.4",
-			"--stability=stable")
+		fmtc.InfoIconLn("Initialising bigcommerce/api project in " + target)
+		runInContainer(projectConf, projectName, "php", "www-data",
+			"composer init --no-interaction "+
+				"--name=bigcommerce/api-project "+
+				"--type=project "+
+				"--require=bigcommerce/api:^3.3 "+
+				"--stability=stable")
+		return
 	}
-	cmd.Dir = target
+
+	fmtc.InfoIconLn("Cloning " + label + " into " + target)
+	// Clone into a temp subdir then move contents, mirroring
+	// Magento's Download trick — `git clone .` refuses a non-empty
+	// dir, and the workdir may already hold .madock / .docker
+	// artefacts from rebuild.
+	stage := "download-bigcommerce123456789"
+	script := "rm -rf ./" + stage +
+		" && git clone --depth 1 " + repoURL + " ./" + stage +
+		" && shopt -s dotglob" +
+		" && mv ./" + stage + "/* ./ 2>/dev/null || true" +
+		" && rm -rf ./" + stage
+	runInContainer(projectConf, projectName, serviceName, userName, script)
+}
+
+// runInContainer is a thin wrapper around `docker exec -u user
+// container bash -c script` that keeps the BigCommerce Download flow
+// readable.
+func runInContainer(projectConf map[string]string, projectName, serviceHint, userHint, script string) {
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir(serviceHint, userHint, projectConf["workdir"])
+	ttyFlag := "-i"
+	if docker.IsTTYAvailable() {
+		ttyFlag = "-it"
+	}
+	cmd := exec.Command("docker", "exec", ttyFlag, "-u", user,
+		docker.GetContainerName(projectConf, projectName, service),
+		"bash", "-c", "cd "+workdir+" && "+script)
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmtc.WarningLn("Download failed: " + err.Error() + ". You can scaffold the project manually inside " + target + " and re-run `madock install`.")
+		fmtc.WarningLn("Download step failed: " + err.Error())
 	}
 }
 

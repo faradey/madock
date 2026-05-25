@@ -8,10 +8,12 @@ import (
 
 	"github.com/faradey/madock/v3/src/controller/general/install"
 	"github.com/faradey/madock/v3/src/controller/general/rebuild"
+	"github.com/faradey/madock/v3/src/helper/cli"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/projects"
+	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/faradey/madock/v3/src/helper/preset"
 	"github.com/faradey/madock/v3/src/helper/setup/tools"
@@ -142,16 +144,16 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-	// Download BEFORE rebuild so containers start with the code already
-	// mounted. The php entrypoint expects a project tree in
-	// /var/www/html and Sylius' composer install needs the cloned
-	// composer.json on disk before php-fpm boots.
-	if args.Download {
-		DownloadSylius()
-	}
-
+	// Containers up first so git clone runs inside the php container,
+	// not on the host. php-fpm starts fine with an empty workdir, and
+	// composer install (in the install handler) runs later once the
+	// project tree is in place.
 	if args.Download || args.Install || continueSetup {
 		rebuild.Execute()
+	}
+
+	if args.Download {
+		DownloadSylius(projectName)
 	}
 
 	if args.Install {
@@ -160,19 +162,34 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 }
 
 // DownloadSylius clones the upstream Sylius/Sylius-Standard repo into
-// the current project root. The standard project is a full Symfony app
+// the current project root via the php container so the host has no
+// git dependency. The standard project is a full Symfony app
 // pre-configured with Sylius bundles, fixtures and the Webpack Encore
 // frontend pipeline.
-func DownloadSylius() {
+func DownloadSylius(projectName string) {
 	target := paths.GetRunDirPath()
 	if !isDirEmpty(target) {
 		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
 		return
 	}
+	projectConf := configs.GetCurrentProjectConfig()
 	repo := "https://github.com/Sylius/Sylius-Standard.git"
 	fmtc.InfoIconLn("Cloning " + repo + " into " + target)
-	cmd := exec.Command("git", "clone", "--depth", "1", repo, ".")
-	cmd.Dir = target
+	stage := "download-sylius123456789"
+	script := "rm -rf ./" + stage +
+		" && git clone --depth 1 " + repo + " ./" + stage +
+		" && shopt -s dotglob" +
+		" && mv ./" + stage + "/* ./ 2>/dev/null || true" +
+		" && rm -rf ./" + stage
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
+	ttyFlag := "-i"
+	if docker.IsTTYAvailable() {
+		ttyFlag = "-it"
+	}
+	cmd := exec.Command("docker", "exec", ttyFlag, "-u", user,
+		docker.GetContainerName(projectConf, projectName, service),
+		"bash", "-c", "cd "+workdir+" && "+script)
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {

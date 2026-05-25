@@ -8,10 +8,12 @@ import (
 
 	"github.com/faradey/madock/v3/src/controller/general/install"
 	"github.com/faradey/madock/v3/src/controller/general/rebuild"
+	"github.com/faradey/madock/v3/src/helper/cli"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/projects"
+	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/faradey/madock/v3/src/helper/preset"
 	"github.com/faradey/madock/v3/src/helper/setup/tools"
@@ -144,16 +146,16 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	fmtc.ToDoLn("to synchronize the database and media files. Enter SSH data in ")
 	fmtc.ToDoLn(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml")
 
-	// Download BEFORE rebuild so containers start with the code already
-	// mounted. Otherwise the nodejs entrypoint sees an empty
-	// /var/www/html, drops to a Node REPL, and never recovers when the
-	// install handler later populates the directory.
-	if args.Download {
-		DownloadMedusa(projectName)
-	}
-
+	// Containers up first so all scaffolding (git clone) runs inside
+	// the nodejs container, not on the host. Mirrors Magento's order.
+	// The nodejs entrypoint waits for package.json to appear, so an
+	// empty workdir at boot is safe.
 	if args.Download || args.Install || continueSetup {
 		rebuild.Execute()
+	}
+
+	if args.Download {
+		DownloadMedusa(projectName)
 	}
 
 	if args.Install {
@@ -164,29 +166,24 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 // DownloadMedusa clones the official Medusa starter into the project
 // root when the directory is empty, then clones the Next.js storefront
 // starter into ./storefront/ when storefront is enabled in config.
-// The user can then run `madock install` (or use `-i` on setup) to
-// apply migrations and create the admin user.
+// Runs inside the nodejs container so the host has no git dependency.
 func DownloadMedusa(projectName string) {
 	target := paths.GetRunDirPath()
 	if !isDirEmpty(target) {
 		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
 		return
 	}
+	projectConf := configs.GetCurrentProjectConfig()
 	repo := "https://github.com/medusajs/medusa-starter-default.git"
 	fmtc.InfoIconLn("Cloning " + repo + " into " + target)
-	cmd := exec.Command("git", "clone", "--depth", "1", repo, ".")
-	cmd.Dir = target
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		fmtc.WarningLn("Failed to clone Medusa starter: " + err.Error())
-		return
-	}
+	stage := "download-medusa123456789"
+	mainScript := "rm -rf ./" + stage +
+		" && git clone --depth 1 " + repo + " ./" + stage +
+		" && shopt -s dotglob" +
+		" && mv ./" + stage + "/* ./ 2>/dev/null || true" +
+		" && rm -rf ./" + stage
+	runMedusaInContainer(projectConf, projectName, "nodejs", "node", mainScript)
 
-	// Storefront clone. Read the URL + folder name from project
-	// config so a user-overridden fork / branch still works. Skip
-	// silently when storefront is disabled.
-	projectConf := configs.GetCurrentProjectConfig()
 	if projectConf["medusa/storefront/enabled"] != "true" {
 		return
 	}
@@ -204,12 +201,24 @@ func DownloadMedusa(projectName string) {
 		return
 	}
 	fmtc.InfoIconLn("Cloning " + storefrontGitURL + " into " + storefrontTarget)
-	scmd := exec.Command("git", "clone", "--depth", "1", storefrontGitURL, storefrontDir)
-	scmd.Dir = target
-	scmd.Stdout = os.Stdout
-	scmd.Stderr = os.Stderr
-	if err := scmd.Run(); err != nil {
-		fmtc.WarningLn("Failed to clone Medusa storefront: " + err.Error())
+	storefrontScript := "git clone --depth 1 " + storefrontGitURL + " " + storefrontDir
+	runMedusaInContainer(projectConf, projectName, "nodejs", "node", storefrontScript)
+}
+
+func runMedusaInContainer(projectConf map[string]string, projectName, serviceHint, userHint, script string) {
+	service, user, workdir := cli.GetEnvForUserServiceWorkdir(serviceHint, userHint, projectConf["workdir"])
+	ttyFlag := "-i"
+	if docker.IsTTYAvailable() {
+		ttyFlag = "-it"
+	}
+	cmd := exec.Command("docker", "exec", ttyFlag, "-u", user,
+		docker.GetContainerName(projectConf, projectName, service),
+		"bash", "-c", "cd "+workdir+" && "+script)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmtc.WarningLn("Download step failed: " + err.Error())
 	}
 }
 

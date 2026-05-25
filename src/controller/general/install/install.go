@@ -1605,7 +1605,7 @@ console.log('[madock] package.json: parked scripts.dev as scripts.dev:stencil');
 }
 
 func bigcommerceInstallApiPhp(projectConf map[string]string, projectName, host, workdir string) {
-	// bigcommerce/api-client is a library. Just install deps so the
+	// bigcommerce/api is a library. Just install deps so the
 	// autoloader is ready. Pick install vs update based on whether
 	// a lock exists (fresh `composer init` doesn't ship one).
 	phpContainer := docker.GetContainerName(projectConf, projectName, "php")
@@ -1614,7 +1614,7 @@ func bigcommerceInstallApiPhp(projectConf map[string]string, projectName, host, 
 		fmtc.WarningLn("composer install failed: " + err.Error())
 	}
 	fmt.Println("")
-	fmtc.SuccessLn("[SUCCESS]: bigcommerce/api-client project initialised.")
+	fmtc.SuccessLn("[SUCCESS]: bigcommerce/api project initialised.")
 	fmtc.SuccessLn("[SUCCESS]: Project URL: https://" + host)
 	fmtc.SuccessLn("[SUCCESS]: Bootstrap with `Bigcommerce\\Api\\Client::configure([...])`. Docs: https://github.com/bigcommerce/bigcommerce-api-php")
 }

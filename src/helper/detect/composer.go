@@ -103,10 +103,9 @@ func DetectFromComposer(projectPath string) DetectionResult {
 	}
 
 	// BigCommerce — api-php preset uses the official Composer
-	// package. Both `bigcommerce/api-client` (current) and the
-	// legacy `bigcommerce/bigcommerce-api-php` package name are
-	// honored.
-	for _, pkg := range []string{"bigcommerce/api-client", "bigcommerce/bigcommerce-api-php"} {
+	// package. Packagist name is `bigcommerce/api`; the legacy
+	// `bigcommerce/bigcommerce-api-php` package name is also honored.
+	for _, pkg := range []string{"bigcommerce/api", "bigcommerce/bigcommerce-api-php"} {
 		if _, ok := composer.Require[pkg]; ok {
 			result.Platform = "bigcommerce"
 			result.Language = "php"

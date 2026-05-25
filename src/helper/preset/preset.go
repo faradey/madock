@@ -301,7 +301,7 @@ func GetShopifyPresets() []Preset {
 // presets. Each preset wires a different stack flavour:
 //   - catalyst : Node + Catalyst (Next.js) headless storefront
 //   - stencil  : Node + Stencil CLI for legacy theme dev
-//   - api-php  : PHP + bigcommerce/api-client Composer SDK
+//   - api-php  : PHP + bigcommerce/api Composer SDK
 //   - app-node : Node + Express embedded App Marketplace template
 func GetBigcommercePresets() []Preset {
 	return []Preset{
@@ -330,8 +330,8 @@ func GetBigcommercePresets() []Preset {
 			},
 		},
 		{
-			Name:        "PHP API SDK (bigcommerce/api-client)",
-			Description: "Backend integration via the official bigcommerce/api-client Composer package. PHP 8.3, MariaDB, Redis.",
+			Name:        "PHP API SDK (bigcommerce/api)",
+			Description: "Backend integration via the official bigcommerce/api Composer package. PHP 8.3, MariaDB, Redis.",
 			Platform:    "bigcommerce",
 			Versions: versions.ToolsVersions{
 				Platform:        "bigcommerce",
