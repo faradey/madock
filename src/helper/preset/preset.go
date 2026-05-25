@@ -307,14 +307,18 @@ func GetBigcommercePresets() []Preset {
 	return []Preset{
 		{
 			Name:        "Catalyst (Next.js storefront)",
-			Description: "Official headless storefront — Next.js + TypeScript, Tailwind. Node 22.",
+			Description: "Official headless storefront — Next.js + TypeScript, Tailwind. Node 24.",
 			Platform:    "bigcommerce",
 			Versions: versions.ToolsVersions{
 				Platform:        "bigcommerce",
 				PlatformVersion: "catalyst",
 				Language:        "nodejs",
-				NodeJs:          "22.20.0",
-				Yarn:            "1.22.22",
+				// Catalyst's root package.json declares
+				// "engines": { "node": ">=24.0.0" } — pnpm install
+				// warns and some workspace packages refuse to build
+				// on Node 22. Bump to current Node 24.
+				NodeJs: "24.10.0",
+				Yarn:   "1.22.22",
 			},
 		},
 		{
