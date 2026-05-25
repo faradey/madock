@@ -219,6 +219,18 @@ func (s *InteractiveSelector) render() {
 		visibleEnd = len(s.Options)
 	}
 
+	// Detect terminal width so the box never overflows. When a line
+	// wraps, clearLines (which moves cursor up by logical \033[A) ends
+	// up off by one and leaves residue in subsequent renders.
+	termCols, _, termErr := term.GetSize(int(os.Stdout.Fd()))
+	if termErr != nil || termCols <= 0 {
+		termCols = 120
+	}
+	maxAllowed := termCols - 2
+	if maxAllowed < 40 {
+		maxAllowed = 40
+	}
+
 	// Calculate width based on visible options
 	maxWidth := len(s.Title) + 4
 	for i := visibleStart; i < visibleEnd; i++ {
@@ -233,6 +245,9 @@ func (s *InteractiveSelector) render() {
 	}
 	if maxWidth < 40 {
 		maxWidth = 40
+	}
+	if maxWidth > maxAllowed {
+		maxWidth = maxAllowed
 	}
 
 	// Title with scroll info
@@ -266,6 +281,20 @@ func (s *InteractiveSelector) render() {
 		isSelected := i == s.Selected
 		isRecommended := i == s.Recommended
 
+		// Truncate option text to fit the box: total line width is
+		// maxWidth+2 (borders), and the option text shares its row
+		// with "│ ▸ N) " (7 cols) and the optional "(recommended)"
+		// suffix (14 cols including its leading space).
+		maxOptLen := maxWidth - 7
+		if isRecommended {
+			maxOptLen -= 14
+		}
+		displayOpt := opt
+		runes := []rune(displayOpt)
+		if maxOptLen > 3 && len(runes) > maxOptLen {
+			displayOpt = string(runes[:maxOptLen-1]) + "…"
+		}
+
 		fmt.Printf("%s│%s ", color.Cyan, color.Reset)
 
 		if isSelected {
@@ -275,17 +304,17 @@ func (s *InteractiveSelector) render() {
 		}
 
 		if isSelected {
-			fmt.Printf("%s%d) %s", color.Green, i, opt)
+			fmt.Printf("%s%d) %s", color.Green, i, displayOpt)
 		} else {
-			fmt.Printf("%s%d)%s %s", color.Cyan, i, color.Reset, opt)
+			fmt.Printf("%s%d)%s %s", color.Cyan, i, color.Reset, displayOpt)
 		}
 
 		if isRecommended {
 			fmt.Printf(" %s(recommended)%s", color.Gray, color.Reset)
 		}
 
-		// Padding
-		visibleLen := len(fmt.Sprintf("%d) %s", i, opt)) + 4
+		// Padding (count runes for unicode-safe alignment)
+		visibleLen := len([]rune(fmt.Sprintf("%d) %s", i, displayOpt))) + 4
 		if isRecommended {
 			visibleLen += 14
 		}

@@ -25,8 +25,9 @@ func SelectPreset(title string, presets []PresetOption) int {
 		}
 	}
 
-	// Last option (Custom) is not recommended, first preset is
-	selector := NewInteractiveSelector(title, options, 0)
+	// No recommended highlight: madock is multi-platform / multi-language,
+	// so the first preset is not a universal default.
+	selector := NewInteractiveSelector(title, options, -1)
 	idx, _ := selector.Run()
 	return idx
 }
