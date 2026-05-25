@@ -1586,10 +1586,14 @@ console.log('[madock] package.json: parked scripts.dev as scripts.dev:stencil');
 "`
 	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
 	cmd := patchDev +
-		" && (test -f yarn.lock && yarn install || npm install)" +
-		" && (npm install -g @bigcommerce/stencil-cli || true)"
+		" && (test -f yarn.lock && yarn install || npm install)"
 	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
 		fmtc.WarningLn("Stencil install failed: " + err.Error())
+	}
+	// stencil-cli is a global npm package — /usr/local/lib/node_modules is
+	// root-owned, so this must run as root, not as the `node` user.
+	if err := docker.ContainerExec(nodejsContainer, "root", true, "bash", "-c", "npm install -g @bigcommerce/stencil-cli"); err != nil {
+		fmtc.WarningLn("Global stencil-cli install failed: " + err.Error())
 	}
 	if rerr := exec.Command("docker", "restart", nodejsContainer).Run(); rerr != nil {
 		fmtc.WarningLn("Could not restart nodejs container: " + rerr.Error())
