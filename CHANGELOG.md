@@ -1,3 +1,22 @@
+**v3.7.12**
+
+Added:
+- BigCommerce platform support with 4 SDK/framework presets:
+  - `--preset catalyst` (Node 22 + Catalyst monorepo) — official headless Next.js storefront. Pnpm + turbo monorepo. Install pre-installs pnpm globally in the nodejs image, clones `bigcommerce/catalyst`, runs `pnpm install` across workspaces, rewrites root `scripts.dev` to filter to `./core` with `-H 0.0.0.0` forwarded via `--` (turbo rejects bare `-H`), and parks `scripts.dev` as `scripts.dev:catalyst` so the container stays up until the user adds real store credentials to `core/.env.local` and runs `npm run dev:catalyst` (Catalyst's pre-dev `generate` step needs the store hash to fetch the GraphQL schema)
+  - `--preset stencil` (Node 22 + Stencil CLI) — Cornerstone-based theme dev. Clones `bigcommerce/cornerstone`, runs `npm install`, installs `@bigcommerce/stencil-cli` globally, parks `scripts.dev` (Stencil needs interactive `stencil init` + API token entry)
+  - `--preset api-php` (PHP 8.3 + MariaDB + Redis) — `bigcommerce/api-client` Composer SDK for backend integrations. `composer init` scaffolds pinned to `^0.4`, `composer install` (or update when no lock yet)
+  - `--preset app-node` (Node 22) — `bigcommerce/sample-app-nodejs` (Express + Next.js with OAuth handshake) clone. Parks `scripts.dev` as `scripts.dev:bc` (app dev needs interactive Developer auth + ngrok tunnel)
+- `madock bigcommerce <cmd>` (alias `madock bc`) — preset-aware container exec. Routes to nodejs container for catalyst/stencil/app-node, php container for api-php
+- BigCommerce env writer mirrors Shopify's preset-branching: Node-only presets drop PHP/DB/Redis; PHP preset keeps full stack. Default DB name `bigcommerce` for the PHP preset, redis on by default with project-level override honored
+- Auto-detection: composer.json with `bigcommerce/api-client` or legacy `bigcommerce/bigcommerce-api-php` → api-php preset. package.json with `@bigcommerce/catalyst-core` / `-client` / `checkout-sdk` → catalyst, with `@bigcommerce/stencil-cli` or `name=cornerstone` → stencil
+- `docker/bigcommerce/nodejs/Dockerfile` pre-installs pnpm globally so the entrypoint's `pnpm dev` works without the `corepack enable` root-permission dance
+- `docker/bigcommerce/nginx/conf/default.conf` swaps between FastCGI (PHP backend) and a Node-only proxy block based on `php/enabled` / `nodejs/enabled`. Node branch uses an in-block `map $http_upgrade $node_connection_upgrade` for Connection-header handling (matches the Shopify Node-preset pattern). For catalyst / stencil / app-node `main_service_port=3000`
+- `MakeConfBigcommerce` materialises only the Dockerfiles the selected preset uses — Node-only presets skip PHP/DB/Redis Dockerfiles entirely. Same pattern as `MakeConfShopify`
+
+Docs:
+- `docs/bigcommerce.md` — preset matrix, install pipeline per preset, services-per-preset table, switching presets, gotchas (Missing store hash, turbo -H bug, stencil auth, app-node CLIENT_ID)
+- `README.md` — BigCommerce added to supported platforms list and key features
+
 **v3.7.11**
 
 Shopify presets — post-tracer hardening:
