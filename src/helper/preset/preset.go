@@ -297,6 +297,67 @@ func GetShopifyPresets() []Preset {
 	}
 }
 
+// GetBigcommercePresets returns available BigCommerce SDK / framework
+// presets. Each preset wires a different stack flavour:
+//   - catalyst : Node + Catalyst (Next.js) headless storefront
+//   - stencil  : Node + Stencil CLI for legacy theme dev
+//   - api-php  : PHP + bigcommerce/api-client Composer SDK
+//   - app-node : Node + Express embedded App Marketplace template
+func GetBigcommercePresets() []Preset {
+	return []Preset{
+		{
+			Name:        "Catalyst (Next.js storefront)",
+			Description: "Official headless storefront — Next.js + TypeScript, Tailwind. Node 22.",
+			Platform:    "bigcommerce",
+			Versions: versions.ToolsVersions{
+				Platform:        "bigcommerce",
+				PlatformVersion: "catalyst",
+				Language:        "nodejs",
+				NodeJs:          "22.20.0",
+				Yarn:            "1.22.22",
+			},
+		},
+		{
+			Name:        "Stencil theme (Node + Handlebars)",
+			Description: "Legacy theme dev with @bigcommerce/stencil-cli — Cornerstone-based themes, Handlebars templates. Node 22.",
+			Platform:    "bigcommerce",
+			Versions: versions.ToolsVersions{
+				Platform:        "bigcommerce",
+				PlatformVersion: "stencil",
+				Language:        "nodejs",
+				NodeJs:          "22.20.0",
+				Yarn:            "1.22.22",
+			},
+		},
+		{
+			Name:        "PHP API SDK (bigcommerce/api-client)",
+			Description: "Backend integration via the official bigcommerce/api-client Composer package. PHP 8.3, MariaDB, Redis.",
+			Platform:    "bigcommerce",
+			Versions: versions.ToolsVersions{
+				Platform:        "bigcommerce",
+				PlatformVersion: "api-php",
+				Language:        "php",
+				Php:             "8.3",
+				Db:              "mariadb:11.4",
+				Composer:        "2",
+				Redis:           "7.4",
+			},
+		},
+		{
+			Name:        "Node App (Express / Next.js)",
+			Description: "Embedded App Marketplace template — Express + Next.js + OAuth handshake. Node 22.",
+			Platform:    "bigcommerce",
+			Versions: versions.ToolsVersions{
+				Platform:        "bigcommerce",
+				PlatformVersion: "app-node",
+				Language:        "nodejs",
+				NodeJs:          "22.20.0",
+				Yarn:            "1.22.22",
+			},
+		},
+	}
+}
+
 // GetShopwarePresets returns available Shopware presets
 func GetShopwarePresets() []Preset {
 	return []Preset{
@@ -362,6 +423,7 @@ func init() {
 	RegisterPresets("spree", GetSpreePresets)
 	RegisterPresets("sylius", GetSyliusPresets)
 	RegisterPresets("shopify", GetShopifyPresets)
+	RegisterPresets("bigcommerce", GetBigcommercePresets)
 }
 
 // GetPresetsByPlatform returns presets for a specific platform.

@@ -50,6 +50,44 @@ func DetectFromPackageJSON(projectPath string) DetectionResult {
 		return result
 	}
 
+	// BigCommerce Catalyst — Next.js storefront. Detected via the
+	// catalyst-specific deps. The starter publishes packages under
+	// @bigcommerce/* and includes a top-level `@thebcms/storefront`
+	// or `@catalyst/*` workspace depending on version.
+	for _, dep := range []string{
+		"@bigcommerce/catalyst-core",
+		"@bigcommerce/catalyst-client",
+		"@bigcommerce/checkout-sdk",
+	} {
+		if _, ok := lookupDep(&pkg, dep); ok {
+			result.Platform = "bigcommerce"
+			result.Language = "nodejs"
+			result.PlatformVersion = "catalyst"
+			result.Detected = true
+			result.Source = dep
+			return result
+		}
+	}
+	// BigCommerce Stencil — Cornerstone theme dev. Detected via the
+	// `@bigcommerce/stencil-cli` devDependency or the unique
+	// `cornerstone` package name.
+	if _, ok := lookupDep(&pkg, "@bigcommerce/stencil-cli"); ok {
+		result.Platform = "bigcommerce"
+		result.Language = "nodejs"
+		result.PlatformVersion = "stencil"
+		result.Detected = true
+		result.Source = "@bigcommerce/stencil-cli"
+		return result
+	}
+	if pkg.Name == "cornerstone" {
+		result.Platform = "bigcommerce"
+		result.Language = "nodejs"
+		result.PlatformVersion = "stencil"
+		result.Detected = true
+		result.Source = "package.json name=cornerstone"
+		return result
+	}
+
 	return result
 }
 

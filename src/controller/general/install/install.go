@@ -76,6 +76,16 @@ func init() {
 		}
 		Shopify(projectName, preset)
 	})
+	RegisterInstallHandler("bigcommerce", func(projectName, platformVersion string, conf map[string]string) {
+		preset := platformVersion
+		if preset == "" {
+			preset = conf["bigcommerce/preset"]
+		}
+		if preset == "" {
+			preset = "catalyst"
+		}
+		Bigcommerce(projectName, preset)
+	})
 }
 
 func Execute() {
@@ -1468,4 +1478,170 @@ func shopifyInstallLaravel(projectConf map[string]string, projectName, host, wor
 	fmtc.SuccessLn("[SUCCESS]: Laravel + Kyon147/laravel-shopify installed.")
 	fmtc.SuccessLn("[SUCCESS]: Project URL: https://" + host)
 	fmtc.SuccessLn("[SUCCESS]: Edit config/shopify-app.php (API key/secret/scopes), then visit /authenticate?shop=<your-store>.myshopify.com to wire OAuth.")
+}
+
+// Bigcommerce dispatches to a preset-specific install routine. Same
+// shape as Shopify — pick handler based on which SDK/framework the
+// user scaffolded.
+func Bigcommerce(projectName, presetCode string) {
+	projectConf := configs.GetCurrentProjectConfig()
+	host := ""
+	hosts := configs.GetHosts(projectConf)
+	if len(hosts) > 0 {
+		host = hosts[0]["name"]
+	}
+	if host == "" {
+		host = "loc." + projectName + ".com"
+	}
+	workdir := projectConf["workdir"]
+	if workdir == "" {
+		workdir = "/var/www/html"
+	}
+
+	switch presetCode {
+	case "catalyst":
+		bigcommerceInstallCatalyst(projectConf, projectName, host, workdir)
+	case "stencil":
+		bigcommerceInstallStencil(projectConf, projectName, host, workdir)
+	case "app-node":
+		bigcommerceInstallAppNode(projectConf, projectName, host, workdir)
+	default:
+		bigcommerceInstallApiPhp(projectConf, projectName, host, workdir)
+	}
+}
+
+func bigcommerceInstallCatalyst(projectConf map[string]string, projectName, host, workdir string) {
+	// Catalyst ships its own Next.js dev server. Bind to 0.0.0.0 so
+	// nginx can proxy from the host. Most Next.js templates use
+	// `next dev` which reads HOST env var.
+	//
+	// Idempotency: patchDev marker-gated; npm install no-op on
+	// second run.
+	// Catalyst requires real BigCommerce store credentials
+	// (BIGCOMMERCE_STORE_HASH + BIGCOMMERCE_STOREFRONT_TOKEN) to
+	// even boot — its pre-dev `generate` step fetches GraphQL
+	// schema from the store. Without creds the container crash-
+	// loops. Park the root `dev` script as `dev:catalyst` (the
+	// real turbo-driven dev with --filter core) and replace
+	// `dev` with `sleep infinity` so the container stays up post-
+	// install. User configures core/.env.local with store creds
+	// then `madock bash` + `npm run dev:catalyst`.
+	patchDev := `node -e "
+const fs=require('fs');
+const p='package.json';
+if(!fs.existsSync(p)) process.exit(0);
+const j=JSON.parse(fs.readFileSync(p,'utf8'));
+if(!j.scripts) j.scripts={};
+if(j.scripts.dev && j.scripts.dev.includes('madock-idle')) process.exit(0);
+if(j.scripts['dev:catalyst']){console.log('[madock] package.json: scripts.dev:catalyst already exists, leaving scripts.dev untouched');process.exit(0);}
+let original=j.scripts.dev||'dotenv -e .env.local -- turbo run dev';
+// Adapt the real dev to filter to core + forward -H 0.0.0.0.
+if(/turbo run dev/.test(original)){
+  original=original.replace(/turbo run dev[^&|;]*/,'turbo run dev --filter ./core -- -H 0.0.0.0');
+}
+j.scripts['dev:catalyst']=original;
+j.scripts.dev='echo madock-idle; sleep infinity';
+fs.writeFileSync(p, JSON.stringify(j,null,2));
+console.log('[madock] package.json: parked scripts.dev as scripts.dev:catalyst');
+"`
+	// Catalyst is a pnpm monorepo (apps/core, packages/client, etc).
+	// pnpm is preinstalled in the bigcommerce nodejs image (see
+	// docker/bigcommerce/nodejs/Dockerfile) so the entrypoint's
+	// `pnpm dev` works after restart without root setup.
+	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
+	cmd := patchDev +
+		" && (test -f pnpm-lock.yaml && pnpm install --frozen-lockfile=false" +
+		" || (test -f yarn.lock && yarn install || npm install))"
+	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
+		fmtc.WarningLn("Catalyst install failed: " + err.Error())
+	}
+	if rerr := exec.Command("docker", "restart", nodejsContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart nodejs container: " + rerr.Error())
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: BigCommerce Catalyst storefront installed.")
+	fmtc.SuccessLn("[SUCCESS]: Storefront URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Wire it to your store via .env (BIGCOMMERCE_STORE_HASH, BIGCOMMERCE_STOREFRONT_TOKEN). Docs: https://www.catalyst.dev")
+}
+
+func bigcommerceInstallStencil(projectConf map[string]string, projectName, host, workdir string) {
+	// Stencil CLI proxies a live BigCommerce store via OAuth, runs
+	// theme builds locally. Install: npm install + global
+	// @bigcommerce/stencil-cli for the `stencil` command. The
+	// container's `dev` script will be `npm run dev` / `stencil
+	// start --tunnel` which requires interactive OAuth → park dev
+	// like the Shopify app-remix preset.
+	patchDev := `node -e "
+const fs=require('fs');
+const p='package.json';
+if(!fs.existsSync(p)) process.exit(0);
+const j=JSON.parse(fs.readFileSync(p,'utf8'));
+if(!j.scripts) j.scripts = {};
+if(j.scripts.dev && j.scripts.dev.includes('madock-idle')) process.exit(0);
+if(j.scripts['dev:stencil']){console.log('[madock] package.json: scripts.dev:stencil already exists, leaving scripts.dev untouched');process.exit(0);}
+if(j.scripts.dev) j.scripts['dev:stencil'] = j.scripts.dev;
+j.scripts.dev = 'echo madock-idle; sleep infinity';
+fs.writeFileSync(p, JSON.stringify(j,null,2));
+console.log('[madock] package.json: parked scripts.dev as scripts.dev:stencil');
+"`
+	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
+	cmd := patchDev +
+		" && (test -f yarn.lock && yarn install || npm install)" +
+		" && (npm install -g @bigcommerce/stencil-cli || true)"
+	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
+		fmtc.WarningLn("Stencil install failed: " + err.Error())
+	}
+	if rerr := exec.Command("docker", "restart", nodejsContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart nodejs container: " + rerr.Error())
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: BigCommerce Stencil theme installed.")
+	fmtc.SuccessLn("[SUCCESS]: Theme dev needs OAuth against a live store.")
+	fmtc.SuccessLn("[SUCCESS]: Run `madock bash`, then `stencil init` (paste API token), then `stencil start --tunnel`.")
+}
+
+func bigcommerceInstallApiPhp(projectConf map[string]string, projectName, host, workdir string) {
+	// bigcommerce/api-client is a library. Just install deps so the
+	// autoloader is ready. Pick install vs update based on whether
+	// a lock exists (fresh `composer init` doesn't ship one).
+	phpContainer := docker.GetContainerName(projectConf, projectName, "php")
+	cmd := "if [ -f composer.lock ]; then composer install --no-interaction --prefer-dist; else composer update --no-interaction --prefer-dist; fi"
+	if err := docker.ContainerExec(phpContainer, "www-data", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
+		fmtc.WarningLn("composer install failed: " + err.Error())
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: bigcommerce/api-client project initialised.")
+	fmtc.SuccessLn("[SUCCESS]: Project URL: https://" + host)
+	fmtc.SuccessLn("[SUCCESS]: Bootstrap with `Bigcommerce\\Api\\Client::configure([...])`. Docs: https://github.com/bigcommerce/bigcommerce-api-php")
+}
+
+func bigcommerceInstallAppNode(projectConf map[string]string, projectName, host, workdir string) {
+	// sample-app-nodejs is Express + Next.js with OAuth handshake.
+	// Park `dev` as sleep infinity — actual dev needs interactive
+	// ngrok-style tunnel + BigCommerce Developer account OAuth.
+	patchDev := `node -e "
+const fs=require('fs');
+const p='package.json';
+if(!fs.existsSync(p)) process.exit(0);
+const j=JSON.parse(fs.readFileSync(p,'utf8'));
+if(!j.scripts) j.scripts = {};
+if(j.scripts.dev && j.scripts.dev.includes('madock-idle')) process.exit(0);
+if(j.scripts['dev:bc']){console.log('[madock] package.json: scripts.dev:bc already exists, leaving scripts.dev untouched');process.exit(0);}
+if(j.scripts.dev) j.scripts['dev:bc'] = j.scripts.dev;
+j.scripts.dev = 'echo madock-idle; sleep infinity';
+fs.writeFileSync(p, JSON.stringify(j,null,2));
+console.log('[madock] package.json: parked scripts.dev as scripts.dev:bc');
+"`
+	nodejsContainer := docker.GetContainerName(projectConf, projectName, "nodejs")
+	cmd := patchDev + " && (test -f yarn.lock && yarn install || npm install)"
+	if err := docker.ContainerExec(nodejsContainer, "node", true, "bash", "-c", "cd "+workdir+" && "+cmd); err != nil {
+		fmtc.WarningLn("Node app install failed: " + err.Error())
+	}
+	if rerr := exec.Command("docker", "restart", nodejsContainer).Run(); rerr != nil {
+		fmtc.WarningLn("Could not restart nodejs container: " + rerr.Error())
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: BigCommerce Node App (Express/Next.js) installed.")
+	fmtc.SuccessLn("[SUCCESS]: Container is idle (App dev needs interactive ngrok tunnel + Developer auth).")
+	fmtc.SuccessLn("[SUCCESS]: Run `madock bash` then `npm run dev:bc` to start the dev server.")
 }
