@@ -226,8 +226,11 @@ func DownloadShopify(projectName, presetCode string) {
 		runShopifyInContainer(projectConf, projectName, "nodejs", "node", script)
 	case "laravel-shopify":
 		fmtc.InfoIconLn("Scaffolding Laravel + Kyon147/laravel-shopify into " + target)
+		// --no-install skips dep install (install handler runs it
+		// later); --no-scripts skips Laravel's post-create-project-cmd
+		// which calls artisan and would fail without vendor/.
 		script := "rm -rf ./" + stage +
-			" && composer create-project --no-install --no-interaction laravel/laravel ./" + stage +
+			" && composer create-project --no-install --no-scripts --no-interaction laravel/laravel ./" + stage +
 			" && shopt -s dotglob" +
 			" && mv ./" + stage + "/* ./ 2>/dev/null || true" +
 			" && rm -rf ./" + stage
