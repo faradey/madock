@@ -28,7 +28,7 @@ func init() {
 		Name:        "custom",
 		DisplayName: "Custom",
 		Language:    "",
-		Order:       20,
+		Order:       10,
 	}, &Handler{})
 }
 

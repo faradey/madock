@@ -82,7 +82,9 @@ func Platform(choices []PlatformChoice) string {
 
 	// Use the interactive selector directly — platform names are fixed
 	// choices, so "Custom" here is a real platform, not a free-text option.
-	selector := fmtc.NewInteractiveSelector("Platform", displayNames, 0)
+	// No recommended highlight: madock is multi-platform / multi-language, so
+	// none of the choices is a default suggestion.
+	selector := fmtc.NewInteractiveSelector("Platform", displayNames, -1)
 	_, value := selector.Run()
 
 	if name, ok := displayToName[value]; ok {

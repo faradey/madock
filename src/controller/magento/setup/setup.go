@@ -34,7 +34,7 @@ func init() {
 		Name:        "magento2",
 		DisplayName: "Magento 2",
 		Language:    "php",
-		Order:       10,
+		Order:       20,
 	}, &Handler{})
 }
 
