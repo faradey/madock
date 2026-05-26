@@ -2,4 +2,6 @@ WORKDIR {{{workdir}}}
 
 EXPOSE 8000 5000 3000
 
+{{{include snippets/dockerfile/common/umask}}}
+
 CMD ["bash"]

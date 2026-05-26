@@ -89,4 +89,10 @@ WORKDIR {{{workdir}}}
 RUN usermod -u {{{os/user/uid}}} -o www-data && groupmod -g {{{os/user/guid}}} -o www-data \
     && chown {{{os/user/uid}}}:{{{os/user/guid}}} {{{workdir}}}
 
+{{{include snippets/dockerfile/common/umask}}}
+
+<<<if{{{permissions/umask/permissive}}}>>>
+CMD ["bash", "-c", "exec php-fpm{{{php/version}}}"]
+<<<else>>>
 CMD "php-fpm{{{php/version}}}"
+<<<endif>>>

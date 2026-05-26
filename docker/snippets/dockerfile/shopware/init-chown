@@ -1,0 +1,26 @@
+# Shopware init-chown entrypoint: fixes root-owned runtime dirs on container
+# start so PHP-FPM (www-data) can write to dirs that Shopware populates from
+# scheduled tasks / message-queue consumers / prior root-owned operations.
+# Best-effort: ignores missing dirs and read-only mounts.
+RUN cat > /usr/local/bin/madock-shopware-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local/bin/madock-shopware-entrypoint
+#!/bin/bash
+set -e
+
+<<<if{{{permissions/umask/permissive}}}>>>umask 0002<<<endif>>>
+
+WORKDIR="{{{workdir}}}"
+
+if [ -d "$WORKDIR" ]; then
+    for dir in var public/theme public/bundles public/sitemap public/thumbnail public/media files config/jwt custom/plugins; do
+        target="${WORKDIR}/${dir}"
+        if [ -d "$target" ]; then
+            chown -R www-data:www-data "$target" 2>/dev/null || true
+        fi
+    done
+fi
+
+exec "$@"
+MADOCK_EOF
+
+ENTRYPOINT ["/usr/local/bin/madock-shopware-entrypoint"]
+CMD ["php-fpm{{{php/version}}}"]

@@ -210,6 +210,11 @@
                     <enabled>false</enabled>
                 </n98magerun>
             </magento>
+            <shopware>
+                <messenger>
+                    <enabled>false</enabled>
+                </messenger>
+            </shopware>
             <medusa>
                 <storefront>
                     <enabled>true</enabled>
@@ -279,6 +284,11 @@
             <isolation>
                 <enabled>false</enabled>
             </isolation>
+            <permissions>
+                <umask>
+                    <permissive>true</permissive>
+                </umask>
+            </permissions>
             <varnish>
                 <enabled>false</enabled>
                 <repository>varnish</repository>

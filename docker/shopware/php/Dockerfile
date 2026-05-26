@@ -8,3 +8,4 @@
 {{{include snippets/dockerfile/php/chown}}}
 {{{include snippets/dockerfile/php/nodejs}}}
 {{{include snippets/dockerfile/php/footer}}}
+{{{include snippets/dockerfile/shopware/init-chown}}}

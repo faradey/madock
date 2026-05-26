@@ -113,4 +113,6 @@ func Shopware(config *configs2.ConfigLines, defVersions versions.ToolsVersions, 
 	config.Set("grafana/auth/enabled", configs2.GetOption("grafana/auth/enabled", generalConf, projectConf))
 	config.Set("grafana/auth/user", configs2.GetOption("grafana/auth/user", generalConf, projectConf))
 	config.Set("grafana/auth/password", configs2.GetOption("grafana/auth/password", generalConf, projectConf))
+
+	config.Set("shopware/messenger/enabled", configs2.GetOption("shopware/messenger/enabled", generalConf, projectConf))
 }

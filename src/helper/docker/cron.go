@@ -129,6 +129,29 @@ func CronExecute(projectName string, flag, manual bool) {
 			} else {
 				fmtc.SuccessLn("Shopify cron job installed successfully")
 			}
+		} else if projectConf["platform"] == "shopware" {
+			containerName := GetContainerName(projectConf, projectName, "php")
+			workdir := projectConf["workdir"]
+			// Shopware scheduled-task:run dispatches due scheduled tasks to the
+			// messenger queue (which a consumer then executes). We append it to
+			// www-data's existing crontab idempotently so it coexists with any
+			// jobs already installed via `cron/jobs/*` configuration.
+			scheduledLine := fmt.Sprintf("* * * * * cd %s && php bin/console scheduled-task:run --time-limit=60 >/dev/null 2>&1", workdir)
+			cmd := fmt.Sprintf(
+				"( crontab -u www-data -l 2>/dev/null | grep -v 'scheduled-task:run' || true ; echo '%s' ) | crontab -u www-data -",
+				scheduledLine,
+			)
+			err := ContainerExec(containerName, "root", false, "bash", "-c", cmd)
+			if manual {
+				if err != nil {
+					logger.Println(err)
+					fmtc.WarningLn(err.Error())
+				} else {
+					fmtc.SuccessLn("Shopware scheduled-task cron installed")
+				}
+			} else if err != nil {
+				logger.Println(err)
+			}
 		}
 	} else {
 		_, err := containerExecSilent(GetContainerName(projectConf, projectName, service), userOS, "service", "cron", "status")
@@ -165,6 +188,19 @@ func CronExecute(projectName string, flag, manual bool) {
 						fmtc.WarningLn(err.Error())
 					} else {
 						fmtc.SuccessLn("Shopify cron job removed successfully")
+					}
+				}
+			} else if projectConf["platform"] == "shopware" {
+				containerName := GetContainerName(projectConf, projectName, "php")
+				// Strip scheduled-task:run from crontab while keeping any other
+				// jobs the user may have installed via cron/jobs/*.
+				cmd := "( crontab -u www-data -l 2>/dev/null | grep -v 'scheduled-task:run' || true ) | crontab -u www-data -"
+				err := ContainerExec(containerName, "root", false, "bash", "-c", cmd)
+				if manual {
+					if err != nil {
+						logger.Println(err)
+					} else {
+						fmt.Println("Shopware scheduled-task cron was removed")
 					}
 				}
 			}

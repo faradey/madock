@@ -32,6 +32,8 @@ func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, pr
 
 	config.Set("cron/enabled", configs2.GetOption("cron/enabled", generalConf, projectConf))
 
+	config.Set("permissions/umask/permissive", configs2.GetOption("permissions/umask/permissive", generalConf, projectConf))
+
 	config.Set("hosts", defVersions.Hosts)
 
 	config.Set("ssh/auth_type", configs2.GetOption("ssh/auth_type", generalConf, projectConf))

@@ -2,6 +2,7 @@
 services:
   {{{include snippets/docker-compose/php.yml}}}
   {{{include snippets/docker-compose/php-xdebug.yml}}}
+  {{{include snippets/docker-compose/shopware-messenger.yml}}}
   {{{include snippets/docker-compose/nginx.yml}}}
   {{{include snippets/docker-compose/db.yml}}}
   {{{include snippets/docker-compose/db-postgresql.yml}}}

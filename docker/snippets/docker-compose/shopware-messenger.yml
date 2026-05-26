@@ -1,0 +1,29 @@
+<<<if{{{php/enabled}}}{{{shopware/messenger/enabled}}}>>>
+  messenger:
+    init: true
+    build:
+      context: ctx
+      dockerfile: php.Dockerfile
+    user: www-data
+    working_dir: {{{workdir}}}
+    # Bypass the Shopware php entrypoint (it does chown as root — not needed
+    # for the consumer and we already drop to www-data here).
+    entrypoint: []
+    command: ["bash", "-c", "exec php bin/console messenger:consume async low_priority --time-limit=3600 --memory-limit=512M -vv"]
+    volumes:
+      - ./src:/var/www/html:cached
+      - ./composer:/var/www/.composer:cached
+      - ./ssh:/var/www/.ssh:ro
+      - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
+      - ./ctx/scripts/:/var/www/scripts/:cached
+    environment:
+      - COMPOSER_HOME=/var/www/.composer
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{nginx/host_gateways}}}
+    depends_on:
+      - php
+    <<<if{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>
+    restart: {{{restart_policy}}}
+<<<endif>>>

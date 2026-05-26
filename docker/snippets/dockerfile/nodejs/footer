@@ -1,5 +1,7 @@
 WORKDIR {{{workdir}}}
 
+{{{include snippets/dockerfile/common/umask}}}
+
 # madock smart entrypoint:
 #   - if package.json has a "dev" script, run it (preferred)
 #   - else if "start" exists, run it
@@ -10,6 +12,8 @@ WORKDIR {{{workdir}}}
 RUN cat > /usr/local/bin/madock-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local/bin/madock-entrypoint
 #!/bin/sh
 set -e
+
+<<<if{{{permissions/umask/permissive}}}>>>umask 0002<<<endif>>>
 
 cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html
 

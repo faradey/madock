@@ -1,0 +1,14 @@
+<<<if{{{permissions/umask/permissive}}}>>>
+# madock: permissive umask (002) for cross-user file writes in dev — makes
+# new files group-writable so root-created files don't block www-data and
+# vice versa. Sourced by interactive shells, non-interactive bash -c
+# (via BASH_ENV), and the container CMD wrapper. Toggle via
+# permissions/umask/permissive=false in config for prod-like setups.
+ENV BASH_ENV=/etc/madock-umask.sh
+RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
+    && mkdir -p /etc/profile.d \
+    && printf 'umask 0002\n' > /etc/profile.d/madock-umask.sh \
+    && touch /etc/bash.bashrc \
+    && printf '\numask 0002\n' >> /etc/bash.bashrc \
+    && chmod 644 /etc/madock-umask.sh /etc/profile.d/madock-umask.sh
+<<<endif>>>

@@ -139,6 +139,8 @@ Shopware may create directories and files with root ownership during runtime ope
 - `var/cache/`
 - `public/theme/`
 - `public/bundles/`
+- `public/sitemap/`
+- `public/thumbnail/`
 
 **Symptoms:**
 - "Permission denied" errors when accessing directories from host
@@ -150,43 +152,99 @@ Shopware may create directories and files with root ownership during runtime ope
 
 Shopware uses background processes (scheduled tasks, message queue consumers) that may run as root inside the container. When these processes create files, they are owned by root.
 
-**Solution:**
+**Auto-fix on container start:**
 
-Run the following command to fix file ownership:
+The Shopware PHP container has an entrypoint that automatically `chown`s the
+following runtime directories to `www-data` on every start:
+
+- `var/`
+- `public/theme/`
+- `public/bundles/`
+- `public/sitemap/`
+- `public/thumbnail/`
+- `public/media/`
+- `files/`
+- `config/jwt/`
+- `custom/plugins/`
+
+So in most cases a regular `madock start` / `madock rebuild` already fixes
+ownership. No manual flag needed.
+
+**Manual fix:**
+
+If root-owned files appear in a directory not covered by the auto-fix list (or
+the container is already running), run:
 
 ```bash
 madock rebuild --with-chown
 ```
 
-If the problem reoccurs after Shopware operations (theme changes, plugin installation, cache rebuild), simply run the command again.
-
 **Prevention tips:**
 
 1. Always run console commands with www-data user (this is the default for `madock sw`)
 2. Avoid using `madock bash` without `-u www-data` flag for Shopware operations
-3. After any admin panel operation that creates files, run `madock rebuild --with-chown` if you encounter permission issues
 
 ### Scheduled Tasks and Message Queue
 
-Shopware uses Symfony Messenger for background task processing. In development, tasks are processed via Admin Worker (JavaScript worker in browser) or synchronously.
+Shopware uses Symfony Messenger for background task processing.
 
-**For local development (recommended):**
+#### Scheduled tasks
 
-Use synchronous processing in `.env`:
+When the project has `cron/enabled=true`, madock automatically installs a
+crontab entry for www-data:
+
+```
+* * * * * cd /var/www/html && php bin/console scheduled-task:run --time-limit=60
+```
+
+It coexists with any custom jobs you define via `cron/jobs/*` — `scheduled-task:run`
+is appended idempotently. Disable it by setting `cron/enabled=false`.
+
+#### Message queue consumer
+
+Two ways to run the messenger consumer:
+
+**1. Sidecar service (recommended for ongoing dev / prod-like setups):**
+
+Enable in project config:
+
+```xml
+<shopware>
+    <messenger>
+        <enabled>true</enabled>
+    </messenger>
+</shopware>
+```
+
+Then rebuild:
+```bash
+madock rebuild
+```
+
+A `messenger` container starts alongside `php`, runs
+`messenger:consume async low_priority --time-limit=3600 --memory-limit=512M`
+as www-data, and respawns on the configured restart policy.
+
+**2. Foreground consume (for one-off debugging):**
+
+```bash
+madock sw:consume                 # default: async --time-limit=3600 -vv
+madock sw:consume failed          # drain the failed transport
+madock sw:consume async -vv       # custom args (override defaults)
+```
+
+Runs as www-data inside the existing php container — Ctrl-C to stop.
+
+#### Synchronous fallback
+
+If you want to skip the queue entirely (older workflow), set in `.env`:
+
 ```
 MESSENGER_TRANSPORT_DSN=sync://
 ```
 
-This ensures all tasks are processed immediately in the HTTP request context (as www-data), avoiding permission issues.
-
-**For async processing:**
-
-If you need async processing, run the consumer as www-data:
-
-```bash
-madock bash -u www-data
-bin/console messenger:consume async --time-limit=3600
-```
+Not recommended — it diverges from prod behaviour and can mask serialization
+bugs. Prefer the sidecar service above.
 
 ### Elasticsearch/OpenSearch Connection
 
@@ -226,6 +284,7 @@ REDIS_URL=redis://redisdb:6379
 | Command | Description |
 |---------|-------------|
 | `madock sw <command>` | Run Shopware console command |
+| `madock sw:consume [args]` | Run messenger consumer in foreground (debug) |
 | `madock swbin <script>` | Run bin script |
 | `madock bash -u www-data` | Enter container as www-data |
 | `madock rebuild --with-chown` | Rebuild and fix permissions |
@@ -233,6 +292,7 @@ REDIS_URL=redis://redisdb:6379
 | `madock db:import <file>` | Import database |
 | `madock db:export` | Export database |
 | `madock logs php` | View PHP container logs |
+| `madock logs messenger` | View messenger consumer logs (if enabled) |
 
 ## Configuration
 
@@ -245,10 +305,12 @@ APP_ENV=dev
 APP_URL=https://shopware.local
 DATABASE_URL=mysql://magento:magento@db:3306/magento
 
-# Sync mode for development (recommended)
-MESSENGER_TRANSPORT_DSN=sync://
-
-# Or async with Redis
+# Default async transport (Doctrine) — picked up by the madock messenger
+# sidecar service when shopware/messenger/enabled=true, or by
+# `madock sw:consume` for manual debugging.
+# MESSENGER_TRANSPORT_DSN=doctrine://default
+# Or RabbitMQ / Redis:
+# MESSENGER_TRANSPORT_DSN=amqp://guest:guest@rabbitmq:5672/%2f/messages
 # MESSENGER_TRANSPORT_DSN=redis://redisdb:6379/messages
 
 # Search engine
@@ -267,3 +329,24 @@ madock service:enable opensearch
 madock service:enable phpmyadmin
 madock service:enable xdebug
 ```
+
+### Permissive umask (dev default)
+
+Madock builds containers with `umask 0002` so new files are group-writable
+(`664` / `775` instead of `644` / `755`). This lets www-data and any other
+user inside the container co-edit runtime files without permission churn.
+
+Default: **on** for all platforms. Applies to PHP-FPM, interactive shells,
+and non-interactive `bash -c` invocations (via `BASH_ENV`).
+
+Disable (e.g. for prod-like servers via *madock pro*):
+
+```xml
+<permissions>
+    <umask>
+        <permissive>false</permissive>
+    </umask>
+</permissions>
+```
+
+Then rebuild containers.
