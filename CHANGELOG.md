@@ -1,3 +1,18 @@
+**v3.7.13**
+
+Changed:
+- Setup wizard: platform picker puts Custom first, drops recommended marker — madock is multi-platform, no single choice should be highlighted
+- Setup version pickers: refresh all language/runtime/service choices after platform detection
+- Interactive selector: clamp box to terminal width, truncate long options so TUI doesn't wrap on narrow terminals
+
+Fixed:
+- ProcessSnippets: support nested includes, fix cron snippet
+- BigCommerce Catalyst: bump default Node to 24.10.0
+- BigCommerce stencil install: run global stencil-cli install as root
+- Shopify laravel-shopify Download: pass --no-scripts to composer create-project
+- Setup Download: run all scaffolding inside project containers (fixes code-not-mounted race)
+- Shopware: init-chown, permissive umask, scheduled-task cron, messenger sidecar
+
 **v3.7.12**
 
 Added:
