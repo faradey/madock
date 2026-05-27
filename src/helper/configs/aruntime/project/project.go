@@ -578,16 +578,18 @@ func ProcessSnippets(b []byte, projectName string) []byte {
 	str := string(b)
 	r := regexp.MustCompile(`\{\{\{include snippets/[^\}]+\}\}\}`)
 
-	for _, match := range r.FindAllString(str, -1) {
-		snippetFile := strings.Replace(match, "{{{include ", "", -1)
-		snippetFile = strings.TrimSpace(strings.Replace(snippetFile, "}}}", "", -1))
-		snippetFile = GetSnippetFile(projectName, snippetFile)
+	for r.MatchString(str) {
+		for _, match := range r.FindAllString(str, -1) {
+			snippetFile := strings.Replace(match, "{{{include ", "", -1)
+			snippetFile = strings.TrimSpace(strings.Replace(snippetFile, "}}}", "", -1))
+			snippetFile = GetSnippetFile(projectName, snippetFile)
 
-		b2, err := os.ReadFile(snippetFile)
-		if err != nil {
-			logger.Fatal(err)
+			b2, err := os.ReadFile(snippetFile)
+			if err != nil {
+				logger.Fatal(err)
+			}
+			str = strings.Replace(str, match, string(b2), -1)
 		}
-		str = strings.Replace(str, match, string(b2), -1)
 	}
 
 	return []byte(str)
