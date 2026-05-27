@@ -113,7 +113,7 @@ func DbEngine(defEngine *string) {
 }
 
 func Db(defVersion *string) {
-	availableVersions := []string{"Custom", "12", "11.6", "11.4", "11.1", "10.6", "10.4"}
+	availableVersions := []string{"Custom", "12", "11.8", "11.6", "11.4", "11.1", "10.6", "10.4"}
 
 	fmt.Println("")
 	SelectInteractive("Database (MariaDB)", availableVersions, defVersion)

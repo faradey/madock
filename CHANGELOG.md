@@ -1,3 +1,8 @@
+**v3.7.15**
+
+Fixed:
+- Add MariaDB 11.8 to setup wizard version picker (Magento 2.4.9 default, was missing)
+
 **v3.7.14**
 
 Fixed:
