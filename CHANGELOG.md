@@ -1,3 +1,8 @@
+**v3.7.14**
+
+Fixed:
+- Add PHP 8.5 to setup wizard PHP version picker (was missing despite Magento 2.4.9 defaulting to it)
+
 **v3.7.13**
 
 Changed:

@@ -94,7 +94,7 @@ func Platform(choices []PlatformChoice) string {
 }
 
 func Php(defVersion *string) {
-	availableVersions := []string{"Custom", "8.4", "8.3", "8.2", "8.1", "8.0", "7.4"}
+	availableVersions := []string{"Custom", "8.5", "8.4", "8.3", "8.2", "8.1", "8.0", "7.4"}
 
 	fmt.Println("")
 	SelectInteractive("PHP Version", availableVersions, defVersion)
