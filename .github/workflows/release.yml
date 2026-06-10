@@ -36,9 +36,17 @@ jobs:
           done
 
       - name: Generate changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           current="${GITHUB_REF_NAME}"
-          prev=$(git describe --tags --abbrev=0 "${current}^" 2>/dev/null || echo "")
+          # Base the changelog on the previous PUBLISHED release (not every tag gets one).
+          prev=$(gh release list --limit 100 --exclude-drafts --json tagName \
+                   --jq "[.[] | .tagName] | map(select(. != \"$current\")) | .[0] // \"\"" 2>/dev/null || echo "")
+          # Fallbacks: previous tag, then full history.
+          if [ -z "$prev" ]; then
+            prev=$(git describe --tags --abbrev=0 "${current}^" 2>/dev/null || echo "")
+          fi
           {
             echo "## What's Changed"
             echo ""
