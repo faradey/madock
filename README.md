@@ -76,7 +76,7 @@ To use version 1 you should switch to [master-1.x.x](https://github.com/faradey/
 
 ### Option A — Download a prebuilt binary (recommended)
 
-Each release ships ready-to-use binaries on the [Releases page](https://github.com/faradey/madock/releases). Pick the one for your platform — no Go toolchain required.
+Each release ships a single self-contained binary on the [Releases page](https://github.com/faradey/madock/releases). Pick the one for your platform — no Go toolchain required.
 
 | Platform | Asset |
 |----------|-------|
@@ -86,23 +86,29 @@ Each release ships ready-to-use binaries on the [Releases page](https://github.c
 | Linux ARM | `madock-linux-arm64` |
 | Windows | `madock-windows-amd64.exe` |
 
+> **Important:** the binary keeps its working data (`docker/`, `scripts/`, `projects/`, `aruntime/`) **next to itself** — these are auto-extracted on first run. Put the binary in a **dedicated, writable folder** (e.g. `~/.madock/`) and add it to your `PATH` via a symlink. Do **not** drop the real file straight into a system directory like `/opt/homebrew/bin` or `/usr/local/bin` — only the symlink goes there.
+
 <details>
 <summary>Mac — install the downloaded binary</summary>
 
 ```shell
-# 1. Rename the downloaded file to `madock`
-mv madock-darwin-arm64 madock      # Apple Silicon
-# mv madock-darwin-amd64 madock    # Intel
+# 1. Put the binary in a dedicated, writable folder
+mkdir -p ~/.madock
+mv ~/Downloads/madock-darwin-arm64 ~/.madock/madock     # Apple Silicon
+# mv ~/Downloads/madock-darwin-amd64 ~/.madock/madock   # Intel
 
 # 2. Make it executable
-chmod +x madock
+chmod +x ~/.madock/madock
 
 # 3. Remove the Gatekeeper quarantine flag (binaries are not Apple-notarized)
-xattr -dr com.apple.quarantine ./madock
+xattr -dr com.apple.quarantine ~/.madock/madock
 
-# 4. Link into your $PATH
-sudo ln -s "$(pwd)/madock" /opt/homebrew/bin/   # Apple Silicon
-# sudo ln -s "$(pwd)/madock" /usr/local/bin/     # Intel
+# 4. Symlink into your $PATH (the real file stays in ~/.madock)
+sudo ln -s ~/.madock/madock /opt/homebrew/bin/madock    # Apple Silicon
+# sudo ln -s ~/.madock/madock /usr/local/bin/madock      # Intel
+
+# 5. Check it works (first run auto-extracts docker/ and scripts/ into ~/.madock)
+madock
 ```
 
 If macOS still blocks it: **System Settings → Privacy & Security → "Open Anyway"**.
@@ -112,9 +118,11 @@ If macOS still blocks it: **System Settings → Privacy & Security → "Open Any
 <summary>Linux — install the downloaded binary</summary>
 
 ```shell
-mv madock-linux-amd64 madock        # or madock-linux-arm64
-chmod +x madock
-sudo ln -s "$(pwd)/madock" /usr/local/bin/
+mkdir -p ~/.madock
+mv ~/Downloads/madock-linux-amd64 ~/.madock/madock      # or madock-linux-arm64
+chmod +x ~/.madock/madock
+sudo ln -s ~/.madock/madock /usr/local/bin/madock       # real file stays in ~/.madock
+madock                                                   # first run auto-extracts assets
 ```
 </details>
 
@@ -123,7 +131,7 @@ sudo ln -s "$(pwd)/madock" /usr/local/bin/
 
 madock runs on Windows with [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/). Two options:
 
-- **Native Windows:** download `madock-windows-amd64.exe`, rename it to `madock.exe`, and put it in a folder that is on your `PATH`.
+- **Native Windows:** download `madock-windows-amd64.exe`, rename it to `madock.exe`, and place it in a **dedicated writable folder** (e.g. `C:\madock\`). Add that folder to your `PATH`. On first run it auto-extracts its `docker\` and `scripts\` assets there.
 - **WSL2 (Linux environment):** install [WSL2](https://learn.microsoft.com/windows/wsl/install), then use the Linux binary `madock-linux-amd64` exactly as in the Linux instructions above.
 </details>
 
