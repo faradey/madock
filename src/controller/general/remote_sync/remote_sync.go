@@ -56,7 +56,7 @@ func ListFiles(chDownload *sync.WaitGroup, ch chan bool, remoteDir, subdir strin
 	projectMediaPath := projectPath + "/" + projectConf["public_dir"] + "/media/"
 	files, err := scp.ReadDir(remoteDir + subdir)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(fmt.Sprintf("Remote directory not found or not accessible: %q (%s).\nCheck 'ssh/site_root_path' and 'public_dir' in your project config.xml — they must point to the existing media folder on the server.", remoteDir+subdir, err.Error()))
 	}
 
 	var name string
