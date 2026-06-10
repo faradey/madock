@@ -12,8 +12,8 @@ Supported platforms: Magento2, Shopify, BigCommerce, Shopware, PrestaShop, WooCo
 [![GitHub issues](https://img.shields.io/github/issues/faradey/madock.svg)](https://github.com/faradey/madock/issues)
 
 ## Description
-`madock` is a local Docker-based environment that allows you to run web projects.
-This project is written on Golang, and it is distributed under a MIT License.
+`madock` is a Docker-based local development environment for web projects across many languages and stacks — PHP, Node.js, Python, Go and Ruby. It ships first-class support for popular e-commerce and CMS platforms (Magento 2, Shopify, BigCommerce, Shopware, PrestaShop, WooCommerce, Medusa.js, Saleor, Spree Commerce, Sylius) and handles any custom project just as well.
+This project is written in Golang and distributed under the MIT License.
 
 ## Key Features
 * Automatic project setup
