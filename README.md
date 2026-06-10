@@ -74,6 +74,61 @@ If you have problems with version 2, you can use version 1.x temporarily as it i
 Version 1 does not receive any more improvements. 
 To use version 1 you should switch to [master-1.x.x](https://github.com/faradey/madock/tree/master-1.x.x) branch_
 
+### Option A — Download a prebuilt binary (recommended)
+
+Each release ships ready-to-use binaries on the [Releases page](https://github.com/faradey/madock/releases). Pick the one for your platform — no Go toolchain required.
+
+| Platform | Asset |
+|----------|-------|
+| Mac (Apple Silicon, M1+) | `madock-darwin-arm64` |
+| Mac (Intel) | `madock-darwin-amd64` |
+| Linux x86_64 | `madock-linux-amd64` |
+| Linux ARM | `madock-linux-arm64` |
+| Windows | `madock-windows-amd64.exe` |
+
+<details>
+<summary>Mac — install the downloaded binary</summary>
+
+```shell
+# 1. Rename the downloaded file to `madock`
+mv madock-darwin-arm64 madock      # Apple Silicon
+# mv madock-darwin-amd64 madock    # Intel
+
+# 2. Make it executable
+chmod +x madock
+
+# 3. Remove the Gatekeeper quarantine flag (binaries are not Apple-notarized)
+xattr -dr com.apple.quarantine ./madock
+
+# 4. Link into your $PATH
+sudo ln -s "$(pwd)/madock" /opt/homebrew/bin/   # Apple Silicon
+# sudo ln -s "$(pwd)/madock" /usr/local/bin/     # Intel
+```
+
+If macOS still blocks it: **System Settings → Privacy & Security → "Open Anyway"**.
+</details>
+
+<details>
+<summary>Linux — install the downloaded binary</summary>
+
+```shell
+mv madock-linux-amd64 madock        # or madock-linux-arm64
+chmod +x madock
+sudo ln -s "$(pwd)/madock" /usr/local/bin/
+```
+</details>
+
+<details>
+<summary>Windows — install the downloaded binary</summary>
+
+madock runs on Windows with [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/). Two options:
+
+- **Native Windows:** download `madock-windows-amd64.exe`, rename it to `madock.exe`, and put it in a folder that is on your `PATH`.
+- **WSL2 (Linux environment):** install [WSL2](https://learn.microsoft.com/windows/wsl/install), then use the Linux binary `madock-linux-amd64` exactly as in the Linux instructions above.
+</details>
+
+### Option B — Build from source
+
 Follow the installation steps for your system.
 <details>
 <summary>Mac</summary>

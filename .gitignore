@@ -27,4 +27,7 @@
 !/tests
 !/tests/*
 !/tests/**
+!/.github
+!/.github/*
+!/.github/**
 .DS_Store
