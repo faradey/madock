@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
@@ -33,8 +35,27 @@ jobs:
               go build -trimpath -ldflags="-s -w" -o "dist/${out}${ext}"
           done
 
+      - name: Generate changelog
+        run: |
+          current="${GITHUB_REF_NAME}"
+          prev=$(git describe --tags --abbrev=0 "${current}^" 2>/dev/null || echo "")
+          {
+            echo "## What's Changed"
+            echo ""
+            if [ -n "$prev" ]; then
+              git log --no-merges --pretty='- %s' "${prev}..${current}"
+            else
+              git log --no-merges --pretty='- %s' "${current}"
+            fi
+            echo ""
+            if [ -n "$prev" ]; then
+              echo "**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${prev}...${current}"
+            fi
+          } > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md
           files: dist/*
