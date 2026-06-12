@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -75,8 +76,10 @@ func Execute() {
 	if nOpenBrace != -1 {
 		result = result[nOpenBrace:]
 	} else {
-		fmt.Println(result)
-		logger.Fatal("Failed to get database authentication data (row 65)")
+		if strings.TrimSpace(result) != "" {
+			fmt.Println(result)
+		}
+		logger.Fatal(fmt.Sprintf("Could not determine the remote database credentials for platform %q.\nNo readable config file was found on the remote host (checked the platform's standard location under ssh/site_root_path).\nProvide them explicitly with --db-host/--db-port/--db-user/--db-password/--db-name, or install madock on the remote host.", projectConf["platform"]))
 	}
 	if len(result) > 2 {
 		dbAuthData := remote_sync.RemoteDbStruct{}
@@ -130,7 +133,11 @@ func Execute() {
 			dumpCmd = "mysqldump -u \"" + dbAuthData.Username + "\" -p\"" + dbAuthData.Password + "\" -h " + dbAuthData.Host + dbPort + " --quick --lock-tables=false --no-tablespaces --triggers" + ignoreTablesStr + " " + dbAuthData.Dbname + " | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/' | gzip > /tmp/" + dumpName
 		}
 
-		result = remote_sync.RunCommand(conn, dumpCmd)
+		// Run the dump under `bash -o pipefail` so a failing dumper (missing
+		// mysqldump/pg_dump, auth error, unreachable host) propagates a non-zero
+		// exit instead of being masked by the trailing `| gzip`, which would
+		// otherwise leave a valid but empty 20-byte gzip archive.
+		result = remote_sync.RunCommand(conn, "bash -o pipefail -c "+shellSingleQuote(dumpCmd))
 		sc, err := sftp.NewClient(conn)
 		if err != nil {
 			logger.Fatal(err)
@@ -143,11 +150,13 @@ func Execute() {
 		}(sc)
 		execPath := paths.GetExecDirPath()
 		projectName := configs.GetProjectName()
-		err = remote_sync.DownloadFile(sc, "/tmp/"+dumpName, execPath+"/projects/"+projectName+"/backup/db/"+dumpName, false, false)
+		localPath := execPath + "/projects/" + projectName + "/backup/db/" + dumpName
+		err = remote_sync.DownloadFile(sc, "/tmp/"+dumpName, localPath, false, false)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		result = remote_sync.RunCommand(conn, "rm "+"/tmp/"+dumpName)
+		remote_sync.RunCommand(conn, "rm "+"/tmp/"+dumpName)
+		assertDumpNotEmpty(localPath, dbAuthData.Host)
 		fmt.Println("")
 		fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db:import`")
 	} else {
@@ -247,6 +256,27 @@ func getRemoteDbCredsJSON(conn *ssh.Client, remoteDir, platform string) string {
 	return ""
 }
 
+// shellSingleQuote wraps s in single quotes for safe use as a single shell
+// argument, escaping any embedded single quotes.
+func shellSingleQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+// assertDumpNotEmpty aborts with a helpful message when the downloaded dump is
+// suspiciously small (an empty gzip stream is ~20 bytes), which means the remote
+// dumper produced no output — typically a missing mysqldump/pg_dump binary on the
+// remote host or a DB host that is not reachable from the remote shell.
+func assertDumpNotEmpty(localPath, dbHost string) {
+	info, err := os.Stat(localPath)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	if info.Size() < 100 {
+		_ = os.Remove(localPath)
+		logger.Fatal(fmt.Sprintf("The downloaded dump is empty (%d bytes). The remote dump command produced no data.\nLikely causes:\n  - mysqldump/pg_dump is not installed on the remote host\n  - the database host %q from the remote config is not reachable from the remote shell (e.g. it is a docker-internal name)\nFix: install the DB client on the server, install madock on the server, or pass --db-host/--db-port/--db-user/--db-password/--db-name explicitly.", info.Size(), dbHost))
+	}
+}
+
 // reFirstValue returns the first capture-group match of pattern in content, or "".
 func reFirstValue(content, pattern string) string {
 	if m := regexp.MustCompile(pattern).FindStringSubmatch(content); len(m) == 2 {
@@ -261,10 +291,14 @@ func credsToJSON(host, port, dbname, user, password string) string {
 		host, dbname, user, password, port)
 }
 
-// splitHostPort splits an optional "host:port" suffix; port is "" when absent.
+// splitHostPort splits an optional "host:port" suffix. The suffix is only treated
+// as a port when it is all digits, so a unix-socket path (e.g.
+// "localhost:/var/run/mysqld/mysqld.sock") stays in the host part.
 func splitHostPort(hostPort string) (string, string) {
 	if i := strings.LastIndex(hostPort, ":"); i != -1 {
-		return hostPort[:i], hostPort[i+1:]
+		if port := hostPort[i+1:]; port != "" && strings.IndexFunc(port, func(r rune) bool { return r < '0' || r > '9' }) == -1 {
+			return hostPort[:i], port
+		}
 	}
 	return hostPort, ""
 }
@@ -279,13 +313,16 @@ func credsFromMagentoEnv(conn *ssh.Client, remoteDir string) string {
 }
 
 // parseMagentoEnv extracts the default DB connection from a Magento 2 env.php.
-// env.php is a PHP array, but the default connection is the first one declared,
-// so a positional scan of the keys after the 'default' entry is sufficient.
+// env.php is a PHP array with many 'default' keys (cache, session, ...), so the
+// scan is narrowed to the db -> connection -> default block before reading the
+// positional keys. The default connection is the first one inside 'connection'.
 func parseMagentoEnv(content string) string {
-	// Narrow to the 'default' connection block so the indexer connection (which
-	// repeats the same keys) cannot shadow it.
-	if i := strings.Index(content, "'default'"); i != -1 {
-		content = content[i:]
+	// Walk down 'db' -> 'connection' -> 'default' so the cache/session 'default'
+	// blocks and the 'indexer' connection cannot shadow the real credentials.
+	for _, anchor := range []string{"'db'", "'connection'", "'default'"} {
+		if i := strings.Index(content, anchor); i != -1 {
+			content = content[i+len(anchor):]
+		}
 	}
 	keyVal := func(key string) string {
 		return reFirstValue(content, `['"]`+key+`['"]\s*=>\s*['"]([^'"]*)['"]`)
@@ -333,8 +370,12 @@ func parseDatabaseURL(content string) string {
 	if perr != nil || u.Host == "" {
 		return ""
 	}
+	dbname := strings.TrimPrefix(u.Path, "/")
+	if dbname == "" {
+		return ""
+	}
 	password, _ := u.User.Password()
-	return credsToJSON(u.Hostname(), u.Port(), strings.TrimPrefix(u.Path, "/"), u.User.Username(), password)
+	return credsToJSON(u.Hostname(), u.Port(), dbname, u.User.Username(), password)
 }
 
 // credsFromWpConfig reads the DB_* constants from the remote wp-config.php.
