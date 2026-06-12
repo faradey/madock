@@ -13,7 +13,9 @@ import (
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"net/url"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -66,11 +68,7 @@ func Execute() {
 		// remote container (no PHP/mysqldump needed on the host) and downloaded.
 		return
 	} else {
-		if projectConf["platform"] == "magento2" {
-			result = remote_sync.RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
-		} else if projectConf["platform"] == "shopware" {
-			result = remote_sync.RunCommand(conn, "php -r \"\\$parsed_url=[];\\$env = include('"+remoteDir+"/.env'); $lines = explode(\"\\n\",\\$env); foreach(\\$lines as \\$line){  preg_match(\"/([^#]+)\\=(.*)/\",\\$line,\\$matches);  if(isset(\\$matches[1]) && \\$matches[1] == \"DATABASE_URL\" && !empty(\\$matches[2])){ \\$parsed_url = parse_url(\\$matches[2]); \\$parsed_url = ['username' => \\$parsed_url['user'],'password' => \\$parsed_url['pass'],'host'     => \\$parsed_url['host'],'port'     => \\$parsed_url['port']??\"3306\",'dbname' => ltrim($parsed_url['path'], '/')];   break;  }} echo json_encode(\\$parsed_url);\"")
-		}
+		result = getRemoteDbCredsJSON(conn, remoteDir, projectConf["platform"])
 	}
 
 	nOpenBrace := strings.Index(result, "{")
@@ -220,4 +218,165 @@ func tryRemoteMadockExport(conn *ssh.Client, remoteDir, name string, args *arg_s
 	fmt.Println("")
 	fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db:import`")
 	return true
+}
+
+// getRemoteDbCredsJSON reads the remote database credentials from the application's
+// own config file and returns them as a RemoteDbStruct-compatible JSON string.
+// The remote config is fetched with `cat` and parsed locally in Go, so no language
+// runtime (php, node, python, ...) is required on the remote host. The config file
+// location depends on the platform:
+//
+//   - magento2: app/etc/env.php (db.connection.default)
+//   - shopware/sylius/medusa/saleor/spree: DATABASE_URL in .env(.local)
+//   - woocommerce: wp-config.php DB_* constants
+//   - prestashop: app/config/parameters.php database_* parameters
+//
+// Returns "" for SaaS/static frontends (shopify, bigcommerce) and custom projects
+// that have no standard DB config — those require `--db-*` flags or remote madock.
+func getRemoteDbCredsJSON(conn *ssh.Client, remoteDir, platform string) string {
+	switch platform {
+	case "magento2":
+		return credsFromMagentoEnv(conn, remoteDir)
+	case "shopware", "sylius", "medusa", "saleor", "spree":
+		return credsFromDatabaseURL(conn, remoteDir)
+	case "woocommerce":
+		return credsFromWpConfig(conn, remoteDir)
+	case "prestashop":
+		return credsFromPrestashop(conn, remoteDir)
+	}
+	return ""
+}
+
+// reFirstValue returns the first capture-group match of pattern in content, or "".
+func reFirstValue(content, pattern string) string {
+	if m := regexp.MustCompile(pattern).FindStringSubmatch(content); len(m) == 2 {
+		return m[1]
+	}
+	return ""
+}
+
+// credsToJSON builds the RemoteDbStruct-compatible JSON consumed by the caller.
+func credsToJSON(host, port, dbname, user, password string) string {
+	return fmt.Sprintf("{\"host\":\"%s\",\"dbname\":\"%s\",\"username\":\"%s\",\"password\":\"%s\",\"port\":\"%s\"}",
+		host, dbname, user, password, port)
+}
+
+// splitHostPort splits an optional "host:port" suffix; port is "" when absent.
+func splitHostPort(hostPort string) (string, string) {
+	if i := strings.LastIndex(hostPort, ":"); i != -1 {
+		return hostPort[:i], hostPort[i+1:]
+	}
+	return hostPort, ""
+}
+
+// credsFromMagentoEnv reads db.connection.default from app/etc/env.php.
+func credsFromMagentoEnv(conn *ssh.Client, remoteDir string) string {
+	out, err := remote_sync.RunCommandSafe(conn, "cat '"+remoteDir+"/app/etc/env.php' 2>/dev/null")
+	if err != nil {
+		return ""
+	}
+	return parseMagentoEnv(out)
+}
+
+// parseMagentoEnv extracts the default DB connection from a Magento 2 env.php.
+// env.php is a PHP array, but the default connection is the first one declared,
+// so a positional scan of the keys after the 'default' entry is sufficient.
+func parseMagentoEnv(content string) string {
+	// Narrow to the 'default' connection block so the indexer connection (which
+	// repeats the same keys) cannot shadow it.
+	if i := strings.Index(content, "'default'"); i != -1 {
+		content = content[i:]
+	}
+	keyVal := func(key string) string {
+		return reFirstValue(content, `['"]`+key+`['"]\s*=>\s*['"]([^'"]*)['"]`)
+	}
+	dbname := keyVal("dbname")
+	if dbname == "" {
+		return ""
+	}
+	host, port := splitHostPort(keyVal("host"))
+	return credsToJSON(host, port, dbname, keyVal("username"), keyVal("password"))
+}
+
+// credsFromDatabaseURL reads DATABASE_URL from the remote .env / .env.local.
+func credsFromDatabaseURL(conn *ssh.Client, remoteDir string) string {
+	out, err := remote_sync.RunCommandSafe(conn, "cat '"+remoteDir+"/.env.local' '"+remoteDir+"/.env' 2>/dev/null")
+	if err != nil {
+		return ""
+	}
+	return parseDatabaseURL(out)
+}
+
+// parseDatabaseURL extracts DB credentials from a DATABASE_URL entry in env file
+// content. Symfony-style overrides apply: .env.local is concatenated first, so the
+// first matching line wins.
+func parseDatabaseURL(content string) string {
+	dbURL := ""
+	for _, line := range strings.Split(content, "\n") {
+		line = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(line), "export "))
+		if !strings.HasPrefix(line, "DATABASE_URL") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		if dbURL = strings.Trim(strings.TrimSpace(parts[1]), "\"'"); dbURL != "" {
+			break
+		}
+	}
+	if dbURL == "" {
+		return ""
+	}
+
+	u, perr := url.Parse(dbURL)
+	if perr != nil || u.Host == "" {
+		return ""
+	}
+	password, _ := u.User.Password()
+	return credsToJSON(u.Hostname(), u.Port(), strings.TrimPrefix(u.Path, "/"), u.User.Username(), password)
+}
+
+// credsFromWpConfig reads the DB_* constants from the remote wp-config.php.
+func credsFromWpConfig(conn *ssh.Client, remoteDir string) string {
+	out, err := remote_sync.RunCommandSafe(conn, "cat '"+remoteDir+"/wp-config.php' 2>/dev/null")
+	if err != nil {
+		return ""
+	}
+	return parseWpConfig(out)
+}
+
+// parseWpConfig extracts DB credentials from WordPress/WooCommerce wp-config.php
+// content. DB_HOST may carry a host:port suffix.
+func parseWpConfig(content string) string {
+	get := func(name string) string {
+		return reFirstValue(content, `define\(\s*['"]`+name+`['"]\s*,\s*['"]([^'"]*)['"]`)
+	}
+	dbname := get("DB_NAME")
+	if dbname == "" {
+		return ""
+	}
+	host, port := splitHostPort(get("DB_HOST"))
+	return credsToJSON(host, port, dbname, get("DB_USER"), get("DB_PASSWORD"))
+}
+
+// credsFromPrestashop reads database_* params from the remote parameters.php.
+func credsFromPrestashop(conn *ssh.Client, remoteDir string) string {
+	out, err := remote_sync.RunCommandSafe(conn, "cat '"+remoteDir+"/app/config/parameters.php' 2>/dev/null")
+	if err != nil {
+		return ""
+	}
+	return parsePrestashop(out)
+}
+
+// parsePrestashop extracts DB credentials from PrestaShop parameters.php content.
+func parsePrestashop(content string) string {
+	get := func(name string) string {
+		return reFirstValue(content, `['"]`+name+`['"]\s*=>\s*['"]([^'"]*)['"]`)
+	}
+	dbname := get("database_name")
+	if dbname == "" {
+		return ""
+	}
+	return credsToJSON(get("database_host"), get("database_port"), dbname, get("database_user"), get("database_password"))
 }

@@ -119,7 +119,15 @@ After the successful execution of these commands, the database will be imported.
 
 1. **Explicit credentials** — if you pass `--db-host`, `--db-port`, `--db-user`, `--db-password` and `--db-name`, they are used directly and the dump is created on the remote host with `mysqldump`/`pg_dump`/`mongodump`.
 2. **Remote madock** — if `madock` is installed on the remote host, the dump is produced **inside the remote container** via `madock db:export` (run from `ssh/site_root_path`), then downloaded. No PHP or database client is required on the remote host.
-3. **PHP fallback** — otherwise the DB credentials are read from the project files (`app/etc/env.php` for Magento 2, `.env` for Shopware) using `php` on the remote host, and the dump is created with the remote database client.
+3. **Config fallback** — otherwise the DB credentials are read from the application's own config file (fetched with `cat` and parsed locally — no PHP/Node/Python runtime needed on the remote host), and the dump is created with the remote database client. Supported per platform:
+
+   | Platform | Config file (relative to `ssh/site_root_path`) |
+   |---|---|
+   | magento2 | `app/etc/env.php` (`db.connection.default`) |
+   | shopware, sylius, medusa, saleor, spree | `.env` / `.env.local` (`DATABASE_URL`) |
+   | woocommerce | `wp-config.php` (`DB_*` constants) |
+   | prestashop | `app/config/parameters.php` (`database_*`) |
+   | shopify, bigcommerce, custom | no standard DB config — use option 1 or 2 |
 
 > For a remote host that has only `madock` installed (no PHP, no `mysqldump`), option 2 is used automatically — make sure `ssh/site_root_path` points to the madock project root on the server.
 
