@@ -156,7 +156,7 @@ func Execute() {
 			logger.Fatal(err)
 		}
 		remote_sync.RunCommand(conn, "rm "+"/tmp/"+dumpName)
-		assertDumpNotEmpty(localPath, dbAuthData.Host)
+		assertDumpNotEmpty(localPath, "remote "+dbType+" client on host "+dbAuthData.Host)
 		fmt.Println("")
 		fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db:import`")
 	} else {
@@ -224,6 +224,9 @@ func tryRemoteMadockExport(conn *ssh.Client, remoteDir, name string, args *arg_s
 	}
 
 	remote_sync.RunCommand(conn, "rm '"+remoteFile+"'")
+	// Guard against an older remote madock whose db:export does not yet fail on a
+	// broken dump: a successful-looking run can still hand us an empty archive.
+	assertDumpNotEmpty(localPath, "remote madock db:export")
 	fmt.Println("")
 	fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db:import`")
 	return true
@@ -264,16 +267,16 @@ func shellSingleQuote(s string) string {
 
 // assertDumpNotEmpty aborts with a helpful message when the downloaded dump is
 // suspiciously small (an empty gzip stream is ~20 bytes), which means the remote
-// dumper produced no output — typically a missing mysqldump/pg_dump binary on the
-// remote host or a DB host that is not reachable from the remote shell.
-func assertDumpNotEmpty(localPath, dbHost string) {
+// dump produced no data. source describes where the dump came from so the message
+// can point at the likely cause.
+func assertDumpNotEmpty(localPath, source string) {
 	info, err := os.Stat(localPath)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	if info.Size() < 100 {
 		_ = os.Remove(localPath)
-		logger.Fatal(fmt.Sprintf("The downloaded dump is empty (%d bytes). The remote dump command produced no data.\nLikely causes:\n  - mysqldump/pg_dump is not installed on the remote host\n  - the database host %q from the remote config is not reachable from the remote shell (e.g. it is a docker-internal name)\nFix: install the DB client on the server, install madock on the server, or pass --db-host/--db-port/--db-user/--db-password/--db-name explicitly.", info.Size(), dbHost))
+		logger.Fatal(fmt.Sprintf("The downloaded dump is empty (%d bytes). The remote dump (%s) produced no data.\nLikely causes:\n  - the DB client (mysqldump/pg_dump/mongodump) is missing on the remote host\n  - the database host from the remote config is not reachable from the remote shell (e.g. a docker-internal name)\n  - an outdated remote madock that does not detect a failed dump\nFix: install the DB client or madock on the server, or pass --db-host/--db-port/--db-user/--db-password/--db-name explicitly.", info.Size(), source))
 	}
 }
 

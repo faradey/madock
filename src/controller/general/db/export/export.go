@@ -151,6 +151,9 @@ func exportPostgresql(containerName string, projectConf map[string]string, args 
 	err = cmd.Run()
 	docker.NotifyExecDone(containerName, []string{"bash", "-c", "pg_dump..."}, err)
 	if err != nil {
+		writer.Close()
+		selectedFile.Close()
+		_ = os.Remove(filePath)
 		logger.Fatal(err)
 	}
 
@@ -179,6 +182,8 @@ func exportMongodb(containerName string, projectConf map[string]string, args *ar
 	err = cmd.Run()
 	docker.NotifyExecDone(containerName, []string{"bash", "-c", "mongodump..."}, err)
 	if err != nil {
+		selectedFile.Close()
+		_ = os.Remove(filePath)
 		logger.Fatal(err)
 	}
 

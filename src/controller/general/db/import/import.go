@@ -50,7 +50,10 @@ func (pr *progressReader) printProgress(done chan struct{}) {
 			return
 		case <-ticker.C:
 			read := pr.bytesRead.Load()
-			percent := int(float64(read) / float64(pr.totalBytes) * 100)
+			percent := 0
+			if pr.totalBytes > 0 {
+				percent = int(float64(read) / float64(pr.totalBytes) * 100)
+			}
 			if percent > 100 {
 				percent = 100
 			}
