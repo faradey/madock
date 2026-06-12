@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 //go:embed config_defaults.xml
@@ -126,15 +127,36 @@ func GetProjectConfigOnly(projectName string) map[string]string {
 	projectPath := ""
 	if val, ok := activeConfig["path"]; ok {
 		projectPath = val
-	} else {
+	} else if projectName == GetProjectName() {
+		// Safe only for the current project: CWD is its source directory.
 		projectPath = paths.GetRunDirPath()
 		activeConfig["path"] = projectPath
+	} else {
+		// For another project CWD is meaningless. Falling back to it would read
+		// the current project's .madock/config.xml as if it belonged to
+		// projectName (and persist a wrong `path` into its runtime config),
+		// corrupting cross-project regenerators such as the shared proxy.conf
+		// builder. Skip the release-side defaults; the runtime config alone
+		// drives. GetProjectConfigInProject("") returns an empty map, so an
+		// empty projectPath is safe here.
+		warnMissingProjectPath(projectName)
 	}
 	defaultConfig := GetProjectConfigInProject(projectPath)
 	activeProjectConfig := make(map[string]string)
 	ConfigMapping(defaultConfig, activeProjectConfig)
 	ConfigMapping(activeConfig, activeProjectConfig)
 	return activeProjectConfig
+}
+
+// warnedMissingPath dedupes the missing-`path` warning so a single rebuild that
+// reads a foreign project's config many times logs it only once per project.
+var warnedMissingPath sync.Map
+
+func warnMissingProjectPath(projectName string) {
+	if _, loaded := warnedMissingPath.LoadOrStore(projectName, true); loaded {
+		return
+	}
+	logger.Println("warning: project \"" + projectName + "\" has no 'path' key in runtime config; its release .madock/config.xml will not be merged (cross-project read)")
 }
 
 func GetCurrentProjectConfigPath(projectName string) string {
