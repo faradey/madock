@@ -101,15 +101,28 @@ func IsHasConfig(projectName string) bool {
 		projectName = GetProjectName()
 	}
 	PrepareDirsForProject(projectName)
-	if !paths.IsFileExist(paths.GetExecDirPath()+"/projects/"+projectName+"/config.xml") && paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
-		err := paths.Copy(paths.GetRunDirPath()+"/.madock/config.xml", paths.GetExecDirPath()+"/projects/"+projectName+"/config.xml")
+	runtimeConfigPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+	inProjectConfigExists := paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml")
+	if !paths.IsFileExist(runtimeConfigPath) && inProjectConfigExists {
+		err := paths.Copy(paths.GetRunDirPath()+"/.madock/config.xml", runtimeConfigPath)
 		if err != nil {
 			logger.Println(err)
 			return false
 		}
 		SetParam(projectName, "path", paths.GetRunDirPath(), "default", MadockLevelConfigCode)
+	} else if inProjectConfigExists && paths.IsFileExist(runtimeConfigPath) {
+		// Self-heal: legacy projects (bootstrapped before `path` was recorded) and
+		// runtime configs placed by a deploy keep a runtime config without a
+		// `path` key, which breaks cross-project regenerators (the shared
+		// proxy.conf builder reads a foreign project and can't find its source).
+		// We are in the project's own source dir here (CWD has its .madock), so
+		// GetRunDirPath() is authoritative — backfill the missing key once.
+		raw := ParseXmlFile(runtimeConfigPath)
+		if getConfigByScope(raw, "default")["path"] == "" {
+			SetParam(projectName, "path", paths.GetRunDirPath(), "default", MadockLevelConfigCode)
+		}
 	}
-	if paths.IsFileExist(paths.GetExecDirPath()+"/projects/"+projectName+"/config.xml") || paths.IsFileExist(paths.GetRunDirPath()+"/.madock/config.xml") {
+	if paths.IsFileExist(runtimeConfigPath) || inProjectConfigExists {
 		return true
 	}
 
