@@ -7,7 +7,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/paths"
 )
 
-// V384 repairs Magento 2 projects whose stored DB credentials drifted away from
+// V385 repairs Magento 2 projects whose stored DB credentials drifted away from
 // app/etc/env.php. An earlier run of V375 backfilled the implicit default
 // "magento" for projects that actually run on different credentials (e.g. the
 // "db" default with a generated password), which made db:export/db:import target
@@ -16,7 +16,7 @@ import (
 // the env.php values. Projects whose config already matches env.php are left
 // untouched; non-Magento projects and projects without a readable env.php are
 // skipped.
-func V384() {
+func V385() {
 	projectsDir := paths.GetExecDirPath() + "/projects"
 	entries, err := os.ReadDir(projectsDir)
 	if err != nil {
