@@ -98,7 +98,10 @@ func exportMysql(containerName string, projectConf map[string]string, args *arg_
 		mysqldumpCommandName = "mariadb-dump"
 	}
 
-	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", mysqldumpCommandName+" -u root -p"+projectConf["db/root_password"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["db/database"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
+	// set -o pipefail so a mysqldump/mariadb-dump failure (e.g. unknown database,
+	// auth error) propagates instead of being masked by the trailing `| sed`,
+	// which would otherwise report success while writing an empty dump.
+	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", "set -o pipefail; "+mysqldumpCommandName+" -u root -p"+projectConf["db/root_password"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["db/database"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}
@@ -107,6 +110,9 @@ func exportMysql(containerName string, projectConf map[string]string, args *arg_
 	err = cmd.Run()
 	docker.NotifyExecDone(containerName, []string{"bash", "-c", "mysqldump..."}, err)
 	if err != nil {
+		writer.Close()
+		selectedFile.Close()
+		_ = os.Remove(filePath)
 		logger.Fatal(err)
 	}
 
