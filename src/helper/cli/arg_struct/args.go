@@ -82,6 +82,7 @@ type ControllerGeneralDbExport struct {
 	DBServiceName string   `arg:"-s,--service" help:"DB service name. For example: db"`
 	IgnoreTable   []string `arg:"--ignore-table" help:"Ignore db table"`
 	User          string   `arg:"-u,--user" help:"Ignore db table"`
+	Json          bool     `arg:"-j,--json" help:"Output the created dump file path as JSON"`
 }
 
 type ControllerGeneralDbImport struct {

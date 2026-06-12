@@ -278,6 +278,19 @@ func RunCommand(conn *ssh.Client, cmd string) string {
 	return string(out)
 }
 
+// RunCommandSafe runs a remote command and returns its combined output together
+// with any error, without aborting the process. Use it for optional probes
+// (e.g. checking whether a binary exists on the remote host).
+func RunCommandSafe(conn *ssh.Client, cmd string) (string, error) {
+	sess, err := conn.NewSession()
+	if err != nil {
+		return "", err
+	}
+	defer sess.Close()
+	out, err := sess.CombinedOutput(cmd)
+	return string(out), err
+}
+
 func NewClient(conn *ssh.Client) *sftp.Client {
 	scTemp, err := sftp.NewClient(conn)
 	if err != nil {

@@ -170,6 +170,24 @@ madock db:info --json
 }
 ```
 
+### db:export
+
+Exports the database and returns the path of the created dump file. The dump is produced inside the database container, so no PHP or database client is required on the host.
+
+```bash
+madock db:export --json
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "file": "/path/to/madock/projects/myproject/backup/db/local_2026-06-12_13-38-56.sql.gz"
+  }
+}
+```
+
 ## Examples
 
 ### Get database password with jq

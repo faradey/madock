@@ -10,11 +10,16 @@ import (
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/cli/output"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
 )
+
+type DbExportOutput struct {
+	File string `json:"file"`
+}
 
 func init() {
 	command.Register(&command.Definition{
@@ -46,19 +51,28 @@ func Export() {
 
 	dbType := configs.GetDbType(projectConf)
 
+	var filePath string
 	switch dbType {
 	case "postgresql":
-		exportPostgresql(containerName, projectConf, args, name, service, dbsPath)
+		filePath = exportPostgresql(containerName, projectConf, args, name, service, dbsPath)
 	case "mongodb":
-		exportMongodb(containerName, projectConf, args, name, dbsPath)
+		filePath = exportMongodb(containerName, projectConf, args, name, dbsPath)
 	default:
-		exportMysql(containerName, projectConf, args, name, service, dbsPath)
+		filePath = exportMysql(containerName, projectConf, args, name, service, dbsPath)
+	}
+
+	if args.Json {
+		if err := output.PrintJSON(DbExportOutput{File: filePath}); err != nil {
+			logger.Fatal(err)
+		}
+		return
 	}
 
 	fmt.Println("Database export completed successfully")
+	fmt.Println(filePath)
 }
 
-func exportMysql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExport, name, service, dbsPath string) {
+func exportMysql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExport, name, service, dbsPath string) string {
 	ignoreTablesStr := ""
 	ignoreTables := args.IgnoreTable
 	if len(ignoreTables) > 0 {
@@ -70,7 +84,8 @@ func exportMysql(containerName string, projectConf map[string]string, args *arg_
 		user = args.User
 	}
 
-	selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
+	filePath := dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz"
+	selectedFile, err := os.Create(filePath)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -94,15 +109,18 @@ func exportMysql(containerName string, projectConf map[string]string, args *arg_
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	return filePath
 }
 
-func exportPostgresql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExport, name, service, dbsPath string) {
+func exportPostgresql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExport, name, service, dbsPath string) string {
 	user := "postgres"
 	if args.User != "" {
 		user = args.User
 	}
 
-	selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz")
+	filePath := dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz"
+	selectedFile, err := os.Create(filePath)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -129,15 +147,18 @@ func exportPostgresql(containerName string, projectConf map[string]string, args 
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	return filePath
 }
 
-func exportMongodb(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExport, name, dbsPath string) {
+func exportMongodb(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExport, name, dbsPath string) string {
 	user := "root"
 	if args.User != "" {
 		user = args.User
 	}
 
-	selectedFile, err := os.Create(dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".archive.gz")
+	filePath := dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".archive.gz"
+	selectedFile, err := os.Create(filePath)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -154,4 +175,6 @@ func exportMongodb(containerName string, projectConf map[string]string, args *ar
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	return filePath
 }

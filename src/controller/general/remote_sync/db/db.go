@@ -13,6 +13,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -60,6 +61,10 @@ func Execute() {
 			args.DbHost = "localhost"
 		}
 		result = "{\"host\":\"" + args.DbHost + "\",\"dbname\":\"" + args.DbName + "\",\"username\":\"" + args.DbUser + "\",\"password\":\"" + args.DbPassword + "\",\"port\":\"" + args.DbPort + "\"}"
+	} else if tryRemoteMadockExport(conn, remoteDir, name, args) {
+		// madock is installed on the remote host: the dump was produced inside the
+		// remote container (no PHP/mysqldump needed on the host) and downloaded.
+		return
 	} else {
 		if projectConf["platform"] == "magento2" {
 			result = remote_sync.RunCommand(conn, "php -r \"\\$r1 = include('"+remoteDir+"/app/etc/env.php'); echo json_encode(\\$r1[\\\"db\\\"][\\\"connection\\\"][\\\"default\\\"]);\"")
@@ -150,4 +155,69 @@ func Execute() {
 	} else {
 		fmt.Println("Failed to get database authentication data (row 110)")
 	}
+}
+
+// madockExportOutput mirrors the JSON emitted by `madock db:export --json` on the remote host.
+type madockExportOutput struct {
+	File string `json:"file"`
+}
+
+// tryRemoteMadockExport produces the dump natively when madock is installed on the
+// remote host. It runs `madock db:export --json` from the project root, which dumps
+// the database inside the remote container (no PHP or mysqldump needed on the host),
+// then downloads the resulting archive locally and removes it from the remote host.
+// Returns false on any failure so the caller can fall back to the PHP/mysqldump flow.
+func tryRemoteMadockExport(conn *ssh.Client, remoteDir, name string, args *arg_struct.ControllerGeneralRemoteSyncDb) bool {
+	if out, err := remote_sync.RunCommandSafe(conn, "command -v madock"); err != nil || strings.TrimSpace(out) == "" {
+		return false
+	}
+
+	exportCmd := "cd '" + remoteDir + "' && madock db:export --json"
+	if name = strings.TrimSpace(name); name != "" {
+		exportCmd += " -n '" + name + "'"
+	}
+	for _, t := range args.IgnoreTable {
+		exportCmd += " --ignore-table '" + t + "'"
+	}
+
+	out, err := remote_sync.RunCommandSafe(conn, exportCmd)
+	if err != nil {
+		fmt.Println(out)
+		return false
+	}
+
+	nOpen := strings.Index(out, "{")
+	nClose := strings.LastIndex(out, "}")
+	if nOpen == -1 || nClose <= nOpen {
+		return false
+	}
+
+	export := madockExportOutput{}
+	if err = json.Unmarshal([]byte(out[nOpen:nClose+1]), &export); err != nil || strings.TrimSpace(export.File) == "" {
+		return false
+	}
+	remoteFile := strings.TrimSpace(export.File)
+
+	sc, err := sftp.NewClient(conn)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer func(sc *sftp.Client) {
+		if cerr := sc.Close(); cerr != nil {
+			logger.Fatal(cerr)
+		}
+	}(sc)
+
+	execPath := paths.GetExecDirPath()
+	projectName := configs.GetProjectName()
+	localName := "remote_" + strings.TrimPrefix(filepath.Base(remoteFile), "local_")
+	localPath := execPath + "/projects/" + projectName + "/backup/db/" + localName
+	if err = remote_sync.DownloadFile(sc, remoteFile, localPath, false, false); err != nil {
+		logger.Fatal(err)
+	}
+
+	remote_sync.RunCommand(conn, "rm '"+remoteFile+"'")
+	fmt.Println("")
+	fmtc.SuccessLn("A database dump was created and saved locally. To import a database dump locally run the command `madock db:import`")
+	return true
 }
