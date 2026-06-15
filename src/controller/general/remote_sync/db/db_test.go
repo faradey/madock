@@ -136,6 +136,43 @@ func TestParsePrestashop(t *testing.T) {
 	}
 }
 
+func TestParseMadockExportFile(t *testing.T) {
+	// Real shape produced by `madock db:export --json` (output.PrintJSON wrapper,
+	// indented), optionally preceded by verbose dumper logging on the ssh stream.
+	out := `mysqldump: [Warning] Using a password on the command line interface can be insecure.
+-- Connecting to db...
+{
+  "success": true,
+  "data": {
+    "file": "/opt/madock/projects/extmag-com/backup/db/local_2026-06-12_17-32-55.sql.gz"
+  }
+}`
+	got, ok := parseMadockExportFile(out)
+	if !ok {
+		t.Fatal("expected ok=true")
+	}
+	want := "/opt/madock/projects/extmag-com/backup/db/local_2026-06-12_17-32-55.sql.gz"
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
+
+func TestParseMadockExportFileFailures(t *testing.T) {
+	cases := map[string]string{
+		"no json":        "bash: madock: command not found\n",
+		"flat file key":  `{"file":"/x.sql.gz"}`, // old (wrong) shape must NOT parse as success
+		"empty data":     `{"success":true,"data":{"file":""}}`,
+		"malformed json": `{"success":true,"data":{`,
+	}
+	for name, out := range cases {
+		t.Run(name, func(t *testing.T) {
+			if got, ok := parseMadockExportFile(out); ok {
+				t.Fatalf("expected ok=false, got %q", got)
+			}
+		})
+	}
+}
+
 func TestParseEmptyReturnsEmpty(t *testing.T) {
 	if got := parseMagentoEnv(""); got != "" {
 		t.Fatalf("parseMagentoEnv(\"\") = %q, want empty", got)

@@ -164,9 +164,38 @@ func Execute() {
 	}
 }
 
-// madockExportOutput mirrors the JSON emitted by `madock db:export --json` on the remote host.
+// madockExportOutput mirrors the JSON emitted by `madock db:export --json` on the
+// remote host. The command prints through the shared output.PrintJSON wrapper, so
+// the payload is {"success":true,"data":{"file":"..."}} — the file path lives under
+// "data", not at the top level.
 type madockExportOutput struct {
-	File string `json:"file"`
+	Success bool `json:"success"`
+	Data    struct {
+		File string `json:"file"`
+	} `json:"data"`
+}
+
+// parseMadockExportFile extracts the dump file path from the output of
+// `madock db:export --json` on the remote host. The JSON is wrapped by
+// output.PrintJSON ({"success":true,"data":{"file":"..."}}) and may be preceded
+// by verbose dumper logging on the combined ssh stream, so the JSON object is
+// located by its outer braces. Returns ok=false on any parse failure.
+func parseMadockExportFile(out string) (string, bool) {
+	nOpen := strings.Index(out, "{")
+	nClose := strings.LastIndex(out, "}")
+	if nOpen == -1 || nClose <= nOpen {
+		return "", false
+	}
+
+	export := madockExportOutput{}
+	if err := json.Unmarshal([]byte(out[nOpen:nClose+1]), &export); err != nil {
+		return "", false
+	}
+	file := strings.TrimSpace(export.Data.File)
+	if file == "" {
+		return "", false
+	}
+	return file, true
 }
 
 // tryRemoteMadockExport produces the dump natively when madock is installed on the
@@ -193,17 +222,10 @@ func tryRemoteMadockExport(conn *ssh.Client, remoteDir, name string, args *arg_s
 		return false
 	}
 
-	nOpen := strings.Index(out, "{")
-	nClose := strings.LastIndex(out, "}")
-	if nOpen == -1 || nClose <= nOpen {
+	remoteFile, ok := parseMadockExportFile(out)
+	if !ok {
 		return false
 	}
-
-	export := madockExportOutput{}
-	if err = json.Unmarshal([]byte(out[nOpen:nClose+1]), &export); err != nil || strings.TrimSpace(export.File) == "" {
-		return false
-	}
-	remoteFile := strings.TrimSpace(export.File)
 
 	sc, err := sftp.NewClient(conn)
 	if err != nil {
