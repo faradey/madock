@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+      # Opt-out: a tag ending in -norelease (e.g. v3.8.7-norelease) is pushed
+      # without triggering a release build. The negative pattern must stay after
+      # the positive one — GitHub applies tag filters in order.
+      - '!v*-norelease'
 
 permissions:
   contents: write
