@@ -88,12 +88,20 @@ func MakeKibanaConf(projectName string) {
 }
 
 func makeNginxDockerfile(projectName string) {
+	// Platforms with a self-contained image (own nginx, e.g. packeton) ship no
+	// nginx/Dockerfile — skip the unused nginx ctx instead of fataling.
+	if GetDockerConfigFileOptional(projectName, "nginx/Dockerfile", "") == "" {
+		return
+	}
 	MakeDockerfile(projectName, "nginx/Dockerfile", "nginx.Dockerfile")
 }
 
 func makeNginxConf(projectName string) {
+	defFile := GetDockerConfigFileOptional(projectName, "nginx/conf/default.conf", "")
+	if defFile == "" {
+		return // platform ships no nginx conf (self-contained image)
+	}
 	projectConf := configs.GetProjectConfig(projectName)
-	defFile := GetDockerConfigFile(projectName, "nginx/conf/default.conf", "")
 
 	b, err := os.ReadFile(defFile)
 	if err != nil {
