@@ -244,6 +244,7 @@ IMPORTANT: Please, read all items before starting work.
 * [PHPStorm + Xdebug Setup](docs/xdebug_phpstorm.md)
 * [Docker images list](docs/docker_images.md)
 * [Customizations](docs/customizations.md)
+* [Docker Compose override](docs/docker_compose_override.md)
 * [Database import, export, synchronization, phpmyadmin](docs/database.md)
 * [Media synchronization](docs/media.md)
 * [Cron](docs/cron.md)

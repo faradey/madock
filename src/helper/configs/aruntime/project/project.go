@@ -263,12 +263,16 @@ func makeDockerCompose(projectName string) {
 	var dockerDefFiles map[string]string
 	dockerDefFiles = make(map[string]string)
 	dockerDefFiles["docker-compose.yml"] = GetDockerConfigFile(projectName, "docker-compose.yml", "")
-	dockerDefFiles["docker-compose.override.yml"] = GetDockerConfigFile(projectName, "docker-compose."+overrideFile+".yml", "")
+	dockerDefFiles["docker-compose.override.yml"] = GetDockerConfigFileOptional(projectName, "docker-compose."+overrideFile+".yml", "")
 	dockerDefFiles["docker-compose-snapshot.yml"] = GetDockerConfigFile(projectName, "docker-compose-snapshot.yml", "general")
 	for key, dockerDefFile := range dockerDefFiles {
-		b, err := os.ReadFile(dockerDefFile)
-		if err != nil {
-			logger.Fatal(err)
+		var b []byte
+		var err error
+		if dockerDefFile != "" {
+			b, err = os.ReadFile(dockerDefFile)
+			if err != nil {
+				logger.Fatal(err)
+			}
 		}
 		b = ProcessSnippets(b, projectName)
 
