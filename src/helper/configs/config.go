@@ -49,6 +49,26 @@ func SaveInFile(file string, data map[string]string, activeScope string) {
 		}
 	}
 
+	// If the incoming data redefines hosts, treat nginx/hosts/* as a replace-group:
+	// drop existing host entries for this scope first, so a removed/recoded domain
+	// doesn't linger (additive merge would keep a stale code like base2 next to the
+	// new set -> "Duplicate domains").
+	hasHosts := false
+	for key := range data {
+		if strings.HasPrefix(key, "nginx/hosts/") {
+			hasHosts = true
+			break
+		}
+	}
+	if hasHosts {
+		prefix := "scopes/" + activeScope + "/nginx/hosts/"
+		for key := range resultData {
+			if strings.HasPrefix(key, prefix) {
+				delete(resultData, key)
+			}
+		}
+	}
+
 	for key, value := range data {
 		resultData["scopes/"+activeScope+"/"+key] = value
 	}
