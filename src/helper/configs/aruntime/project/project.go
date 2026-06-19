@@ -553,7 +553,12 @@ func processOtherCTXFiles(projectName string) {
 	var err error
 	var file string
 	for _, fileName := range filesNames {
-		file = GetDockerConfigFile(projectName, fileName, "")
+		// Platforms with a self-contained image (e.g. packeton) ship no grafana
+		// ctx files and there is no general fallback — skip instead of fataling.
+		file = GetDockerConfigFileOptional(projectName, fileName, "")
+		if file == "" {
+			continue
+		}
 		b, err = os.ReadFile(file)
 		if err != nil {
 			logger.Fatal(err)
