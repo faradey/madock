@@ -160,7 +160,6 @@ func TestParseMadockExportFile(t *testing.T) {
 func TestParseMadockExportFileFailures(t *testing.T) {
 	cases := map[string]string{
 		"no json":        "bash: madock: command not found\n",
-		"flat file key":  `{"file":"/x.sql.gz"}`, // old (wrong) shape must NOT parse as success
 		"empty data":     `{"success":true,"data":{"file":""}}`,
 		"malformed json": `{"success":true,"data":{`,
 	}
@@ -168,6 +167,31 @@ func TestParseMadockExportFileFailures(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			if got, ok := parseMadockExportFile(out); ok {
 				t.Fatalf("expected ok=false, got %q", got)
+			}
+		})
+	}
+}
+
+// TestParseMadockExportFilePlainFallback covers an older remote madock whose
+// db:export ignores --json and prints verbose dumper logging followed by the
+// bare dump path. The path must still be recovered.
+func TestParseMadockExportFilePlainFallback(t *testing.T) {
+	cases := map[string]string{
+		"verbose plus bare path": "-- Connecting to db...\n-- Disconnecting from db...\nDatabase export completed successfully\n/opt/madock/projects/extmag-com/backup/db/local_live_2026-06-21_23-17-08.sql.gz",
+		"flat json file key":     `{"file":"/opt/madock/projects/extmag-com/backup/db/local.sql.gz"}`,
+	}
+	wants := map[string]string{
+		"verbose plus bare path": "/opt/madock/projects/extmag-com/backup/db/local_live_2026-06-21_23-17-08.sql.gz",
+		"flat json file key":     "/opt/madock/projects/extmag-com/backup/db/local.sql.gz",
+	}
+	for name, out := range cases {
+		t.Run(name, func(t *testing.T) {
+			got, ok := parseMadockExportFile(out)
+			if !ok {
+				t.Fatal("expected ok=true")
+			}
+			if got != wants[name] {
+				t.Fatalf("got %q, want %q", got, wants[name])
 			}
 		})
 	}

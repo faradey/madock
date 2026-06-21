@@ -45,12 +45,15 @@ func Execute() {
 	}
 	conn := remote_sync.Connect(projectConf, sshType)
 
+	// remoteDir is the madock project root (deploy root): the native madock export
+	// runs there so the project name is derived from it (the container is
+	// madock_<project>-db-1). docRoot is the platform's document root, which on a
+	// Deployer/Capistrano layout lives under <root>/current — that is where the
+	// cred files (env.php, .env, wp-config.php, ...) actually are.
 	remoteDir := siteRootPath
-	// Deployer/Capistrano layout keeps the live release under <root>/current.
-	// Resolve it once so every cred parser and the native madock export look at
-	// the actual document root instead of the empty deploy root.
+	docRoot := remoteDir
 	if out, err := remote_sync.RunCommandSafe(conn, "[ -e '"+remoteDir+"/current' ] && echo current"); err == nil && strings.TrimSpace(out) == "current" {
-		remoteDir = remoteDir + "/current"
+		docRoot = remoteDir + "/current"
 	}
 	name := args.Name
 	defer func(conn *ssh.Client) {
@@ -75,7 +78,7 @@ func Execute() {
 		// remote container (no PHP/mysqldump needed on the host) and downloaded.
 		return
 	} else {
-		result = getRemoteDbCredsJSON(conn, remoteDir, projectConf["platform"])
+		result = getRemoteDbCredsJSON(conn, docRoot, projectConf["platform"])
 	}
 
 	nOpenBrace := strings.Index(result, "{")
@@ -181,27 +184,37 @@ type madockExportOutput struct {
 	} `json:"data"`
 }
 
+// dumpPathRe matches an absolute remote dump path emitted by `madock db:export`.
+// Used as a fallback for older remote madock versions whose db:export ignores
+// --json and prints verbose dumper logging followed by the bare file path.
+var dumpPathRe = regexp.MustCompile(`/\S+\.(?:sql\.gz|archive\.gz|sql)`)
+
 // parseMadockExportFile extracts the dump file path from the output of
-// `madock db:export --json` on the remote host. The JSON is wrapped by
-// output.PrintJSON ({"success":true,"data":{"file":"..."}}) and may be preceded
-// by verbose dumper logging on the combined ssh stream, so the JSON object is
-// located by its outer braces. Returns ok=false on any parse failure.
+// `madock db:export --json` on the remote host. A current remote madock wraps
+// the path in JSON via output.PrintJSON ({"success":true,"data":{"file":"..."}}),
+// possibly preceded by verbose dumper logging on the combined ssh stream, so the
+// JSON object is located by its outer braces. An older remote madock ignores
+// --json and prints only verbose logging plus the bare dump path, so when JSON
+// is absent we fall back to the last path-looking token in the output.
+// Returns ok=false when no path can be recovered.
 func parseMadockExportFile(out string) (string, bool) {
 	nOpen := strings.Index(out, "{")
 	nClose := strings.LastIndex(out, "}")
-	if nOpen == -1 || nClose <= nOpen {
-		return "", false
+	if nOpen != -1 && nClose > nOpen {
+		export := madockExportOutput{}
+		if err := json.Unmarshal([]byte(out[nOpen:nClose+1]), &export); err == nil {
+			if file := strings.TrimSpace(export.Data.File); file != "" {
+				return file, true
+			}
+		}
 	}
 
-	export := madockExportOutput{}
-	if err := json.Unmarshal([]byte(out[nOpen:nClose+1]), &export); err != nil {
-		return "", false
+	// Fallback: older remote madock without --json support — recover the bare
+	// dump path (the last matching token, since logging precedes it).
+	if matches := dumpPathRe.FindAllString(out, -1); len(matches) > 0 {
+		return strings.TrimSpace(matches[len(matches)-1]), true
 	}
-	file := strings.TrimSpace(export.Data.File)
-	if file == "" {
-		return "", false
-	}
-	return file, true
+	return "", false
 }
 
 // tryRemoteMadockExport produces the dump natively when madock is installed on the
@@ -210,7 +223,11 @@ func parseMadockExportFile(out string) (string, bool) {
 // then downloads the resulting archive locally and removes it from the remote host.
 // Returns false on any failure so the caller can fall back to the PHP/mysqldump flow.
 func tryRemoteMadockExport(conn *ssh.Client, remoteDir, name string, args *arg_struct.ControllerGeneralRemoteSyncDb) bool {
-	if out, err := remote_sync.RunCommandSafe(conn, "command -v madock"); err != nil || strings.TrimSpace(out) == "" {
+	// Probe and run through a login shell (bash -lc) so the user's profile PATH is
+	// loaded: a plain ssh exec session is non-login/non-interactive, so madock
+	// installed under ~/bin or /usr/local/bin (added to PATH in ~/.profile or
+	// ~/.bash_profile) is not on PATH and the probe would falsely report it missing.
+	if out, err := remote_sync.RunCommandSafe(conn, "bash -lc "+shellSingleQuote("command -v madock")); err != nil || strings.TrimSpace(out) == "" {
 		return false
 	}
 
@@ -222,7 +239,7 @@ func tryRemoteMadockExport(conn *ssh.Client, remoteDir, name string, args *arg_s
 		exportCmd += " --ignore-table '" + t + "'"
 	}
 
-	out, err := remote_sync.RunCommandSafe(conn, exportCmd)
+	out, err := remote_sync.RunCommandSafe(conn, "bash -lc "+shellSingleQuote(exportCmd))
 	if err != nil {
 		fmt.Println(out)
 		return false
