@@ -46,6 +46,12 @@ func Execute() {
 	conn := remote_sync.Connect(projectConf, sshType)
 
 	remoteDir := siteRootPath
+	// Deployer/Capistrano layout keeps the live release under <root>/current.
+	// Resolve it once so every cred parser and the native madock export look at
+	// the actual document root instead of the empty deploy root.
+	if out, err := remote_sync.RunCommandSafe(conn, "[ -e '"+remoteDir+"/current' ] && echo current"); err == nil && strings.TrimSpace(out) == "current" {
+		remoteDir = remoteDir + "/current"
+	}
 	name := args.Name
 	defer func(conn *ssh.Client) {
 		err := conn.Close()
