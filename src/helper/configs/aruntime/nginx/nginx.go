@@ -14,23 +14,30 @@ import (
 	"strings"
 	"time"
 
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	configs2 "github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/v3/src/helper/configs/aruntime/proxytransform"
 	"github.com/faradey/madock/v3/src/helper/finder"
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/faradey/madock/v3/src/helper/ports"
 )
 
 func MakeConf(projectName string) {
-	if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
-		return
+	// The shared proxy.conf lists every project's routing, so it must be
+	// regenerated on every up — otherwise a freshly added/started project never
+	// appears in the proxy until a rebuild clears the cache. The per-project
+	// "<name>-proxy.conf" cache (used inside makeProxy) keeps this cheap: only
+	// the current project's block is re-rendered, the rest are reused.
+	//
+	// conf-cache absent means a full reset is wanted (first start / rebuild /
+	// clone remove it): drop the per-project caches so every block regenerates
+	// from scratch. The proxy.go hash gate then reloads only if proxy.conf
+	// actually changed, so regenerating on an unchanged start is a no-op.
+	if !paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
+		cleanProxyCache()
 	}
-
-	// Clean up old proxy cache files to prevent stale configs
-	cleanProxyCache()
 
 	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/nginx")
 	setPorts(projectName)
@@ -259,7 +266,6 @@ func makeDockerCompose(projectName string) {
 	/* END Create nginx Dockerfile configuration */
 }
 
-
 // replacePortPlaceholders dynamically scans for {{{port/XXX}}} patterns and allocates ports
 func replacePortPlaceholders(str, projectName string) string {
 	re := regexp.MustCompile(`\{\{\{port/([a-z0-9_]+)\}\}\}`)
@@ -291,7 +297,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 		var commands []string
 		i := 0
 		for _, name := range projectsNames {
-			if !paths.IsFileExist(paths.GetExecDirPath()+"/projects/"+name+"/config.xml") {
+			if !paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
 				continue
 			}
 
