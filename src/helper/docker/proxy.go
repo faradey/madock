@@ -90,8 +90,8 @@ func UpNginxWithBuild(projectName string, force bool) {
 		if err := ReloadNginx(); err == nil {
 			// Persist the applied hash and restore the conf-cache marker the
 			// rebuild removed (so MakeConf resumes caching) only when the reload
-			// actually took — a rejected config keeps the old one live, so we must
-			// not record it as applied or we'd never retry.
+			// command actually ran — if the exec failed (proxy missing / docker
+			// error) we must not record the config as applied or we'd never retry.
 			writeProxyHash(hashCache, newHash)
 			if !paths.IsFileExist(confCache) {
 				if err := os.WriteFile(confCache, []byte("config cache"), 0755); err != nil {
@@ -205,13 +205,23 @@ func StopNginx(force bool) {
 	}
 }
 
-// ReloadNginx reloads the nginx configuration. Returns the exec error so
-// callers can avoid recording a config as "applied" when the reload failed
-// (e.g. nginx rejected the new config and kept running the old one).
+// ReloadNginx reloads the nginx configuration in the running proxy and returns
+// the exec error so callers can avoid recording a config as "applied" when the
+// command could not even run (e.g. the proxy container is missing or docker
+// errored). It targets the compose SERVICE name ("nginx") rather than a
+// container name: the proxy template sets no container_name, so Compose v2 names
+// the container "<project>-nginx-<index>" (aruntime-nginx-1) — a hardcoded
+// container name would not match. `-T` disables TTY allocation (non-interactive).
+//
+// Note: `nginx -s reload` returns 0 even when the new config is rejected (nginx
+// logs the error and keeps the old config and workers live), so a non-nil error
+// here means the exec itself failed, not that the config was bad.
 func ReloadNginx() error {
-	err := ContainerExec("aruntime-nginx", "", false, "nginx", "-s", "reload")
+	composeFile := paths.ProxyDockerCompose()
+	cmd := exec.Command("docker", "compose", "-f", composeFile, "exec", "-T", "nginx", "nginx", "-s", "reload")
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(string(out), err)
 	}
 	return err
 }
