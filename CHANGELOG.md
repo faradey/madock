@@ -1,3 +1,8 @@
+**v3.8.17**
+
+Fixed:
+- PHP image Node.js install: fail fast when the NodeSource setup script cannot be fetched instead of silently falling back to the Debian `nodejs` package (which ships without npm and broke `npm install -g grunt-cli` with `npm: command not found`). Repo setup, `apt-get update` and the install now run in one layer, with an `apt-get install -y npm` fallback and a `node -v` / `npm -v` sanity check
+
 **v3.7.15**
 
 Fixed:
