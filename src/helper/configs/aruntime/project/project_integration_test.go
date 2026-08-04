@@ -336,8 +336,11 @@ func TestMakeConf_DbServiceDisabled(t *testing.T) {
 	if strings.Contains(composeStr, "\n  db:\n") {
 		t.Error("db service still rendered when db/enabled=false")
 	}
-	if strings.Contains(composeStr, "\n  dbdata:\n") {
-		t.Error("dbdata volume still declared when db/enabled=false")
+	// The dbdata volume stays declared even with the database off: every other
+	// entry in the volumes section is optional, and an empty "volumes:" makes
+	// compose fail with "volumes must be a mapping".
+	if !strings.Contains(composeStr, "\n  dbdata:\n") {
+		t.Error("dbdata volume declaration dropped; volumes section can now render empty")
 	}
 
 	// The rest of the stack must be untouched.
@@ -348,6 +351,68 @@ func TestMakeConf_DbServiceDisabled(t *testing.T) {
 	}
 }
 
+// TestMakeConf_MemcachedDisabledByDefault keeps the new service opt-in. It is
+// included in every platform's compose file, so a wrong default would add an
+// idle container to every existing project on the next rebuild.
+func TestMakeConf_MemcachedDisabledByDefault(t *testing.T) {
+	env := setupTestEnvironment(t, "memcdefaultproject", "memcdefault.test")
+
+	MakeConf(env.projectName)
+
+	composeStr := readCompose(t, env)
+
+	if strings.Contains(composeStr, "\n  memcached:\n") {
+		t.Error("memcached service rendered although the service is off by default")
+	}
+	if strings.Contains(readPhpDockerfile(t, env), "-memcached") {
+		t.Error("php-memcached installed into the PHP image although the service is off")
+	}
+}
+
+// TestMakeConf_MemcachedEnabled renders the service from a project config that
+// sets only memcached/enabled — the shape service:enable writes. Image tag, cache
+// size and connection limit must come from the embedded defaults; an unresolved
+// placeholder would land in docker-compose.yml verbatim and break the stack.
+func TestMakeConf_MemcachedEnabled(t *testing.T) {
+	env := setupTestEnvironment(t, "memcenabledproject", "memcenabled.test")
+
+	projectConfigPath := filepath.Join(env.execDir, "projects", env.projectName, "config.xml")
+	configs.SaveInFile(projectConfigPath, map[string]string{"memcached/enabled": "true"}, "default")
+	configs.CleanCache()
+
+	MakeConf(env.projectName)
+
+	composeStr := readCompose(t, env)
+
+	if !strings.Contains(composeStr, "\n  memcached:\n") {
+		t.Fatal("memcached service missing from docker-compose.yml when memcached/enabled=true")
+	}
+	if !strings.Contains(composeStr, "image: memcached:") {
+		t.Error("memcached image not resolved from the embedded repository/version defaults")
+	}
+	if !strings.Contains(composeStr, `command: ["-m", "256", "-c", "1024"]`) {
+		t.Error("memcached command not resolved from the embedded memory/max_connections defaults")
+	}
+	if strings.Contains(composeStr, "{{{memcached/") {
+		t.Error("unresolved memcached placeholder left in docker-compose.yml")
+	}
+
+	// The container alone is useless to PHP without the extension.
+	if !strings.Contains(readPhpDockerfile(t, env), "-memcached") {
+		t.Error("php-memcached missing from the PHP image while the service is enabled")
+	}
+}
+
+func readPhpDockerfile(t *testing.T, env *testEnv) string {
+	t.Helper()
+	dockerfile := filepath.Join(env.execDir, "aruntime", "projects", env.projectName, "ctx", "php.Dockerfile")
+	content, err := os.ReadFile(dockerfile)
+	if err != nil {
+		t.Fatalf("Failed to read php.Dockerfile: %v", err)
+	}
+	return string(content)
+}
+
 func readCompose(t *testing.T, env *testEnv) string {
 	t.Helper()
 	composeFile := filepath.Join(env.execDir, "aruntime", "projects", env.projectName, "docker-compose.yml")
@@ -356,4 +421,42 @@ func readCompose(t *testing.T, env *testEnv) string {
 		t.Fatalf("Failed to read docker-compose.yml: %v", err)
 	}
 	return string(content)
+}
+
+// TestMakeConf_VolumesNeverEmpty renders the leanest project the config allows —
+// no database, no second database, no search engine, no grafana — and checks the
+// volumes section still has an entry. Every entry there except dbdata is
+// optional, so gating dbdata as well lets the section render as a bare
+// "volumes:" and compose refuses the file with "volumes must be a mapping".
+func TestMakeConf_VolumesNeverEmpty(t *testing.T) {
+	env := setupTestEnvironment(t, "novolumesproject", "novolumes.test")
+
+	projectConfigPath := filepath.Join(env.execDir, "projects", env.projectName, "config.xml")
+	configs.SaveInFile(projectConfigPath, map[string]string{
+		"db/enabled":                   "false",
+		"db2/enabled":                  "false",
+		"search/opensearch/enabled":    "false",
+		"search/elasticsearch/enabled": "false",
+		"search/meilisearch/enabled":   "false",
+		"grafana/enabled":              "false",
+	}, "default")
+	configs.CleanCache()
+
+	MakeConf(env.projectName)
+
+	composeStr := readCompose(t, env)
+
+	idx := strings.Index(composeStr, "\nvolumes:\n")
+	if idx == -1 {
+		t.Fatal("volumes section missing from docker-compose.yml")
+	}
+
+	rest := composeStr[idx+len("\nvolumes:\n"):]
+	firstLine := rest
+	if nl := strings.Index(rest, "\n"); nl != -1 {
+		firstLine = rest[:nl]
+	}
+	if !strings.HasPrefix(firstLine, "  ") || strings.TrimSpace(firstLine) == "" {
+		t.Errorf("volumes section is empty; compose would fail with \"volumes must be a mapping\". Next line: %q", firstLine)
+	}
 }

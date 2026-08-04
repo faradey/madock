@@ -1,5 +1,9 @@
 volumes:
-  <<<if{{{db/enabled}}}>>>dbdata:<<<endif>>>
+  # Declared unconditionally on purpose. Every other entry here is optional, so
+  # gating this one too lets `volumes:` render empty when a project runs without
+  # a database, without search and without grafana — and compose rejects that
+  # with "volumes must be a mapping". An unused named volume costs nothing.
+  dbdata:
   <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>
   <<<if{{{search/elasticsearch/enabled}}}>>>elasticsearch_vlm_{{{search/elasticsearch/version}}}:<<<endif>>>
   <<<if{{{search/opensearch/enabled}}}>>>opensearch_vlm_{{{search/opensearch/version}}}:<<<endif>>>
