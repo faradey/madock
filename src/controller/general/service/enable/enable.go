@@ -25,9 +25,10 @@ func init() {
 // interactively asks the user for a version. Only services that support
 // version selection at enable time appear here.
 var versionPrompts = map[string]func(*string){
-	"valkey":  tools.Valkey,
-	"artemis": tools.Artemis,
-	"xdebug":  tools.Xdebug,
+	"valkey":    tools.Valkey,
+	"memcached": tools.Memcached,
+	"artemis":   tools.Artemis,
+	"xdebug":    tools.Xdebug,
 }
 
 func Execute() {

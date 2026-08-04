@@ -157,6 +157,13 @@
                     <password></password>
                 </auth>
             </valkey>
+            <memcached>
+                <enabled>false</enabled>
+                <repository>memcached</repository>
+                <version>1.6.39-alpine</version>
+                <memory>256</memory>
+                <max_connections>1024</max_connections>
+            </memcached>
             <rabbitmq>
                 <enabled>false</enabled>
                 <repository>rabbitmq</repository>

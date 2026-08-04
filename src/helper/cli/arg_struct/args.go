@@ -49,8 +49,11 @@ type ControllerGeneralSetupEnv struct {
 
 type ControllerGeneralServiceEnable struct {
 	attr.ArgumentsWithArgs
-	Global  bool   `arg:"-g,--global" help:"Global"`
-	Version string `arg:"--version" help:"Service version (for services that support it, e.g. valkey, artemis)"`
+	Global bool `arg:"-g,--global" help:"Global"`
+	// Not --version: go-arg intercepts that name before it reaches any struct
+	// field and aborts with "version requested by user", so the flag could never
+	// be read here.
+	Version string `arg:"--service-version" help:"Service version (for services that support it, e.g. valkey, memcached, artemis)"`
 }
 
 type ControllerGeneralServiceDisable struct {

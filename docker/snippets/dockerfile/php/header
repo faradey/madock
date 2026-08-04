@@ -64,6 +64,13 @@ RUN apt-get -y --allow-releaseinfo-change update && apt-get install -y php{{{php
 RUN apt-get install -y php{{{php/version}}}-opcache || true
 RUN apt-get install -y php{{{php/version}}}-xmlrpc || true
 
+<<<if{{{memcached/enabled}}}>>>
+# Pulled in only while the memcached service is enabled — it is the one extension
+# with a service behind it. ondrej lags a release or two behind for the newest PHP
+# versions, so a hard failure here would break the image for everyone else.
+RUN apt-get install -y php{{{php/version}}}-memcached || true
+<<<endif>>>
+
 SHELL ["/bin/bash", "-c"]
 RUN IFS='.' read major minor patch <<< "{{{php/version}}}" \
     && if [[ "${major}" -ge "9" ]] || [[ "${major}" = "8" && "${minor}" -ge "4" ]]; then \

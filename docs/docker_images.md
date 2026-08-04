@@ -50,6 +50,9 @@ This document lists the Docker images used by Madock.
 ### Valkey
 * [valkey/valkey](https://hub.docker.com/r/valkey/valkey)
 
+### Memcached
+* [memcached](https://hub.docker.com/_/memcached)
+
 ### Varnish
 * [varnish](https://hub.docker.com/_/varnish)
 

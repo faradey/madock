@@ -182,6 +182,13 @@ func Valkey(defVersion *string) {
 	SelectInteractive("Valkey Version", availableVersions, defVersion)
 }
 
+func Memcached(defVersion *string) {
+	availableVersions := []string{"Custom", "1.6.39-alpine", "1.6.39", "1.6-alpine"}
+
+	fmt.Println("")
+	SelectInteractive("Memcached Version", availableVersions, defVersion)
+}
+
 func Artemis(defVersion *string) {
 	availableVersions := []string{"Custom", "2.42.0", "2.41.0", "2.40.0"}
 

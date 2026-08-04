@@ -150,3 +150,38 @@ func TestEmbeddedDefaults_DbEnabled(t *testing.T) {
 		t.Errorf("db/enabled = %q, want \"true\"", got)
 	}
 }
+
+// TestEmbeddedDefaults_Memcached pins the memcached defaults. The service is off
+// by default, but its image, cache size and connection limit still have to be
+// there: service:enable only writes memcached/enabled (and optionally a version),
+// so the remaining placeholders in the compose snippet are resolved from these
+// defaults. A missing one would render as a literal {{{memcached/memory}}} in
+// docker-compose.yml and break the whole stack, not just this container.
+func TestEmbeddedDefaults_Memcached(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("MADOCK_EXEC_DIR", tmpDir)
+	CleanCache()
+
+	conf := GetOriginalGeneralConfig()
+
+	want := map[string]string{
+		"memcached/enabled":         "false",
+		"memcached/repository":      "memcached",
+		"memcached/memory":          "256",
+		"memcached/max_connections": "1024",
+	}
+	for key, expected := range want {
+		got, ok := conf[key]
+		if !ok {
+			t.Errorf("%s missing from embedded defaults", key)
+			continue
+		}
+		if got != expected {
+			t.Errorf("%s = %q, want %q", key, got, expected)
+		}
+	}
+
+	if conf["memcached/version"] == "" {
+		t.Error("memcached/version missing from embedded defaults: the image tag would be empty")
+	}
+}

@@ -1,3 +1,13 @@
+**v3.8.19**
+
+Added:
+- Memcached as a first-class service, off by default: `madock service:enable memcached` / `service:disable memcached`. Container `memcached` on port 11211, reachable from the other containers by service name, not published to the host. Joins the `isolated` network in isolation mode. Included in every platform's compose file, so enabling it is never a silent no-op
+- Configurable via `memcached/repository`, `memcached/version` (`1.6.39-alpine` by default, also selectable interactively or with `service:enable memcached --version`), `memcached/memory` (`-m`, 256 MB) and `memcached/max_connections` (`-c`, 1024)
+- `php{version}-memcached` is installed into the PHP image only while the service is enabled, and tolerates a missing package — ondrej lags a release behind for the newest PHP versions and a hard failure there would break the image for everyone. Documented in [docs/memcached.md](docs/memcached.md)
+
+Fixed:
+- `service:enable <svc> --version` never worked: go-arg intercepts `--version` before it reaches the struct field and aborts with "version requested by user", so valkey, artemis and xdebug could only be versioned through the interactive picker. The flag is now `--service-version`
+
 **v3.8.17**
 
 Fixed:

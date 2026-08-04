@@ -1,0 +1,9 @@
+<<<if{{{memcached/enabled}}}>>>
+  memcached:
+    init: true
+    image: {{{memcached/repository}}}:{{{memcached/version}}}
+    command: ["-m", "{{{memcached/memory}}}", "-c", "{{{memcached/max_connections}}}"]
+    restart: {{{restart_policy}}}
+<<<endif>>>
+    <<<if{{{memcached/enabled}}}{{{isolation/enabled}}}>>>networks:
+      - isolated<<<endif>>>

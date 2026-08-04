@@ -37,7 +37,7 @@ This project is written in Golang and distributed under the MIT License.
 * Synchronization of the local database and media files with the dev site
 * Multiple database engines: MariaDB, MySQL, PostgreSQL, MongoDB
 * Admin UI: phpMyAdmin, pgAdmin, Mongo Express
-* Additional services: redis, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
+* Additional services: redis, valkey, memcached, rabbitMQ, elasticsearch, Kibana, ioncube, xdebug, cron
 * LiveReload. Learn [more](docs/livereload.md)
 * HMR / file watching on macOS (Next.js, Chokidar, nodemon, vite, …). Learn [more](docs/macos-hmr.md)
 * Mailpit (email testing tool for developers)
@@ -49,6 +49,7 @@ This project is written in Golang and distributed under the MIT License.
 * Snapshots. Learn [more](docs/snapshot.md)
 * Isolation mode [more](docs/isolation.md)
 * Varnish Cache [more](docs/varnish.md)
+* Memcached [more](docs/memcached.md)
 * Custom commands [more](docs/custom_commands.md)
 * MCP Server for AI assistants (Claude Code, Cursor, VS Code) [more](docs/mcp.md)
 
@@ -249,6 +250,7 @@ IMPORTANT: Please, read all items before starting work.
 * [Media synchronization](docs/media.md)
 * [Cron](docs/cron.md)
 * [ENV variables](docs/env.md)
+* [Memcached](docs/memcached.md)
 * Kibana. URL http://{you_domain_name}/kibana
 * Mailpit. Default URL http://localhost:8025
 * [Store scopes](docs/store_scopes.md): website vs store
