@@ -21,6 +21,11 @@ func init() {
 		Category: "general",
 		ArgsType: new(arg_struct.ControllerGeneralHelp),
 	})
+
+	// "madock <command> --help" is parsed inside attr, which cannot reach this
+	// package. Hand it the same renderer "madock help <command>" uses so both
+	// spellings print the same thing.
+	attr.HelpRenderer = showCommandHelp
 }
 
 func Execute() {

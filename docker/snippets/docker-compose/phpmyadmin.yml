@@ -1,4 +1,4 @@
-<<<if{{{db/enabled}}}{{{db/phpmyadmin/enabled}}}>>>
+<<<if{{{db/phpmyadmin/enabled}}}>>>
   phpmyadmin:
     init: true
     image: {{{db/phpmyadmin/repository}}}:{{{db/phpmyadmin/version}}}

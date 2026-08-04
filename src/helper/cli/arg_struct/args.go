@@ -174,6 +174,10 @@ type ControllerGeneralStatus struct {
 	attr.Arguments
 }
 
+type ControllerGeneralVersion struct {
+	attr.Arguments
+}
+
 type ControllerGeneralInfoPorts struct {
 	attr.Arguments
 }

@@ -1,4 +1,4 @@
-<<<if{{{db/enabled}}}{{{db/type_is_mysql}}}>>>
+<<<if{{{db/type_is_mysql}}}>>>
   db:
     init: true
 <<<if{{{db/use_default_auth_plugin}}}>>>    command:

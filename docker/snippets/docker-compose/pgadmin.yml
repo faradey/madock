@@ -1,4 +1,4 @@
-<<<if{{{db/enabled}}}{{{db/pgadmin/enabled}}}>>>
+<<<if{{{db/pgadmin/enabled}}}>>>
   pgadmin:
     init: true
     image: {{{db/pgadmin/repository}}}:{{{db/pgadmin/version}}}

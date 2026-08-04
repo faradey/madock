@@ -1,4 +1,4 @@
-<<<if{{{db/enabled}}}{{{db/type_is_mongodb}}}>>>
+<<<if{{{db/type_is_mongodb}}}>>>
   db:
     init: true
     build:

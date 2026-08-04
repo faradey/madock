@@ -1,3 +1,11 @@
+**v3.8.20**
+
+Added:
+- `madock version` (also `madock --version`, `madock -v`) — the version was only reachable by reading the binary's own migration output before. Supports `--json`
+
+Fixed:
+- `madock <command> --help` and `-h` printed a bare "help requested by user" instead of the command's help. go-arg answers both with a sentinel error rather than output, and it was going straight to the fatal logger. Both spellings now render the same block as `madock help <command>`
+
 **v3.8.19**
 
 Added:
