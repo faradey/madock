@@ -299,3 +299,61 @@ func assertFileContains(t *testing.T, path, substr string) {
 		t.Errorf("%s does not contain %q", filepath.Base(path), substr)
 	}
 }
+
+// TestMakeConf_DbServiceEnabledByDefault renders a project config that does not
+// mention db/enabled at all — the shape every project created before the flag
+// existed has on disk. The embedded default must fill it in, otherwise
+// evaluateCondition sees an unsubstituted {{{db/enabled}}} placeholder, treats
+// it as false, and the database container silently disappears.
+func TestMakeConf_DbServiceEnabledByDefault(t *testing.T) {
+	env := setupTestEnvironment(t, "dbdefaultproject", "dbdefault.test")
+
+	MakeConf(env.projectName)
+
+	composeStr := readCompose(t, env)
+
+	if !strings.Contains(composeStr, "\n  db:\n") {
+		t.Error("db service missing from docker-compose.yml when db/enabled is not set")
+	}
+	if !strings.Contains(composeStr, "\n  dbdata:\n") {
+		t.Error("dbdata volume missing from docker-compose.yml when db/enabled is not set")
+	}
+}
+
+// TestMakeConf_DbServiceDisabled checks the flag actually removes the container
+// and its volume, and that nothing else goes with them.
+func TestMakeConf_DbServiceDisabled(t *testing.T) {
+	env := setupTestEnvironment(t, "dbdisabledproject", "dbdisabled.test")
+
+	projectConfigPath := filepath.Join(env.execDir, "projects", env.projectName, "config.xml")
+	configs.SaveInFile(projectConfigPath, map[string]string{"db/enabled": "false"}, "default")
+	configs.CleanCache()
+
+	MakeConf(env.projectName)
+
+	composeStr := readCompose(t, env)
+
+	if strings.Contains(composeStr, "\n  db:\n") {
+		t.Error("db service still rendered when db/enabled=false")
+	}
+	if strings.Contains(composeStr, "\n  dbdata:\n") {
+		t.Error("dbdata volume still declared when db/enabled=false")
+	}
+
+	// The rest of the stack must be untouched.
+	for _, svc := range []string{"\n  php:\n", "\n  nginx:\n"} {
+		if !strings.Contains(composeStr, svc) {
+			t.Errorf("service %q disappeared along with the database", strings.TrimSpace(svc))
+		}
+	}
+}
+
+func readCompose(t *testing.T, env *testEnv) string {
+	t.Helper()
+	composeFile := filepath.Join(env.execDir, "aruntime", "projects", env.projectName, "docker-compose.yml")
+	content, err := os.ReadFile(composeFile)
+	if err != nil {
+		t.Fatalf("Failed to read docker-compose.yml: %v", err)
+	}
+	return string(content)
+}

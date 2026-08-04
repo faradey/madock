@@ -8,6 +8,8 @@ import (
 )
 
 var serviceMap = map[string]string{
+	"db":                             "db",
+	"db2":                            "db2",
 	"db/phpmyadmin":                  "phpmyadmin",
 	"db2/phpmyadmin":                 "phpmyadmin2",
 	"db/pgadmin":                     "pgadmin",

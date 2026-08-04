@@ -129,3 +129,24 @@ func TestGetOriginalGeneralConfig_NoEmbeddedFile(t *testing.T) {
 		t.Fatal("GetOriginalGeneralConfig() returned empty map with no filesystem config")
 	}
 }
+
+// TestEmbeddedDefaults_DbEnabled guards the db service against silently
+// disappearing. The compose snippets for db, db-postgresql, db-mongodb and the
+// dbdata volume are gated on {{{db/enabled}}}, and evaluateCondition treats an
+// unsubstituted placeholder as false. So a missing default would remove the
+// database container from every project instead of keeping it.
+func TestEmbeddedDefaults_DbEnabled(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("MADOCK_EXEC_DIR", tmpDir)
+	CleanCache()
+
+	conf := GetOriginalGeneralConfig()
+
+	got, ok := conf["db/enabled"]
+	if !ok {
+		t.Fatal("db/enabled missing from embedded defaults: every project would lose its db service")
+	}
+	if got != "true" {
+		t.Errorf("db/enabled = %q, want \"true\"", got)
+	}
+}

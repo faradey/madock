@@ -1,4 +1,4 @@
-<<<if{{{db/type_is_postgresql}}}>>>
+<<<if{{{db/enabled}}}{{{db/type_is_postgresql}}}>>>
   db:
     init: true
     build:

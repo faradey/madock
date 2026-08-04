@@ -55,6 +55,7 @@
                 </nodejs>
             </php>
             <db>
+                <enabled>true</enabled>
                 <type>mysql</type>
                 <repository>mariadb</repository>
                 <root_password>password</root_password>
