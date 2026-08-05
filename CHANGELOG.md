@@ -1,3 +1,10 @@
+**v3.8.22**
+
+Fixed:
+- `remote:sync:db`, `remote:sync:media` and `remote:sync:file` could not use a passphrase-protected SSH key. The client never looked at `SSH_AUTH_SOCK`, so it asked for the passphrase itself and died with `operation not supported by device` wherever there is no TTY — a cron job, a hook, an agent-driven session. Plain `ssh host` works on the same host because ssh-agent holds the key, which is what made the gap easy to miss. The agent is now offered as the first auth method, with the key file kept as a fallback
+- The key-file method is built lazily when an agent is present. It used to be constructed up front, which meant reading and parsing the key — and prompting for its passphrase — before the handshake ever reached the agent, so ordering the methods alone would have fixed nothing
+- `AgentAuth()` is exported: enterprise replaces the whole `ssh.ClientConfig` through `SetSSHConfigProvider`, so a fix confined to the open-source path would have left every pro installation prompting
+
 **v3.8.20**
 
 Added:

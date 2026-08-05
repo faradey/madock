@@ -7,10 +7,12 @@ import (
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/terminal"
 	"image/jpeg"
 	"io"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -217,8 +219,15 @@ func Connect(projectConf map[string]string, sshType string) *ssh.Client {
 				ssh.Password(password),
 			}
 		} else {
-			config.Auth = []ssh.AuthMethod{
-				publicKey(keyPath),
+			// Agent first, key file second. The file method has to be the lazy
+			// form here: publicKey() reads and parses the key immediately, so
+			// building it would prompt for the passphrase before the handshake
+			// ever reaches the agent. With no agent, nothing changes — the
+			// eager call keeps its existing failure behaviour.
+			if agentAuth, ok := AgentAuth(); ok {
+				config.Auth = append(config.Auth, agentAuth, publicKeyLazy(keyPath))
+			} else {
+				config.Auth = append(config.Auth, publicKey(keyPath))
 			}
 		}
 	}
@@ -236,6 +245,69 @@ func Disconnect(conn *ssh.Client) {
 	if err != nil {
 		return
 	}
+}
+
+// AgentAuth returns an auth method backed by the running ssh-agent, and false
+// when no agent is reachable.
+//
+// Offered before the key file so a passphrase-protected key never reaches the
+// interactive prompt: the prompt reads from the terminal, and without a TTY —
+// a CI job, a hook, an agent-driven session — it fails with "operation not
+// supported by device" and the command dies. Every other tool on the machine
+// already goes through the agent, so `ssh host` succeeding while
+// `remote:sync:*` fails on the same host is a difference nobody expects.
+//
+// Exported because enterprise replaces the whole ClientConfig through
+// SetSSHConfigProvider; without this being callable from there, fixing the
+// open-source path alone would leave every pro installation prompting.
+func AgentAuth() (ssh.AuthMethod, bool) {
+	sock := os.Getenv("SSH_AUTH_SOCK")
+	if sock == "" {
+		return nil, false
+	}
+
+	conn, err := net.Dial("unix", sock)
+	if err != nil {
+		// Stale socket from a dead agent — fall through to the key file.
+		return nil, false
+	}
+
+	// Signers is a callback, so the agent is queried at handshake time. A key
+	// added to the agent after this point still counts.
+	return ssh.PublicKeysCallback(agent.NewClient(conn).Signers), true
+}
+
+// publicKeyLazy is publicKey deferred to handshake time: the file is read, and
+// a passphrase asked for, only after the methods offered before it have been
+// refused. Used when an agent is available, so an agent-held key never triggers
+// the prompt. Returns an error instead of calling logger.Fatal — at this point
+// the agent may already have succeeded, and killing the process over an
+// unreadable fallback key would turn a working connection into a failure.
+func publicKeyLazy(path string) ssh.AuthMethod {
+	return ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
+		key, err := os.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+
+		signer, err := ssh.ParsePrivateKey(key)
+		if err != nil {
+			if passwd == "" {
+				fmt.Print("Input your password for ssh key:")
+				sentence, readErr := terminal.ReadPassword(int(syscall.Stdin))
+				if readErr != nil {
+					return nil, readErr
+				}
+				passwd = strings.TrimSpace(string(sentence))
+			}
+			signer, err = ssh.ParsePrivateKeyWithPassphrase(key, []byte(passwd))
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return []ssh.Signer{signer}, nil
+	})
 }
 
 func publicKey(path string) ssh.AuthMethod {
