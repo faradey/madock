@@ -1,3 +1,8 @@
+**v3.8.23**
+
+Changed:
+- Builds against Go 1.25. The 1.23 line went out of support on 2025-08-12 and 1.24 on 2026-02-10 — Go keeps only the two newest majors alive and has no security-only tail, so both were already receiving nothing. The `toolchain` directive is gone with the bump: it named the same version as `go`, and `go mod tidy` drops it as redundant. Building now needs Go 1.25 or newer, which `GOTOOLCHAIN=auto` fetches by itself; the published binaries are unaffected
+
 **v3.8.22**
 
 Fixed:
