@@ -118,6 +118,34 @@ func Down(projectName string, withVolumes bool) {
 	forceRemoveByLabel(projectName, withVolumes)
 }
 
+// Stop stops the project's containers without removing them. Unlike Down it
+// leaves the containers in place, so a later Start brings the project back
+// without recreating or rebuilding anything — which is what a snapshot needs:
+// the data directory has to be quiet, not gone.
+func Stop(projectName string) error {
+	pp := paths.NewProjectPaths(projectName)
+	composeFile := pp.DockerCompose()
+	if !paths.IsFileExist(composeFile) {
+		return nil
+	}
+	cmd := exec.Command("docker", "compose", "-f", composeFile, "-f", pp.DockerComposeOverride(), "stop")
+	attachOutput(cmd)
+	return cmd.Run()
+}
+
+// Start starts containers that already exist. It does not create or rebuild
+// anything — see UpProjectWithBuild for that.
+func Start(projectName string) error {
+	pp := paths.NewProjectPaths(projectName)
+	composeFile := pp.DockerCompose()
+	if !paths.IsFileExist(composeFile) {
+		return nil
+	}
+	cmd := exec.Command("docker", "compose", "-f", composeFile, "-f", pp.DockerComposeOverride(), "start")
+	attachOutput(cmd)
+	return cmd.Run()
+}
+
 // Kill forcefully stops project containers. Falls back to a
 // label-based `docker kill` if the compose file is missing.
 func Kill(projectName string) {

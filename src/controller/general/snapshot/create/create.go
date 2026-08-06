@@ -16,6 +16,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -43,12 +44,88 @@ func Execute() {
 	name += time.Now().Format("2006-01-02-15-04-05")
 
 	dbsPath := paths.MakeDirsByPath(dest + "/" + name + "/")
-	GetDB(projectConf, projectName, dbsPath)
-	GetFiles(projectConf, projectName, dbsPath)
+
+	// The snapshot is taken with the project's own containers stopped, from the
+	// helper container that mounts the same volumes — the mirror of what
+	// snapshot:restore already does.
+	//
+	// Copying a database's data directory out of a running server produces a
+	// torn set of pages: an archive that looks like a backup and may refuse to
+	// start. There is no way around that from inside the running container, so
+	// the project stands still for the length of the copy.
+	//
+	// `stop` rather than `down`: the containers stay, so bringing the project
+	// back afterwards is a start and not a rebuild.
+	wasRunning := isRunning(projectName)
+	if wasRunning {
+		fmtc.TitleLn("Stopping containers for a consistent copy...")
+		if err := docker.Stop(projectName); err != nil {
+			logger.Fatal(err)
+		}
+	}
+
+	docker.UpSnapshot(projectName)
+	container := docker.GetContainerName(projectConf, projectName, "snapshot")
+
+	archiveDatabases(projectConf, projectName, container, snapshotVolumePaths, dbsPath)
+	archiveFiles(container, snapshotVolumePaths.files, dbsPath)
+
+	docker.StopSnapshot(projectName)
+
+	if wasRunning {
+		fmtc.TitleLn("Starting containers again...")
+		if err := docker.Start(projectName); err != nil {
+			logger.Fatal(err)
+		}
+	}
+
 	fmt.Println("Snapshot completed successfully")
 }
 
+// volumePaths names where the data lives inside the container being read.
+type volumePaths struct {
+	db, db2, files string
+}
+
+// snapshotVolumePaths are the mounts of the helper `snapshot` container, which
+// snapshot:restore untars into. Create and restore have to agree on them.
+var snapshotVolumePaths = volumePaths{
+	db:    "/var/www/mysql",
+	db2:   "/var/www/mysql2/mysql",
+	files: "/var/www/html",
+}
+
+// liveVolumePaths are the same data seen from the project's own running
+// containers. project:clone reads the source project this way because it must
+// not take the source down.
+var liveVolumePaths = volumePaths{
+	db:    "/var/lib/mysql",
+	db2:   "/var/lib/mysql",
+	files: "/var/www/html",
+}
+
+// isRunning reports whether the project has containers up right now, so a
+// snapshot can put them back the way it found them.
+func isRunning(projectName string) bool {
+	for _, active := range paths.GetActiveProjects() {
+		if strings.EqualFold(active, projectName) {
+			return true
+		}
+	}
+	return false
+}
+
+// GetDB copies the project's databases out of its own running containers.
+// project:clone uses it: cloning must not take the source project down, so it
+// accepts the torn-copy risk that snapshot:create refuses.
 func GetDB(projectConf map[string]string, projectName string, dbsPath string) {
+	archiveDatabases(projectConf, projectName, "", liveVolumePaths, dbsPath)
+}
+
+// archiveDatabases writes db.tar.gz and, when the project has one, db2.tar.gz.
+// container names the container to read from; empty means the project's own db
+// and db2 containers.
+func archiveDatabases(projectConf map[string]string, projectName, container string, dirs volumePaths, dbsPath string) {
 	// A snapshot copies the data directory of a container this project owns.
 	// A project without its own db service has nothing to copy — and if its data
 	// lives on another project's server, that directory holds every other
@@ -63,10 +140,18 @@ func GetDB(projectConf map[string]string, projectName string, dbsPath string) {
 		return
 	}
 
-	archiveDataDir(docker.GetContainerName(projectConf, projectName, "db"), dbsPath+"db.tar.gz")
+	dbContainer := container
+	if dbContainer == "" {
+		dbContainer = docker.GetContainerName(projectConf, projectName, "db")
+	}
+	archiveDataDir(dbContainer, dirs.db, dbsPath+"db.tar.gz")
 
 	if projectConf["db2/enabled"] == "true" {
-		archiveDataDir(docker.GetContainerName(projectConf, projectName, "db2"), dbsPath+"db2.tar.gz")
+		db2Container := container
+		if db2Container == "" {
+			db2Container = docker.GetContainerName(projectConf, projectName, "db2")
+		}
+		archiveDataDir(db2Container, dirs.db2, dbsPath+"db2.tar.gz")
 	}
 }
 
@@ -77,8 +162,8 @@ func GetDB(projectConf map[string]string, projectName string, dbsPath string) {
 // together: a torn copy of it is not "slightly out of date", it is an archive
 // that may refuse to start. Better to stop and say so than to store something
 // that looks like a backup.
-func archiveDataDir(containerName, archivePath string) {
-	err := archive(containerName, "/var/lib/mysql", archivePath)
+func archiveDataDir(containerName, dir, archivePath string) {
+	err := archive(containerName, dir, archivePath)
 	if errors.Is(err, errFilesChanged) {
 		// archive keeps the file so the caller can decide. This one cannot be
 		// kept: left in the snapshot directory it is indistinguishable from a
@@ -93,13 +178,18 @@ func archiveDataDir(containerName, archivePath string) {
 	}
 }
 
+// GetFiles copies the project's files out of its own running container.
+// project:clone uses it, for the same reason it uses GetDB.
 func GetFiles(projectConf map[string]string, projectName string, dbsPath string) {
 	// The service running the application code, not "php". Every platform mounts
 	// the project at /var/www/html, but only a PHP one has a php container —
 	// snapshot:create died with "No such container" on all the others.
 	mainService := configs.ResolveMainService(projectConf, "php")
+	archiveFiles(docker.GetContainerName(projectConf, projectName, mainService), liveVolumePaths.files, dbsPath)
+}
 
-	err := archive(docker.GetContainerName(projectConf, projectName, mainService), "/var/www/html", dbsPath+"files.tar.gz")
+func archiveFiles(containerName, dir, dbsPath string) {
+	err := archive(containerName, dir, dbsPath+"files.tar.gz")
 	if errors.Is(err, errFilesChanged) {
 		// Expected of any project whose containers are up: a log rotates, a
 		// cache file is written. The archive is complete and every other file

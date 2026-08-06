@@ -1,3 +1,13 @@
+**v3.8.30**
+
+Changed:
+- **`snapshot:create` stops the project's containers, copies, and starts them again.** It reads from the helper container that mounts the same volumes — the mirror of what `snapshot:restore` already did. A database's data directory copied out of a running server comes out torn: an archive that looks like a backup and may refuse to start. There is no way around that from inside the running container, so the project stands still for the length of the copy. A project that was already stopped is left stopped
+- Containers are **stopped, not removed**, so coming back is a start and not a rebuild. `docker.Stop` and `docker.Start` are new for this; only `Down`, which removes them, existed before
+- `project:clone` still reads the source project's live containers on purpose — cloning must not interrupt whatever the source is doing — so it accepts the risk `snapshot:create` refuses
+
+Fixed:
+- [docs/snapshot.md](docs/snapshot.md) claimed snapshots are stored in `~/.madock/projects/{name}/snapshots/`, that the database part is a dump, and that `vendor/` and generated files are excluded. The path is `{madock_dir}/projects/{name}/backup/snapshot/{snapshot_name}/`, the database part is a copy of the data directory, and nothing is filtered out of the project directory — a snapshot is the size of the project, which the old table hid
+
 **v3.8.29**
 
 Fixed:
