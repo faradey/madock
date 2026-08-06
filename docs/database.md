@@ -67,6 +67,24 @@ All database commands work automatically based on the configured engine:
 | `madock db:info` | Shows all credentials + root password | Shows credentials (no root password) | Shows credentials (no root password) |
 | `madock remote:sync:db` | Remote `db:export` (if madock installed) or remote mysqldump via SSH | Remote `db:export` or remote pg_dump via SSH | Remote `db:export` or remote mongodump via SSH |
 
+**Where the commands look.** `db:execute`, `db:export`, `db:import` and `db:info`
+do not assume the database is a container of the current project. They ask for
+the project's database target, which is the project's own `db` (or `db2`)
+service in the ordinary case, and the owning project's container when the
+database is shared — an installation that adds shared databases plugs into that
+same lookup, so no database command needs a separate spelling for it.
+
+Two consequences worth knowing:
+
+- `--db-service-name db2` uses the `db2/*` credentials. Before, it connected to
+  `db2` with `db`'s root password and `db`'s schema name.
+- A project with `db/enabled=false` and no shared database says so by name
+  instead of failing with Docker's `No such container`.
+- `snapshot:create` skips the database for such a project rather than aborting.
+  A snapshot copies a data directory this project owns; a shared server belongs
+  to the project that provides it, and restoring a copy of it here would take
+  every other consumer with it.
+
 ### Admin UI services
 
 Each database engine has a corresponding admin UI:

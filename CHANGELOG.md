@@ -1,3 +1,14 @@
+**v3.8.24**
+
+Added:
+- `src/helper/dbtarget` — one place that answers which container a database command runs in and with which host and credentials. `Register` lets an installation answer it instead, which is how a project whose database is owned by another project gets working `db:*` commands without every command learning about it
+
+Fixed:
+- `db:execute`, `db:export` and `db:import` built the container name from the current project and died with Docker's `No such container` on a project that does not run its own database. All three now go through `dbtarget`, so they follow the database wherever it lives
+- `db:info` printed `host: db` and empty credentials for such a project instead of admitting there is nothing there. It now describes the real target, marks a shared one with its provider, and omits a `db2` block for a project that has no `db2`
+- `--db-service-name db2` connected to `db2` with `db`'s root password and `db`'s schema name — the commands read `db/*` for credentials no matter which service was asked for. Each service's own keys are used now
+- `snapshot:create` aborted on a project without its own `db` service. It skips the database and says so. A snapshot copies a container's data directory, so a database owned by another project is deliberately not included: restoring that copy would overwrite the data every other consumer of that server reads
+
 **v3.8.23**
 
 Changed:

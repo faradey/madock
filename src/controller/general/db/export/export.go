@@ -12,6 +12,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/cli/output"
 	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/dbtarget"
 	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
@@ -46,19 +47,19 @@ func Export() {
 	}
 
 	projectName := configs.GetProjectName()
-	containerName := docker.GetContainerName(projectConf, projectName, service)
+	target := dbtarget.MustResolve(projectConf, projectName, service)
+	// The dump belongs to the project that asked for it, even when the data
+	// lives on another project's server.
 	dbsPath := paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/backup/db/")
 
-	dbType := configs.GetDbType(projectConf)
-
 	var filePath string
-	switch dbType {
+	switch target.Type {
 	case "postgresql":
-		filePath = exportPostgresql(containerName, projectConf, args, name, service, dbsPath)
+		filePath = exportPostgresql(target, args, name, dbsPath)
 	case "mongodb":
-		filePath = exportMongodb(containerName, projectConf, args, name, dbsPath)
+		filePath = exportMongodb(target, args, name, dbsPath)
 	default:
-		filePath = exportMysql(containerName, projectConf, args, name, service, dbsPath)
+		filePath = exportMysql(target, args, name, dbsPath)
 	}
 
 	if args.Json {
@@ -69,14 +70,17 @@ func Export() {
 	}
 
 	fmt.Println("Database export completed successfully")
+	if target.Shared {
+		fmt.Println("Source: " + target.Origin())
+	}
 	fmt.Println(filePath)
 }
 
-func exportMysql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExport, name, service, dbsPath string) string {
+func exportMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbExport, name, dbsPath string) string {
 	ignoreTablesStr := ""
 	ignoreTables := args.IgnoreTable
 	if len(ignoreTables) > 0 {
-		ignoreTablesStr = " --ignore-table=" + projectConf["db/database"] + "." + strings.Join(ignoreTables, " --ignore-table="+projectConf["db/database"]+".")
+		ignoreTablesStr = " --ignore-table=" + target.Database + "." + strings.Join(ignoreTables, " --ignore-table="+target.Database+".")
 	}
 
 	user := "mysql"
@@ -93,22 +97,17 @@ func exportMysql(containerName string, projectConf map[string]string, args *arg_
 	writer := gzip.NewWriter(selectedFile)
 	defer writer.Close()
 
-	mysqldumpCommandName := "mysqldump"
-	if projectConf["db/repository"] == "mariadb" && configs.CompareVersions(projectConf["db/version"], "10.5") != -1 {
-		mysqldumpCommandName = "mariadb-dump"
-	}
-
 	// set -o pipefail so a mysqldump/mariadb-dump failure (e.g. unknown database,
 	// auth error) propagates instead of being masked by the trailing `| sed`,
 	// which would otherwise report success while writing an empty dump.
-	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", "set -o pipefail; "+mysqldumpCommandName+" -u root -p"+projectConf["db/root_password"]+" -v -h "+service+ignoreTablesStr+" "+projectConf["db/database"]+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
+	cmd, prepErr := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", "set -o pipefail; "+target.MySQLDump()+" -u root -p"+target.RootPassword+" -v -h "+target.Host+ignoreTablesStr+" "+target.Database+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}
 	cmd.Stdout = writer
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
-	docker.NotifyExecDone(containerName, []string{"bash", "-c", "mysqldump..."}, err)
+	docker.NotifyExecDone(target.Container, []string{"bash", "-c", "mysqldump..."}, err)
 	if err != nil {
 		writer.Close()
 		selectedFile.Close()
@@ -119,7 +118,7 @@ func exportMysql(containerName string, projectConf map[string]string, args *arg_
 	return filePath
 }
 
-func exportPostgresql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExport, name, service, dbsPath string) string {
+func exportPostgresql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbExport, name, dbsPath string) string {
 	user := "postgres"
 	if args.User != "" {
 		user = args.User
@@ -142,14 +141,14 @@ func exportPostgresql(containerName string, projectConf map[string]string, args 
 		}
 	}
 
-	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", "PGPASSWORD='"+projectConf["db/password"]+"' pg_dump -U "+projectConf["db/user"]+" -h "+service+ignoreTablesStr+" "+projectConf["db/database"])
+	cmd, prepErr := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", "PGPASSWORD='"+target.Password+"' pg_dump -U "+target.User+" -h "+target.Host+ignoreTablesStr+" "+target.Database)
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}
 	cmd.Stdout = writer
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
-	docker.NotifyExecDone(containerName, []string{"bash", "-c", "pg_dump..."}, err)
+	docker.NotifyExecDone(target.Container, []string{"bash", "-c", "pg_dump..."}, err)
 	if err != nil {
 		writer.Close()
 		selectedFile.Close()
@@ -160,7 +159,7 @@ func exportPostgresql(containerName string, projectConf map[string]string, args 
 	return filePath
 }
 
-func exportMongodb(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExport, name, dbsPath string) string {
+func exportMongodb(target dbtarget.Target, args *arg_struct.ControllerGeneralDbExport, name, dbsPath string) string {
 	user := "root"
 	if args.User != "" {
 		user = args.User
@@ -173,14 +172,14 @@ func exportMongodb(containerName string, projectConf map[string]string, args *ar
 	}
 	defer selectedFile.Close()
 
-	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", "mongodump --username="+projectConf["db/user"]+" --password="+projectConf["db/password"]+" --authenticationDatabase=admin --db="+projectConf["db/database"]+" --archive --gzip")
+	cmd, prepErr := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", "mongodump --username="+target.User+" --password="+target.Password+" --authenticationDatabase=admin --db="+target.Database+" --archive --gzip")
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}
 	cmd.Stdout = selectedFile
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
-	docker.NotifyExecDone(containerName, []string{"bash", "-c", "mongodump..."}, err)
+	docker.NotifyExecDone(target.Container, []string{"bash", "-c", "mongodump..."}, err)
 	if err != nil {
 		selectedFile.Close()
 		_ = os.Remove(filePath)

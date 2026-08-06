@@ -7,6 +7,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/dbtarget"
 	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
 )
@@ -30,33 +31,25 @@ func Execute() {
 		service = args.DBServiceName
 	}
 
-	projectName := configs.GetProjectName()
-	containerName := docker.GetContainerName(projectConf, projectName, service)
+	target := dbtarget.MustResolve(projectConf, configs.GetProjectName(), service)
 
-	dbType := configs.GetDbType(projectConf)
-
-	switch dbType {
+	switch target.Type {
 	case "postgresql":
-		executePostgresql(containerName, projectConf, args, service)
+		executePostgresql(target, args)
 	case "mongodb":
-		executeMongodb(containerName, projectConf, args)
+		executeMongodb(target, args)
 	default:
-		executeMysql(containerName, projectConf, args, service)
+		executeMysql(target, args)
 	}
 }
 
-func executeMysql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExecute, service string) {
+func executeMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbExecute) {
 	user := "mysql"
 	if args.User != "" {
 		user = args.User
 	}
 
-	mysqlCommandName := "mysql"
-	if projectConf["db/repository"] == "mariadb" && configs.CompareVersions(projectConf["db/version"], "10.5") != -1 {
-		mysqlCommandName = "mariadb"
-	}
-
-	cmd, err := docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, projectConf["db/database"], "-e", args.Query)
+	cmd, err := docker.PrepareContainerExec(target.Container, user, false, target.MySQLClient(), "-u", "root", "-p"+target.RootPassword, "-h", target.Host, target.Database, "-e", args.Query)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -67,13 +60,13 @@ func executeMysql(containerName string, projectConf map[string]string, args *arg
 	}
 }
 
-func executePostgresql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExecute, service string) {
+func executePostgresql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbExecute) {
 	user := "postgres"
 	if args.User != "" {
 		user = args.User
 	}
 
-	cmd, err := docker.PrepareContainerExec(containerName, user, false, "psql", "-U", projectConf["db/user"], "-h", service, projectConf["db/database"], "-c", args.Query)
+	cmd, err := docker.PrepareContainerExec(target.Container, user, false, "psql", "-U", target.User, "-h", target.Host, target.Database, "-c", args.Query)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -84,13 +77,13 @@ func executePostgresql(containerName string, projectConf map[string]string, args
 	}
 }
 
-func executeMongodb(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbExecute) {
+func executeMongodb(target dbtarget.Target, args *arg_struct.ControllerGeneralDbExecute) {
 	user := "root"
 	if args.User != "" {
 		user = args.User
 	}
 
-	cmd, err := docker.PrepareContainerExec(containerName, user, false, "mongosh", "--username="+projectConf["db/user"], "--password="+projectConf["db/password"], "--authenticationDatabase=admin", projectConf["db/database"], "--eval", args.Query)
+	cmd, err := docker.PrepareContainerExec(target.Container, user, false, "mongosh", "--username="+target.User, "--password="+target.Password, "--authenticationDatabase=admin", target.Database, "--eval", args.Query)
 	if err != nil {
 		logger.Fatal(err)
 	}

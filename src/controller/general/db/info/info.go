@@ -11,6 +11,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/cli/output"
 	configs2 "github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/dbtarget"
 	"github.com/faradey/madock/v3/src/helper/ports"
 )
 
@@ -28,6 +29,10 @@ type DatabaseInfo struct {
 	RootPassword string `json:"root_password,omitempty"`
 	RemoteHost   string `json:"remote_host"`
 	RemotePort   int    `json:"remote_port"`
+	// Shared and Provider describe a database owned by another project. They
+	// stay absent for the ordinary case of a database inside this project.
+	Shared   bool   `json:"shared,omitempty"`
+	Provider string `json:"provider,omitempty"`
 }
 
 func init() {
@@ -46,65 +51,83 @@ func Info() {
 	projectConf := configs2.GetCurrentProjectConfig()
 	projectName := configs2.GetProjectName()
 
-	dbType := configs2.GetDbType(projectConf)
-
-	db1Port := ports.GetPort(projectName, ports.ServiceDB)
-	db2Port := ports.GetPort(projectName, ports.ServiceDB2)
-
-	db1 := DatabaseInfo{
-		Name:       "First DB",
-		Type:       dbType,
-		Host:       "db",
-		Database:   projectConf["db/database"],
-		User:       projectConf["db/user"],
-		Password:   projectConf["db/password"],
-		RemoteHost: "localhost",
-		RemotePort: db1Port,
+	var databases []DatabaseInfo
+	if db, ok := describe(projectConf, projectName, "db", "First DB"); ok {
+		databases = append(databases, db)
 	}
-	// root_password is only relevant for MySQL/MariaDB
-	if dbType == "mysql" {
-		db1.RootPassword = projectConf["db/root_password"]
+	if db2, ok := describe(projectConf, projectName, "db2", "Second DB"); ok {
+		databases = append(databases, db2)
 	}
-
-	databases := []DatabaseInfo{db1}
-
-	// db2 is always MySQL
-	databases = append(databases, DatabaseInfo{
-		Name:         "Second DB",
-		Type:         "mysql",
-		Host:         "db2",
-		Database:     projectConf["db2/database"],
-		User:         projectConf["db2/user"],
-		Password:     projectConf["db2/password"],
-		RootPassword: projectConf["db2/root_password"],
-		RemoteHost:   "localhost",
-		RemotePort:   db2Port,
-	})
 
 	if args.Json {
 		output.PrintJSON(DbInfoOutput{Databases: databases})
 		return
 	}
 
-	// Text output
-	fmtc.SuccessLn("First DB")
-	fmtc.SuccessLn("   type: " + strings.ToUpper(dbType))
-	fmtc.SuccessLn("   host: db")
-	fmtc.SuccessLn("   name: " + projectConf["db/database"])
-	fmtc.SuccessLn("   user: " + projectConf["db/user"])
-	fmtc.SuccessLn("   password: " + projectConf["db/password"])
-	if dbType == "mysql" {
-		fmtc.SuccessLn("   root password: " + projectConf["db/root_password"])
+	if len(databases) == 0 {
+		fmtc.WarningLn("This project has no database: db/enabled is false and no shared database is configured.")
+		return
 	}
-	fmtc.SuccessLn("   remote HOST:PORT: " + "localhost:" + strconv.Itoa(db1Port))
 
-	fmt.Println("")
-	fmtc.SuccessLn("Second DB")
-	fmtc.SuccessLn("   type: MYSQL")
-	fmtc.SuccessLn("   host: db2")
-	fmtc.SuccessLn("   name: " + projectConf["db2/database"])
-	fmtc.SuccessLn("   user: " + projectConf["db2/user"])
-	fmtc.SuccessLn("   password: " + projectConf["db2/password"])
-	fmtc.SuccessLn("   root password: " + projectConf["db2/root_password"])
-	fmtc.SuccessLn("   remote HOST:PORT: " + "localhost:" + strconv.Itoa(db2Port))
+	for i, db := range databases {
+		if i > 0 {
+			fmt.Println("")
+		}
+		title := db.Name
+		if db.Shared {
+			title += " (shared from " + db.Provider + ")"
+		}
+		fmtc.SuccessLn(title)
+		fmtc.SuccessLn("   type: " + strings.ToUpper(db.Type))
+		fmtc.SuccessLn("   host: " + db.Host)
+		fmtc.SuccessLn("   name: " + db.Database)
+		fmtc.SuccessLn("   user: " + db.User)
+		fmtc.SuccessLn("   password: " + db.Password)
+		if db.RootPassword != "" {
+			fmtc.SuccessLn("   root password: " + db.RootPassword)
+		}
+		fmtc.SuccessLn("   remote HOST:PORT: " + db.RemoteHost + ":" + strconv.Itoa(db.RemotePort))
+	}
+}
+
+// describe builds the info row for one service, or reports false when the
+// project neither runs that service nor borrows it from another project.
+func describe(projectConf map[string]string, projectName, service, label string) (DatabaseInfo, bool) {
+	target, ok := dbtarget.Resolve(projectConf, projectName, service)
+	if !ok {
+		return DatabaseInfo{}, false
+	}
+
+	info := DatabaseInfo{
+		Name:     label,
+		Type:     target.Type,
+		Host:     target.Host,
+		Database: target.Database,
+		User:     target.User,
+		Password: target.Password,
+		// The published port belongs to the project running the container, which
+		// is the provider when the database is shared.
+		RemoteHost: "localhost",
+		RemotePort: ports.GetPort(target.Project, portService(target.Service)),
+	}
+	// root_password is only meaningful for MySQL/MariaDB.
+	if target.Type == "mysql" {
+		info.RootPassword = target.RootPassword
+	}
+	if target.Shared {
+		info.Shared = true
+		info.Provider = target.Project
+		// A shared server is addressed by container name over the proxy network,
+		// not by the compose service alias of this project.
+		info.Host = target.Container
+	}
+
+	return info, true
+}
+
+func portService(service string) string {
+	if service == "db2" {
+		return ports.ServiceDB2
+	}
+	return ports.ServiceDB
 }

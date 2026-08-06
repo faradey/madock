@@ -19,6 +19,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/dbtarget"
 	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
@@ -101,6 +102,12 @@ func Import() {
 	}
 
 	projectName := configs.GetProjectName()
+	target := dbtarget.MustResolve(projectConf, projectName, service)
+	if target.Shared {
+		// The rows being replaced belong to a server other projects also read.
+		fmtc.WarningLn("Importing into the " + target.Origin() + ", schema \"" + target.Database + "\".")
+		fmtc.WarningLn("Every project connected to that server sees the result.")
+	}
 
 	filePath := resolveImportFilePath(args, projectName)
 	ext := strings.ToLower(filepath.Ext(filePath))
@@ -117,20 +124,19 @@ func Import() {
 	}
 	totalSize := fileInfo.Size()
 
-	containerName := docker.GetContainerName(projectConf, projectName, service)
-
-	dbType := configs.GetDbType(projectConf)
-
-	switch dbType {
+	switch target.Type {
 	case "postgresql":
-		importPostgresql(containerName, projectConf, args, service, selectedFile, ext, totalSize)
+		importPostgresql(target, args, selectedFile, ext, totalSize)
 	case "mongodb":
-		importMongodb(containerName, projectConf, args, selectedFile, totalSize)
+		importMongodb(target, args, selectedFile, totalSize)
 	default:
-		importMysql(containerName, projectConf, args, service, selectedFile, ext, totalSize)
+		importMysql(target, args, selectedFile, ext, totalSize)
 	}
 
 	fmt.Println("Database import completed successfully")
+	if target.Shared {
+		fmt.Println("Target: " + target.Origin())
+	}
 }
 
 func resolveImportFilePath(args *arg_struct.ControllerGeneralDbImport, projectName string) string {
@@ -183,19 +189,16 @@ func resolveImportFilePath(args *arg_struct.ControllerGeneralDbImport, projectNa
 	return dbNames[selectedIdx]
 }
 
-func importMysql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbImport, service string, selectedFile *os.File, ext string, totalSize int64) {
+func importMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbImport, selectedFile *os.File, ext string, totalSize int64) {
 	user := "mysql"
 	if args.User != "" {
 		user = args.User
 	}
 
-	mysqlCommandName := "mysql"
-	if projectConf["db/repository"] == "mariadb" && configs.CompareVersions(projectConf["db/version"], "10.5") != -1 {
-		mysqlCommandName = "mariadb"
-	}
+	mysqlCommandName := target.MySQLClient()
 
 	runQuery := func(query string) error {
-		c, e := docker.PrepareContainerExec(containerName, user, false, mysqlCommandName, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "-f", "--execute", query, projectConf["db/database"])
+		c, e := docker.PrepareContainerExec(target.Container, user, false, mysqlCommandName, "-u", "root", "-p"+target.RootPassword, "-h", target.Host, "-f", "--execute", query, target.Database)
 		if e != nil {
 			return e
 		}
@@ -203,7 +206,7 @@ func importMysql(containerName string, projectConf map[string]string, args *arg_
 	}
 
 	if args.ResetGtid {
-		if err := runQuery(gtidResetStatement(projectConf) + ";"); err != nil {
+		if err := runQuery(gtidResetStatement(target) + ";"); err != nil {
 			logger.Fatalln("Failed to reset GTID state:", err)
 		}
 	}
@@ -217,9 +220,9 @@ func importMysql(containerName string, projectConf map[string]string, args *arg_
 		if args.Force || forceOverride {
 			baseArgs = append(baseArgs, "-f")
 		}
-		baseArgs = append(baseArgs, "-u", "root", "-p"+projectConf["db/root_password"], "-h", service, "--max-allowed-packet", "256M", "--init-command", "SET FOREIGN_KEY_CHECKS=0", projectConf["db/database"])
+		baseArgs = append(baseArgs, "-u", "root", "-p"+target.RootPassword, "-h", target.Host, "--max-allowed-packet", "256M", "--init-command", "SET FOREIGN_KEY_CHECKS=0", target.Database)
 		var cmd *exec.Cmd
-		cmd, _ = docker.PrepareContainerExec(containerName, user, false, baseArgs...)
+		cmd, _ = docker.PrepareContainerExec(target.Container, user, false, baseArgs...)
 
 		progress := &progressReader{totalBytes: totalSize}
 
@@ -254,7 +257,7 @@ func importMysql(containerName string, projectConf map[string]string, args *arg_
 
 	stderr, err := runImport(false, false)
 	if err != nil && isGtidPurgedError(stderr) {
-		err = handleGtidConflict(projectConf, runQuery, runImport)
+		err = handleGtidConflict(target, runQuery, runImport)
 		stderr = ""
 	}
 	if err != nil && isDuplicateEntryError(stderr) {
@@ -274,21 +277,21 @@ func isGtidPurgedError(stderr string) bool {
 		(strings.Contains(stderr, "@@GLOBAL.GTID_PURGED") && strings.Contains(stderr, "@@GLOBAL.GTID_EXECUTED"))
 }
 
-func gtidResetStatement(projectConf map[string]string) string {
-	if projectConf["db/repository"] == "mysql" && configs.CompareVersions(projectConf["db/version"], "8.4") >= 0 {
+func gtidResetStatement(target dbtarget.Target) string {
+	if target.Repository == "mysql" && configs.CompareVersions(target.Version, "8.4") >= 0 {
 		return "RESET BINARY LOGS AND GTIDS"
 	}
 	return "RESET MASTER"
 }
 
-func handleGtidConflict(projectConf map[string]string, runQuery func(string) error, runImport func(bool, bool) (string, error)) error {
+func handleGtidConflict(target dbtarget.Target, runQuery func(string) error, runImport func(bool, bool) (string, error)) error {
 	fmt.Println()
 	fmtc.WarningLn("Detected GTID_PURGED conflict during import.")
 	fmt.Println("The dump contains GTID metadata that conflicts with the local server state.")
 	fmt.Println("You can re-run with --reset-gtid to skip this prompt next time.")
 	fmt.Println()
 
-	resetStmt := gtidResetStatement(projectConf)
+	resetStmt := gtidResetStatement(target)
 	options := []string{
 		"Run " + resetStmt + " and retry import",
 		"Retry import with GTID statements stripped from the dump",
@@ -379,13 +382,13 @@ func filterGtidReader(r io.Reader) io.Reader {
 	return pr
 }
 
-func importPostgresql(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbImport, service string, selectedFile *os.File, ext string, totalSize int64) {
+func importPostgresql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbImport, selectedFile *os.File, ext string, totalSize int64) {
 	user := "postgres"
 	if args.User != "" {
 		user = args.User
 	}
 
-	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", "PGPASSWORD='"+projectConf["db/password"]+"' psql -U "+projectConf["db/user"]+" -h "+service+" "+projectConf["db/database"])
+	cmd, prepErr := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", "PGPASSWORD='"+target.Password+"' psql -U "+target.User+" -h "+target.Host+" "+target.Database)
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}
@@ -419,13 +422,13 @@ func importPostgresql(containerName string, projectConf map[string]string, args 
 	}
 }
 
-func importMongodb(containerName string, projectConf map[string]string, args *arg_struct.ControllerGeneralDbImport, selectedFile *os.File, totalSize int64) {
+func importMongodb(target dbtarget.Target, args *arg_struct.ControllerGeneralDbImport, selectedFile *os.File, totalSize int64) {
 	user := "root"
 	if args.User != "" {
 		user = args.User
 	}
 
-	cmd, prepErr := docker.PrepareContainerExec(containerName, user, false, "bash", "-c", "mongorestore --username="+projectConf["db/user"]+" --password="+projectConf["db/password"]+" --authenticationDatabase=admin --db="+projectConf["db/database"]+" --archive --gzip --drop")
+	cmd, prepErr := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", "mongorestore --username="+target.User+" --password="+target.Password+" --authenticationDatabase=admin --db="+target.Database+" --archive --gzip --drop")
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}

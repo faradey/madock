@@ -7,7 +7,9 @@ import (
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/dbtarget"
 	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
@@ -45,6 +47,14 @@ func Execute() {
 }
 
 func GetDB(projectConf map[string]string, projectName string, dbsPath string) {
+	// A snapshot copies the data directory of a container this project owns.
+	// A project without its own db service has nothing to copy — and if its data
+	// lives on another project's server, that server is not ours to snapshot.
+	if !dbtarget.HasLocal(projectConf, "db") {
+		fmtc.WarningLn("Skipping the database: this project does not run its own db service.")
+		return
+	}
+
 	selectedFile, err := os.Create(dbsPath + "db.tar.gz")
 	if err != nil {
 		logger.Fatal(err)
