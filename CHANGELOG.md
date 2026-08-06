@@ -1,3 +1,9 @@
+**v3.8.25**
+
+Fixed:
+- **The default OpenSearch version was `2.5`, a tag no registry publishes.** `opensearchproject/opensearch` ships `x.y.z` only, and the value goes straight into `image:` and into the data volume name, so a project that took the default failed its first `start` on the pull. Now `2.19.1`. This is not cosmetic: `service:enable opensearch` does not ask for a version, so whatever sits in the defaults is what gets pulled
+- **A first-time setup overwrote the platform's version matrix with the embedded defaults.** `tools.PopulateFromConfig` exists to show a reconfigured project the versions it already runs, but it ran on new projects too — where the caller has no project config and passes the general config, which starts from those defaults. A Shopware 6.7 project came out pinned to the default OpenSearch and Elasticsearch versions instead of the 2.8.0 and 8.11.14 its matrix names. It is now a no-op outside reconfigure mode, which is set exactly when the project already has a `config.xml`
+
 **v3.8.24**
 
 Added:

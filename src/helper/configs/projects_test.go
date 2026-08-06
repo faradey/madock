@@ -3,6 +3,7 @@ package configs
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -183,5 +184,31 @@ func TestEmbeddedDefaults_Memcached(t *testing.T) {
 
 	if conf["memcached/version"] == "" {
 		t.Error("memcached/version missing from embedded defaults: the image tag would be empty")
+	}
+}
+
+// TestEmbeddedDefaults_SearchImageTags pins the search engine versions to tags
+// that exist. The value is substituted straight into `image:` and into the data
+// volume name, and neither opensearchproject/opensearch nor the Elasticsearch
+// image publishes a two-part x.y tag — so a default like "2.5" is not an older
+// version, it is a pull failure on the project's first start. It bit a Shopware
+// project: `service:enable opensearch` does not ask for a version, so whatever
+// sits here is what gets pulled.
+func TestEmbeddedDefaults_SearchImageTags(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("MADOCK_EXEC_DIR", tmpDir)
+	CleanCache()
+
+	conf := GetOriginalGeneralConfig()
+
+	for _, key := range []string{"search/opensearch/version", "search/elasticsearch/version"} {
+		got, ok := conf[key]
+		if !ok || got == "" {
+			t.Errorf("%s missing from embedded defaults: the image tag would be empty", key)
+			continue
+		}
+		if strings.Count(got, ".") != 2 {
+			t.Errorf("%s = %q, want a full x.y.z tag — the registry publishes no shorter form", key, got)
+		}
 	}
 }

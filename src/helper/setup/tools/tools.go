@@ -435,7 +435,19 @@ func setSelectedVersion(defVersion *string, availableVersions []string, selected
 
 // PopulateFromConfig fills ToolsVersions fields from existing project config
 // so that reconfigure mode shows the correct current values.
+//
+// It does nothing anywhere else, and that guard is the point. A project being
+// set up for the first time has no config.xml, so the caller hands over the
+// general config instead — and that one starts from the embedded defaults.
+// Populating from it would overwrite the platform's version matrix with values
+// nobody chose: a Shopware 6.7 project came out pinned to the default
+// OpenSearch version rather than the one its matrix names, and that default was
+// a tag the registry does not publish, so the first start failed on a pull.
 func PopulateFromConfig(tv *versions.ToolsVersions, conf map[string]string) {
+	if !reconfigureMode {
+		return
+	}
+
 	if v := conf["php/version"]; v != "" {
 		tv.Php = v
 	}
