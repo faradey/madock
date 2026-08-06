@@ -40,10 +40,6 @@ func Sylius(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	}
 	if nodeVer != "" {
 		config.Set("nodejs/version", nodeVer)
-		nodeMajorVersion := strings.Split(nodeVer, ".")
-		if len(nodeMajorVersion) > 0 {
-			config.Set("nodejs/major_version", nodeMajorVersion[0])
-		}
 	}
 	config.Set("php/nodejs/enabled", "true")
 	config.Set("php/yarn/enabled", "true")

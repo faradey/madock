@@ -147,20 +147,12 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 		// (via shopify CLI tunnel). Match nginx upstream.
 		config.Set("main_service_port", "3000")
 		config.Set("nodejs/version", nodeVer)
-		nodeMajorVersion := strings.Split(nodeVer, ".")
-		if len(nodeMajorVersion) > 0 {
-			config.Set("nodejs/major_version", nodeMajorVersion[0])
-		}
 	} else {
 		// PHP-stack preset (api-php / laravel-shopify / legacy)
 		config.Set("nodejs/enabled", "false")
 		config.Set("php/nodejs/enabled", "true")
 		config.Set("php/yarn/enabled", "true")
 		config.Set("nodejs/version", nodeVer)
-		nodeMajorVersion := strings.Split(nodeVer, ".")
-		if len(nodeMajorVersion) > 0 {
-			config.Set("nodejs/major_version", nodeMajorVersion[0])
-		}
 		// Reset stale Node-only setting if user switched away from
 		// hydrogen/app-remix back to a PHP preset.
 		config.Set("main_service_port", "")

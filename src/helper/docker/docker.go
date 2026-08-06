@@ -7,8 +7,9 @@ import (
 	"os/user"
 	"strings"
 
-	configs2 "github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	configs2 "github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
 )
@@ -252,6 +253,11 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 			logger.Fatal(err)
 		}
 	}
+
+	// The containers now match the generated stack. Recorded last, so a failed
+	// up leaves the old record and the next start retries instead of assuming
+	// the change went in.
+	project.RecordApplied(projectName)
 }
 
 // dockerComposePull pulls images for docker-compose

@@ -17,10 +17,22 @@ import (
 	"github.com/faradey/madock/v3/src/helper/ports"
 )
 
+// MakeConf renders the project's compose files and build context from its
+// config. It runs on every up, not only on rebuild.
+//
+// It used to return early whenever the conf-cache marker existed, and only
+// rebuild and project:clone removed that marker. So a `config:set` followed by
+// `start` or `restart` kept the previously generated Dockerfile: the change was
+// in config.xml, invisible to docker, and the environment ran the old one until
+// somebody happened to rebuild. The same gate silently ignored a newly added
+// docker-compose.<GOOS>.yml override, which the documentation promises is
+// picked up on every start.
+//
+// Rendering is file IO over a few dozen templates and is deterministic, so
+// doing it every time costs nothing worth measuring. What it must not do by
+// itself is recreate containers — that decision belongs to the caller, which
+// compares Fingerprint against the stack the containers were created from.
 func MakeConf(projectName string) {
-	if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
-		return
-	}
 	// get project config
 	projectConf := configs.GetProjectConfig(projectName)
 	pp := paths.NewProjectPaths(projectName)
@@ -161,12 +173,6 @@ func MakePhpDockerfile(projectName string) {
 	if err != nil {
 		logger.Fatal(err)
 	}
-	projectConf := configs.GetProjectConfig(projectName)
-	nodeMajorVersion := strings.Split(projectConf["nodejs/version"], ".")
-	if len(nodeMajorVersion) > 0 {
-		projectConf["nodejs/major_version"] = nodeMajorVersion[0]
-	}
-
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)
@@ -229,12 +235,6 @@ func makeCustomPhpDockerfile(projectName string) {
 	if err != nil {
 		logger.Fatal(err)
 	}
-	projectConf := configs.GetProjectConfig(projectName)
-	nodeMajorVersion := strings.Split(projectConf["nodejs/version"], ".")
-	if len(nodeMajorVersion) > 0 {
-		projectConf["nodejs/major_version"] = nodeMajorVersion[0]
-	}
-
 	b = ProcessSnippets(b, projectName)
 	str := string(b)
 	str = configs.ReplaceConfigValue(projectName, str)

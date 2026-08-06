@@ -31,10 +31,6 @@ func Medusa(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 
 	config.Set("nodejs/enabled", "true")
 	config.Set("nodejs/version", defVersions.NodeJs)
-	nodeMajorVersion := strings.Split(defVersions.NodeJs, ".")
-	if len(nodeMajorVersion) > 0 {
-		config.Set("nodejs/major_version", nodeMajorVersion[0])
-	}
 	config.Set("nodejs/yarn/enabled", "true")
 	config.Set("nodejs/yarn/version", defVersions.Yarn)
 	config.Set("timezone", configs2.GetOption("timezone", generalConf, projectConf))

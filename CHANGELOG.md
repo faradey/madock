@@ -1,3 +1,15 @@
+**v3.8.26**
+
+Fixed:
+- **`config:set` was only picked up by `rebuild`.** The generator returned early whenever the `conf-cache` marker existed, and only `rebuild` and `project:clone` removed it, so `start` and `restart` kept the previously rendered Dockerfile. The change sat in `config.xml`, invisible to docker, and the environment ran the old one until somebody happened to rebuild. The compose files and build context are now rendered on every up — it is deterministic file IO over a few dozen templates
+- **Rendering alone was not enough.** `docker compose start` reads the compose file for names, not for content: it wakes the existing containers and ignores a changed image or service definition. `start` now compares a fingerprint of the generated stack against the one the containers were created from, and recreates them when they differ, saying so first
+- The fingerprint hashes the **generated files**, not the config, so a key no template reads — an SSH host, a cron flag — renders identically and costs nothing. Symlinks out of the runtime dir (the project source, `~/.composer`, `~/.ssh`) are skipped: following them would make every source edit look like a stack change
+- A project with no recorded fingerprint is adopted silently rather than treated as changed, so upgrading madock does not rebuild every project on its next start
+- The same early return silently ignored a newly added `docker-compose.<GOOS>.yml`, which [docker_compose_override.md](docs/docker_compose_override.md) says is picked up on every start. It now is
+
+Changed:
+- **`nodejs/major_version` has one owner.** It was written by twelve platform presets at setup, recomputed by two generators while rendering, and stored in `config.xml` where it could only go stale. It is now derived from `nodejs/version` on every config read, and `config:set nodejs/major_version` is refused with the option to set instead — it used to look accepted and change nothing
+
 **v3.8.25**
 
 Fixed:

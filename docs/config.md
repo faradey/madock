@@ -60,6 +60,17 @@ Set a configuration value:
 madock config:set --name=php/version --value=8.2
 ```
 
+**When a change takes effect.** The compose files and Dockerfiles are rendered
+from the config on every `start`, `restart` and `rebuild`. If the render differs
+from what the running containers were created from, `start` says so and recreates
+them — `docker compose start` only wakes existing containers and would otherwise
+keep running the old definition. A change that no template reads (an SSH host, a
+cron flag) renders identically and starts the containers as they are.
+
+Derived options cannot be set: `nodejs/major_version` is computed from
+`nodejs/version` on every read, so `config:set` refuses it and names the option to
+set instead.
+
 Clear configuration cache:
 ```bash
 madock config:cache:clean

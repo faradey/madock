@@ -28,11 +28,6 @@ func WooCommerce(config *configs2.ConfigLines, defVersions versions.ToolsVersion
 	config.Set("php/xdebug/enabled", configs2.GetOption("php/xdebug/enabled", generalConf, projectConf))
 	config.Set("php/ioncube/enabled", configs2.GetOption("php/ioncube/enabled", generalConf, projectConf))
 
-	nodeMajorVersion := strings.Split(configs2.GetOption("nodejs/version", generalConf, projectConf), ".")
-	if len(nodeMajorVersion) > 0 {
-		config.Set("nodejs/major_version", nodeMajorVersion[0])
-	}
-
 	dbType, dbRepo := resolveDbTypeAndRepo(defVersions)
 	config.Set("db/type", dbType)
 

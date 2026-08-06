@@ -487,6 +487,12 @@ func IsOption(name string) bool {
 	if strings.Contains(name, "/hosts/") {
 		return true
 	}
+
+	// A derived key is recomputed on every read, so accepting a value for it
+	// would store something nothing ever looks at.
+	if source, derived := IsDerived(name); derived {
+		logger.Fatalln("The option \"" + name + "\" is derived from \"" + source + "\" and cannot be set on its own. Set \"" + source + "\" instead.")
+	}
 	for key := range GetCurrentProjectConfig() {
 		if key == name {
 			return true

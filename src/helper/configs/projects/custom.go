@@ -102,11 +102,6 @@ func customPhpConfig(config *configs2.ConfigLines, defVersions versions.ToolsVer
 	config.Set("php/xdebug/enabled", configs2.GetOption("php/xdebug/enabled", generalConf, projectConf))
 	config.Set("php/ioncube/enabled", configs2.GetOption("php/ioncube/enabled", generalConf, projectConf))
 
-	nodeMajorVersion := strings.Split(configs2.GetOption("nodejs/version", generalConf, projectConf), ".")
-	if len(nodeMajorVersion) > 0 {
-		config.Set("nodejs/major_version", nodeMajorVersion[0])
-	}
-
 	config.Set("php/nodejs/enabled", configs2.GetOption("php/nodejs/enabled", generalConf, projectConf))
 	config.Set("nodejs/version", configs2.GetOption("nodejs/version", generalConf, projectConf))
 }
@@ -114,10 +109,6 @@ func customPhpConfig(config *configs2.ConfigLines, defVersions versions.ToolsVer
 func customNodeJsConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	config.Set("nodejs/enabled", "true")
 	config.Set("nodejs/version", defVersions.NodeJs)
-	nodeMajorVersion := strings.Split(defVersions.NodeJs, ".")
-	if len(nodeMajorVersion) > 0 {
-		config.Set("nodejs/major_version", nodeMajorVersion[0])
-	}
 	config.Set("nodejs/yarn/version", defVersions.Yarn)
 	config.Set("timezone", configs2.GetOption("timezone", generalConf, projectConf))
 }

@@ -109,10 +109,6 @@ func Bigcommerce(config *configs2.ConfigLines, defVersions versions.ToolsVersion
 		// 3000. app-node on 3000. Match nginx upstream.
 		config.Set("main_service_port", "3000")
 		config.Set("nodejs/version", nodeVer)
-		nodeMajorVersion := strings.Split(nodeVer, ".")
-		if len(nodeMajorVersion) > 0 {
-			config.Set("nodejs/major_version", nodeMajorVersion[0])
-		}
 	} else {
 		// api-php — Node + Yarn still get baked into the PHP image
 		// for asset pipelines / cli tooling users may want
@@ -121,10 +117,6 @@ func Bigcommerce(config *configs2.ConfigLines, defVersions versions.ToolsVersion
 		config.Set("php/nodejs/enabled", "true")
 		config.Set("php/yarn/enabled", "true")
 		config.Set("nodejs/version", nodeVer)
-		nodeMajorVersion := strings.Split(nodeVer, ".")
-		if len(nodeMajorVersion) > 0 {
-			config.Set("nodejs/major_version", nodeMajorVersion[0])
-		}
 		// Reset stale Node-only setting if user switched away from
 		// catalyst/stencil/app-node back to api-php.
 		config.Set("main_service_port", "")

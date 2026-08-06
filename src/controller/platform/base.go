@@ -7,6 +7,7 @@ import (
 
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
@@ -50,7 +51,20 @@ func (h *BaseHandler) SupportsCron() bool {
 
 // Start starts the containers for a project
 func (h *BaseHandler) Start(projectName string, withChown bool, projectConf map[string]string) {
+	// Regenerates the compose files and build context from the current config.
 	docker.UpNginx(projectName)
+
+	// `docker compose start` only wakes existing containers: it reads the
+	// compose file for names, not for content, so a changed image or service
+	// definition would be ignored and the project would keep running the old
+	// one. When the generated stack no longer matches what the containers were
+	// created from, the only honest move is to recreate them.
+	if project.NeedsRecreate(projectName) {
+		fmtc.WarningLn("Configuration changed since these containers were created.")
+		fmtc.ToDoLn("Recreating containers")
+		docker.UpProjectWithBuild(projectName, withChown)
+		return
+	}
 
 	pp := paths.NewProjectPaths(projectName)
 	profilesOn := []string{

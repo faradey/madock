@@ -98,12 +98,14 @@ func GetProjectConfig(projectName string) map[string]string {
 		if len(projectConfig) == 0 {
 			config := GetProjectConfigOnly(projectName)
 			ConfigMapping(GetGeneralConfig(), config)
+			applyDerived(config)
 			projectConfig = config
 		}
 		return projectConfig
 	} else {
 		config := GetProjectConfigOnly(projectName)
 		ConfigMapping(GetGeneralConfig(), config)
+		applyDerived(config)
 		return config
 	}
 }
