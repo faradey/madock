@@ -1,3 +1,9 @@
+**v3.8.27**
+
+Fixed:
+- `Fingerprint` answered with the hash of the empty set for a project whose stack had never been generated. That is a stable, plausible-looking value, and `RecordApplied` would happily store it as "what the containers were built from" — after which the first real render read as a change and rebuilt a project that had only just been created. A missing runtime dir now has no fingerprint, and nothing records a non-answer
+- `nodejs/major_version` survived when `nodejs/version` was empty, so a value left over from an older config decided which Node got installed while looking deliberate. The derived key is dropped when there is no source: the placeholder stays unsubstituted and the image build fails where the mistake is
+
 **v3.8.26**
 
 Fixed:

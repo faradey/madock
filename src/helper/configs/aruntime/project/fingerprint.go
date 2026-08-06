@@ -24,15 +24,18 @@ func Fingerprint(projectName string) string {
 	pp := paths.NewProjectPaths(projectName)
 	root := pp.RuntimeDir()
 
+	// Nothing generated yet is not "an empty stack" — it is no answer at all.
+	// Hashing the empty set here would give a perfectly stable value that could
+	// then be recorded as the stack the containers were built from.
+	if _, err := os.Stat(root); err != nil {
+		return ""
+	}
+
 	type entry struct{ name, sum string }
 	var entries []entry
 
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
-			// A missing runtime dir just means nothing has been generated yet.
-			if os.IsNotExist(walkErr) {
-				return nil
-			}
 			return walkErr
 		}
 		// Symlinks point at the project source, the global composer dir and
@@ -57,7 +60,6 @@ func Fingerprint(projectName string) string {
 		return nil
 	})
 	if err != nil {
-		// A fingerprint that cannot be computed must not read as "unchanged".
 		return ""
 	}
 
@@ -97,6 +99,12 @@ func RecordApplied(projectName string) {
 // An absent record means this project predates the fingerprint (or its cache
 // was cleared). That is adopted silently rather than treated as a change:
 // upgrading madock must not force a rebuild of every project on its next start.
+//
+// Both failure modes answer "no". An unreadable stack is not evidence that
+// anything changed, and recreating containers on the strength of a stat error
+// would turn a permissions problem into a rebuild of a working environment.
+// The cost of being wrong this way is that a change goes unnoticed until the
+// next rebuild — which is exactly where this started, so it is not a new trap.
 func NeedsRecreate(projectName string) bool {
 	fingerprint := Fingerprint(projectName)
 	if fingerprint == "" {

@@ -31,5 +31,11 @@ func applyDerived(conf map[string]string) {
 	// (setup_20.x), while the image tag is the full one.
 	if version := strings.TrimSpace(conf["nodejs/version"]); version != "" {
 		conf["nodejs/major_version"] = strings.Split(version, ".")[0]
+	} else {
+		// No source, so any value present is left over from an older config.
+		// Dropping it leaves the placeholder unsubstituted, which fails the
+		// image build loudly; keeping it would install some Node nobody asked
+		// for and look deliberate.
+		delete(conf, "nodejs/major_version")
 	}
 }

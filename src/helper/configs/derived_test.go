@@ -33,14 +33,18 @@ func TestApplyDerivedOverwritesAStoredValue(t *testing.T) {
 	}
 }
 
-// Without a source there is nothing to derive, and inventing "0" would put
-// `setup_0.x` into the NodeSource URL.
+// Without a source there is nothing to derive, and a value left over from an
+// older config would install some Node nobody asked for while looking
+// deliberate.
 func TestApplyDerivedWithoutASource(t *testing.T) {
-	conf := map[string]string{"nodejs/version": ""}
+	conf := map[string]string{
+		"nodejs/version":       "",
+		"nodejs/major_version": "18",
+	}
 	applyDerived(conf)
 
-	if _, ok := conf["nodejs/major_version"]; ok {
-		t.Error("major_version was invented from an empty nodejs/version")
+	if got, ok := conf["nodejs/major_version"]; ok {
+		t.Errorf("major_version = %q survived an empty nodejs/version", got)
 	}
 }
 
