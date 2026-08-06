@@ -1,3 +1,11 @@
+**v3.8.29**
+
+Fixed:
+- **`snapshot:create` failed on a project whose files changed while it ran.** tar exits 1 when a member was written while being read — the archive is complete, those members are not — and the command treated it as a fatal error. Worse, the shell chain was `tar -czf /tmp/x.tar.gz . && cat /tmp/x.tar.gz`, so exit 1 skipped the `cat` and produced an empty archive alongside the error. A project with its containers up rotates a log or writes a cache file, which was enough
+- tar now streams to stdout instead of writing a second copy inside the container and cat-ing it, so its exit status reaches madock rather than being swallowed. Status 1 is interpreted; 2 and above stay errors, and `--ignore-failed-read` is deliberately not passed, so an unreadable file cannot arrive disguised as a changed one
+- **Project files and the database data directory are treated differently, on purpose.** For the files, a changed member is expected and the snapshot is kept with a warning. For a data directory it is not survivable: those pages only mean anything together, so the archive is deleted, the run stops, and it points at `db:export` for a dump that can be relied on. Keeping it would have left something indistinguishable from a good snapshot for `snapshot:restore` to write back
+- `cd` into the directory is checked separately, so a missing path cannot land in the exit-1 branch and pass off an empty archive as a complete one
+
 **v3.8.28**
 
 Fixed:
