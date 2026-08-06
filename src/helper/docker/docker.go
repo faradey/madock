@@ -247,8 +247,17 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 
 	if withChown {
 		usr, _ := user.Current()
+		// The service running the application code, not "php" — a Node, Python
+		// or Go project has no php container, and reaching for one turned
+		// --with-chown into a fatal error on those platforms.
+		mainService := configs2.ResolveMainService(projectConf, "php")
+		chownCmd := "chown -R " + usr.Uid + ":" + usr.Gid + " " + projectConf["workdir"]
+		if mainService == "php" {
+			// Only the php image mounts the composer home.
+			chownCmd += " && chown -R " + usr.Uid + ":" + usr.Gid + " /var/www/.composer"
+		}
 		/* for .npm for futures +" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.npm" */
-		err = ContainerExec(GetContainerName(projectConf, projectName, "php"), "root", true, "bash", "-c", "chown -R "+usr.Uid+":"+usr.Gid+" "+projectConf["workdir"]+" && chown -R "+usr.Uid+":"+usr.Gid+" /var/www/.composer")
+		err = ContainerExec(GetContainerName(projectConf, projectName, mainService), "root", true, "bash", "-c", chownCmd)
 		if err != nil {
 			logger.Fatal(err)
 		}

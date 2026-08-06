@@ -1,6 +1,10 @@
 package platform
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/faradey/madock/v3/src/helper/configs"
+)
 
 // Handler defines the interface for platform-specific operations
 type Handler interface {
@@ -48,24 +52,11 @@ func GetMainService(projectConf map[string]string) string {
 	return ResolveMainService(projectConf, GetOrDefault(projectConf["platform"]).GetMainContainer())
 }
 
-// ResolveMainService determines the main service name based on the language config.
-// It accepts a fallback value that is used when the language is "php" or unset.
-// This function can be called from packages that cannot import the platform package
-// (to avoid import cycles) by providing their own fallback.
+// ResolveMainService determines the main service name based on the language
+// config. It accepts a fallback used when the language is "php" or unset.
+//
+// The rule itself lives in configs, which every package may import — packages
+// that cannot import this one call it there directly.
 func ResolveMainService(projectConf map[string]string, fallback string) string {
-	if lang, ok := projectConf["language"]; ok && lang != "" && lang != "php" {
-		switch lang {
-		case "nodejs":
-			return "nodejs"
-		case "python":
-			return "python"
-		case "golang":
-			return "golang"
-		case "ruby":
-			return "ruby"
-		case "none":
-			return "app"
-		}
-	}
-	return fallback
+	return configs.ResolveMainService(projectConf, fallback)
 }

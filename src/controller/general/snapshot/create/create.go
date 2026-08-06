@@ -49,9 +49,15 @@ func Execute() {
 func GetDB(projectConf map[string]string, projectName string, dbsPath string) {
 	// A snapshot copies the data directory of a container this project owns.
 	// A project without its own db service has nothing to copy — and if its data
-	// lives on another project's server, that server is not ours to snapshot.
+	// lives on another project's server, that directory holds every other
+	// consumer's data too, so restoring a copy taken from here would overwrite
+	// all of them.
 	if !dbtarget.HasLocal(projectConf, "db") {
 		fmtc.WarningLn("Skipping the database: this project does not run its own db service.")
+		if target, ok := dbtarget.Resolve(projectConf, projectName, "db"); ok && target.Shared {
+			fmtc.WarningLn("Its data lives on project \"" + target.Project + "\" — snapshot it there.")
+			fmtc.WarningLn("A snapshot copies the whole data directory, which on that server holds every consumer.")
+		}
 		return
 	}
 
@@ -102,7 +108,11 @@ func GetFiles(projectConf map[string]string, projectName string, dbsPath string)
 	defer selectedFileFiles.Close()
 	writerFiles := gzip.NewWriter(selectedFileFiles)
 	defer writerFiles.Close()
-	cmd, prepErr := docker.PrepareContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "root", false, "bash", "-c", "cd /var/www/html && tar -czf /tmp/files.tar.gz . && cat /tmp/files.tar.gz")
+	// The service running the application code, not "php". Every platform mounts
+	// the project at /var/www/html, but only a PHP one has a php container —
+	// snapshot:create died with "No such container" on all the others.
+	mainService := configs.ResolveMainService(projectConf, "php")
+	cmd, prepErr := docker.PrepareContainerExec(docker.GetContainerName(projectConf, projectName, mainService), "root", false, "bash", "-c", "cd /var/www/html && tar -czf /tmp/files.tar.gz . && cat /tmp/files.tar.gz")
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}

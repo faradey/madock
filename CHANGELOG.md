@@ -1,3 +1,12 @@
+**v3.8.28**
+
+Fixed:
+- **`--with-chown` and `snapshot:create` reached into a `php` container on projects that run none.** Both hardcoded the service name, so on a Node, Python, Go or Ruby project they died with `No such container` — `snapshot:create` unconditionally, `--with-chown` whenever containers had to be recreated. They now resolve the service that runs the application code. Verified on a `language: none` project, where the main service is `app`
+- The rule that maps a language to its main service lived in two copies, in packages that could not import each other. It is now `configs.ResolveMainService`, and both copies delegate — the copy that did not get updated is how this bug existed at all
+- **A `--db-service-name` that is not a database service is now named as such.** Only `db` and `db2` hold one; anything else used to be assumed to exist, and the user got Docker's `No such container` instead of the actual mistake. Resolvers are still asked first, so an installation that adds a database under another name keeps working
+- **`db:export` from a shared database no longer calls the file `local_`.** The dump sits in this project's backup directory but holds another project's schema — and everything every other consumer keeps in it. The name now says `shared-<provider>_`, which matters before that file is restored or uploaded somewhere
+- `snapshot:create` on a project whose database is shared now names the provider and says why the snapshot stops at the files
+
 **v3.8.27**
 
 Fixed:

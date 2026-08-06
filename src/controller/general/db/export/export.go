@@ -22,6 +22,18 @@ type DbExportOutput struct {
 	File string `json:"file"`
 }
 
+// dumpPrefix names the source in the file name. A dump taken from a shared
+// database sits in this project's backup directory but holds another project's
+// schema — and everything every other consumer of that schema keeps in it.
+// Calling that file "local_" is how it ends up restored, or uploaded, as if it
+// were this project's own data.
+func dumpPrefix(target dbtarget.Target) string {
+	if target.Shared {
+		return "shared-" + target.Project + "_"
+	}
+	return "local_"
+}
+
 func init() {
 	command.Register(&command.Definition{
 		Aliases:  []string{"db:export"},
@@ -88,7 +100,7 @@ func exportMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbExp
 		user = args.User
 	}
 
-	filePath := dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz"
+	filePath := dbsPath + dumpPrefix(target) + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz"
 	selectedFile, err := os.Create(filePath)
 	if err != nil {
 		logger.Fatal(err)
@@ -124,7 +136,7 @@ func exportPostgresql(target dbtarget.Target, args *arg_struct.ControllerGeneral
 		user = args.User
 	}
 
-	filePath := dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz"
+	filePath := dbsPath + dumpPrefix(target) + name + time.Now().Format("2006-01-02_15-04-05") + ".sql.gz"
 	selectedFile, err := os.Create(filePath)
 	if err != nil {
 		logger.Fatal(err)
@@ -165,7 +177,7 @@ func exportMongodb(target dbtarget.Target, args *arg_struct.ControllerGeneralDbE
 		user = args.User
 	}
 
-	filePath := dbsPath + "local_" + name + time.Now().Format("2006-01-02_15-04-05") + ".archive.gz"
+	filePath := dbsPath + dumpPrefix(target) + name + time.Now().Format("2006-01-02_15-04-05") + ".archive.gz"
 	selectedFile, err := os.Create(filePath)
 	if err != nil {
 		logger.Fatal(err)

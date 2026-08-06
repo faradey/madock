@@ -87,6 +87,10 @@ func Resolve(projectConf map[string]string, projectName, service string) (Target
 func MustResolve(projectConf map[string]string, projectName, service string) Target {
 	target, ok := Resolve(projectConf, projectName, service)
 	if !ok {
+		if service != "db" && service != "db2" {
+			logger.Fatalln("Project \"" + projectName + "\" has no database service named \"" + service +
+				"\". The database services are \"db\" and \"db2\".")
+		}
 		logger.Fatalln("Project \"" + projectName + "\" has no \"" + service + "\" service: " + service +
 			"/enabled is false and no shared database is configured for it.")
 	}
@@ -164,7 +168,11 @@ func localEnabled(projectConf map[string]string, service string) bool {
 	case "db2":
 		return projectConf["db2/enabled"] == "true"
 	default:
-		// A service this package does not know about is assumed to be running.
-		return true
+		// Only db and db2 hold a database. A name outside that set can only be
+		// a typo or a service an installation adds through a resolver — and the
+		// resolvers were already asked. Guessing that it exists would build a
+		// container name nothing ever created and hand the user Docker's "No
+		// such container" instead of the actual mistake.
+		return false
 	}
 }

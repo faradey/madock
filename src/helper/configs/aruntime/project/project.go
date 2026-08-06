@@ -350,23 +350,11 @@ func resolveMainServicePort(projectConf map[string]string) string {
 	return "3000"
 }
 
-// resolveMainService determines the main service name based on the language config
+// resolveMainService determines the main service name based on the language
+// config. The rule lives in configs so the compose generator, the platform
+// handlers and the docker helpers cannot drift apart.
 func resolveMainService(projectConf map[string]string) string {
-	language := projectConf["language"]
-	switch language {
-	case "nodejs":
-		return "nodejs"
-	case "python":
-		return "python"
-	case "golang":
-		return "golang"
-	case "ruby":
-		return "ruby"
-	case "none":
-		return "app"
-	default:
-		return "php"
-	}
+	return configs.ResolveMainService(projectConf, "php")
 }
 
 // replacePortPlaceholders dynamically scans for {{{port/XXX}}} patterns and allocates ports

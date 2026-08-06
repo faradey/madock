@@ -74,6 +74,35 @@ func TestResolveDb2UsesItsOwnCredentials(t *testing.T) {
 	}
 }
 
+// Only db and db2 hold a database. Assuming an unknown name exists would build
+// a container name nothing ever created, and the user would get Docker's "No
+// such container" instead of being told they named a service that is not one.
+func TestResolveUnknownServiceIsNotATarget(t *testing.T) {
+	resetResolvers(t)
+
+	for _, service := range []string{"shared", "php", "typo"} {
+		if _, ok := Resolve(baseConf(), "demo", service); ok {
+			t.Errorf("Resolve returned a target for service %q", service)
+		}
+	}
+}
+
+// ...but a registered resolver may still own such a name, and it is asked first.
+func TestResolveUnknownServiceCanBeClaimed(t *testing.T) {
+	resetResolvers(t)
+
+	Register(func(conf map[string]string, projectName, service string) (Target, bool) {
+		if service != "shared" {
+			return Target{}, false
+		}
+		return Target{Container: "provider-db-1", Shared: true}, true
+	})
+
+	if _, ok := Resolve(baseConf(), "demo", "shared"); !ok {
+		t.Error("a resolver could not claim a service name the local path rejects")
+	}
+}
+
 func TestResolveDb2DisabledIsNotATarget(t *testing.T) {
 	resetResolvers(t)
 
