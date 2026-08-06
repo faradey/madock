@@ -1,3 +1,8 @@
+**v3.8.31**
+
+Fixed:
+- **The proxy.conf extension point was a single slot, and a second consumer would have silently disabled the first.** `SetProxyConfTransformer` was last-writer-wins, which is fine for one caller and a trap for two — and two is the normal case, since routing and TLS have nothing to do with each other and both need the generated file. `AddProxyConfTransformer` appends instead, transformers run in registration order each seeing the previous one's output, and a transformer returning an empty string no longer truncates the file for the ones after it. `SetProxyConfTransformer` is kept for callers that mean "this and nothing else"
+
 **v3.8.30**
 
 Changed:
