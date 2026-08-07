@@ -1,0 +1,110 @@
+# The virtual machine the end-to-end tests run in.
+#
+# They cannot run on your own machine, and the reason is worth reading before
+# you try. madock's proxy is a single compose stack named `aruntime` on a
+# network named `madock-proxy`, and both names are written into the templates
+# rather than derived from anything. A test that starts a project therefore
+# does not take a port from your work — it operates on the very same
+# containers. MADOCK_EXEC_DIR does not save you either: it moves the files,
+# not the container names.
+#
+# So the tests need a Docker daemon nobody else is using, and this is it.
+#
+#   ./test/e2e/e2e.sh up      build the machine (a few minutes, once)
+#   ./test/e2e/e2e.sh run     run the suite inside it
+#   ./test/e2e/e2e.sh reset   throw it away and build it again
+#
+# Ubuntu because that is what the servers we deploy to run, so a defect that
+# only shows on Linux shows here rather than at a customer.
+
+minimumLimaVersion: 2.0.0
+
+base:
+  # Brings the default mounts with it: your home directory appears inside the
+  # guest at the same absolute path, read-only. That is how the repository and
+  # the freshly built binary get in — nothing is copied.
+  - template://ubuntu-24.04
+
+# Apple's Virtualization.framework rather than QEMU: a real hypervisor on
+# Apple Silicon instead of emulation, which is the difference between a suite
+# that runs in a coffee break and one nobody runs.
+vmType: vz
+mountType: virtiofs
+
+# Sized for a Magento stack (php + db + opensearch + redis) with room to spare,
+# while leaving a 16 GB laptop usable. The disk is sparse — it grows to what is
+# actually written, not to 60 GiB on day one.
+cpus: 4
+memory: "6GiB"
+disk: "60GiB"
+
+# Lima ships containerd for its own nerdctl. madock speaks to Docker, and two
+# container runtimes on one machine is just something else to go wrong.
+containerd:
+  system: false
+  user: false
+
+provision:
+  # Docker, installed the way our own documentation tells a customer to install
+  # it. If that path breaks, this VM is where we would rather find out.
+  - mode: system
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      command -v docker >/dev/null 2>&1 && exit 0
+      export DEBIAN_FRONTEND=noninteractive
+      curl -fsSL https://get.docker.com | sh
+
+  # madock runs docker as the invoking user, never as root. Without this the
+  # first command fails on the socket and every test after it is noise.
+  - mode: system
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      usermod -aG docker "{{.User}}"
+
+  # Go from upstream rather than apt: go.mod asks for 1.25 and Ubuntu 24.04
+  # ships 1.22. The tests are compiled inside the guest, so this is not
+  # optional.
+  - mode: system
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      GO_VERSION=1.25.0
+      [ -x /usr/local/go/bin/go ] && /usr/local/go/bin/go version | grep -q "go${GO_VERSION}" && exit 0
+      ARCH=$(dpkg --print-architecture)
+      curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" -o /tmp/go.tgz
+      rm -rf /usr/local/go
+      tar -C /usr/local -xzf /tmp/go.tgz
+      rm -f /tmp/go.tgz
+      printf 'export PATH=$PATH:/usr/local/go/bin\n' > /etc/profile.d/go.sh
+
+  # git because madock clones a starter during `setup -d`, and the scenarios
+  # that cover it would otherwise fail for a reason that has nothing to do
+  # with madock.
+  - mode: system
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      export DEBIAN_FRONTEND=noninteractive
+      command -v git >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq git)
+
+probes:
+  # `limactl start` returning is not the same as the machine being usable. Wait
+  # for the things the suite needs, or the first run fails on a race and gets
+  # blamed on the code under test.
+  - description: "docker to accept commands"
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      timeout 120s bash -c "until docker info >/dev/null 2>&1; do sleep 3; done"
+    hint: |
+      Docker did not come up. Look at /var/log/cloud-init-output.log inside the
+      guest: limactl shell madock-e2e -- sudo cat /var/log/cloud-init-output.log
+  - description: "go to be installed"
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      timeout 180s bash -c "until [ -x /usr/local/go/bin/go ]; do sleep 3; done"
+    hint: |
+      The Go tarball did not land. Same log as above.

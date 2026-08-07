@@ -151,7 +151,8 @@ arrive, so watchers and rebuilds behave differently from everywhere else.
 
 > **Working on madock itself?** Turn on the repository's git hooks once:
 > `git config core.hooksPath .githooks`. Before every push they build the code
-> and run the test suite — about two seconds, no Docker needed.
+> and run the test suite — about two seconds, no Docker needed. The end-to-end
+> suite is separate and runs in a VM of its own; see [docs/testing.md](docs/testing.md).
 
 Follow the installation steps for your system.
 <details>

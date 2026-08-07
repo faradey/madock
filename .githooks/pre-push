@@ -1,0 +1,58 @@
+#!/bin/sh
+#
+# Refuse to push code that does not build or does not pass its tests.
+#
+# pre-push rather than pre-commit on purpose: a commit is a local save, often of
+# unfinished work, and blocking that gets in the way. A push is what other people
+# see, and that is worth gating.
+#
+# The whole suite runs in about two seconds, and stays that way by construction:
+# the tests that need Docker sit behind the `e2e` build tag, so `go test ./...`
+# does not even compile them.
+#
+# -count=1 is not optional. Go caches a package's test result until one of its
+# .go files changes, and the golden tests read their input from docker/ — plain
+# data files the cache knows nothing about. Without it, editing a template and
+# running the suite reports `ok (cached)` and proves nothing. Measured: a
+# deliberately broken entrypoint passed the hook until this was added.
+#
+# Enable once per clone:
+#     git config core.hooksPath .githooks
+#
+# `git push --no-verify` skips this. That is deliberate — a safety net, not a gate.
+#
+# Deliberately absent: a repository-wide gofmt check. Around nineteen files are
+# already unformatted, so it would fail on the first run, and a hook that is red
+# from day one gets switched off on day two.
+
+set -u
+
+fail() {
+    printf '\n\033[31mpush refused: %s\033[0m\n' "$1" >&2
+    printf 'Fix it, or push with --no-verify if you know what you are doing.\n\n' >&2
+    exit 1
+}
+
+if ! command -v go >/dev/null 2>&1; then
+    fail "go is not installed, so nothing here can be checked"
+fi
+
+if ! build_output=$(go build ./... 2>&1); then
+    printf '%s\n' "$build_output" >&2
+    fail "the code does not build"
+fi
+
+if ! test_output=$(go test -count=1 ./... 2>&1); then
+    printf '%s\n' "$test_output" | grep -E '^(FAIL|---|\s+---)|\.go:[0-9]+:' >&2
+    fail "tests are failing"
+fi
+
+# The end-to-end suite is excluded from everything above by its build tag, so a
+# broken test file there compiles nowhere and is discovered whenever somebody
+# next boots the VM. Vet does not run them — it only proves they still build.
+if ! vet_output=$(go vet -tags=e2e ./test/... 2>&1); then
+    printf '%s\n' "$vet_output" >&2
+    fail "the end-to-end tests do not compile"
+fi
+
+exit 0

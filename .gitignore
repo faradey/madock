@@ -22,6 +22,11 @@
 !/scripts
 !/scripts/*
 !/scripts/**
+!/test
+!/test/*
+!/test/**
+!/.githooks
+!/.githooks/*
 !/media
 !/media/*
 !/tests
