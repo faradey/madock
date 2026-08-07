@@ -43,6 +43,15 @@ type testEnv struct {
 // and creates a project config via SaveInFile.
 func setupTestEnvironment(t *testing.T, projectName, hostName string) *testEnv {
 	t.Helper()
+	return setupTestEnvironmentWith(t, projectName, hostName, nil)
+}
+
+// setupTestEnvironmentWith is setupTestEnvironment with the project config
+// opened up: overrides are applied on top of the Magento defaults below, so a
+// test can describe a different platform, language or database without
+// restating the ninety keys it does not care about.
+func setupTestEnvironmentWith(t *testing.T, projectName, hostName string, overrides map[string]string) *testEnv {
+	t.Helper()
 	realRoot := findProjectRoot(t)
 
 	tmpDir, err := os.MkdirTemp("", "madock-integration-*")
@@ -188,6 +197,10 @@ func setupTestEnvironment(t *testing.T, projectName, hostName string) *testEnv {
 
 	if hostName != "" {
 		projectConfigData["nginx/hosts/base/name"] = hostName
+	}
+
+	for key, value := range overrides {
+		projectConfigData[key] = value
 	}
 
 	configs.SaveInFile(projectConfigPath, projectConfigData, "default")

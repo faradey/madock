@@ -1,0 +1,108 @@
+name: madock_golden
+services:
+  
+  php:
+    init: true
+    build:
+      context: ctx
+      dockerfile: php.Dockerfile
+    volumes:
+      - ./src:/var/www/html:cached
+      - ./composer:/var/www/.composer:cached
+      - ./ssh:/var/www/.ssh:ro
+      - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
+      - ./ctx/scripts/:/var/www/scripts/:cached
+    environment:
+      - COMPOSER_HOME=/var/www/.composer
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    ports:
+      - "<PORT>:35729"
+      - "<PORT>:5173"
+      - "<PORT>:9998"
+      - "<PORT>:9999"
+    restart: no
+
+  nginx:
+    init: true
+    build:
+      context: ctx
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "<PORT>:80"
+      - "<PORT>:443"
+    volumes:
+      - ./src:/var/www/html:delegated
+      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    depends_on:
+      - php
+    restart: no
+  
+  db:
+    init: true
+    command:
+      --default-authentication-plugin=mysql_native_password
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    ports:
+      - "<PORT>:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "magento"
+      MYSQL_USER: "magento"
+      MYSQL_PASSWORD: "magento"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+    restart: no
+
+  
+  opensearch:
+    init: true
+    build:
+      context: ctx
+      dockerfile: opensearch.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 2512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      OPENSEARCH_DISCOVERY_TYPE: 'single-node'
+      DISABLE_INSTALL_DEMO_CONFIG: 'true'
+      DISABLE_SECURITY_PLUGIN: 'true'
+      ES_JAVA_OPTS: '-Xms800m -Xmx800m'
+    volumes:
+      - opensearch_vlm_2.19.0:/usr/share/opensearch/data
+    restart: no
+
+
+
+
+
+
+
+
+
+
+volumes:
+  # Declared unconditionally on purpose. Every other entry here is optional, so
+  # gating this one too lets `volumes:` render empty when a project runs without
+  # a database, without search and without grafana — and compose rejects that
+  # with "volumes must be a mapping". An unused named volume costs nothing.
+  dbdata:
+  opensearch_vlm_2.19.0:
+networks:
+  madock-proxy:
+    external: true

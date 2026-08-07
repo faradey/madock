@@ -1,0 +1,5 @@
+[client]
+user=root
+password=password
+host=db
+port=3306
