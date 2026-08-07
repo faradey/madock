@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/v3/src/helper/configs/aruntime/proxytransform"
@@ -22,6 +23,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
 	"github.com/faradey/madock/v3/src/helper/ports"
+	"github.com/faradey/madock/v3/src/helper/setup/tools"
 )
 
 func MakeConf(projectName string) {
@@ -420,14 +422,29 @@ func GenerateSslCert(ctxPath string, force bool) {
 				err = cmd.Run()
 				selected := "y"
 				if err != nil && errb.String() == "" {
-					fmt.Println("You need to install \"certutil\" to proceed with the certificate installation. Continue installation? y - continue. n - cancel certificate generation and continue without ssl.")
-					fmt.Print("> ")
-					buf := bufio.NewReader(os.Stdin)
-					sentence, err := buf.ReadBytes('\n')
-					if err != nil {
-						logger.Fatalln(err)
+					// -y reaches here too. Without this the flag stops being
+					// true the moment a machine happens to lack certutil, and
+					// `madock setup -y` in a provisioning script waits at a
+					// prompt nobody will ever answer.
+					askAboutCertutil := !tools.IsNonInteractive()
+
+					if askAboutCertutil {
+						fmt.Println("You need to install \"certutil\" to proceed with the certificate installation. Continue installation? y - continue. n - cancel certificate generation and continue without ssl.")
+						fmt.Print("> ")
+						buf := bufio.NewReader(os.Stdin)
+						sentence, readErr := buf.ReadBytes('\n')
+						if readErr != nil {
+							// No terminal to answer with — a pipe, a cron job,
+							// a CI step. Skipping SSL leaves a working project;
+							// installing packages nobody agreed to does not, so
+							// that is the safer reading of silence.
+							fmtc.WarningLn("No answer possible on this input, continuing without SSL. Pass -y to install certutil instead.")
+							selected = "n"
+						} else {
+							selected = strings.TrimSpace(string(sentence))
+						}
 					}
-					selected = strings.TrimSpace(string(sentence))
+
 					if selected == "y" {
 						cmd = exec.Command("sudo", "apt", "install", "-y", "libnss3-tools")
 						attr.AttachOutput(cmd)
