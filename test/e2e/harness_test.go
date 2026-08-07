@@ -167,9 +167,27 @@ func (p *project) run(timeout time.Duration, args ...string) string {
 	return out
 }
 
+// runWithInput executes a madock command that asks a question, answering it
+// from the string given. Commands that cannot be driven by flags — snapshot
+// restore chooses from a numbered list and has none — can only be tested this
+// way.
+func (p *project) runWithInput(timeout time.Duration, input string, args ...string) string {
+	p.t.Helper()
+
+	out, err := p.tryRunWithInput(timeout, input, args...)
+	if err != nil {
+		p.t.Fatalf("madock %s failed: %v\n%s", strings.Join(args, " "), err, out)
+	}
+	return out
+}
+
 // tryRun executes a madock command and hands back whatever happened. Use it
 // when the failure is the thing being tested.
 func (p *project) tryRun(timeout time.Duration, args ...string) (string, error) {
+	return p.tryRunWithInput(timeout, "", args...)
+}
+
+func (p *project) tryRunWithInput(timeout time.Duration, input string, args ...string) (string, error) {
 	p.t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -177,6 +195,9 @@ func (p *project) tryRun(timeout time.Duration, args ...string) (string, error) 
 
 	cmd := exec.CommandContext(ctx, binary(), args...)
 	cmd.Dir = p.runDir
+	if input != "" {
+		cmd.Stdin = strings.NewReader(input)
+	}
 	cmd.Env = append(os.Environ(),
 		"MADOCK_EXEC_DIR="+p.execDir,
 		"MADOCK_RUN_DIR="+p.runDir,
@@ -234,6 +255,30 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 	os.Exit(m.Run())
+}
+
+// query runs SQL and waits for the database to be ready to answer.
+//
+// A container that exists is not a database that accepts connections, and the
+// wait is different on the first run of the day from every run after it — so a
+// fixed sleep is either flaky or wasteful.
+func (p *project) query(sql string) string {
+	p.t.Helper()
+
+	var out string
+	var err error
+	deadline := time.Now().Add(3 * time.Minute)
+	for {
+		out, err = p.tryRun(time.Minute, "db:execute", sql)
+		if err == nil || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
+	if err != nil {
+		p.t.Fatalf("db:execute %q never succeeded: %v\n%s", sql, err, out)
+	}
+	return out
 }
 
 func requireContains(t *testing.T, haystack, needle, what string) {
