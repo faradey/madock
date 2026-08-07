@@ -53,6 +53,7 @@
                 <nodejs>
                     <enabled>false</enabled>
                 </nodejs>
+                <browser_libs>false</browser_libs>
             </php>
             <db>
                 <enabled>true</enabled>
@@ -97,6 +98,10 @@
                 <enabled>false</enabled>
                 <repository>node</repository>
                 <version>18.15.0</version>
+                <env>development</env>
+                <script></script>
+                <script_type>auto</script_type>
+                <browser_libs>false</browser_libs>
                 <yarn>
                     <enabled>false</enabled>
                     <version>1.22.19</version>

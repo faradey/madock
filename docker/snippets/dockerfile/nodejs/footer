@@ -3,8 +3,8 @@ WORKDIR {{{workdir}}}
 {{{include snippets/dockerfile/common/umask}}}
 
 # madock smart entrypoint:
-#   - if package.json has a "dev" script, run it (preferred)
-#   - else if "start" exists, run it
+#   - if nodejs/script is set, run that (see nodejs/script_type)
+#   - else pick from package.json: "dev" in development, "start" in production
 #   - else fall back to plain `node` REPL
 # Picks the package manager from lockfiles (yarn/pnpm/npm).
 # Refuses to start the dev server when node_modules is missing —
@@ -30,10 +30,60 @@ if [ ! -f package.json ]; then
   echo "[madock] package.json detected — continuing."
 fi
 
-script=$(node -e 'try{var p=require("./package.json").scripts||{};process.stdout.write(p.dev?"dev":(p.start?"start":""))}catch(e){}' 2>/dev/null)
+# has_script <name> — true when package.json declares that script.
+has_script() {
+  node -e 'try{var p=require("./package.json").scripts||{};process.exit(p[process.argv[1]]?0:1)}catch(e){process.exit(1)}' "$1" 2>/dev/null
+}
+
+configured="{{{nodejs/script}}}"
+configured_type="{{{nodejs/script_type}}}"
+node_env="${NODE_ENV:-development}"
+
+# mode is "package" (run through the project's package manager) or "command"
+# (hand it to a shell). A path to a file is a command.
+mode="package"
+
+if [ -n "$configured" ]; then
+  case "$configured_type" in
+    package)
+      mode="package"
+      ;;
+    command)
+      mode="command"
+      ;;
+    *)
+      # auto: a name package.json declares is a script, anything else is a
+      # command. Said out loud, because the difference decides what runs and
+      # a typo would otherwise become a shell command that fails at exec.
+      if has_script "$configured"; then
+        mode="package"
+      else
+        mode="command"
+        echo "[madock] \"$configured\" is not a script in package.json — running it as a command."
+      fi
+      ;;
+  esac
+  script="$configured"
+else
+  # No script configured. In production "dev" is the wrong guess: for a
+  # Shopify app it is `shopify app dev`, which prints a verification code and
+  # waits for a human. On a server nobody logs in, it gives up, and the
+  # container dies with it — start reported success minutes earlier.
+  if [ "$node_env" = "production" ]; then
+    if has_script start; then script="start"; elif has_script dev; then script="dev"; fi
+  else
+    if has_script dev; then script="dev"; elif has_script start; then script="start"; fi
+  fi
+fi
 
 if [ -z "$script" ]; then
   exec node
+fi
+
+if [ "$mode" = "package" ] && ! has_script "$script"; then
+  echo "[madock] package.json has no \"$script\" script (nodejs/script_type=package)."
+  echo "[madock] Set nodejs/script to a script it declares, or nodejs/script_type=command to run it as a command."
+  exit 1
 fi
 
 deps_installed() {
@@ -79,6 +129,11 @@ if [ -f .env ]; then
   set -a
   . ./.env
   set +a
+fi
+
+if [ "$mode" = "command" ]; then
+  echo "[madock] starting: $script"
+  exec sh -c "$script"
 fi
 
 echo "[madock] starting: $pm $script"

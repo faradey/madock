@@ -1,1 +1,14 @@
 RUN npm install -g grunt-cli
+<<<if{{{nodejs/browser_libs}}}>>>
+# Shared libraries a headless browser needs. Playwright is asked for the list
+# rather than the list being written here: it knows the package names for the
+# distribution underneath, and those names move — libasound2 became
+# libasound2t64 in Debian trixie and Ubuntu 24.04, so a list pinned today
+# breaks the build the day the base image is bumped.
+#
+# This runs at build time, where we are root. `playwright install --with-deps`
+# at runtime cannot work: madock execs as a non-root user, so Playwright
+# shells out to sudo and stops on a password prompt — and anything apt
+# installs into a running container is gone at the next rebuild anyway.
+RUN npx --yes playwright install-deps chromium
+<<<endif>>>

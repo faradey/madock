@@ -1,3 +1,14 @@
+**v3.8.32**
+
+Added:
+- **`nodejs/script` and `nodejs/script_type`** — the Node container can be told what to run instead of having it guessed. `script_type` is `auto` (a name `package.json` declares is a script, anything else is a command, and madock says which it chose), `package` (always a script — a missing one stops the container with an explanation instead of failing at exec) or `command` (always a shell command; a path to a file is a command). A script still goes through the package manager the lockfile names
+- **`nodejs/browser_libs` and `php/browser_libs`** install the shared libraries a headless Chromium needs, off by default. The list is not written down: the image asks Playwright for it at build time, because the package names differ per distribution and move between releases — `libasound2` became `libasound2t64` in Debian trixie and Ubuntu 24.04, so a hand-pinned list breaks the build the day the base image is bumped. Installing them at runtime cannot work anyway: madock execs as a non-root user, so Playwright stops at a sudo password prompt, and apt's work is lost at the next rebuild
+
+Fixed:
+- **The Node entrypoint always preferred `dev`, which is the wrong process on a server.** For a Shopify app `dev` is `shopify app dev` — it prints a verification code and waits for a human. Nobody logs in, it gives up, and the container dies with it, because that command is its main process. Now `start` is preferred when `NODE_ENV` is `production`
+- **`nodejs/env` replaces a hardcoded `NODE_ENV: "development"`** in the compose file. It was set that way for every project, laptop and server alike, so the entrypoint had nothing to read and libraries that branch on it were always in development mode
+- **`start` no longer reports success when a container is already dead.** `docker compose up` returning zero only says the containers were created; a main process that is not a daemon is gone seconds later. Services that are not running are now listed with their exit code, and `madock logs -s <service>` is offered. Until now the only signal was the log, and nothing pointed at it — `status`, asked in between, honestly answered "running"
+
 **v3.8.31**
 
 Fixed:

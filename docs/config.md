@@ -95,8 +95,59 @@ Settings are inherited in this order (later overrides earlier):
 | `php/version` | PHP version | `8.2` |
 | `php/nodejs/enabled` | Node.js inside PHP container | `false` |
 | `nodejs/enabled` | Standalone Node.js container | `false` |
+| `nodejs/env` | `NODE_ENV` inside the container | `development` |
+| `nodejs/script` | What the container runs — see below | *(empty: pick from `package.json`)* |
+| `nodejs/script_type` | How to read `nodejs/script`: `auto`, `package`, `command` | `auto` |
+| `nodejs/browser_libs` | Install the shared libraries a headless browser needs | `false` |
+| `php/browser_libs` | The same for the PHP image (needs `php/nodejs/enabled`) | `false` |
 | `python/version` | Python version (custom platform) | `3.12` |
 | `go/version` | Go version (custom platform) | `1.22` |
 | `ruby/version` | Ruby version (custom platform) | `3.3` |
+
+## What the Node container runs
+
+Left alone, the container picks a script out of `package.json`: `dev` when
+`nodejs/env` is `development`, `start` when it is `production`.
+
+That default is why `nodejs/env` stopped being hardcoded. For a Shopify app,
+`dev` is `shopify app dev` — an interactive command that prints a verification
+code and waits for someone to log in. On a server nobody does, it gives up, and
+the container dies with it, because that command *is* its main process. `start`
+reported success minutes earlier.
+
+`nodejs/script` says what to run instead, and `nodejs/script_type` says how to
+read it:
+
+| `script_type` | Meaning |
+|---|---|
+| `auto` (default) | A name `package.json` declares is run as a script; anything else is run as a command, and madock says which it chose |
+| `package` | Always a `package.json` script. A name it does not declare stops the container with an explanation instead of failing at exec |
+| `command` | Always a shell command |
+
+```bash
+madock config:set --name=nodejs/script --value=docker-start
+madock config:set --name=nodejs/script --value="node server.js --port 3000"
+madock config:set --name=nodejs/script_type --value=command
+```
+
+A script goes through the package manager the project actually uses — yarn, pnpm
+or npm, detected from the lockfile. A path to a file is a command.
+
+## Headless browsers
+
+`nodejs/browser_libs` (and `php/browser_libs` for the PHP image) installs the
+shared libraries a headless Chromium needs. Off by default: most projects have
+no browser, and the libraries are weight and surface they do not need.
+
+The list is not written down anywhere in madock — the image asks Playwright for
+it at build time (`playwright install-deps`), because the package names differ
+per distribution and move between releases: `libasound2` became `libasound2t64`
+in Debian trixie and Ubuntu 24.04, so a list pinned by hand breaks the build the
+day the base image is bumped.
+
+Installing them from inside a running container does not work and is not worth
+attempting: madock execs as a non-root user, so Playwright shells out to `sudo`
+and stops at a password prompt — and anything `apt` installs into a running
+container is gone at the next rebuild.
 
 See also: [Scopes](./scopes.md) for managing multiple environments per project.

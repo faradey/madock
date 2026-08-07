@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -116,6 +117,70 @@ func Down(projectName string, withVolumes bool) {
 	// Label-based sweep — handles the no-compose-file case and also
 	// catches any leftovers that compose missed.
 	forceRemoveByLabel(projectName, withVolumes)
+}
+
+// ServiceState is one row of `docker compose ps -a` for a project.
+type ServiceState struct {
+	Service  string `json:"Service"`
+	Name     string `json:"Name"`
+	State    string `json:"State"`
+	ExitCode int    `json:"ExitCode"`
+}
+
+// NotRunning returns the project's services that are not running.
+//
+// It exists because "started successfully" was being printed on the strength
+// of `docker compose up` returning zero, which only says the containers were
+// created. A container whose main process is not a daemon — a Node service
+// running a command that exits, say — is gone seconds later, and until
+// somebody read the log there was nothing to go on: start said success and
+// status, asked in between, honestly said running.
+func NotRunning(projectName string) []ServiceState {
+	pp := paths.NewProjectPaths(projectName)
+	composeFile := pp.DockerCompose()
+	if !paths.IsFileExist(composeFile) {
+		return nil
+	}
+
+	out, err := exec.Command("docker", "compose", "-f", composeFile, "-f", pp.DockerComposeOverride(),
+		"ps", "-a", "--format", "json").Output()
+	if err != nil {
+		// Nothing to report rather than a false alarm: a docker that cannot be
+		// asked is not evidence that a service died.
+		return nil
+	}
+
+	var dead []ServiceState
+	for _, entry := range parseComposePS(out) {
+		if entry.State != "running" && entry.State != "restarting" {
+			dead = append(dead, entry)
+		}
+	}
+	return dead
+}
+
+// parseComposePS reads `docker compose ps --format json` in both shapes it
+// comes in: NDJSON from newer compose, a single JSON array from older.
+func parseComposePS(psOutput []byte) []ServiceState {
+	var entries []ServiceState
+	for _, line := range strings.Split(string(psOutput), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "[") {
+			var batch []ServiceState
+			if err := json.Unmarshal([]byte(line), &batch); err == nil {
+				entries = append(entries, batch...)
+			}
+			continue
+		}
+		var one ServiceState
+		if err := json.Unmarshal([]byte(line), &one); err == nil && one.Service != "" {
+			entries = append(entries, one)
+		}
+	}
+	return entries
 }
 
 // Stop stops the project's containers without removing them. Unlike Down it

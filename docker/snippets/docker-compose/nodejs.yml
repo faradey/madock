@@ -6,7 +6,10 @@
       dockerfile: nodejs.Dockerfile
     tty: true
     environment:
-      NODE_ENV: "development"
+      # Was hardcoded to "development", which is wrong the moment a project
+      # runs on a server: libraries branch on it, and the entrypoint reads it
+      # when no nodejs/script is configured.
+      NODE_ENV: "{{{nodejs/env}}}"
       # Polling-based file watching for macOS bind mounts (no inotify forwarding).
       # Harmless on Linux. Picked up by next/webpack/chokidar/medusa watcher.
       WATCHPACK_POLLING: "true"

@@ -10,6 +10,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/docker"
 )
 
 func init() {
@@ -38,6 +39,23 @@ func Execute() {
 
 		elapsed := time.Since(startTime).Round(time.Second)
 		fmt.Println("")
+
+		// "up" returning zero only says the containers were created. Report a
+		// service whose main process is already gone instead of claiming
+		// success and leaving the reason in a log nobody has been told to read.
+		if dead := docker.NotRunning(projectName); len(dead) > 0 {
+			fmtc.WarningIconLn(fmt.Sprintf("Containers started in %s, but some are not running:", elapsed))
+			for _, service := range dead {
+				line := "  " + service.Service + " — " + service.State
+				if service.ExitCode != 0 {
+					line += fmt.Sprintf(" (exit %d)", service.ExitCode)
+				}
+				fmtc.WarningLn(line)
+			}
+			fmtc.ToDoLn("madock logs -s <service>")
+			return
+		}
+
 		fmtc.SuccessIconLn(fmt.Sprintf("Containers started in %s", elapsed))
 	} else {
 		fmtc.WarningIconLn("Set up the project")
