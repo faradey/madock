@@ -107,3 +107,26 @@ func requireCertificateFor(t *testing.T, host string) {
 		time.Sleep(2 * time.Second)
 	}
 }
+
+// TestChangedHostGetsItsOwnCertificate covers the other half of the same
+// window. The certificate is issued for the hosts that existed when it was
+// made, so editing a project's host used to leave it served under the old name
+// — harder to notice than a new project, because the site worked yesterday.
+func TestChangedHostGetsItsOwnCertificate(t *testing.T) {
+	p := newProject(t, "e2ehost")
+
+	p.run(5*time.Minute, "setup", "-y",
+		"--platform=custom",
+		"--language=none",
+		"--hosts=e2ehost-before.test",
+	)
+	p.run(20*time.Minute, "start")
+	requireCertificateFor(t, "e2ehost-before.test")
+
+	// Hosts live one per store code, so the key is a path rather than `hosts`.
+	// `--hosts=` on setup writes the base one.
+	p.run(2*time.Minute, "config:set", "-n", "nginx/hosts/base/name", "-v", "e2ehost-after.test")
+	p.run(10*time.Minute, "restart")
+
+	requireCertificateFor(t, "e2ehost-after.test")
+}

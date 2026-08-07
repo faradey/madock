@@ -55,13 +55,20 @@ func UpNginxWithBuild(projectName string, force bool) {
 
 	ctxPath := paths.MakeDirsByPath(paths.CtxDir())
 
-	// The certificate covers every project at once, so adding one invalidates
-	// it. Until this was here it was only ever issued on the proxy's first
-	// start: the new project appeared in proxy.conf and was reloaded, and its
-	// HTTPS was served with a certificate that did not name it. Reissuing is a
-	// second or two and only happens when the host set actually changed.
+	// The certificate covers every project at once, so adding a project or
+	// editing its hosts invalidates it. It used to be issued only on the very
+	// first start of the proxy — behind both "the proxy is down" and "there is
+	// no conf-cache marker" — while proxy.conf was regenerated every time. A
+	// new project was therefore routed immediately and served over HTTPS with a
+	// certificate that did not name it, and a renamed host kept the old name.
+	//
+	// Checked before the branch on purpose: the gap is in both halves. `restart`
+	// stops the last project, which takes the proxy down with it, so the case
+	// where the proxy is down and the marker still exists is the common one.
+	// Reissuing costs a second or two and happens only when the host set really
+	// changed.
 	certRefreshed := false
-	if !doNeedRunAruntime && !nginx.SslCertCoversCurrentHosts(ctxPath) {
+	if !nginx.SslCertCoversCurrentHosts(ctxPath) {
 		nginx.GenerateSslCert(ctxPath, false)
 		certRefreshed = true
 	}
@@ -71,7 +78,9 @@ func UpNginxWithBuild(projectName string, force bool) {
 		CreateProxyNetwork()
 
 		if !paths.IsFileExist(confCache) {
-			nginx.GenerateSslCert(ctxPath, false)
+			if !certRefreshed {
+				nginx.GenerateSslCert(ctxPath, false)
+			}
 
 			dockerComposePull([]string{"compose", "-f", proxyCompose})
 

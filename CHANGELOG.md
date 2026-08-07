@@ -1,3 +1,9 @@
+**v3.8.35**
+
+Fixed:
+- **The certificate fix in 3.8.34 covered half the problem.** The check sat in the branch taken when the proxy is already running, and the more common case is the other one: `restart` is a stop followed by a start, stopping the last project takes the proxy down with it, and the `conf-cache` marker survives — so nothing reissued the certificate. A project whose host was edited kept serving the old name. The host set is now compared before that branch, so both halves are covered
+- **`./test/e2e/e2e.sh run -run 'A|B'`** passed the pattern into a shell unquoted, so anything after a pipe was run as a command
+
 **v3.8.34**
 
 Fixed:

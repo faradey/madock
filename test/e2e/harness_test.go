@@ -34,8 +34,9 @@ import (
 // Container names are not isolated by it, which is why each test picks its own
 // project name — two tests sharing a name would share containers.
 type project struct {
-	t    *testing.T
-	name string
+	t       *testing.T
+	install *installation
+	name    string
 	// execDir is the madock installation: registry, runtime, templates.
 	execDir string
 	// runDir is the project source directory. madock takes the project name
@@ -48,9 +49,13 @@ type project struct {
 // it is shared by every project in an installation and that sharing is the
 // thing being tested.
 type installation struct {
-	t    *testing.T
-	root string
-	dir  string
+	t        *testing.T
+	root     string
+	dir      string
+	projects []*project
+
+	proxyReset     bool
+	proxyDestroyed bool
 }
 
 func newInstallation(t *testing.T) *installation {
@@ -63,7 +68,55 @@ func newInstallation(t *testing.T) *installation {
 	if err := os.MkdirAll(i.dir, 0o755); err != nil {
 		t.Fatalf("creating %s: %v", i.dir, err)
 	}
+
 	return i
+}
+
+// resetProxy removes whatever proxy is running before this installation starts
+// anything, once.
+//
+// The teardown at the end of a test is not enough on its own: a run that is
+// interrupted, or that fails before its cleanup, leaves the container up. The
+// next run then inherits its certificate and routing and reports on state
+// nobody created — a two-project test once passed against a binary with a known
+// defect for exactly this reason, and later failed while being served a
+// certificate belonging to a project from a different test entirely.
+//
+// Called before the first `start`, when setup has already written the project
+// config the command needs.
+func (i *installation) resetProxy(from *project) {
+	if i.proxyReset {
+		return
+	}
+	i.proxyReset = true
+
+	if out, err := from.tryRun(3*time.Minute, "proxy:prune", "--force"); err != nil {
+		i.t.Logf("could not remove a leftover proxy: %v\n%s", err, out)
+	}
+}
+
+// destroyProxy removes the shared proxy container, once per installation.
+//
+// Everything else a test creates is isolated by MADOCK_EXEC_DIR, but the proxy
+// is one container per Docker daemon and it outlives the installation that
+// started it. Leaving it up lets a later test inherit an earlier one's
+// certificate and routing — which is not a theory: a binary built before the
+// certificate fix passed this suite once, on state a fixed binary had left
+// behind a minute earlier. The test only started telling the two apart after
+// this.
+//
+// It runs from a project that still exists, before any of them is removed:
+// `project:remove` deletes the project directory, and madock has nowhere to be
+// when its working directory is gone.
+func (i *installation) destroyProxy(from *project) {
+	if i.proxyDestroyed {
+		return
+	}
+	i.proxyDestroyed = true
+
+	if out, err := from.tryRun(3*time.Minute, "proxy:prune", "--force"); err != nil {
+		i.t.Logf("could not remove the proxy: %v\n%s", err, out)
+	}
 }
 
 // newProject prepares an empty project directory. Nothing is created inside
@@ -80,6 +133,7 @@ func (i *installation) project(name string) *project {
 
 	p := &project{
 		t:       t,
+		install: i,
 		name:    name,
 		execDir: i.dir,
 		runDir:  filepath.Join(i.root, name),
@@ -93,12 +147,18 @@ func (i *installation) project(name string) *project {
 	// and the next run fails for a reason that has nothing to do with the code.
 	t.Cleanup(p.destroy)
 
+	i.projects = append(i.projects, p)
+
 	return p
 }
 
 // run executes a madock command and fails the test if it does not succeed.
 func (p *project) run(timeout time.Duration, args ...string) string {
 	p.t.Helper()
+
+	if len(args) > 0 && args[0] == "start" {
+		p.install.resetProxy(p)
+	}
 
 	out, err := p.tryRun(timeout, args...)
 	if err != nil {
@@ -139,6 +199,7 @@ func (p *project) destroy() {
 	if !p.configured() {
 		return
 	}
+	p.install.destroyProxy(p)
 	if out, err := p.tryRun(5*time.Minute, "project:remove", "--force", "--name="+p.name); err != nil {
 		p.t.Logf("cleanup of %s did not complete: %v\n%s", p.name, err, out)
 	}

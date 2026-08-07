@@ -84,10 +84,19 @@ cmd_run() {
     # MADOCK_E2E_BIN is how the tests find the binary. The repository is mounted
     # into the guest at its host path, read-only, so the binary built a moment
     # ago is already visible there.
+    # Arguments reach the guest through `sh -c`, so they are quoted one by one
+    # here. Without it `-run "A|B"` arrives as two commands and the shell tries
+    # to execute the second one.
+    quoted=""
+    for arg in "$@"; do
+        escaped=$(printf '%s' "$arg" | sed "s/'/'\\\\''/g")
+        quoted="$quoted '$escaped'"
+    done
+
     limactl shell "$VM_NAME" -- env \
         MADOCK_E2E_BIN="$binary" \
         PATH="/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin" \
-        sh -c "cd '$repo_root' && go test -tags=e2e -count=1 -v -timeout=30m ./test/e2e/... $*"
+        sh -c "cd '$repo_root' && go test -tags=e2e -count=1 -v -timeout=30m ./test/e2e/...$quoted"
 }
 
 cmd_shell() {
