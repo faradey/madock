@@ -85,7 +85,10 @@ type ControllerGeneralDbExport struct {
 	DBServiceName string   `arg:"-s,--service" help:"DB service name. For example: db"`
 	IgnoreTable   []string `arg:"--ignore-table" help:"Ignore db table"`
 	User          string   `arg:"-u,--user" help:"Ignore db table"`
-	Json          bool     `arg:"-j,--json" help:"Output the created dump file path as JSON"`
+	// No Json field here: attr.Arguments already carries one. Declared twice,
+	// the parser fills the embedded copy while `args.Json` reads the shallower
+	// one, so the flag parsed cleanly and did nothing — db:export --json printed
+	// the human output and no JSON at all.
 }
 
 type ControllerGeneralDbImport struct {
