@@ -30,7 +30,7 @@ func TestSnapshotRestoresTheDatabase(t *testing.T) {
 	)
 	p.run(20*time.Minute, "start")
 
-	p.query("CREATE TABLE probe (note VARCHAR(32))")
+	p.freshTable("probe", "(note VARCHAR(32))")
 	p.query("INSERT INTO probe VALUES ('before-snapshot')")
 
 	p.run(10*time.Minute, "snapshot:create", "-n", "probe-point")

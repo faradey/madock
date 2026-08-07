@@ -27,7 +27,7 @@ func TestDumpRoundTrip(t *testing.T) {
 	)
 	p.run(20*time.Minute, "start")
 
-	p.query("CREATE TABLE probe (note VARCHAR(32))")
+	p.freshTable("probe", "(note VARCHAR(32))")
 	p.query("INSERT INTO probe VALUES ('before-dump')")
 
 	// --json exists so a script does not have to guess the name: the file

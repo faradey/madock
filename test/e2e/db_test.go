@@ -32,7 +32,7 @@ func TestDatabaseIsReachable(t *testing.T) {
 	// A round trip, because a SELECT of a constant would also succeed against
 	// the wrong database. Writing and then finding it again is what proves the
 	// two commands landed in the same place.
-	p.query("CREATE TABLE madock_e2e_probe (id INT)")
+	p.freshTable("madock_e2e_probe", "(id INT)")
 	tables := p.query("SHOW TABLES")
 	requireContains(t, tables, "madock_e2e_probe", "the table created a moment ago")
 

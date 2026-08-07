@@ -281,6 +281,19 @@ func (p *project) query(sql string) string {
 	return out
 }
 
+// freshTable creates a table, replacing one an earlier run may have left.
+//
+// Volumes are named after the project, so a run that was interrupted — killed
+// mid-test, or measuring a deliberately broken binary — leaves its database
+// behind under the name the next run will use. Without this the next run fails
+// with "table already exists", which says nothing about the code and everything
+// about last time.
+func (p *project) freshTable(name, definition string) {
+	p.t.Helper()
+	p.query("DROP TABLE IF EXISTS " + name)
+	p.query("CREATE TABLE " + name + " " + definition)
+}
+
 func requireContains(t *testing.T, haystack, needle, what string) {
 	t.Helper()
 	if !strings.Contains(haystack, needle) {
