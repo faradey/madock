@@ -53,11 +53,23 @@ func UpNginxWithBuild(projectName string, force bool) {
 	newHash := proxyConfHash()
 	hashCache := paths.CacheDir() + "/proxy-conf-hash"
 
+	ctxPath := paths.MakeDirsByPath(paths.CtxDir())
+
+	// The certificate covers every project at once, so adding one invalidates
+	// it. Until this was here it was only ever issued on the proxy's first
+	// start: the new project appeared in proxy.conf and was reloaded, and its
+	// HTTPS was served with a certificate that did not name it. Reissuing is a
+	// second or two and only happens when the host set actually changed.
+	certRefreshed := false
+	if !doNeedRunAruntime && !nginx.SslCertCoversCurrentHosts(ctxPath) {
+		nginx.GenerateSslCert(ctxPath, false)
+		certRefreshed = true
+	}
+
 	if doNeedRunAruntime {
 		// Proxy is not running (first start / proxy:rebuild did Down) → bring it up.
 		CreateProxyNetwork()
 
-		ctxPath := paths.MakeDirsByPath(paths.CtxDir())
 		if !paths.IsFileExist(confCache) {
 			nginx.GenerateSslCert(ctxPath, false)
 
@@ -82,7 +94,7 @@ func UpNginxWithBuild(projectName string, force bool) {
 			// proxy isn't actually running this config and the next run must retry.
 			writeProxyHash(hashCache, newHash)
 		}
-	} else if newHash != "" && newHash != readProxyHash(hashCache) {
+	} else if certRefreshed || (newHash != "" && newHash != readProxyHash(hashCache)) {
 		// Proxy is already running and its config changed (a project rebuild/clone
 		// regenerated proxy.conf) → reload in place so other projects stay up
 		// (zero-downtime). reload re-parses the full config: routing, upstreams

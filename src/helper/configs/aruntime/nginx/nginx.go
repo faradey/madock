@@ -292,37 +292,67 @@ func replacePortPlaceholders(str, projectName string) string {
 	return str
 }
 
+// sslAltNamesExt builds the openssl extension file that decides which hosts the
+// certificate covers. It is derived from every registered project, so it
+// changes whenever one is added, removed or has its hosts edited.
+func sslAltNamesExt() string {
+	projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.RuntimeProjects()))
+	var commands []string
+	i := 0
+	for _, name := range projectsNames {
+		if !paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
+			continue
+		}
+
+		projectConf := configs2.GetProjectConfig(name)
+		hosts := configs2.GetHosts(projectConf)
+		if len(hosts) == 0 {
+			continue
+		}
+
+		for _, hostAndStore := range hosts {
+			commands = append(commands, "DNS."+strconv.Itoa(i+2)+" = "+hostAndStore["name"])
+			i++
+		}
+	}
+
+	return "authorityKeyIdentifier=keyid,issuer\n" +
+		"basicConstraints=CA:FALSE\n" +
+		"keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\n" +
+		"subjectAltName = @alt_names\n" +
+		"\n" +
+		"[alt_names]\n" +
+		"DNS.1 = madocklocalkey\n" +
+		strings.Join(commands, "\n")
+}
+
+// SslCertCoversCurrentHosts reports whether the certificate on disk was issued
+// for the projects that exist now.
+//
+// It matters because the certificate is shared by every project, while it used
+// to be generated only when the proxy was started for the first time. A second
+// project therefore got its route into proxy.conf — which is regenerated and
+// reloaded on every start — and no certificate to go with it, so the browser
+// refused the site that madock had just reported as running.
+func SslCertCoversCurrentHosts(ctxPath string) bool {
+	generalConfig := configs2.GetGeneralConfig()
+	if val, ok := generalConfig["nginx/ssl/enabled"]; !ok || val != "true" {
+		// Nothing to cover. Answering "yes" keeps the caller from regenerating
+		// a certificate on every start of an installation that has SSL off.
+		return true
+	}
+
+	existing, err := os.ReadFile(ctxPath + "/madock.ca.ext")
+	if err != nil {
+		return false
+	}
+	return string(existing) == sslAltNamesExt()
+}
+
 func GenerateSslCert(ctxPath string, force bool) {
 	generalConfig := configs2.GetGeneralConfig()
 	if val, ok := generalConfig["nginx/ssl/enabled"]; force || (ok && val == "true") {
-		projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.RuntimeProjects()))
-		var commands []string
-		i := 0
-		for _, name := range projectsNames {
-			if !paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
-				continue
-			}
-
-			projectConf := configs2.GetProjectConfig(name)
-			hosts := configs2.GetHosts(projectConf)
-			if len(hosts) == 0 {
-				continue
-			}
-
-			for _, hostAndStore := range hosts {
-				commands = append(commands, "DNS."+strconv.Itoa(i+2)+" = "+hostAndStore["name"])
-				i++
-			}
-		}
-
-		extFileContent := "authorityKeyIdentifier=keyid,issuer\n" +
-			"basicConstraints=CA:FALSE\n" +
-			"keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\n" +
-			"subjectAltName = @alt_names\n" +
-			"\n" +
-			"[alt_names]\n" +
-			"DNS.1 = madocklocalkey\n" +
-			strings.Join(commands, "\n")
+		extFileContent := sslAltNamesExt()
 
 		err := os.WriteFile(ctxPath+"/madock.ca.ext", []byte(extFileContent), 0755)
 		if err != nil {

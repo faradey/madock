@@ -1,3 +1,13 @@
+**v3.8.34**
+
+Fixed:
+- **A second project got a route but no certificate.** The TLS certificate covers every project at once, and it was only ever issued when the proxy started for the first time. `proxy.conf` is regenerated and reloaded on every start, so a newly added project was routed immediately — and served over HTTPS with a certificate that did not name it, which every browser refuses. It is now reissued whenever the set of hosts changes, and the proxy reloads to pick it up. Found by the end-to-end suite on the first run that started two projects
+- **`setup -y` was not non-interactive.** On a machine without `certutil` the SSL step printed a question and waited on stdin, so `madock setup -y` in a provisioning script hung with nobody there to answer. The flag is read there now, and an unreadable stdin means "continue without SSL" rather than a fatal error — skipping SSL leaves a working project, installing packages nobody agreed to does not
+- **A debug log that could not be written ended the command.** It was placed next to the binary, ignoring `MADOCK_EXEC_DIR`, and a failed write called `log.Fatal` — so an installation directory without write permission turned every error into `open debug.log: read-only file system` and hid the error being reported. It now goes to the installation directory, and a failure warns once on stderr
+
+Added:
+- **An end-to-end suite** in `test/e2e`: it creates a project with the real binary, starts it, asks whether it is running, talks to its database, checks the proxy serves the right certificate, and takes it down. It runs in a Lima VM rather than on the developer's machine, because the proxy stack is named in the templates rather than derived — a test that starts a project operates on the same containers your own work uses. `./test/e2e/e2e.sh up`, then `run`. See [docs/testing.md](docs/testing.md)
+
 **v3.8.33**
 
 Fixed:

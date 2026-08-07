@@ -43,25 +43,49 @@ type project struct {
 	runDir string
 }
 
-// newProject prepares an empty project directory. Nothing is created inside
-// madock yet — that is what `setup` does, and it is usually the first thing a
-// test wants to assert about.
-func newProject(t *testing.T, name string) *project {
+// installation is a madock install directory that projects can share. Most
+// tests want one project and do not care; the proxy is the exception, because
+// it is shared by every project in an installation and that sharing is the
+// thing being tested.
+type installation struct {
+	t    *testing.T
+	root string
+	dir  string
+}
+
+func newInstallation(t *testing.T) *installation {
 	t.Helper()
 
 	binary()
 
 	root := t.TempDir()
+	i := &installation{t: t, root: root, dir: filepath.Join(root, "install")}
+	if err := os.MkdirAll(i.dir, 0o755); err != nil {
+		t.Fatalf("creating %s: %v", i.dir, err)
+	}
+	return i
+}
+
+// newProject prepares an empty project directory. Nothing is created inside
+// madock yet — that is what `setup` does, and it is usually the first thing a
+// test wants to assert about.
+func newProject(t *testing.T, name string) *project {
+	t.Helper()
+	return newInstallation(t).project(name)
+}
+
+func (i *installation) project(name string) *project {
+	t := i.t
+	t.Helper()
+
 	p := &project{
 		t:       t,
 		name:    name,
-		execDir: filepath.Join(root, "install"),
-		runDir:  filepath.Join(root, name),
+		execDir: i.dir,
+		runDir:  filepath.Join(i.root, name),
 	}
-	for _, dir := range []string{p.execDir, p.runDir} {
-		if err := os.MkdirAll(dir, 0o755); err != nil {
-			t.Fatalf("creating %s: %v", dir, err)
-		}
+	if err := os.MkdirAll(p.runDir, 0o755); err != nil {
+		t.Fatalf("creating %s: %v", p.runDir, err)
 	}
 
 	// Registered before setup runs, so a test that fails halfway still takes
