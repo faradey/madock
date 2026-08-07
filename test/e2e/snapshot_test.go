@@ -44,14 +44,33 @@ func TestSnapshotRestoresTheDatabase(t *testing.T) {
 	requireContains(t, both, "before-snapshot", "the row written before the snapshot")
 	requireContains(t, both, "after-snapshot", "the row written after it")
 
-	// snapshot:restore has no flags at all: it prints a numbered list and reads
-	// a choice from stdin. With one snapshot the answer is 1. It ends with a
-	// rebuild, so it takes a while.
-	p.runWithInput(20*time.Minute, "1\n", "snapshot:restore")
+	// A name that does not exist must stop rather than fall back to the prompt,
+	// which would hang a script, or pick something else, which would restore the
+	// wrong data.
+	out, err := p.tryRun(2*time.Minute, "snapshot:restore", "--name", "no-such-snapshot")
+	if err == nil {
+		t.Errorf("restoring a snapshot that does not exist succeeded:\n%s", out)
+	}
+	requireContains(t, out, "probe-point", "the error should list the snapshots that do exist")
+
+	// Restoring by name. It ends with a rebuild, so it takes a while.
+	p.run(20*time.Minute, "snapshot:restore", "--name", "probe-point")
 
 	restored := p.query("SELECT note FROM probe")
 	requireContains(t, restored, "before-snapshot", "the row the snapshot contained")
 	if strings.Contains(restored, "after-snapshot") {
 		t.Errorf("the row written after the snapshot survived the restore:\n%s", restored)
+	}
+
+	// The other branch: no name, a numbered list, a choice on stdin. This is
+	// what a person does, and it is the older of the two paths — worth keeping
+	// covered now that a second one exists beside it.
+	p.query("INSERT INTO probe VALUES ('after-restore')")
+	p.runWithInput(20*time.Minute, "1\n", "snapshot:restore")
+
+	again := p.query("SELECT note FROM probe")
+	requireContains(t, again, "before-snapshot", "the row the snapshot contained")
+	if strings.Contains(again, "after-restore") {
+		t.Errorf("the interactive restore did not roll the database back:\n%s", again)
 	}
 }
