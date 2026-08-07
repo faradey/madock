@@ -12,9 +12,20 @@ import (
 	"testing"
 )
 
+// Run these with -count=1, always:
+//
+//	go test -count=1 ./src/helper/configs/aruntime/project/...
+//
+// Go caches a package's test result until one of its .go files changes. These
+// tests read their input from docker/ — plain data files the cache knows
+// nothing about — so editing a template and re-running reports `ok (cached)`
+// and proves nothing. Measured: a deliberately reversed dev/start preference
+// passed a cached run and failed immediately with -count=1. The pre-push hook
+// passes the flag for this reason.
+//
 // updateGolden rewrites the expected files instead of comparing against them:
 //
-//	go test ./src/helper/configs/aruntime/project/... -run Golden -update
+//	go test -count=1 ./src/helper/configs/aruntime/project/... -run Golden -update
 //
 // Review the diff it produces like any other change. A golden file that was
 // updated without being read is worse than no test — it records whatever the

@@ -149,6 +149,10 @@ arrive, so watchers and rebuilds behave differently from everywhere else.
 
 ### Option B — Build from source
 
+> **Working on madock itself?** Turn on the repository's git hooks once:
+> `git config core.hooksPath .githooks`. Before every push they build the code
+> and run the test suite — about two seconds, no Docker needed.
+
 Follow the installation steps for your system.
 <details>
 <summary>Mac</summary>
