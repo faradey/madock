@@ -60,7 +60,7 @@ This project is written in Golang and distributed under the MIT License.
 ## Tested on
 * Linux (Ubuntu 20.04)
 * macOS (Monterey, Sonoma)
-* Windows (10, 11)
+* Windows (10, 11) — via WSL2
 
 ## Video
 
@@ -85,7 +85,7 @@ Each release ships a single self-contained binary on the [Releases page](https:/
 | Mac (Intel) | `madock-darwin-amd64` |
 | Linux x86_64 | `madock-linux-amd64` |
 | Linux ARM | `madock-linux-arm64` |
-| Windows | `madock-windows-amd64.exe` |
+| Windows (via WSL2) | `madock-linux-amd64` |
 
 > **Important:** the binary keeps its working data (`docker/`, `scripts/`, `projects/`, `aruntime/`) **next to itself** — these are auto-extracted on first run. Put the binary in a **dedicated, writable folder** (e.g. `~/.madock/`) and add it to your `PATH` via a symlink. Do **not** drop the real file straight into a system directory like `/opt/homebrew/bin` or `/usr/local/bin` — only the symlink goes there.
 
@@ -130,10 +130,21 @@ madock                                                   # first run auto-extrac
 <details>
 <summary>Windows — install the downloaded binary</summary>
 
-madock runs on Windows with [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/). Two options:
+**madock on Windows runs inside WSL2.** Install
+[WSL2](https://learn.microsoft.com/windows/wsl/install) and
+[Docker Desktop](https://docs.docker.com/desktop/install/windows-install/) with the
+WSL2 backend, then use the Linux binary `madock-linux-amd64` exactly as in the Linux
+instructions above — inside WSL2 madock is a Linux program and behaves like one.
 
-- **Native Windows:** download `madock-windows-amd64.exe`, rename it to `madock.exe`, and place it in a **dedicated writable folder** (e.g. `C:\madock\`). Add that folder to your `PATH`. On first run it auto-extracts its `docker\` and `scripts\` assets there.
-- **WSL2 (Linux environment):** install [WSL2](https://learn.microsoft.com/windows/wsl/install), then use the Linux binary `madock-linux-amd64` exactly as in the Linux instructions above.
+Keep your projects on the **Linux side** of WSL2 (`~/projects`, not `/mnt/c/...`).
+Across the `/mnt/c` boundary file access is slow and file-change events do not
+arrive, so watchers and rebuilds behave differently from everywhere else.
+
+> A `madock-windows-amd64.exe` is published with each release, but running madock
+> natively on Windows is **not supported and not tested**: it creates symlinks,
+> which Windows permits only in Developer Mode or as administrator, and it renders
+> the container user from the host account id, which on Windows is a SID rather
+> than a number. Use WSL2.
 </details>
 
 ### Option B — Build from source

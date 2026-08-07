@@ -38,8 +38,8 @@ sudo nano /etc/hosts
 <details>
 <summary><b>Windows</b></summary>
 
-- Docker Desktop for Windows installed and running
-- WSL2 enabled (recommended for better performance)
+- Docker Desktop for Windows installed and running, with the WSL2 backend
+- WSL2 — **required**: madock on Windows runs inside it, as the Linux binary
 - Git installed
 - madock installed and available in PATH
 
@@ -237,9 +237,13 @@ chmod -R 775 var public files
 
 Run from WSL2 terminal:
 
+Keep the project on the Linux side of WSL2. Across the `/mnt/c` boundary file
+access is slow and file-change events do not arrive, so watchers and rebuilds
+behave differently from everywhere else.
+
 ```bash
 # Navigate to project folder
-cd /mnt/c/path/to/project
+cd ~/projects/your-project
 
 # Fix ownership
 sudo chown -R $(whoami):$(whoami) var public files
