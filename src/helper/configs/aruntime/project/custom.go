@@ -15,7 +15,18 @@ func MakeConfCustom(projectName string) {
 
 	MakeMainContainerDockerfile(projectName)
 
-	if language == "php" {
+	// The nodejs service is rendered into docker-compose.yml whenever
+	// nodejs/enabled is set, whatever the language — but its Dockerfile was
+	// only written for php projects. A Python, Go, Ruby or language-less
+	// project with Node enabled got a compose service pointing at a file
+	// nobody generated: missing on a fresh project, and worse on an old one,
+	// where a copy left over from an earlier madock is silently built instead.
+	//
+	// Not when the language is nodejs. There the node container *is* the main
+	// service and MakeMainContainerDockerfile has already written this same
+	// file from the language template, which the service template does not
+	// match — it has no cron. Writing it again here would take that away.
+	if language == "php" || (projectConf["nodejs/enabled"] == "true" && language != "nodejs") {
 		MakeNodeJsDockerfile(projectName)
 	}
 

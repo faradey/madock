@@ -1,3 +1,8 @@
+**v3.8.33**
+
+Fixed:
+- **On the `custom` platform the Node container's Dockerfile was generated only for PHP projects.** The `nodejs` service is rendered into docker-compose.yml whenever `nodejs/enabled` is set, whatever the language — so a Python, Go, Ruby or language-less project with Node enabled had a compose service pointing at a file nobody wrote: missing on a fresh project, and worse on an older one, where a copy left over from an earlier madock was silently built instead. It is now generated whenever the service exists, except when the language is `nodejs` — there the Node container *is* the main service, its Dockerfile already comes from the language template, and that template carries cron where the service one does not
+
 **v3.8.32**
 
 Added:
