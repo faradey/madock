@@ -23,8 +23,16 @@ services:
   mailcatcher:
     image: axllent/mailpit:latest
     ports:
+      # SMTP. Published on every interface on purpose: the php containers reach
+      # it through host.docker.internal, which resolves to the host gateway
+      # rather than to loopback, so a loopback publish would take mail away from
+      # the thing that sends it. What arrives here is stored and never
+      # forwarded, so an open port means somebody can fill a developer's inbox,
+      # not relay through it.
       - 1025:1025
-      - {{{nginx/interface_ip}}}8025:8025
+      # The web interface, which is the one that matters: no authentication, and
+      # it shows every message from every project. Loopback by default.
+      - {{{proxy/mailpit/interface_ip}}}8025:8025
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1

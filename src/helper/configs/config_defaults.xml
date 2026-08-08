@@ -50,6 +50,19 @@
                 <ioncube>
                     <enabled>false</enabled>
                 </ioncube>
+                <!-- Where PHP's mail() hands the message. The defaults point at
+                     mailpit, which is where a developer wants it. On a server
+                     that actually sends mail, point it at the relay on the host
+                     instead (port 25 for a local postfix), or turn it off and
+                     let the application speak SMTP itself. Editing php.ini
+                     inside the container is not an option that survives: the
+                     image is rebuilt from a template and the edit goes with
+                     it. -->
+                <sendmail>
+                    <enabled>true</enabled>
+                    <host>host.docker.internal</host>
+                    <port>1025</port>
+                </sendmail>
                 <nodejs>
                     <enabled>false</enabled>
                 </nodejs>
@@ -291,6 +304,13 @@
                 </rate_limit>
                 <mailpit>
                     <enabled>true</enabled>
+                    <!-- Which address the web interface is published on. It has
+                         no authentication and shows every message every project
+                         has sent, so the default is loopback: on a laptop the
+                         browser is on the same machine, and on a server this is
+                         reached through an ssh tunnel. Empty means all
+                         interfaces, which on a server means anyone. -->
+                    <interface_ip>127.0.0.1:</interface_ip>
                 </mailpit>
             </proxy>
             <container_name_prefix>madock_</container_name_prefix>

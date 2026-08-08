@@ -154,10 +154,6 @@ RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 259<GID>00/g
 # this file and the edit goes with it, which is exactly how a working mail
 # configuration disappears at the next rebuild.
 
-RUN sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/8.4/fpm/php.ini \
-    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/8.4/cli/php.ini
-
-
 WORKDIR /var/www
 
 RUN apt-get install -y cron

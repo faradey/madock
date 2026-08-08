@@ -80,6 +80,16 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// Mail turned off. sendmail_path used to be written whatever the
+			// configuration said, so with mailpit disabled every mail() call
+			// went to a port nobody was listening on and failed silently. The
+			// generated Dockerfile must simply not touch it.
+			name: "magento2-no-sendmail",
+			overrides: map[string]string{
+				"php/sendmail/enabled": "false",
+			},
+		},
+		{
 			// The sandbox shape — no language at all, so the main service is
 			// "app" and there is no PHP container.
 			name: "custom-none",

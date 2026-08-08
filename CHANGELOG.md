@@ -1,3 +1,9 @@
+**v3.8.36**
+
+Fixed:
+- **`sendmail_path` was written into php.ini whatever the configuration said**, hardcoded to mailpit's port. With mailpit disabled every `mail()` call handed the message to msmtp, which connected to a port nobody was listening on: mail did not arrive and nothing said so, because the setting looked correct and only the port was wrong. It is now written only when `php/sendmail/enabled` is on, and `php/sendmail/host` and `php/sendmail/port` point it somewhere real — port 25 on the host for a local postfix, for instance. Editing php.ini inside a running container was never an alternative: the image is rebuilt from a template and the edit goes with it, which is how a working mail configuration disappears at the next rebuild
+- **Mailpit's web interface was published on every interface.** It has no authentication and shows every message every project has sent, so on a server that is everyone's mail readable by anyone who can reach the port. It now binds to loopback, and `proxy/mailpit/interface_ip` opens it deliberately for those who want it open. The SMTP port stays on every interface and has to: the php containers reach it through `host.docker.internal`, which resolves to the host gateway rather than to loopback. What arrives there is stored and never forwarded, so an open SMTP port means somebody can fill a developer's inbox, not relay through it
+
 **v3.8.35**
 
 Fixed:
