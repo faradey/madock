@@ -244,6 +244,48 @@ func Kill(projectName string) {
 	}
 }
 
+// prepareHomeDirs makes sure the host directories a project links into exist,
+// and returns the home directory holding them.
+//
+// A project's `composer` and `ssh` entries under aruntime are symlinks to
+// ~/.composer and ~/.ssh, and every application container bind-mounts
+// ~/.ssh/known_hosts. A machine that has never used ssh — a fresh server, a CI
+// runner, a container — has none of that, and the symlink then dangles: Docker
+// finds something at the path, cannot make a directory of it, and the stack
+// dies with "mkdir .../ssh: file exists", which says nothing about ssh. So
+// create them, the way ~/.composer already was.
+func prepareHomeDirs() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	if !paths.IsFileExist(home + "/.composer") {
+		paths.MakeDirsByPath(home + "/.composer")
+	}
+
+	if !paths.IsFileExist(home + "/.ssh") {
+		if err = os.Chmod(paths.MakeDirsByPath(home+"/.ssh"), 0700); err != nil {
+			return "", err
+		}
+	}
+
+	// The mount is the file, not the directory. Left absent, Docker creates a
+	// *directory* named known_hosts inside the container's .ssh, and ssh then
+	// fails on every host key with an error about a directory.
+	if !paths.IsFileExist(home + "/.ssh/known_hosts") {
+		file, createErr := os.OpenFile(home+"/.ssh/known_hosts", os.O_CREATE|os.O_WRONLY, 0600)
+		if createErr != nil {
+			return "", createErr
+		}
+		if err = file.Close(); err != nil {
+			return "", err
+		}
+	}
+
+	return home, nil
+}
+
 // UpProjectWithBuild starts project containers with build
 func UpProjectWithBuild(projectName string, withChown bool) {
 	var err error
@@ -255,13 +297,9 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 		}
 	}
 
-	composerGlobalDir, err := os.UserHomeDir()
+	composerGlobalDir, err := prepareHomeDirs()
 	if err != nil {
 		logger.Fatal(err)
-	} else {
-		if !paths.IsFileExist(composerGlobalDir + "/.composer") {
-			paths.MakeDirsByPath(composerGlobalDir + "/.composer")
-		}
 	}
 
 	pp := paths.NewProjectPaths(projectName)
