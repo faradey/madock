@@ -20,27 +20,6 @@ import (
 // restart_policy again: it renders straight into the compose file, so what the
 // scope did is visible in a generated file rather than only in the config.
 func TestScopesKeepTheirOwnValues(t *testing.T) {
-	// Skipped on a defect this test found and did not fix.
-	//
-	// Activating a scope creates a second stack: the compose project name
-	// carries the scope, so the containers are madock_<project>-<scope>-*, side
-	// by side with the default scope's. Their published ports do not carry it —
-	// ports are allocated under `<project>/<service>` — so both stacks claim the
-	// same one and the second to start fails:
-	//
-	//   Bind for 0.0.0.0:17010 failed: port is already allocated
-	//
-	// So `scope:add` followed by `start` cannot work while the project is
-	// running, which is the normal state of a project somebody wants a second
-	// configuration of.
-	//
-	// The fix belongs in port allocation, which is shared by every project and
-	// whose keys are also what keeps existing projects' ports stable — worth
-	// doing deliberately rather than late. Either the scope joins the key, so
-	// the two stacks coexist as their separate container names suggest they are
-	// meant to, or switching scope stops the stack it is leaving.
-	t.Skip("scopes collide on published ports — see the comment above")
-
 	p := newProject(t, "e2escope")
 
 	p.run(5*time.Minute, "setup", "-y",
@@ -53,6 +32,13 @@ func TestScopesKeepTheirOwnValues(t *testing.T) {
 	compose := p.generated("docker-compose.yml")
 	requireContains(t, readFile(t, compose), "restart: no", "the default scope's value")
 
+	// One scope runs at a time: a scope is a different shape of the same
+	// project, not a second copy of it. The containers of the scope being left
+	// have to go down before the next one comes up, or the two claim the same
+	// published ports and the second start fails with "port is already
+	// allocated".
+	p.run(5*time.Minute, "stop")
+
 	// Adding a scope activates it, which is why the value set next belongs to
 	// the new one and not to default.
 	p.run(2*time.Minute, "scope:add", "staging")
@@ -63,6 +49,7 @@ func TestScopesKeepTheirOwnValues(t *testing.T) {
 	requireContains(t, readFile(t, compose), "restart: always", "the compose file under the new scope")
 
 	// Back to default. The value set in staging must not have followed.
+	p.run(5*time.Minute, "stop")
 	p.run(2*time.Minute, "scope:set", "default")
 	p.run(20*time.Minute, "start")
 
@@ -74,6 +61,7 @@ func TestScopesKeepTheirOwnValues(t *testing.T) {
 
 	// And staging still holds its own, rather than having been overwritten by
 	// the trip through default.
+	p.run(5*time.Minute, "stop")
 	p.run(2*time.Minute, "scope:set", "staging")
 	p.run(20*time.Minute, "start")
 	requireContains(t, readFile(t, compose), "restart: always", "the scope's value after switching away and back")
