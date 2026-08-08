@@ -65,6 +65,31 @@ func Execute() {
 		// Done
 		elapsed := time.Since(startTime).Round(time.Second)
 		fmt.Println("")
+		// Same honesty as `start`: creating containers is not the same as having
+		// them run, and a rebuild is the moment a newly enabled service shows
+		// whether it can. Seen with an image built for another architecture —
+		// the container was created, started, died on exec, and the rebuild
+		// reported success with nothing to suggest looking further.
+		// A moment to settle first. A container that cannot exec its entrypoint
+		// is reported as "Started" and is gone a breath later, so asking
+		// immediately after `up` sees it running and reports success — which is
+		// exactly the answer this check exists to stop giving. Two seconds
+		// against a rebuild that takes tens of them.
+		time.Sleep(2 * time.Second)
+
+		if dead := docker.NotRunning(projectName); len(dead) > 0 {
+			fmtc.WarningIconLn(fmt.Sprintf("Rebuild completed in %s, but some services are not running:", elapsed))
+			for _, service := range dead {
+				line := "  " + service.Service + " — " + service.State
+				if service.ExitCode != 0 {
+					line += fmt.Sprintf(" (exit %d)", service.ExitCode)
+				}
+				fmtc.WarningLn(line)
+			}
+			fmtc.ToDoLn("madock logs -s <service>")
+			return
+		}
+
 		fmtc.SuccessIconLn(fmt.Sprintf("Rebuild completed in %s", elapsed))
 	} else {
 		fmtc.WarningIconLn("Set up the project")

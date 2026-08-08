@@ -1,3 +1,8 @@
+**v3.8.43**
+
+Fixed:
+- **`rebuild` reported success while a service it had just started was already dead.** `start` has said this for a while; rebuild did not, and rebuild is what runs when a service is enabled — the moment a new service first shows whether it can run at all. Found with an image published only for amd64: on an arm64 host the container was created, started, and killed on exec, and the rebuild finished with a tick. It now lists services that are not running, with their exit code, and points at `madock logs`. The check waits two seconds first: a container that cannot exec its entrypoint is reported as started and is gone a breath later, so asking immediately sees it running and gives exactly the answer the check exists to prevent
+
 **v3.8.42**
 
 Fixed:
