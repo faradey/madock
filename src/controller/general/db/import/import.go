@@ -198,7 +198,8 @@ func importMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbImp
 	mysqlCommandName := target.MySQLClient()
 
 	runQuery := func(query string) error {
-		c, e := docker.PrepareContainerExec(target.Container, user, false, mysqlCommandName, "-u", "root", "-p"+target.RootPassword, "-h", target.Host, "-f", "--execute", query, target.Database)
+		login, loginPassword := target.Login()
+		c, e := docker.PrepareContainerExec(target.Container, user, false, mysqlCommandName, "-u", login, "-p"+loginPassword, "-h", target.Host, "-f", "--execute", query, target.Database)
 		if e != nil {
 			return e
 		}
@@ -220,7 +221,8 @@ func importMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbImp
 		if args.Force || forceOverride {
 			baseArgs = append(baseArgs, "-f")
 		}
-		baseArgs = append(baseArgs, "-u", "root", "-p"+target.RootPassword, "-h", target.Host, "--max-allowed-packet", "256M", "--init-command", "SET FOREIGN_KEY_CHECKS=0", target.Database)
+		importLogin, importPassword := target.Login()
+		baseArgs = append(baseArgs, "-u", importLogin, "-p"+importPassword, "-h", target.Host, "--max-allowed-packet", "256M", "--init-command", "SET FOREIGN_KEY_CHECKS=0", target.Database)
 		var cmd *exec.Cmd
 		cmd, _ = docker.PrepareContainerExec(target.Container, user, false, baseArgs...)
 

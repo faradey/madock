@@ -124,6 +124,25 @@ func Local(projectConf map[string]string, projectName, service string) Target {
 
 // MySQLClient returns the interactive client binary name. MariaDB renamed its
 // binaries in 10.5 and keeps the mysql* names only as deprecated symlinks.
+// Login returns the account the client should authenticate as.
+//
+// For a project's own database that is root: export has to lock tables and
+// import has to create them, and the application account is not guaranteed to
+// be allowed either.
+//
+// For a shared database it must not be. The client runs in the provider's
+// container but connects over the network from the consumer's, and MySQL grants
+// root to localhost only — so a root login from another host is refused before
+// any password is checked, with "Host '172.x.x.x' is not allowed to connect".
+// The consumer's own account is the one `shared-db:connect` created and granted,
+// and it is reachable from anywhere by design.
+func (t Target) Login() (user, password string) {
+	if t.Shared {
+		return t.User, t.Password
+	}
+	return "root", t.RootPassword
+}
+
 func (t Target) MySQLClient() string {
 	return t.clientName("mariadb", "mysql")
 }

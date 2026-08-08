@@ -112,7 +112,19 @@ func exportMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbExp
 	// set -o pipefail so a mysqldump/mariadb-dump failure (e.g. unknown database,
 	// auth error) propagates instead of being masked by the trailing `| sed`,
 	// which would otherwise report success while writing an empty dump.
-	cmd, prepErr := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", "set -o pipefail; "+target.MySQLDump()+" -u root -p"+target.RootPassword+" -v -h "+target.Host+ignoreTablesStr+" "+target.Database+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
+	login, loginPassword := target.Login()
+
+	// A consumer of a shared database is granted SELECT, INSERT, UPDATE and
+	// DELETE — not LOCK TABLES, which mysqldump takes by default. Dumping in a
+	// single transaction needs no locks at all and is the better choice on
+	// InnoDB anyway: it reads a consistent snapshot without stopping anyone
+	// else's writes, which matters more when the server is shared.
+	consistency := ""
+	if target.Shared {
+		consistency = " --single-transaction"
+	}
+
+	cmd, prepErr := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", "set -o pipefail; "+target.MySQLDump()+" -u "+login+" -p"+loginPassword+consistency+" -v -h "+target.Host+ignoreTablesStr+" "+target.Database+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}

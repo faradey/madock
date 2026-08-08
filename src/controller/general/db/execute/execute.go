@@ -49,7 +49,8 @@ func executeMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbEx
 		user = args.User
 	}
 
-	cmd, err := docker.PrepareContainerExec(target.Container, user, false, target.MySQLClient(), "-u", "root", "-p"+target.RootPassword, "-h", target.Host, target.Database, "-e", args.Query)
+	login, loginPassword := target.Login()
+	cmd, err := docker.PrepareContainerExec(target.Container, user, false, target.MySQLClient(), "-u", login, "-p"+loginPassword, "-h", target.Host, target.Database, "-e", args.Query)
 	if err != nil {
 		logger.Fatal(err)
 	}

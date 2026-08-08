@@ -1,3 +1,8 @@
+**v3.8.39**
+
+Fixed:
+- **Every `db:*` command authenticated as root, which a shared database refuses.** For a project's own server that is right — the client runs inside the container, root is reachable on localhost, and export needs to lock tables while import needs to create them. For a database belonging to another project the client connects over the network from a different container, and MySQL grants root to localhost only: the refusal arrives before any password is checked, as `Host '172.21.0.2' is not allowed to connect`, which reads like a network fault and is an account one. `db:execute`, `db:export` and `db:import` now use the account `shared-db:connect` created and granted. Export adds `--single-transaction` for a shared database, because a consumer is not granted LOCK TABLES and a snapshot read is the better choice on a server other projects are using anyway
+
 **v3.8.38**
 
 Added:
