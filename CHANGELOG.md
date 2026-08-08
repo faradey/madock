@@ -1,3 +1,15 @@
+**v3.8.41**
+
+Fixed:
+- **A removed project stayed in the proxy.** Its server block, pointing at a container that no longer existed, survived until something else happened to regenerate the file. Removal is the one moment routing should change: a stopped project keeps its block on purpose, because it is coming back and rewriting the configuration every other project is served through would be churn for nothing. The regeneration runs on behalf of a project that still exists — naming the removed one brings its registry entry and its port reservation straight back, which is how both of those were found
+- **`project:clone` could not copy a running database.** It read the source's live containers deliberately, so as not to interrupt it, and the check added for snapshots then refused the torn result — so clone stopped working for any project with a database, which is every project worth cloning. The source now stands still for the copy and is read from the helper container, the same trade `snapshot:create` makes
+- **`--domain-suffix` documented a form that cannot work.** The suffix usually starts with a dash, and `-s -update` is read as two flags: "missing value for -s". The help now shows `-s=-update`
+
+**v3.8.40**
+
+Fixed:
+- **`status` reported a stack with exactly one service as empty.** Compose prints one JSON object per line when asked for a stack's status, so the count decides the shape of its output, and the parser only wrapped it into an array when it could see a `}{` boundary between two of them. With one service the bare object failed to decode into a list — and the error was discarded, so the answer was "No services found" rather than a complaint. Reported from a server where disabling mailpit left the proxy with nginx alone: `status` called the proxy empty while every site it was serving stayed up. The parser now handles none, one, many and an already-formed array, and a decode failure is said out loud instead of being turned into "nothing is running"
+
 **v3.8.39**
 
 Fixed:

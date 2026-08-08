@@ -106,6 +106,39 @@ var liveVolumePaths = volumePaths{
 
 // isRunning reports whether the project has containers up right now, so a
 // snapshot can put them back the way it found them.
+// CopyStandingStill writes the project's databases and files into dest with the
+// project stopped, then starts it again if it was running.
+//
+// It exists because project:clone needs precisely what snapshot:create does, and
+// the first attempt to give it that stopped the containers and then tried to
+// read from them — "container is not running", reported as a torn copy. The
+// data is read from the helper container that mounts the same volumes, which is
+// the only place it can be read from while the servers are down.
+func CopyStandingStill(projectConf map[string]string, projectName, dest string) {
+	wasRunning := isRunning(projectName)
+	if wasRunning {
+		fmtc.TitleLn("Stopping the source for a consistent copy...")
+		if err := docker.Stop(projectName); err != nil {
+			logger.Fatal(err)
+		}
+	}
+
+	docker.UpSnapshot(projectName)
+	container := docker.GetContainerName(projectConf, projectName, "snapshot")
+
+	archiveDatabases(projectConf, projectName, container, snapshotVolumePaths, dest)
+	archiveFiles(container, snapshotVolumePaths.files, dest)
+
+	docker.StopSnapshot(projectName)
+
+	if wasRunning {
+		fmtc.TitleLn("Starting the source again...")
+		if err := docker.Start(projectName); err != nil {
+			logger.Fatal(err)
+		}
+	}
+}
+
 func isRunning(projectName string) bool {
 	for _, active := range paths.GetActiveProjects() {
 		if strings.EqualFold(active, projectName) {

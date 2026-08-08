@@ -82,8 +82,16 @@ func Execute() {
 		configs.SetParam(cloneName, key, applyDomainSuffix(val, domainSuffix), projectConf["activeScope"], "")
 	}
 	cloneProjectConf := configs.GetProjectConfig(cloneName)
-	create.GetDB(projectConf, projectName, dest)
-	create.GetFiles(projectConf, projectName, dest)
+
+	// The source stands still while it is copied.
+	//
+	// It used to be copied live, on the grounds that cloning should not
+	// interrupt whatever the source is doing. That cannot hold: a running InnoDB
+	// writes to its log during any copy, so the archive came out torn — and once
+	// the copy was checked for exactly that, clone stopped working at all for
+	// any project with a database, which is every project worth cloning.
+	create.CopyStandingStill(projectConf, projectName, dest)
+
 	containerName := docker.GetContainerName(cloneProjectConf, cloneName, "snapshot")
 	if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
 		err := os.Remove(paths.CacheDir() + "/conf-cache")

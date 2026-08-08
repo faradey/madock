@@ -10,6 +10,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/configs/aruntime/nginx"
 	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
@@ -103,7 +104,32 @@ func removeProject(projectName string) {
 		logger.Fatal(err)
 	}
 
-	// Remove port allocations for this project
+	// Take the project out of the shared proxy.
+	//
+	// Removal is the one moment this belongs to. A stopped project keeps its
+	// routing on purpose — it is coming back, and rewriting every other
+	// project's configuration for a pause would be churn and risk for nothing.
+	// A removed project is not coming back, and its server block points at a
+	// container that no longer exists.
+	//
+	// Nothing did this before, so the block survived until something else
+	// happened to regenerate the file.
+	// Regenerated on behalf of a project that still exists, never the removed
+	// one: MakeConf recreates directories and allocates ports for the name it is
+	// given, so naming the corpse brings its registry entry and its port
+	// reservation straight back.
+	remaining := paths.GetActiveProjects()
+	if len(remaining) > 0 {
+		nginx.MakeConf(remaining[0])
+		if err := docker.ReloadNginx(); err != nil {
+			logger.Println(err)
+		}
+	}
+
+	// Ports come last, and the order is not cosmetic: generating the proxy
+	// configuration allocates a port for the project it is given, so releasing
+	// them first only meant handing them straight back. The removed project then
+	// kept a reservation no other project could use.
 	ports.GetRegistry().RemoveProject(projectName)
 
 	fmtc.SuccessLn("Project was removed successfully")

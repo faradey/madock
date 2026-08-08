@@ -169,8 +169,11 @@ type ControllerGeneralRemoteSyncMedia struct {
 
 type ControllerGeneralProjectClone struct {
 	attr.Arguments
-	Name         string `arg:"-n,--name,required" help:"Name of the project"`
-	DomainSuffix string `arg:"-s,--domain-suffix,required" help:"Suffix appended to each host before the TLD dot (e.g. -update turns shop.test into shop-update.test). Required to avoid domain collisions with the source project"`
+	Name string `arg:"-n,--name,required" help:"Name of the project"`
+	// The value usually starts with a dash, which a separate argument cannot
+	// express: `-s -update` is read as two flags and fails with "missing value
+	// for -s". The help says `=` for that reason.
+	DomainSuffix string `arg:"-s,--domain-suffix,required" help:"Suffix appended to each host before the TLD dot, written with an equals sign: -s=-update turns shop.test into shop-update.test. Required to avoid domain collisions with the source project"`
 }
 
 type ControllerGeneralStatus struct {
