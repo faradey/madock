@@ -1,3 +1,8 @@
+**v3.8.44**
+
+Fixed:
+- **`status` answered the cron question from the configuration.** It reported "Cron is running" whenever `cron/enabled` was set, which says what was asked for and not what happened — and starting cron is a command executed inside the container, which can fail. A project could have nothing on a schedule and a status that said otherwise, with the consequence surfacing whenever somebody noticed a mail or a reindex missing. It now asks the container. `--json` gains `cron_running` beside `cron_enabled`, because the two are different questions and their disagreement is the interesting case; the text says "Cron is enabled but not running" when they disagree
+
 **v3.8.43**
 
 Fixed:

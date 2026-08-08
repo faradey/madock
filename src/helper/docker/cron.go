@@ -30,6 +30,28 @@ func containerExecSilent(container, user string, command ...string) (string, err
 }
 
 // CronExecute starts or stops cron service in the container
+// CronRunning asks the container whether cron is actually running.
+//
+// `status` used to answer this from the configuration — cron/enabled — which
+// says what was asked for and not what happened. Starting cron is a command
+// executed inside the container and it can fail; the setting would still read
+// true, and status would report a scheduler that is not there. Anything that
+// runs on a schedule then silently does not.
+//
+// A project that is down answers false, which is correct rather than an error:
+// there is no cron running in a container that does not exist.
+func CronRunning(projectName string) bool {
+	projectConf := configs2.GetProjectConfig(projectName)
+	service := resolveMainService(projectConf)
+	service, userOS, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
+
+	cmd, err := PrepareContainerExec(GetContainerName(projectConf, projectName, service), userOS, false, "service", "cron", "status")
+	if err != nil {
+		return false
+	}
+	return cmd.Run() == nil
+}
+
 func CronExecute(projectName string, flag, manual bool) {
 	projectConf := configs2.GetProjectConfig(projectName)
 	service := resolveMainService(projectConf)

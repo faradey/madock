@@ -12,6 +12,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/cli/output"
 	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
 )
@@ -48,6 +49,7 @@ type ServiceStatus struct {
 
 type ToolsStatus struct {
 	CronEnabled     bool `json:"cron_enabled"`
+	CronRunning     bool `json:"cron_running"`
 	DebuggerEnabled bool `json:"debugger_enabled"`
 }
 
@@ -66,7 +68,13 @@ func Execute() {
 	// Get tools status
 	projectConf := configs.GetCurrentProjectConfig()
 	toolsStatus := ToolsStatus{
+		// Two different questions, and they can disagree. cron_enabled is what
+		// the configuration asks for; cron_running is what the container has.
+		// Starting cron is a command that can fail, and reporting the setting as
+		// if it were the outcome is how a project ends up with nothing on a
+		// schedule and a status that says otherwise.
 		CronEnabled:     strings.ToLower(projectConf["cron/enabled"]) == "true",
+		CronRunning:     docker.CronRunning(projectName),
 		DebuggerEnabled: strings.ToLower(projectConf["php/xdebug/enabled"]) == "true",
 	}
 
@@ -110,8 +118,10 @@ func Execute() {
 	}
 
 	fmtc.TitleLn("Tools:")
-	if toolsStatus.CronEnabled {
+	if toolsStatus.CronRunning {
 		fmtc.SuccessLn(" Cron is running")
+	} else if toolsStatus.CronEnabled {
+		fmtc.WarningLn(" Cron is enabled but not running")
 	} else {
 		fmtc.WarningLn(" Cron is not running")
 	}
