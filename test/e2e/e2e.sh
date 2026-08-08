@@ -9,10 +9,12 @@
 #   ./test/e2e/e2e.sh shell         a shell inside the VM
 #   ./test/e2e/e2e.sh down          shut it down, keep the disk
 #   ./test/e2e/e2e.sh reset         delete it and build it again
+#   ./test/e2e/e2e.sh run-local     no VM — only where the daemon is disposable
 #
 # The suite is behind the `e2e` build tag, so `go test ./...` does not compile
-# it and the pre-push hook stays fast. Nothing here runs on your machine's
-# Docker daemon.
+# it and the pre-push hook stays fast. Nothing here touches your machine's own
+# Docker daemon — except run-local, which is for CI runners and refuses to start
+# anywhere that has not said it is one.
 
 set -eu
 
@@ -99,6 +101,29 @@ cmd_run() {
         sh -c "cd '$repo_root' && go test -tags=e2e -count=1 -v -timeout=30m ./test/e2e/...$quoted"
 }
 
+# cmd_run_local runs the suite against the Docker daemon of the machine it is
+# invoked on. That is right on a CI runner, which is a disposable Linux box with
+# a daemon nobody else is using, and wrong on a laptop, where the proxy stack it
+# takes over is the one your own projects are behind.
+#
+# The guard is the CI variable every provider sets. It can be overridden, and
+# the flag to do it is spelled out rather than short, because the failure mode is
+# somebody's afternoon rather than a message.
+cmd_run_local() {
+    if [ "${CI:-}" != "true" ] && [ "${MADOCK_E2E_ALLOW_LOCAL_DOCKER:-}" != "yes" ]; then
+        die "run-local takes over this machine's Docker daemon, including the proxy your own projects use.
+On a CI runner that is fine and CI=true says so. Anywhere else use: $0 run
+To insist anyway: MADOCK_E2E_ALLOW_LOCAL_DOCKER=yes $0 run-local"
+    fi
+
+    goarch=$(go env GOHOSTARCH)
+    mkdir -p "$script_dir/.bin"
+    printf 'building madock for linux/%s\n' "$goarch"
+    ( cd "$repo_root" && GOOS=linux GOARCH="$goarch" go build -o "$binary" . )
+
+    MADOCK_E2E_BIN="$binary" go test -tags=e2e -count=1 -v -timeout=40m ./test/e2e/... "$@"
+}
+
 cmd_shell() {
     need_lima
     ensure_running
@@ -129,8 +154,9 @@ command=${1:-}
 [ $# -gt 0 ] && shift
 
 case "$command" in
-    up)     cmd_up ;;
-    run)    cmd_run "$@" ;;
+    up)        cmd_up ;;
+    run)       cmd_run "$@" ;;
+    run-local) cmd_run_local "$@" ;;
     shell)  cmd_shell ;;
     down)   cmd_down ;;
     reset)  cmd_reset ;;

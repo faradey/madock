@@ -1,0 +1,82 @@
+# Continuous integration.
+#
+# Two jobs, because they answer different questions and cost different amounts.
+# `test` is seconds and gates everything; `e2e` starts real containers and takes
+# a quarter of an hour.
+#
+# The end-to-end suite needs a Docker daemon nobody else is using — madock's
+# proxy is a compose stack named `aruntime` written into the templates rather
+# than derived, so a test that starts a project operates on the same containers
+# as anything else on the machine. On a developer's laptop that means a VM (see
+# test/e2e/lima.yaml). A hosted runner already is one: a disposable Linux box
+# with Docker and nothing else on it, so the suite runs directly and the VM would
+# only be a second layer of virtualisation to pay for.
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+# Nothing here publishes anything. Said explicitly rather than left to the
+# default, which differs between repository settings.
+permissions:
+  contents: read
+
+# A branch that gets three pushes in a minute should run the third one, not all
+# three. The default branch is exempt: those runs are the record of what master
+# did, and cancelling them loses it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+jobs:
+  test:
+    name: Build and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          # From go.mod, so the version is decided in one place and CI cannot
+          # drift away from what developers build with.
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        run: go build ./...
+
+      # -count=1 is not decoration. Go caches a package's result until one of its
+      # .go files changes, and the golden tests read their input from docker/ —
+      # data the cache knows nothing about. Without it, a broken template gets a
+      # cached `ok`. Measured, not assumed.
+      - name: Test
+        run: go test -count=1 ./...
+
+      # The end-to-end suite is behind a build tag, so nothing above compiles it.
+      # This does, without needing Docker: a test file that stops building should
+      # not be discovered by the job that takes fifteen minutes.
+      - name: Check the end-to-end tests still compile
+        run: go vet -tags=e2e ./test/...
+
+  e2e:
+    name: End-to-end
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # run-local refuses to touch a daemon that might be somebody's own; CI=true
+      # is what tells it this one is disposable. GitHub sets it.
+      - name: Run the end-to-end suite
+        run: ./test/e2e/e2e.sh run-local
