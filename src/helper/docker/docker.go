@@ -127,6 +127,46 @@ type ServiceState struct {
 	ExitCode int    `json:"ExitCode"`
 }
 
+// HasContainers reports whether the project has any containers at all, running
+// or stopped.
+//
+// `docker compose start` wakes existing containers and succeeds with nothing to
+// do when there are none — exit zero, no output, a fraction of a second. The
+// start command took that for success, so a project whose containers had been
+// removed reported as started and was not. It is how a fresh clone behaved:
+// clone removes the containers to load the copied data, and the configuration
+// fingerprint still matched, so nothing suggested recreating them.
+//
+// An unanswerable docker returns true: that is not evidence of an empty
+// project, and creating containers on a false negative is the more expensive
+// mistake.
+func HasContainers(projectName string) bool {
+	pp := paths.NewProjectPaths(projectName)
+	composeFile := pp.DockerCompose()
+	if !paths.IsFileExist(composeFile) {
+		return false
+	}
+
+	out, err := exec.Command("docker", "compose", "-f", composeFile, "-f", pp.DockerComposeOverride(),
+		"ps", "-a", "--format", "json").Output()
+	if err != nil {
+		return true
+	}
+
+	// The snapshot helper does not count. It belongs to the same compose project
+	// but is not a service of the project proper — it exists to read volumes
+	// while the real containers are down, and project:clone leaves it behind
+	// stopped. Counting it made a freshly cloned project look populated, so
+	// `start` woke the helper and reported success while the project had no
+	// database at all.
+	for _, entry := range parseComposePS(out) {
+		if entry.Service != "snapshot" {
+			return true
+		}
+	}
+	return false
+}
+
 // NotRunning returns the project's services that are not running.
 //
 // It exists because "started successfully" was being printed on the strength

@@ -1,3 +1,8 @@
+**v3.8.42**
+
+Fixed:
+- **`start` reported success while creating nothing.** It wakes existing containers when the configuration has not changed, and waking nothing succeeds: the command returned in a fraction of a second, said the project was started, and left the machine empty. The fallback only ran when the wake failed, which it never does. Any project whose containers were removed while its configuration stayed put was affected; a freshly cloned project always was, since `project:clone` removes them to load the copied data. `start` now creates containers when there are none to wake — and does not count the snapshot helper, which lives in the same compose project, is not a service of the project proper, and is exactly what clone leaves behind
+
 **v3.8.41**
 
 Fixed:

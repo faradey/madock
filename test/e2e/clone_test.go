@@ -21,20 +21,6 @@ import (
 // The hosts have to diverge too. Both projects are behind one proxy, and two
 // projects claiming the same name is a coin toss over which site answers.
 func TestCloneCopiesTheDataAndThenDiverges(t *testing.T) {
-	// Skipped one layer short of green, and the layer is named.
-	//
-	// The copy itself is fixed: with the source stopped and the data read from
-	// the helper container, project:clone completes and writes its archives.
-	// What does not work is the clone afterwards — `start` in the new project
-	// returns in under half a second having created nothing, and the database
-	// that follows reports "No such container: madock_<clone>-db-1". The project
-	// itself resolves correctly, since config:list returns the clone's own
-	// config with the suffixed host.
-	//
-	// That is a separate defect from the one just fixed, and it is the next
-	// thing to look at here.
-	t.Skip("project:clone copies correctly now, but the clone does not start — see the comment above")
-
 	// The source stops while it is copied. That is a decision, not an accident:
 	// a running InnoDB writes to its log during any copy, so cloning a live
 	// database can only produce a torn archive, and the check added for

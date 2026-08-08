@@ -66,6 +66,17 @@ func (h *BaseHandler) Start(projectName string, withChown bool, projectConf map[
 		return
 	}
 
+	// Nothing to wake. `docker compose start` succeeds with nothing to do when
+	// the containers do not exist, so this used to report a started project and
+	// leave the machine empty — most visibly right after project:clone, which
+	// removes the containers to load the copied data and leaves a configuration
+	// fingerprint that still matches.
+	if !docker.HasContainers(projectName) {
+		fmtc.ToDoLn("Creating containers")
+		docker.UpProjectWithBuild(projectName, withChown)
+		return
+	}
+
 	pp := paths.NewProjectPaths(projectName)
 	profilesOn := []string{
 		"compose",
