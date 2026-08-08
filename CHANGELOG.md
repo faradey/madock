@@ -1,3 +1,8 @@
+**v3.8.45**
+
+Fixed:
+- **`debug:enable` reported success on projects it cannot debug.** Every debug command writes `php/xdebug/*`, so on a nodejs, python, golang or ruby project it set a value nothing reads, rebuilt the project, and finished with a tick — debugging absent, and the command that was supposed to arrange it saying otherwise. It now says the language has no debugger wired up and changes nothing. Wiring the others up is a piece of work rather than an oversight: xdebug connects out to the IDE, while Node, Python, Ruby and Go debuggers listen, so each needs a published port, an allocation from the registry, and its process started under the debugger — and Go additionally needs `SYS_PTRACE`
+
 **v3.8.44**
 
 Fixed:

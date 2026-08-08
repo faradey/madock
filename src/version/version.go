@@ -2,4 +2,4 @@ package version
 
 // Version is the current madock release version.
 // Used by migration system for semver comparison.
-const Version = "3.8.44"
+const Version = "3.8.45"
