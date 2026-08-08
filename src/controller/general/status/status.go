@@ -136,6 +136,11 @@ func getContainerStatus(composePath string) []ServiceStatus {
 		var rawData []InfoStruct
 		err = json.Unmarshal(result, &rawData)
 		if err != nil {
+			// Reported rather than swallowed. This returned an empty list in
+			// silence, which reads as "nothing is running" — the one answer a
+			// status command must never give when it does not know.
+			fmtc.WarningLn("Could not read the container status: " + err.Error())
+			logger.Println(err, string(result))
 			return statusData
 		}
 		for _, val := range rawData {
@@ -150,12 +155,36 @@ func getContainerStatus(composePath string) []ServiceStatus {
 	return statusData
 }
 
+// parseJson turns what `docker compose ps --format json` prints into a JSON
+// array.
+//
+// Compose emits one object per line rather than an array, so the count decides
+// the shape: two services look like `{…}\n{…}` and one looks like `{…}`. This
+// used to wrap only when it found a `}{` boundary, so a stack with exactly one
+// service was handed to the array decoder as a bare object, failed to decode,
+// and — because the error was swallowed — was reported as no services at all.
+//
+// Seen in the field: disabling mailpit left the proxy with nginx alone, and
+// `status` began answering "Proxy: No services found" while every site it was
+// serving stayed up.
 func parseJson(data []byte) []byte {
 	str := strings.TrimSpace(string(data))
-	if strings.Contains(str, "}{") || strings.Contains(str, "}\n{") {
-		str = strings.ReplaceAll(str, "}\n{", "}{")
-		str = "[" + strings.ReplaceAll(str, "}{", "},{") + "]"
+	if str == "" {
+		return []byte("[]")
 	}
 
-	return []byte(str)
+	// Some versions print a real array already.
+	if strings.HasPrefix(str, "[") {
+		return []byte(str)
+	}
+
+	var objects []string
+	for _, line := range strings.Split(str, "\n") {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			objects = append(objects, line)
+		}
+	}
+
+	return []byte("[" + strings.Join(objects, ",") + "]")
 }
