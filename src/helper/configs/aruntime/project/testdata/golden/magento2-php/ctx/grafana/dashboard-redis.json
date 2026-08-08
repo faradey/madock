@@ -77,7 +77,7 @@
               },
               {
                 "color": "dark-yellow",
-                "value": 2<GID>00
+                "value": 22000
               },
               {
                 "color": "dark-red",
@@ -1302,7 +1302,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": <GID>5
+                "value": 205
               }
             ]
           },
@@ -1690,7 +1690,7 @@
               },
               {
                 "id": "custom.width",
-                "value": <GID>0
+                "value": 200
               }
             ]
           },
@@ -1718,7 +1718,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 1<GID>
+                "value": 120
               }
             ]
           },

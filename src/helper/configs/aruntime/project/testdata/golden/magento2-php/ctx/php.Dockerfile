@@ -99,7 +99,7 @@ RUN if [ -f /etc/ImageMagick-6/policy.xml ]; then \
 
 
 RUN if [[ "false" = "true" ]]; then set -eux && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
-    && curl -o ioncube.tar.gz http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_aarch64.tar.gz \
+    && curl -o ioncube.tar.gz http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_<ARCH>.tar.gz \
     && tar xvfz ioncube.tar.gz \
     && cd ioncube \
     && cp ioncube_loader_lin_8.4.so ${EXTENSION_DIR}/ioncube.so \
@@ -135,7 +135,7 @@ RUN if [[ "false" = "true" && "debug" = "profile" ]]; then echo "xdebug.profiler
     && echo "xdebug.profiler_output_dir=/var/www/html/var" >> /etc/php/8.4/mods-available/xdebug.ini \
     && echo "xdebug.xdebug.profiler_enable_trigger=0" >> /etc/php/8.4/mods-available/xdebug.ini \
     && echo "xdebug.profiler_append=0" >> /etc/php/8.4/mods-available/xdebug.ini; fi
-RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 259<GID>00/g' /etc/php/8.4/fpm/php.ini \
+RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /etc/php/8.4/fpm/php.ini \
     && sed -i 's/post_max_size = 8M/post_max_size = 80M/g' /etc/php/8.4/fpm/php.ini \
     && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 50M/g' /etc/php/8.4/fpm/php.ini \
     && sed -i 's/;max_input_vars = 1000/max_input_vars = 50000/g' /etc/php/8.4/fpm/php.ini
