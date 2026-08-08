@@ -161,6 +161,10 @@ RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 259<GID>00/g
 # mail() call with four arguments is not, and that is what anyone testing their
 # own site tries first. Setting this makes both work.
 
+RUN sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal --from=shop@example.com"/g' /etc/php/8.4/fpm/php.ini \
+    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal --from=shop@example.com"/g' /etc/php/8.4/cli/php.ini
+
+
 WORKDIR /var/www
 
 RUN apt-get install -y cron

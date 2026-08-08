@@ -90,6 +90,16 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// With an envelope sender configured. Without one msmtp refuses a
+			// plain mail() call, and the argument has to be absent rather than
+			// empty when the address is not set — which is why it is rendered
+			// whole rather than as a value.
+			name: "magento2-sendmail-from",
+			overrides: map[string]string{
+				"php/sendmail/from": "shop@example.com",
+			},
+		},
+		{
 			// The sandbox shape — no language at all, so the main service is
 			// "app" and there is no PHP container.
 			name: "custom-none",

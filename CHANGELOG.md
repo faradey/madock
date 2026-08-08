@@ -1,3 +1,8 @@
+**v3.8.38**
+
+Added:
+- **`php/sendmail/from`** — the envelope sender. msmtp refuses to send without one (`envelope-from address is missing`, exit 78) and there is no msmtprc in the image to hold a default, so a plain four-argument `mail()` call failed while Magento and Laravel were fine: a mail transport passes its own sender. Anyone testing their site reaches for `mail()` first, gets exit 78, and has no reason to suspect the sender is the missing part. Empty by default, because no address is right for every project and a wrong one costs more in deliverability than a clear failure does
+
 **v3.8.37**
 
 Added:

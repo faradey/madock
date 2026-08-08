@@ -62,6 +62,13 @@
                     <enabled>true</enabled>
                     <host>host.docker.internal</host>
                     <port>1025</port>
+                    <!-- Envelope sender. Empty by default because no address is
+                         right for every project, and a wrong one hurts
+                         deliverability more than a clear failure does. Set it
+                         and a plain mail() call works; leave it and only callers
+                         that pass their own sender (Magento, Laravel, anything
+                         using a mail transport) can send. -->
+                    <from></from>
                 </sendmail>
                 <nodejs>
                     <enabled>false</enabled>

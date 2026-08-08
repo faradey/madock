@@ -38,4 +38,16 @@ func applyDerived(conf map[string]string) {
 		// for and look deliberate.
 		delete(conf, "nodejs/major_version")
 	}
+
+	// msmtp will not send without an envelope sender, and there is no msmtprc in
+	// the image to hold a default. A mail transport supplies one; a bare mail()
+	// call with four arguments does not, and fails with exit 78. Rendering the
+	// whole argument here rather than the address keeps the template free of a
+	// conditional it cannot express — an unset address has to produce nothing at
+	// all, not an empty --from=.
+	if from := strings.TrimSpace(conf["php/sendmail/from"]); from != "" {
+		conf["php/sendmail/from_argument"] = " --from=" + from
+	} else {
+		conf["php/sendmail/from_argument"] = ""
+	}
 }

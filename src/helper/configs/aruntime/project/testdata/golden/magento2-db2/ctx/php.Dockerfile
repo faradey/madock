@@ -153,6 +153,13 @@ RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 259<GID>00/g
 # inside a running container is not an alternative — the image is rebuilt from
 # this file and the edit goes with it, which is exactly how a working mail
 # configuration disappears at the next rebuild.
+#
+# php/sendmail/from is the envelope sender. msmtp refuses to send without one —
+# `msmtp: envelope-from address is missing`, exit 78 — and there is no msmtprc
+# here to supply a default. A mail transport passes it (PHP's mail() takes it as
+# the fifth argument, `-f`), so Magento and Laravel are fine either way; a plain
+# mail() call with four arguments is not, and that is what anyone testing their
+# own site tries first. Setting this makes both work.
 
 RUN sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/8.4/fpm/php.ini \
     && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/8.4/cli/php.ini
