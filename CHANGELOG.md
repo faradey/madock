@@ -1,3 +1,8 @@
+**v3.8.37**
+
+Added:
+- **`configs.SetDefaultOverride`** — a seam for editions whose answer to a setting differs from the community one. It applies after the embedded defaults and before the user's `config.xml`, which is the only layering that works: the edition chooses the default and whoever edits the file still overrides it, so turning something back on never needs a different binary. Written for mailpit, which madock-pro disables by default — a mail interceptor with no authentication is what a developer wants and the opposite of what a server wants
+
 **v3.8.36**
 
 Fixed:

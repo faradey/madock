@@ -32,6 +32,24 @@ func SetProjectNameResolver(r ProjectNameResolver) {
 	projectNameResolver = r
 }
 
+// defaultOverrides lets an edition disagree with a built-in default.
+var defaultOverrides = map[string]string{}
+
+// SetDefaultOverride changes what a setting defaults to, for editions whose
+// answer differs from the community one.
+//
+// It applies after the embedded defaults and before the user's config.xml, which
+// is the only layering that works: the edition gets to choose the default, and
+// whoever edits the file still overrides it. Turning something back on must
+// never require a different binary.
+//
+// The case it was written for is mailpit. It is a mail interceptor with no
+// authentication, which is what a developer wants and the opposite of what a
+// server wants — and madock-pro is the edition that runs on servers.
+func SetDefaultOverride(key, value string) {
+	defaultOverrides[key] = value
+}
+
 // GetDefaultConfigXML returns the raw embedded config_defaults.xml bytes.
 func GetDefaultConfigXML() []byte {
 	return defaultConfigXML
@@ -60,6 +78,12 @@ func GetOriginalGeneralConfig() map[string]string {
 	if len(defaultConfigXML) > 0 {
 		origGeneralConfig = ParseXmlBytes(defaultConfigXML)
 		origGeneralConfig = getConfigByScope(origGeneralConfig, "default")
+	}
+
+	// Then whatever this edition decided differs. Before the file below, so a
+	// user who wants the community answer back can simply say so.
+	for key, value := range defaultOverrides {
+		origGeneralConfig[key] = value
 	}
 
 	// Overlay filesystem config.xml — file values win, embedded fills gaps
