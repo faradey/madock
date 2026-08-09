@@ -1,3 +1,9 @@
+**v3.8.46**
+
+Fixed:
+- **`db:execute` has never worked against PostgreSQL.** It ran `psql -U … -h … <db> -c <query>` and offered no password, which psql does not accept on the command line — so every query ended in `fe_sendauth: no password supplied`. `db:export` and `db:import` already passed `PGPASSWORD` and worked; this one call site did not, which is why the gap survived. Found on our own Packeton server, where the answer to any database question was to open a shell in the container by hand
+- **A quote in a password, or in a query, broke the command it sat in.** The PostgreSQL paths build a shell line, and every value went into it raw: an apostrophe ended the string early and handed the rest to the shell. For `db:execute` the query is the sharper case — `WHERE name='x'` is ordinary SQL and would have been mangled. Quoting now goes through `src/helper/cli/shell`, one place with tests that hand the result to a real `/bin/sh`
+
 **v3.8.45**
 
 Fixed:

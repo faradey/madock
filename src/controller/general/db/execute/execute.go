@@ -6,6 +6,7 @@ import (
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/cli/shell"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/dbtarget"
 	"github.com/faradey/madock/v3/src/helper/docker"
@@ -67,7 +68,19 @@ func executePostgresql(target dbtarget.Target, args *arg_struct.ControllerGenera
 		user = args.User
 	}
 
-	cmd, err := docker.PrepareContainerExec(target.Container, user, false, "psql", "-U", target.User, "-h", target.Host, target.Database, "-c", args.Query)
+	// psql takes no password on the command line, so it has to come from the
+	// environment — which means a shell, which means every value in the line
+	// has to be quoted. Without PGPASSWORD the command failed outright with
+	// "fe_sendauth: no password supplied", so db:execute has never worked
+	// against PostgreSQL. The query is quoted for the same reason and more
+	// urgently: a WHERE clause containing an apostrophe is ordinary SQL.
+	command := "PGPASSWORD=" + shell.Quote(target.Password) +
+		" psql -U " + shell.Quote(target.User) +
+		" -h " + shell.Quote(target.Host) +
+		" " + shell.Quote(target.Database) +
+		" -c " + shell.Quote(args.Query)
+
+	cmd, err := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", command)
 	if err != nil {
 		logger.Fatal(err)
 	}

@@ -18,6 +18,7 @@ import (
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v3/src/helper/cli/shell"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/dbtarget"
 	"github.com/faradey/madock/v3/src/helper/docker"
@@ -390,7 +391,8 @@ func importPostgresql(target dbtarget.Target, args *arg_struct.ControllerGeneral
 		user = args.User
 	}
 
-	cmd, prepErr := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", "PGPASSWORD='"+target.Password+"' psql -U "+target.User+" -h "+target.Host+" "+target.Database)
+	cmd, prepErr := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c",
+		"PGPASSWORD="+shell.Quote(target.Password)+" psql -U "+shell.Quote(target.User)+" -h "+shell.Quote(target.Host)+" "+shell.Quote(target.Database))
 	if prepErr != nil {
 		logger.Fatal(prepErr)
 	}
