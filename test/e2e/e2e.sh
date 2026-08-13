@@ -89,6 +89,12 @@ cmd_run() {
     # Arguments reach the guest through `sh -c`, so they are quoted one by one
     # here. Without it `-run "A|B"` arrives as two commands and the shell tries
     # to execute the second one.
+    #
+    # 45m rather than the 30m this started with: the suite outgrew it. A whole
+    # run on a freshly built VM also pulls every image, and the timeout is not
+    # a budget — it is the point at which Go decides the run is hung and dumps
+    # every goroutine, which is unreadable and says nothing about which test
+    # was slow. run-local passes 40m for the same reason.
     quoted=""
     for arg in "$@"; do
         escaped=$(printf '%s' "$arg" | sed "s/'/'\\\\''/g")
@@ -98,7 +104,7 @@ cmd_run() {
     limactl shell "$VM_NAME" -- env \
         MADOCK_E2E_BIN="$binary" \
         PATH="/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin" \
-        sh -c "cd '$repo_root' && go test -tags=e2e -count=1 -v -timeout=30m ./test/e2e/...$quoted"
+        sh -c "cd '$repo_root' && go test -tags=e2e -count=1 -v -timeout=45m ./test/e2e/...$quoted"
 }
 
 # cmd_run_local runs the suite against the Docker daemon of the machine it is

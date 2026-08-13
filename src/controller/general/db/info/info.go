@@ -86,7 +86,13 @@ func Info() {
 		if db.RootPassword != "" {
 			fmtc.SuccessLn("   root password: " + db.RootPassword)
 		}
-		fmtc.SuccessLn("   remote HOST:PORT: " + db.RemoteHost + ":" + strconv.Itoa(db.RemotePort))
+		if db.RemotePort > 0 {
+			fmtc.SuccessLn("   remote HOST:PORT: " + db.RemoteHost + ":" + strconv.Itoa(db.RemotePort))
+		} else {
+			// Printing localhost:0 would read as a port rather than as its
+			// absence, and the reason it is absent is worth saying.
+			fmtc.SuccessLn("   remote HOST:PORT: not published yet — run madock start")
+		}
 	}
 }
 
@@ -107,8 +113,16 @@ func describe(projectConf map[string]string, projectName, service, label string)
 		Password: target.Password,
 		// The published port belongs to the project running the container, which
 		// is the provider when the database is shared.
+		//
+		// Looked up, never allocated: this command answers a question and must
+		// not change the thing it is describing. `madock info` already carries
+		// that rule; this one used to call GetOrAllocate, so asking about a
+		// project that had never started reserved ports for every service it
+		// might one day run, and then printed one nothing was listening on.
+		// Zero means "not allocated yet", which is the honest answer before the
+		// first start.
 		RemoteHost: "localhost",
-		RemotePort: ports.GetPort(target.Project, portService(target.Service)),
+		RemotePort: ports.GetRegistry().Get(target.Project, portService(target.Service)),
 	}
 	// root_password is only meaningful for MySQL/MariaDB.
 	if target.Type == "mysql" {
