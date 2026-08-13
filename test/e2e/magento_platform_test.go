@@ -231,6 +231,24 @@ func reportWhyTheSiteIsSilent(t *testing.T, p *project, host string) {
 		t.Logf("the proxy served a certificate for %s (%s), so the handshake is fine and the answer is missing behind it", host, digest[:12])
 	}
 
+	// The proxy decides whether a request ever reaches the project, and it does
+	// it by server name. A host the generated configuration does not mention
+	// falls to the default block, which closes the connection without answering
+	// — the client calls that EOF, and so far that is the whole story it tells.
+	//
+	// Two different faults produce it, and this separates them: a host missing
+	// from the file is a generation problem, a host present in a file the
+	// running container is not using is a reload problem.
+	proxyConf := filepath.Join(p.execDir, "aruntime", "ctx", "proxy.conf")
+	if data, err := os.ReadFile(proxyConf); err != nil {
+		t.Logf("the generated proxy configuration could not be read (%s): %v", proxyConf, err)
+	} else if !strings.Contains(string(data), host) {
+		t.Logf("the generated proxy configuration does not mention %s at all — the server names it carries are:\n%s",
+			host, serverNamesIn(string(data)))
+	} else {
+		t.Logf("the generated proxy configuration does carry %s, so the running proxy is not using this file", host)
+	}
+
 	for _, service := range []string{"nginx", "php"} {
 		if out, err := p.tryRun(2*time.Minute, "logs", "-s", service); err == nil {
 			t.Logf("last of the %s log:\n%s", service, lastLines(out, 25))
@@ -259,6 +277,21 @@ func servedCertificateDigestOrEmpty(host string) string {
 	}
 	sum := sha256.Sum256(certs[0].Raw)
 	return hex.EncodeToString(sum[:])
+}
+
+// serverNamesIn lists the hosts a generated proxy configuration answers for.
+func serverNamesIn(conf string) string {
+	var names []string
+	for _, line := range strings.Split(conf, "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "server_name") {
+			names = append(names, strings.TrimSuffix(strings.TrimPrefix(line, "server_name"), ";"))
+		}
+	}
+	if len(names) == 0 {
+		return "  (none)"
+	}
+	return "  " + strings.Join(names, "\n  ")
 }
 
 func lastLines(s string, n int) string {
