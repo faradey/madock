@@ -189,6 +189,17 @@ func (p *project) tryRun(timeout time.Duration, args ...string) (string, error) 
 
 func (p *project) tryRunWithInput(timeout time.Duration, input string, args ...string) (string, error) {
 	p.t.Helper()
+	return p.tryRunWith(timeout, input, nil, args...)
+}
+
+// tryRunWith is the full form: input on stdin and extra environment variables.
+//
+// The environment is not decoration for these tests — MADOCK_USER,
+// MADOCK_SERVICE_NAME and MADOCK_WORKDIR are a documented way to redirect any
+// exec-shaped command, and they are read in one helper that every one of those
+// commands calls. Nothing can drive them except from outside the process.
+func (p *project) tryRunWith(timeout time.Duration, input string, env []string, args ...string) (string, error) {
+	p.t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -202,6 +213,7 @@ func (p *project) tryRunWithInput(timeout time.Duration, input string, args ...s
 		"MADOCK_EXEC_DIR="+p.execDir,
 		"MADOCK_RUN_DIR="+p.runDir,
 	)
+	cmd.Env = append(cmd.Env, env...)
 
 	started := time.Now()
 	out, err := cmd.CombinedOutput()
