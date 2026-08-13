@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/faradey/madock/v3/src/controller/general/install"
@@ -222,8 +223,22 @@ func runMedusaInContainer(projectConf map[string]string, projectName, serviceHin
 	}
 }
 
-// isDirEmpty returns true when path doesn't exist or holds no entries
-// besides dotfiles madock itself may have created (.madock/).
+// isDirEmpty returns true when path doesn't exist or holds nothing that could
+// be somebody's project.
+//
+// "Nothing" has to include what madock itself put there a moment earlier. The
+// download runs after the containers are up, because git runs inside the node
+// container — and starting them makes docker create the bind-mount sources that
+// do not exist yet, `storefront/` among them, owned by root and empty. A plain
+// emptiness check therefore said "not empty" about a directory the tool had
+// just populated, skipped the clone with a warning, and left `setup -d -i` to
+// run its install against nothing: yarn had no package.json, and the failure
+// surfaced two commands later as "npm error could not determine executable to
+// run". On a clean directory, which is the only way anybody starts.
+//
+// Empty directories are skipped rather than the one name, because that is the
+// property that matters: an empty directory is not a project, whoever created
+// it.
 func isDirEmpty(path string) bool {
 	entries, err := os.ReadDir(path)
 	if err != nil {
@@ -231,6 +246,9 @@ func isDirEmpty(path string) bool {
 	}
 	for _, e := range entries {
 		if e.Name() == ".madock" || e.Name() == "." || e.Name() == ".." {
+			continue
+		}
+		if e.IsDir() && isDirEmpty(filepath.Join(path, e.Name())) {
 			continue
 		}
 		return false

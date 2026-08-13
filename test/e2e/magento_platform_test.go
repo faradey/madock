@@ -142,13 +142,20 @@ func httpsGet(t *testing.T, host, path string) (int, string) {
 		},
 	}
 
-	// A store that has just been installed is still warming caches, so the first
-	// request can time out or answer 503 while php-fpm compiles. Retried for a
-	// few minutes, which is shorter than the install that preceded it.
-	deadline := time.Now().Add(5 * time.Minute)
+	// A store that has just been installed is still warming up, and how long
+	// that takes depends on the platform: php-fpm compiles on the first
+	// request, while a Node platform builds its admin bundle before it listens
+	// at all. Fifteen minutes, because the failure this must not produce is "we
+	// gave up first".
+	//
+	// Every attempt is logged. A run that ends in "it never answered" is
+	// otherwise indistinguishable from one that answered 502 for fourteen
+	// minutes and then died, and those have different causes.
+	deadline := time.Now().Add(15 * time.Minute)
+	started := time.Now()
 	var lastStatus int
 	var lastBody string
-	for {
+	for attempt := 1; ; attempt++ {
 		resp, err := client.Get("https://" + host + path)
 		if err == nil {
 			body := make([]byte, 64*1024)
@@ -156,15 +163,18 @@ func httpsGet(t *testing.T, host, path string) (int, string) {
 			_ = resp.Body.Close()
 			lastStatus, lastBody = resp.StatusCode, string(body[:n])
 			if resp.StatusCode == http.StatusOK {
+				t.Logf("%s answered 200 after %s", path, time.Since(started).Round(time.Second))
 				return lastStatus, lastBody
 			}
+			t.Logf("attempt %d (%s): %s answered %d", attempt, time.Since(started).Round(time.Second), path, resp.StatusCode)
 		} else {
 			lastBody = err.Error()
+			t.Logf("attempt %d (%s): %v", attempt, time.Since(started).Round(time.Second), err)
 		}
 		if time.Now().After(deadline) {
 			return lastStatus, lastBody
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(15 * time.Second)
 	}
 }
 
