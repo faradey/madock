@@ -5,6 +5,7 @@ package e2e
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -72,6 +73,8 @@ func TestMagentoInstallsAndAnswers(t *testing.T) {
 	// installed.
 	version := p.run(5*time.Minute, "magento", "--version")
 	requireContains(t, version, "2.4.8", "the version bin/magento reports")
+	t.Logf("bin/magento said: %s", strings.TrimSpace(version))
+	t.Logf("the installed project: %s", describeTree(t, p.runDir))
 
 	// And the whole point: a browser gets a page, over HTTPS, through the proxy.
 	// A 200 here means the PHP image built, php-fpm is answering, the database
@@ -156,6 +159,30 @@ func httpsGet(t *testing.T, host, path string) (int, string) {
 		}
 		time.Sleep(10 * time.Second)
 	}
+}
+
+// describeTree counts what is on disk and how much of it there is.
+//
+// A store that installed and a directory that did not are both "present" to a
+// file check; the difference is tens of thousands of files. Logged rather than
+// asserted, because the number is evidence for a person reading the run, not a
+// threshold worth failing on.
+func describeTree(t *testing.T, root string) string {
+	t.Helper()
+
+	var files int
+	var bytes int64
+	_ = filepath.Walk(root, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if !info.IsDir() {
+			files++
+			bytes += info.Size()
+		}
+		return nil
+	})
+	return fmt.Sprintf("%d files, %d MB", files, bytes/(1024*1024))
 }
 
 func firstLines(s string, n int) string {
