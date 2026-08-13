@@ -42,6 +42,16 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	platformVersion := ""
 	if args.PlatformVersion != "" {
 		platformVersion = args.PlatformVersion
+		// Read the version's own defaults here rather than leaving it to the
+		// branch below, which only runs while Php is still empty — so naming a
+		// version *and* a PHP version skipped the table entirely and left
+		// Composer, the database and the search engine at the values for an
+		// unknown version, which are empty strings. Magento had the same hole
+		// on the same flag, where it meant Composer 1 and an install that could
+		// not resolve a package.
+		//
+		// Explicit flags still win: each is applied over this below.
+		toolsDefVersions = shopware.GetVersions(platformVersion)
 		if args.Php != "" {
 			toolsDefVersions.Php = args.Php
 		}

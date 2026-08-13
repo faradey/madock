@@ -38,8 +38,8 @@ import (
 // a red test on a machine that was never going to have the keys teaches nobody
 // anything.
 func TestMagentoInstallsAndAnswers(t *testing.T) {
-	if os.Getenv("MADOCK_E2E_PLATFORMS") != "yes" {
-		t.Skip("platform tests are opt-in: MADOCK_E2E_PLATFORMS=yes ./test/e2e/e2e.sh run -run TestMagento")
+	if !platformTestsEnabled() {
+		t.Skip("platform tests are opt-in: ./test/e2e/e2e.sh run --platforms -run TestMagento")
 	}
 	requireMagentoCredentials(t)
 
@@ -89,6 +89,13 @@ func TestMagentoInstallsAndAnswers(t *testing.T) {
 	if !strings.Contains(body, "Magento") && !strings.Contains(body, "mage-") {
 		t.Errorf("something answered 200 on the storefront, but it does not look like Magento:\n%s", firstLines(body, 20))
 	}
+}
+
+// platformTestsEnabled reports whether the caller asked for the tests that
+// install a real store. They pull hundreds of megabytes and take minutes each,
+// so nothing runs them by accident.
+func platformTestsEnabled() bool {
+	return os.Getenv("MADOCK_E2E_PLATFORMS") == "yes"
 }
 
 // requireMagentoCredentials skips the test unless this machine can download

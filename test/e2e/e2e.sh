@@ -48,20 +48,36 @@ ensure_running() {
     vm_running || limactl start "$VM_NAME"
 }
 
-# ensure_free refuses to start while another suite is running in the same VM.
+# ensure_free refuses to start while another suite is running anywhere on this
+# machine.
 #
-# madock and madock-pro share this machine and only one may run at a time: the
-# proxy is one container per Docker daemon, and every installation's port
-# registry starts at the same number, so the second run takes the first one's
-# proxy away and then fails to bind. That is not theoretical — it cost three
-# runs in one afternoon, and the leftovers look like a defect in whatever was
-# being tested rather than like a collision.
+# It began as a check inside one VM, when madock and madock-pro shared it: the
+# proxy is one container per Docker daemon and every installation's port
+# registry starts at the same number, so the second run took the first one's
+# proxy and then failed to bind. It cost three runs in one afternoon, and the
+# leftovers look like a defect in whatever was being tested rather than like a
+# collision.
 #
-# The check is for the test binary rather than for containers: containers left
+# madock-pro then moved into a VM of its own, which ends that collision: the
+# tests run inside the guest, so 127.0.0.1:443 is the guest's own loopback and
+# each VM has its own proxy. (Checked rather than assumed — on this machine the
+# host's 443 belongs to OrbStack and neither suite goes near it.)
+#
+# The check still spans every running instance, for a smaller and duller reason:
+# each VM is four CPUs and six gigabytes, and two of them installing a Magento
+# at once on a laptop makes every timeout in the suite a lie. A run that fails
+# because the machine was busy looks exactly like a run that found something.
+#
+# It looks for the test binary rather than for containers: containers left
 # behind are a mess to clean up, but a running `e2e.test` is somebody's work in
-# progress. madock-pro's driver has had this; this one had not.
+# progress.
 ensure_free() {
-    running=$(limactl shell "$VM_NAME" -- pgrep -af 'e2e\.test' 2>/dev/null || true)
+    running=""
+    for instance in $(limactl list --quiet 2>/dev/null); do
+        found=$(limactl shell "$instance" -- pgrep -af 'e2e\.test' 2>/dev/null || true)
+        [ -n "$found" ] && running="$running
+  $instance: $found"
+    done
     [ -z "$running" ] && return 0
 
     [ "${MADOCK_E2E_IGNORE_BUSY:-}" = "yes" ] && {
@@ -69,12 +85,11 @@ ensure_free() {
         return 0
     }
 
-    die "another end-to-end suite is already running in $VM_NAME:
-
+    die "another end-to-end suite is already running on this machine:
 $running
 
-Both suites share this VM and only one may run at a time — the proxy is one
-container per daemon and the port registries collide. Wait for it to finish.
+Two suites at once share one laptop's CPUs and memory, and every timeout in
+this suite then measures the contention rather than the code. Wait for it.
 To insist anyway: MADOCK_E2E_IGNORE_BUSY=yes $0 run"
 }
 
