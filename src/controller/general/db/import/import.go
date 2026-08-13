@@ -198,18 +198,38 @@ func importMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbImp
 
 	mysqlCommandName := target.MySQLClient()
 
-	runQuery := func(query string) error {
+	// runQuery keeps the server's own message. Without it every failure here
+	// arrives as "exit status 1", which says that something went wrong and
+	// nothing about what — and the two failures this function can hit need
+	// telling apart.
+	runQuery := func(query string) (string, error) {
 		login, loginPassword := target.Login()
 		c, e := docker.PrepareContainerExec(target.Container, user, false, mysqlCommandName, "-u", login, "-p"+loginPassword, "-h", target.Host, "-f", "--execute", query, target.Database)
 		if e != nil {
-			return e
+			return "", e
 		}
-		return c.Run()
+		var stderrBuf bytes.Buffer
+		c.Stdout = os.Stdout
+		c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
+		// Run first, read after: in a single return statement the buffer would
+		// be read before the command that fills it has run.
+		runErr := c.Run()
+		return stderrBuf.String(), runErr
 	}
 
 	if args.ResetGtid {
-		if err := runQuery(gtidResetStatement(target) + ";"); err != nil {
-			logger.Fatalln("Failed to reset GTID state:", err)
+		if stderr, err := runQuery(gtidResetStatement(target) + ";"); err != nil {
+			// madock's own database images run with binary logging off, so
+			// RESET MASTER cannot execute there — the server answers "Binlog
+			// closed". That is not a reason to abandon the import: with no
+			// binlog there is no GTID state, which is the condition the flag
+			// was asking for in the first place.
+			if isBinlogClosedError(stderr) {
+				fmtc.WarningLn("Binary logging is off on this server, so there is no GTID state to reset.")
+				fmt.Println("Continuing with the import.")
+			} else {
+				logger.Fatalln("Failed to reset GTID state:", strings.TrimSpace(stderr), err)
+			}
 		}
 	}
 
@@ -280,6 +300,16 @@ func isGtidPurgedError(stderr string) bool {
 		(strings.Contains(stderr, "@@GLOBAL.GTID_PURGED") && strings.Contains(stderr, "@@GLOBAL.GTID_EXECUTED"))
 }
 
+// isBinlogClosedError reports the one refusal that means "there was nothing to
+// reset": MySQL and MariaDB answer ER_FLUSH_MASTER_BINLOG_CLOSED (1186) when
+// RESET MASTER is issued on a server started without binary logging.
+func isBinlogClosedError(stderr string) bool {
+	if stderr == "" {
+		return false
+	}
+	return strings.Contains(stderr, "ERROR 1186") || strings.Contains(stderr, "Binlog closed")
+}
+
 func gtidResetStatement(target dbtarget.Target) string {
 	if target.Repository == "mysql" && configs.CompareVersions(target.Version, "8.4") >= 0 {
 		return "RESET BINARY LOGS AND GTIDS"
@@ -287,7 +317,7 @@ func gtidResetStatement(target dbtarget.Target) string {
 	return "RESET MASTER"
 }
 
-func handleGtidConflict(target dbtarget.Target, runQuery func(string) error, runImport func(bool, bool) (string, error)) error {
+func handleGtidConflict(target dbtarget.Target, runQuery func(string) (string, error), runImport func(bool, bool) (string, error)) error {
 	fmt.Println()
 	fmtc.WarningLn("Detected GTID_PURGED conflict during import.")
 	fmt.Println("The dump contains GTID metadata that conflicts with the local server state.")
@@ -305,8 +335,16 @@ func handleGtidConflict(target dbtarget.Target, runQuery func(string) error, run
 
 	switch idx {
 	case 0:
-		if err := runQuery(resetStmt + ";"); err != nil {
-			return fmt.Errorf("failed to execute %s: %w", resetStmt, err)
+		if stderr, err := runQuery(resetStmt + ";"); err != nil {
+			// The option the user just picked is the one that cannot work on a
+			// server with binary logging off — which is every default madock
+			// database. Saying so, and naming the option that does work, is
+			// the difference between a dead end and one more keystroke.
+			if isBinlogClosedError(stderr) {
+				return fmt.Errorf("%s is not possible here: binary logging is off on this server. "+
+					"Re-run the import and choose \"Retry import with GTID statements stripped from the dump\"", resetStmt)
+			}
+			return fmt.Errorf("failed to execute %s: %s: %w", resetStmt, strings.TrimSpace(stderr), err)
 		}
 		_, err := runImport(false, false)
 		return err
