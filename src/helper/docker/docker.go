@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
@@ -284,6 +286,92 @@ func Kill(projectName string) {
 	}
 }
 
+// ensureBindMountSources creates the host directories the generated stack binds
+// into containers, before docker gets the chance to.
+//
+// Docker creates a missing bind-mount source itself, and the daemon runs as
+// root — so a directory the project needs appears owned by root, inside the
+// user's own project. Two things then break, both quietly: Medusa's download
+// step saw a project directory that was no longer empty and skipped cloning the
+// starter, and `project:remove` could not delete what it had not created.
+//
+// Creating them here means they belong to whoever ran madock, which is the
+// answer to both. Only paths under the project's own `src` mount are touched,
+// and only when missing.
+func ensureBindMountSources(composeFile string) {
+	data, err := os.ReadFile(composeFile)
+	if err != nil {
+		return
+	}
+
+	runDir := paths.GetRunDirPath()
+	// `- ./src/<relative path>:<container path>` is how the templates bind a
+	// piece of the project. Named volumes and absolute paths are not ours to
+	// create.
+	pattern := regexp.MustCompile(`(?m)^\s*-\s*\./src/([^:\s]+):`)
+	for _, match := range pattern.FindAllStringSubmatch(string(data), -1) {
+		relative := strings.TrimSuffix(match[1], "/")
+		if relative == "" || strings.Contains(relative, "..") {
+			continue
+		}
+		target := filepath.Join(runDir, relative)
+		if paths.IsFileExist(target) {
+			continue
+		}
+		if err := os.MkdirAll(target, 0o755); err != nil {
+			logger.Println("could not create the bind-mount directory "+target+":", err)
+		}
+	}
+}
+
+// ReclaimProjectFiles hands the project directory back to whoever runs madock.
+//
+// Containers run as root unless something says otherwise, so anything they
+// write during a build or a dev server belongs to root on the host too —
+// Medusa's `.medusa/client/` is the one that showed up first. The user cannot
+// delete it, which is how `project:remove`, a command whose whole promise is to
+// leave nothing behind, ended with "permission denied" and a directory still
+// there.
+//
+// Best effort by design: it runs before the containers are taken down so the
+// project's own image is available, and a failure is reported rather than
+// fatal. Removal has to continue either way — stopping at this point would
+// leave the user with both the files and the containers.
+func ReclaimProjectFiles(projectName string) {
+	usr, err := user.Current()
+	if err != nil {
+		logger.Println("could not tell who is running madock:", err)
+		return
+	}
+
+	projectConf := configs2.GetProjectConfig(projectName)
+	workdir := projectConf["workdir"]
+	if workdir == "" {
+		workdir = "/var/www/html"
+	}
+	service := configs2.ResolveMainService(projectConf, "php")
+	container := GetContainerName(projectConf, projectName, service)
+
+	own := "chown -R " + usr.Uid + ":" + usr.Gid + " " + workdir
+	if out, execErr := exec.Command("docker", "exec", "-u", "root", container, "sh", "-c", own).CombinedOutput(); execErr == nil {
+		return
+	} else {
+		logger.Println("could not reclaim "+workdir+" through "+container+":", execErr, string(out))
+	}
+
+	// The container may already be gone — a project that was stopped, or one
+	// whose stack failed to come up. A throwaway container mounting the same
+	// directory does the same job and needs nothing of the project.
+	runDir := paths.GetRunDirPath()
+	fallback := exec.Command("docker", "run", "--rm",
+		"-v", runDir+":/madock-target",
+		"--entrypoint", "sh", "alpine:3",
+		"-c", "chown -R "+usr.Uid+":"+usr.Gid+" /madock-target")
+	if out, runErr := fallback.CombinedOutput(); runErr != nil {
+		logger.Println("could not reclaim "+runDir+":", runErr, string(out))
+	}
+}
+
 // prepareHomeDirs makes sure the host directories a project links into exist,
 // and returns the home directory holding them.
 //
@@ -388,6 +476,7 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 	paths.MakeDirsByPath(pp.RuntimeDir())
 	composeFile := pp.DockerCompose()
 	composeFileOS := pp.DockerComposeOverride()
+	ensureBindMountSources(composeFile)
 	profilesOn := []string{
 		"compose",
 		"-f",

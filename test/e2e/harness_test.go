@@ -236,6 +236,16 @@ func (p *project) destroy() {
 	if out, err := p.tryRun(5*time.Minute, "project:remove", "--force", "--name="+p.name); err != nil {
 		p.t.Logf("cleanup of %s did not complete: %v\n%s", p.name, err, out)
 	}
+
+	// Containers write as root, and some of what they write outlives them: a
+	// Medusa install leaves `.medusa/client/` owned by root inside the project.
+	// Go's own TempDir cleanup then fails with "permission denied" and marks
+	// the test failed after it has already passed — a red result whose cause is
+	// housekeeping. Removing it as root is the only way, and it is confined to
+	// a directory this test created.
+	if out, err := exec.Command("sudo", "rm", "-rf", p.runDir).CombinedOutput(); err != nil {
+		p.t.Logf("could not remove %s as root: %v\n%s", p.runDir, err, out)
+	}
 }
 
 // configured reports whether setup ever got far enough to register the project.
