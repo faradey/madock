@@ -64,6 +64,16 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 		fmtc.InfoIconLn(fmt.Sprintf("Using detected Magento version: %s", mageVersion))
 	} else if !usePreset && args.PlatformVersion != "" {
 		mageVersion = args.PlatformVersion
+		// The same table the detected-version branch above reads. Naming the
+		// version on the command line used to skip it entirely and keep the
+		// defaults for an unknown version — where Composer is the empty string,
+		// because GetComposerVersion("") matches none of its ranges. The result
+		// was a 2.4.8 installed with Composer 1, which cannot resolve
+		// magento/product-community-edition at all: every package "could not be
+		// found", after a twenty-minute download.
+		//
+		// Explicit flags still win: each is applied over this a few steps below.
+		toolsDefVersions = magento2.GetVersions(mageVersion)
 		if args.Php != "" {
 			toolsDefVersions.Php = args.Php
 		}

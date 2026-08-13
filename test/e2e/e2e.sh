@@ -6,6 +6,7 @@
 #   ./test/e2e/e2e.sh up            build the VM (a few minutes, once)
 #   ./test/e2e/e2e.sh run           build madock for linux, run the whole suite
 #   ./test/e2e/e2e.sh run -run Foo  the same, narrowed to one test
+#   ./test/e2e/e2e.sh run --platforms   include the platform tests (an hour)
 #   ./test/e2e/e2e.sh shell         a shell inside the VM
 #   ./test/e2e/e2e.sh down          shut it down, keep the disk
 #   ./test/e2e/e2e.sh reset         delete it and build it again
@@ -107,6 +108,18 @@ cmd_up() {
 
 cmd_run() {
     need_lima
+
+    # --platforms as a flag rather than an environment variable: an inline
+    # assignment in front of a command is invisible to shell history, to a
+    # transcript and to anything that matches commands by prefix, and this is
+    # the one switch that changes a five-minute run into an hour-long one.
+    platforms=""
+    if [ "${1:-}" = "--platforms" ]; then
+        platforms="yes"
+        shift
+    fi
+    [ "${MADOCK_E2E_PLATFORMS:-}" = "yes" ] && platforms="yes"
+
     ensure_running
     ensure_free
     build_binary
@@ -138,11 +151,11 @@ cmd_run() {
     # its own, so the whole run gets an hour and a half when they are asked for
     # and stays at 45m when they are not.
     timeout="45m"
-    [ "${MADOCK_E2E_PLATFORMS:-}" = "yes" ] && timeout="90m"
+    [ "$platforms" = "yes" ] && timeout="90m"
 
     limactl shell "$VM_NAME" -- env \
         MADOCK_E2E_BIN="$binary" \
-        MADOCK_E2E_PLATFORMS="${MADOCK_E2E_PLATFORMS:-}" \
+        MADOCK_E2E_PLATFORMS="$platforms" \
         PATH="/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin" \
         sh -c "cd '$repo_root' && go test -tags=e2e -count=1 -v -timeout=$timeout ./test/e2e/...$quoted"
 }
