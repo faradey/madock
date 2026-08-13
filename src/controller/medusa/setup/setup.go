@@ -197,8 +197,13 @@ func DownloadMedusa(projectName string) {
 		storefrontDir = "storefront"
 	}
 	storefrontTarget := target + "/" + storefrontDir
-	if _, err := os.Stat(storefrontTarget); err == nil {
-		fmtc.WarningLn("Skipping storefront download — " + storefrontTarget + " already exists.")
+	// Existing is not the same as occupied. The directory is a bind-mount
+	// source, so it exists before the download runs — created by madock now,
+	// and by docker as root before that. Skipping on existence alone meant the
+	// storefront was never cloned on a clean project, which shows up much later
+	// as a site that has a backend and no shop.
+	if !isDirEmpty(storefrontTarget) {
+		fmtc.WarningLn("Skipping storefront download — " + storefrontTarget + " already has content.")
 		return
 	}
 	fmtc.InfoIconLn("Cloning " + storefrontGitURL + " into " + storefrontTarget)

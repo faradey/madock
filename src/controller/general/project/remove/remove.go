@@ -86,6 +86,11 @@ func Execute() {
 }
 
 func removeProject(projectName string) {
+	// Before the containers go: anything they wrote as root has to be handed
+	// back, or the deletion below stops at the first such file and leaves the
+	// project half removed.
+	docker.ReclaimProjectFiles(projectName)
+
 	docker.Down(projectName, true)
 
 	pp := paths.NewProjectPaths(projectName)

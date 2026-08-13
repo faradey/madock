@@ -3,8 +3,10 @@
 package e2e
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -51,6 +53,13 @@ func TestMedusaInstallsAndAnswers(t *testing.T) {
 	requireFile(t, filepath.Join(p.runDir, ".env"),
 		"the environment file the install writes, with the database URL in it")
 
+	// The storefront is a second clone into a directory that already exists,
+	// because it is a bind-mount source. It used to be skipped for exactly that
+	// reason — "already exists" — leaving a project with a backend and no shop,
+	// which is only noticed when somebody opens the site.
+	requireFile(t, filepath.Join(p.runDir, "storefront", "package.json"),
+		"the storefront starter, cloned into a directory that was already there")
+
 	requireContains(t, p.run(3*time.Minute, "status"), "nodejs running",
 		"the container the dev server lives in")
 	t.Logf("the installed project: %s", describeTree(t, p.runDir))
@@ -65,4 +74,47 @@ func TestMedusaInstallsAndAnswers(t *testing.T) {
 	if !strings.Contains(strings.ToUpper(body), "OK") {
 		t.Errorf("/health answered 200 but not with what Medusa says:\n%s", firstLines(body, 20))
 	}
+
+	// Ownership is asked about before removal, not through it. `project:remove`
+	// hands the directory back to the user first, so it would succeed even if
+	// the dev server were still writing as root — the two fixes have to be told
+	// apart, and this is the one that says the entrypoint drops privileges.
+	if owned := rootOwnedFiles(t, p.runDir); len(owned) > 0 {
+		t.Errorf("the dev server wrote %d file(s) as root, e.g. %v", len(owned), owned[:min(3, len(owned))])
+	}
+
+	// Removal is part of what this platform tests, because it is where the
+	// ownership problem lands. A dev server writes `.medusa/client/` as root,
+	// and `project:remove` — whose whole promise is to leave nothing behind —
+	// used to stop there with "permission denied" and leave the directory. The
+	// harness cleans up as root afterwards, so without asking here nothing
+	// would notice.
+	if out, err := p.tryRun(10*time.Minute, "project:remove", "--force", "--name="+p.name); err != nil {
+		t.Errorf("project:remove could not finish: %v\n%s", err, out)
+	}
+	if _, err := os.Stat(p.runDir); err == nil {
+		t.Errorf("project:remove left %s behind:\n%s", p.runDir, describeTree(t, p.runDir))
+	}
+}
+
+// rootOwnedFiles returns paths under root that belong to uid 0.
+//
+// Everything a container writes into the project should come out owned by
+// whoever runs madock — the images remap their application user to that uid for
+// exactly this reason. A file owned by root means some process inside is still
+// running as root, and the user cannot delete their own project.
+func rootOwnedFiles(t *testing.T, root string) []string {
+	t.Helper()
+
+	var owned []string
+	_ = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info == nil {
+			return nil
+		}
+		if stat, ok := info.Sys().(*syscall.Stat_t); ok && stat.Uid == 0 {
+			owned = append(owned, strings.TrimPrefix(path, root+"/"))
+		}
+		return nil
+	})
+	return owned
 }

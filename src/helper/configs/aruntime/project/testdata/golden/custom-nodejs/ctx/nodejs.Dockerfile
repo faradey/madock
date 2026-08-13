@@ -43,6 +43,31 @@ umask 0002
 
 cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html
 
+# run_app execs the long-running command as the application user.
+#
+# The entrypoint itself needs root: it waits for code that madock writes after
+# the container starts, and reads files whose ownership is not settled yet. The
+# dev server does not, and running it as root is how every file it writes ends
+# up owned by root on the host — `.medusa/client/` was the one that made this
+# visible, and the user could not delete their own project afterwards.
+#
+# This is the arrangement the php side has always had: the php-fpm master starts
+# as root and its workers run as www-data, whose uid is remapped to the host
+# user at build time. `node` is remapped the same way, so dropping to it here
+# makes the two languages agree.
+#
+# HOME comes from passwd rather than being assumed: yarn and npm write caches
+# and logs into it, and leaving root's HOME behind would send them somewhere the
+# app user cannot write.
+run_app() {
+  if [ "$(id -u)" = "0" ] && id node >/dev/null 2>&1; then
+    HOME=$(getent passwd node | cut -d: -f6)
+    export HOME
+    exec setpriv --reuid=node --regid=node --init-groups "$@"
+  fi
+  exec "$@"
+}
+
 # Wait for the project code to appear. madock setup -d clones the
 # starter AFTER the container starts; rather than dropping to a Node
 # REPL and never recovering, idle here until package.json shows up.
@@ -103,7 +128,7 @@ else
 fi
 
 if [ -z "$script" ]; then
-  exec node
+  run_app node
 fi
 
 if [ "$mode" = "package" ] && ! has_script "$script"; then
@@ -159,11 +184,11 @@ fi
 
 if [ "$mode" = "command" ]; then
   echo "[madock] starting: $script"
-  exec sh -c "$script"
+  run_app sh -c "$script"
 fi
 
 echo "[madock] starting: $pm $script"
-exec $pm $script
+run_app $pm $script
 MADOCK_EOF
 
 ENV WORKDIR=/var/www/html

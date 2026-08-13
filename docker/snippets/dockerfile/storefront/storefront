@@ -23,6 +23,21 @@ set -e
 
 cd "${WORKDIR:-/var/www/html/storefront}" 2>/dev/null || cd /var/www/html/storefront
 
+# run_app execs the dev server as the application user. The entrypoint needs
+# root to wait for code madock writes after the container starts; the server
+# does not, and running it as root makes every file it writes root-owned on the
+# host — including the build output the user then cannot delete. `node` is
+# remapped to the host uid at build time, so dropping to it is what makes the
+# ownership come out right. Same arrangement as the backend image.
+run_app() {
+  if [ "$(id -u)" = "0" ] && id node >/dev/null 2>&1; then
+    HOME=$(getent passwd node | cut -d: -f6)
+    export HOME
+    exec setpriv --reuid=node --regid=node --init-groups "$@"
+  fi
+  exec "$@"
+}
+
 if [ ! -f package.json ]; then
   echo "[madock] storefront: no package.json in $(pwd) — waiting for project code."
   while [ ! -f package.json ]; do
@@ -34,7 +49,7 @@ fi
 script=$(node -e 'try{var p=require("./package.json").scripts||{};process.stdout.write(p.dev?"dev":(p.start?"start":""))}catch(e){}' 2>/dev/null)
 
 if [ -z "$script" ]; then
-  exec node
+  run_app node
 fi
 
 deps_installed() {
@@ -72,7 +87,7 @@ for envfile in .env .env.local; do
 done
 
 echo "[madock] storefront starting: $pm $script"
-exec $pm $script
+run_app $pm $script
 MADOCK_EOF
 
 ENV WORKDIR={{{medusa/storefront/workdir}}}
