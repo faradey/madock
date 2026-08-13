@@ -138,14 +138,25 @@ func (h *BaseHandler) executeChown(projectName string, projectConf map[string]st
 		logger.Fatal(err)
 	}
 
-	// Build chown command for all directories
+	// Build chown command for all directories.
+	//
+	// Each directory is chowned only if it is there. The list is declared per
+	// platform, but what exists is decided by the image: a `custom` project with
+	// no PHP runs an `app` container with no composer home, and the chain used
+	// to stop at the first missing directory and take the whole command with it
+	// — `start --with-chown` exited 1 on every such project, after the
+	// containers were already up, so the flag was unusable and the failure said
+	// nothing about why.
+	//
+	// A missing directory is skipped; a chown that genuinely cannot run still
+	// fails, which is the half worth keeping loud.
 	chownCmd := ""
 	dirs := h.GetChownDirs(projectConf)
 	for i, dir := range dirs {
 		if i > 0 {
 			chownCmd += " && "
 		}
-		chownCmd += "chown -R " + usr.Uid + ":" + usr.Gid + " " + dir
+		chownCmd += "if [ -e " + dir + " ]; then chown -R " + usr.Uid + ":" + usr.Gid + " " + dir + "; fi"
 	}
 
 	containerName := docker.GetContainerName(projectConf, projectName, ResolveMainService(projectConf, h.GetMainContainer()))
