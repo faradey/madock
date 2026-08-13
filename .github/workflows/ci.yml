@@ -14,9 +14,18 @@
 
 name: CI
 
+# `staging` is where work is verified and `master` is where verified work lands.
+# The end-to-end suite only ever runs here — the build tag keeps it out of the
+# pre-push hook, and the Lima VM on a laptop is the iteration loop, not the
+# verdict — so a branch that CI does not watch is a branch whose e2e nobody has
+# run. master then receives a fast-forward of exactly the tree that was green.
+#
+# It costs a second run of the same tree on master. That is deliberate: the run
+# on master is the record of what master did, and re-running is cheaper than
+# reasoning about whether a green run on another ref still applies.
 on:
   push:
-    branches: [master]
+    branches: [master, staging]
   pull_request:
   workflow_dispatch:
 
