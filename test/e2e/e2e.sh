@@ -46,6 +46,36 @@ ensure_running() {
     vm_running || limactl start "$VM_NAME"
 }
 
+# ensure_free refuses to start while another suite is running in the same VM.
+#
+# madock and madock-pro share this machine and only one may run at a time: the
+# proxy is one container per Docker daemon, and every installation's port
+# registry starts at the same number, so the second run takes the first one's
+# proxy away and then fails to bind. That is not theoretical — it cost three
+# runs in one afternoon, and the leftovers look like a defect in whatever was
+# being tested rather than like a collision.
+#
+# The check is for the test binary rather than for containers: containers left
+# behind are a mess to clean up, but a running `e2e.test` is somebody's work in
+# progress. madock-pro's driver has had this; this one had not.
+ensure_free() {
+    running=$(limactl shell "$VM_NAME" -- pgrep -af 'e2e\.test' 2>/dev/null || true)
+    [ -z "$running" ] && return 0
+
+    [ "${MADOCK_E2E_IGNORE_BUSY:-}" = "yes" ] && {
+        printf 'another suite is running and MADOCK_E2E_IGNORE_BUSY=yes — going ahead anyway\n' >&2
+        return 0
+    }
+
+    die "another end-to-end suite is already running in $VM_NAME:
+
+$running
+
+Both suites share this VM and only one may run at a time — the proxy is one
+container per daemon and the port registries collide. Wait for it to finish.
+To insist anyway: MADOCK_E2E_IGNORE_BUSY=yes $0 run"
+}
+
 # The guest runs the same architecture as the host — vz virtualises, it does not
 # emulate — so the host's own arch is the right target.
 build_binary() {
@@ -77,6 +107,7 @@ cmd_up() {
 cmd_run() {
     need_lima
     ensure_running
+    ensure_free
     build_binary
 
     # -count=1 for the same reason the pre-push hook passes it: these tests are
