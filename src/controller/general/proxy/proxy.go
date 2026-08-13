@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"os"
+
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
@@ -74,7 +76,19 @@ func Execute(flag string) {
 				docker.DownNginx(args.Force)
 				docker.UpNginxWithBuild(projectName, true)
 			} else if flag == "reload" {
-				docker.ReloadNginx()
+				// reload is the one verb that cannot create what it needs: it
+				// execs `nginx -s reload` inside a container that has to
+				// already be running. When it is not, docker fails and the
+				// configuration on disk is simply not applied — printing the
+				// success line below would report the intent instead of what
+				// happened, and the caller (a script, or a person who has just
+				// changed a host) would carry on believing the proxy is
+				// serving the new config.
+				if err := docker.ReloadNginx(); err != nil {
+					fmtc.ErrorLn("The proxy configuration was not reloaded: the proxy is not running")
+					fmtc.ToDoLn("Run madock proxy:start")
+					os.Exit(1)
+				}
 			}
 			fmtc.SuccessLn("Done")
 		} else {
