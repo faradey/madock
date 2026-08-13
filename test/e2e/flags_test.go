@@ -105,6 +105,17 @@ func TestStartWithChownTakesOwnershipBack(t *testing.T) {
 // politely, and also what makes it worth a test — a database killed mid-write
 // has to come back through crash recovery with its rows intact. Nothing else in
 // the suite kills a database on purpose.
+//
+// What it can honestly ask for is bounded by what the stack promises. madock's
+// my.cnf sets `innodb_flush_log_at_trx_commit = 0`, so a commit is durable
+// about a second later rather than at commit — a development trade that buys
+// speed and means a kill can take the last second of writes with it. This test
+// passed locally and failed in CI for exactly that reason: the runner is faster,
+// so less than a second passed between the insert and the kill.
+//
+// So the row is made durable first, deliberately and visibly. Testing crash
+// recovery is the point; testing whether a background flush happened to win a
+// race is not.
 func TestRebuildForceKeepsTheData(t *testing.T) {
 	p := newProject(t, "e2erebuildf")
 
@@ -115,6 +126,7 @@ func TestRebuildForceKeepsTheData(t *testing.T) {
 	)
 	p.run(20*time.Minute, "start")
 
+	p.query("SET GLOBAL innodb_flush_log_at_trx_commit = 1")
 	p.freshTable("probe", "(note VARCHAR(32))")
 	p.query("INSERT INTO probe VALUES ('written-before-rebuild')")
 
