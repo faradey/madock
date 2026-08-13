@@ -59,6 +59,11 @@ func TestShopwareInstallsAndAnswers(t *testing.T) {
 	// rendered by PHP against the database it was just given, which is.
 	status, body := httpsGet(t, "e2eshopware.test", "/")
 	if status != 200 {
+		// This passes on a laptop and failed on a CI runner with the same EOF
+		// sixty times over fifteen minutes, which is a difference in the
+		// machine rather than in the code — and nothing in "EOF" says which
+		// part gave up. Ask the environment while it is still standing.
+		reportWhyTheSiteIsSilent(t, p, "e2eshopware.test")
 		t.Fatalf("the storefront answered %d, not 200:\n%s", status, firstLines(body, 20))
 	}
 	if !strings.Contains(strings.ToLower(body), "shopware") {

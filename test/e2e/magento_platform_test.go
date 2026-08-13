@@ -4,7 +4,9 @@ package e2e
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"net/http"
@@ -200,6 +202,71 @@ func describeTree(t *testing.T, root string) string {
 		return nil
 	})
 	return fmt.Sprintf("%d files, %d MB", files, bytes/(1024*1024))
+}
+
+// reportWhyTheSiteIsSilent prints what the project looks like from inside when
+// a request through the proxy gets no answer.
+//
+// "EOF" is what Go says when the connection closed before a response, and every
+// candidate for that produces the same word: the project's nginx not running,
+// php-fpm not answering it, a certificate the proxy would not serve, or the
+// proxy pointing at nothing. Each is visible from a different place, so all four
+// are asked at once — a failure that only happens on somebody else's machine is
+// worth more evidence than a failure you can reproduce.
+//
+// Everything here is best effort and none of it fails the test; the assertion
+// that called it has already decided.
+func reportWhyTheSiteIsSilent(t *testing.T, p *project, host string) {
+	t.Helper()
+
+	if out, err := p.tryRun(2*time.Minute, "status"); err == nil {
+		t.Logf("containers:\n%s", out)
+	} else {
+		t.Logf("status could not be read: %v\n%s", err, out)
+	}
+
+	if digest := servedCertificateDigestOrEmpty(host); digest == "" {
+		t.Logf("the proxy served no certificate for %s — the TLS handshake is where this ends", host)
+	} else {
+		t.Logf("the proxy served a certificate for %s (%s), so the handshake is fine and the answer is missing behind it", host, digest[:12])
+	}
+
+	for _, service := range []string{"nginx", "php"} {
+		if out, err := p.tryRun(2*time.Minute, "logs", "-s", service); err == nil {
+			t.Logf("last of the %s log:\n%s", service, lastLines(out, 25))
+		} else {
+			t.Logf("the %s log could not be read: %v", service, err)
+		}
+	}
+}
+
+// servedCertificateDigestOrEmpty is servedCertificateDigest without the fatal:
+// here the absence of a certificate is a piece of evidence, not a failure.
+func servedCertificateDigestOrEmpty(host string) string {
+	dialer := &net.Dialer{Timeout: 10 * time.Second}
+	conn, err := dialer.Dial("tcp", "127.0.0.1:443")
+	if err != nil {
+		return ""
+	}
+	tlsConn := tls.Client(conn, &tls.Config{ServerName: host, InsecureSkipVerify: true})
+	defer func() { _ = tlsConn.Close() }()
+	if err := tlsConn.Handshake(); err != nil {
+		return ""
+	}
+	certs := tlsConn.ConnectionState().PeerCertificates
+	if len(certs) == 0 {
+		return ""
+	}
+	sum := sha256.Sum256(certs[0].Raw)
+	return hex.EncodeToString(sum[:])
+}
+
+func lastLines(s string, n int) string {
+	lines := strings.Split(strings.TrimRight(s, "\n"), "\n")
+	if len(lines) > n {
+		lines = lines[len(lines)-n:]
+	}
+	return strings.Join(lines, "\n")
 }
 
 func firstLines(s string, n int) string {
