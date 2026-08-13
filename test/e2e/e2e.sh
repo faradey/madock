@@ -9,6 +9,7 @@
 #   ./test/e2e/e2e.sh shell         a shell inside the VM
 #   ./test/e2e/e2e.sh down          shut it down, keep the disk
 #   ./test/e2e/e2e.sh reset         delete it and build it again
+#   ./test/e2e/e2e.sh auth          give the VM your composer credentials
 #   ./test/e2e/e2e.sh run-local     no VM — only where the daemon is disposable
 #
 # The suite is behind the `e2e` build tag, so `go test ./...` does not compile
@@ -132,10 +133,18 @@ cmd_run() {
         quoted="$quoted '$escaped'"
     done
 
+    # A platform test installs a real store: a composer create-project, an
+    # OpenSearch that has to come up, a setup:install. That is twenty minutes on
+    # its own, so the whole run gets an hour and a half when they are asked for
+    # and stays at 45m when they are not.
+    timeout="45m"
+    [ "${MADOCK_E2E_PLATFORMS:-}" = "yes" ] && timeout="90m"
+
     limactl shell "$VM_NAME" -- env \
         MADOCK_E2E_BIN="$binary" \
+        MADOCK_E2E_PLATFORMS="${MADOCK_E2E_PLATFORMS:-}" \
         PATH="/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin" \
-        sh -c "cd '$repo_root' && go test -tags=e2e -count=1 -v -timeout=45m ./test/e2e/...$quoted"
+        sh -c "cd '$repo_root' && go test -tags=e2e -count=1 -v -timeout=$timeout ./test/e2e/...$quoted"
 }
 
 # cmd_run_local runs the suite against the Docker daemon of the machine it is
@@ -159,6 +168,37 @@ To insist anyway: MADOCK_E2E_ALLOW_LOCAL_DOCKER=yes $0 run-local"
     ( cd "$repo_root" && GOOS=linux GOARCH="$goarch" go build -o "$binary" . )
 
     MADOCK_E2E_BIN="$binary" go test -tags=e2e -count=1 -v -timeout=40m ./test/e2e/... "$@"
+}
+
+# cmd_auth copies the invoking user's composer credentials into the guest.
+#
+# The platform tests install a real store, and Magento is downloaded from
+# repo.magento.com, which refuses anonymous requests. madock symlinks
+# ~/.composer into the project and bind-mounts it into the php container, so the
+# credentials come from whichever machine runs madock — here the guest, whose
+# home is its own and empty.
+#
+# Lima mounts the host home read-only at the same absolute path, so the file is
+# already visible from inside; this only puts it where composer looks. Nothing
+# leaves this laptop: the guest is local, the file is never committed, and CI
+# has neither the mount nor the file, which is why the Magento test skips there
+# instead of failing.
+#
+# Run it again after `reset` — a rebuilt VM has an empty home.
+cmd_auth() {
+    need_lima
+    ensure_running
+
+    host_auth="$HOME/.composer/auth.json"
+    [ -f "$host_auth" ] || die "no composer credentials on this machine: $host_auth does not exist.
+The platform tests need them to download Magento; everything else runs without."
+
+    limactl shell "$VM_NAME" -- sh -c "mkdir -p ~/.composer && cp '$host_auth' ~/.composer/auth.json && chmod 600 ~/.composer/auth.json"
+    printf 'copied %s into %s:~/.composer/auth.json\n' "$host_auth" "$VM_NAME"
+
+    # Named, never printed: the point is to confirm which service the guest can
+    # now reach, not to put a password in a terminal or a transcript.
+    limactl shell "$VM_NAME" -- sh -c "grep -o '\"[a-z0-9.-]*\\.com\"' ~/.composer/auth.json | tr -d '\"' | sort -u | sed 's/^/  credentials for /'"
 }
 
 cmd_shell() {
@@ -194,6 +234,7 @@ case "$command" in
     up)        cmd_up ;;
     run)       cmd_run "$@" ;;
     run-local) cmd_run_local "$@" ;;
+    auth)   cmd_auth ;;
     shell)  cmd_shell ;;
     down)   cmd_down ;;
     reset)  cmd_reset ;;
