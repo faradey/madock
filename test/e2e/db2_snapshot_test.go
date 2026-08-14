@@ -97,10 +97,24 @@ func TestSnapshotAndInfoKnowAboutTheSecondDatabase(t *testing.T) {
 	requireFile(t, filepath.Join(snapshotDir, "db.tar.gz"),
 		"the first database's archive inside the snapshot")
 
+	// snapshot:create takes the databases down to copy them, and a container that
+	// is back is not a server accepting connections yet. Without this wait the very
+	// next write to db2 answered `ERROR 2002 (HY000): Can't connect to server on
+	// 'db2'` — on a busy runner, and only there: the same commit passed in a second
+	// run that happened to be thirty seconds slower. The first database is waited
+	// for the same way at the top of the test; this is the second place that needs
+	// it and did not have it.
+	waitForSecondDatabase(t, p)
+
 	p.query("INSERT INTO first_probe VALUES ('after-snapshot')")
 	p.querySecond("INSERT INTO second_probe VALUES ('after-snapshot')")
 
 	p.run(20*time.Minute, "snapshot:restore", "--name", "both-databases")
+
+	// Same reason as above: restore also stops the databases to replace their data
+	// directories, so the assertions below have to wait for db2 to answer rather
+	// than assume it does.
+	waitForSecondDatabase(t, p)
 
 	first := p.query("SELECT note FROM first_probe")
 	requireContains(t, first, "before-snapshot", "the first database after the restore")
