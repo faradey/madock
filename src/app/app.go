@@ -47,8 +47,8 @@ func Run(appVersion string) {
 // a command in a directory that is not a project quietly adopted any generated
 // files sitting under that name. In the madock source tree itself — a directory
 // called "madock", next to runtime leftovers from an older version — `restart`
-// therefore ran docker compose against a file from months earlier and failed with
-// `bad host name ''`, blaming a service in a project that does not exist.
+// therefore ran docker compose against a file from months earlier and failed on an
+// empty host name, blaming a service in a project that does not exist.
 func refuseOutsideProject(cmdName string) {
 	name := configs.GetProjectName()
 
