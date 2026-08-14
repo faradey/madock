@@ -35,9 +35,25 @@ func TestShopwareInstallsAndAnswers(t *testing.T) {
 
 	p := newProject(t, "e2eshopware")
 
+	// 6.7.12.2 rather than the newest release, and the reason is upstream rather
+	// than here. shopware/core v6.7.13.0 is the only one of its 209 releases that
+	// requires mcp/sdk, as `^0.6.0` — which for a 0.x version means 0.6.0 and
+	// nothing else. On 2026-08-14 at 06:19 UTC, advisory PKSA-p9gd-j6gr-6f9t
+	// (CVE-2026-53965, an unbounded SSE buffer in that package's client) was
+	// published against >=0.5.0,<0.7.1, so composer refuses to install the only
+	// version the constraint allows and `create-project` dies with exit status 2
+	// after three hundred lines of version candidates. This test was green sixteen
+	// hours earlier on the same code.
+	//
+	// Not worked around by relaxing composer's advisory policy: that would install
+	// a package with a CVE onto every stand this test stands in for. 6.7.12.2 does
+	// not require mcp/sdk at all.
+	//
+	// Move this back to the newest release once shopware/core constrains mcp/sdk to
+	// something that includes 0.7.1.
 	p.run(45*time.Minute, "setup", "-y", "-d", "-i",
 		"--platform=shopware",
-		"--platform-version=6.7.13.0",
+		"--platform-version=6.7.12.2",
 		"--php=8.3",
 		"--hosts=e2eshopware.test",
 	)
