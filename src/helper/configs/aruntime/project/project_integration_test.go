@@ -3,226 +3,19 @@ package project
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/ports"
+	"github.com/faradey/madock/v3/src/helper/testenv"
 )
 
-// findProjectRoot locates the madock project root by walking up from the current test file.
-func findProjectRoot(t *testing.T) string {
-	t.Helper()
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("cannot determine test file path")
-	}
-	dir := filepath.Dir(filename)
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return dir
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			t.Fatal("cannot find project root (go.mod)")
-		}
-		dir = parent
-	}
-}
-
-// testEnv holds paths for the test environment and cleanup function.
-type testEnv struct {
-	execDir     string
-	runDir      string
-	projectName string
-}
-
-// setupTestEnvironment creates a temp directory structure that MakeConf can work with.
-// It symlinks docker/ and scripts/ from the real project, copies config.xml,
-// and creates a project config via SaveInFile.
-func setupTestEnvironment(t *testing.T, projectName, hostName string) *testEnv {
-	t.Helper()
-	return setupTestEnvironmentWith(t, projectName, hostName, nil)
-}
-
-// setupTestEnvironmentWith is setupTestEnvironment with the project config
-// opened up: overrides are applied on top of the Magento defaults below, so a
-// test can describe a different platform, language or database without
-// restating the ninety keys it does not care about.
-func setupTestEnvironmentWith(t *testing.T, projectName, hostName string, overrides map[string]string) *testEnv {
-	t.Helper()
-	realRoot := findProjectRoot(t)
-
-	tmpDir, err := os.MkdirTemp("", "madock-integration-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	t.Cleanup(func() { os.RemoveAll(tmpDir) })
-
-	execDir := filepath.Join(tmpDir, "exec")
-	runDir := filepath.Join(tmpDir, "run")
-
-	// Create directory structure
-	dirs := []string{
-		execDir,
-		filepath.Join(execDir, "projects", projectName, "docker", "ctx"),
-		filepath.Join(execDir, "aruntime", "projects", projectName, "ctx"),
-		filepath.Join(execDir, "cache"),
-		filepath.Join(execDir, "scripts"),
-		runDir,
-	}
-	for _, d := range dirs {
-		if err := os.MkdirAll(d, 0755); err != nil {
-			t.Fatalf("Failed to create dir %s: %v", d, err)
-		}
-	}
-
-	// Symlink docker/ from real project
-	if err := os.Symlink(filepath.Join(realRoot, "docker"), filepath.Join(execDir, "docker")); err != nil {
-		t.Fatalf("Failed to symlink docker/: %v", err)
-	}
-
-	// Copy config.xml (global config template)
-	srcConfig, err := os.ReadFile(filepath.Join(realRoot, "config.xml"))
-	if err != nil {
-		t.Fatalf("Failed to read config.xml: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(execDir, "config.xml"), srcConfig, 0644); err != nil {
-		t.Fatalf("Failed to write config.xml: %v", err)
-	}
-
-	// Set env vars
-	t.Setenv("MADOCK_EXEC_DIR", execDir)
-	t.Setenv("MADOCK_RUN_DIR", runDir)
-
-	// Clean config cache so the new env vars are picked up
-	configs.CleanCache()
-
-	// Create project config via SaveInFile with Magento 2.4.8 settings
-	projectConfigPath := filepath.Join(execDir, "projects", projectName, "config.xml")
-	projectConfigData := map[string]string{
-		"platform":                     "magento2",
-		"language":                     "php",
-		"path":                         runDir,
-		"php/enabled":                  "true",
-		"php/version":                  "8.4",
-		"php/composer/version":         "2",
-		"php/xdebug/version":           "3.4.4",
-		"php/xdebug/remote_host":       "host.docker.internal",
-		"php/xdebug/ide_key":           "PHPSTORM",
-		"php/xdebug/enabled":           "false",
-		"php/xdebug/mode":              "debug",
-		"php/ioncube/enabled":          "false",
-		"php/nodejs/enabled":           "false",
-		"timezone":                     "UTC",
-		"workdir":                      "/var/www/html",
-		"public_dir":                   "pub",
-		"composer_dir":                 "",
-		"db/repository":                "mariadb",
-		"db/version":                   "11.4",
-		"db/root_password":             "password",
-		"db/user":                      "magento",
-		"db/password":                  "magento",
-		"db/database":                  "magento",
-		"db/phpmyadmin/enabled":        "false",
-		"db2/enabled":                  "false",
-		"search/engine":                "OpenSearch",
-		"search/elasticsearch/enabled": "false",
-		"search/elasticsearch/version": "8.17.6",
-		"search/elasticsearch/repository": "elasticsearch",
-		"search/opensearch/enabled":    "true",
-		"search/opensearch/version":    "2.19.0",
-		"search/opensearch/repository": "opensearchproject/opensearch",
-		"search/opensearch/dashboard/enabled":    "false",
-		"search/opensearch/dashboard/repository": "opensearchproject/opensearch-dashboards",
-		"search/elasticsearch/dashboard/enabled":    "false",
-		"search/elasticsearch/dashboard/repository": "kibana",
-		"redis/enabled":                "false",
-		"redis/repository":             "redis",
-		"redis/version":                "8.0",
-		"valkey/enabled":               "false",
-		"valkey/repository":            "valkey/valkey",
-		"valkey/version":               "8.1.3",
-		"rabbitmq/enabled":             "false",
-		"rabbitmq/repository":          "rabbitmq",
-		"rabbitmq/version":             "4.1",
-		"nodejs/enabled":               "false",
-		"nodejs/repository":            "node",
-		"nodejs/version":               "18.15.0",
-		"nodejs/major_version":         "18",
-		"nodejs/yarn/enabled":          "false",
-		"cron/enabled":                 "false",
-		"nginx/ssl/enabled":            "true",
-		"nginx/http/version":           "http2",
-		"nginx/run_type":               "website",
-		"nginx/default_host_first_level": ".test",
-		"nginx/port/unsecure":          "80",
-		"nginx/port/secure":            "443",
-		"nginx/port/internal":          "80",
-		"nginx/interface_ip":           "",
-		"os/name":                      "ubuntu",
-		"os/version":                   "22.04",
-		"container_name_prefix":        "madock_",
-		"restart_policy":               "no",
-		"proxy/enabled":                "true",
-		"proxy/timeout/connect":        "60",
-		"proxy/timeout/send":           "300",
-		"proxy/timeout/read":           "300",
-		"proxy/gzip/enabled":           "true",
-		"proxy/rate_limit/enabled":     "true",
-		"proxy/rate_limit/rate":        "1000",
-		"proxy/rate_limit/burst":       "2000",
-		"isolation/enabled":            "false",
-		"varnish/enabled":              "false",
-		"grafana/enabled":              "false",
-		"claude/enabled":               "false",
-		"claude/nodejs_repository":     "node",
-		"claude/nodejs_version":        "22.19.0",
-		"ssh/auth_type":                "key",
-		"ssh/port":                     "22",
-		"magento/admin_user":           "admin",
-		"magento/admin_password":       "admin123",
-		"magento/admin_first_name":     "admin",
-		"magento/admin_last_name":      "admin",
-		"magento/admin_email":          "admin@admin.com",
-		"magento/admin_frontname":      "admin",
-		"magento/locale":               "en_US",
-		"magento/currency":             "USD",
-		"magento/timezone":             "America/Chicago",
-		"magento/cloud/enabled":        "false",
-		"magento/mftf/enabled":         "false",
-		"magento/n98magerun/enabled":   "false",
-	}
-
-	if hostName != "" {
-		projectConfigData["nginx/hosts/base/name"] = hostName
-	}
-
-	for key, value := range overrides {
-		projectConfigData[key] = value
-	}
-
-	configs.SaveInFile(projectConfigPath, projectConfigData, "default")
-
-	// Clean cache again after writing config
-	configs.CleanCache()
-	// Reset global port registry so it re-reads from the new execDir
-	ports.ResetRegistry()
-
-	return &testEnv{
-		execDir:     execDir,
-		runDir:      runDir,
-		projectName: projectName,
-	}
-}
-
 func TestMakeConfMagento2Integration(t *testing.T) {
-	env := setupTestEnvironment(t, "testproject", "magento248.test")
+	env := testenv.Setup(t, "testproject", "magento248.test")
 
-	MakeConf(env.projectName)
+	MakeConf(env.ProjectName)
 
-	runtimeDir := filepath.Join(env.execDir, "aruntime", "projects", env.projectName)
+	runtimeDir := filepath.Join(env.ExecDir, "aruntime", "projects", env.ProjectName)
 	ctxDir := filepath.Join(runtimeDir, "ctx")
 
 	// Verify expected files exist
@@ -262,22 +55,22 @@ func TestMakeConfMagento2Integration(t *testing.T) {
 }
 
 func TestMakeConfMagento2_NginxHostConfig(t *testing.T) {
-	env := setupTestEnvironment(t, "hostproject", "magento248.test")
+	env := testenv.Setup(t, "hostproject", "magento248.test")
 
-	MakeConf(env.projectName)
+	MakeConf(env.ProjectName)
 
-	ctxDir := filepath.Join(env.execDir, "aruntime", "projects", env.projectName, "ctx")
+	ctxDir := filepath.Join(env.ExecDir, "aruntime", "projects", env.ProjectName, "ctx")
 	nginxConf := filepath.Join(ctxDir, "nginx.conf")
 
 	assertFileContains(t, nginxConf, "magento248.test")
 }
 
 func TestMakeConfMagento2_DockerComposeServices(t *testing.T) {
-	env := setupTestEnvironment(t, "svcproject", "magento248.test")
+	env := testenv.Setup(t, "svcproject", "magento248.test")
 
-	MakeConf(env.projectName)
+	MakeConf(env.ProjectName)
 
-	runtimeDir := filepath.Join(env.execDir, "aruntime", "projects", env.projectName)
+	runtimeDir := filepath.Join(env.ExecDir, "aruntime", "projects", env.ProjectName)
 	composeFile := filepath.Join(runtimeDir, "docker-compose.yml")
 
 	content, err := os.ReadFile(composeFile)
@@ -319,9 +112,9 @@ func assertFileContains(t *testing.T, path, substr string) {
 // evaluateCondition sees an unsubstituted {{{db/enabled}}} placeholder, treats
 // it as false, and the database container silently disappears.
 func TestMakeConf_DbServiceEnabledByDefault(t *testing.T) {
-	env := setupTestEnvironment(t, "dbdefaultproject", "dbdefault.test")
+	env := testenv.Setup(t, "dbdefaultproject", "dbdefault.test")
 
-	MakeConf(env.projectName)
+	MakeConf(env.ProjectName)
 
 	composeStr := readCompose(t, env)
 
@@ -336,13 +129,13 @@ func TestMakeConf_DbServiceEnabledByDefault(t *testing.T) {
 // TestMakeConf_DbServiceDisabled checks the flag actually removes the container
 // and its volume, and that nothing else goes with them.
 func TestMakeConf_DbServiceDisabled(t *testing.T) {
-	env := setupTestEnvironment(t, "dbdisabledproject", "dbdisabled.test")
+	env := testenv.Setup(t, "dbdisabledproject", "dbdisabled.test")
 
-	projectConfigPath := filepath.Join(env.execDir, "projects", env.projectName, "config.xml")
+	projectConfigPath := filepath.Join(env.ExecDir, "projects", env.ProjectName, "config.xml")
 	configs.SaveInFile(projectConfigPath, map[string]string{"db/enabled": "false"}, "default")
 	configs.CleanCache()
 
-	MakeConf(env.projectName)
+	MakeConf(env.ProjectName)
 
 	composeStr := readCompose(t, env)
 
@@ -368,9 +161,9 @@ func TestMakeConf_DbServiceDisabled(t *testing.T) {
 // included in every platform's compose file, so a wrong default would add an
 // idle container to every existing project on the next rebuild.
 func TestMakeConf_MemcachedDisabledByDefault(t *testing.T) {
-	env := setupTestEnvironment(t, "memcdefaultproject", "memcdefault.test")
+	env := testenv.Setup(t, "memcdefaultproject", "memcdefault.test")
 
-	MakeConf(env.projectName)
+	MakeConf(env.ProjectName)
 
 	composeStr := readCompose(t, env)
 
@@ -387,13 +180,13 @@ func TestMakeConf_MemcachedDisabledByDefault(t *testing.T) {
 // size and connection limit must come from the embedded defaults; an unresolved
 // placeholder would land in docker-compose.yml verbatim and break the stack.
 func TestMakeConf_MemcachedEnabled(t *testing.T) {
-	env := setupTestEnvironment(t, "memcenabledproject", "memcenabled.test")
+	env := testenv.Setup(t, "memcenabledproject", "memcenabled.test")
 
-	projectConfigPath := filepath.Join(env.execDir, "projects", env.projectName, "config.xml")
+	projectConfigPath := filepath.Join(env.ExecDir, "projects", env.ProjectName, "config.xml")
 	configs.SaveInFile(projectConfigPath, map[string]string{"memcached/enabled": "true"}, "default")
 	configs.CleanCache()
 
-	MakeConf(env.projectName)
+	MakeConf(env.ProjectName)
 
 	composeStr := readCompose(t, env)
 
@@ -416,9 +209,9 @@ func TestMakeConf_MemcachedEnabled(t *testing.T) {
 	}
 }
 
-func readPhpDockerfile(t *testing.T, env *testEnv) string {
+func readPhpDockerfile(t *testing.T, env *testenv.Env) string {
 	t.Helper()
-	dockerfile := filepath.Join(env.execDir, "aruntime", "projects", env.projectName, "ctx", "php.Dockerfile")
+	dockerfile := filepath.Join(env.ExecDir, "aruntime", "projects", env.ProjectName, "ctx", "php.Dockerfile")
 	content, err := os.ReadFile(dockerfile)
 	if err != nil {
 		t.Fatalf("Failed to read php.Dockerfile: %v", err)
@@ -426,9 +219,9 @@ func readPhpDockerfile(t *testing.T, env *testEnv) string {
 	return string(content)
 }
 
-func readCompose(t *testing.T, env *testEnv) string {
+func readCompose(t *testing.T, env *testenv.Env) string {
 	t.Helper()
-	composeFile := filepath.Join(env.execDir, "aruntime", "projects", env.projectName, "docker-compose.yml")
+	composeFile := filepath.Join(env.ExecDir, "aruntime", "projects", env.ProjectName, "docker-compose.yml")
 	content, err := os.ReadFile(composeFile)
 	if err != nil {
 		t.Fatalf("Failed to read docker-compose.yml: %v", err)
@@ -442,9 +235,9 @@ func readCompose(t *testing.T, env *testEnv) string {
 // optional, so gating dbdata as well lets the section render as a bare
 // "volumes:" and compose refuses the file with "volumes must be a mapping".
 func TestMakeConf_VolumesNeverEmpty(t *testing.T) {
-	env := setupTestEnvironment(t, "novolumesproject", "novolumes.test")
+	env := testenv.Setup(t, "novolumesproject", "novolumes.test")
 
-	projectConfigPath := filepath.Join(env.execDir, "projects", env.projectName, "config.xml")
+	projectConfigPath := filepath.Join(env.ExecDir, "projects", env.ProjectName, "config.xml")
 	configs.SaveInFile(projectConfigPath, map[string]string{
 		"db/enabled":                   "false",
 		"db2/enabled":                  "false",
@@ -455,7 +248,7 @@ func TestMakeConf_VolumesNeverEmpty(t *testing.T) {
 	}, "default")
 	configs.CleanCache()
 
-	MakeConf(env.projectName)
+	MakeConf(env.ProjectName)
 
 	composeStr := readCompose(t, env)
 
