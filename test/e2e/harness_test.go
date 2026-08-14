@@ -296,21 +296,51 @@ func TestMain(m *testing.M) {
 // A container that exists is not a database that accepts connections, and the
 // wait is different on the first run of the day from every run after it — so a
 // fixed sleep is either flaky or wasteful.
+// dbReadyTimeout is how long a database is given to start accepting connections.
+//
+// Five minutes rather than three because a runner starting two databases at once
+// missed the old deadline: the first database's very first query failed the whole
+// test after three minutes of `ERROR 2002 (HY000): Can't connect to server`. On a
+// laptop the same query answers in seconds, which is why the limit had never been
+// reached before CI ran the second-database tests.
+const dbReadyTimeout = 5 * time.Minute
+
 func (p *project) query(sql string) string {
 	p.t.Helper()
+	return p.queryOn("db", sql)
+}
+
+// queryOn runs a query against one of the project's databases, waiting for it to
+// come up. A container that exists is not a server accepting connections, and every
+// caller here has just started or restarted one.
+//
+// The failure says how long it waited and how many attempts it made, because "never
+// succeeded" alone leaves the reader unable to tell a database that never came up
+// from a query that was wrong all along.
+func (p *project) queryOn(service, sql string) string {
+	p.t.Helper()
+
+	command := []string{"db:execute", sql}
+	if service != "db" {
+		command = []string{"db:execute", "--service", service, sql}
+	}
 
 	var out string
 	var err error
-	deadline := time.Now().Add(3 * time.Minute)
+	attempts := 0
+	started := time.Now()
+	deadline := started.Add(dbReadyTimeout)
 	for {
-		out, err = p.tryRun(time.Minute, "db:execute", sql)
+		attempts++
+		out, err = p.tryRun(time.Minute, command...)
 		if err == nil || time.Now().After(deadline) {
 			break
 		}
 		time.Sleep(5 * time.Second)
 	}
 	if err != nil {
-		p.t.Fatalf("db:execute %q never succeeded: %v\n%s", sql, err, out)
+		p.t.Fatalf("db:execute %q against %s never succeeded in %s over %d attempts: %v\n%s",
+			sql, service, time.Since(started).Round(time.Second), attempts, err, out)
 	}
 	return out
 }

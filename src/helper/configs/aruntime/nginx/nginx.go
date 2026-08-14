@@ -156,6 +156,23 @@ func makeProxy(projectName string) {
 		logger.Fatalln("Error. Duplicate domains found:\n" + strings.Join(duplicateErrors, "\n"))
 	}
 
+	// A registry entry whose source directory is gone keeps everything it had: its
+	// ports stay reserved, and the block written below keeps routing its hosts at
+	// containers that cannot exist. Said here because this is where the consequence
+	// is created, and said rather than acted on: a stopped project keeps its routing
+	// on purpose, and "the directory is not there right now" is also what an
+	// unmounted disk looks like. Cleaning up is project:remove, deliberately.
+	var withoutSource []string
+	for _, entry := range configs2.ListProjects() {
+		if entry.State == configs2.ProjectMissingSource {
+			withoutSource = append(withoutSource, entry.Name)
+		}
+	}
+	if len(withoutSource) > 0 {
+		fmtc.WarningLn("These projects are still routed but their source directory is gone: " + strings.Join(withoutSource, ", "))
+		fmtc.ToDoLn("Run madock project:list --stale")
+	}
+
 	for _, name := range projectsNames {
 		// Skip if already processed (prevents duplicate upstream definitions)
 		if processedProjects[name] {

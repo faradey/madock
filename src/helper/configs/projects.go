@@ -392,6 +392,77 @@ func AddScope(projectName, scope string) bool {
 	return saveProjectConfig(configPath, config)
 }
 
+// Project states as ListProjectsIn reports them.
+const (
+	// ProjectOk — the directory the project was set up in is still there.
+	ProjectOk = "ok"
+	// ProjectMissingSource — the recorded path points at a directory that is
+	// gone. The entry keeps being resolved: it holds its ports, and the shared
+	// proxy keeps a server block routing its hosts at containers that cannot
+	// exist. Two such entries were found on this machine, both still in the
+	// generated proxy configuration.
+	ProjectMissingSource = "missing-source"
+	// ProjectNoPath — a legacy entry from before the path was recorded. The
+	// self-heal in IsHasConfig backfills it, but only when madock runs from the
+	// project's own directory, which is exactly what nobody does for a project
+	// they have forgotten about.
+	ProjectNoPath = "no-path"
+)
+
+// ProjectEntry is one registry entry and what is true about it.
+type ProjectEntry struct {
+	Name  string `json:"name"`
+	Path  string `json:"path"`
+	State string `json:"state"`
+}
+
+// ListProjectsIn reads the registry under an installation directory.
+//
+// A project is a directory under projects/ that has a config.xml — not merely a
+// directory. That distinction matters: aruntime/projects/ also holds `composer`
+// and `ssh`, which are shared support directories rather than projects, and
+// anything that walks names instead of configurations picks them up.
+//
+// Takes the directory rather than asking paths for it, so a test can build a
+// registry in a temporary one.
+func ListProjectsIn(execDir string) []ProjectEntry {
+	entries, err := os.ReadDir(filepath.Join(execDir, "projects"))
+	if err != nil {
+		return nil
+	}
+
+	var out []ProjectEntry
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		configPath := filepath.Join(execDir, "projects", entry.Name(), "config.xml")
+		if !paths.IsFileExist(configPath) {
+			continue
+		}
+
+		raw := ParseXmlFile(configPath)
+		path := strings.TrimSpace(getConfigByScope(raw, "default")["path"])
+
+		state := ProjectOk
+		switch {
+		case path == "":
+			state = ProjectNoPath
+		case !paths.IsFileExist(path):
+			state = ProjectMissingSource
+		}
+
+		out = append(out, ProjectEntry{Name: entry.Name(), Path: path, State: state})
+	}
+
+	return out
+}
+
+// ListProjects reads the registry of the installation in use.
+func ListProjects() []ProjectEntry {
+	return ListProjectsIn(paths.GetExecDirPath())
+}
+
 func GetActiveScope(projectName string, withDefault bool, prefix string) string {
 	config := GetProjectConfig(projectName)
 	if val, ok := config["activeScope"]; ok && val != "default" {

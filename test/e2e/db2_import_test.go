@@ -112,29 +112,17 @@ func TestSecondDatabaseImportsIntoItself(t *testing.T) {
 }
 
 // waitForSecondDatabase blocks until db2 answers, the way the first database is
-// waited for. A container that exists is not a server accepting connections.
+// waited for. A container that exists is not a server accepting connections, and
+// snapshot:create and snapshot:restore both stop it.
 func waitForSecondDatabase(t *testing.T, p *project) {
 	t.Helper()
-
-	var out string
-	var err error
-	deadline := time.Now().Add(3 * time.Minute)
-	for {
-		out, err = p.tryRun(time.Minute, "db:execute", "--service", "db2", "SELECT 1")
-		if err == nil || time.Now().After(deadline) {
-			break
-		}
-		time.Sleep(5 * time.Second)
-	}
-	if err != nil {
-		t.Fatalf("db:execute --service db2 never succeeded: %v\n%s", err, out)
-	}
+	p.queryOn("db2", "SELECT 1")
 }
 
 // querySecond is query() against db2.
 func (p *project) querySecond(sql string) string {
 	p.t.Helper()
-	return p.run(time.Minute, "db:execute", "--service", "db2", sql)
+	return p.queryOn("db2", sql)
 }
 
 // dumpFile returns the path db:export --json reported.

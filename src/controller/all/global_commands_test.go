@@ -18,7 +18,9 @@ import (
 //
 // setup and project:clone are here because they create a project; help, version and
 // mcp because they answer about the binary; proxy:logs because one proxy serves
-// every project and "why is it answering 502" is asked from wherever one stands.
+// every project and "why is it answering 502" is asked from wherever one stands;
+// project:list because it describes the installation, and the reason to run it is
+// usually that something about the registry is wrong.
 func TestGlobalCommands(t *testing.T) {
 	want := []string{
 		"--version",
@@ -26,6 +28,7 @@ func TestGlobalCommands(t *testing.T) {
 		"help",
 		"mcp",
 		"project:clone",
+		"project:list",
 		"proxy:logs",
 		"setup",
 		"version",
