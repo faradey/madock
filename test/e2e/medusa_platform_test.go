@@ -89,6 +89,14 @@ func TestMedusaInstallsAndAnswers(t *testing.T) {
 	// used to stop there with "permission denied" and leave the directory. The
 	// harness cleans up as root afterwards, so without asking here nothing
 	// would notice.
+	// The proxy goes first, and it has to: it is one container per daemon, it
+	// outlives the installation that started it, and `proxy:prune` needs a
+	// project to run from — which this is about to delete. Skipping this left
+	// the next platform test talking to a proxy that still had Medusa's
+	// configuration mounted, so its site answered nothing at all and looked
+	// like a defect in that platform.
+	p.install.destroyProxy(p)
+
 	if out, err := p.tryRun(10*time.Minute, "project:remove", "--force", "--name="+p.name); err != nil {
 		t.Errorf("project:remove could not finish: %v\n%s", err, out)
 	}

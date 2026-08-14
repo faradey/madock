@@ -20,7 +20,9 @@ func init() {
 		Help:     "Show help",
 		Category: "general",
 		ArgsType: new(arg_struct.ControllerGeneralHelp),
-	})
+			// Global: answers about the binary, not a project.
+		Global:   true,
+})
 
 	// "madock <command> --help" is parsed inside attr, which cannot reach this
 	// package. Hand it the same renderer "madock help <command>" uses so both

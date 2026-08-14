@@ -38,6 +38,10 @@ func Execute() {
 
 	projectName := configs.GetProjectName()
 
+	if !mayRemove(projectName) {
+		os.Exit(1)
+	}
+
 	// Non-interactive mode with --force flag
 	if args.Force {
 		if args.Name == "" {
@@ -85,7 +89,57 @@ func Execute() {
 	}
 }
 
+// mayRemove answers whether this directory may be destroyed at all.
+//
+// removeProject finishes with RemoveAll on the current directory, and until now
+// the only thing standing between that and the wrong directory was the name: the
+// project name comes from the directory name, and --force merely checks that the
+// caller repeated it. A leftover runtime directory with no configuration was
+// enough to make any same-named directory look like a project — and one such
+// leftover was the madock installation itself, whose runtime `src` was a symlink
+// back to the source tree. `project:remove --force --name madock` there would have
+// deleted madock, its repository and every other project's configuration with it.
+//
+// So three refusals before anything is touched: the installation, a directory that
+// is not the project's own, and a project that does not exist.
+func mayRemove(projectName string) bool {
+	runDir := paths.GetRunDirPath()
+
+	if configs.IsSamePath(runDir, paths.GetExecDirPath()) {
+		fmtc.ErrorLn("This directory is the madock installation, not a project — refusing to remove it")
+		return false
+	}
+
+	if !paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml") {
+		fmtc.ErrorLn("There is no project '" + projectName + "' to remove: it has no configuration")
+		fmtc.ToDoLn("Leftover generated files, if any, are under " + paths.GetExecDirPath() + "/aruntime/projects/" + projectName)
+		return false
+	}
+
+	// A recorded path that disagrees with where we stand means the name resolved
+	// to somebody else's project, and RemoveAll would take this directory apart on
+	// its behalf.
+	stored := configs.GetProjectConfigOnly(projectName)["path"]
+	if stored != "" && !configs.IsSamePath(stored, runDir) {
+		fmtc.ErrorLn("The project '" + projectName + "' is registered at another path, so this directory is not it")
+		fmtc.ErrorLn("  registered: " + stored)
+		fmtc.ErrorLn("  current:    " + runDir)
+		return false
+	}
+
+	return true
+}
+
 func removeProject(projectName string) {
+	// Say what is about to go even when --force skipped the interactive listing:
+	// this is the one command that deletes the directory the caller is standing in.
+	pp := paths.NewProjectPaths(projectName)
+	fmtc.WarningLn("Removing project '" + projectName + "':")
+	fmtc.WarningLn("  " + paths.GetExecDirPath() + "/projects/" + projectName + "/")
+	fmtc.WarningLn("  " + pp.RuntimeDir())
+	fmtc.WarningLn("  " + paths.GetRunDirPath())
+	fmtc.WarningLn("  containers, images and volumes of the project")
+
 	// Before the containers go: anything they wrote as root has to be handed
 	// back, or the deletion below stops at the first such file and leaves the
 	// project half removed.
@@ -93,7 +147,6 @@ func removeProject(projectName string) {
 
 	docker.Down(projectName, true)
 
-	pp := paths.NewProjectPaths(projectName)
 	err := os.RemoveAll(paths.GetExecDirPath() + "/projects/" + projectName + "/")
 	if err != nil {
 		logger.Fatal(err)

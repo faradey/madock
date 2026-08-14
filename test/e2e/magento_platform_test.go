@@ -4,7 +4,9 @@ package e2e
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"net/http"
@@ -200,6 +202,104 @@ func describeTree(t *testing.T, root string) string {
 		return nil
 	})
 	return fmt.Sprintf("%d files, %d MB", files, bytes/(1024*1024))
+}
+
+// reportWhyTheSiteIsSilent prints what the project looks like from inside when
+// a request through the proxy gets no answer.
+//
+// "EOF" is what Go says when the connection closed before a response, and every
+// candidate for that produces the same word: the project's nginx not running,
+// php-fpm not answering it, a certificate the proxy would not serve, or the
+// proxy pointing at nothing. Each is visible from a different place, so all four
+// are asked at once — a failure that only happens on somebody else's machine is
+// worth more evidence than a failure you can reproduce.
+//
+// Everything here is best effort and none of it fails the test; the assertion
+// that called it has already decided.
+func reportWhyTheSiteIsSilent(t *testing.T, p *project, host string) {
+	t.Helper()
+
+	if out, err := p.tryRun(2*time.Minute, "status"); err == nil {
+		t.Logf("containers:\n%s", out)
+	} else {
+		t.Logf("status could not be read: %v\n%s", err, out)
+	}
+
+	if digest := servedCertificateDigestOrEmpty(host); digest == "" {
+		t.Logf("the proxy served no certificate for %s — the TLS handshake is where this ends", host)
+	} else {
+		t.Logf("the proxy served a certificate for %s (%s), so the handshake is fine and the answer is missing behind it", host, digest[:12])
+	}
+
+	// The proxy decides whether a request ever reaches the project, and it does
+	// it by server name. A host the generated configuration does not mention
+	// falls to the default block, which closes the connection without answering
+	// — the client calls that EOF, and so far that is the whole story it tells.
+	//
+	// Two different faults produce it, and this separates them: a host missing
+	// from the file is a generation problem, a host present in a file the
+	// running container is not using is a reload problem.
+	proxyConf := filepath.Join(p.execDir, "aruntime", "ctx", "proxy.conf")
+	if data, err := os.ReadFile(proxyConf); err != nil {
+		t.Logf("the generated proxy configuration could not be read (%s): %v", proxyConf, err)
+	} else if !strings.Contains(string(data), host) {
+		t.Logf("the generated proxy configuration does not mention %s at all — the server names it carries are:\n%s",
+			host, serverNamesIn(string(data)))
+	} else {
+		t.Logf("the generated proxy configuration does carry %s, so the running proxy is not using this file", host)
+	}
+
+	for _, service := range []string{"nginx", "php"} {
+		if out, err := p.tryRun(2*time.Minute, "logs", "-s", service); err == nil {
+			t.Logf("last of the %s log:\n%s", service, lastLines(out, 25))
+		} else {
+			t.Logf("the %s log could not be read: %v", service, err)
+		}
+	}
+}
+
+// servedCertificateDigestOrEmpty is servedCertificateDigest without the fatal:
+// here the absence of a certificate is a piece of evidence, not a failure.
+func servedCertificateDigestOrEmpty(host string) string {
+	dialer := &net.Dialer{Timeout: 10 * time.Second}
+	conn, err := dialer.Dial("tcp", "127.0.0.1:443")
+	if err != nil {
+		return ""
+	}
+	tlsConn := tls.Client(conn, &tls.Config{ServerName: host, InsecureSkipVerify: true})
+	defer func() { _ = tlsConn.Close() }()
+	if err := tlsConn.Handshake(); err != nil {
+		return ""
+	}
+	certs := tlsConn.ConnectionState().PeerCertificates
+	if len(certs) == 0 {
+		return ""
+	}
+	sum := sha256.Sum256(certs[0].Raw)
+	return hex.EncodeToString(sum[:])
+}
+
+// serverNamesIn lists the hosts a generated proxy configuration answers for.
+func serverNamesIn(conf string) string {
+	var names []string
+	for _, line := range strings.Split(conf, "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "server_name") {
+			names = append(names, strings.TrimSuffix(strings.TrimPrefix(line, "server_name"), ";"))
+		}
+	}
+	if len(names) == 0 {
+		return "  (none)"
+	}
+	return "  " + strings.Join(names, "\n  ")
+}
+
+func lastLines(s string, n int) string {
+	lines := strings.Split(strings.TrimRight(s, "\n"), "\n")
+	if len(lines) > n {
+		lines = lines[len(lines)-n:]
+	}
+	return strings.Join(lines, "\n")
 }
 
 func firstLines(s string, n int) string {

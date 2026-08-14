@@ -24,7 +24,9 @@ func init() {
 		Help:     "Clone project",
 		Category: "project",
 		ArgsType: new(arg_struct.ControllerGeneralProjectClone),
-	})
+			// Global: creates a project, so it cannot require one.
+		Global:   true,
+})
 }
 
 func Execute() {

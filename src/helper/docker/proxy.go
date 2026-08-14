@@ -237,6 +237,58 @@ func StopNginx(force bool) {
 // Note: `nginx -s reload` returns 0 even when the new config is rejected (nginx
 // logs the error and keeps the old config and workers live), so a non-nil error
 // here means the exec itself failed, not that the config was bad.
+// IsProxyRunning reports whether the aruntime nginx container is up.
+func IsProxyRunning() bool {
+	composeFile := paths.ProxyDockerCompose()
+	if !paths.IsFileExist(composeFile) {
+		return false
+	}
+	out, err := exec.Command("docker", "compose", "-f", composeFile, "ps", "--format", "json").CombinedOutput()
+	if err != nil {
+		return false
+	}
+
+	return isProxyRunning(out)
+}
+
+// ProxyLogs shows the proxy's own container logs — the only place the reason for
+// a 502 is written down. nginx logs to /var/log/nginx/{access,error}.log, and the
+// image symlinks both to the container's stdout and stderr, so `docker compose
+// logs` carries them.
+//
+// Returns the captured output when not following, so the caller can tell an empty
+// log apart from a log full of errors instead of printing nothing and letting it
+// read as "no problems".
+func ProxyLogs(service string, follow bool, tail string) (string, error) {
+	composeFile := paths.ProxyDockerCompose()
+	if !paths.IsFileExist(composeFile) {
+		return "", fmt.Errorf("the proxy has never been set up: %s does not exist", composeFile)
+	}
+
+	command := []string{"compose", "-f", composeFile, "logs", "--no-color"}
+	if tail != "" {
+		command = append(command, "--tail", tail)
+	}
+	if follow {
+		command = append(command, "--follow")
+	}
+	if service != "" {
+		command = append(command, service)
+	}
+
+	cmd := exec.Command("docker", command...)
+	if follow {
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return "", cmd.Run()
+	}
+
+	out, err := cmd.CombinedOutput()
+
+	return string(out), err
+}
+
 func ReloadNginx() error {
 	composeFile := paths.ProxyDockerCompose()
 	cmd := exec.Command("docker", "compose", "-f", composeFile, "exec", "-T", "nginx", "nginx", "-s", "reload")

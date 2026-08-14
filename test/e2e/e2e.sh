@@ -190,12 +190,25 @@ On a CI runner that is fine and CI=true says so. Anywhere else use: $0 run
 To insist anyway: MADOCK_E2E_ALLOW_LOCAL_DOCKER=yes $0 run-local"
     fi
 
+    # Same switch as `run`, so the CI job that wants the platform tests asks for
+    # them the same way a person does.
+    platforms=""
+    if [ "${1:-}" = "--platforms" ]; then
+        platforms="yes"
+        shift
+    fi
+    [ "${MADOCK_E2E_PLATFORMS:-}" = "yes" ] && platforms="yes"
+
     goarch=$(go env GOHOSTARCH)
     mkdir -p "$script_dir/.bin"
     printf 'building madock for linux/%s\n' "$goarch"
     ( cd "$repo_root" && GOOS=linux GOARCH="$goarch" go build -o "$binary" . )
 
-    MADOCK_E2E_BIN="$binary" go test -tags=e2e -count=1 -v -timeout=40m ./test/e2e/... "$@"
+    timeout="40m"
+    [ "$platforms" = "yes" ] && timeout="90m"
+
+    MADOCK_E2E_BIN="$binary" MADOCK_E2E_PLATFORMS="$platforms" \
+        go test -tags=e2e -count=1 -v -timeout="$timeout" ./test/e2e/... "$@"
 }
 
 # cmd_auth copies the invoking user's composer credentials into the guest.

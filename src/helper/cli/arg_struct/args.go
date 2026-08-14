@@ -131,6 +131,13 @@ type ControllerGeneralProxy struct {
 	Force bool `arg:"-f,--force" help:"Force"`
 }
 
+type ControllerGeneralProxyLogs struct {
+	attr.Arguments
+	Service string `arg:"-s,--service" help:"Proxy service (nginx, mailcatcher). Default nginx"`
+	Follow  bool   `arg:"-f,--follow" help:"Keep streaming new lines"`
+	Tail    string `arg:"--tail" help:"Lines from the end of the log. Default 200, 'all' for everything"`
+}
+
 type ControllerGeneralPrune struct {
 	attr.Arguments
 	WithVolumes bool `arg:"-v,--with-volumes" help:"With Volumes"`

@@ -23,10 +23,18 @@ name: CI
 # It costs a second run of the same tree on master. That is deliberate: the run
 # on master is the record of what master did, and re-running is cheaper than
 # reasoning about whether a green run on another ref still applies.
+#
+# The nightly schedule is for the platform job below, which installs Magento,
+# Shopware and Medusa from their vendors. What that job catches is mostly not
+# ours: an image tag withdrawn, a starter repository moved, a package that no
+# longer resolves. None of it arrives with a commit, so waiting for a push to
+# find out means finding out from a customer instead.
 on:
   push:
     branches: [master, staging]
   pull_request:
+  schedule:
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 # Nothing here publishes anything. Said explicitly rather than left to the
@@ -96,3 +104,33 @@ jobs:
       # is what tells it this one is disposable. GitHub sets it.
       - name: Run the end-to-end suite
         run: ./test/e2e/e2e.sh run-local
+
+  # The platform tests install a real store — Shopware and Medusa here, from
+  # public packages. They are the only tests that can see a broken image, a
+  # withdrawn tag or a package that no longer resolves, and until this job
+  # existed they ran on one laptop and nowhere else: opt-in locally means
+  # nobody's CI has ever proven them.
+  #
+  # A separate job rather than a flag on the one above, because they answer a
+  # different question and take twice as long: the suite proves madock, this
+  # proves madock against the world as it is today. Splitting them also means a
+  # vendor outage does not read as "the end-to-end suite is red".
+  #
+  # Magento skips here and says so. Its download needs Adobe credentials, and
+  # those do not belong in a public repository's secrets — which is why it stays
+  # a local test and this job carries the two that can be public.
+  platforms:
+    name: Platforms
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install Shopware and Medusa for real
+        run: ./test/e2e/e2e.sh run-local --platforms -run 'TestMagentoInstallsAndAnswers|TestShopwareInstallsAndAnswers|TestMedusaInstallsAndAnswers'

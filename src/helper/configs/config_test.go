@@ -555,3 +555,55 @@ func TestCompareVersions_EdgeCases(t *testing.T) {
 		})
 	}
 }
+
+// ---------------------------------------------------------------------------
+// UnresolvedTag — what makes a malformed template loud instead of silent
+// ---------------------------------------------------------------------------
+
+func TestUnresolvedTag(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		wantFound bool
+		wantLine  int
+	}{
+		{
+			// The mistake this exists for: a tag written inside a comment. The
+			// engine counts it as an opening, never finds its close, and gives
+			// up on the file — leaving these tags in the output.
+			name:      "unbalanced if survives processing",
+			input:     processConditionals("# see <<<if>>> for details\n<<<iffalse>>>\ndropped\n<<<endif>>>\n"),
+			wantFound: true,
+			wantLine:  1,
+		},
+		{
+			name:      "stray endif",
+			input:     "server {\n}\n<<<endif>>>\n",
+			wantFound: true,
+			wantLine:  3,
+		},
+		{
+			name:      "well-formed template leaves nothing",
+			input:     processConditionals("<<<iftrue>>>kept<<<endif>>>\n<<<iffalse>>>dropped<<<endif>>>\n"),
+			wantFound: false,
+		},
+		{
+			// Legal template content in the php Dockerfiles, and not a tag.
+			name:      "bash here-string is not a tag",
+			input:     "RUN IFS='.' read major minor patch <<< \"8.3.1\"\n",
+			wantFound: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			line, text, found := UnresolvedTag(tt.input)
+			if found != tt.wantFound {
+				t.Fatalf("found = %v, want %v (input %q)", found, tt.wantFound, tt.input)
+			}
+			if found && line != tt.wantLine {
+				t.Errorf("line = %d (%q), want %d", line, text, tt.wantLine)
+			}
+		})
+	}
+}

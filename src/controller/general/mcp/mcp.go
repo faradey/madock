@@ -23,7 +23,9 @@ func init() {
 		Handler:  Execute,
 		Help:     "Start MCP (Model Context Protocol) server for AI assistants",
 		Category: "general",
-	})
+			// Global: a server for AI assistants; it does not read a project on start.
+		Global:   true,
+})
 }
 
 func Execute() {

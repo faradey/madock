@@ -230,6 +230,18 @@ func (p *project) tryRunWith(timeout time.Duration, input string, env []string, 
 // should not replace the real error with its own.
 func (p *project) destroy() {
 	if !p.configured() {
+		// A test that removed its own project — because removal was the thing
+		// it was testing — lands here, and it used to mean the proxy was never
+		// taken down. That container is one per daemon and outlives the
+		// installation that started it, so the next test inherited a proxy
+		// serving somebody else's configuration and its site answered nothing.
+		// A whole CI failure was spent finding that out. A test that removes its
+		// project must take the proxy with it first, and this says so out loud
+		// rather than leaving the next one to discover it.
+		if !p.install.proxyDestroyed {
+			p.t.Logf("%s was removed by the test itself, so the shared proxy was never taken down — "+
+				"call install.destroyProxy(p) before project:remove", p.name)
+		}
 		return
 	}
 	p.install.destroyProxy(p)
