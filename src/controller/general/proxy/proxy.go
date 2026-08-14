@@ -1,7 +1,9 @@
 package proxy
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
@@ -54,6 +56,71 @@ func init() {
 		Category: "proxy",
 		ArgsType: new(arg_struct.ControllerGeneralProxy),
 	})
+	command.Register(&command.Definition{
+		Aliases:  []string{"proxy:logs"},
+		Handler:  ExecuteLogs,
+		Help:     "Show proxy logs",
+		Category: "proxy",
+		ArgsType: new(arg_struct.ControllerGeneralProxyLogs),
+		// Global: one proxy serves every project, and "why is it answering 502" is
+		// asked from wherever the person is standing. The other proxy verbs stay
+		// project-scoped because they regenerate the configuration from a project.
+		Global: true,
+	})
+}
+
+// ExecuteLogs shows the proxy's own logs. Deliberately not gated on being inside
+// a project the way the verbs above are: the proxy is one shared container for
+// every project, and the question "why is it answering 502" is usually asked from
+// wherever the person happens to be standing.
+func ExecuteLogs() {
+	args := attr.Parse(new(arg_struct.ControllerGeneralProxyLogs)).(*arg_struct.ControllerGeneralProxyLogs)
+
+	service := args.Service
+	if service == "" {
+		service = "nginx"
+	}
+	tail := args.Tail
+	if tail == "" {
+		tail = "200"
+	}
+
+	if args.Follow && !docker.IsProxyRunning() {
+		fmtc.ErrorLn("The proxy is not running, so there is nothing to follow")
+		fmtc.ToDoLn("Run madock proxy:start")
+		os.Exit(1)
+	}
+
+	out, err := docker.ProxyLogs(service, args.Follow, tail)
+	if args.Follow {
+		if err != nil {
+			fmtc.ErrorLn(err.Error())
+			os.Exit(1)
+		}
+		return
+	}
+
+	if err != nil {
+		fmtc.ErrorLn("Could not read the proxy logs: " + err.Error())
+		if out != "" {
+			fmt.Print(out)
+		}
+		os.Exit(1)
+	}
+
+	if strings.TrimSpace(out) == "" {
+		// An empty log and a healthy proxy look identical on screen, so say which
+		// one this is rather than printing nothing.
+		if docker.IsProxyRunning() {
+			fmtc.WarningLn("The " + service + " container has logged nothing yet")
+		} else {
+			fmtc.WarningLn("The proxy is not running and its " + service + " container has no logs")
+			fmtc.ToDoLn("Run madock proxy:start")
+		}
+		return
+	}
+
+	fmt.Print(out)
 }
 
 func Execute(flag string) {

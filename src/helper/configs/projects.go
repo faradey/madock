@@ -270,6 +270,13 @@ func GetProjectName() string {
 // so two recordings of "the same" directory can differ textually; we
 // want them to compare equal so GetProjectName doesn't auto-suffix a
 // project that's actually the user's current one.
+// IsSamePath reports whether two recorded paths mean the same directory, with the
+// same normalisation GetProjectName uses. Exported for callers that destroy things
+// and must be sure the directory in front of them is the one they think it is.
+func IsSamePath(a, b string) bool {
+	return canonicalProjectPath(a) == canonicalProjectPath(b)
+}
+
 func canonicalProjectPath(p string) string {
 	p = strings.TrimSpace(p)
 	p = strings.TrimRight(p, "/")

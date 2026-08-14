@@ -23,7 +23,9 @@ func init() {
 		Help:     "Setup project",
 		Category: "setup",
 		ArgsType: new(arg_struct.ControllerGeneralSetup),
-	})
+			// Global: this is the command that turns a directory into a project.
+		Global:   true,
+})
 }
 
 func Execute() {

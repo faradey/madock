@@ -20,7 +20,9 @@ func init() {
 		Help:     "Show madock version",
 		Category: "general",
 		ArgsType: new(arg_struct.ControllerGeneralVersion),
-	})
+			// Global: answers about the binary, not a project.
+		Global:   true,
+})
 }
 
 func Execute() {

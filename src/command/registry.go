@@ -15,6 +15,20 @@ type Definition struct {
 	ArgsType interface{}
 	Before   []Handler
 	After    []Handler
+
+	// Global marks a command that does not belong to a project: it neither reads
+	// a project's configuration nor talks to its containers, so it runs anywhere.
+	// `setup` counts, because it is what creates a project.
+	//
+	// Everything else is project-scoped, and the dispatcher refuses to run it in a
+	// directory that is not a project. The default is deliberately the strict one:
+	// most commands are project-scoped, and the failure of forgetting the flag on
+	// a global command is immediate and loud, while the failure of forgetting a
+	// check inside a project command is silent. `stop` never had that check, took
+	// the directory name for a project name, and drove docker compose with
+	// whatever generated file happened to carry that name — leftovers from a
+	// version long gone included.
+	Global bool
 }
 
 var registry = make(map[string]*Definition)
