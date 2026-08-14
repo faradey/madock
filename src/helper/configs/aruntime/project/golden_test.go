@@ -2,12 +2,10 @@ package project
 
 import (
 	"flag"
-	"io/fs"
-	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 	"testing"
+
+	"github.com/faradey/madock/v3/src/helper/testenv"
 )
 
 // Run these with -count=1, always:
@@ -183,246 +181,21 @@ func TestGoldenGeneratedConfig(t *testing.T) {
 	for _, testCase := range goldenCases() {
 		t.Run(testCase.name, func(t *testing.T) {
 			projectName := "golden"
-			env := setupTestEnvironmentWith(t, projectName, "golden.test", testCase.overrides)
+			env := testenv.SetupWith(t, projectName, "golden.test", testCase.overrides)
 
 			MakeConf(projectName)
 
-			rendered := collectGenerated(t, filepath.Join(env.execDir, "aruntime", "projects", projectName), env)
+			rendered := testenv.Collect(t, filepath.Join(env.ExecDir, "aruntime", "projects", projectName), env)
 			if len(rendered) == 0 {
 				t.Fatal("MakeConf produced no files")
 			}
 
 			goldenDir := filepath.Join("testdata", "golden", testCase.name)
 			if *updateGolden {
-				writeGolden(t, goldenDir, rendered)
+				testenv.WriteGolden(t, goldenDir, rendered)
 				return
 			}
-			compareGolden(t, goldenDir, rendered)
+			testenv.CompareGolden(t, goldenDir, rendered)
 		})
-	}
-}
-
-// collectGenerated reads every generated file, with the machine-specific parts
-// replaced so the same output is expected on any machine.
-func collectGenerated(t *testing.T, root string, env *testEnv) map[string]string {
-	t.Helper()
-
-	files := map[string]string{}
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		// The runtime directory holds symlinks to the project source, the
-		// composer home and ~/.ssh. Following them would pull the whole
-		// working tree into the comparison.
-		if d.Type()&fs.ModeSymlink != 0 || d.IsDir() {
-			return nil
-		}
-		content, readErr := os.ReadFile(path)
-		if readErr != nil {
-			return readErr
-		}
-		rel, relErr := filepath.Rel(root, path)
-		if relErr != nil {
-			return relErr
-		}
-		files[filepath.ToSlash(rel)] = normalise(string(content), env)
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("reading generated files: %v", err)
-	}
-	return files
-}
-
-var (
-	// Only a ports mapping, and only where compose writes one: a list entry.
-	// Matching every `"NNNN:` in the file swallowed `user: "1001:1001"` on a
-	// Linux runner, where a uid happens to be four digits.
-	publishedPort = regexp.MustCompile(`- "\d{4,5}:`)
-
-	// uid and gid are normalised where they are *used*, not wherever their
-	// digits appear. Replacing the values themselves looked simpler and was
-	// wrong twice over: a macOS gid of 20 rewrote unrelated numbers inside the
-	// Grafana dashboards ("2093" became "<GID>93"), and on a CI runner where
-	// uid == gid the second replacement found nothing left to replace, so
-	// `groupmod -g` came out as `<UID>`. Both produced golden files that could
-	// only ever match the machine that wrote them.
-	composeUser = regexp.MustCompile(`user: "\d+:\d+"`)
-	usermodUid  = regexp.MustCompile(`usermod -u \d+`)
-	groupmodGid = regexp.MustCompile(`groupmod -g \d+`)
-	chownPair   = regexp.MustCompile(`chown (-R )?\d+:\d+`)
-
-	// The loader URL carries the host architecture, so an arm64 laptop and an
-	// amd64 runner render different files from the same template.
-	loaderArch = regexp.MustCompile(`ioncube_loaders_lin_[\w-]+\.tar\.gz`)
-)
-
-// normalise removes what differs between machines and runs.
-//
-// Ports are allocated by probing the host for something free, so they depend on
-// what else is listening; uid, gid and the CPU architecture come from whoever
-// runs the tests. None of that is what these tests are about — the shape of the
-// rendered file is.
-func normalise(content string, env *testEnv) string {
-	content = strings.ReplaceAll(content, env.execDir, "<EXEC_DIR>")
-	content = strings.ReplaceAll(content, env.runDir, "<RUN_DIR>")
-	content = publishedPort.ReplaceAllString(content, `- "<PORT>:`)
-	content = composeUser.ReplaceAllString(content, `user: "<UID>:<GID>"`)
-	content = usermodUid.ReplaceAllString(content, "usermod -u <UID>")
-	content = groupmodGid.ReplaceAllString(content, "groupmod -g <GID>")
-	content = chownPair.ReplaceAllString(content, "chown ${1}<UID>:<GID>")
-	content = loaderArch.ReplaceAllString(content, "ioncube_loaders_lin_<ARCH>.tar.gz")
-
-	return content
-}
-
-func writeGolden(t *testing.T, goldenDir string, rendered map[string]string) {
-	t.Helper()
-
-	if err := os.RemoveAll(goldenDir); err != nil {
-		t.Fatalf("clearing %s: %v", goldenDir, err)
-	}
-	for name, content := range rendered {
-		path := filepath.Join(goldenDir, filepath.FromSlash(name))
-		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			t.Fatalf("creating %s: %v", filepath.Dir(path), err)
-		}
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
-			t.Fatalf("writing %s: %v", path, err)
-		}
-	}
-	t.Logf("wrote %d golden files to %s — read the diff before committing", len(rendered), goldenDir)
-}
-
-func compareGolden(t *testing.T, goldenDir string, rendered map[string]string) {
-	t.Helper()
-
-	expected := map[string]string{}
-	err := filepath.WalkDir(goldenDir, func(path string, d fs.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if d.IsDir() {
-			return nil
-		}
-		content, readErr := os.ReadFile(path)
-		if readErr != nil {
-			return readErr
-		}
-		rel, _ := filepath.Rel(goldenDir, path)
-		expected[filepath.ToSlash(rel)] = string(content)
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("no golden files in %s (%v) — run with -update", goldenDir, err)
-	}
-
-	for name, want := range expected {
-		got, rendered_ok := rendered[name]
-		if !rendered_ok {
-			t.Errorf("%s is no longer generated", name)
-			continue
-		}
-		if got != want {
-			t.Errorf("%s differs from the golden copy:\n%s", name, firstDifference(want, got))
-		}
-	}
-
-	for name := range rendered {
-		if _, known := expected[name]; !known {
-			t.Errorf("%s is generated but has no golden copy — new output, or a file that moved", name)
-		}
-	}
-}
-
-// firstDifference reports the first differing line with a little context, which
-// is what a reader needs; a full diff of a 200-line compose file is not.
-func firstDifference(want, got string) string {
-	wantLines := strings.Split(want, "\n")
-	gotLines := strings.Split(got, "\n")
-
-	for i := 0; i < len(wantLines) || i < len(gotLines); i++ {
-		wantLine := ""
-		if i < len(wantLines) {
-			wantLine = wantLines[i]
-		}
-		gotLine := ""
-		if i < len(gotLines) {
-			gotLine = gotLines[i]
-		}
-		if wantLine != gotLine {
-			return "  line " + itoa(i+1) + "\n    want: " + wantLine + "\n    got:  " + gotLine
-		}
-	}
-	return "  (files differ only in trailing content)"
-}
-
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	digits := ""
-	for n > 0 {
-		digits = string(rune('0'+n%10)) + digits
-		n /= 10
-	}
-	return digits
-}
-
-// TestNormalise pins the thing the golden files depend on and nothing else
-// checks: that two different machines normalise to the same text.
-//
-// Both cases here are real. macOS gives a gid of 20, which the old
-// value-substitution normaliser found inside unrelated numbers; a GitHub runner
-// gives uid == gid, where replacing the uid first left the gid with nothing to
-// match. Either one produced golden files that only the machine that wrote them
-// could reproduce.
-func TestNormalise(t *testing.T) {
-	env := &testEnv{execDir: "/exec", runDir: "/run"}
-
-	// The same rendered file as three machines would write it: an arm64 laptop
-	// (uid 501, gid 20), an amd64 runner (uid 1001, gid 1001), and a Linux
-	// desktop (uid 1000, gid 1000).
-	render := func(uid, gid, arch string) string {
-		return strings.Join([]string{
-			`    user: "` + uid + `:` + gid + `"`,
-			`      - "34500:80"`,
-			`RUN usermod -u ` + uid + ` -o www-data && groupmod -g ` + gid + ` -o www-data`,
-			`RUN mkdir /var/www/.npm && chown ` + uid + `:` + gid + ` /var/www/.npm`,
-			`    && chown -R ` + uid + `:` + gid + ` /var/www`,
-			`    && curl -o ioncube.tar.gz http://x/ioncube_loaders_lin_` + arch + `.tar.gz \\`,
-			`RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' php.ini`,
-			`        "uid": "PBFA97CFB590B2093"`,
-			`  ingestion_burst_size_mb: 20`,
-		}, "\n")
-	}
-
-	mac := normalise(render("501", "20", "aarch64"), env)
-	ci := normalise(render("1001", "1001", "x86-64"), env)
-	linux := normalise(render("1000", "1000", "x86-64"), env)
-
-	if mac != ci {
-		t.Errorf("macOS and CI normalise differently:\n%s\n---\n%s", mac, ci)
-	}
-	if ci != linux {
-		t.Errorf("two Linux machines normalise differently:\n%s\n---\n%s", ci, linux)
-	}
-
-	// The numbers that are not ids must survive, and the ids must not.
-	for _, want := range []string{
-		`user: "<UID>:<GID>"`,
-		`- "<PORT>:80"`,
-		"usermod -u <UID> -o www-data && groupmod -g <GID> -o www-data",
-		"chown <UID>:<GID> /var/www/.npm",
-		"chown -R <UID>:<GID> /var/www",
-		"ioncube_loaders_lin_<ARCH>.tar.gz",
-		"session.cookie_lifetime = 2592000",
-		`"uid": "PBFA97CFB590B2093"`,
-		"ingestion_burst_size_mb: 20",
-	} {
-		if !strings.Contains(mac, want) {
-			t.Errorf("normalised output is missing %q:\n%s", want, mac)
-		}
 	}
 }

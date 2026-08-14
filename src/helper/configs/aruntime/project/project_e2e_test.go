@@ -12,16 +12,17 @@ import (
 
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/ports"
+	"github.com/faradey/madock/v3/src/helper/testenv"
 )
 
 // setupE2EEnvironment creates a test environment with redis enabled on top of the base setup.
-func setupE2EEnvironment(t *testing.T, projectName, hostName string) *testEnv {
+func setupE2EEnvironment(t *testing.T, projectName, hostName string) *testenv.Env {
 	t.Helper()
 
-	env := setupTestEnvironment(t, projectName, hostName)
+	env := testenv.Setup(t, projectName, hostName)
 
 	// Enable redis in the project config via SaveInFile (merges into existing XML)
-	projectConfigPath := filepath.Join(env.execDir, "projects", projectName, "config.xml")
+	projectConfigPath := filepath.Join(env.ExecDir, "projects", projectName, "config.xml")
 	configs.SaveInFile(projectConfigPath, map[string]string{
 		"redis/enabled": "true",
 	}, "default")
@@ -68,7 +69,7 @@ func TestE2E_Magento2_ContainersStart(t *testing.T) {
 	// Generate all docker config files
 	MakeConf(projectName)
 
-	runtimeDir := filepath.Join(env.execDir, "aruntime", "projects", projectName)
+	runtimeDir := filepath.Join(env.ExecDir, "aruntime", "projects", projectName)
 
 	// Create the external docker network (ignore error if it already exists)
 	exec.Command("docker", "network", "create", "madock-proxy").Run()

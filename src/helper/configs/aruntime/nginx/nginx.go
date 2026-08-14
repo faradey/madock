@@ -72,9 +72,8 @@ func setPorts(projectName string) {
 // directives that must exist exactly once for all projects.
 //
 // A function of its configuration and nothing else, so the branches here can be
-// asserted without generating a whole installation. There are no golden files for
-// the shared proxy.conf — the harness that renders one belongs to another package —
-// and this is where its conditionals live.
+// asserted without generating a whole installation, which the golden file beside
+// this package does end to end.
 func proxyPreamble(generalConfig map[string]string) string {
 	// worker_priority used to be set to -10 here and never worked: lowering a nice
 	// value needs CAP_SYS_NICE, which is not in a container's default capability
