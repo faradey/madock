@@ -69,7 +69,15 @@ func TestGoldenProxyConf(t *testing.T) {
 // 17000 up. The proxy's own listeners — 80, 443, 35729, 5173 — are fixed and stay
 // as they are, which is why the pattern is anchored on the range rather than on
 // "any number".
-var allocatedPort = regexp.MustCompile(`\b1[78]\d{3}\b`)
+//
+// No \b around it, and that is the point: the number appears as
+// `upstreamm_madock_17003`, where an underscore is a word character, so a word
+// boundary never falls between it and the first digit. The first version of this
+// pattern had them, matched only the `host.docker.internal:17003` form, and left
+// every upstream name with a live port in it — and the grep that was supposed to
+// catch that used the same pattern, so it agreed. Go's regexp has no lookbehind to
+// express it more tightly; the five-digit range is distinctive enough here.
+var allocatedPort = regexp.MustCompile(`1[78]\d{3}`)
 
 func maskPorts(content string) string {
 	seen := map[string]string{}
