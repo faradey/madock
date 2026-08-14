@@ -3,6 +3,8 @@ package nginx
 import (
 	"flag"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/faradey/madock/v3/src/helper/testenv"
@@ -45,7 +47,15 @@ func TestGoldenProxyConf(t *testing.T) {
 
 	// Only proxy.conf: the certificate and the key beside it are regenerated on
 	// every run and are not text a golden file can hold.
-	only := map[string]string{"proxy.conf": rendered["proxy.conf"]}
+	//
+	// Port numbers go too, and that one cost a red CI run. Allocation skips ports
+	// already in use on the machine, so this laptop's registry handed out 17003
+	// where a fresh runner handed out 17000 — and the proxy configuration carries
+	// the number in every upstream name and every proxy_pass. The names still have
+	// to agree with the passes, so the substitution is by position: the first
+	// distinct port becomes <PORT1>, the second <PORT2>, and a block that pointed
+	// at the wrong one would still show up as a difference.
+	only := map[string]string{"proxy.conf": maskPorts(rendered["proxy.conf"])}
 
 	goldenDir := filepath.Join("testdata", "golden", "proxy")
 	if *updateGolden {
@@ -53,6 +63,24 @@ func TestGoldenProxyConf(t *testing.T) {
 		return
 	}
 	testenv.CompareGolden(t, goldenDir, only)
+}
+
+// allocatedPort matches the ports madock hands out, which are five digits from
+// 17000 up. The proxy's own listeners — 80, 443, 35729, 5173 — are fixed and stay
+// as they are, which is why the pattern is anchored on the range rather than on
+// "any number".
+var allocatedPort = regexp.MustCompile(`\b1[78]\d{3}\b`)
+
+func maskPorts(content string) string {
+	seen := map[string]string{}
+	return allocatedPort.ReplaceAllStringFunc(content, func(port string) string {
+		if name, ok := seen[port]; ok {
+			return name
+		}
+		name := "<PORT" + strconv.Itoa(len(seen)+1) + ">"
+		seen[port] = name
+		return name
+	})
 }
 
 func keys(m map[string]string) []string {
