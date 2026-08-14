@@ -134,6 +134,34 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// A php platform of its own. Pins the fastcgi HTTPS parameter, which
+			// used to be the constant `on`: the application then believed every
+			// request was secure, including one that arrived over plain http at the
+			// published project port, and built https URLs and secure cookies for
+			// it. Shopware and Sylius hardcoded SERVER_PORT 443 beside it.
+			name: "woocommerce-php",
+			overrides: map[string]string{
+				"platform": "woocommerce",
+				"language": "php",
+			},
+		},
+		{
+			// PHP switched on beside a language that is not PHP. The nginx
+			// templates used to include a snippet per enabled runtime, so this
+			// shape rendered two server blocks on the same listen and
+			// server_name: nginx kept the php one and warned about the other,
+			// and the route to the app answered 404 from a document root that
+			// has no index.php. The front door follows the language, so the
+			// only server block here proxies to app.
+			name: "custom-none-with-php",
+			overrides: map[string]string{
+				"platform":    "custom",
+				"language":    "none",
+				"php/enabled": "true",
+				"app/enabled": "true",
+			},
+		},
+		{
 			// What a Node project on a server looks like: production, and a
 			// named script rather than whatever package.json happens to have.
 			name: "custom-nodejs-production",
