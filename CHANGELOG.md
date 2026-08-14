@@ -1,3 +1,9 @@
+**v3.8.50**
+
+Fixed:
+- **`status` printed `exit status 1` and threw away the sentence that said why.** `docker compose ps` runs through `CombinedOutput`, so docker's own error was already in hand — and `logger.Fatal(err)` reported only the exit code. That one line meant a missing compose file, a daemon that is not running, and a compose file docker refuses to parse, with nothing to tell them apart. It cost about an hour on a server and ended in looking at docker directly, which is the thing madock exists to avoid: the answer, once a diagnostic build printed it, was `open /opt/madock/aruntime/projects/shiplab-shopify-2/docker-compose.yml: no such file or directory` — a ghost project left in the registry after its source was removed, resolved and never mentioned. The path, the error and docker's output are now all in the message. The handler a few lines below, the one that parses the JSON, had always done this correctly, so it was one missed case rather than a habit
+- Related, and already in 3.8.49: a command run in a directory that is not a project now says so instead of failing on generated files that happen to carry the directory's name. That covers the first of the three meanings above; this release covers the other two
+
 **v3.8.49**
 
 Fixed:
