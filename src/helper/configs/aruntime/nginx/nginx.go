@@ -67,21 +67,37 @@ func setPorts(projectName string) {
 	_ = ports.GetPort(projectName, ports.ServiceNginx)
 }
 
-func makeProxy(projectName string) {
-	generalConfig := configs2.GetGeneralConfig()
-	/* Create nginx default configuration for Magento2 */
-	nginxDefFile := ""
-	str := ""
-	allFileData := "worker_processes 2;\nworker_priority -10;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\nserver_names_hash_bucket_size  128;\nserver_names_hash_max_size 1024;\n"
+// proxyPreamble builds everything in the shared proxy configuration that comes
+// before the per-project server blocks: worker settings, the http block, and the
+// directives that must exist exactly once for all projects.
+//
+// A function of its configuration and nothing else, so the branches here can be
+// asserted without generating a whole installation. There are no golden files for
+// the shared proxy.conf — the harness that renders one belongs to another package —
+// and this is where its conditionals live.
+func proxyPreamble(generalConfig map[string]string) string {
+	// worker_priority used to be set to -10 here and never worked: lowering a nice
+	// value needs CAP_SYS_NICE, which is not in a container's default capability
+	// set, so every start logged two `[alert] setpriority(-10) failed (13:
+	// Permission denied)` — alert being the loudest level short of emerg, in the
+	// one log where a real fault has to be visible. The proxy ran at ordinary
+	// priority while the configuration claimed otherwise.
+	//
+	// Not worth a capability either: nginx here is epoll and I/O, and what starves
+	// under load is php-fpm and the database, so a better-scheduled proxy only
+	// accepts requests faster into the same queue. If priority is ever genuinely
+	// wanted, the container-native knob is a cgroup weight — cpu_shares/cpus on the
+	// proxy service in compose — which needs no extra privilege.
+	preamble := "worker_processes 2;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\nserver_names_hash_bucket_size  128;\nserver_names_hash_max_size 1024;\n"
 
 	// Global rate limiting zone (defined once for all projects)
 	if generalConfig["proxy/rate_limit/enabled"] == "true" {
-		allFileData += "# Rate limiting (protection against infinite loops)\nlimit_req_zone $binary_remote_addr zone=general:10m rate=" + generalConfig["proxy/rate_limit/rate"] + "r/s;\n"
+		preamble += "# Rate limiting (protection against infinite loops)\nlimit_req_zone $binary_remote_addr zone=general:10m rate=" + generalConfig["proxy/rate_limit/rate"] + "r/s;\n"
 	}
 
 	// Global gzip settings (defined once for all projects)
 	if generalConfig["proxy/gzip/enabled"] == "true" {
-		allFileData += "# Gzip compression\ngzip on;\ngzip_vary on;\ngzip_proxied any;\ngzip_comp_level 6;\ngzip_min_length 1000;\ngzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;\n"
+		preamble += "# Gzip compression\ngzip on;\ngzip_vary on;\ngzip_proxied any;\ngzip_comp_level 6;\ngzip_min_length 1000;\ngzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;\n"
 	}
 
 	// Global map for WebSocket upgrade. Used by Grafana Live AND by
@@ -90,11 +106,21 @@ func makeProxy(projectName string) {
 	// instead of being demoted to plain HTTP. The empty default keeps
 	// `Connection:` empty for non-WS traffic so upstream keepalive
 	// still works (close would force a new TCP per request).
-	allFileData += "# WebSocket upgrade map\nmap $http_upgrade $connection_upgrade {\n  default upgrade;\n  '' '';\n}\n"
+	preamble += "# WebSocket upgrade map\nmap $http_upgrade $connection_upgrade {\n  default upgrade;\n  '' '';\n}\n"
 
 	// Global log format and access log
-	allFileData += "# Access log format\nlog_format main '$remote_addr - $host [$time_local] \"$request\" '\n                '$status $body_bytes_sent \"$http_referer\" '\n                '\"$http_user_agent\" $request_time';\n"
-	allFileData += "access_log /var/log/nginx/access.log main;\n"
+	preamble += "# Access log format\nlog_format main '$remote_addr - $host [$time_local] \"$request\" '\n                '$status $body_bytes_sent \"$http_referer\" '\n                '\"$http_user_agent\" $request_time';\n"
+	preamble += "access_log /var/log/nginx/access.log main;\n"
+
+	return preamble
+}
+
+func makeProxy(projectName string) {
+	generalConfig := configs2.GetGeneralConfig()
+	/* Create nginx default configuration for Magento2 */
+	nginxDefFile := ""
+	str := ""
+	allFileData := proxyPreamble(generalConfig)
 
 	processedProjects := make(map[string]bool) // Track processed projects to avoid duplicates
 	projectsNames := paths.GetDirs(paths.MakeDirsByPath(paths.RuntimeProjects()))

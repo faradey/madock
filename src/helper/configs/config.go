@@ -3,6 +3,7 @@ package configs
 import (
 	"bytes"
 	"encoding/xml"
+	"fmt"
 	"log"
 	"os"
 	"os/user"
@@ -228,6 +229,16 @@ func ReplaceConfigValue(projectName, str string) string {
 	// Process conditionals with proper nesting support
 	str = processConditionals(str)
 
+	// processConditionals cannot report a malformed template: it locates the
+	// closing tag by counting openings, so one unbalanced <<<if leaves every
+	// conditional in the file unresolved and the result is written out as-is.
+	// That produced an nginx config with raw <<<iffalse>>> in it and six server
+	// blocks where one belonged, and nothing said a word. A surviving tag is
+	// always a template bug, so stop here instead of generating garbage.
+	if line, text, found := UnresolvedTag(str); found {
+		logger.Fatal(fmt.Errorf("unresolved template tag at line %d while generating config for project %s: %s\nAn <<<if without its <<<endif>>> (a tag inside a comment counts) makes the engine abandon the whole file", line, projectName, text))
+	}
+
 	var onlyHosts []string
 
 	hosts := GetHosts(projectConf)
@@ -239,6 +250,20 @@ func ReplaceConfigValue(projectName, str string) string {
 
 	str = strings.Replace(str, "{{{nginx/host_gateways}}}", strings.Join(onlyHosts, "\n      "), -1)
 	return str
+}
+
+// UnresolvedTag reports the first conditional tag left in a processed template,
+// which is the observable symptom of a malformed one. Bash here-strings
+// (`read a b c <<< "$x"`) appear in the Dockerfile templates and are not tags,
+// so only the three tag forms count.
+func UnresolvedTag(str string) (int, string, bool) {
+	for i, line := range strings.Split(str, "\n") {
+		if strings.Contains(line, "<<<if") || strings.Contains(line, "<<<else>>>") || strings.Contains(line, "<<<endif>>>") {
+			return i + 1, strings.TrimSpace(line), true
+		}
+	}
+
+	return 0, "", false
 }
 
 // processConditionals handles nested <<<if...>>>...<<<endif>>> blocks

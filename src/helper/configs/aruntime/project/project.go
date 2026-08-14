@@ -133,6 +133,19 @@ func makeNginxConf(projectName string) {
 	str = strings.Replace(str, "{{{main_service_enabled}}}", resolveMainServiceEnabled(projectConf, mainService), -1)
 	str = strings.Replace(str, "{{{main_service_port}}}", resolveMainServicePort(projectConf), -1)
 
+	// Which snippet is the front door: fastcgi to php, or a proxy to whatever
+	// the language runs. The nginx templates used to decide it per service —
+	// one conditional include per enabled runtime — which contradicted this
+	// rule and emitted a server block per runtime, all of them on the same
+	// listen and server_name. nginx keeps the first and warns about the rest,
+	// so enabling php beside another runtime silently took that runtime's
+	// route away.
+	mainServiceIsPhp := "false"
+	if mainService == "php" {
+		mainServiceIsPhp = "true"
+	}
+	str = strings.Replace(str, "{{{main_service_is_php}}}", mainServiceIsPhp, -1)
+
 	str = configs.ReplaceConfigValue(projectName, str)
 	hostName := "loc." + projectName + ".com"
 	hostNameWebsites := "loc." + projectName + ".com base;"
@@ -322,19 +335,26 @@ func makeDockerCompose(projectName string) {
 // resolveMainServiceEnabled returns "true" if the main service container will be
 // emitted in docker-compose, "false" otherwise. Used to gate depends_on lines so
 // that nginx (and similar) don't reference an undefined service.
+// resolveMainServiceEnabled answers whether the service the front door points
+// at is actually part of the stack.
+//
+// Every one of these services is rendered into docker-compose behind its own
+// <<<if{{{<service>/enabled}}}>>>, so answering "true" for a switched-off
+// service produces a file that references something it does not contain: a
+// `depends_on: python` docker compose refuses to read, and an nginx upstream on
+// a name that does not resolve, which stops nginx from starting. python, golang,
+// ruby and app used to fall through to a blanket "true" for exactly that
+// reason — only php and nodejs were answered honestly.
 func resolveMainServiceEnabled(projectConf map[string]string, mainService string) string {
 	switch mainService {
-	case "php":
-		if projectConf["php/enabled"] == "true" {
-			return "true"
-		}
-		return "false"
-	case "nodejs":
-		if projectConf["nodejs/enabled"] == "true" {
+	case "php", "nodejs", "python", "golang", "ruby", "app":
+		if projectConf[mainService+"/enabled"] == "true" {
 			return "true"
 		}
 		return "false"
 	}
+
+	// A platform that names its own main service owns the answer.
 	return "true"
 }
 
