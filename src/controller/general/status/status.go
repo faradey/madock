@@ -137,7 +137,14 @@ func getContainerStatus(composePath string) []ServiceStatus {
 	cmd := exec.Command("docker", "compose", "-f", composePath, "ps", "--format", "json")
 	result, err := cmd.CombinedOutput()
 	if err != nil {
-		logger.Fatal(err)
+		// The output, not just the exit code. `logger.Fatal(err)` printed
+		// "exit status 1" and threw away the only sentence that said why —
+		// docker's own error, which is in the combined output. On a server
+		// where every project answered that way, the message was equally
+		// consistent with a missing compose file, a daemon that is not running
+		// and a compose file docker refuses to parse, and there was no way to
+		// tell from madock at all.
+		logger.Fatal(fmt.Errorf("docker compose ps failed for %s: %w\n%s", composePath, err, string(result)))
 	}
 
 	var statusData []ServiceStatus
