@@ -31,7 +31,7 @@ func Run(appVersion string) {
 	cmdName := strings.ToLower(os.Args[1])
 
 	if def, ok := command.Get(cmdName); ok {
-		if !def.Global && !configs.IsHasConfig("") {
+		if !command.IsGlobal(def) && !configs.IsHasConfig("") {
 			refuseOutsideProject(cmdName)
 			return
 		}

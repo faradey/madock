@@ -1,3 +1,8 @@
+**v3.8.49**
+
+Fixed:
+- **The project guard added in 3.8.48 refused madock-pro's machine commands.** That guard is a property of a command's definition, and a layer built on madock registers definitions madock never sees — around a hundred and ten of them in pro, whole families of which act on the host rather than on a project: `server:*`, `firewall:*`, `dns:*`, `disk:*`, the systemd `service:install|remove|status`, `webhook:*`, `mail:*`, `dashboard:tls:*`, `license:reset`, `init`, and the `:all` group. Measured on a pro binary built against 3.8.48: `firewall:status` and `version` both answered "This directory is not a madock project", and on a server nobody stands in a project directory. `command.AddScopeResolver` lets the layer that owns those commands answer for them, as a rule rather than a list of aliases; the flag stays the fallback, so an unmarked command of madock's own is still project-scoped and a forgotten check still fails loudly. A resolver may also pin a command as project-scoped, which matters where a family is shared: pro's `service:install` is the machine, madock's `service:enable` is a project's containers, and a prefix would have freed both
+
 **v3.8.48**
 
 Added:

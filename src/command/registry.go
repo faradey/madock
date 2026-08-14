@@ -33,6 +33,40 @@ type Definition struct {
 
 var registry = make(map[string]*Definition)
 var globalMiddlewares []Middleware
+var scopeResolvers []ScopeResolver
+
+// ScopeResolver answers whether a command belongs to a project, for a layer that
+// knows better than madock does. `decided` false means "no opinion".
+type ScopeResolver func(def *Definition) (global bool, decided bool)
+
+// AddScopeResolver registers such an answer.
+//
+// It exists because the Global flag is a property of a definition, and a layer
+// built on madock registers definitions madock never sees: madock-pro adds around
+// a hundred and ten aliases, and whole families of them — server:*, firewall:*,
+// dns:*, disk:*, service:*, the :all group — act on the machine rather than on a
+// project. Left to the default they would all be refused outside a project, which
+// is where they are actually run.
+//
+// A resolver keeps the strict default for madock's own commands, where forgetting
+// the flag has to fail loudly, while letting the layer that owns the knowledge
+// express it as a rule instead of a list of aliases nobody will maintain.
+func AddScopeResolver(resolver ScopeResolver) {
+	scopeResolvers = append(scopeResolvers, resolver)
+}
+
+// IsGlobal reports whether a command may run outside a project. Resolvers are
+// asked first, in registration order, and the flag on the definition is the
+// fallback.
+func IsGlobal(def *Definition) bool {
+	for _, resolver := range scopeResolvers {
+		if global, decided := resolver(def); decided {
+			return global
+		}
+	}
+
+	return def.Global
+}
 
 // Register adds a command definition to the registry
 func Register(def *Definition) {
