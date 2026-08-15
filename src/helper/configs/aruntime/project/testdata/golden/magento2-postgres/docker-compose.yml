@@ -1,6 +1,5 @@
 name: madock_golden
 services:
-  
   php:
     init: true
     build:
@@ -41,7 +40,6 @@ services:
     depends_on:
       - php
     restart: no
-  
   db:
     init: true
     build:
@@ -56,8 +54,6 @@ services:
     volumes:
       - dbdata:/var/lib/postgresql/data
     restart: no
-
-  
   opensearch:
     init: true
     build:
@@ -83,15 +79,6 @@ services:
       - opensearch_vlm_2.19.0:/usr/share/opensearch/data
     restart: no
 
-
-
-
-
-
-
-
-
-
 volumes:
   # Declared unconditionally on purpose. Every other entry here is optional, so
   # gating this one too lets `volumes:` render empty when a project runs without
@@ -99,6 +86,7 @@ volumes:
   # with "volumes must be a mapping". An unused named volume costs nothing.
   dbdata:
   opensearch_vlm_2.19.0:
+
 networks:
   madock-proxy:
     external: true

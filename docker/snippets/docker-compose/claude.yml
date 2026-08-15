@@ -1,4 +1,4 @@
-  <<<if{{{claude/enabled}}}>>>
+  {{{- if .claude.enabled}}}
   claude:
     init: true
     build:
@@ -9,8 +9,12 @@
       - ./src:/var/www/html:cached
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
-    restart: {{{restart_policy}}}
-    <<<endif>>>
-  <<<if{{{claude/enabled}}}{{{isolation/enabled}}}>>>networks:
-    - isolated<<<endif>>>
+      {{{- range .nginx.hosts}}}
+      - "{{{.name}}}:host-gateway"
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+  {{{- end}}}
+  {{{- if and .claude.enabled .isolation.enabled}}}
+  networks:
+    - isolated
+  {{{- end}}}

@@ -1,6 +1,6 @@
-{{{include snippets/dockerfile/golang/header}}}
-{{{include snippets/dockerfile/common/cron}}}
-{{{include snippets/dockerfile/common/mkdir}}}
-{{{include snippets/dockerfile/golang/chown}}}
-{{{include snippets/dockerfile/common/cleanup}}}
-{{{include snippets/dockerfile/golang/footer}}}
+{{{template "snippets/dockerfile/golang/header" .}}}
+{{{template "snippets/dockerfile/common/cron" .}}}
+{{{template "snippets/dockerfile/common/mkdir" .}}}
+{{{template "snippets/dockerfile/golang/chown" .}}}
+{{{template "snippets/dockerfile/common/cleanup" .}}}
+{{{template "snippets/dockerfile/golang/footer" .}}}

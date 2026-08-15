@@ -1,4 +1,4 @@
-<<<if{{{permissions/umask/permissive}}}>>>
+{{{- if .permissions.umask.permissive}}}
 # madock: permissive umask (002) for cross-user file writes in dev — makes
 # new files group-writable so root-created files don't block www-data and
 # vice versa. Sourced by interactive shells, non-interactive bash -c
@@ -11,4 +11,4 @@ RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
     && touch /etc/bash.bashrc \
     && printf '\numask 0002\n' >> /etc/bash.bashrc \
     && chmod 644 /etc/madock-umask.sh /etc/profile.d/madock-umask.sh
-<<<endif>>>
+{{{- end}}}

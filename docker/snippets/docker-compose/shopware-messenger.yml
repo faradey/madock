@@ -1,11 +1,11 @@
-<<<if{{{php/enabled}}}{{{shopware/messenger/enabled}}}>>>
+{{{- if and .php.enabled .shopware.messenger.enabled}}}
   messenger:
     init: true
     build:
       context: ctx
       dockerfile: php.Dockerfile
     user: www-data
-    working_dir: {{{workdir}}}
+    working_dir: {{{.workdir}}}
     # Bypass the Shopware php entrypoint (it does chown as root — not needed
     # for the consumer and we already drop to www-data here).
     entrypoint: []
@@ -20,10 +20,14 @@
       - COMPOSER_HOME=/var/www/.composer
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
+      {{{- range .nginx.hosts}}}
+      - "{{{.name}}}:host-gateway"
+      {{{- end}}}
     depends_on:
       - php
-    <<<if{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+    {{{- if .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

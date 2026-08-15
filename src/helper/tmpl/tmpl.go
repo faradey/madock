@@ -83,6 +83,12 @@ type Renderer struct {
 	// {{{port "livereload"}}}, which is honest about that in a way {{{port/livereload}}}
 	// never was.
 	Port func(service string) (int, error)
+
+	// OnLegacy is called when a template turns out to be written in the old
+	// <<<if>>> syntax, before it is converted and rendered. Only a project's own
+	// overrides under .madock/docker/ can be, and they keep working — but
+	// silently would mean nobody ever updates them.
+	OnLegacy func(name string, notes []string)
 }
 
 // Render parses body under the given name, resolves every {{{template}}} it
@@ -93,7 +99,7 @@ type Renderer struct {
 func (r *Renderer) Render(name, body string) (string, error) {
 	root := template.New(name).Delims(LeftDelim, RightDelim).Option("missingkey=error").Funcs(r.funcMap())
 
-	if _, err := root.Parse(body); err != nil {
+	if _, err := root.Parse(r.source(name, body)); err != nil {
 		return "", err
 	}
 	if err := r.loadSnippets(root); err != nil {
@@ -111,6 +117,25 @@ func (r *Renderer) Render(name, body string) (string, error) {
 	}
 
 	return out.String(), nil
+}
+
+// source is every template's way in, the root and each snippet alike.
+//
+// A template written against the old syntax is converted here rather than read
+// by a second engine kept alive for it. Only a project's own overrides under
+// .madock/docker/ can still be in that shape — everything madock ships was
+// converted once, in the tree — and an override can be either the file being
+// rendered or a snippet it pulls in, so both go through here.
+func (r *Renderer) source(name, body string) string {
+	if !IsLegacy(body) {
+		return body
+	}
+
+	converted, notes := Legacy(body)
+	if r.OnLegacy != nil {
+		r.OnLegacy(name, notes)
+	}
+	return converted
 }
 
 // loadSnippets parses every template the set refers to but does not yet define,
@@ -147,7 +172,7 @@ func (r *Renderer) loadSnippets(root *template.Template) error {
 			if err != nil {
 				return fmt.Errorf("including %q: %w", name, err)
 			}
-			if _, err := root.New(name).Parse(body); err != nil {
+			if _, err := root.New(name).Parse(r.source(name, body)); err != nil {
 				return err
 			}
 			loaded[name] = true

@@ -1,13 +1,13 @@
-<<<if{{{saleor/worker/enabled}}}>>>
+{{{- if .saleor.worker.enabled}}}
   worker:
     init: true
     build:
       context: ctx
       dockerfile: python.Dockerfile
     tty: true
-    working_dir: {{{workdir}}}
+    working_dir: {{{.workdir}}}
     volumes:
-      - ./src:{{{workdir}}}:cached
+      - ./src:{{{.workdir}}}:cached
     environment:
       # DATABASE_URL / REDIS_URL / CELERY_BROKER_URL come from the
       # project's .env (sourced in `command:` below). The install
@@ -20,8 +20,12 @@
     command: ["sh", "-c", "set -a; [ -f .env ] && . ./.env; set +a; if [ ! -d .venv ] && ! python -c 'import saleor' 2>/dev/null; then echo '[madock] worker idle: run madock install first'; exec sleep infinity; fi; PREFIX=''; if [ -f uv.lock ] && command -v uv >/dev/null 2>&1; then PREFIX='uv run'; fi; echo \"[madock] starting: $$PREFIX celery -A saleor worker -B\"; exec $$PREFIX celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B"]
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
-    restart: {{{restart_policy}}}
-<<<endif>>>
-    <<<if{{{saleor/worker/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+      {{{- range .nginx.hosts}}}
+      - "{{{.name}}}:host-gateway"
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}
+    {{{- if and .saleor.worker.enabled .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}

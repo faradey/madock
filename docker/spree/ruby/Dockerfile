@@ -1,4 +1,4 @@
-FROM ruby:{{{ruby/version}}}-slim
+FROM ruby:{{{.ruby.version}}}-slim
 
 # System deps: build toolchain for native gems (pg, nokogiri, bcrypt,
 # etc.), PostgreSQL client for `rails db:*` and migrations probes,
@@ -32,17 +32,17 @@ RUN gem install bundler --no-document
 # Match host UID/GID so bind-mounted files stay editable on host and
 # container as the same user. The base image ships no `node`/`www-data`
 # user we can re-use, so create a dedicated `ruby` user.
-ARG MADOCK_UID={{{os/user/uid}}}
-ARG MADOCK_GID={{{os/user/guid}}}
+ARG MADOCK_UID={{{.os.user.uid}}}
+ARG MADOCK_GID={{{.os.user.guid}}}
 RUN groupadd -g ${MADOCK_GID} ruby 2>/dev/null || true \
  && useradd -u ${MADOCK_UID} -g ${MADOCK_GID} -ms /bin/bash ruby 2>/dev/null || true \
  && mkdir -p /var/www && chown ${MADOCK_UID}:${MADOCK_GID} /var/www
 
-ENV WORKDIR={{{workdir}}}
+ENV WORKDIR={{{.workdir}}}
 ENV BUNDLE_PATH=/var/www/html/vendor/bundle
 ENV BUNDLE_BIN=/var/www/html/vendor/bundle/bin
 ENV PATH=/var/www/html/vendor/bundle/bin:/var/www/html/bin:$PATH
-WORKDIR {{{workdir}}}
+WORKDIR {{{.workdir}}}
 
 # Smart entrypoint: waits for the project clone, then for `bundle
 # install` to populate vendor/bundle, then exec's the Rails dev server.

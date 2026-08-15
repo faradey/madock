@@ -1,17 +1,19 @@
-<<<if{{{db/enabled}}}{{{db/mongo_express/enabled}}}>>>
+{{{- if and .db.enabled .db.mongo_express.enabled}}}
   mongo-express:
     init: true
-    image: {{{db/mongo_express/repository}}}:{{{db/mongo_express/version}}}
+    image: {{{.db.mongo_express.repository}}}:{{{.db.mongo_express.version}}}
     ports:
-      - "{{{port/mongo_express}}}:8081"
+      - "{{{port "mongo_express"}}}:8081"
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: {{{db/user}}}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: {{{db/password}}}
+      ME_CONFIG_MONGODB_ADMINUSERNAME: {{{.db.user}}}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: {{{.db.password}}}
       ME_CONFIG_MONGODB_SERVER: db
     depends_on:
       - db
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

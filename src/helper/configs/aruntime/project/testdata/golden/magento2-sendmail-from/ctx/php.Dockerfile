@@ -64,7 +64,6 @@ RUN apt-get -y --allow-releaseinfo-change update && apt-get install -y php8.4-bc
 RUN apt-get install -y php8.4-opcache || true
 RUN apt-get install -y php8.4-xmlrpc || true
 
-
 SHELL ["/bin/bash", "-c"]
 RUN IFS='.' read major minor patch <<< "8.4" \
     && if [[ "${major}" -ge "9" ]] || [[ "${major}" = "8" && "${minor}" -ge "4" ]]; then \
@@ -160,21 +159,18 @@ RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /
 # the fifth argument, `-f`), so Magento and Laravel are fine either way; a plain
 # mail() call with four arguments is not, and that is what anyone testing their
 # own site tries first. Setting this makes both work.
-
 RUN sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal --from=shop@example.com"/g' /etc/php/8.4/fpm/php.ini \
     && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal --from=shop@example.com"/g' /etc/php/8.4/cli/php.ini
-
 
 WORKDIR /var/www
 
 RUN apt-get install -y cron
 RUN mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
-RUN mkdir /var/www/.npm && chown <UID>:<GID> /var/www/.npm
 
+RUN mkdir /var/www/.npm && chown <UID>:<GID> /var/www/.npm
 RUN if [ "false" = "true" ]; then curl -sS https://accounts.magento.cloud/cli/installer | php \
     && cp -r /root/.magento-cloud/ /var/www/ && chown -R <UID>:<GID> /var/www/.magento-cloud && ln -s /var/www/.magento-cloud/bin/magento-cloud /usr/bin/magento-cloud; fi
 RUN if [ "false" = "true" ]; then chown <UID>:<GID> /usr/bin/magento-cloud; fi
-
 
 RUN usermod -u <UID> -o www-data && groupmod -g <GID> -o www-data \
     && chown -R <UID>:<GID> /var/www \
@@ -199,8 +195,4 @@ RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
     && touch /etc/bash.bashrc \
     && printf '\numask 0002\n' >> /etc/bash.bashrc \
     && chmod 644 /etc/madock-umask.sh /etc/profile.d/madock-umask.sh
-
-
-
-
 CMD ["bash", "-c", "exec php-fpm8.4"]

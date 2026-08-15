@@ -1,10 +1,10 @@
-<<<if{{{search/elasticsearch/dashboard/enabled}}}>>>
+{{{- if .search.elasticsearch.dashboard.enabled}}}
   kibana:
     init: true
     platform: linux/x86_64
-    image: {{{search/elasticsearch/dashboard/repository}}}:{{{search/elasticsearch/version}}}
+    image: {{{.search.elasticsearch.dashboard.repository}}}:{{{.search.elasticsearch.version}}}
     ports:
-      - "{{{port/kibana}}}:5601"
+      - "{{{port "kibana"}}}:5601"
     environment:
       SERVER_BASEPATH: /kibana
       ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
@@ -12,6 +12,8 @@
       - elasticsearch
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

@@ -1,4 +1,4 @@
-<<<if{{{search/elasticsearch/enabled}}}>>>
+{{{- if .search.elasticsearch.enabled}}}
   elasticsearch:
     init: true
     build:
@@ -21,8 +21,10 @@
       - "cluster.routing.allocation.disk.threshold_enabled=false"
       - "index.blocks.read_only_allow_delete"
     volumes:
-      - elasticsearch_vlm_{{{search/elasticsearch/version}}}:/usr/share/elasticsearch/data
-    restart: {{{restart_policy}}}
-<<<endif>>>
-    <<<if{{{search/elasticsearch/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+      - elasticsearch_vlm_{{{.search.elasticsearch.version}}}:/usr/share/elasticsearch/data
+    restart: {{{.restart_policy}}}
+{{{- end}}}
+    {{{- if and .search.elasticsearch.enabled .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}

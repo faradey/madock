@@ -1,1 +1,1 @@
-name: {{{container_name_prefix}}}{{{project_name}}}{{{scope}}}
+name: {{{.container_name_prefix}}}{{{.project_name}}}{{{.scope}}}

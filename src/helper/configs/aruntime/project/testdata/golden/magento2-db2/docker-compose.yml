@@ -1,6 +1,5 @@
 name: madock_golden
 services:
-  
   php:
     init: true
     build:
@@ -41,7 +40,6 @@ services:
     depends_on:
       - php
     restart: no
-  
   db:
     init: true
     command:
@@ -60,8 +58,6 @@ services:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
     restart: no
-
-  
   db2:
     init: true
     command:
@@ -80,8 +76,6 @@ services:
       - dbdata2:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
     restart: no
-
-  
   opensearch:
     init: true
     build:
@@ -107,15 +101,6 @@ services:
       - opensearch_vlm_2.19.0:/usr/share/opensearch/data
     restart: no
 
-
-
-
-
-
-
-
-
-
 volumes:
   # Declared unconditionally on purpose. Every other entry here is optional, so
   # gating this one too lets `volumes:` render empty when a project runs without
@@ -124,6 +109,7 @@ volumes:
   dbdata:
   dbdata2:
   opensearch_vlm_2.19.0:
+
 networks:
   madock-proxy:
     external: true

@@ -1,18 +1,20 @@
-<<<if{{{db/enabled}}}{{{db/type_is_mongodb}}}>>>
+{{{- if and .db.enabled (eq .db.type "mongodb")}}}
   db:
     init: true
     build:
       context: ctx
       dockerfile: db.Dockerfile
     ports:
-      - "{{{port/db}}}:27017"
+      - "{{{port "db"}}}:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: "{{{db/user}}}"
-      MONGO_INITDB_ROOT_PASSWORD: "{{{db/password}}}"
-      MONGO_INITDB_DATABASE: "{{{db/database}}}"
+      MONGO_INITDB_ROOT_USERNAME: "{{{.db.user}}}"
+      MONGO_INITDB_ROOT_PASSWORD: "{{{.db.password}}}"
+      MONGO_INITDB_DATABASE: "{{{.db.database}}}"
     volumes:
       - dbdata:/data/db
-    <<<if{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+    {{{- if .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/kibana/kibana.yml}}}
+{{{template "snippets/dockerfile/kibana/kibana.yml" .}}}

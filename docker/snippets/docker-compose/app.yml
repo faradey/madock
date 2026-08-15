@@ -1,4 +1,4 @@
-<<<if{{{app/enabled}}}>>>
+{{{- if .app.enabled}}}
   app:
     init: true
     build:
@@ -11,8 +11,12 @@
       - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
-    <<<if{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- range .nginx.hosts}}}
+      - "{{{.name}}}:host-gateway"
+      {{{- end}}}
+    {{{- if .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

@@ -1,19 +1,21 @@
-<<<if{{{db2/phpmyadmin/enabled}}}>>>
+{{{- if .db2.phpmyadmin.enabled}}}
   phpmyadmin2:
     init: true
-    image: {{{db2/phpmyadmin/repository}}}:{{{db2/phpmyadmin/version}}}
+    image: {{{.db2.phpmyadmin.repository}}}:{{{.db2.phpmyadmin.version}}}
     ports:
-      - "{{{port/phpmyadmin2}}}:80"
+      - "{{{port "phpmyadmin2"}}}:80"
     environment:
       PMA_HOST: "db2"
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
-      PMA_ABSOLUTE_URI: "http://{{{nginx/host_name_default}}}/phpmyadmin2/"
+      PMA_ABSOLUTE_URI: "http://{{{(index .nginx.hosts 0).name}}}/phpmyadmin2/"
       PMA_USER: root
-      PMA_PASSWORD: {{{db2/root_password}}}
+      PMA_PASSWORD: {{{.db2.root_password}}}
       UPLOAD_LIMIT: 2G
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

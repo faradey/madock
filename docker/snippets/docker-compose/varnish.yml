@@ -1,14 +1,16 @@
-<<<if{{{varnish/enabled}}}>>>
+{{{- if .varnish.enabled}}}
   varnish:
     init: true
-    image: {{{varnish/repository}}}:{{{varnish/version}}}
+    image: {{{.varnish.repository}}}:{{{.varnish.version}}}
     ports:
-      - "{{{port/varnish}}}:6081"
+      - "{{{port "varnish"}}}:6081"
     volumes:
-      - ./src/{{{varnish/config_file}}}:/etc/varnish/default.vcl:ro
+      - ./src/{{{.varnish.config_file}}}:/etc/varnish/default.vcl:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
+      {{{- range .nginx.hosts}}}
+      - "{{{.name}}}:host-gateway"
+      {{{- end}}}
     command: "-p default_keep=300"
     environment:
       VARNISH_HTTP_PORT: 6081
@@ -17,6 +19,8 @@
       - nginx
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

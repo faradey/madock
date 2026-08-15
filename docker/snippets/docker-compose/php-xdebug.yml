@@ -1,4 +1,4 @@
-<<<if{{{php/enabled}}}{{{php/xdebug/enabled}}}>>>
+{{{- if and .php.enabled .php.xdebug.enabled}}}
   php_without_xdebug:
     init: true
     build:
@@ -10,7 +10,9 @@
       - "host.docker.internal:host-gateway"
     depends_on:
       - php
-    restart: {{{restart_policy}}}
-<<<endif>>>
-    <<<if{{{php/xdebug/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+    restart: {{{.restart_policy}}}
+{{{- end}}}
+    {{{- if and .php.xdebug.enabled .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}

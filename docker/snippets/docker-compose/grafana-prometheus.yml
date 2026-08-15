@@ -1,4 +1,4 @@
-<<<if{{{grafana/enabled}}}>>>
+{{{- if .grafana.enabled}}}
   prometheus:
     init: true
     image: prom/prometheus
@@ -7,6 +7,8 @@
       - ./ctx/grafana/prometheus-config.yml:/etc/prometheus/prometheus-config.yml
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/grafana/dashboard-loki.json}}}
+{{{template "snippets/dockerfile/grafana/dashboard-loki.json" .}}}

@@ -1,10 +1,10 @@
-<<<if{{{search/opensearch/dashboard/enabled}}}>>>
+{{{- if .search.opensearch.dashboard.enabled}}}
   opensearchdashboard:
     init: true
     platform: linux/x86_64
-    image: {{{search/opensearch/dashboard/repository}}}:{{{search/opensearch/version}}}
+    image: {{{.search.opensearch.dashboard.repository}}}:{{{.search.opensearch.version}}}
     ports:
-      - "{{{port/opensearchdashboard}}}:5601"
+      - "{{{port "opensearchdashboard"}}}:5601"
     environment:
       SERVER_BASEPATH: /opensearch-dashboard
       OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
@@ -13,6 +13,8 @@
       - opensearch
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

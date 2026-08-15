@@ -1,8 +1,10 @@
-<<<if{{{valkey/enabled}}}>>>
+{{{- if .valkey.enabled}}}
   valkeydb:
     init: true
-    image: {{{valkey/repository}}}:{{{valkey/version}}}
-    restart: {{{restart_policy}}}
-<<<endif>>>
-    <<<if{{{valkey/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+    image: {{{.valkey.repository}}}:{{{.valkey.version}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}
+    {{{- if and .valkey.enabled .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}

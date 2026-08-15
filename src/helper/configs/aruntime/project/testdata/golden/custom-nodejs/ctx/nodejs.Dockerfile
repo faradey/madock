@@ -26,8 +26,6 @@ RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
     && printf '\numask 0002\n' >> /etc/bash.bashrc \
     && chmod 644 /etc/madock-umask.sh /etc/profile.d/madock-umask.sh
 
-
-
 # madock smart entrypoint:
 #   - if nodejs/script is set, run that (see nodejs/script_type)
 #   - else pick from package.json: "dev" in development, "start" in production
@@ -38,7 +36,6 @@ RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
 RUN cat > /usr/local/bin/madock-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local/bin/madock-entrypoint
 #!/bin/sh
 set -e
-
 umask 0002
 
 cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html

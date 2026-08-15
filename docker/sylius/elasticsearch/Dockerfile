@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/elasticsearch/elasticsearch}}}
+{{{template "snippets/dockerfile/elasticsearch/elasticsearch" .}}}

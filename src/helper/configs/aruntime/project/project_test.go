@@ -1,7 +1,6 @@
 package project
 
 import (
-	"os"
 	"testing"
 
 	"github.com/faradey/madock/v3/src/helper/configs"
@@ -173,54 +172,6 @@ func TestCompareVersionsSymmetry(t *testing.T) {
 	}
 }
 
-func TestProcessSnippets(t *testing.T) {
-	// Test with no snippets
-	input := []byte("This is a test without snippets")
-	result := ProcessSnippets(input, "testproject")
-	if string(result) != string(input) {
-		t.Errorf("ProcessSnippets should return unchanged input when no snippets present")
-	}
-
-	// Test with empty input
-	result = ProcessSnippets([]byte(""), "testproject")
-	if string(result) != "" {
-		t.Errorf("ProcessSnippets should return empty string for empty input")
-	}
-}
-
-func TestProcessSnippetsPattern(t *testing.T) {
-	// Test that the regex pattern matches correctly
-	tests := []struct {
-		input    string
-		hasMatch bool
-	}{
-		{"{{{include snippets/test.txt}}}", true},
-		{"{{{include snippets/path/to/file.conf}}}", true},
-		{"no snippet here", false},
-		{"{{{other/pattern}}}", false},
-		{"{{{include other/path}}}", false},
-	}
-
-	for _, tt := range tests {
-		// We can't fully test ProcessSnippets without file system setup,
-		// but we can verify it doesn't panic on various inputs
-		func() {
-			defer func() {
-				if r := recover(); r != nil && !tt.hasMatch {
-					// Expected to not panic for non-matching inputs
-				}
-			}()
-
-			if !tt.hasMatch {
-				result := ProcessSnippets([]byte(tt.input), "testproject")
-				if string(result) != tt.input {
-					t.Errorf("Non-matching input should be unchanged: %s", tt.input)
-				}
-			}
-		}()
-	}
-}
-
 func TestGetDockerConfigFilePathPriority(t *testing.T) {
 	// This test documents the path priority order that GetDockerConfigFile uses:
 	// 1. {runDir}/.madock/docker/{path}
@@ -246,21 +197,4 @@ func TestGetSnippetFilePathPriority(t *testing.T) {
 	t.Log("1. Project .madock override: {runDir}/.madock/docker/{path}")
 	t.Log("2. Project-specific: {execDir}/projects/{projectName}/docker/{path}")
 	t.Log("3. Global docker: {execDir}/docker/{path}")
-}
-
-// Integration test for ProcessSnippets with actual file
-func TestProcessSnippetsWithFile(t *testing.T) {
-	// Create temp directory structure
-	tmpDir, err := os.MkdirTemp("", "processsnippets")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// This test is limited because ProcessSnippets depends on paths.GetRunDirPath()
-	// and paths.GetExecDirPath() which we can't easily mock.
-	// A more comprehensive test would require dependency injection.
-
-	t.Log("ProcessSnippets requires file system access to fully test")
-	t.Log("Consider refactoring to accept path resolver interface for better testability")
 }

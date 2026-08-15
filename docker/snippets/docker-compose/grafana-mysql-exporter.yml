@@ -1,4 +1,4 @@
-<<<if{{{grafana/enabled}}}>>>
+{{{- if .grafana.enabled}}}
   dbexporter:
     init: true
     image: prom/mysqld-exporter
@@ -6,6 +6,8 @@
       - ./ctx/grafana/mysql-exporter.my.cnf:/.my.cnf
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

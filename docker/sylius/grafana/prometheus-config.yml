@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/grafana/prometheus-config.yml}}}
+{{{template "snippets/dockerfile/grafana/prometheus-config.yml" .}}}

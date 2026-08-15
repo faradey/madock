@@ -1,6 +1,6 @@
-WORKDIR {{{workdir}}}
+WORKDIR {{{.workdir}}}
 
-{{{include snippets/dockerfile/common/umask}}}
+{{{template "snippets/dockerfile/common/umask" .}}}
 
 # madock smart entrypoint:
 #   - if nodejs/script is set, run that (see nodejs/script_type)
@@ -13,7 +13,9 @@ RUN cat > /usr/local/bin/madock-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local
 #!/bin/sh
 set -e
 
-<<<if{{{permissions/umask/permissive}}}>>>umask 0002<<<endif>>>
+{{{- if .permissions.umask.permissive}}}
+umask 0002
+{{{- end}}}
 
 cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html
 
@@ -60,8 +62,8 @@ has_script() {
   node -e 'try{var p=require("./package.json").scripts||{};process.exit(p[process.argv[1]]?0:1)}catch(e){process.exit(1)}' "$1" 2>/dev/null
 }
 
-configured="{{{nodejs/script}}}"
-configured_type="{{{nodejs/script_type}}}"
+configured="{{{.nodejs.script}}}"
+configured_type="{{{.nodejs.script_type}}}"
 node_env="${NODE_ENV:-development}"
 
 # mode is "package" (run through the project's package manager) or "command"
@@ -165,6 +167,6 @@ echo "[madock] starting: $pm $script"
 run_app $pm $script
 MADOCK_EOF
 
-ENV WORKDIR={{{workdir}}}
+ENV WORKDIR={{{.workdir}}}
 
 CMD ["/usr/local/bin/madock-entrypoint"]

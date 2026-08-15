@@ -1,18 +1,20 @@
-<<<if{{{db/enabled}}}{{{db/type_is_postgresql}}}>>>
+{{{- if and .db.enabled (eq .db.type "postgresql")}}}
   db:
     init: true
     build:
       context: ctx
       dockerfile: db.Dockerfile
     ports:
-      - "{{{port/db}}}:5432"
+      - "{{{port "db"}}}:5432"
     environment:
-      POSTGRES_DB: "{{{db/database}}}"
-      POSTGRES_USER: "{{{db/user}}}"
-      POSTGRES_PASSWORD: "{{{db/password}}}"
+      POSTGRES_DB: "{{{.db.database}}}"
+      POSTGRES_USER: "{{{.db.user}}}"
+      POSTGRES_PASSWORD: "{{{.db.password}}}"
     volumes:
       - dbdata:/var/lib/postgresql/data
-    <<<if{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+    {{{- if .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

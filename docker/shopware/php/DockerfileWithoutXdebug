@@ -1,2 +1,2 @@
-{{{include snippets/dockerfile/php/withoutXdebug}}}
-{{{include snippets/dockerfile/shopware/init-chown}}}
+{{{template "snippets/dockerfile/php/withoutXdebug" .}}}
+{{{template "snippets/dockerfile/shopware/init-chown" .}}}
