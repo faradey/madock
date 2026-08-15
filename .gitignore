@@ -25,6 +25,9 @@
 !/test
 !/test/*
 !/test/**
+!/tools
+!/tools/*
+!/tools/**
 !/.githooks
 !/.githooks/*
 !/media
