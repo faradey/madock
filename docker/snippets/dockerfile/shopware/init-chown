@@ -6,9 +6,11 @@ RUN cat > /usr/local/bin/madock-shopware-entrypoint <<'MADOCK_EOF' && chmod +x /
 #!/bin/bash
 set -e
 
-<<<if{{{permissions/umask/permissive}}}>>>umask 0002<<<endif>>>
+{{{- if .permissions.umask.permissive}}}
+umask 0002
+{{{- end}}}
 
-WORKDIR="{{{workdir}}}"
+WORKDIR="{{{.workdir}}}"
 
 if [ -d "$WORKDIR" ]; then
     for dir in var public/theme public/bundles public/sitemap public/thumbnail public/media files config/jwt custom/plugins; do
@@ -23,4 +25,4 @@ exec "$@"
 MADOCK_EOF
 
 ENTRYPOINT ["/usr/local/bin/madock-shopware-entrypoint"]
-CMD ["php-fpm{{{php/version}}}"]
+CMD ["php-fpm{{{.php.version}}}"]

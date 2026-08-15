@@ -8,18 +8,18 @@ services:
       - ./ctx/proxy.conf:/etc/nginx/nginx.conf:delegated
       - ./ctx/:/sslcert/:delegated
     ports:
-      - {{{nginx/interface_ip}}}{{{nginx/port/unsecure}}}:80
-      - {{{nginx/interface_ip}}}{{{nginx/port/secure}}}:443
-      - {{{nginx/interface_ip}}}35729:35729
-      - {{{nginx/interface_ip}}}5173:5173
+      - {{{.nginx.interface_ip}}}{{{.nginx.port.unsecure}}}:80
+      - {{{.nginx.interface_ip}}}{{{.nginx.port.secure}}}:443
+      - {{{.nginx.interface_ip}}}35729:35729
+      - {{{.nginx.interface_ip}}}5173:5173
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       - madock-proxy
       - default
-    restart: {{{restart_policy}}}
+    restart: {{{.restart_policy}}}
 
-<<<if{{{proxy/mailpit/enabled}}}>>>
+{{{- if .proxy.mailpit.enabled}}}
   mailcatcher:
     image: axllent/mailpit:latest
     ports:
@@ -32,12 +32,12 @@ services:
       - 1025:1025
       # The web interface, which is the one that matters: no authentication, and
       # it shows every message from every project. Loopback by default.
-      - {{{proxy/mailpit/interface_ip}}}8025:8025
+      - {{{.proxy.mailpit.interface_ip}}}8025:8025
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
-    restart: {{{restart_policy}}}
-<<<endif>>>
+    restart: {{{.restart_policy}}}
+{{{- end}}}
 
 networks:
   madock-proxy:

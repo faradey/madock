@@ -1,13 +1,17 @@
-name: {{{container_name_prefix}}}{{{project_name}}}{{{scope}}}
+name: {{{.container_name_prefix}}}{{{.project_name}}}{{{.scope}}}
 services:
   snapshot:
-    image: {{{os/name}}}:{{{os/version}}}
+    image: {{{.os.name}}}:{{{.os.version}}}
     tty: true
-    user: "{{{os/user/uid}}}:{{{os/user/guid}}}"
+    user: "{{{.os.user.uid}}}:{{{.os.user.guid}}}"
     volumes:
       - ./src:/var/www/html
       - dbdata:/var/www/mysql
-<<<if{{{db2/enabled}}}>>>      - dbdata2:/var/www/mysql2/mysql<<<endif>>>
+      {{{- if .db2.enabled}}}
+      - dbdata2:/var/www/mysql2/mysql
+      {{{- end}}}
 volumes:
   dbdata:
-  <<<if{{{db2/enabled}}}>>>dbdata2:<<<endif>>>
+  {{{- if .db2.enabled}}}
+  dbdata2:
+  {{{- end}}}

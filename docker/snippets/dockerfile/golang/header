@@ -1,9 +1,9 @@
-FROM golang:{{{go/version}}}
+FROM golang:{{{.go.version}}}
 
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NOWARNINGS="yes"
 
-RUN ln -snf /usr/share/zoneinfo/{{{timezone}}} /etc/localtime && echo {{{timezone}}} > /etc/timezone \
+RUN ln -snf /usr/share/zoneinfo/{{{.timezone}}} /etc/localtime && echo {{{.timezone}}} > /etc/timezone \
     && apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y \
     locales \
     curl \

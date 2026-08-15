@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/claude/claude}}}
+{{{template "snippets/dockerfile/claude/claude" .}}}

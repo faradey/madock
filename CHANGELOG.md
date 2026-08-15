@@ -1,3 +1,19 @@
+**v3.10.0**
+
+Upgrading:
+- **The `<<<if>>>` template syntax is deprecated.** Every file under `docker/` is now a Go `text/template` with `{{{ }}}` delimiters, documented in [Customizations](docs/customizations.md). A project's own override under `.madock/docker/` written in the old syntax keeps working — it is converted as it is read — but madock names the file in a warning on every generation, and the conversion goes away in a later release. `go run ./tools/tmplconvert -dir <path>` converts a tree in place
+- **Generated files move in whitespace.** Blank lines that came from the line an `{{{include}}}` tag sat on are gone, eighteen in a row at the end of a default compose file among them. Nothing about a container changes; a diff of `aruntime/projects/<name>/` after an upgrade will not be empty
+
+Fixed:
+- **A project's block in the shared proxy was rendered with another project's configuration.** `proxy.conf` is built by walking every registered project, and the substitution pass was handed the name of whichever project happened to be starting — so the mftf locations in one project's server block followed a different project's setting. It follows its own now
+- **A snippet that includes itself no longer spins forever.** The include pass was a regex looped "while a match remains", with no cycle detection of any kind
+
+Added:
+- **A template can compare two values, so four settings that were never settings are gone.** `db/type_is_mysql`, `db/type_is_postgresql`, `db/type_is_mongodb` and `db/use_default_auth_plugin` were booleans computed in Go and written into the config map as though a user had set them, because the old engine's only test was "does the substituted text contain the word false" — which also meant a path or an image name containing `false` flipped a branch. Conditions are expressions now: `{{{- if and (eq .db.type "mysql") (versionLt .db.version "8.4")}}}`
+- **Loops, so a compose file's indentation is not decided in Go.** The hosts used to be joined into one string with the YAML indentation of the file they were going into baked into the separator; they are a list a template ranges over
+- **A template that does not parse stops the run and names the file and the line.** The old engine located a closing tag by counting openings, so one unbalanced tag — including one inside a comment — made it abandon the whole file with every conditional unresolved and write the result out anyway. That produced an nginx configuration with six server blocks where one belonged, and nothing said a word
+- **Two tests over the whole template tree**: every embedded template parses, and every setting a template reads is a setting madock has. The second is what replaces `missingkey=error`, which cannot be used — a shared snippet asks about `memcached/enabled` on platforms whose configuration has never heard of memcached, so an absent key has to stay falsy. It checks all eleven platforms in a second, where a render could only ever check the one somebody happened to run
+
 **v3.9.0**
 
 Upgrading:

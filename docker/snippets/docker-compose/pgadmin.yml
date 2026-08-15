@@ -1,16 +1,18 @@
-<<<if{{{db/enabled}}}{{{db/pgadmin/enabled}}}>>>
+{{{- if and .db.enabled .db.pgadmin.enabled}}}
   pgadmin:
     init: true
-    image: {{{db/pgadmin/repository}}}:{{{db/pgadmin/version}}}
+    image: {{{.db.pgadmin.repository}}}:{{{.db.pgadmin.version}}}
     ports:
-      - "{{{port/pgadmin}}}:80"
+      - "{{{port "pgadmin"}}}:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: {{{db/pgadmin/email}}}
-      PGADMIN_DEFAULT_PASSWORD: {{{db/pgadmin/password}}}
+      PGADMIN_DEFAULT_EMAIL: {{{.db.pgadmin.email}}}
+      PGADMIN_DEFAULT_PASSWORD: {{{.db.pgadmin.password}}}
     depends_on:
       - db
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

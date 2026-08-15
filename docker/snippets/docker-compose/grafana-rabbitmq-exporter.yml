@@ -1,17 +1,19 @@
-<<<if{{{grafana/enabled}}}{{{rabbitmq/enabled}}}>>>
+{{{- if and .grafana.enabled .rabbitmq.enabled}}}
   rabbitmqexporter:
     init: true
     image: kbudde/rabbitmq-exporter
     environment:
       RABBIT_URL: http://rabbitmq:15672
-      RABBIT_USER: {{{rabbitmq/user}}}
-      RABBIT_PASSWORD: {{{rabbitmq/password}}}
+      RABBIT_USER: {{{.rabbitmq.user}}}
+      RABBIT_PASSWORD: {{{.rabbitmq.password}}}
       PUBLISH_PORT: 9419
       OUTPUT_FORMAT: prometheus
     depends_on:
       - rabbitmq
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

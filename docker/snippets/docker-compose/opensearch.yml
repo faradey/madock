@@ -1,4 +1,4 @@
-<<<if{{{search/opensearch/enabled}}}>>>
+{{{- if .search.opensearch.enabled}}}
   opensearch:
     init: true
     build:
@@ -21,8 +21,10 @@
       DISABLE_SECURITY_PLUGIN: 'true'
       ES_JAVA_OPTS: '-Xms800m -Xmx800m'
     volumes:
-      - opensearch_vlm_{{{search/opensearch/version}}}:/usr/share/opensearch/data
-    restart: {{{restart_policy}}}
-<<<endif>>>
-    <<<if{{{search/opensearch/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+      - opensearch_vlm_{{{.search.opensearch.version}}}:/usr/share/opensearch/data
+    restart: {{{.restart_policy}}}
+{{{- end}}}
+    {{{- if and .search.opensearch.enabled .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}

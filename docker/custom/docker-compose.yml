@@ -1,38 +1,38 @@
-{{{include snippets/docker-compose/container-name.yml}}}
+{{{template "snippets/docker-compose/container-name.yml" .}}}
 services:
-  {{{include snippets/docker-compose/php.yml}}}
-  {{{include snippets/docker-compose/php-xdebug.yml}}}
-  {{{include snippets/docker-compose/nginx.yml}}}
-  {{{include snippets/docker-compose/db.yml}}}
-  {{{include snippets/docker-compose/db-postgresql.yml}}}
-  {{{include snippets/docker-compose/db-mongodb.yml}}}
-  {{{include snippets/docker-compose/db2.yml}}}
-  {{{include snippets/docker-compose/nodejs.yml}}}
-  {{{include snippets/docker-compose/python.yml}}}
-  {{{include snippets/docker-compose/golang.yml}}}
-  {{{include snippets/docker-compose/ruby.yml}}}
-  {{{include snippets/docker-compose/app.yml}}}
-  {{{include snippets/docker-compose/elasticsearch.yml}}}
-  {{{include snippets/docker-compose/opensearch.yml}}}
-  {{{include snippets/docker-compose/redis.yml}}}
-  {{{include snippets/docker-compose/valkey.yml}}}
-  {{{include snippets/docker-compose/memcached.yml}}}
-  {{{include snippets/docker-compose/rabbitmq.yml}}}
-  {{{include snippets/docker-compose/artemis.yml}}}
-  {{{include snippets/docker-compose/phpmyadmin.yml}}}
-  {{{include snippets/docker-compose/phpmyadmin2.yml}}}
-  {{{include snippets/docker-compose/pgadmin.yml}}}
-  {{{include snippets/docker-compose/mongo-express.yml}}}
-  {{{include snippets/docker-compose/kibana.yml}}}
-  {{{include snippets/docker-compose/opensearchdashboard.yml}}}
-  {{{include snippets/docker-compose/varnish.yml}}}
-  {{{include snippets/docker-compose/grafana.yml}}}
-  {{{include snippets/docker-compose/grafana-loki.yml}}}
-  {{{include snippets/docker-compose/grafana-promtail.yml}}}
-  {{{include snippets/docker-compose/grafana-prometheus.yml}}}
-  {{{include snippets/docker-compose/grafana-mysql-exporter.yml}}}
-  {{{include snippets/docker-compose/grafana-rabbitmq-exporter.yml}}}
-  {{{include snippets/docker-compose/claude.yml}}}
+  {{{- template "snippets/docker-compose/php.yml" .}}}
+  {{{- template "snippets/docker-compose/php-xdebug.yml" .}}}
+  {{{- template "snippets/docker-compose/nginx.yml" .}}}
+  {{{- template "snippets/docker-compose/db.yml" .}}}
+  {{{- template "snippets/docker-compose/db-postgresql.yml" .}}}
+  {{{- template "snippets/docker-compose/db-mongodb.yml" .}}}
+  {{{- template "snippets/docker-compose/db2.yml" .}}}
+  {{{- template "snippets/docker-compose/nodejs.yml" .}}}
+  {{{- template "snippets/docker-compose/python.yml" .}}}
+  {{{- template "snippets/docker-compose/golang.yml" .}}}
+  {{{- template "snippets/docker-compose/ruby.yml" .}}}
+  {{{- template "snippets/docker-compose/app.yml" .}}}
+  {{{- template "snippets/docker-compose/elasticsearch.yml" .}}}
+  {{{- template "snippets/docker-compose/opensearch.yml" .}}}
+  {{{- template "snippets/docker-compose/redis.yml" .}}}
+  {{{- template "snippets/docker-compose/valkey.yml" .}}}
+  {{{- template "snippets/docker-compose/memcached.yml" .}}}
+  {{{- template "snippets/docker-compose/rabbitmq.yml" .}}}
+  {{{- template "snippets/docker-compose/artemis.yml" .}}}
+  {{{- template "snippets/docker-compose/phpmyadmin.yml" .}}}
+  {{{- template "snippets/docker-compose/phpmyadmin2.yml" .}}}
+  {{{- template "snippets/docker-compose/pgadmin.yml" .}}}
+  {{{- template "snippets/docker-compose/mongo-express.yml" .}}}
+  {{{- template "snippets/docker-compose/kibana.yml" .}}}
+  {{{- template "snippets/docker-compose/opensearchdashboard.yml" .}}}
+  {{{- template "snippets/docker-compose/varnish.yml" .}}}
+  {{{- template "snippets/docker-compose/grafana.yml" .}}}
+  {{{- template "snippets/docker-compose/grafana-loki.yml" .}}}
+  {{{- template "snippets/docker-compose/grafana-promtail.yml" .}}}
+  {{{- template "snippets/docker-compose/grafana-prometheus.yml" .}}}
+  {{{- template "snippets/docker-compose/grafana-mysql-exporter.yml" .}}}
+  {{{- template "snippets/docker-compose/grafana-rabbitmq-exporter.yml" .}}}
+  {{{- template "snippets/docker-compose/claude.yml" .}}}
 
-{{{include snippets/docker-compose/volumes.yml}}}
-{{{include snippets/docker-compose/networks.yml}}}
+{{{template "snippets/docker-compose/volumes.yml" .}}}
+{{{template "snippets/docker-compose/networks.yml" .}}}

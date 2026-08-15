@@ -1,7 +1,7 @@
-{{{include snippets/dockerfile/common/header-ubuntu}}}
-{{{include snippets/dockerfile/python/packages}}}
-{{{include snippets/dockerfile/common/cron}}}
-{{{include snippets/dockerfile/common/mkdir}}}
-{{{include snippets/dockerfile/common/chown}}}
-{{{include snippets/dockerfile/common/cleanup}}}
-{{{include snippets/dockerfile/python/footer}}}
+{{{template "snippets/dockerfile/common/header-ubuntu" .}}}
+{{{template "snippets/dockerfile/python/packages" .}}}
+{{{template "snippets/dockerfile/common/cron" .}}}
+{{{template "snippets/dockerfile/common/mkdir" .}}}
+{{{template "snippets/dockerfile/common/chown" .}}}
+{{{template "snippets/dockerfile/common/cleanup" .}}}
+{{{template "snippets/dockerfile/python/footer" .}}}

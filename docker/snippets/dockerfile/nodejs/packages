@@ -1,5 +1,5 @@
 RUN npm install -g grunt-cli
-<<<if{{{nodejs/browser_libs}}}>>>
+{{{- if .nodejs.browser_libs}}}
 # Shared libraries a headless browser needs. Playwright is asked for the list
 # rather than the list being written here: it knows the package names for the
 # distribution underneath, and those names move — libasound2 became
@@ -11,4 +11,4 @@ RUN npm install -g grunt-cli
 # shells out to sudo and stops on a password prompt — and anything apt
 # installs into a running container is gone at the next rebuild anyway.
 RUN npx --yes playwright install-deps chromium
-<<<endif>>>
+{{{- end}}}

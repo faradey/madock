@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -118,7 +117,6 @@ func makeProxy(projectName string) {
 	generalConfig := configs2.GetGeneralConfig()
 	/* Create nginx default configuration for Magento2 */
 	nginxDefFile := ""
-	str := ""
 	allFileData := proxyPreamble(generalConfig)
 
 	processedProjects := make(map[string]bool) // Track processed projects to avoid duplicates
@@ -184,62 +182,47 @@ func makeProxy(projectName string) {
 			if !paths.IsFileExist(pp.StoppedFile()) {
 				if projectName == name || !paths.IsFileExist(paths.CacheDir()+"/"+name+"-proxy.conf") {
 					nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
-					b, err := os.ReadFile(nginxDefFile)
-					if err != nil {
-						logger.Fatal(err)
-					}
-
-					str = string(b)
 					projectConf := configs2.GetProjectConfig(name)
 
-					// Dynamic port placeholder replacement - scans for any {{{port/XXX}}} pattern
-					strReplaced := replacePortPlaceholders(str, name)
-
-					// Get nginx port for main upstream (needed for varnish logic)
-					nginxPort := ports.GetPort(name, "nginx")
-
-					// Set main upstream server - either nginx directly or varnish
-					mainUpstreamServer := ""
-					if projectConf["varnish/enabled"] != "true" {
-						mainUpstreamServer = "host.docker.internal:" + strconv.Itoa(nginxPort)
-					} else {
-						varnishPort := ports.GetPort(name, "varnish")
-						mainUpstreamServer = "host.docker.internal:" + strconv.Itoa(varnishPort)
+					// The upstream is nginx, unless varnish is in front of it.
+					upstreamPort := ports.GetPort(name, "nginx")
+					if projectConf["varnish/enabled"] == "true" {
+						upstreamPort = ports.GetPort(name, "varnish")
 					}
-					strReplaced = strings.Replace(strReplaced, "{{{main_upstream_server}}}", mainUpstreamServer, -1)
-					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/unsecure}}}", generalConfig["nginx/port/unsecure"], -1)
-					strReplaced = strings.Replace(strReplaced, "{{{nginx/port/secure}}}", generalConfig["nginx/port/secure"], -1)
+
 					// HTTP/2 directive (new nginx 1.25+ syntax)
 					http2Directive := ""
 					if generalConfig["nginx/http/version"] == "http2" {
 						http2Directive = "http2 on;"
 					}
-					strReplaced = strings.Replace(strReplaced, "{{{nginx/http2/directive}}}", http2Directive, -1)
-					strReplaced = strings.Replace(strReplaced, "{{{proxy/timeout/connect}}}", generalConfig["proxy/timeout/connect"], -1)
-					strReplaced = strings.Replace(strReplaced, "{{{proxy/timeout/send}}}", generalConfig["proxy/timeout/send"], -1)
-					strReplaced = strings.Replace(strReplaced, "{{{proxy/timeout/read}}}", generalConfig["proxy/timeout/read"], -1)
 
 					// Rate limiting request directive (per-location, conditional)
 					rateLimitReq := ""
 					if generalConfig["proxy/rate_limit/enabled"] == "true" {
 						rateLimitReq = "limit_req zone=general burst=" + generalConfig["proxy/rate_limit/burst"] + " nodelay;"
 					}
-					strReplaced = strings.Replace(strReplaced, "{{{proxy/rate_limit/req}}}", rateLimitReq, -1)
 
-					strReplaced = configs2.ReplaceConfigValue(projectName, strReplaced)
-					hostName := "loc." + name + ".com"
-					hosts := configs2.GetHosts(projectConf)
-					if len(hosts) > 0 {
-						var onlyHosts []string
-						for _, hostAndStore := range hosts {
-							onlyHosts = append(onlyHosts, hostAndStore["name"])
-						}
-						hostName = strings.Join(onlyHosts, "\n")
-					}
+					// The proxy block belongs to `name`, and until this was
+					// rendered per project it was substituted with the config of
+					// whichever project happened to be starting: the mftf
+					// locations in one project's block followed another
+					// project's setting.
+					//
+					// The listening ports and the timeouts are the proxy's own
+					// and come from the general config, not from the project
+					// whose block this is.
+					strReplaced := project.Render(name, nginxDefFile, "nginx/conf/default-proxy.conf", map[string]string{
+						"main_upstream_server":  "host.docker.internal:" + strconv.Itoa(upstreamPort),
+						"nginx/port/unsecure":   generalConfig["nginx/port/unsecure"],
+						"nginx/port/secure":     generalConfig["nginx/port/secure"],
+						"nginx/http2/directive": http2Directive,
+						"proxy/timeout/connect": generalConfig["proxy/timeout/connect"],
+						"proxy/timeout/send":    generalConfig["proxy/timeout/send"],
+						"proxy/timeout/read":    generalConfig["proxy/timeout/read"],
+						"proxy/rate_limit/req":  rateLimitReq,
+					})
 
-					strReplaced = strings.Replace(strReplaced, "{{{nginx/host_names}}}", hostName, -1)
-
-					err = os.WriteFile(paths.MakeDirsByPath(paths.CacheDir())+"/"+name+"-proxy.conf", []byte(strReplaced), 0755)
+					err := os.WriteFile(paths.MakeDirsByPath(paths.CacheDir())+"/"+name+"-proxy.conf", []byte(strReplaced), 0755)
 					if err != nil {
 						logger.Fatalln(err)
 					}
@@ -276,18 +259,7 @@ func makeDockerfile(projectName string) {
 	/* Create nginx Dockerfile configuration */
 	ctxPath := paths.MakeDirsByPath(paths.CtxDir())
 	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/proxy.Dockerfile"
-	b, err := os.ReadFile(nginxDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	str := string(b)
-	str = configs2.ReplaceConfigValue(projectName, str)
-
-	err = os.WriteFile(ctxPath+"/Dockerfile", []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
+	project.RenderTo(projectName, nginxDefFile, "general/nginx/proxy.Dockerfile", ctxPath+"/Dockerfile", nil)
 	/* END Create nginx Dockerfile configuration */
 }
 
@@ -295,43 +267,8 @@ func makeDockerCompose(projectName string) {
 	/* Copy nginx docker-compose configuration */
 	paths.MakeDirsByPath(paths.CtxDir())
 	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/docker-compose-proxy.yml"
-	b, err := os.ReadFile(nginxDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	str := string(b)
-	str = configs2.ReplaceConfigValue(projectName, str)
-
-	err = os.WriteFile(paths.ProxyDockerCompose(), []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
+	project.RenderTo(projectName, nginxDefFile, "general/nginx/docker-compose-proxy.yml", paths.ProxyDockerCompose(), nil)
 	/* END Create nginx Dockerfile configuration */
-}
-
-// replacePortPlaceholders dynamically scans for {{{port/XXX}}} patterns and allocates ports
-func replacePortPlaceholders(str, projectName string) string {
-	re := regexp.MustCompile(`\{\{\{port/([a-z0-9_]+)\}\}\}`)
-	matches := re.FindAllStringSubmatch(str, -1)
-
-	replaced := make(map[string]bool)
-	for _, match := range matches {
-		if len(match) < 2 {
-			continue
-		}
-		placeholder := match[0]
-		serviceName := match[1]
-
-		if replaced[placeholder] {
-			continue
-		}
-		replaced[placeholder] = true
-
-		port := ports.GetPort(projectName, serviceName)
-		str = strings.Replace(str, placeholder, strconv.Itoa(port), -1)
-	}
-	return str
 }
 
 // sslAltNamesExt builds the openssl extension file that decides which hosts the

@@ -1,14 +1,14 @@
-WORKDIR {{{workdir}}}
+WORKDIR {{{.workdir}}}
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && rm -f /var/log/faillog && rm -f /var/log/lastlog
 
 EXPOSE 9001 9003 35729 5173 9998 9999
 
-{{{include snippets/dockerfile/common/umask}}}
+{{{template "snippets/dockerfile/common/umask" .}}}
 
-<<<if{{{permissions/umask/permissive}}}>>>
-CMD ["bash", "-c", "exec php-fpm{{{php/version}}}"]
-<<<else>>>
-CMD "php-fpm{{{php/version}}}"
-<<<endif>>>
+{{{- if .permissions.umask.permissive}}}
+CMD ["bash", "-c", "exec php-fpm{{{.php.version}}}"]
+{{{- else}}}
+CMD "php-fpm{{{.php.version}}}"
+{{{- end}}}

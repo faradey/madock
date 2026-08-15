@@ -1,10 +1,12 @@
-<<<if{{{redis/enabled}}}>>>
+{{{- if .redis.enabled}}}
   redisdb:
     init: true
     build:
       context: ctx
       dockerfile: redis.Dockerfile
-    restart: {{{restart_policy}}}
-<<<endif>>>
-    <<<if{{{redis/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+    restart: {{{.restart_policy}}}
+{{{- end}}}
+    {{{- if and .redis.enabled .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}

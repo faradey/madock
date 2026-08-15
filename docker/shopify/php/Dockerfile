@@ -1,10 +1,10 @@
-{{{include snippets/dockerfile/php/header}}}
-{{{include snippets/dockerfile/php/ioncube}}}
-{{{include snippets/dockerfile/php/composer}}}
-{{{include snippets/dockerfile/php/xdebug}}}
-{{{include snippets/dockerfile/php/ini}}}
-{{{include snippets/dockerfile/php/cron}}}
-{{{include snippets/dockerfile/php/mkdir}}}
-{{{include snippets/dockerfile/php/nodejs}}}
-{{{include snippets/dockerfile/php/chown}}}
-{{{include snippets/dockerfile/php/footer}}}
+{{{template "snippets/dockerfile/php/header" .}}}
+{{{template "snippets/dockerfile/php/ioncube" .}}}
+{{{template "snippets/dockerfile/php/composer" .}}}
+{{{template "snippets/dockerfile/php/xdebug" .}}}
+{{{template "snippets/dockerfile/php/ini" .}}}
+{{{template "snippets/dockerfile/php/cron" .}}}
+{{{template "snippets/dockerfile/php/mkdir" .}}}
+{{{template "snippets/dockerfile/php/nodejs" .}}}
+{{{template "snippets/dockerfile/php/chown" .}}}
+{{{template "snippets/dockerfile/php/footer" .}}}

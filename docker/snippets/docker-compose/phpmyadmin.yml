@@ -1,21 +1,23 @@
-<<<if{{{db/enabled}}}{{{db/phpmyadmin/enabled}}}>>>
+{{{- if and .db.enabled .db.phpmyadmin.enabled}}}
   phpmyadmin:
     init: true
-    image: {{{db/phpmyadmin/repository}}}:{{{db/phpmyadmin/version}}}
+    image: {{{.db.phpmyadmin.repository}}}:{{{.db.phpmyadmin.version}}}
     ports:
-      - "{{{port/phpmyadmin}}}:80"
+      - "{{{port "phpmyadmin"}}}:80"
     environment:
       PMA_HOST: "db"
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
-      PMA_ABSOLUTE_URI: "http://{{{nginx/host_name_default}}}/phpmyadmin/"
+      PMA_ABSOLUTE_URI: "http://{{{(index .nginx.hosts 0).name}}}/phpmyadmin/"
       PMA_USER: root
-      PMA_PASSWORD: {{{db/root_password}}}
+      PMA_PASSWORD: {{{.db.root_password}}}
       UPLOAD_LIMIT: 2G
     depends_on:
       - db
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

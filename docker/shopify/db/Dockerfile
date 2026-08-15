@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/db/db}}}
+{{{template "snippets/dockerfile/db/db" .}}}

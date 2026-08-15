@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/nodejs/nodejs}}}
+{{{template "snippets/dockerfile/nodejs/nodejs" .}}}

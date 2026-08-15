@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/redis/redis}}}
+{{{template "snippets/dockerfile/redis/redis" .}}}

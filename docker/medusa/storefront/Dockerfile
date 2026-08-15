@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/storefront/storefront}}}
+{{{template "snippets/dockerfile/storefront/storefront" .}}}

@@ -1,5 +1,5 @@
-{{{include snippets/dockerfile/nodejs/header}}}
-{{{include snippets/dockerfile/nodejs/packages}}}
-{{{include snippets/dockerfile/nodejs/cron}}}
-{{{include snippets/dockerfile/nodejs/chown}}}
-{{{include snippets/dockerfile/nodejs/footer}}}
+{{{template "snippets/dockerfile/nodejs/header" .}}}
+{{{template "snippets/dockerfile/nodejs/packages" .}}}
+{{{template "snippets/dockerfile/nodejs/cron" .}}}
+{{{template "snippets/dockerfile/nodejs/chown" .}}}
+{{{template "snippets/dockerfile/nodejs/footer" .}}}
