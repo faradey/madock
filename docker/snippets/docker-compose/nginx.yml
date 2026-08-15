@@ -1,20 +1,28 @@
-nginx:
+{{{- if .nginx.enabled}}}
+  nginx:
     init: true
     build:
       context: ctx
       dockerfile: nginx.Dockerfile
     ports:
-      - "{{{port/nginx}}}:80"
-      - "{{{port/nginx_ssl}}}:443"
+      - "{{{port "nginx"}}}:80"
+      - "{{{port "nginx_ssl"}}}:443"
     volumes:
       - ./src:/var/www/html:delegated
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
-    <<<if{{{main_service_enabled}}}>>>depends_on:
-      - {{{main_service}}}<<<endif>>>
-    <<<if{{{isolation/enabled}}}>>>networks:
+      {{{- range $host := .nginx.hosts}}}
+      - "{{{$host.name}}}:host-gateway"
+      {{{- end}}}
+    {{{- if .main_service_enabled}}}
+    depends_on:
+      - {{{.main_service}}}
+    {{{- end}}}
+    {{{- if .isolation.enabled}}}
+    networks:
       - opened
-      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
+      - isolated
+    {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

@@ -1,0 +1,88 @@
+name: madock_golden
+services:
+  db:
+    init: true
+    command:
+      --default-authentication-plugin=mysql_native_password
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    ports:
+      - "<PORT>:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "magento"
+      MYSQL_USER: "magento"
+      MYSQL_PASSWORD: "magento"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+    restart: no
+  app:
+    init: true
+    build:
+      context: ctx
+      dockerfile: app.Dockerfile
+    tty: true
+    volumes:
+      - ./src:/var/www/html:cached
+      - ./ssh:/var/www/.ssh:ro
+      - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    restart: no
+  opensearch:
+    init: true
+    build:
+      context: ctx
+      dockerfile: opensearch.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 2512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      OPENSEARCH_DISCOVERY_TYPE: 'single-node'
+      DISABLE_INSTALL_DEMO_CONFIG: 'true'
+      DISABLE_SECURITY_PLUGIN: 'true'
+      ES_JAVA_OPTS: '-Xms800m -Xmx800m'
+    volumes:
+      - opensearch_vlm_2.19.0:/usr/share/opensearch/data
+    restart: no
+  varnish:
+    init: true
+    image: varnish:7.5.0
+    ports:
+      - "<PORT>:6081"
+    volumes:
+      - ./src/default.vcl:/etc/varnish/default.vcl:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    command: "-p default_keep=300"
+    environment:
+      VARNISH_HTTP_PORT: 6081
+      VARNISH_SIZE: 1G
+    networks:
+      - default
+    restart: no
+
+volumes:
+  # Declared unconditionally on purpose. Every other entry here is optional, so
+  # gating this one too lets `volumes:` render empty when a project runs without
+  # a database, without search and without grafana — and compose rejects that
+  # with "volumes must be a mapping". An unused named volume costs nothing.
+  dbdata:
+  opensearch_vlm_2.19.0:
+
+networks:
+  madock-proxy:
+    external: true
+

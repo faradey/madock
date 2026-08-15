@@ -1,6 +1,6 @@
-FROM {{{db/repository}}}:{{{db/version}}}
+FROM {{{.db.repository}}}:{{{.db.version}}}
 
-<<<if{{{db/type_is_mysql}}}>>>
+{{{- if (eq .db.type "mysql")}}}
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
-RUN usermod -u {{{os/user/uid}}} -o mysql && groupmod -g {{{os/user/guid}}} -o mysql
-<<<endif>>>
+RUN usermod -u {{{.os.user.uid}}} -o mysql && groupmod -g {{{.os.user.guid}}} -o mysql
+{{{- end}}}

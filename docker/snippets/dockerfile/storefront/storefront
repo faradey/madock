@@ -1,14 +1,14 @@
-FROM {{{medusa/storefront/repository}}}:{{{medusa/storefront/version}}}
+FROM {{{.medusa.storefront.repository}}}:{{{.medusa.storefront.version}}}
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
 RUN apt-get update && apt-get install -y --no-install-recommends xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
-RUN usermod -u {{{os/user/uid}}} -o node && groupmod -g {{{os/user/guid}}} -o node \
-    && mkdir -p /var/www && chown {{{os/user/uid}}}:{{{os/user/guid}}} /var/www
+RUN usermod -u {{{.os.user.uid}}} -o node && groupmod -g {{{.os.user.guid}}} -o node \
+    && mkdir -p /var/www && chown {{{.os.user.uid}}}:{{{.os.user.guid}}} /var/www
 
-WORKDIR {{{medusa/storefront/workdir}}}
+WORKDIR {{{.medusa.storefront.workdir}}}
 
 # madock smart entrypoint (storefront variant):
 #   - waits for package.json (clone happens AFTER container start)
@@ -90,6 +90,6 @@ echo "[madock] storefront starting: $pm $script"
 run_app $pm $script
 MADOCK_EOF
 
-ENV WORKDIR={{{medusa/storefront/workdir}}}
+ENV WORKDIR={{{.medusa.storefront.workdir}}}
 
 CMD ["/usr/local/bin/madock-entrypoint"]

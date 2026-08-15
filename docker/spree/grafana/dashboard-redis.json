@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/grafana/dashboard-redis.json}}}
+{{{template "snippets/dockerfile/grafana/dashboard-redis.json" .}}}

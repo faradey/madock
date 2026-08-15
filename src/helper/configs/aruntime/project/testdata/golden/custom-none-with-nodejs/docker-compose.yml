@@ -17,7 +17,6 @@ services:
     depends_on:
       - app
     restart: no
-  
   db:
     init: true
     command:
@@ -36,8 +35,6 @@ services:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
     restart: no
-
-  
   nodejs:
     init: true
     build:
@@ -59,8 +56,6 @@ services:
       - "host.docker.internal:host-gateway"
       - "golden.test:host-gateway"
     restart: no
-
-  
   app:
     init: true
     build:
@@ -75,8 +70,6 @@ services:
       - "host.docker.internal:host-gateway"
       - "golden.test:host-gateway"
     restart: no
-
-  
   opensearch:
     init: true
     build:
@@ -102,15 +95,6 @@ services:
       - opensearch_vlm_2.19.0:/usr/share/opensearch/data
     restart: no
 
-
-
-
-
-
-
-
-
-
 volumes:
   # Declared unconditionally on purpose. Every other entry here is optional, so
   # gating this one too lets `volumes:` render empty when a project runs without
@@ -118,6 +102,8 @@ volumes:
   # with "volumes must be a mapping". An unused named volume costs nothing.
   dbdata:
   opensearch_vlm_2.19.0:
+
 networks:
   madock-proxy:
     external: true
+

@@ -1,20 +1,16 @@
 package project
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
 
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/dockertransform"
 	"github.com/faradey/madock/v3/src/helper/logger"
 	"github.com/faradey/madock/v3/src/helper/paths"
-	"github.com/faradey/madock/v3/src/helper/ports"
 )
 
 // MakeConf renders the project's compose files and build context from its
@@ -81,25 +77,15 @@ func MakeScriptsConf(projectName string) {
 
 func MakeKibanaConf(projectName string) {
 	file := GetDockerConfigFile(projectName, "kibana/kibana.yml", "")
-
-	b, err := os.ReadFile(file)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	b = ProcessSnippets(b, projectName)
-	str := string(b)
-	str = configs.ReplaceConfigValue(projectName, str)
-
 	pp := paths.NewProjectPaths(projectName)
-	filePath := paths.MakeDirsByPath(pp.CtxDir()) + "/kibana.yml"
-	err = os.WriteFile(filePath, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
+	RenderTo(projectName, file, "kibana/kibana.yml", paths.MakeDirsByPath(pp.CtxDir())+"/kibana.yml", nil)
 }
 
 func makeNginxDockerfile(projectName string) {
+	// A project that answers no request has no web server to build.
+	if !configs.NginxEnabledFor(projectName) {
+		return
+	}
 	// Platforms with a self-contained image (own nginx, e.g. packeton) ship no
 	// nginx/Dockerfile — skip the unused nginx ctx instead of fataling.
 	if GetDockerConfigFileOptional(projectName, "nginx/Dockerfile", "") == "" {
@@ -108,112 +94,29 @@ func makeNginxDockerfile(projectName string) {
 	MakeDockerfile(projectName, "nginx/Dockerfile", "nginx.Dockerfile")
 }
 
+// makeNginxConf renders the project's own nginx configuration.
+//
+// Which snippet is the front door — fastcgi to php, or a proxy to whatever the
+// language runs — is decided by main_service, and by nothing else. The nginx
+// templates used to decide it per service, one conditional include per enabled
+// runtime, which emitted a server block per runtime with the same listen and
+// server_name: nginx keeps the first and warns about the rest, so enabling php
+// beside another runtime silently took that runtime's route away.
 func makeNginxConf(projectName string) {
+	if !configs.NginxEnabledFor(projectName) {
+		return // the project has no web server at all
+	}
 	defFile := GetDockerConfigFileOptional(projectName, "nginx/conf/default.conf", "")
 	if defFile == "" {
 		return // platform ships no nginx conf (self-contained image)
 	}
-	projectConf := configs.GetProjectConfig(projectName)
-
-	b, err := os.ReadFile(defFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	b = ProcessSnippets(b, projectName)
-	str := string(b)
-
-	// Resolve main_service / main_service_enabled BEFORE ReplaceConfigValue so
-	// that processConditionals (run inside ReplaceConfigValue) sees the
-	// concrete values when evaluating <<<if{{{main_service_enabled}}}>>>
-	// blocks. Otherwise the unresolved placeholder makes the condition
-	// evaluate to false and the block is always stripped.
-	mainService := resolveMainService(projectConf)
-	str = strings.Replace(str, "{{{main_service}}}", mainService, -1)
-	str = strings.Replace(str, "{{{main_service_enabled}}}", resolveMainServiceEnabled(projectConf, mainService), -1)
-	str = strings.Replace(str, "{{{main_service_port}}}", resolveMainServicePort(projectConf), -1)
-
-	// Which snippet is the front door: fastcgi to php, or a proxy to whatever
-	// the language runs. The nginx templates used to decide it per service —
-	// one conditional include per enabled runtime — which contradicted this
-	// rule and emitted a server block per runtime, all of them on the same
-	// listen and server_name. nginx keeps the first and warns about the rest,
-	// so enabling php beside another runtime silently took that runtime's
-	// route away.
-	mainServiceIsPhp := "false"
-	if mainService == "php" {
-		mainServiceIsPhp = "true"
-	}
-	str = strings.Replace(str, "{{{main_service_is_php}}}", mainServiceIsPhp, -1)
-
-	str = configs.ReplaceConfigValue(projectName, str)
-	hostName := "loc." + projectName + ".com"
-	hostNameWebsites := "loc." + projectName + ".com base;"
-	hosts := configs.GetHosts(projectConf)
-	if len(hosts) > 0 {
-		var onlyHosts []string
-		var websitesHosts []string
-		for _, host := range hosts {
-			websitesHosts = append(websitesHosts, host["name"]+" "+host["code"]+";")
-			onlyHosts = append(onlyHosts, host["name"])
-		}
-		if len(onlyHosts) > 0 {
-			hostName = strings.Join(onlyHosts, "\n")
-		}
-		if len(websitesHosts) > 0 {
-			hostNameWebsites = strings.Join(websitesHosts, "\n")
-		}
-	}
-	str = strings.Replace(str, "{{{nginx/host_names}}}", hostName, -1)
-	str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
-
-	str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
-	str = strings.Replace(str, "{{{nginx/host_names_with_codes}}}", hostNameWebsites, -1)
 
 	pp := paths.NewProjectPaths(projectName)
-	paths.MakeDirsByPath(pp.CtxDir())
-	nginxFile := paths.MakeDirsByPath(pp.CtxDir()) + "/nginx.conf"
-	err = os.WriteFile(nginxFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
+	RenderTo(projectName, defFile, "nginx/conf/default.conf", paths.MakeDirsByPath(pp.CtxDir())+"/nginx.conf", nil)
 }
 
 func MakePhpDockerfile(projectName string) {
-	dockerDefFile := GetDockerConfigFile(projectName, "php/Dockerfile", "")
-
-	b, err := os.ReadFile(dockerDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	b = ProcessSnippets(b, projectName)
-	str := string(b)
-	str = configs.ReplaceConfigValue(projectName, str)
-	str = dockertransform.ApplyDockerfileTransform("php.Dockerfile", str)
-	pp := paths.NewProjectPaths(projectName)
-	nginxFile := paths.MakeDirsByPath(pp.CtxDir()) + "/php.Dockerfile"
-	err = os.WriteFile(nginxFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
-
-	dockerDefFileWithoutXdebug := GetDockerConfigFileOptional(projectName, "php/DockerfileWithoutXdebug", "")
-	if dockerDefFileWithoutXdebug != "" {
-		b, err = os.ReadFile(dockerDefFileWithoutXdebug)
-		if err != nil {
-			logger.Fatal(err)
-		}
-
-		b = ProcessSnippets(b, projectName)
-		str = string(b)
-		str = configs.ReplaceConfigValue(projectName, str)
-		str = dockertransform.ApplyDockerfileTransform("php.DockerfileWithoutXdebug", str)
-		nginxFile = paths.MakeDirsByPath(pp.CtxDir()) + "/php.DockerfileWithoutXdebug"
-		err = os.WriteFile(nginxFile, []byte(str), 0755)
-		if err != nil {
-			log.Fatalf("Unable to write file: %v", err)
-		}
-	}
+	makePhpDockerfiles(projectName, "php/Dockerfile", "php/DockerfileWithoutXdebug")
 }
 
 func MakeMainContainerDockerfile(projectName string) {
@@ -242,93 +145,51 @@ func MakeMainContainerDockerfile(projectName string) {
 }
 
 func makeCustomPhpDockerfile(projectName string) {
-	dockerDefFile := GetDockerConfigFile(projectName, "Dockerfile", "")
+	makePhpDockerfiles(projectName, "Dockerfile", "DockerfileWithoutXdebug")
+}
 
-	b, err := os.ReadFile(dockerDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	b = ProcessSnippets(b, projectName)
-	str := string(b)
-	str = configs.ReplaceConfigValue(projectName, str)
-	str = dockertransform.ApplyDockerfileTransform("php.Dockerfile", str)
+// makePhpDockerfiles writes the php image and, where a platform ships one, the
+// same image without xdebug. The pair differs only in which template it starts
+// from: a platform with its own php/ directory keeps the first names, a custom
+// project's language template keeps the second.
+func makePhpDockerfiles(projectName, withXdebug, withoutXdebug string) {
 	pp := paths.NewProjectPaths(projectName)
-	phpFile := paths.MakeDirsByPath(pp.CtxDir()) + "/php.Dockerfile"
-	err = os.WriteFile(phpFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
+	ctx := paths.MakeDirsByPath(pp.CtxDir())
+
+	file := GetDockerConfigFile(projectName, withXdebug, "")
+	str := Render(projectName, file, withXdebug, nil)
+	write(ctx+"/php.Dockerfile", dockertransform.ApplyDockerfileTransform("php.Dockerfile", str))
+
+	if file = GetDockerConfigFileOptional(projectName, withoutXdebug, ""); file != "" {
+		str = Render(projectName, file, withoutXdebug, nil)
+		write(ctx+"/php.DockerfileWithoutXdebug", dockertransform.ApplyDockerfileTransform("php.DockerfileWithoutXdebug", str))
 	}
+}
 
-	dockerDefFileWithoutXdebug := GetDockerConfigFileOptional(projectName, "DockerfileWithoutXdebug", "")
-	if dockerDefFileWithoutXdebug != "" {
-		b, err = os.ReadFile(dockerDefFileWithoutXdebug)
-		if err != nil {
-			logger.Fatal(err)
-		}
-
-		b = ProcessSnippets(b, projectName)
-		str = string(b)
-		str = configs.ReplaceConfigValue(projectName, str)
-		str = dockertransform.ApplyDockerfileTransform("php.DockerfileWithoutXdebug", str)
-		phpFile = paths.MakeDirsByPath(pp.CtxDir()) + "/php.DockerfileWithoutXdebug"
-		err = os.WriteFile(phpFile, []byte(str), 0755)
-		if err != nil {
-			log.Fatalf("Unable to write file: %v", err)
-		}
+func write(destination, content string) {
+	if err := os.WriteFile(destination, []byte(content), 0755); err != nil {
+		log.Fatalf("Unable to write file: %v", err)
 	}
 }
 
 func makeDockerCompose(projectName string) {
-	overrideFile := runtime.GOOS
-	projectConf := configs.GetProjectConfig(projectName)
-	var dockerDefFiles map[string]string
-	dockerDefFiles = make(map[string]string)
-	dockerDefFiles["docker-compose.yml"] = GetDockerConfigFile(projectName, "docker-compose.yml", "")
-	dockerDefFiles["docker-compose.override.yml"] = GetDockerConfigFileOptional(projectName, "docker-compose."+overrideFile+".yml", "")
-	dockerDefFiles["docker-compose-snapshot.yml"] = GetDockerConfigFile(projectName, "docker-compose-snapshot.yml", "general")
-	for key, dockerDefFile := range dockerDefFiles {
-		var b []byte
-		var err error
-		if dockerDefFile != "" {
-			b, err = os.ReadFile(dockerDefFile)
-			if err != nil {
-				logger.Fatal(err)
-			}
+	dockerDefFiles := map[string]string{
+		"docker-compose.yml":          GetDockerConfigFile(projectName, "docker-compose.yml", ""),
+		"docker-compose.override.yml": GetDockerConfigFileOptional(projectName, "docker-compose."+runtime.GOOS+".yml", ""),
+		"docker-compose-snapshot.yml": GetDockerConfigFile(projectName, "docker-compose-snapshot.yml", "general"),
+	}
+
+	pp := paths.NewProjectPaths(projectName)
+	runtimeDir := paths.MakeDirsByPath(pp.RuntimeDir())
+
+	for name, file := range dockerDefFiles {
+		// A platform without a per-OS override still gets an empty file
+		// written, because compose is told to read it either way.
+		str := ""
+		if file != "" {
+			str = Render(projectName, file, name, nil)
 		}
-		b = ProcessSnippets(b, projectName)
-
-		str := string(b)
-
-		hostName := "loc." + projectName + ".com"
-		hosts := configs.GetHosts(projectConf)
-		if len(hosts) > 0 {
-			hostName = hosts[0]["name"]
-		}
-
-		// Resolve main_service / main_service_enabled BEFORE ReplaceConfigValue
-		// so processConditionals sees the concrete value when evaluating
-		// <<<if{{{main_service_enabled}}}>>> blocks.
-		mainService := resolveMainService(projectConf)
-		str = strings.Replace(str, "{{{main_service}}}", mainService, -1)
-		str = strings.Replace(str, "{{{main_service_enabled}}}", resolveMainServiceEnabled(projectConf, mainService), -1)
-
-		str = configs.ReplaceConfigValue(projectName, str)
-		str = strings.Replace(str, "{{{nginx/host_name_default}}}", hostName, -1)
-
-		// Dynamic port placeholder replacement - scans for any {{{port/XXX}}} pattern
-		str = replacePortPlaceholders(str, projectName)
-
-		str = strings.Replace(str, "{{{project_name}}}", strings.ToLower(projectName), -1)
-		str = strings.Replace(str, "{{{scope}}}", configs.GetActiveScope(projectName, false, "-"), -1)
-
-		str = dockertransform.ApplyComposeTransform(key, str)
-
-		pp := paths.NewProjectPaths(projectName)
-		resultFile := paths.MakeDirsByPath(pp.RuntimeDir()) + "/" + key
-		err = os.WriteFile(resultFile, []byte(str), 0755)
-		if err != nil {
-			log.Fatalf("Unable to write file: %v", err)
-		}
+		write(runtimeDir+"/"+name, dockertransform.ApplyComposeTransform(name, str))
 	}
 }
 
@@ -370,82 +231,25 @@ func resolveMainServicePort(projectConf map[string]string) string {
 	return "3000"
 }
 
-// resolveMainService determines the main service name based on the language
-// config. The rule lives in configs so the compose generator, the platform
-// handlers and the docker helpers cannot drift apart.
-func resolveMainService(projectConf map[string]string) string {
-	return configs.ResolveMainService(projectConf, "php")
-}
-
-// replacePortPlaceholders dynamically scans for {{{port/XXX}}} patterns and allocates ports
-func replacePortPlaceholders(str, projectName string) string {
-	re := regexp.MustCompile(`\{\{\{port/([a-z0-9_]+)\}\}\}`)
-	matches := re.FindAllStringSubmatch(str, -1)
-
-	// Use a map to avoid duplicate replacements
-	replaced := make(map[string]bool)
-	for _, match := range matches {
-		if len(match) < 2 {
-			continue
-		}
-		placeholder := match[0]
-		serviceName := match[1]
-
-		if replaced[placeholder] {
-			continue
-		}
-		replaced[placeholder] = true
-
-		port := ports.GetPort(projectName, serviceName)
-		str = strings.Replace(str, placeholder, strconv.Itoa(port), -1)
-	}
-
-	return str
-}
-
 func MakeDBDockerfile(projectName string) {
-	dockerDefFile := GetDockerConfigFile(projectName, "/db/Dockerfile", "")
-
-	b, err := os.ReadFile(dockerDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	b = ProcessSnippets(b, projectName)
-	str := string(b)
-	str = configs.ReplaceConfigValue(projectName, str)
-	str = dockertransform.ApplyDockerfileTransform("db.Dockerfile", str)
 	pp := paths.NewProjectPaths(projectName)
-	nginxFile := paths.MakeDirsByPath(pp.CtxDir()) + "/db.Dockerfile"
-	err = os.WriteFile(nginxFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
+	ctx := paths.MakeDirsByPath(pp.CtxDir())
+
+	file := GetDockerConfigFile(projectName, "/db/Dockerfile", "")
+	str := Render(projectName, file, "db/Dockerfile", nil)
+	write(ctx+"/db.Dockerfile", dockertransform.ApplyDockerfileTransform("db.Dockerfile", str))
 
 	projectConf := configs.GetProjectConfig(projectName)
-	dbType := configs.GetDbType(projectConf)
 
 	// my.cnf is only needed for MySQL/MariaDB
-	if dbType == "mysql" {
-		myCnfFile := GetDockerConfigFile(projectName, "db/my.cnf", "")
-		if !paths.IsFileExist(myCnfFile) {
-			logger.Fatal(err)
-		}
-
-		b, err = os.ReadFile(myCnfFile)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		b = ProcessSnippets(b, projectName)
+	if configs.GetDbType(projectConf) == "mysql" {
+		str = Render(projectName, GetDockerConfigFile(projectName, "db/my.cnf", ""), "db/my.cnf", nil)
 
 		if strings.ToLower(projectConf["db/repository"]) == "mariadb" && configs.CompareVersions(projectConf["db/version"], "10.4") >= 0 {
-			b = bytes.Replace(b, []byte("[mysqld]"), []byte("[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n"), -1)
+			str = strings.Replace(str, "[mysqld]", "[mysqld]\noptimizer_switch = 'rowid_filter=off'\noptimizer_use_condition_selectivity = 1\n", -1)
 		}
 
-		err = os.WriteFile(pp.CtxDir()+"/my.cnf", b, 0755)
-		if err != nil {
-			log.Fatalf("Unable to write file: %v", err)
-		}
+		write(ctx+"/my.cnf", str)
 	}
 }
 
@@ -470,24 +274,11 @@ func MakeClaudeDockerfile(projectName string) {
 }
 
 func MakeDockerfile(projectName, path, fileName string) {
-	dockerDefFile := GetDockerConfigFile(projectName, path, "")
-
-	b, err := os.ReadFile(dockerDefFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	b = ProcessSnippets(b, projectName)
-	str := string(b)
-	str = configs.ReplaceConfigValue(projectName, str)
-	str = dockertransform.ApplyDockerfileTransform(fileName, str)
+	file := GetDockerConfigFile(projectName, path, "")
+	str := Render(projectName, file, path, nil)
 
 	pp := paths.NewProjectPaths(projectName)
-	dockerFile := paths.MakeDirsByPath(pp.CtxDir()) + "/" + fileName
-	err = os.WriteFile(dockerFile, []byte(str), 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
-	}
+	write(paths.MakeDirsByPath(pp.CtxDir())+"/"+fileName, dockertransform.ApplyDockerfileTransform(fileName, str))
 }
 
 func GetDockerConfigFile(projectName, path, platform string) string {
@@ -557,67 +348,23 @@ func processOtherCTXFiles(projectName string) {
 		"grafana/dashboard-redis.json",
 		"grafana/dashboard-loki.json",
 	}
-	var b []byte
-	var err error
-	var file string
+	pp := paths.NewProjectPaths(projectName)
+
 	for _, fileName := range filesNames {
 		// Platforms with a self-contained image (e.g. packeton) ship no grafana
 		// ctx files and there is no general fallback — skip instead of fataling.
-		file = GetDockerConfigFileOptional(projectName, fileName, "")
+		file := GetDockerConfigFileOptional(projectName, fileName, "")
 		if file == "" {
 			continue
 		}
-		b, err = os.ReadFile(file)
-		if err != nil {
-			logger.Fatal(err)
-		}
-
-		b = ProcessSnippets(b, projectName)
-		str := string(b)
-		str = configs.ReplaceConfigValue(projectName, str)
-		pp := paths.NewProjectPaths(projectName)
 		paths.MakeDirsByPath(pp.CtxDir() + "/" + strings.Split(fileName, "/")[0] + "/")
-		destinationFile := pp.CtxDir() + "/" + fileName
-		err = os.WriteFile(destinationFile, []byte(str), 0755)
-		if err != nil {
-			log.Fatalf("Unable to write file: %v", err)
-		}
+		RenderTo(projectName, file, fileName, pp.CtxDir()+"/"+fileName, nil)
 	}
 
-	pp := paths.NewProjectPaths(projectName)
-	paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/")
-	ctxFiles := paths.GetFiles(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/")
-	for _, ctxFile := range ctxFiles {
-		b, err = os.ReadFile(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/" + ctxFile)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		b = ProcessSnippets(b, projectName)
-		str := string(b)
-		destinationFile := pp.CtxDir() + "/" + ctxFile
-		err = os.WriteFile(destinationFile, []byte(str), 0755)
+	ctxDir := paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/")
+	for _, ctxFile := range paths.GetFiles(ctxDir) {
+		RenderTo(projectName, ctxDir+"/"+ctxFile, "ctx/"+ctxFile, pp.CtxDir()+"/"+ctxFile, nil)
 	}
-}
-
-func ProcessSnippets(b []byte, projectName string) []byte {
-	str := string(b)
-	r := regexp.MustCompile(`\{\{\{include snippets/[^\}]+\}\}\}`)
-
-	for r.MatchString(str) {
-		for _, match := range r.FindAllString(str, -1) {
-			snippetFile := strings.Replace(match, "{{{include ", "", -1)
-			snippetFile = strings.TrimSpace(strings.Replace(snippetFile, "}}}", "", -1))
-			snippetFile = GetSnippetFile(projectName, snippetFile)
-
-			b2, err := os.ReadFile(snippetFile)
-			if err != nil {
-				logger.Fatal(err)
-			}
-			str = strings.Replace(str, match, string(b2), -1)
-		}
-	}
-
-	return []byte(str)
 }
 
 func GetSnippetFile(projectName, path string) string {

@@ -1,24 +1,24 @@
-<<<if{{{grafana/enabled}}}>>>
+{{{- if .grafana.enabled}}}
   grafana:
     init: true
-    image: {{{grafana/repository}}}:{{{grafana/version}}}
+    image: {{{.grafana.repository}}}:{{{.grafana.version}}}
     ports:
-      - "{{{port/grafana}}}:3000"
+      - "{{{port "grafana"}}}:3000"
     environment:
-      GF_SERVER_ROOT_URL: "https://{{{nginx/host_name_default}}}/grafana/"
-      GF_SERVER_DOMAIN: "{{{nginx/host_name_default}}}"
+      GF_SERVER_ROOT_URL: "https://{{{(index .nginx.hosts 0).name}}}/grafana/"
+      GF_SERVER_DOMAIN: "{{{(index .nginx.hosts 0).name}}}"
       GF_INSTALL_PLUGINS: grafana-clock-panel,redis-datasource,redis-app,redis-explorer-app
       GF_SERVE_FROM_SUB_PATH: true
       GF_SERVER_PROTOCOL: http
-<<<if{{{grafana/auth/enabled}}}>>>
-      GF_SECURITY_ADMIN_USER: {{{grafana/auth/user}}}
-      GF_SECURITY_ADMIN_PASSWORD: {{{grafana/auth/password}}}
-<<<else>>>
+{{{- if .grafana.auth.enabled}}}
+      GF_SECURITY_ADMIN_USER: {{{.grafana.auth.user}}}
+      GF_SECURITY_ADMIN_PASSWORD: {{{.grafana.auth.password}}}
+{{{- else}}}
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
       GF_AUTH_ANONYMOUS_ENABLED: true
       GF_AUTH_BASIC_ENABLED: false
       GF_AUTH_DISABLE_LOGIN_FORM: true
-<<<endif>>>
+{{{- end}}}
       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
     volumes:
       - grafanadata:/var/lib/grafana
@@ -83,6 +83,8 @@
     networks:
       - default
       - madock-proxy
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

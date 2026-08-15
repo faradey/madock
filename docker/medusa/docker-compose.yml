@@ -1,17 +1,17 @@
-{{{include snippets/docker-compose/container-name.yml}}}
+{{{template "snippets/docker-compose/container-name.yml" .}}}
 services:
-  {{{include snippets/docker-compose/nginx.yml}}}
-  {{{include snippets/docker-compose/nodejs.yml}}}
-  {{{include snippets/docker-compose/storefront.yml}}}
-  {{{include snippets/docker-compose/db.yml}}}
-  {{{include snippets/docker-compose/db-postgresql.yml}}}
-  {{{include snippets/docker-compose/redis.yml}}}
-  {{{include snippets/docker-compose/meilisearch.yml}}}
-  {{{include snippets/docker-compose/valkey.yml}}}
-  {{{include snippets/docker-compose/memcached.yml}}}
-  {{{include snippets/docker-compose/rabbitmq.yml}}}
-  {{{include snippets/docker-compose/pgadmin.yml}}}
-  {{{include snippets/docker-compose/claude.yml}}}
+  {{{- template "snippets/docker-compose/nginx.yml" .}}}
+  {{{- template "snippets/docker-compose/nodejs.yml" .}}}
+  {{{- template "snippets/docker-compose/storefront.yml" .}}}
+  {{{- template "snippets/docker-compose/db.yml" .}}}
+  {{{- template "snippets/docker-compose/db-postgresql.yml" .}}}
+  {{{- template "snippets/docker-compose/redis.yml" .}}}
+  {{{- template "snippets/docker-compose/meilisearch.yml" .}}}
+  {{{- template "snippets/docker-compose/valkey.yml" .}}}
+  {{{- template "snippets/docker-compose/memcached.yml" .}}}
+  {{{- template "snippets/docker-compose/rabbitmq.yml" .}}}
+  {{{- template "snippets/docker-compose/pgadmin.yml" .}}}
+  {{{- template "snippets/docker-compose/claude.yml" .}}}
 
-{{{include snippets/docker-compose/volumes.yml}}}
-{{{include snippets/docker-compose/networks.yml}}}
+{{{template "snippets/docker-compose/volumes.yml" .}}}
+{{{template "snippets/docker-compose/networks.yml" .}}}

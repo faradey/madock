@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/storefront/spree-storefront}}}
+{{{template "snippets/dockerfile/storefront/spree-storefront" .}}}

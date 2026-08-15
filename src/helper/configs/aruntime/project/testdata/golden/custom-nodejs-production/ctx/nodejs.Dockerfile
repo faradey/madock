@@ -4,7 +4,6 @@ RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
 RUN apt-get update && apt-get install -y --no-install-recommends xdg-utils && rm -rf /var/lib/apt/lists/*
 RUN npm install -g grunt-cli
-
 # Shared libraries a headless browser needs. Playwright is asked for the list
 # rather than the list being written here: it knows the package names for the
 # distribution underneath, and those names move — libasound2 became
@@ -16,7 +15,6 @@ RUN npm install -g grunt-cli
 # shells out to sudo and stops on a password prompt — and anything apt
 # installs into a running container is gone at the next rebuild anyway.
 RUN npx --yes playwright install-deps chromium
-
 
 RUN apt-get update && apt-get install -y cron && rm -rf /var/lib/apt/lists/*
 
@@ -39,8 +37,6 @@ RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
     && printf '\numask 0002\n' >> /etc/bash.bashrc \
     && chmod 644 /etc/madock-umask.sh /etc/profile.d/madock-umask.sh
 
-
-
 # madock smart entrypoint:
 #   - if nodejs/script is set, run that (see nodejs/script_type)
 #   - else pick from package.json: "dev" in development, "start" in production
@@ -51,7 +47,6 @@ RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
 RUN cat > /usr/local/bin/madock-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local/bin/madock-entrypoint
 #!/bin/sh
 set -e
-
 umask 0002
 
 cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html

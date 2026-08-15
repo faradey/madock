@@ -2,51 +2,67 @@ package dockerassets
 
 import (
 	"io/fs"
-	"strings"
 	"testing"
+	"text/template"
+
+	"github.com/faradey/madock/v3/src/helper/tmpl"
 )
 
-// TestTemplateTagsAreBalanced checks every embedded template for well-formed
-// conditional tags, because the engine that reads them cannot complain.
+// TestEveryTemplateParses is what the tag-balance test became.
 //
-// processConditionals (src/helper/configs/config.go) locates the closing tag by
-// counting openings. One unbalanced <<<if — including one written inside a
-// comment — makes findMatchingEndif return -1, and the loop then abandons the
-// whole file with every conditional left unresolved. Nothing errors: the
-// generated config is simply written out with raw <<<iffalse>>> in it and every
-// branch kept, which nginx either rejects or, worse, accepts as duplicate
-// server blocks.
+// That test walked this tree counting <<<if against <<<endif>>>, because the
+// engine that read them could not complain: it located the closing tag by
+// counting openings, so one unbalanced tag — including one written inside a
+// comment — made it abandon the whole file with every conditional unresolved,
+// and the result was written out anyway. That produced an nginx config with six
+// server blocks where one belonged, and nothing said a word.
 //
-// Bash here-strings (`read a b c <<< "$x"`) are legal template content and are
-// not tags, so only the three tag forms are counted.
-func TestTemplateTagsAreBalanced(t *testing.T) {
+// A parser says a word. It names the file and the line, it catches an unknown
+// function and a malformed action as well as an unbalanced one, and it is the
+// same parse that runs on a user's machine — so a template that fails here
+// could never have rendered there.
+func TestEveryTemplateParses(t *testing.T) {
 	err := fs.WalkDir(FS, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}
 
-		b, readErr := fs.ReadFile(FS, path)
+		body, readErr := fs.ReadFile(FS, path)
 		if readErr != nil {
 			return readErr
 		}
-		body := string(b)
 
-		opens := strings.Count(body, "<<<if")
-		closes := strings.Count(body, "<<<endif>>>")
-		if opens != closes {
-			t.Errorf("%s: %d <<<if against %d <<<endif>>> — processConditionals will abandon the file and leave every conditional unresolved", path, opens, closes)
+		if _, parseErr := template.New(path).Delims(tmpl.LeftDelim, tmpl.RightDelim).Funcs(tmpl.StubFuncs()).Parse(string(body)); parseErr != nil {
+			t.Errorf("%s does not parse: %v", path, parseErr)
 		}
 
-		// An opening tag has to be terminated, or the engine gives up at the
-		// same place for a different reason.
-		for _, part := range strings.Split(body, "<<<if")[1:] {
-			if !strings.Contains(part, ">>>") {
-				t.Errorf("%s: an <<<if is never closed by >>>", path)
-			}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk embedded templates: %v", err)
+	}
+}
+
+// TestNoTemplateIsStillLegacy keeps the old syntax out of the tree.
+//
+// The renderer converts a template written against <<<if>>> on the fly and
+// warns, which is what keeps a project's own override under .madock/docker/
+// working across the change. Nothing madock ships should ever take that path:
+// a template here that still needs converting means the converter was not run
+// after a rebase, and the warning would go to every user of the release.
+func TestNoTemplateIsStillLegacy(t *testing.T) {
+	err := fs.WalkDir(FS, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
 		}
 
-		if strings.Count(body, "<<<else>>>") > opens {
-			t.Errorf("%s: more <<<else>>> than <<<if — an else outside a conditional is silently kept in the output", path)
+		body, readErr := fs.ReadFile(FS, path)
+		if readErr != nil {
+			return readErr
+		}
+
+		if tmpl.IsLegacy(string(body)) {
+			t.Errorf("%s is still in the old syntax — run: go run ./tools/tmplconvert", path)
 		}
 
 		return nil

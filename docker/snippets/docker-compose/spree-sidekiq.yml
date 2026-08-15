@@ -1,27 +1,31 @@
-<<<if{{{spree/sidekiq/enabled}}}>>>
+{{{- if .spree.sidekiq.enabled}}}
   sidekiq:
     init: true
     build:
       context: ctx
       dockerfile: ruby.Dockerfile
     tty: true
-    working_dir: {{{workdir}}}
+    working_dir: {{{.workdir}}}
     volumes:
       - ./src:/var/www/html:cached
     environment:
       RAILS_ENV: "development"
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
+      {{{- range $host := .nginx.hosts}}}
+      - "{{{$host.name}}}:host-gateway"
+      {{{- end}}}
     command: >
       bash -lc "
-      cd {{{workdir}}};
+      cd {{{.workdir}}};
       while [ ! -f Gemfile ]; do echo '[madock] sidekiq: waiting for project'; sleep 5; done;
       set -a && [ -f .env ] && . ./.env && set +a;
       while ! bundle exec ruby -e 'require \"sidekiq\"' >/dev/null 2>&1; do echo '[madock] sidekiq: waiting for bundle install'; sleep 5; done;
       exec bundle exec sidekiq
       "
-    restart: {{{restart_policy}}}
-<<<endif>>>
-    <<<if{{{spree/sidekiq/enabled}}}{{{isolation/enabled}}}>>>networks:
-      - isolated<<<endif>>>
+    restart: {{{.restart_policy}}}
+{{{- end}}}
+    {{{- if and .spree.sidekiq.enabled .isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}

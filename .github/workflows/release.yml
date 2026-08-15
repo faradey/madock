@@ -51,19 +51,7 @@ jobs:
           if [ -z "$prev" ]; then
             prev=$(git describe --tags --abbrev=0 "${current}^" 2>/dev/null || echo "")
           fi
-          {
-            echo "## What's Changed"
-            echo ""
-            if [ -n "$prev" ]; then
-              git log --no-merges --pretty='- %s' "${prev}..${current}"
-            else
-              git log --no-merges --pretty='- %s' "${current}"
-            fi
-            echo ""
-            if [ -n "$prev" ]; then
-              echo "**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${prev}...${current}"
-            fi
-          } > RELEASE_NOTES.md
+          sh .github/scripts/release-notes.sh "$current" "$prev" > RELEASE_NOTES.md
           cat RELEASE_NOTES.md
 
       - name: Release

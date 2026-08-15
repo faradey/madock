@@ -46,6 +46,7 @@ import (
 	_ "github.com/faradey/madock/v3/src/controller/general/service/list"
 	_ "github.com/faradey/madock/v3/src/controller/general/setup"
 	_ "github.com/faradey/madock/v3/src/controller/general/setup/env"
+	_ "github.com/faradey/madock/v3/src/controller/general/template"
 	_ "github.com/faradey/madock/v3/src/controller/general/version"
 
 	// Platform setup handlers (self-register with the setup registry)

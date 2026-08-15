@@ -1,1 +1,1 @@
-{{{include snippets/dockerfile/grafana/dashboard-mysql.json}}}
+{{{template "snippets/dockerfile/grafana/dashboard-mysql.json" .}}}

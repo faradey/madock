@@ -1,4 +1,4 @@
-FROM python:{{{python/version}}}-slim
+FROM python:{{{.python.version}}}-slim
 
 # System deps: build toolchain for native wheels (psycopg, Pillow, etc),
 # postgres client for `manage.py dbshell` and migrations probes, and the
@@ -26,16 +26,16 @@ RUN pip install --no-cache-dir uv
 # Match host UID/GID so bind-mounted files stay editable on host and
 # container as the same user. The base image ships no `node`/`www-data`
 # user we can re-use, so create a dedicated `saleor` user.
-ARG MADOCK_UID={{{os/user/uid}}}
-ARG MADOCK_GID={{{os/user/guid}}}
+ARG MADOCK_UID={{{.os.user.uid}}}
+ARG MADOCK_GID={{{.os.user.guid}}}
 RUN groupadd -g ${MADOCK_GID} saleor 2>/dev/null || true \
  && useradd -u ${MADOCK_UID} -g ${MADOCK_GID} -ms /bin/bash saleor 2>/dev/null || true \
  && mkdir -p /var/www && chown ${MADOCK_UID}:${MADOCK_GID} /var/www
 
-ENV WORKDIR={{{workdir}}}
+ENV WORKDIR={{{.workdir}}}
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-WORKDIR {{{workdir}}}
+WORKDIR {{{.workdir}}}
 
 # Smart entrypoint: prefer uv-managed `manage.py runserver`, fall back to
 # uvicorn for ASGI, fall back to a bash shell if no recognisable Python

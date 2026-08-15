@@ -217,3 +217,9 @@ type ControllerGeneralDbInfo struct {
 type ControllerGeneralConfigList struct {
 	attr.Arguments
 }
+
+type ControllerGeneralTemplateConvert struct {
+	attr.Arguments
+	Path   string `arg:"positional" help:"Directory of templates to convert (default: .madock/docker in the current project)"`
+	DryRun bool   `arg:"--dry-run" help:"Report what would change without writing"`
+}

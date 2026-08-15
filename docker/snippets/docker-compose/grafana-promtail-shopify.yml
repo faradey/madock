@@ -1,4 +1,4 @@
-<<<if{{{grafana/enabled}}}>>>
+{{{- if .grafana.enabled}}}
   promtail:
     init: true
     image: grafana/promtail:2.9.10
@@ -10,6 +10,8 @@
       - loki
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}

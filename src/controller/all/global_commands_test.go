@@ -20,7 +20,10 @@ import (
 // mcp because they answer about the binary; proxy:logs because one proxy serves
 // every project and "why is it answering 502" is asked from wherever one stands;
 // project:list because it describes the installation, and the reason to run it is
-// usually that something about the registry is wrong.
+// usually that something about the registry is wrong; template:convert because a
+// directory of templates is a directory of templates — refusing to run it outside
+// a project would be refusing it in exactly the place somebody keeps a copy of
+// their overrides.
 func TestGlobalCommands(t *testing.T) {
 	want := []string{
 		"--version",
@@ -31,6 +34,7 @@ func TestGlobalCommands(t *testing.T) {
 		"project:list",
 		"proxy:logs",
 		"setup",
+		"template:convert",
 		"version",
 	}
 

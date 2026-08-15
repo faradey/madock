@@ -46,6 +46,4 @@ RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
     && printf '\numask 0002\n' >> /etc/bash.bashrc \
     && chmod 644 /etc/madock-umask.sh /etc/profile.d/madock-umask.sh
 
-
-
 CMD ["bash"]

@@ -1,18 +1,22 @@
-<<<if{{{magento/mftf/enabled}}}>>>
+{{{- if .magento.mftf.enabled}}}
   selenium:
     init: true
     image: selenium/standalone-chrome:latest
     platform: linux/amd64
     ports:
-      - "{{{port/selenium}}}:7900"
+      - "{{{port "selenium"}}}:7900"
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{nginx/host_gateways}}}
+      {{{- range $host := .nginx.hosts}}}
+      - "{{{$host.name}}}:host-gateway"
+      {{{- end}}}
     shm_size: '2g'
     depends_on:
       - php
     networks:
       - default
-<<<if{{{isolation/enabled}}}>>>      - isolated<<<endif>>>
-    restart: {{{restart_policy}}}
-<<<endif>>>
+      {{{- if .isolation.enabled}}}
+      - isolated
+      {{{- end}}}
+    restart: {{{.restart_policy}}}
+{{{- end}}}
