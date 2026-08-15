@@ -1,6 +1,5 @@
 name: madock_golden
 services:
-
   nginx:
     init: true
     build:

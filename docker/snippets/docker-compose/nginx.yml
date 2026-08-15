@@ -1,10 +1,4 @@
-{{{/* nginx is the one service here that is never optional, so this snippet
-has no conditional of its own — and so no trim marker to begin its output
-with a newline. This comment renders to nothing; the blank line below it is
-the newline, and the one after that is the gap between two services. The
-include that pulls this in trims the line it sat on, as it must for the
-thirty optional services beside it. */}}}
-
+{{{- if .nginx.enabled}}}
   nginx:
     init: true
     build:
@@ -31,3 +25,4 @@ thirty optional services beside it. */}}}
       - isolated
     {{{- end}}}
     restart: {{{.restart_policy}}}
+{{{- end}}}

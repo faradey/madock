@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -333,16 +334,49 @@ func (p *project) queryOn(service, sql string) string {
 	for {
 		attempts++
 		out, err = p.tryRun(time.Minute, command...)
-		if err == nil || time.Now().After(deadline) {
+		if err == nil || refusesTheHost(out) || time.Now().After(deadline) {
 			break
 		}
 		time.Sleep(5 * time.Second)
 	}
 	if err != nil {
-		p.t.Fatalf("db:execute %q against %s never succeeded in %s over %d attempts: %v\n%s",
-			sql, service, time.Since(started).Round(time.Second), attempts, err, out)
+		p.t.Fatalf("db:execute %q against %s never succeeded in %s over %d attempts: %v\n%s%s",
+			sql, service, time.Since(started).Round(time.Second), attempts, err, out, p.databaseDiagnosis(service))
 	}
 	return out
+}
+
+// refusesTheHost reports MariaDB answering 1130, which is the server running and
+// refusing the client's address outright — no grant covers it.
+//
+// Worth its own case because it is not a database that has yet to come up, and
+// waiting cannot change it: the account is created once, while the data
+// directory is initialised, and a server that is already answering has decided.
+// Retrying anyway is how a defect took five minutes and 61 identical attempts to
+// report itself, twice, on a job that has a budget.
+func refusesTheHost(out string) bool {
+	return strings.Contains(out, "ERROR 1130")
+}
+
+// databaseDiagnosis is what the runner is asked for before it is thrown away.
+//
+// A hosted runner is disposable, so the container that misbehaved is gone by the
+// time anyone reads the failure — and the one thing that separates the two
+// candidate causes is in its log: a data directory that was initialised prints
+// the initialisation banner, one that was reused goes straight to "ready for
+// connections" and creates no accounts. Twice now that log was the missing piece.
+func (p *project) databaseDiagnosis(service string) string {
+	logs, err := p.tryRun(time.Minute, "logs", "-s", service)
+	if err != nil {
+		return "\n(could not read the " + service + " log: " + err.Error() + ")"
+	}
+
+	lines := strings.Split(strings.TrimRight(logs, "\n"), "\n")
+	if len(lines) > 40 {
+		lines = lines[len(lines)-40:]
+	}
+
+	return "\n--- last " + strconv.Itoa(len(lines)) + " lines of the " + service + " log ---\n" + strings.Join(lines, "\n")
 }
 
 // freshTable creates a table, replacing one an earlier run may have left.

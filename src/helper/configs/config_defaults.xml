@@ -9,6 +9,11 @@
                 <version>22.04</version>
             </os>
             <nginx>
+                <!-- A project that answers no request needs no web server: a queue
+                     worker, a bus consumer, the owner of a shared database schema.
+                     false leaves out the container, the vhost, the block in the
+                     shared proxy, the name in the certificate and the ports. -->
+                <enabled>true</enabled>
                 <port>
                     <unsecure>80</unsecure>
                     <secure>443</secure>

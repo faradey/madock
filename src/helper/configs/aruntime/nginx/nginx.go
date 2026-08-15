@@ -61,6 +61,13 @@ func cleanProxyCache() {
 }
 
 func setPorts(projectName string) {
+	// A project without a web server publishes nothing, so reserving the two
+	// ports would hold them against every other project on the machine for a
+	// container that is never created.
+	if !configs2.NginxEnabledFor(projectName) {
+		return
+	}
+
 	// Use the new ports package - it handles everything
 	// Just ensure the project is registered
 	_ = ports.GetPort(projectName, ports.ServiceNginx)
@@ -135,6 +142,11 @@ func makeProxy(projectName string) {
 		scannedProjects[name] = true
 		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
 			projectConf := configs2.GetProjectConfig(name)
+			// A project with no web server owns none of its domains: it is not
+			// routed anywhere, so it cannot collide with a project that is.
+			if !configs2.NginxEnabled(projectConf) {
+				continue
+			}
 			hosts := configs2.GetHosts(projectConf)
 			for _, hostAndStore := range hosts {
 				domain := hostAndStore["name"]
@@ -179,6 +191,16 @@ func makeProxy(projectName string) {
 		processedProjects[name] = true
 		pp := paths.NewProjectPaths(name)
 		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
+			// A project with no web server has nothing to route to. Its cached
+			// block is deleted rather than merely skipped: the cache is what a
+			// project keeps while it is stopped, so leaving it there would put
+			// the block back into proxy.conf on the next start of any other
+			// project — which is exactly how a server_name for a project that
+			// had its hosts removed survived on dev for weeks.
+			if !configs2.NginxEnabledFor(name) {
+				os.Remove(paths.CacheDir() + "/" + name + "-proxy.conf")
+				continue
+			}
 			if !paths.IsFileExist(pp.StoppedFile()) {
 				if projectName == name || !paths.IsFileExist(paths.CacheDir()+"/"+name+"-proxy.conf") {
 					nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
@@ -284,6 +306,11 @@ func sslAltNamesExt() string {
 		}
 
 		projectConf := configs2.GetProjectConfig(name)
+		// Nothing serves those names, so a certificate covering them would be
+		// issued for a site that cannot answer.
+		if !configs2.NginxEnabled(projectConf) {
+			continue
+		}
 		hosts := configs2.GetHosts(projectConf)
 		if len(hosts) == 0 {
 			continue

@@ -82,6 +82,10 @@ func MakeKibanaConf(projectName string) {
 }
 
 func makeNginxDockerfile(projectName string) {
+	// A project that answers no request has no web server to build.
+	if !configs.NginxEnabledFor(projectName) {
+		return
+	}
 	// Platforms with a self-contained image (own nginx, e.g. packeton) ship no
 	// nginx/Dockerfile — skip the unused nginx ctx instead of fataling.
 	if GetDockerConfigFileOptional(projectName, "nginx/Dockerfile", "") == "" {
@@ -99,6 +103,9 @@ func makeNginxDockerfile(projectName string) {
 // server_name: nginx keeps the first and warns about the rest, so enabling php
 // beside another runtime silently took that runtime's route away.
 func makeNginxConf(projectName string) {
+	if !configs.NginxEnabledFor(projectName) {
+		return // the project has no web server at all
+	}
 	defFile := GetDockerConfigFileOptional(projectName, "nginx/conf/default.conf", "")
 	if defFile == "" {
 		return // platform ships no nginx conf (self-contained image)
