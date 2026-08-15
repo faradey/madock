@@ -89,6 +89,7 @@ Settings are inherited in this order (later overrides earlier):
 | Key | Description | Default |
 |-----|-------------|---------|
 | `platform` | Project platform (`magento2`, `shopware`, `prestashop`, `shopify`, `custom`) | `magento2` |
+| `nginx/enabled` | Give the project a web server — see below | `true` |
 | `language` | Programming language for custom platform (`php`, `nodejs`, `python`, `golang`, `ruby`, `none`) | `php` |
 | `timezone` | Container timezone | `Europe/Kiev` |
 | `php/enabled` | Enable PHP container | `false` (set `true` by setup for PHP-based platforms) |
@@ -103,6 +104,36 @@ Settings are inherited in this order (later overrides earlier):
 | `python/version` | Python version (custom platform) | `3.12` |
 | `go/version` | Go version (custom platform) | `1.22` |
 | `ruby/version` | Ruby version (custom platform) | `3.3` |
+
+## A project with no web server
+
+Some projects answer no request and never will: a queue worker, a bus consumer,
+the service that owns a shared database schema while its neighbours take their
+own webhooks. `nginx/enabled=false` leaves the web server out completely — no
+container, no vhost, no block in the shared proxy, no name in the shared
+certificate, and no ports reserved.
+
+```bash
+madock config:set --name=nginx/enabled --value=false
+madock rebuild
+```
+
+**Removing the project's `<hosts>` does not do this**, which is the trap worth
+knowing about: the container still starts, and a project with no hosts gets
+`loc.<project>.com` invented for it, so its block in the shared proxy is renamed
+rather than removed and the two ports stay reserved.
+
+To check:
+
+```bash
+madock status                                  # no nginx line
+madock info:ports                              # no port for nginx
+grep -c "<project-host>" <MADOCK_ROOT>/aruntime/ctx/proxy.conf   # 0
+```
+
+Varnish sits in front of nginx, so it has nothing to do on a project without
+one — the `depends_on` is dropped so compose still reads the file, but enabling
+both is a configuration nobody needs.
 
 ## What the Node container runs
 

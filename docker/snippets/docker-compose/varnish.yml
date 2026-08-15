@@ -15,8 +15,10 @@
     environment:
       VARNISH_HTTP_PORT: 6081
       VARNISH_SIZE: 1G
+    {{{- if .nginx.enabled}}}
     depends_on:
       - nginx
+    {{{- end}}}
     networks:
       - default
       {{{- if .isolation.enabled}}}

@@ -160,6 +160,22 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// A project that answers no request: the owner of a shared database
+			// schema, a queue worker. No nginx container, and nothing that
+			// depends on one — the compose file is the whole point of the case,
+			// because a service left with `depends_on: nginx` is a file docker
+			// refuses to read.
+			name: "custom-none-no-nginx",
+			overrides: map[string]string{
+				"platform":        "custom",
+				"language":        "none",
+				"php/enabled":     "false",
+				"app/enabled":     "true",
+				"nginx/enabled":   "false",
+				"varnish/enabled": "true",
+			},
+		},
+		{
 			// What a Node project on a server looks like: production, and a
 			// named script rather than whatever package.json happens to have.
 			name: "custom-nodejs-production",

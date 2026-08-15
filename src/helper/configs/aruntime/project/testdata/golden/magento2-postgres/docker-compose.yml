@@ -22,7 +22,6 @@ services:
       - "<PORT>:9998"
       - "<PORT>:9999"
     restart: no
-
   nginx:
     init: true
     build:

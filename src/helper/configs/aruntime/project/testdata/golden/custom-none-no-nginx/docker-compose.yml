@@ -1,22 +1,5 @@
 name: madock_golden
 services:
-  nginx:
-    init: true
-    build:
-      context: ctx
-      dockerfile: nginx.Dockerfile
-    ports:
-      - "<PORT>:80"
-      - "<PORT>:443"
-    volumes:
-      - ./src:/var/www/html:delegated
-      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-      - "golden.test:host-gateway"
-    depends_on:
-      - nodejs
-    restart: no
   db:
     init: true
     command:
@@ -35,23 +18,16 @@ services:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
     restart: no
-  nodejs:
+  app:
     init: true
     build:
       context: ctx
-      dockerfile: nodejs.Dockerfile
+      dockerfile: app.Dockerfile
     tty: true
-    environment:
-      # Was hardcoded to "development", which is wrong the moment a project
-      # runs on a server: libraries branch on it, and the entrypoint reads it
-      # when no nodejs/script is configured.
-      NODE_ENV: "production"
-      # Polling-based file watching for macOS bind mounts (no inotify forwarding).
-      # Harmless on Linux. Picked up by next/webpack/chokidar/medusa watcher.
-      WATCHPACK_POLLING: "true"
-      CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./src:/var/www/html:cached
+      - ./ssh:/var/www/.ssh:ro
+      - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "golden.test:host-gateway"
@@ -79,6 +55,23 @@ services:
       ES_JAVA_OPTS: '-Xms800m -Xmx800m'
     volumes:
       - opensearch_vlm_2.19.0:/usr/share/opensearch/data
+    restart: no
+  varnish:
+    init: true
+    image: varnish:7.5.0
+    ports:
+      - "<PORT>:6081"
+    volumes:
+      - ./src/default.vcl:/etc/varnish/default.vcl:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    command: "-p default_keep=300"
+    environment:
+      VARNISH_HTTP_PORT: 6081
+      VARNISH_SIZE: 1G
+    networks:
+      - default
     restart: no
 
 volumes:
