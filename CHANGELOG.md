@@ -1,3 +1,9 @@
+**v3.9.0**
+
+Released:
+- **The first published release since v3.8.6.** Everything between the two shipped as `-norelease` tags — usable by madock-pro, invisible to anyone who installs from a GitHub Release — so a user upgrading from v3.8.6 receives forty-four versions at once. The bump is minor rather than patch because that range is not only fixes: it adds `project:list`, `proxy:logs`, `cli --service`, the end-to-end suite that now gates every push, and it changes behaviour a project can notice — the front door follows the main service instead of every enabled runtime, static files are served `no-cache`, and commands refuse to run outside a project. The sections below stand unchanged; this entry exists because the version number is what a user sees, and a jump from 3.8.6 to 3.8.51 says nothing about the size of what arrived
+- No code changes of its own beyond the version constant
+
 **v3.8.51**
 
 Fixed:
