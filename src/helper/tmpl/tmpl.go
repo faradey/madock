@@ -138,6 +138,38 @@ func (r *Renderer) source(name, body string) string {
 	return converted
 }
 
+// StubFuncs is the function vocabulary with the right names and arities and no
+// behaviour, for anything that parses a template without rendering it: the
+// converter, the test that every embedded template parses, and the audit of the
+// keys they read.
+func StubFuncs() template.FuncMap {
+	return (&Renderer{}).funcMap()
+}
+
+// Keys lists every configuration key a template reads, in the slash form the
+// configuration uses — .php.xdebug.enabled comes back as php/xdebug/enabled.
+//
+// It is what replaces missingkey=error. A key the project does not carry has to
+// stay falsy at render time, because a shared snippet asks about memcached on
+// platforms whose config has never heard of it; so a typo cannot be caught
+// there. It is caught here instead, over the whole tree at once, and for every
+// platform rather than only the one somebody happened to start.
+//
+// Chains rooted at a variable — $host.name inside a range — are not keys and do
+// not appear.
+func Keys(name, body string) ([]string, error) {
+	root, err := template.New(name).Delims(LeftDelim, RightDelim).Funcs(StubFuncs()).Parse(body)
+	if err != nil {
+		return nil, err
+	}
+
+	var keys []string
+	for _, path := range referencedFields(root) {
+		keys = append(keys, strings.Join(path, "/"))
+	}
+	return keys, nil
+}
+
 // loadSnippets parses every template the set refers to but does not yet define,
 // repeating until the set is closed.
 //

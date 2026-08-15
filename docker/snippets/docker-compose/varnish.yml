@@ -8,8 +8,8 @@
       - ./src/{{{.varnish.config_file}}}:/etc/varnish/default.vcl:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{- range .nginx.hosts}}}
-      - "{{{.name}}}:host-gateway"
+      {{{- range $host := .nginx.hosts}}}
+      - "{{{$host.name}}}:host-gateway"
       {{{- end}}}
     command: "-p default_keep=300"
     environment:

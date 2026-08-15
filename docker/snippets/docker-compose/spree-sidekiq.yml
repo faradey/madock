@@ -12,8 +12,8 @@
       RAILS_ENV: "development"
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{- range .nginx.hosts}}}
-      - "{{{.name}}}:host-gateway"
+      {{{- range $host := .nginx.hosts}}}
+      - "{{{$host.name}}}:host-gateway"
       {{{- end}}}
     command: >
       bash -lc "

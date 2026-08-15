@@ -134,8 +134,8 @@ func TestConvertsElse(t *testing.T) {
 func TestConvertsTheJoinedLists(t *testing.T) {
 	got := convertLegacy(t, "    extra_hosts:\n      {{{nginx/host_gateways}}}\n")
 	want := "    extra_hosts:\n" +
-		"      {{{- range .nginx.hosts}}}\n" +
-		"      - \"{{{.name}}}:host-gateway\"\n" +
+		"      {{{- range $host := .nginx.hosts}}}\n" +
+		"      - \"{{{$host.name}}}:host-gateway\"\n" +
 		"      {{{- end}}}\n"
 	if got != want {
 		t.Errorf("converted:\n%q\nwant:\n%q", got, want)

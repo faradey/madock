@@ -7,8 +7,8 @@
       - "{{{port "selenium"}}}:7900"
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      {{{- range .nginx.hosts}}}
-      - "{{{.name}}}:host-gateway"
+      {{{- range $host := .nginx.hosts}}}
+      - "{{{$host.name}}}:host-gateway"
       {{{- end}}}
     shm_size: '2g'
     depends_on:

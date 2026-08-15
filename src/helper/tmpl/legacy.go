@@ -220,14 +220,14 @@ func loopBlock(line string) ([]string, bool) {
 	switch strings.TrimSpace(line) {
 	case "{{{nginx/host_gateways}}}":
 		return []string{
-			indent + "{{{- range .nginx.hosts}}}",
-			indent + `- "{{{.name}}}:host-gateway"`,
+			indent + "{{{- range $host := .nginx.hosts}}}",
+			indent + `- "{{{$host.name}}}:host-gateway"`,
 			indent + "{{{- end}}}",
 		}, true
 	case "{{{nginx/host_names_with_codes}}}":
 		return []string{
-			indent + "{{{- range .nginx.hosts}}}",
-			indent + "{{{.name}}} {{{.code}}};",
+			indent + "{{{- range $host := .nginx.hosts}}}",
+			indent + "{{{$host.name}}} {{{$host.code}}};",
 			indent + "{{{- end}}}",
 		}, true
 	}
