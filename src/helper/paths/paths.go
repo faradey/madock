@@ -81,6 +81,18 @@ func GetRunDirNameWithHash() string {
 	return filepath.Base(GetRunDirPath()) + "__" + strconv.Itoa(int(hash.Hash(GetRunDirPath())))
 }
 
+// GetDirs lists the directories inside a path, following symlinks.
+//
+// os.ReadDir answers about the entry, not its target, so a symlink to a directory
+// has IsDir() false and used to be dropped here. Registry entries are symlinks on
+// every machine that sets a project up from a temporary checkout — a cluster VM had
+// four of them — and everything that walks projects/ goes through this function:
+// the migrations, project:clone, and the project list. On such a machine
+// `project:list` answered "No projects are registered" while four were running,
+// which reads as "all clean" rather than as "I cannot see".
+//
+// A broken symlink fails the Stat and is skipped, which is what should happen to a
+// registry entry pointing at nothing.
 func GetDirs(path string) (dirs []string) {
 	items, err := os.ReadDir(path)
 	if err != nil {
@@ -88,9 +100,11 @@ func GetDirs(path string) (dirs []string) {
 	}
 
 	for _, file := range items {
-		if file.IsDir() {
-			dirs = append(dirs, file.Name())
+		info, statErr := os.Stat(filepath.Join(path, file.Name()))
+		if statErr != nil || !info.IsDir() {
+			continue
 		}
+		dirs = append(dirs, file.Name())
 	}
 
 	return dirs

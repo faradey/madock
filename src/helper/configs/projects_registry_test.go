@@ -48,6 +48,30 @@ func TestListProjectsIn(t *testing.T) {
 	live := t.TempDir()
 	write("alive", config(live))
 	write("deleted", config(filepath.Join(execDir, "not-here")))
+
+	// A registry entry that is a symlink to its project, which is how every
+	// installation set up from a temporary checkout looks. os.ReadDir answers about
+	// the entry rather than its target, so this case was dropped before anything
+	// looked at its configuration: on a cluster VM with four such projects running,
+	// project:list said "No projects are registered". The first version of this test
+	// built only real directories, which is exactly why it passed.
+	linked := t.TempDir()
+	linkedRegistry := filepath.Join(t.TempDir(), "linked-entry")
+	if err := os.MkdirAll(linkedRegistry, 0755); err != nil {
+		t.Fatalf("creating the symlink target: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(linkedRegistry, "config.xml"), []byte(config(linked)), 0644); err != nil {
+		t.Fatalf("writing the linked config: %v", err)
+	}
+	if err := os.Symlink(linkedRegistry, filepath.Join(execDir, "projects", "linked")); err != nil {
+		t.Fatalf("linking the registry entry: %v", err)
+	}
+
+	// And one pointing at nothing, which must be skipped rather than reported: an
+	// entry whose own directory is gone is not an entry.
+	if err := os.Symlink(filepath.Join(execDir, "gone"), filepath.Join(execDir, "projects", "broken-link")); err != nil {
+		t.Fatalf("linking the broken registry entry: %v", err)
+	}
 	write("legacy", `<?xml version="1.0" encoding="UTF-8"?>
 <config>
     <scopes>
@@ -67,6 +91,7 @@ func TestListProjectsIn(t *testing.T) {
 		"alive":   ProjectOk,
 		"deleted": ProjectMissingSource,
 		"legacy":  ProjectNoPath,
+		"linked":  ProjectOk,
 	}
 
 	if len(got) != len(want) {

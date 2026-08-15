@@ -1,3 +1,9 @@
+**v3.8.51**
+
+Fixed:
+- **`project:list` was blind to exactly the projects it was written to find.** It listed the registry with `os.ReadDir` and kept the entries whose `IsDir()` was true — and that answers about the entry, not its target, so an entry that is a symlink to its project reported false and was dropped before anything read its configuration. On a cluster VM with four projects running, one release after the command shipped, it answered "No projects are registered in this installation": the single wrong answer that reads as good news. Symlinked entries are how an installation looks whenever a project was set up from a temporary checkout, which is also where forgotten entries come from — so `--stale`, whose whole purpose is finding what nobody remembers, could not see the likeliest cases. The predicate now stats the target, and a symlink pointing at nothing is skipped rather than reported, which is right for an entry whose directory is gone
+- **Same predicate, same blindness, in `paths.GetDirs`** — and everything that walks `projects/` is built on it: the migrations from v1.4 to v2.4, `project:clone`'s name check, and the project list itself. A symlinked project silently missed a migration. Fixed in the one place, with a test for a real directory, a symlink to one, a plain file and a broken symlink
+
 **v3.8.50**
 
 Added:

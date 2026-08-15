@@ -433,7 +433,14 @@ func ListProjectsIn(execDir string) []ProjectEntry {
 
 	var out []ProjectEntry
 	for _, entry := range entries {
-		if !entry.IsDir() {
+		// Stat rather than entry.IsDir(): os.ReadDir answers about the entry, and a
+		// symlink to a directory says false. Registry entries are symlinks wherever
+		// a project was set up from a temporary checkout, and on a cluster VM with
+		// four such projects this command answered "No projects are registered" —
+		// the one wrong answer that reads as good news. A broken symlink fails the
+		// Stat and is skipped, which is right for an entry pointing at nothing.
+		info, statErr := os.Stat(filepath.Join(execDir, "projects", entry.Name()))
+		if statErr != nil || !info.IsDir() {
 			continue
 		}
 		configPath := filepath.Join(execDir, "projects", entry.Name(), "config.xml")
