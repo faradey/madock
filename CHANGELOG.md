@@ -5,6 +5,7 @@ Upgrading:
 - **Generated files move in whitespace.** Blank lines that came from the line an `{{{include}}}` tag sat on are gone, eighteen in a row at the end of a default compose file among them. Nothing about a container changes; a diff of `aruntime/projects/<name>/` after an upgrade will not be empty
 
 Fixed:
+- **golang.org/x/crypto updated to 0.52.0**, clearing seventeen advisories, worst critical. Not theoretical here: it is a direct dependency and `remote:sync` imports `ssh`, `ssh/agent` and `ssh/terminal` to pull a production database down over SSH, while two of the CVEs are exactly that code path — agent constraints not dropped when keys are forwarded (CVE-2026-39832) and key constraints not enforced (CVE-2026-39833). `x/sys` and `x/term` come along as the versions it now requires; no source change was needed
 - **A project's block in the shared proxy was rendered with another project's configuration.** `proxy.conf` is built by walking every registered project, and the substitution pass was handed the name of whichever project happened to be starting — so the mftf locations in one project's server block followed a different project's setting. It follows its own now
 - **A snippet that includes itself no longer spins forever.** The include pass was a regex looped "while a match remains", with no cycle detection of any kind
 
