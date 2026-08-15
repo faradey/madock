@@ -349,3 +349,51 @@ func TestMakeDirsByPathEmpty(t *testing.T) {
 		t.Errorf("MakeDirsByPath(\"\") = %q, want empty string", result)
 	}
 }
+
+// TestGetDirsFollowsSymlinks pins the predicate every walk of projects/ depends on.
+//
+// os.ReadDir answers about the entry, not its target, so a symlink to a directory
+// reports IsDir() false — and this function used to drop it. Registry entries are
+// symlinks on any installation whose projects were set up from a temporary
+// checkout: a cluster VM had four, and everything that walks projects/ is built on
+// this call, from the migrations to project:clone to the project list. There, the
+// list answered "No projects are registered" with four projects running, which
+// reads as good news rather than as blindness.
+//
+// A symlink pointing at nothing is skipped: a registry entry whose directory is
+// gone is not an entry.
+func TestGetDirsFollowsSymlinks(t *testing.T) {
+	root := t.TempDir()
+	target := t.TempDir()
+
+	if err := os.MkdirAll(filepath.Join(root, "real"), 0755); err != nil {
+		t.Fatalf("creating a real directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "file"), []byte("x"), 0644); err != nil {
+		t.Fatalf("creating a file: %v", err)
+	}
+	if err := os.Symlink(target, filepath.Join(root, "linked")); err != nil {
+		t.Fatalf("linking a directory: %v", err)
+	}
+	if err := os.Symlink(filepath.Join(root, "gone"), filepath.Join(root, "broken")); err != nil {
+		t.Fatalf("linking nothing: %v", err)
+	}
+
+	got := map[string]bool{}
+	for _, dir := range GetDirs(root) {
+		got[dir] = true
+	}
+
+	if !got["real"] {
+		t.Error("a real directory is missing")
+	}
+	if !got["linked"] {
+		t.Error("a symlink to a directory is missing — this is the defect this test exists for")
+	}
+	if got["file"] {
+		t.Error("a plain file was reported as a directory")
+	}
+	if got["broken"] {
+		t.Error("a symlink pointing at nothing was reported as a directory")
+	}
+}
