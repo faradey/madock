@@ -90,7 +90,7 @@ Settings are inherited in this order (later overrides earlier):
 |-----|-------------|---------|
 | `platform` | Project platform (`magento2`, `shopware`, `prestashop`, `shopify`, `custom`) | `magento2` |
 | `language` | Programming language for custom platform (`php`, `nodejs`, `python`, `golang`, `ruby`, `none`) | `php` |
-| `timezone` | Container timezone | `Europe/Kiev` |
+| `timezone` | Container timezone | `UTC` |
 | `php/enabled` | Enable PHP container | `false` (set `true` by setup for PHP-based platforms) |
 | `php/version` | PHP version | `8.2` |
 | `php/nodejs/enabled` | Node.js inside PHP container | `false` |
