@@ -106,7 +106,19 @@ Before v3.9.1 madock read these files with an engine of its own:
 
 An override still written that way keeps working — it is converted as it is read
 — but madock prints a warning naming the file, and the conversion will be removed
-in a later release. To convert a file by hand, follow the table:
+in a later release. To convert the files for good:
+
+```bash
+madock template:convert                 # the current project's .madock/docker/
+madock template:convert --dry-run       # say what would change, write nothing
+madock template:convert /some/other/dir # a copy kept somewhere else
+```
+
+It rewrites in place, reports every file it touched, and running it twice is a
+no-op. It is the same conversion the renderer applies as it reads, so the result
+cannot differ from what the warning was already producing.
+
+To convert by hand instead, the table is:
 
 | Old | New |
 |---|---|

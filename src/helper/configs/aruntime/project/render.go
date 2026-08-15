@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -38,7 +39,7 @@ func Render(projectName, file, name string, extra map[string]string) string {
 		logger.Fatal(err)
 	}
 
-	out, err := newRenderer(projectName, extra).Render(name, string(body))
+	out, err := newRenderer(projectName, file, extra).Render(name, string(body))
 	if err != nil {
 		logger.Fatal(fmt.Errorf("rendering %s for project %s: %w", name, projectName, err))
 	}
@@ -56,24 +57,30 @@ func RenderTo(projectName, file, name, destination string, extra map[string]stri
 	return out
 }
 
-func newRenderer(projectName string, extra map[string]string) *tmpl.Renderer {
+func newRenderer(projectName, file string, extra map[string]string) *tmpl.Renderer {
 	conf := configs.GetProjectConfig(projectName)
+
+	// Which file a snippet name came from, so a warning about one can name it.
+	legacySource := map[string]string{}
 
 	return &tmpl.Renderer{
 		Values: renderValues(projectName, conf, extra),
 		Data:   renderData(projectName, conf),
 		Snippet: func(name string) (string, error) {
-			body, err := os.ReadFile(GetSnippetFile(projectName, name))
+			snippet := GetSnippetFile(projectName, name)
+			legacySource[name] = snippet
+			body, err := os.ReadFile(snippet)
 			return string(body), err
 		},
 		Port: func(service string) (int, error) {
 			return ports.GetPort(projectName, service), nil
 		},
 		OnLegacy: func(name string, notes []string) {
-			fmtc.WarningLn("The template " + name + " is written in the old <<<if>>> syntax and was converted on the fly. Rewrite it against text/template — the conversion goes away in a later release.")
-			for _, note := range notes {
-				fmtc.WarningLn("  " + note)
+			source := file
+			if snippet, ok := legacySource[name]; ok {
+				source = snippet
 			}
+			legacyWarning(source, notes)
 		},
 	}
 }
@@ -86,6 +93,23 @@ func newRenderer(projectName string, extra map[string]string) *tmpl.Renderer {
 // db/use_default_auth_plugin were booleans Go computed and wrote into the config
 // map as though a user had set them, because a template could not compare two
 // values. A template now writes the comparison itself.
+// legacyWarning names the file on disk and the command that fixes it.
+//
+// Naming the template — "nginx/conf/default.conf" — told the reader which
+// template it was and not which file: an override lives under
+// <PROJECT>/.madock/docker/ and the shipped copy under the installation, and
+// only one of them is theirs to edit. And the instruction used to be "rewrite
+// it", against a syntax reference, when the conversion this very message just
+// performed can be written to the file by one command.
+func legacyWarning(path string, notes []string) {
+	fmtc.WarningLn("The template " + path + " is written in the old <<<if>>> syntax and was converted as it was read.")
+	for _, note := range notes {
+		fmtc.WarningLn("  " + note)
+	}
+	fmtc.ToDoLn("Convert it for good with: madock template:convert " + filepath.Dir(path))
+	fmtc.WarningLn("The conversion on read goes away in a later release.")
+}
+
 func renderValues(projectName string, conf map[string]string, extra map[string]string) map[string]string {
 	values := make(map[string]string, len(conf)+16)
 	for key, value := range conf {
