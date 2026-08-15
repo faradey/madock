@@ -100,7 +100,7 @@ A template that does not parse stops the run and names the file and the line.
 
 ### The old `<<<if>>>` syntax
 
-Before v3.10.0 madock read these files with an engine of its own:
+Before v3.9.1 madock read these files with an engine of its own:
 `<<<if{{{php/enabled}}}>>>…<<<endif>>>`, `{{{include snippets/…}}}` and
 `{{{php/version}}}` without the leading dot.
 

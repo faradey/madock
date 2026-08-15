@@ -1,4 +1,4 @@
-**v3.10.0**
+**v3.9.1**
 
 Upgrading:
 - **The `<<<if>>>` template syntax is deprecated.** Every file under `docker/` is now a Go `text/template` with `{{{ }}}` delimiters, documented in [Customizations](docs/customizations.md). A project's own override under `.madock/docker/` written in the old syntax keeps working — it is converted as it is read — but madock names the file in a warning on every generation, and the conversion goes away in a later release. `go run ./tools/tmplconvert -dir <path>` converts a tree in place
