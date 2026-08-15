@@ -30,3 +30,91 @@ Default list of properties that can be customised:
 
 * [docker/docker-compose.yml](../docker/magento2/docker-compose.yml)
 * etc.
+
+## Template syntax
+
+Every file under `docker/` is a Go [text/template](https://pkg.go.dev/text/template)
+with the delimiters changed to `{{{` and `}}}`. The delimiters are three braces
+rather than two because the templates are full of shell and nginx, which use
+`{{ }}` and `${ }` of their own — and they are not `<<< >>>` because a Dockerfile
+line like `read major minor patch <<< "$x"` is a bash here-string.
+
+A setting is read by its path, with the slashes written as dots:
+
+```
+FROM php:{{{.php.version}}}-fpm
+WORKDIR {{{.workdir}}}
+```
+
+The names are the ones `madock config:set` uses — `php/xdebug/enabled` is
+`.php.xdebug.enabled`. A setting the project does not have reads as empty, so a
+snippet may ask about a service the platform has never heard of.
+
+Conditionals, with `and`, `or`, `not`, `eq` and `ne`:
+
+```
+{{{- if .php.xdebug.enabled}}}
+RUN pecl install xdebug-{{{.php.xdebug.version}}}
+{{{- end}}}
+
+{{{- if and (eq .db.type "mysql") (versionLt .db.version "8.4")}}}
+--default-authentication-plugin=mysql_native_password
+{{{- end}}}
+```
+
+The `-` inside a delimiter deletes the whitespace on that side, which is what
+keeps a switched-off block from leaving a blank line behind. Write conditionals
+that own a line with `{{{-` on both the opening and the closing tag.
+
+Loops, over the project's hosts:
+
+```
+    extra_hosts:
+      {{{- range $host := .nginx.hosts}}}
+      - "{{{$host.name}}}:host-gateway"
+      {{{- end}}}
+```
+
+`.nginx.hosts` is ordered and never empty — a project with no host configured
+gets `loc.<project>.com` — so `{{{(index .nginx.hosts 0).name}}}` is the first
+host.
+
+Another file is included by name, relative to `docker/`. The override chain
+above applies to the snippet as well, so a project can replace one snippet and
+keep the rest:
+
+```
+{{{template "snippets/docker-compose/php.yml" .}}}
+```
+
+Beyond the [built-in functions](https://pkg.go.dev/text/template#hdr-Functions),
+madock adds:
+
+| Function | What it does |
+|---|---|
+| `port "livereload"` | The host port published for a service. **Calling it allocates the port**, which is why it is a function and not a setting |
+| `versionGte`, `versionGt`, `versionLte`, `versionLt` | Compare two dotted versions: `versionLt .db.version "8.4"` |
+| `join`, `lower`, `upper` | As they read |
+
+A template that does not parse stops the run and names the file and the line.
+
+### The old `<<<if>>>` syntax
+
+Before v3.10.0 madock read these files with an engine of its own:
+`<<<if{{{php/enabled}}}>>>…<<<endif>>>`, `{{{include snippets/…}}}` and
+`{{{php/version}}}` without the leading dot.
+
+An override still written that way keeps working — it is converted as it is read
+— but madock prints a warning naming the file, and the conversion will be removed
+in a later release. To convert a file by hand, follow the table:
+
+| Old | New |
+|---|---|
+| `{{{php/version}}}` | `{{{.php.version}}}` |
+| `{{{include snippets/x}}}` | `{{{template "snippets/x" .}}}` |
+| `{{{port/nginx}}}` | `{{{port "nginx"}}}` |
+| `<<<if{{{a}}}{{{b}}}>>>` | `{{{- if and .a .b}}}` |
+| `<<<else>>>` / `<<<endif>>>` | `{{{- else}}}` / `{{{- end}}}` |
+| `{{{nginx/host_gateways}}}` | a `range` over `.nginx.hosts` |
+| `{{{db/type_is_mysql}}}` | `(eq .db.type "mysql")` |
+| `{{{db/use_default_auth_plugin}}}` | `(not (and (eq (lower .db.repository) "mysql") (versionGte .db.version "8.4")))` |
