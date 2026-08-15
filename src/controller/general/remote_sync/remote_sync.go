@@ -1,6 +1,7 @@
 package remote_sync
 
 import (
+	"errors"
 	"fmt"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/logger"
@@ -214,22 +215,7 @@ func Connect(projectConf map[string]string, sshType string) *ssh.Client {
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		}
 
-		if authType == "password" {
-			config.Auth = []ssh.AuthMethod{
-				ssh.Password(password),
-			}
-		} else {
-			// Agent first, key file second. The file method has to be the lazy
-			// form here: publicKey() reads and parses the key immediately, so
-			// building it would prompt for the passphrase before the handshake
-			// ever reaches the agent. With no agent, nothing changes — the
-			// eager call keeps its existing failure behaviour.
-			if agentAuth, ok := AgentAuth(); ok {
-				config.Auth = append(config.Auth, agentAuth, publicKeyLazy(keyPath))
-			} else {
-				config.Auth = append(config.Auth, publicKey(keyPath))
-			}
-		}
+		config.Auth = authMethods(authType, password, keyPath)
 	}
 
 	conn, err := ssh.Dial("tcp", host+":"+port, config)
@@ -247,92 +233,212 @@ func Disconnect(conn *ssh.Client) {
 	}
 }
 
-// AgentAuth returns an auth method backed by the running ssh-agent, and false
-// when no agent is reachable.
+// authMethods builds what the handshake is allowed to try.
 //
-// Offered before the key file so a passphrase-protected key never reaches the
-// interactive prompt: the prompt reads from the terminal, and without a TTY —
-// a CI job, a hook, an agent-driven session — it fails with "operation not
-// supported by device" and the command dies. Every other tool on the machine
-// already goes through the agent, so `ssh host` succeeding while
-// `remote:sync:*` fails on the same host is a difference nobody expects.
+// Public-key authentication is **one** method, not two. The agent and the key
+// file were offered as separate entries in config.Auth, and to the protocol both
+// answer to the name "publickey" — which is what the client marks as tried, by
+// name. So the agent refusing closed the path to ssh/key_path as well: the
+// configured key was never offered at all. Measured on a live sshd, the server
+// log held exactly one attempt, with a key from the agent that it did not
+// accept, and none with the key the project had been told to use.
 //
-// Exported because enterprise replaces the whole ClientConfig through
-// SetSSHConfigProvider; without this being callable from there, fixing the
-// open-source path alone would leave every pro installation prompting.
-func AgentAuth() (ssh.AuthMethod, bool) {
-	sock := os.Getenv("SSH_AUTH_SOCK")
-	if sock == "" {
-		return nil, false
+// The visible symptom was `ssh host` working while `remote:sync:*` failed on the
+// same host, which is precisely the difference this code exists to avoid.
+func authMethods(authType, password, keyPath string) []ssh.AuthMethod {
+	if authType == "password" {
+		return []ssh.AuthMethod{ssh.Password(password)}
 	}
 
-	conn, err := net.Dial("unix", sock)
-	if err != nil {
-		// Stale socket from a dead agent — fall through to the key file.
-		return nil, false
-	}
-
-	// Signers is a callback, so the agent is queried at handshake time. A key
-	// added to the agent after this point still counts.
-	return ssh.PublicKeysCallback(agent.NewClient(conn).Signers), true
+	return []ssh.AuthMethod{publicKeyAuth(keyPath)}
 }
 
-// publicKeyLazy is publicKey deferred to handshake time: the file is read, and
-// a passphrase asked for, only after the methods offered before it have been
-// refused. Used when an agent is available, so an agent-held key never triggers
-// the prompt. Returns an error instead of calling logger.Fatal — at this point
-// the agent may already have succeeded, and killing the process over an
-// unreadable fallback key would turn a working connection into a failure.
-func publicKeyLazy(path string) ssh.AuthMethod {
+// publicKeyAuth offers the agent's keys and the configured key file as a single
+// publickey method, agent first, so every key is tried.
+//
+// The callback runs at handshake time, so a key added to the agent after the
+// config was built still counts. The key file is not read while an agent key is
+// still being tried: the signer built for it knows its own public half, and the
+// private half — and the passphrase prompt with it — waits until the server has
+// said it would accept that key.
+func publicKeyAuth(keyPath string) ssh.AuthMethod {
 	return ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
-		key, err := os.ReadFile(path)
-		if err != nil {
-			return nil, err
+		var signers []ssh.Signer
+
+		if conn := dialAgent(); conn != nil {
+			agentSigners, err := agent.NewClient(conn).Signers()
+			if err == nil {
+				signers = append(signers, agentSigners...)
+			}
+			// An agent that cannot be talked to is no reason to give up the key
+			// file, which is the whole point of putting them in one method.
 		}
 
-		signer, err := ssh.ParsePrivateKey(key)
-		if err != nil {
-			if passwd == "" {
-				fmt.Print("Input your password for ssh key:")
-				sentence, readErr := terminal.ReadPassword(int(syscall.Stdin))
-				if readErr != nil {
-					return nil, readErr
-				}
-				passwd = strings.TrimSpace(string(sentence))
-			}
-			signer, err = ssh.ParsePrivateKeyWithPassphrase(key, []byte(passwd))
-			if err != nil {
-				return nil, err
+		if keyPath != "" {
+			if signer := fileSigner(keyPath); signer != nil {
+				signers = append(signers, signer)
 			}
 		}
 
-		return []ssh.Signer{signer}, nil
+		if len(signers) == 0 {
+			// Said here rather than left to the handshake, which would report
+			// only that no method remained.
+			if keyPath == "" {
+				return nil, fmt.Errorf("no ssh keys to offer: the agent has none and no key_path is configured")
+			}
+			return nil, fmt.Errorf("no ssh keys to offer: the agent has none and the public half of %s could not be read", keyPath)
+		}
+
+		return signers, nil
 	})
 }
 
-func publicKey(path string) ssh.AuthMethod {
-	key, err := os.ReadFile(path)
-	if err != nil {
-		logger.Fatal(err)
+// dialAgent connects to the running SSH agent, or reports none. A socket left
+// behind by a dead agent counts as none — the key file is the better answer
+// there than an error.
+func dialAgent() net.Conn {
+	socket := os.Getenv("SSH_AUTH_SOCK")
+	if socket == "" {
+		return nil
 	}
-	signer, err := ssh.ParsePrivateKey(key)
+
+	conn, err := net.Dial("unix", socket)
 	if err != nil {
-		if passwd == "" {
-			fmt.Print("Input your password for ssh key:")
-			var sentence []byte
-			sentence, err = terminal.ReadPassword(int(syscall.Stdin))
-			if err != nil {
-				logger.Fatalln(err)
-			}
-			passwd = strings.TrimSpace(string(sentence))
-		}
-		signer, err = ssh.ParsePrivateKeyWithPassphrase(key, []byte(passwd))
-		if err != nil {
-			logger.Fatal(err)
+		return nil
+	}
+
+	return conn
+}
+
+// fileSigner wraps a key file as a signer whose public half is known up front
+// and whose private half is read on the first signature asked of it.
+//
+// nil when the public half cannot be established without a passphrase. Two
+// reasons, and the second is not a style preference: an unreadable fallback key
+// must not sink a connection the agent may still complete, and a signer with no
+// public key is dereferenced by the handshake before anything can check it —
+// nil there is a panic, not a skip.
+func fileSigner(path string) ssh.Signer {
+	public := publicKeyOf(path)
+	if public == nil {
+		return nil
+	}
+
+	return &lazyFileSigner{path: path, public: public}
+}
+
+// publicKeyOf finds the public half of a key file without ever asking for a
+// passphrase: from the .pub beside it, from the key itself when it is not
+// encrypted, or from the cleartext public key an encrypted OpenSSH key carries
+// alongside its encrypted private half.
+func publicKeyOf(path string) ssh.PublicKey {
+	if pub, err := os.ReadFile(path + ".pub"); err == nil {
+		if key, _, _, _, err := ssh.ParseAuthorizedKey(pub); err == nil {
+			return key
 		}
 	}
 
-	return ssh.PublicKeys(signer)
+	key, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+
+	signer, err := ssh.ParsePrivateKey(key)
+	if err == nil {
+		return signer.PublicKey()
+	}
+
+	var missing *ssh.PassphraseMissingError
+	if errors.As(err, &missing) {
+		return missing.PublicKey
+	}
+
+	return nil
+}
+
+// lazyFileSigner signs with a key file, reading and decrypting it on first use.
+// Sign is reached only after the server has accepted the public key, so a
+// passphrase is asked for where it is needed rather than while an agent key is
+// still in play.
+type lazyFileSigner struct {
+	path   string
+	public ssh.PublicKey
+
+	once   sync.Once
+	signer ssh.Signer
+	err    error
+}
+
+func (l *lazyFileSigner) PublicKey() ssh.PublicKey {
+	return l.public
+}
+
+func (l *lazyFileSigner) Sign(rand io.Reader, data []byte) (*ssh.Signature, error) {
+	signer, err := l.load()
+	if err != nil {
+		return nil, err
+	}
+
+	return signer.Sign(rand, data)
+}
+
+// SignWithAlgorithm is what makes an RSA key file usable at all. Without it the
+// handshake treats this as a plain Signer, which it assumes can only produce
+// ssh-rsa — SHA-1, refused by every OpenSSH since 8.8 — and the key is rejected
+// for a reason that has nothing to do with the key.
+func (l *lazyFileSigner) SignWithAlgorithm(rand io.Reader, data []byte, algorithm string) (*ssh.Signature, error) {
+	signer, err := l.load()
+	if err != nil {
+		return nil, err
+	}
+
+	as, ok := signer.(ssh.AlgorithmSigner)
+	if !ok {
+		if algorithm != "" && algorithm != signer.PublicKey().Type() {
+			return nil, fmt.Errorf("ssh: key %s cannot sign with %s", l.path, algorithm)
+		}
+		return signer.Sign(rand, data)
+	}
+
+	return as.SignWithAlgorithm(rand, data, algorithm)
+}
+
+func (l *lazyFileSigner) load() (ssh.Signer, error) {
+	l.once.Do(func() {
+		l.signer, l.err = loadSigner(l.path)
+	})
+
+	return l.signer, l.err
+}
+
+// loadSigner reads and parses a key file, asking for the passphrase when it is
+// encrypted. One place prompts, so the answer is remembered once.
+func loadSigner(path string) (ssh.Signer, error) {
+	key, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	signer, err := ssh.ParsePrivateKey(key)
+	if err == nil {
+		return signer, nil
+	}
+
+	var missing *ssh.PassphraseMissingError
+	if !errors.As(err, &missing) {
+		return nil, err
+	}
+
+	if passwd == "" {
+		fmt.Print("Input your password for ssh key:")
+		sentence, readErr := terminal.ReadPassword(int(syscall.Stdin))
+		if readErr != nil {
+			return nil, readErr
+		}
+		passwd = strings.TrimSpace(string(sentence))
+	}
+
+	return ssh.ParsePrivateKeyWithPassphrase(key, []byte(passwd))
 }
 
 func RunCommand(conn *ssh.Client, cmd string) string {

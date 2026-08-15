@@ -1,3 +1,10 @@
+**v3.9.2**
+
+Fixed:
+- **A project's configured SSH key was never offered when an agent was running.** `remote:sync:*` built the agent and `ssh/key_path` as two entries in the client's auth list, and to the protocol both answer to the name `publickey` — which is what the client marks as tried, by name. So an agent that had no key the server would accept did not fall back to the key file: it closed that path too. Measured on a live sshd, the server log held exactly one attempt, with a key from the agent, and none with the key the project had been told to use. The visible symptom was `ssh host` working while `remote:sync:media` failed on the same host, from the same machine. They are now one method, agent keys first and the key file after, so every key is tried
+- **Two things that had to come with it, or the fix would have been worse than the defect.** The key file is still not read while an agent key is in play: the signer built for it finds its public half without a passphrase — from the `.pub` beside it, from the key itself when it is not encrypted, or from the cleartext public key an encrypted OpenSSH key carries inside — and reads the private half only once the server has said it would accept that key. A key whose public half cannot be found that way is not offered at all, because the handshake dereferences it before anything can check it. And an RSA key file now signs `rsa-sha2-256`: a plain signer is assumed to manage only `ssh-rsa`, which is SHA-1 and refused by every OpenSSH since 8.8, so one silent refusal would have been traded for another on the commonest key type
+- The same defect was fixed in madock-pro 0.23.7, which replaces the whole client configuration and so was never on this path. This is the same fix for everyone else
+
 **v3.9.1**
 
 Upgrading:
