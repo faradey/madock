@@ -135,13 +135,19 @@ func customNoneConfig(config *configs2.ConfigLines, generalConf, projectConf map
 func customDbConfig(config *configs2.ConfigLines, defVersions versions.ToolsVersions, generalConf, projectConf map[string]string) {
 	// Set db/type and db/repository based on DbType
 	dbType, dbRepo := resolveDbTypeAndRepo(defVersions)
-	config.Set("db/type", dbType)
 
 	repoVersion := strings.Split(defVersions.Db, ":")
 	if len(repoVersion) > 1 {
+		// An explicit repository decides the engine, because it is the more
+		// specific thing the user said. `--db postgres:16` used to leave
+		// db/type at whatever the engine question had defaulted to — MariaDB
+		// under --yes — and the generated compose then rendered the MySQL
+		// service block around a postgres image, with MYSQL_* variables on it.
+		config.Set("db/type", configs2.DbTypeFromRepository(repoVersion[0]))
 		config.Set("db/repository", repoVersion[0])
 		config.Set("db/version", repoVersion[1])
 	} else {
+		config.Set("db/type", dbType)
 		if dbRepo != "" {
 			config.Set("db/repository", dbRepo)
 		}

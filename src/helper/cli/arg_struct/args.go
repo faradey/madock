@@ -20,6 +20,7 @@ type ControllerGeneralSetup struct {
 	Language            string `arg:"-l,--language" help:"Primary language (php, nodejs, python, golang, ruby, none)"`
 	Php                 string `arg:"--php" help:"PHP version"`
 	Db                  string `arg:"--db" help:"DB version"`
+	DbType              string `arg:"--db-type" help:"DB engine: mariadb, mysql, postgresql, mongodb"`
 	Composer            string `arg:"--composer" help:"Composer version"`
 	SearchEngine        string `arg:"--search-engine" help:"Search Engine"`
 	SearchEngineVersion string `arg:"--search-engine-version" help:"Search Engine Version"`

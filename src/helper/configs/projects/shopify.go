@@ -69,12 +69,14 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 		config.Set("php/ioncube/enabled", configs2.GetOption("php/ioncube/enabled", generalConf, projectConf))
 
 		dbType, dbRepo := resolveDbTypeAndRepo(defVersions)
-		config.Set("db/type", dbType)
 		repoVersion := strings.Split(defVersions.Db, ":")
 		if len(repoVersion) > 1 {
+			// An explicit repository decides the engine — see customDbConfig.
+			config.Set("db/type", configs2.DbTypeFromRepository(repoVersion[0]))
 			config.Set("db/repository", repoVersion[0])
 			config.Set("db/version", repoVersion[1])
 		} else {
+			config.Set("db/type", dbType)
 			if dbRepo != "" {
 				config.Set("db/repository", dbRepo)
 			}
