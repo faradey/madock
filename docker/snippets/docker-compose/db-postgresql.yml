@@ -19,7 +19,16 @@
       POSTGRES_USER: "{{{.db.user}}}"
       POSTGRES_PASSWORD: "{{{.db.password}}}"
     volumes:
+    {{{- if versionGte .db.version "18"}}}
+      # 18 moved the data one level up: the image keeps a major-version
+      # directory under /var/lib/postgresql so that pg_ctlcluster and pg_upgrade
+      # can see both versions at once. Mounting the old path there makes the
+      # image refuse to start — it finds data in what it now considers an unused
+      # mount — so an 18 project could not come up at all.
+      - dbdata:/var/lib/postgresql
+    {{{- else}}}
       - dbdata:/var/lib/postgresql/data
+    {{{- end}}}
     {{{- if .isolation.enabled}}}
     networks:
       - isolated

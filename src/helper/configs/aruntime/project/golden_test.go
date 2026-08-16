@@ -76,6 +76,19 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// PostgreSQL 18, which mounts its volume one level up from every
+			// version before it. The image keeps a major-version directory
+			// under /var/lib/postgresql, and finding data in the old path makes
+			// it refuse to start — so the fixture exists to hold the mount, not
+			// the version number.
+			name: "magento2-postgres18",
+			overrides: map[string]string{
+				"db/type":       "postgresql",
+				"db/repository": "postgres",
+				"db/version":    "18",
+			},
+		},
+		{
 			// MongoDB, which is the engine that has to be told a cache size.
 			// Left alone, WiredTiger sizes its cache from the RAM it can see —
 			// the host's, not the container's limit — so one mongod on a large

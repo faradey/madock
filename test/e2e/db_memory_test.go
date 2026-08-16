@@ -83,6 +83,39 @@ func TestDatabaseMemoryReachesPostgresql(t *testing.T) {
 		"73728", "effective_cache_size should be three quarters of the budget")
 }
 
+// TestPostgres18Starts is about the mount, not about memory.
+//
+// Postgres 18 keeps a major-version directory under /var/lib/postgresql so
+// pg_ctlcluster and pg_upgrade can see two versions at once. Mounting the
+// volume at the old /var/lib/postgresql/data makes the image refuse to start —
+// it finds a database in what it now considers an unused mount — so an 18
+// project could not come up at all.
+//
+// It hid behind another defect: with --yes the version silently stayed at the
+// MariaDB default, and postgres:10.6 exists, so a scripted postgres project
+// came up on a seven-year-old release instead of failing. Once the version
+// selection was fixed, 18 is what a new project gets.
+func TestPostgres18Starts(t *testing.T) {
+	p := newProject(t, "e2epg18")
+
+	p.run(5*time.Minute, "setup", "-y",
+		"--platform=custom",
+		"--language=none",
+		"--db-type=postgresql",
+		"--db=18",
+		"--hosts=e2epg18.test",
+	)
+	p.run(20*time.Minute, "start")
+
+	requireContains(t, p.run(3*time.Minute, "status"), "db running",
+		"a postgres 18 container has to start, not exit on its data directory")
+
+	// Answering a query is the difference between a container that is up and a
+	// server that initialised.
+	requireContains(t, p.query("SELECT 18 AS madock_probe"), "madock_probe",
+		"the server should answer a query")
+}
+
 // TestDatabaseMemoryReachesMongodb covers the engine that is dangerous when
 // left alone: WiredTiger sizes its cache from the RAM it can see, which is the
 // host's rather than the container's limit, so one mongod on a large machine
