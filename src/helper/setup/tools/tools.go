@@ -100,9 +100,74 @@ func Php(defVersion *string) {
 	SelectInteractive("PHP Version", availableVersions, defVersion)
 }
 
+// dbEngineOverride is the engine named on the command line, if one was.
+//
+// Set once from the setup controller, the same way SetNonInteractive is, so the
+// prompt can be answered without a terminal. Until this existed the engine was
+// the one question `--yes` could not answer: `--db` picks a version, and every
+// scripted setup therefore got MariaDB whatever the project needed. It also
+// meant an end-to-end test could not create a PostgreSQL or MongoDB project at
+// all — switching `db/type` afterwards leaves the first engine's data directory
+// in the volume, and the second engine refuses to start on it.
+var dbEngineOverride string
+
+// forgetForeignDbVersion clears a default version that belongs to a different
+// engine, so the engine's own selector picks its own.
+//
+// Only when --db-type was given. The version default is carried over from the
+// general configuration, and with a new engine it is a version of the old one:
+// asking for MongoDB got `FROM mongo:10.6`, the MariaDB default, and a tag that
+// does not exist. Restricted to the flag path on purpose — outside it a version
+// missing from the list is the point of the "Custom" option, and clearing it
+// would throw away a deliberate choice.
+func forgetForeignDbVersion(defVersion *string, availableVersions []string) {
+	if dbEngineOverride == "" || *defVersion == "" {
+		return
+	}
+
+	for _, version := range availableVersions {
+		if version == *defVersion {
+			return
+		}
+	}
+
+	*defVersion = ""
+}
+
+// HasDbEngineOverride reports whether --db-type named an engine.
+//
+// The platform setups ask for the engine only when no version was given, on the
+// reasoning that `--db` means the whole question is answered. It is not: a
+// version says nothing about the engine, so `--db-type=postgresql --db 16` used
+// to set the version and leave the engine at MariaDB.
+func HasDbEngineOverride() bool { return dbEngineOverride != "" }
+
+// SetDbEngine records the engine named by --db-type. Empty means "ask".
+func SetDbEngine(engine string) {
+	switch strings.ToLower(strings.TrimSpace(engine)) {
+	case "":
+		dbEngineOverride = ""
+	case "mariadb":
+		dbEngineOverride = "MariaDB"
+	case "mysql":
+		dbEngineOverride = "MySQL"
+	case "postgresql", "postgres", "pgsql":
+		dbEngineOverride = "PostgreSQL"
+	case "mongodb", "mongo":
+		dbEngineOverride = "MongoDB"
+	default:
+		logger.Fatal(fmt.Errorf("--db-type %q is not a database engine madock knows: mariadb, mysql, postgresql or mongodb", engine))
+	}
+}
+
 // DbEngine lets the user choose the database engine.
 // Returns "MariaDB", "MySQL", "PostgreSQL", or "MongoDB".
 func DbEngine(defEngine *string) {
+	if dbEngineOverride != "" {
+		*defEngine = dbEngineOverride
+		return
+	}
+
 	if *defEngine == "" {
 		*defEngine = "MariaDB"
 	}
@@ -115,6 +180,7 @@ func DbEngine(defEngine *string) {
 func Db(defVersion *string) {
 	availableVersions := []string{"Custom", "12", "11.8", "11.6", "11.4", "11.1", "10.6", "10.4"}
 
+	forgetForeignDbVersion(defVersion, availableVersions)
 	fmt.Println("")
 	SelectInteractive("Database (MariaDB)", availableVersions, defVersion)
 }
@@ -122,6 +188,7 @@ func Db(defVersion *string) {
 func DbMysql(defVersion *string) {
 	availableVersions := []string{"Custom", "9.4", "9.3", "9.2", "8.4", "8.0"}
 
+	forgetForeignDbVersion(defVersion, availableVersions)
 	fmt.Println("")
 	SelectInteractive("Database (MySQL)", availableVersions, defVersion)
 }
@@ -129,6 +196,7 @@ func DbMysql(defVersion *string) {
 func DbPostgresql(defVersion *string) {
 	availableVersions := []string{"Custom", "18", "17", "16", "15", "14"}
 
+	forgetForeignDbVersion(defVersion, availableVersions)
 	fmt.Println("")
 	SelectInteractive("Database (PostgreSQL)", availableVersions, defVersion)
 }
@@ -136,6 +204,7 @@ func DbPostgresql(defVersion *string) {
 func DbMongodb(defVersion *string) {
 	availableVersions := []string{"Custom", "8.0", "7.0", "6.0", "5.0"}
 
+	forgetForeignDbVersion(defVersion, availableVersions)
 	fmt.Println("")
 	SelectInteractive("Database (MongoDB)", availableVersions, defVersion)
 }

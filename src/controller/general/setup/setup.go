@@ -36,6 +36,11 @@ func Execute() {
 	tools.SetNonInteractive(args.Yes)
 	defer tools.SetNonInteractive(false)
 
+	// The engine is the one question --yes could not answer: --db picks a
+	// version, so every scripted setup got MariaDB whatever it needed.
+	tools.SetDbEngine(args.DbType)
+	defer tools.SetDbEngine("")
+
 	// Display setup banner
 	fmt.Println("")
 	fmtc.Banner("MADOCK SETUP", "Docker Environment Configuration")

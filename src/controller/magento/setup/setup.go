@@ -179,17 +179,23 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 
 			// Step 3: Database Engine & Version
 			tools.SetProgressStep(currentStep)
-			if args.Db == "" {
+			if args.Db == "" || tools.HasDbEngineOverride() {
 				tools.DbEngine(&toolsDefVersions.DbType)
-				switch toolsDefVersions.DbType {
-				case "MySQL":
-					tools.DbMysql(&toolsDefVersions.Db)
-				case "PostgreSQL":
-					tools.DbPostgresql(&toolsDefVersions.Db)
-				case "MongoDB":
-					tools.DbMongodb(&toolsDefVersions.Db)
-				default:
-					tools.Db(&toolsDefVersions.Db)
+				// An explicit version is taken as given; the selectors are
+				// only for deciding one.
+				if args.Db != "" {
+					toolsDefVersions.Db = args.Db
+				} else {
+					switch toolsDefVersions.DbType {
+					case "MySQL":
+						tools.DbMysql(&toolsDefVersions.Db)
+					case "PostgreSQL":
+						tools.DbPostgresql(&toolsDefVersions.Db)
+					case "MongoDB":
+						tools.DbMongodb(&toolsDefVersions.Db)
+					default:
+						tools.Db(&toolsDefVersions.Db)
+					}
 				}
 			} else {
 				toolsDefVersions.Db = args.Db
