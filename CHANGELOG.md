@@ -1,3 +1,18 @@
+**v3.9.3**
+
+Fixed:
+- **An argument containing shell syntax never reached the program it was meant for.** Every passthrough command — `cli`, `magento`, `composer`, `node`, `n98`, `shopware`, `claude` and the rest, twenty-one of them — joins the arguments back into one string and hands it to `bash -c` in the container. Argv arrives already split by the caller's shell with the quoting removed, so the join makes the container's shell split it a second time, by its own rules rather than the ones that were typed:
+
+  ```
+  $ madock cli node -e "console.log(process.version)"
+  bash: -c: line 1: syntax error near unexpected token `('
+  ```
+
+  The parentheses never reached node. An argument was quoted only when it contained a space or an `=`, which is neither brackets, nor `|`, `;`, `&`, `*`, `>`, `$`, backticks, `#`, `~`, nor a newline — and the quoting used was double quotes, which leave `$` and backticks live, so `madock cli echo '$(id -u)'` ran the substitution instead of printing it. Values also had quote characters stripped off both ends. Every argument is now single-quoted, which is the one form that carries anything.
+- Two behaviours are kept, and both are load-bearing. A single argument is still passed through untouched, because `madock cli "ls -la | grep conf"` is how a pipeline has always been run and there is no way to both quote that string and leave it a pipeline — one argument means a script, several mean argv. And `NAME=value` keeps its shape with only the value quoted: bash reads an assignment only when the `=` is unquoted, so quoting the whole word would turn `madock cli APP_ENV=dev php bin/console` into a search for a command called `APP_ENV=dev php`.
+- Arguments are no longer trimmed of surrounding whitespace on the way through. A function whose job is to deliver an argument unchanged has no business editing it.
+- Measured on a real container before and after, not only in tests: the reported command errors on 3.9.2 and prints the string here, `echo 'a|b' 'c;d' '$HOME' "it's"` arrives whole, `madock cli echo --json hello` still passes its flags through rather than madock eating them, and the pipeline idiom still pipes.
+
 **v3.9.2**
 
 Added:
