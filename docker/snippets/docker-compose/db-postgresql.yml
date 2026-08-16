@@ -4,6 +4,14 @@
     build:
       context: ctx
       dockerfile: db.Dockerfile
+    # Sized from db/memory, because postgres otherwise takes its stock
+    # shared_buffers of 128MB and the only way to raise it was a copy of the
+    # config in the project. effective_cache_size buys no memory — it tells the
+    # planner how much of the OS cache to expect.
+    command: >
+      postgres
+      -c shared_buffers={{{memShare .db.memory 1 4 "MB"}}}
+      -c effective_cache_size={{{memShare .db.memory 3 4 "MB"}}}
     ports:
       - "{{{port "db"}}}:5432"
     environment:

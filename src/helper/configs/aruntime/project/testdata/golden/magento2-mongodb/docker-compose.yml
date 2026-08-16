@@ -44,22 +44,18 @@ services:
     build:
       context: ctx
       dockerfile: db.Dockerfile
-    # Sized from db/memory, because postgres otherwise takes its stock
-    # shared_buffers of 128MB and the only way to raise it was a copy of the
-    # config in the project. effective_cache_size buys no memory — it tells the
-    # planner how much of the OS cache to expect.
-    command: >
-      postgres
-      -c shared_buffers=192MB
-      -c effective_cache_size=576MB
+    # The one engine that must be told. Left alone, WiredTiger sizes its cache
+    # from the RAM it can see — the host's, not the container's limit — so on a
+    # large machine one mongod quietly reserves gigabytes.
+    command: mongod --wiredTigerCacheSizeGB 0.375
     ports:
-      - "<PORT>:5432"
+      - "<PORT>:27017"
     environment:
-      POSTGRES_DB: "magento"
-      POSTGRES_USER: "magento"
-      POSTGRES_PASSWORD: "magento"
+      MONGO_INITDB_ROOT_USERNAME: "magento"
+      MONGO_INITDB_ROOT_PASSWORD: "magento"
+      MONGO_INITDB_DATABASE: "magento"
     volumes:
-      - dbdata:/var/lib/postgresql/data
+      - dbdata:/data/db
     restart: no
   opensearch:
     init: true

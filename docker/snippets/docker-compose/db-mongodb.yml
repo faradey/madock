@@ -4,6 +4,10 @@
     build:
       context: ctx
       dockerfile: db.Dockerfile
+    # The one engine that must be told. Left alone, WiredTiger sizes its cache
+    # from the RAM it can see — the host's, not the container's limit — so on a
+    # large machine one mongod quietly reserves gigabytes.
+    command: mongod --wiredTigerCacheSizeGB {{{memShareGB .db.memory 1 2}}}
     ports:
       - "{{{port "db"}}}:27017"
     environment:

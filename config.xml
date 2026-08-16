@@ -83,6 +83,16 @@
             <db>
                 <enabled>true</enabled>
                 <type>mysql</type>
+                <!-- Memory budget for the database engine, divided by whichever
+                     engine reads it: MySQL takes two thirds as its buffer pool
+                     and one third as its log buffer, PostgreSQL a quarter as
+                     shared_buffers and three quarters as effective_cache_size,
+                     MongoDB a half as its WiredTiger cache. 768M reproduces the
+                     numbers that used to be written into my.cnf by hand.
+                     MongoDB is the one worth raising deliberately: left to
+                     itself it sizes its cache from the host's RAM, not from the
+                     container's limit. -->
+                <memory>768M</memory>
                 <repository>mariadb</repository>
                 <root_password>password</root_password>
                 <user>db</user>

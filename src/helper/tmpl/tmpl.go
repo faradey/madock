@@ -487,6 +487,13 @@ func (r *Renderer) funcMap() template.FuncMap {
 
 		"lower": strings.ToLower,
 		"upper": strings.ToUpper,
+
+		// One memory budget, divided by whoever is reading it. Each engine
+		// wants a different setting in a different unit, and a template that
+		// cannot do arithmetic leaves only one way to change any of them:
+		// copying the file into a project and letting the copy drift.
+		"memShare":   memShare,
+		"memShareGB": memShareGB,
 	}
 }
 

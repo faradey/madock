@@ -76,6 +76,19 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// MongoDB, which is the engine that has to be told a cache size.
+			// Left alone, WiredTiger sizes its cache from the RAM it can see —
+			// the host's, not the container's limit — so one mongod on a large
+			// machine reserves gigabytes nobody asked it to. This fixture is
+			// here to hold the --wiredTigerCacheSizeGB the budget produces.
+			name: "magento2-mongodb",
+			overrides: map[string]string{
+				"db/type":       "mongodb",
+				"db/repository": "mongo",
+				"db/version":    "7",
+			},
+		},
+		{
 			// Mail turned off. sendmail_path used to be written whatever the
 			// configuration said, so with mailpit disabled every mail() call
 			// went to a port nobody was listening on and failed silently. The
