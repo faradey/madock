@@ -1,3 +1,13 @@
+**v3.9.12**
+
+Fixed:
+- **A migration rewrote a project as a language it is not.** `V320` backfills `language` into configs that lack one, and its guard asked `rawConf["language"]` — but the parser returns keys as they sit in the file, so the real key is `scopes/default/language`. The lookup therefore never found one, the guard always passed, and a **nodejs** project was written back as **php**. Measured: it sent `madock cli` into a php container that does not exist, and cost half an hour looking for a defect in the service resolver instead
+- It hid because it only fires when the migrations run at all — an installation with a current recorded version never reaches it, and a fresh one reaches it every time. Which means it fired precisely when somebody tried a new build against a clean `MADOCK_EXEC_DIR`, the one safe way to try a new build
+- **Not a regression.** Measured against 3.9.5, which produces a byte-identical rewrite: this has been there since the migration was written
+- Config files are written with a trailing newline and without the formatter's leading blank line. These files live in somebody's repository, so every write used to show up as two spurious line changes on top of the real one
+
+Known, and not fixed here: a migration that writes a project's `.madock/config.xml` still loses the XML comments in it and reorders the keys, because the file is parsed and rendered rather than edited. The values all survive. Comments in that file are often the record of *why* a setting is what it is, so this is worth closing — it needs the writer to edit the text rather than re-render it.
+
 **v3.9.11**
 
 Fixed:

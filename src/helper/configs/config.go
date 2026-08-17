@@ -95,7 +95,14 @@ func RenderXml(data map[string]interface{}) string {
 	if err := MarshalXML(SetXmlMap(data), xml.NewEncoder(w), "config"); err != nil {
 		logger.Fatalln(err)
 	}
-	return xmlfmt.FormatXML(w.String(), "", "    ", true)
+	// Trimmed at the front and terminated at the end.
+	//
+	// The formatter emits a leading blank line and no trailing newline, and
+	// these files live in somebody's repository: every write then shows up as
+	// two spurious line changes on top of the real one. Cheap to fix, and it is
+	// the difference between a diff that can be read and a diff that gets
+	// waved through.
+	return strings.TrimLeft(xmlfmt.FormatXML(w.String(), "", "    ", true), "\r\n") + "\n"
 }
 
 func (t *ConfigLines) Set(name, value string) {

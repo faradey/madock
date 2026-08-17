@@ -244,3 +244,79 @@ func TestV398_NewNameWins(t *testing.T) {
 	}
 	_ = execDir
 }
+
+// V320 wrote `language=php` over whatever a project actually was.
+//
+// Its guard asked rawConf["language"], but ParseXmlFile returns keys as they
+// sit in the file — "scopes/default/language" — so the lookup never found one,
+// the guard always passed, and a nodejs project became a php one. Measured: it
+// sent `madock cli` into a php container that does not exist and cost half an
+// hour looking for a defect in the service resolver.
+//
+// It only fires when the migrations run at all, which is why it hid: an
+// installation with a current recorded version never reaches it, and a fresh
+// one — the only safe way to try a new build — reaches it every time.
+func TestV320_DoesNotOverwriteALanguageTheProjectAlreadyStates(t *testing.T) {
+	_, registry, projectDir := installation(t)
+
+	write(t, filepath.Join(registry, "config.xml"), `<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <scopes>
+        <default>
+            <platform>custom</platform>
+            <language>nodejs</language>
+            <path>`+projectDir+`</path>
+        </default>
+    </scopes>
+</config>
+`)
+
+	projectConfig := filepath.Join(projectDir, ".madock", "config.xml")
+	write(t, projectConfig, `<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <scopes>
+        <default>
+            <platform>custom</platform>
+            <language>nodejs</language>
+        </default>
+    </scopes>
+</config>
+`)
+
+	// The broken path reads the *working directory*, not the registry's `path`,
+	// and pointing at it is what makes this test catch anything: without it the
+	// run stops at an earlier guard and passes against the defect.
+	t.Setenv("MADOCK_RUN_DIR", projectDir)
+	configs.CleanCache()
+
+	V320()
+
+	for _, path := range []string{filepath.Join(registry, "config.xml"), projectConfig} {
+		if got := configs.ParseXmlFile(path)["scopes/default/language"]; got != "nodejs" {
+			t.Errorf("%s: language became %q — the project was rewritten as something it is not", path, got)
+		}
+	}
+}
+
+// A project that genuinely states no language still gets one, or the migration
+// stops doing the job it exists for.
+func TestV320_StillFillsInAMissingLanguage(t *testing.T) {
+	_, registry, projectDir := installation(t)
+
+	write(t, filepath.Join(registry, "config.xml"), `<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <scopes>
+        <default>
+            <platform>magento2</platform>
+            <path>`+projectDir+`</path>
+        </default>
+    </scopes>
+</config>
+`)
+
+	V320()
+
+	if got := configs.ParseXmlFile(filepath.Join(registry, "config.xml"))["scopes/default/language"]; got != "php" {
+		t.Errorf("language is %q, want \"php\" — the backfill stopped working", got)
+	}
+}
