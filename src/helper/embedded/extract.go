@@ -4,6 +4,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/faradey/madock/v3/src/helper/paths"
 )
@@ -46,14 +48,76 @@ func ExtractIfNeeded(appVersion string) {
 		return
 	}
 
+	written := map[string]bool{}
 	if DockerFS != nil {
-		extractFS(DockerFS, filepath.Join(execDir, "docker"))
+		extractFS(DockerFS, filepath.Join(execDir, "docker"), written)
 	}
 	if ScriptsFS != nil {
-		extractFS(ScriptsFS, filepath.Join(execDir, "scripts"))
+		extractFS(ScriptsFS, filepath.Join(execDir, "scripts"), written)
 	}
 
+	removeWithdrawn(execDir, written)
+	writeManifest(execDir, written)
+
 	os.WriteFile(markerFile, []byte(appVersion), 0644)
+}
+
+// manifestFile lists what the last extraction put on disk.
+const manifestFile = ".embedded_files"
+
+// removeWithdrawn deletes files a previous extraction wrote and this one did
+// not — the ones a release withdrew.
+//
+// Extraction only ever added and overwrote, so a template dropped from the
+// shipped set stayed on the machine for good. Measured on extmag: twelve
+// `docker-compose.{darwin,linux,windows}.yml` files that neither madock 3.9.14
+// nor madock-pro ships, and `snippets/dockerfile/php/nodejs` still carrying the
+// `.php.nodejs.enabled` syntax that 3.9.8 removed. Harmless there only by
+// accident — the first is empty and nothing includes the second any more.
+//
+// What makes it worth fixing before it stops being harmless: the resolver
+// reaches `{execDir}/docker/{platform}/docker-compose.<GOOS>.yml` and applies
+// what it finds as `docker-compose.override.yml`. A non-empty template withdrawn
+// in a release would therefore go on applying on upgraded machines and not on
+// fresh ones — at the same version. The result would depend on the history of
+// the installation rather than on what it says it is.
+//
+// **Only files this mechanism itself wrote are removed.** The list comes from
+// the manifest of the previous run, never from a walk of the directory:
+// madock-pro extracts its own platform templates into the same tree, and a
+// sweep of everything-not-in-the-embed would delete them. An installation with
+// no manifest yet — every installation before this version — has nothing
+// removed, so orphans predating it need one clean by hand.
+func removeWithdrawn(execDir string, written map[string]bool) {
+	body, err := os.ReadFile(filepath.Join(execDir, manifestFile))
+	if err != nil {
+		return
+	}
+
+	for _, previous := range strings.Split(string(body), "\n") {
+		previous = strings.TrimSpace(previous)
+		if previous == "" || written[previous] {
+			continue
+		}
+		// Relative paths only, and nothing that climbs out of the tree: the
+		// manifest is a file on disk and this deletes what it names.
+		if filepath.IsAbs(previous) || strings.Contains(previous, "..") {
+			continue
+		}
+		os.Remove(filepath.Join(execDir, previous))
+	}
+}
+
+// writeManifest records what this extraction wrote, so the next one can tell a
+// withdrawn file from somebody else's.
+func writeManifest(execDir string, written map[string]bool) {
+	paths := make([]string, 0, len(written))
+	for path := range written {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+
+	os.WriteFile(filepath.Join(execDir, manifestFile), []byte(strings.Join(paths, "\n")+"\n"), 0644)
 }
 
 // sourceSentinel is the file that says the docker tree in this directory is
@@ -87,7 +151,7 @@ func isSourceCheckout(execDir string) bool {
 	return err == nil
 }
 
-func extractFS(fsys fs.FS, destDir string) {
+func extractFS(fsys fs.FS, destDir string, written map[string]bool) {
 	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil || path == "." {
 			return err
@@ -101,6 +165,9 @@ func extractFS(fsys fs.FS, destDir string) {
 			return err
 		}
 		os.MkdirAll(filepath.Dir(target), 0755)
+		if rel, relErr := filepath.Rel(paths.GetExecDirPath(), target); relErr == nil {
+			written[filepath.ToSlash(rel)] = true
+		}
 		return os.WriteFile(target, data, 0755)
 	})
 }

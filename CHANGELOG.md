@@ -1,3 +1,11 @@
+**v3.9.15**
+
+Fixed:
+- **Extraction removes what a release withdrew.** It only ever added and overwrote, so a template dropped from the shipped set stayed on the machine for good. Measured on a live server: twelve `docker-compose.{darwin,linux,windows}.yml` files that neither madock nor madock-pro ships, and `snippets/dockerfile/php/nodejs` still carrying the `.php.nodejs.enabled` syntax removed in 3.9.8. Harmless there by accident — the first are empty, and nothing includes the second any more
+- Worth fixing before that accident runs out: the resolver reaches `{execDir}/docker/{platform}/docker-compose.<GOOS>.yml` and applies what it finds as `docker-compose.override.yml`, so a non-empty template withdrawn in a release would go on applying on upgraded machines and not on fresh ones — **at the same version**. The result would depend on the history of an installation rather than on what it says it is
+- **Only files this mechanism itself wrote are removed**, from a manifest it keeps, never from a walk of the directory. madock-pro extracts its own platform templates into the same tree, and a sweep of everything-not-in-the-embed would delete them. An installation with no manifest yet — every installation before this version — has nothing removed, so orphans predating it need one clean by hand
+- **The error a template raises when the binary is older than it now says so.** `function "memShareGB" not defined` reads as a broken template and sends somebody to edit a file that is correct: template functions are compiled into the binary while templates are files on disk. The message keeps the engine's own words and adds the cause and the cure. Measured on this machine, where the radius is every project at once, because the installation directory and the source checkout are the same directory
+
 **v3.9.14**
 
 Added:
