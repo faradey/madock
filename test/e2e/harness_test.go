@@ -331,10 +331,15 @@ func (p *project) queryOn(service, sql string) string {
 	attempts := 0
 	started := time.Now()
 	deadline := started.Add(dbReadyTimeout)
+	// 1130 gets a budget rather than an instant verdict. See refusesTheHost.
+	refusalDeadline := started.Add(refusalGrace)
 	for {
 		attempts++
 		out, err = p.tryRun(time.Minute, command...)
-		if err == nil || refusesTheHost(out) || time.Now().After(deadline) {
+		if err == nil || time.Now().After(deadline) {
+			break
+		}
+		if refusesTheHost(out) && time.Now().After(refusalDeadline) {
 			break
 		}
 		time.Sleep(5 * time.Second)
@@ -346,14 +351,29 @@ func (p *project) queryOn(service, sql string) string {
 	return out
 }
 
+// refusalGrace is how long 1130 is allowed to be wrong about itself.
+//
+// It used to be zero: the first 1130 ended the wait, which is why a failure
+// reads "never succeeded in 0s over 1 attempts". The reasoning was sound as far
+// as it went — the account is created once, while the data directory is
+// initialised, so a server that is already answering has decided — and it saved
+// five minutes and 61 identical attempts on a real grant defect, twice.
+//
+// What it did not allow for is a server that answers *before* it has finished
+// deciding. That case has not been demonstrated: it does not reproduce on a
+// developer machine, where the database is ready in a tenth of a second, and the
+// three tests it hits are green on every pull-request run and red on the master
+// run of the same tree, twice — a difference that is about the machine, not the
+// code.
+//
+// So this is a trade, made deliberately and with the evidence stated: if 1130 is
+// permanent the suite now spends this long instead of nothing, and if it is the
+// initialisation window it survives. Being wrong costs a minute; the setting it
+// replaces cost two red runs on master and an afternoon of guessing.
+const refusalGrace = time.Minute
+
 // refusesTheHost reports MariaDB answering 1130, which is the server running and
 // refusing the client's address outright — no grant covers it.
-//
-// Worth its own case because it is not a database that has yet to come up, and
-// waiting cannot change it: the account is created once, while the data
-// directory is initialised, and a server that is already answering has decided.
-// Retrying anyway is how a defect took five minutes and 61 identical attempts to
-// report itself, twice, on a job that has a budget.
 func refusesTheHost(out string) bool {
 	return strings.Contains(out, "ERROR 1130")
 }
@@ -372,11 +392,26 @@ func (p *project) databaseDiagnosis(service string) string {
 	}
 
 	lines := strings.Split(strings.TrimRight(logs, "\n"), "\n")
-	if len(lines) > 40 {
-		lines = lines[len(lines)-40:]
+
+	// Both ends, and the first one is the point.
+	//
+	// This printed the last 40 lines only, which could never answer the
+	// question the comment above says it exists for: whether the data
+	// directory was initialised. That banner is written at the very start of
+	// the log, so tailing it hid exactly the evidence it was meant to show —
+	// and a reader then concludes "no banner, so the directory was reused",
+	// which is a conclusion drawn from a window the banner cannot appear in.
+	// That mistake was made on this suite, from these logs.
+	const head, tail = 25, 25
+	if len(lines) <= head+tail {
+		return "\n--- the whole " + service + " log (" + strconv.Itoa(len(lines)) + " lines) ---\n" + strings.Join(lines, "\n")
 	}
 
-	return "\n--- last " + strconv.Itoa(len(lines)) + " lines of the " + service + " log ---\n" + strings.Join(lines, "\n")
+	return "\n--- first " + strconv.Itoa(head) + " lines of the " + service + " log (where initialisation is decided) ---\n" +
+		strings.Join(lines[:head], "\n") +
+		"\n--- " + strconv.Itoa(len(lines)-head-tail) + " lines omitted ---\n" +
+		"--- last " + strconv.Itoa(tail) + " lines ---\n" +
+		strings.Join(lines[len(lines)-tail:], "\n")
 }
 
 // freshTable creates a table, replacing one an earlier run may have left.
