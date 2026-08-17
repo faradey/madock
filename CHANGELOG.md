@@ -12,7 +12,7 @@ Upgrading:
 
 Added:
 - **`proxy/conn_limit`, the half of resource exhaustion nothing answered.** A request that never finishes spends no rate at all, so a few hundred slow connections hold every worker the proxy has while staying under any per-second limit. 100 simultaneous connections per address by default, where a browser needs six to eight
-- **`proxy/livereload/enabled` and `proxy/vite/enabled`, both on by default.** The shared proxy publishes LiveReload on 35729 and Vite on 5173 as fixed numbers, so they fall outside the 17000-19999 range the firewall guard closes — and they are published whether or not anything can serve them, since Vite needs nodejs a project may not run. On a laptop that is the point of them; on a server it is a development server answering the internet, which is where one was found. Turning either off removes only its published port
+- **`proxy/livereload/publish` and `proxy/vite/publish`, both on by default.** The shared proxy publishes LiveReload on 35729 and Vite on 5173 as fixed numbers, so they fall outside the 17000-19999 range the firewall guard closes — and they are published whether or not anything can serve them, since Vite needs nodejs a project may not run. On a laptop that is the point of them; on a server it is a development server answering the internet, which is where one was found. `publish` rather than `enabled`, because that is all it does: the project still runs the tool and still publishes its own allocated port, which the guard covers. What goes away is the proxy's fixed entry point, the one that routes by Host so the same number works for every project. The neighbouring `mailpit/enabled` means something else — there it decides whether a container exists at all
 
 **v3.9.3**
 

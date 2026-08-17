@@ -34,8 +34,8 @@ func TestProxyPublishesTheDevPortsByDefault(t *testing.T) {
 // And each can be turned off on its own, which is what a server does.
 func TestProxyDevPortsCanBeTurnedOff(t *testing.T) {
 	testenv.SetupWith(t, "golden", "golden.test", map[string]string{
-		"proxy/livereload/enabled": "false",
-		"proxy/vite/enabled":       "false",
+		"proxy/livereload/publish": "false",
+		"proxy/vite/publish":       "false",
 	})
 
 	makeDockerCompose("golden")
@@ -59,7 +59,7 @@ func TestProxyDevPortsCanBeTurnedOff(t *testing.T) {
 // difference.
 func TestProxyDevPortsAreIndependent(t *testing.T) {
 	testenv.SetupWith(t, "golden", "golden.test", map[string]string{
-		"proxy/vite/enabled": "false",
+		"proxy/vite/publish": "false",
 	})
 
 	makeDockerCompose("golden")

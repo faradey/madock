@@ -354,8 +354,18 @@
                      workers. 128M covers product images and admin imports; a
                      project that genuinely needs more sets its own. -->
                 <max_body_size>128M</max_body_size>
-                <!-- The two front-end development ports the shared proxy
-                     publishes: LiveReload on 35729 and Vite on 5173.
+                <!-- Whether the shared proxy publishes its two fixed
+                     development ports: LiveReload on 35729 and Vite on 5173.
+
+                     `publish` rather than `enabled`, because that is all it
+                     does. Turning one off does not turn the tool off: the
+                     project still runs Vite and still publishes its own
+                     allocated port, which the firewall guard covers. What goes
+                     away is the proxy's fixed entry point — the one that routes
+                     by Host so a developer can use the same number for every
+                     project. The neighbouring `mailpit/enabled` means something
+                     else entirely: there it decides whether a container exists
+                     at all.
 
                      They are fixed numbers, so they fall outside the
                      17000-19999 range the firewall guard closes, and they are
@@ -365,10 +375,10 @@
                      a development server answering the internet, which is how
                      one was found listening on a production host. -->
                 <livereload>
-                    <enabled>true</enabled>
+                    <publish>true</publish>
                 </livereload>
                 <vite>
-                    <enabled>true</enabled>
+                    <publish>true</publish>
                 </vite>
                 <mailpit>
                     <enabled>true</enabled>

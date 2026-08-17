@@ -10,10 +10,10 @@ services:
     ports:
       - {{{.nginx.interface_ip}}}{{{.nginx.port.unsecure}}}:80
       - {{{.nginx.interface_ip}}}{{{.nginx.port.secure}}}:443
-    {{{- if .proxy.livereload.enabled}}}
+    {{{- if .proxy.livereload.publish}}}
       - {{{.nginx.interface_ip}}}35729:35729
     {{{- end}}}
-    {{{- if .proxy.vite.enabled}}}
+    {{{- if .proxy.vite.publish}}}
       - {{{.nginx.interface_ip}}}5173:5173
     {{{- end}}}
     extra_hosts:
