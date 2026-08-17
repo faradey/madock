@@ -269,3 +269,85 @@ func TestEditXml_InsertionIsExact(t *testing.T) {
 		t.Errorf("insertion is not byte-exact:\n--- got ---\n%q\n--- want ---\n%q", out, want)
 	}
 }
+
+// Real keys here go four deep — search/elasticsearch/auth/password,
+// cron/jobs/<name>/schedule, nginx/hosts/base/name — so the depth the writer
+// handles is not a matter of taste. Checked as exact bytes at every depth, and
+// with every mix of "this part of the path exists, that part does not".
+func TestEditXml_Depth(t *testing.T) {
+	for _, c := range []struct {
+		what string
+		key  string
+		want string
+	}{
+		{
+			what: "four levels, none of them there",
+			key:  "search/elasticsearch/auth/password",
+			want: "            <search>\n" +
+				"                <elasticsearch>\n" +
+				"                    <auth>\n" +
+				"                        <password>secret</password>\n" +
+				"                    </auth>\n" +
+				"                </elasticsearch>\n" +
+				"            </search>\n",
+		},
+		{
+			what: "three levels, none of them there",
+			key:  "nodejs/embedded/enabled",
+			want: "            <nodejs>\n" +
+				"                <embedded>\n" +
+				"                    <enabled>secret</enabled>\n" +
+				"                </embedded>\n" +
+				"            </nodejs>\n",
+		},
+		{
+			what: "four levels under a parent that already exists",
+			key:  "cron/jobs/apply_due/command",
+			want: "                        <command>secret</command>\n",
+		},
+	} {
+		out, err := editXml([]byte(handWritten), map[string]string{c.key: "secret"}, nil, "default")
+		if err != nil {
+			t.Fatalf("%s: %v", c.what, err)
+		}
+		got := string(out)
+
+		if !strings.Contains(got, c.want) {
+			t.Errorf("%s: the elements are not written where they belong.\nwant to find:\n%s\ngot:\n%s", c.what, c.want, got)
+		}
+
+		// And it has to read back as the value that was asked for.
+		if value := ParseXmlBytes(out)["scopes/default/"+c.key]; value != "secret" {
+			t.Errorf("%s: reads back as %q", c.what, value)
+		}
+
+		// Nothing else moved.
+		if !strings.Contains(got, "a second one would shadow it") {
+			t.Errorf("%s: the comment was lost", c.what)
+		}
+		if !strings.Contains(got, "<schedule>* * * * *</schedule>") {
+			t.Errorf("%s: an untouched branch was disturbed:\n%s", c.what, got)
+		}
+	}
+}
+
+// And removing from the middle of a deep branch takes that element and nothing
+// above it.
+func TestEditXml_RemovesFromDepth(t *testing.T) {
+	out, err := editXml([]byte(handWritten), nil, []string{"cron/jobs/apply_due"}, "default")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(out)
+
+	for _, gone := range []string{"apply_due", "<schedule>"} {
+		if strings.Contains(got, gone) {
+			t.Errorf("%q survived:\n%s", gone, got)
+		}
+	}
+	for _, kept := range []string{"<cron>", "<jobs>", "</jobs>", "<enabled>true</enabled>"} {
+		if !strings.Contains(got, kept) {
+			t.Errorf("%q was taken with it:\n%s", kept, got)
+		}
+	}
+}
