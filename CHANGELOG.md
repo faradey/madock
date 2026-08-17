@@ -1,3 +1,12 @@
+**v3.9.8**
+
+Changed:
+- **Node stopped being PHP's business: `php/nodejs/enabled` is now `nodejs/embedded`.** The old name said a runtime belongs to the language beside it, and it does not — a Python service with a JavaScript front end, or a Go one with an admin panel, needs exactly the same thing, and until now there was no way to ask for it. Half the design was already general: the version has always lived at `nodejs/version` and the php snippet read it, so only the switch was wrong. The snippet moved from `snippets/dockerfile/php/nodejs` to `snippets/dockerfile/common/nodejs` and is now included by the python, ruby and golang images as well — every one of those base images is Debian or Ubuntu, so the same nodesource install works in each
+- **`php/yarn/enabled` is now `nodejs/yarn/enabled`**, and that key was never declared at all: no default carried it, three platform configurators set it, and one template read it, while a real `nodejs/yarn/enabled` sat unused in the defaults
+- `service:enable php/nodejs` was documented and worked by accident — it was in no service map, and the lookup found it only because `php/nodejs/enabled` happened to exist. `service:enable nodejs/embedded` (or `embedded-node`) is the deliberate replacement: a service map entry for a setting that is itself the switch rather than an `<x>/enabled` pair
+- **The rename carries itself.** The migration moves the key in the installation's config, in the global project defaults, in every project's registry config, in each project's own `.madock/config.xml` — the one file no command may write, where a migration is the single exception — and in any template a project copied under `.madock/docker/`. Missing one of those is silent in the worst way: the key no longer exists, the renderer answers it as false, node stops being installed, and it surfaces much later as a build with no npm. Every scope in a file is migrated, not only `default`, and a file with nothing to migrate is not rewritten at all
+- Two golden cases were added, because none existed with node turned on: the whole half of the php image that installs node was rendered by nothing and compared against nothing. One covers node in the php image, the other node in a python image — the case the rename exists for
+
 **v3.9.7**
 
 Fixed:

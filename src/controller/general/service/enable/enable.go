@@ -44,7 +44,7 @@ func Execute() {
 			continue
 		}
 		configKey := service.GetByShort(name)
-		serviceName := configKey + "/enabled"
+		serviceName := service.ConfigKeyOf(name)
 		projectName := configs.GetProjectName()
 		projectConfig := configs.GetProjectConfig(projectName)
 		configs.SetParam(projectName, serviceName, "true", projectConfig["activeScope"], "")

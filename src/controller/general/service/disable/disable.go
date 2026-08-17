@@ -29,7 +29,7 @@ func Execute() {
 	}
 	for _, name := range args.Args {
 		if service.IsService(name) {
-			serviceName := service.GetByShort(name) + "/enabled"
+			serviceName := service.ConfigKeyOf(name)
 			projectName := configs.GetProjectName()
 			projectConfig := configs.GetProjectConfig(projectName)
 			configs.SetParam(projectName, serviceName, "false", projectConfig["activeScope"], "")

@@ -5,7 +5,7 @@
 {{{template "snippets/dockerfile/php/ini" .}}}
 {{{template "snippets/dockerfile/php/cron" .}}}
 {{{template "snippets/dockerfile/php/mkdir" .}}}
-{{{template "snippets/dockerfile/php/nodejs" .}}}
+{{{template "snippets/dockerfile/common/nodejs" .}}}
 RUN if [ "{{{.magento.cloud.enabled}}}" = "true" ]; then curl -sS https://accounts.magento.cloud/cli/installer | php \
     && cp -r /root/.magento-cloud/ /var/www/ && chown -R {{{.os.user.uid}}}:{{{.os.user.guid}}} /var/www/.magento-cloud && ln -s /var/www/.magento-cloud/bin/magento-cloud /usr/bin/magento-cloud; fi
 RUN if [ "{{{.magento.cloud.enabled}}}" = "true" ]; then chown {{{.os.user.uid}}}:{{{.os.user.guid}}} /usr/bin/magento-cloud; fi

@@ -68,7 +68,7 @@ madock service:enable phpmyadmin
 
 ```bash
 # Enable Node.js in PHP container
-madock service:enable php/nodejs
+madock service:enable nodejs/embedded
 
 # Enter container and run npm
 madock bash

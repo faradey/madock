@@ -1,4 +1,4 @@
-{{{- if .php.nodejs.enabled}}}
+{{{- if .nodejs.embedded}}}
 RUN set -eux; \
     curl -fsSL https://deb.nodesource.com/setup_{{{.nodejs.major_version}}}.x -o /tmp/nodesource_setup.sh; \
     bash /tmp/nodesource_setup.sh; \
@@ -7,17 +7,15 @@ RUN set -eux; \
     apt-get install -y nodejs; \
     command -v npm >/dev/null 2>&1 || apt-get install -y npm; \
     node -v; npm -v
-{{{- end}}}
-RUN mkdir /var/www/.npm && chown {{{.os.user.uid}}}:{{{.os.user.guid}}} /var/www/.npm
-{{{- if .php.nodejs.enabled}}}
+RUN mkdir -p /var/www/.npm && chown {{{.os.user.uid}}}:{{{.os.user.guid}}} /var/www/.npm
 RUN npm install -g grunt-cli
 {{{- end}}}
-{{{- if .php.yarn.enabled}}}
+{{{- if .nodejs.yarn.enabled}}}
 RUN npm install -g yarn
 {{{- end}}}
 {{{- if .php.browser_libs}}}
 # Shared libraries a headless browser needs — see the note in
 # snippets/dockerfile/nodejs/packages for why the list is asked for rather
-# than written down. Needs npx, so it depends on php/nodejs/enabled.
+# than written down. Needs npx, so it depends on nodejs/embedded.
 RUN npx --yes playwright install-deps chromium
 {{{- end}}}

@@ -173,7 +173,7 @@ RUN usermod -u <UID> -o www-data && groupmod -g <GID> -o www-data \
     && chown -R <UID>:<GID> /var/www \
     && chown -R <UID>:<GID> /usr/bin/composer
 
-RUN mkdir /var/www/.npm && chown <UID>:<GID> /var/www/.npm
+
 WORKDIR /var/www/html
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \

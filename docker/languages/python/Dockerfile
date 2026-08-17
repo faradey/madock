@@ -1,5 +1,6 @@
 {{{template "snippets/dockerfile/common/header-ubuntu" .}}}
 {{{template "snippets/dockerfile/python/packages" .}}}
+{{{template "snippets/dockerfile/common/nodejs" .}}}
 {{{template "snippets/dockerfile/common/cron" .}}}
 {{{template "snippets/dockerfile/common/mkdir" .}}}
 {{{template "snippets/dockerfile/common/chown" .}}}
