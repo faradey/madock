@@ -44,26 +44,13 @@ func Execute() {
 
 	var services []ServiceInfo
 	for _, key := range keys {
-		// Skip scope-shadowed copies — scopes/<name>/... are overrides,
-		// not first-class services. Checked before anything else, or a
-		// service appears twice: once for itself and once for its override.
-		if strings.HasPrefix(key, "scopes/") {
-			continue
-		}
-
-		// A setting that is itself the switch — embedded node is the one —
-		// has no "/enabled" half to split off, and listing only the pairs
-		// would leave it enableable and invisible.
-		if service2.IsFlagKey(key) {
-			services = append(services, ServiceInfo{
-				Name:    service2.GetByLong(key),
-				Enabled: configData[key] == "true",
-			})
-			continue
-		}
-
 		serviceName := strings.SplitN(key, "/enabled", 2)
 		if serviceName[0] == key {
+			continue
+		}
+		// Skip scope-shadowed copies — scopes/<name>/... are overrides,
+		// not first-class services.
+		if strings.HasPrefix(key, "scopes/") {
 			continue
 		}
 		service := service2.GetByLong(serviceName[0])

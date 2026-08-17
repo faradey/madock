@@ -304,7 +304,7 @@ madock service:enable xdebug --global
 | Service | Description |
 |---------|-------------|
 | `nodejs` | Separate Node.js container for frontend builds |
-| `nodejs/embedded` | Node.js inside the application container (for grunt, simple npm tasks) |
+| `nodejs/embedded/enabled` | Node.js inside the application container (for grunt, simple npm tasks) |
 | `redis` | Redis cache server (container hostname: `redisdb`) |
 | `rabbitmq` | RabbitMQ message broker |
 | `xdebug` | PHP Xdebug extension |
@@ -369,7 +369,7 @@ madock node npm run watch
 madock node bash
 ```
 
-**2. `nodejs/embedded` — Node.js inside the application container**
+**2. `nodejs/embedded/enabled` — Node.js inside the application container**
 
 Best for: simple tasks like Magento 2 grunt compilation, quick npm scripts.
 No separate container needed — runs directly in PHP container.
@@ -386,7 +386,7 @@ grunt watch
 
 **When to use which:**
 - Use `nodejs` when you need a dedicated Node.js environment or run long watchers
-- Use `nodejs/embedded` for Magento 2 grunt tasks or when you want to keep things simple
+- Use `nodejs/embedded/enabled` for Magento 2 grunt tasks or when you want to keep things simple
 
 ### Using Redis
 

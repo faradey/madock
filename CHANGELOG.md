@@ -1,3 +1,9 @@
+**v3.9.10**
+
+Changed:
+- **The new key is `nodejs/embedded/enabled`, not a bare `nodejs/embedded`.** The short form was the switch itself, and every other service in madock is an `<x>/enabled` pair — so it needed a special case in the resolver, in `service:enable`, in `service:disable` and in `service:list`. That last one is what settles the question: the listing walked the config splitting on `/enabled`, so the setting was enableable and **invisible**, which is worse than not being settable at all. It was caught by somebody asking, not by a test, and the next config walker would have missed it the same way. Shaping it like everything else deleted the special case entirely — about forty lines, and the class of bug with them
+- Nothing was released with the short form: 3.9.8 and 3.9.9 are `-norelease` tags, no server carries them and no customer has the key. `service:enable nodejs/embedded` still reads exactly the same, because `nodejs/embedded` is now an ordinary service prefix rather than a special one
+
 **v3.9.9**
 
 Fixed:

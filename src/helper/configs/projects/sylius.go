@@ -41,7 +41,7 @@ func Sylius(config *configs2.ConfigLines, defVersions versions.ToolsVersions, ge
 	if nodeVer != "" {
 		config.Set("nodejs/version", nodeVer)
 	}
-	config.Set("nodejs/embedded", "true")
+	config.Set("nodejs/embedded/enabled", "true")
 	config.Set("nodejs/yarn/enabled", "true")
 	yarnVer := defVersions.Yarn
 	if yarnVer == "" {

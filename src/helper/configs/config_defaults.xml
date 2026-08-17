@@ -158,8 +158,15 @@
                      until 3.9.8, which said node was php's business; it is not.
                      A Python or Go service with a JavaScript front end needs the
                      same thing, and the version above was already shared. The
-                     two are independent: a project can have both. -->
-                <embedded>false</embedded>
+                     two are independent: a project can have both.
+
+                     Shaped as <embedded><enabled> rather than a bare <embedded>
+                     so it is an ordinary service switch. The short form cost a
+                     special case in four places and made service:list omit it
+                     silently, which is worse than not being settable at all. -->
+                <embedded>
+                    <enabled>false</enabled>
+                </embedded>
                 <repository>node</repository>
                 <version>18.15.0</version>
                 <env>development</env>

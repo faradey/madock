@@ -142,12 +142,12 @@ does not need a different binary.
 | `php/enabled` | Enable PHP container | `false` (set `true` by setup for PHP-based platforms) |
 | `php/version` | PHP version | `8.2` |
 | `nodejs/enabled` | Standalone Node.js container | `false` |
-| `nodejs/embedded` | Node.js inside the application container — see below | `false` |
+| `nodejs/embedded/enabled` | Node.js inside the application container — see below | `false` |
 | `nodejs/env` | `NODE_ENV` inside the container | `development` |
 | `nodejs/script` | What the container runs — see below | *(empty: pick from `package.json`)* |
 | `nodejs/script_type` | How to read `nodejs/script`: `auto`, `package`, `command` | `auto` |
 | `nodejs/browser_libs` | Install the shared libraries a headless browser needs | `false` |
-| `php/browser_libs` | The same for the PHP image (needs `nodejs/embedded`) | `false` |
+| `php/browser_libs` | The same for the PHP image (needs `nodejs/embedded/enabled`) | `false` |
 | `python/version` | Python version (custom platform) | `3.12` |
 | `go/version` | Go version (custom platform) | `1.22` |
 | `ruby/version` | Ruby version (custom platform) | `3.3` |
@@ -156,13 +156,13 @@ does not need a different binary.
 
 ```bash
 madock config:set --name=nodejs/enabled  --value=true   # a container of its own
-madock config:set --name=nodejs/embedded --value=true   # inside the app container
+madock config:set --name=nodejs/embedded/enabled --value=true   # inside the app container
 madock service:enable nodejs/embedded                   # the same thing, shorter
 ```
 
 - **`nodejs/enabled`** gives the project a Node container running its own
   process — a Node backend, a dev server, a worker.
-- **`nodejs/embedded`** puts the Node binaries inside the *application*
+- **`nodejs/embedded/enabled`** puts the Node binaries inside the *application*
   container, next to whatever language it runs. That is what a build step needs:
   grunt, webpack, vite, a `npm run build` during deployment.
 

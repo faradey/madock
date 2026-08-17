@@ -1,4 +1,4 @@
-{{{- if .nodejs.embedded}}}
+{{{- if .nodejs.embedded.enabled}}}
 RUN set -eux; \
     curl -fsSL https://deb.nodesource.com/setup_{{{.nodejs.major_version}}}.x -o /tmp/nodesource_setup.sh; \
     bash /tmp/nodesource_setup.sh; \

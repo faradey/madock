@@ -2,21 +2,22 @@ package service
 
 import "testing"
 
-// Most services are a container or an extension, and their switch is
-// <name>/enabled. Embedded node is neither — it is a runtime added to whichever
-// application image the project has — so its switch is the key itself.
+// Embedded node is an ordinary service switch, and that is a decision rather
+// than an accident.
 //
-// Until 3.9.8 the same thing was reachable as `service:enable php/nodejs`, and
-// that worked by accident: it was in no map, and IsService found it only
-// because php/nodejs/enabled happened to exist. This pins the replacement so
-// the ergonomics survive on purpose.
+// It was briefly a bare `nodejs/embedded` — the switch being the key itself —
+// and the shorter name cost a special case in four places: the resolver, enable,
+// disable and the listing. The listing is where it bit: it walked the config
+// splitting on "/enabled", so the setting was enableable and invisible, which
+// is worse than not being settable at all. Shaping it like everything else
+// deleted all of that.
 func TestConfigKeyOf(t *testing.T) {
 	for _, c := range []struct {
 		name string
 		want string
 	}{
-		{"nodejs/embedded", "nodejs/embedded"},
-		{"embedded-node", "nodejs/embedded"},
+		{"nodejs/embedded", "nodejs/embedded/enabled"},
+		{"embedded-node", "nodejs/embedded/enabled"},
 		{"xdebug", "php/xdebug/enabled"},
 		{"php/xdebug", "php/xdebug/enabled"},
 		{"yarn", "nodejs/yarn/enabled"},
@@ -62,7 +63,7 @@ func TestOldServiceNamesStillResolve(t *testing.T) {
 
 	// The old name has to reach the key that is actually read, or it "works"
 	// while switching nothing.
-	if got := ConfigKeyOf("php/nodejs"); got != "nodejs/embedded" {
+	if got := ConfigKeyOf("php/nodejs"); got != "nodejs/embedded/enabled" {
 		t.Errorf("ConfigKeyOf(\"php/nodejs\") = %q — the old name would switch nothing", got)
 	}
 	if got := ConfigKeyOf("php/yarn"); got != "nodejs/yarn/enabled" {
