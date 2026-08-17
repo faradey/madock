@@ -30,11 +30,37 @@ func init() {
 		Help:     "Remove project",
 		Category: "project",
 		ArgsType: new(ArgsStruct),
+		// Runs outside a project on purpose, and only for --name.
+		//
+		// The scope check refuses a project command run anywhere else, which is
+		// right for every other one and wrong for this: an orphan is an entry
+		// whose source directory is gone, so there is nowhere to stand to remove
+		// it. project:list names such entries and nothing could remove them —
+		// the tool could describe the problem and not act on it.
+		//
+		// Without --name the handler still requires a project directory, so the
+		// protection that refuses to destroy the wrong one is unchanged.
+		Global: true,
 	})
 }
 
 func Execute() {
 	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+
+	// Before anything is read, decided or printed: this command deletes a
+	// project's data, and an installation may forbid that.
+	if !configs.AllowsDestructiveCommands() {
+		for _, line := range configs.DestructiveRefusal("project:remove") {
+			fmtc.ErrorLn(line)
+		}
+		os.Exit(1)
+	}
+
+	// A name is answered by the registry, not by the working directory.
+	if args.Name != "" && args.Name != configs.GetProjectName() {
+		removeNamed(args.Name, args.Force)
+		return
+	}
 
 	projectName := configs.GetProjectName()
 
@@ -140,6 +166,23 @@ func removeProject(projectName string) {
 	fmtc.WarningLn("  " + paths.GetRunDirPath())
 	fmtc.WarningLn("  containers, images and volumes of the project")
 
+	removeRegistered(projectName)
+
+	// The project's own directory, and only when standing in it. Split out so
+	// that removing an entry by name — where the source is gone and the caller
+	// is standing somewhere else entirely — cannot reach this line.
+	if err := os.RemoveAll(paths.GetRunDirPath()); err != nil {
+		logger.Fatal(err)
+	}
+}
+
+// removeRegistered takes down everything the installation holds for a project:
+// its containers, its registry entry, its generated runtime, its block in the
+// shared proxy and its port reservation. Everything except the project's own
+// directory, which is the caller's to decide about.
+func removeRegistered(projectName string) {
+	pp := paths.NewProjectPaths(projectName)
+
 	// Before the containers go: anything they wrote as root has to be handed
 	// back, or the deletion below stops at the first such file and leaves the
 	// project half removed.
@@ -147,18 +190,11 @@ func removeProject(projectName string) {
 
 	docker.Down(projectName, true)
 
-	err := os.RemoveAll(paths.GetExecDirPath() + "/projects/" + projectName + "/")
-	if err != nil {
+	if err := os.RemoveAll(paths.GetExecDirPath() + "/projects/" + projectName + "/"); err != nil {
 		logger.Fatal(err)
 	}
 
-	err = os.RemoveAll(pp.RuntimeDir())
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	err = os.RemoveAll(paths.GetRunDirPath())
-	if err != nil {
+	if err := os.RemoveAll(pp.RuntimeDir()); err != nil {
 		logger.Fatal(err)
 	}
 
@@ -192,4 +228,72 @@ func removeProject(projectName string) {
 
 	fmtc.SuccessLn("Project was removed successfully")
 	fmtc.SuccessLn("!!! Close the terminal for the changes to take effect !!!")
+}
+
+// removeNamed removes a registry entry from anywhere, by name.
+//
+// It exists for the orphan: an entry whose source directory is gone. project:list
+// has been able to name those since 3.8.50 and nothing could remove them, because
+// this command asked the working directory who the project was — and for an
+// orphan there is no directory to stand in. The workaround was to recreate the
+// directory with a copy of its config.xml and delete from there, which is a
+// strange thing for a tool to require of the person cleaning up after it.
+//
+// A project whose source still exists is refused and told where it is. That keeps
+// the protection this command is built around: removeProject ends with RemoveAll
+// on the working directory, so removing a live project from somewhere else would
+// take that somewhere else with it.
+func removeNamed(projectName string, force bool) {
+	var entry *configs.ProjectEntry
+	for _, candidate := range configs.ListProjects() {
+		if candidate.Name == projectName {
+			found := candidate
+			entry = &found
+			break
+		}
+	}
+
+	if entry == nil {
+		fmtc.ErrorLn("No project named '" + projectName + "' is registered in this installation")
+		fmtc.ToDoLn("madock project:list")
+		os.Exit(1)
+	}
+
+	if entry.State == configs.ProjectOk {
+		fmtc.ErrorLn("Project '" + projectName + "' still has its source directory: " + entry.Path)
+		fmtc.ToDoLn("Remove it from there, so the directory goes with it:")
+		fmtc.ToDoLn("  cd " + entry.Path + " && madock project:remove --force --name=" + projectName)
+		os.Exit(1)
+	}
+
+	fmtc.WarningLn("Removing the registry entry '" + projectName + "':")
+	fmtc.WarningLn("  " + paths.GetExecDirPath() + "/projects/" + projectName + "/")
+	fmtc.WarningLn("  " + paths.NewProjectPaths(projectName).RuntimeDir())
+	fmtc.WarningLn("  containers, images and volumes of the project")
+	if entry.Path != "" {
+		fmtc.WarningLn("  its source directory is already gone: " + entry.Path)
+	}
+
+	if !force {
+		fmt.Println("")
+		fmt.Println("Enter the project name \"" + projectName + "\" to confirm")
+		fmt.Print("> ")
+		buf := bufio.NewReader(os.Stdin)
+		sentence, err := buf.ReadBytes('\n')
+		if err != nil {
+			logger.Fatalln(err)
+		}
+		if strings.TrimSpace(string(sentence)) != projectName {
+			fmtc.WarningLn("The project was not removed. The entered value does not match the project name.")
+			return
+		}
+	}
+
+	removeRegistered(projectName)
+}
+
+// definition returns this command's registration, for tests that assert on it.
+func definition() *command.Definition {
+	def, _ := command.Get("project:remove")
+	return def
 }

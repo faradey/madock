@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
     <activeScope>default</activeScope>
+    <!-- Whether commands that delete a project's data may run here.
+
+         Outside <scopes> on purpose. Everything below describes a project: a
+         project's own file overrides it and `config:set` writes it. A guard a
+         project can switch off is not a guard, and `config:set` writes to the
+         project — so the switch would be reachable by the very command it
+         protects against. Here it can only be changed by editing this file.
+
+         It is a guard rail, not a security control: the file sits beside the
+         binary and is writable by the same user. It stops a mistake, not a
+         person. The mistakes are real — `project:remove` ends with a recursive
+         delete of the working directory, and `prune` is `docker compose down`
+         for the current project rather than the tidy-up its name suggests.
+
+         true here, false in madock-pro, which is the edition that runs on
+         servers. -->
+    <allow_destructive_commands>true</allow_destructive_commands>
     <scopes>
         <default>
             <name>default</name>

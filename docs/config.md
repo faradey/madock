@@ -84,6 +84,43 @@ Settings are inherited in this order (later overrides earlier):
 3. `~/.madock/projects/{project_name}/config.xml` (project settings)
 4. `{project_root}/.madock/config.xml` (local project settings)
 
+## Settings that belong to the installation, not the project
+
+One setting is deliberately outside that chain, and outside `<scopes>`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <allow_destructive_commands>true</allow_destructive_commands>
+    <scopes>
+        ...
+    </scopes>
+</config>
+```
+
+`allow_destructive_commands` decides whether the commands that delete a
+project's data may run on this machine — `project:remove`, which ends in a
+recursive delete of the project directory, and `prune`, which is `docker compose
+down` for the current project and, with `--with-volumes`, its data volumes and
+images as well. Set it to `false` and both refuse, naming the file to edit.
+
+It sits at the top level because everything under `<scopes>` is reachable from a
+project: the project's own `.madock/config.xml` overrides it and `config:set`
+writes it. A guard a project can switch off is not a guard, so this one is
+readable only from `~/.madock/config.xml` — the file belonging to whoever
+administers the installation. A copy of the key inside a project's config, or
+inside `<scopes>`, is ignored.
+
+It is a guard rail, not a security control. The file sits beside the binary and
+is writable by the same user, so anyone who can run the command can also edit the
+file first. It stops a mistake, not a person.
+
+The default is `true`: on a laptop, projects are created and removed all day, and
+a guard that gets in the way there is a guard people learn to switch off.
+madock-pro ships it as `false`, because that edition is the one that runs on
+servers — and the file still has the last word there, so a machine that needs it
+does not need a different binary.
+
 ## Key Configuration Options
 
 | Key | Description | Default |

@@ -23,7 +23,12 @@ import (
 // usually that something about the registry is wrong; template:convert because a
 // directory of templates is a directory of templates — refusing to run it outside
 // a project would be refusing it in exactly the place somebody keeps a copy of
-// their overrides.
+// their overrides; and project:remove because an orphan — a registry entry whose
+// source directory is gone — has nowhere to be removed from. project:list has been
+// able to name those since 3.8.50 and nothing could act on them: the tool described
+// a problem it could not fix. The exemption is narrow in the handler, not here —
+// without --name it still requires a project directory, so the protection that
+// keeps it from destroying the wrong one is unchanged.
 func TestGlobalCommands(t *testing.T) {
 	want := []string{
 		"--version",
@@ -32,6 +37,7 @@ func TestGlobalCommands(t *testing.T) {
 		"mcp",
 		"project:clone",
 		"project:list",
+		"project:remove",
 		"proxy:logs",
 		"setup",
 		"template:convert",

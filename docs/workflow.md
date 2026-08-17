@@ -235,6 +235,9 @@ This command shows you the following items:
 
 * `project:remove`   Remove project (project folder, madock project configuration, volumes, images, containers)
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;An installation can forbid this command, and `prune` with it — see
+`allow_destructive_commands` in [config.md](config.md). madock-pro ships it forbidden
+
 * `proxy:start`   Start a proxy server
 
 
