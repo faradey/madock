@@ -1,3 +1,12 @@
+**v3.9.13**
+
+Fixed:
+- **A project's own `.madock/config.xml` is edited now, not re-rendered.** It is the one file madock writes that a person wrote first and committed to their repository, and its comments are usually the record of *why* a setting is what it is — "the database is off because this app talks to the shared cluster" is not something the values can say. Parsing it into a map and rendering the map back lost every comment, sorted the keys alphabetically and turned a one-line migration into a diff nobody reads. The new writer edits the document text by byte offsets from the decoder: the element that changes has the text between its tags replaced, and every other byte is copied through. Measured on the reproduction that opened this: a run that used to change 63 lines now changes **one**, and that one is a setting genuinely being added
+- Scoped to that file on purpose. The registry copies and the installation's own config are machine-owned, have no comments, and go on using the renderer — putting every config write on a new path for the benefit of one file is how a formatting fix becomes an outage
+
+Added:
+- **Settings can be removed, which was never possible.** `config:set` can only assign, there is no unset, and clearing the cache does not touch the file — so a key taken out of a project's config stayed in the installed copy for good, and the only way to drop one was to remove the project and set it up again. A team that deletes a setting, commits and rolls out therefore left every machine that had ever run setup living by the old value, with nothing failing and nobody told. `RemoveKeepingComments` is the primitive that ends that; removing a branch takes its children, which is what an explicit unset of a branch means
+
 **v3.9.12**
 
 Fixed:
