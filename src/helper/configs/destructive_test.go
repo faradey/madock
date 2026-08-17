@@ -112,3 +112,36 @@ func TestDestructiveKey_IsDroppedByScopeExtraction(t *testing.T) {
 		t.Fatal("the key survived scope extraction, so a project would inherit it")
 	}
 }
+
+// The guard has to survive madock writing the file for other reasons.
+//
+// SaveInFile rewrites config.xml whole: it parses what is there, merges the
+// incoming keys into a scope and writes the result back. A top-level key is not
+// part of any scope, so it travels through that merge as itself — and if it did
+// not, an installation that allowed the command would quietly stop allowing it
+// the next time anything wrote a password or a setting, with no diff a person
+// would think to look at.
+func TestDestructiveKey_SurvivesAWriteToTheSameFile(t *testing.T) {
+	dir := installationWith(t, `    <`+DestructiveKey+`>true</`+DestructiveKey+`>
+    <scopes>
+        <default>
+            <platform>magento2</platform>
+        </default>
+    </scopes>`)
+
+	path := filepath.Join(dir, "config.xml")
+	SaveInFile(path, map[string]string{"db/password": "written-later"}, "default")
+	CleanCache()
+
+	written := ParseXmlFile(path)
+	if written[DestructiveKey] != "true" {
+		t.Fatalf("the guard's key did not survive a write to the same file: %v", written)
+	}
+	if written["scopes/default/db/password"] != "written-later" {
+		t.Errorf("the write itself did not land: %v", written)
+	}
+
+	if !AllowsDestructiveCommands() {
+		t.Fatal("the installation's answer changed because something else wrote to the file")
+	}
+}
