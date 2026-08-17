@@ -185,11 +185,13 @@ the defaults.
 of those base images is Debian or Ubuntu, so the same nodesource install works
 in each.
 
-**The old names still work.** `madock service:enable php/nodejs` and
-`service:enable php/yarn` are accepted, resolve to the new keys, and print the
-new name once so it is learned from the command rather than from a changelog.
-They are aliases, not a second way of spelling it, and they will be removed once
-the new names are the ones in people's fingers.
+**The old names still work.** `madock service:enable php/nodejs` is accepted,
+resolves to `nodejs/embedded`, and prints the new name once so it is learned
+from the command rather than from a changelog. `php/yarn` is aliased the same
+way, though it was never a registered service — it worked only on the three
+platforms whose configurator happened to write `php/yarn/enabled`. Both are
+aliases rather than a second spelling, and both will be removed once the new
+names are the ones in people's fingers.
 
 ## A project with no web server
 

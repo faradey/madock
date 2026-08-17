@@ -64,7 +64,15 @@ var flagKeys = map[string]bool{
 // working, and the command says the new one — which is how somebody learns it,
 // rather than by reading a changelog they never opened.
 //
-// These are not kept forever. They are cheap while the old name is still in
+// The two entries do not carry the same weight, and it is worth being accurate
+// about that. `php/nodejs` was documented in four places and worked for every
+// project, because php/nodejs/enabled was in the shipped defaults. `php/yarn`
+// was never a registered service at all — in no map, in no defaults — and
+// worked only where a platform configurator happened to have written
+// php/yarn/enabled: shopify, bigcommerce and sylius. It is aliased for whoever
+// scripted it on one of those, not because it was a supported name.
+//
+// Neither is kept forever. They are cheap while the old name is still in
 // people's fingers and in their scripts, and they come out when it is not.
 var renamedServices = map[string]string{
 	"php/nodejs": "nodejs/embedded",
