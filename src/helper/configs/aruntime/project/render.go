@@ -41,10 +41,36 @@ func Render(projectName, file, name string, extra map[string]string) string {
 
 	out, err := newRenderer(projectName, file, extra).Render(name, string(body))
 	if err != nil {
-		logger.Fatal(fmt.Errorf("rendering %s for project %s: %w", name, projectName, err))
+		logger.Fatal(fmt.Errorf("rendering %s for project %s: %w%s", name, projectName, err, adviceFor(err)))
 	}
 
 	return out
+}
+
+// adviceFor names the cause and the cure when the error is one whose message
+// points at the wrong thing.
+//
+// `function "memShareGB" not defined` reads as a broken template and sends
+// somebody to edit a file that is correct. It is not: template functions are
+// compiled into the binary while the templates are files on disk, so the
+// message means the installed binary is older than the tree it is rendering.
+// Measured on this machine — the function arrived in the templates at 16:13 and
+// the binary in use had been built at 13:44 the same day — and the radius there
+// is every project at once, because the installation directory and the source
+// checkout are the same directory: `docker/` moves with git and the binary does
+// not.
+//
+// Written as a suffix rather than folded into the error so the original text
+// survives verbatim; the point is to add what is missing, not to paraphrase
+// what the engine said.
+func adviceFor(err error) string {
+	if err == nil || !strings.Contains(err.Error(), "not defined") {
+		return ""
+	}
+
+	return "\n\nThe function is compiled into madock, the template is a file on disk," +
+		"\nso this means the binary in use is older than the templates it is rendering." +
+		"\nRebuild or reinstall madock; the template needs no editing."
 }
 
 // RenderTo renders a located template and writes the result where the
