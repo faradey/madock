@@ -11,9 +11,16 @@
 
          It is a guard rail, not a security control: the file sits beside the
          binary and is writable by the same user. It stops a mistake, not a
-         person. The mistakes are real — `project:remove` ends with a recursive
-         delete of the working directory, and `prune` is `docker compose down`
-         for the current project rather than the tidy-up its name suggests.
+         person.
+
+         What it covers is what cannot be undone: `project:remove`, which ends
+         with a recursive delete of the working directory, and `prune` when it
+         is asked to take the volumes, which destroys the database with them.
+         Plain `prune` is `docker compose down` and is deliberately not covered,
+         because `start` puts that back.
+
+         (No double hyphen anywhere above: XML forbids one inside a comment, and
+         naming the flag here cost a test run to find that out.)
 
          true here, false in madock-pro, which is the edition that runs on
          servers. -->

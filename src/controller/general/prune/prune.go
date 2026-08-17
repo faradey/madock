@@ -26,12 +26,20 @@ func init() {
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralPrune)).(*arg_struct.ControllerGeneralPrune)
 
-	// The name promises `docker system prune` and the body is `docker compose
-	// down` for the current project — with --with-volumes, its data volumes and
-	// images as well. Whatever it is called, it destroys, so the installation's
-	// answer applies here too.
-	if !configs.AllowsDestructiveCommands() {
-		for _, line := range configs.DestructiveRefusal("prune") {
+	// Only the flag is destructive, and the difference is the whole of it.
+	//
+	// Plain `prune` is `docker compose down`: containers and the network go,
+	// the volumes stay, the images stay, the project directory and its registry
+	// entry are not touched. `madock start` puts it back. That is `stop` with
+	// the containers removed, and guarding it would be both an obstacle and
+	// inconsistent — `stop` takes the same site down and nothing stands in
+	// front of it.
+	//
+	// `--with-volumes` is `down -v --rmi all`: the data volumes and the images.
+	// The database is gone and nothing brings it back, which is what the
+	// installation's answer is about.
+	if args.WithVolumes && !configs.AllowsDestructiveCommands() {
+		for _, line := range configs.DestructiveRefusal("prune --with-volumes") {
 			fmtc.ErrorLn(line)
 		}
 		os.Exit(1)

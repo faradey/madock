@@ -98,11 +98,21 @@ One setting is deliberately outside that chain, and outside `<scopes>`:
 </config>
 ```
 
-`allow_destructive_commands` decides whether the commands that delete a
-project's data may run on this machine — `project:remove`, which ends in a
-recursive delete of the project directory, and `prune`, which is `docker compose
-down` for the current project and, with `--with-volumes`, its data volumes and
-images as well. Set it to `false` and both refuse, naming the file to edit.
+`allow_destructive_commands` decides whether the commands that destroy a
+project's data may run on this machine:
+
+- **`project:remove`** — the registry entry, the generated runtime, the ports,
+  the volumes, the images, and a recursive delete of the project directory.
+- **`prune --with-volumes`** — `docker compose down -v --rmi all`: the data
+  volumes and the images. The database is gone and nothing brings it back.
+
+Set it to `false` and both refuse, naming the file to edit.
+
+**Plain `prune` is not covered**, deliberately. It is `docker compose down`:
+containers and the network go, the volumes and images stay, the project
+directory and its registry entry are untouched, and `madock start` puts it back.
+Guarding it would obstruct without protecting — and inconsistently, since `stop`
+takes the same site down with nothing in front of it.
 
 It sits at the top level because everything under `<scopes>` is reachable from a
 project: the project's own `.madock/config.xml` overrides it and `config:set`
