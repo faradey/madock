@@ -1,3 +1,36 @@
+**v3.9.14**
+
+Added:
+- **`config:unset`, because nothing could remove a setting.** madock keeps the project's own `.madock/config.xml` — the copy in git — and a machine-side copy under the installation, seeded from it the first time the project is seen. Reads merge both with the project's copy winning, so *adding* or *changing* a setting in git reaches every machine. **Deleting one does not**: the machine-side copy still has it, `config:set` can only assign, and clearing the cache does not touch the file. The only way to drop a single key was to remove the project and set it up again
+- Measured on a live project: a `custom_commands` block was deleted from the repository, committed and rolled out, and `madock pr` went on working on every machine that had ever run setup. Nothing broke and nobody was told, which is the whole difficulty — a setting retired months ago is still in force and nothing says so
+- It reports by reading back rather than by trusting the write. A key can survive an unset in a way that looks exactly like success, because the project's own config may also set it and that file wins — so the command says which key is still set and where to look, instead of printing "removed" over a value that did not move
+
+Still open, and stated rather than quietly skipped: which copy should win in general. Making `rebuild` reduce the machine-side copy to the project's would fix the class rather than the case, and would also discard everything set with `config:set` on that machine. Telling those two apart needs provenance the config does not record, and that is a decision, not a patch.
+
+**v3.9.13**
+
+Fixed:
+- **A project's own `.madock/config.xml` is edited now, not re-rendered.** It is the one file madock writes that a person wrote first and committed to their repository, and its comments are usually the record of *why* a setting is what it is — "the database is off because this app talks to the shared cluster" is not something the values can say. Parsing it into a map and rendering the map back lost every comment, sorted the keys alphabetically and turned a one-line migration into a diff nobody reads. The new writer edits the document text by byte offsets from the decoder: the element that changes has the text between its tags replaced, and every other byte is copied through. Measured on the reproduction that opened this: a run that used to change 63 lines now changes **one**, and that one is a setting genuinely being added
+- Scoped to that file on purpose. The registry copies and the installation's own config are machine-owned, have no comments, and go on using the renderer — putting every config write on a new path for the benefit of one file is how a formatting fix becomes an outage
+
+Added:
+- **Settings can be removed, which was never possible.** `config:set` can only assign, there is no unset, and clearing the cache does not touch the file — so a key taken out of a project's config stayed in the installed copy for good, and the only way to drop one was to remove the project and set it up again. A team that deletes a setting, commits and rolls out therefore left every machine that had ever run setup living by the old value, with nothing failing and nobody told. `RemoveKeepingComments` is the primitive that ends that; removing a branch takes its children, which is what an explicit unset of a branch means
+
+**v3.9.12**
+
+Fixed:
+- **A migration rewrote a project as a language it is not.** `V320` backfills `language` into configs that lack one, and its guard asked `rawConf["language"]` — but the parser returns keys as they sit in the file, so the real key is `scopes/default/language`. The lookup therefore never found one, the guard always passed, and a **nodejs** project was written back as **php**. Measured: it sent `madock cli` into a php container that does not exist, and cost half an hour looking for a defect in the service resolver instead
+- It hid because it only fires when the migrations run at all — an installation with a current recorded version never reaches it, and a fresh one reaches it every time. Which means it fired precisely when somebody tried a new build against a clean `MADOCK_EXEC_DIR`, the one safe way to try a new build
+- **Not a regression.** Measured against 3.9.5, which produces a byte-identical rewrite: this has been there since the migration was written
+- Config files are written with a trailing newline and without the formatter's leading blank line. These files live in somebody's repository, so every write used to show up as two spurious line changes on top of the real one
+
+Known, and not fixed here: a migration that writes a project's `.madock/config.xml` still loses the XML comments in it and reorders the keys, because the file is parsed and rendered rather than edited. The values all survive. Comments in that file are often the record of *why* a setting is what it is, so this is worth closing — it needs the writer to edit the text rather than re-render it.
+
+**v3.9.11**
+
+Fixed:
+- **Migrations were gated by comparing versions as strings, and the first two-digit patch release breaks that.** `"3.9.10" < "3.9.8"` is **true** as a string, because `'1'` sorts before `'8'` — so an installation on 3.9.10 would have re-run the 3.9.8 migration on every command, forever. On 3.10.0 it is three migrations, not one. It would also have stayed quiet: migrations here are written to be harmless when there is nothing to do, which is exactly what would have kept anybody from noticing. `configs.CompareVersions` was already in the tree; the gate uses it now, and a test pins both the case that broke and the ordinary ones the string compare happened to get right
+
 **v3.9.10**
 
 Changed:

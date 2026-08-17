@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"log"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -35,7 +36,32 @@ type ConfigLinesInterface interface {
 }
 
 func (t *ConfigLines) Save() {
+	// A project's own .madock/config.xml is edited rather than re-rendered.
+	//
+	// It is the one file here written by a person and committed to their
+	// repository, and its comments are usually the record of why a setting is
+	// what it is. Rendering a parsed map loses all of them and reorders the
+	// keys, which turns a one-line migration into a diff nobody reads — and
+	// which is how a project once came back from a migration describing itself
+	// as a language it is not.
+	//
+	// One decision point on purpose: every migration writes through here.
+	if isProjectOwnedConfig(t.EnvFile) {
+		if err := SaveKeepingComments(t.EnvFile, t.Lines, t.ActiveScope); err == nil {
+			return
+		}
+		// A file the editor cannot read is not one the renderer can improve on,
+		// but leaving it half-migrated is worse than the formatting loss.
+	}
+
 	SaveInFile(t.EnvFile, t.Lines, t.ActiveScope)
+}
+
+// isProjectOwnedConfig reports whether a path is a project's own config — the
+// copy that lives with the source and belongs to whoever wrote it, as opposed
+// to the machine-owned copies under the installation directory.
+func isProjectOwnedConfig(file string) bool {
+	return strings.HasSuffix(filepath.ToSlash(file), "/.madock/config.xml")
 }
 
 func SaveInFile(file string, data map[string]string, activeScope string) {
@@ -95,7 +121,14 @@ func RenderXml(data map[string]interface{}) string {
 	if err := MarshalXML(SetXmlMap(data), xml.NewEncoder(w), "config"); err != nil {
 		logger.Fatalln(err)
 	}
-	return xmlfmt.FormatXML(w.String(), "", "    ", true)
+	// Trimmed at the front and terminated at the end.
+	//
+	// The formatter emits a leading blank line and no trailing newline, and
+	// these files live in somebody's repository: every write then shows up as
+	// two spurious line changes on top of the real one. Cheap to fix, and it is
+	// the difference between a diff that can be read and a diff that gets
+	// waved through.
+	return strings.TrimLeft(xmlfmt.FormatXML(w.String(), "", "    ", true), "\r\n") + "\n"
 }
 
 func (t *ConfigLines) Set(name, value string) {

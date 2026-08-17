@@ -71,6 +71,28 @@ Derived options cannot be set: `nodejs/major_version` is computed from
 `nodejs/version` on every read, so `config:set` refuses it and names the option to
 set instead.
 
+Remove a configuration value, so whatever is underneath it applies again:
+```bash
+madock config:unset --name=php/version
+madock config:unset -n a -n b --global
+```
+
+**Why this exists.** madock keeps two copies of a project's configuration: the
+one in the project (`{project}/.madock/config.xml`, committed to your
+repository) and a machine-side one under `~/.madock/projects/{name}/`, seeded
+from it the first time the project is seen. Reads merge both, and the project's
+copy wins — so adding or changing a setting in git reaches every machine.
+**Deleting one did not.** The machine-side copy kept it, `config:set` can only
+assign, and clearing the cache does not touch the file, so the only way to drop
+a single key was to remove the project and set it up again. A team that retires
+a setting, commits and rolls out otherwise leaves every machine living by the
+old value, with nothing failing and nobody told.
+
+`config:unset` reads the value back afterwards rather than trusting the write:
+if the key is still set — because the project's own config also sets it, and
+that file wins — it says so and where to look, instead of reporting a removal
+that did not happen.
+
 Clear configuration cache:
 ```bash
 madock config:cache:clean

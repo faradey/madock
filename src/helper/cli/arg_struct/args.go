@@ -80,6 +80,12 @@ type ControllerGeneralConfig struct {
 	Value string `arg:"-v,--value" help:"Parameter value"`
 }
 
+type ControllerGeneralConfigUnset struct {
+	attr.Arguments
+	Name   []string `arg:"-n,--name" help:"Parameter name. May be given more than once"`
+	Global bool     `arg:"-g,--global" help:"Also remove it from the installation's own config"`
+}
+
 type ControllerGeneralDbExport struct {
 	attr.Arguments
 	Name          string   `arg:"-n,--name" help:"Name of the archive file"`

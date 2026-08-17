@@ -41,7 +41,12 @@ func Apply(newAppVersion string) {
 		oldAppVersion = oldAppVersionTxt
 	}
 
-	if oldAppVersion < newAppVersion {
+	// Compared as versions, not as strings. "3.9.8" < "3.9.10" is **false** as
+	// a string — '8' sorts after '1' — so an installation on 3.9.8 upgrading to
+	// 3.9.10 would have run no migrations at all, and the one that renames
+	// php/nodejs/enabled would simply never have happened for anybody. Silent
+	// in both directions: nothing fails, the key is just gone.
+	if olderThan(oldAppVersion, newAppVersion) {
 		Execute(oldAppVersion)
 		saveNewVersion(newAppVersion)
 	}
