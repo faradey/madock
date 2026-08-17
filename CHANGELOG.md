@@ -1,3 +1,8 @@
+**v3.9.11**
+
+Fixed:
+- **Migrations were gated by comparing versions as strings, and the first two-digit patch release breaks that.** `"3.9.10" < "3.9.8"` is **true** as a string, because `'1'` sorts before `'8'` — so an installation on 3.9.10 would have re-run the 3.9.8 migration on every command, forever. On 3.10.0 it is three migrations, not one. It would also have stayed quiet: migrations here are written to be harmless when there is nothing to do, which is exactly what would have kept anybody from noticing. `configs.CompareVersions` was already in the tree; the gate uses it now, and a test pins both the case that broke and the ordinary ones the string compare happened to get right
+
 **v3.9.10**
 
 Changed:
