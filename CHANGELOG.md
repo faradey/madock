@@ -5,6 +5,9 @@ Added:
 - The default stays `true`, because a laptop creates and removes projects all day and a guard that gets in the way is one people learn to switch off. madock-pro ships it `false`: that edition is the one that runs on servers. The installation's own file has the last word in both directions, so a machine that needs the command back does not need a different binary
 - It is a guard rail and not a security control, and the refusal says so: the file is writable by the same user who runs the command. It stops a mistake, not a person
 
+Fixed:
+- **A comment in `config.xml` could make the key test report nonsense.** `TestEveryKeyIsAKeyMadockHas` reads the config with a regexp over tag names, and it had no idea what a comment was — a tag mentioned inside one was pushed onto its stack and, having no closing half, never left it. Every key after that point was then computed one level too deep, so the test said madock has no setting called `restart_policy` and listed forty more, none of them the comment that caused it. Latent until now only because the two commented-out blocks in the file (`<hosts>`, `<jobs>`) happen to be balanced
+
 **v3.9.5**
 
 Upgrading:

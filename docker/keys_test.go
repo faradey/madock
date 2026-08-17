@@ -139,7 +139,7 @@ func xmlPaths(body string) []string {
 	var stack []string
 	var paths []string
 
-	for _, match := range tag.FindAllStringSubmatch(body, -1) {
+	for _, match := range tag.FindAllStringSubmatch(withoutComments(body), -1) {
 		if match[1] == "/" {
 			if len(stack) > 0 {
 				stack = stack[:len(stack)-1]
@@ -155,6 +155,23 @@ func xmlPaths(body string) []string {
 	}
 
 	return paths
+}
+
+// withoutComments removes XML comments before the tags are counted.
+//
+// The scanner below is a regexp over tag names and has no idea what a comment
+// is, so a tag mentioned inside one is pushed onto the stack and — having no
+// closing half — never leaves it. Every key after that point is computed one
+// level deep and the test reports that madock has no setting called
+// `restart_policy`, which is forty lines of nonsense pointing nowhere near the
+// comment that caused it.
+//
+// It was already latent: config_defaults.xml carries commented-out `<hosts>`
+// and `<jobs>` blocks, which happen to be balanced and so cancel out. A comment
+// that merely names a tag in prose does not.
+func withoutComments(body string) string {
+	comment := regexp.MustCompile(`(?s)<!--.*?-->`)
+	return comment.ReplaceAllString(body, "")
 }
 
 func repoRoot(t *testing.T) string {
@@ -173,4 +190,39 @@ func sorted(m map[string][]string) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+// TestXmlPathsIgnoresComments pins the above. Without it the failure lands on
+// every key in the file except the one that caused it.
+func TestXmlPathsIgnoresComments(t *testing.T) {
+	keys := xmlPaths(`<?xml version="1.0"?>
+<config>
+    <!-- Outside <scopes> on purpose, and this sentence used to break the scan.
+         So did a commented-out block:
+         <hosts>
+             <host>example.test</host> -->
+    <allow_destructive_commands>true</allow_destructive_commands>
+    <scopes>
+        <default>
+            <restart_policy>no</restart_policy>
+            <php>
+                <version>8.2</version>
+            </php>
+        </default>
+    </scopes>
+</config>`)
+
+	found := map[string]bool{}
+	for _, key := range keys {
+		found[key] = true
+	}
+
+	for _, want := range []string{"restart_policy", "php/version"} {
+		if !found[want] {
+			t.Errorf("%q was not read; the comment shifted the scan: %v", want, keys)
+		}
+	}
+	if found["allow_destructive_commands"] {
+		t.Error("a top-level key was read as a setting; it lives outside <scopes> and is not one")
+	}
 }
