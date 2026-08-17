@@ -1,3 +1,8 @@
+**v3.9.7**
+
+Fixed:
+- **The guard added in 3.9.6 covered `prune`, and `prune` is not destructive.** It is `docker compose down` for the current project: containers and the network go, the volumes stay, the images stay, the project directory and its registry entry are untouched, and `madock start` puts it all back. Guarding it obstructed without protecting anything — and inconsistently, since `stop` takes the same site down with nothing in front of it. Only `prune --with-volumes` is covered now, which is `down -v --rmi all`: the data volumes and the images, with nothing to bring the database back. `project:remove` is unchanged
+
 **v3.9.6**
 
 Added:

@@ -31,12 +31,18 @@ const DestructiveKey = "allow_destructive_commands"
 // same user, so anyone who can run the command can also edit the file first. It
 // stops a mistake, not a person.
 //
-// What it stops is worth stopping. `project:remove` ends with RemoveAll on the
-// working directory, and the release runbook records that running it in the
-// installation directory would have taken madock, its repository and every
-// other project's configuration with it. `prune` sounds like tidying and is
-// `docker compose down` for the current project — with --with-volumes, the data
-// volumes and the images too.
+// What it stops is only what cannot be undone. `project:remove` ends with
+// RemoveAll on the working directory, and the release runbook records that
+// running it in the installation directory would have taken madock, its
+// repository and every other project's configuration with it.
+// `prune --with-volumes` is `down -v --rmi all`: the data volumes and the
+// images, with nothing to bring the database back.
+//
+// Plain `prune` is deliberately not covered. It is `docker compose down` —
+// containers and the network, with the volumes, the images, the project
+// directory and its registry entry all untouched — so `start` puts it back.
+// Guarding it would obstruct without protecting, and inconsistently at that,
+// since `stop` takes the same site down unguarded.
 func AllowsDestructiveCommands() bool {
 	return !strings.EqualFold(strings.TrimSpace(destructiveSetting()), "false")
 }

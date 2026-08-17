@@ -46,7 +46,7 @@ func TestDestructiveCommandsObeyTheInstallation(t *testing.T) {
 
 	for _, refused := range [][]string{
 		{"project:remove", "--force", "--name=e2eguarded"},
-		{"prune"},
+		{"prune", "--with-volumes"},
 	} {
 		out, err := p.tryRun(2*time.Minute, refused...)
 		if err == nil {
@@ -61,6 +61,15 @@ func TestDestructiveCommandsObeyTheInstallation(t *testing.T) {
 
 	if _, err := os.Stat(registry); err != nil {
 		t.Fatalf("the project was removed despite the refusal: %v", err)
+	}
+
+	// And the line the guard must not cross. Plain `prune` is `docker compose
+	// down`: containers and the network go, the volumes and images stay, the
+	// project directory and its registry entry are untouched, and `start` puts
+	// it back. Guarding it would be an obstacle rather than a guard — and an
+	// inconsistent one, since `stop` takes the same site down unguarded.
+	if out, err := p.tryRun(2*time.Minute, "prune"); err != nil {
+		t.Errorf("plain prune was refused; only --with-volumes destroys anything:\n%s", out)
 	}
 
 	// Now try to lift it, by every route a project has.
