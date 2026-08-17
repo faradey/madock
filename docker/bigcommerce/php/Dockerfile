@@ -4,6 +4,6 @@
 {{{template "snippets/dockerfile/php/ini" .}}}
 {{{template "snippets/dockerfile/php/cron" .}}}
 {{{template "snippets/dockerfile/php/mkdir" .}}}
-{{{template "snippets/dockerfile/php/nodejs" .}}}
+{{{template "snippets/dockerfile/common/nodejs" .}}}
 {{{template "snippets/dockerfile/php/chown" .}}}
 {{{template "snippets/dockerfile/php/footer" .}}}

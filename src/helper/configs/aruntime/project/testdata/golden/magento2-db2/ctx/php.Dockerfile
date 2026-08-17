@@ -167,7 +167,7 @@ WORKDIR /var/www
 RUN apt-get install -y cron
 RUN mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
 
-RUN mkdir /var/www/.npm && chown <UID>:<GID> /var/www/.npm
+
 RUN if [ "false" = "true" ]; then curl -sS https://accounts.magento.cloud/cli/installer | php \
     && cp -r /root/.magento-cloud/ /var/www/ && chown -R <UID>:<GID> /var/www/.magento-cloud && ln -s /var/www/.magento-cloud/bin/magento-cloud /usr/bin/magento-cloud; fi
 RUN if [ "false" = "true" ]; then chown <UID>:<GID> /usr/bin/magento-cloud; fi

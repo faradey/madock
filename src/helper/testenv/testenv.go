@@ -127,7 +127,7 @@ func SetupWith(t *testing.T, projectName, hostName string, overrides map[string]
 		"php/xdebug/enabled":                        "false",
 		"php/xdebug/mode":                           "debug",
 		"php/ioncube/enabled":                       "false",
-		"php/nodejs/enabled":                        "false",
+		"nodejs/embedded":                        "false",
 		"timezone":                                  "UTC",
 		"workdir":                                   "/var/www/html",
 		"public_dir":                                "pub",

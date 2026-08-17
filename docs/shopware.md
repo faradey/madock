@@ -74,7 +74,7 @@ madock service:enable phpmyadmin
 
 ```bash
 # Enable Node.js service
-madock service:enable php/nodejs
+madock service:enable nodejs/embedded
 
 # Enter container and run build
 madock bash -u www-data
@@ -127,7 +127,7 @@ The hot reload ports are automatically exposed by madock. Each project gets uniq
 If hot reload doesn't work, check:
 1. Ports are exposed: `docker ps` should show port mappings
 2. `PROXY_URL` in `.env` matches the exposed port
-3. Node.js is enabled: `madock service:enable php/nodejs`
+3. Node.js is enabled: `madock service:enable nodejs/embedded`
 
 ## Troubleshooting
 

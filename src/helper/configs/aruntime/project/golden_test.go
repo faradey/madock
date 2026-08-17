@@ -54,6 +54,29 @@ func goldenCases() []goldenCase {
 			name: "magento2-php",
 		},
 		{
+			// Node inside the application container. Until 3.9.8 this was
+			// php/nodejs/enabled and no golden case turned it on, so the whole
+			// half of the php image that installs node was rendered by nothing
+			// and compared against nothing.
+			name: "magento2-php-embedded-node",
+			overrides: map[string]string{
+				"nodejs/embedded":     "true",
+				"nodejs/yarn/enabled": "true",
+			},
+		},
+		{
+			// The reason the key was renamed. A Python service with a
+			// JavaScript front end needs node in its own image exactly as a PHP
+			// one does, and before 3.9.8 there was no way to ask for it.
+			name: "custom-python-embedded-node",
+			overrides: map[string]string{
+				"platform":        "custom",
+				"language":        "python",
+				"php/enabled":     "false",
+				"nodejs/embedded": "true",
+			},
+		},
+		{
 			// Two databases. The credentials of the second one are its own —
 			// reading them from db/* is a defect this pins.
 			name: "magento2-db2",

@@ -78,18 +78,24 @@ func SaveInFile(file string, data map[string]string, activeScope string) {
 		}
 	}
 
-	resultMapData := SetXmlMap(resultData)
-	w := &bytes.Buffer{}
-	w.WriteString(xml.Header)
-	err := MarshalXML(resultMapData, xml.NewEncoder(w), "config")
-	if err != nil {
-		logger.Fatalln(err)
-	}
-
-	err = os.WriteFile(file, []byte(xmlfmt.FormatXML(w.String(), "", "    ", true)), ConfigFilePermissions)
+	err := os.WriteFile(file, []byte(RenderXml(resultData)), ConfigFilePermissions)
 	if err != nil {
 		log.Fatalf("Unable to write file: %v", err)
 	}
+}
+
+// RenderXml turns a flat key map back into the config file format.
+//
+// Shared with the migrations, which need to write a config file without going
+// through SaveInFile's scope merging: a rename moves a key rather than setting
+// one, and merging would leave both spellings in the file.
+func RenderXml(data map[string]interface{}) string {
+	w := &bytes.Buffer{}
+	w.WriteString(xml.Header)
+	if err := MarshalXML(SetXmlMap(data), xml.NewEncoder(w), "config"); err != nil {
+		logger.Fatalln(err)
+	}
+	return xmlfmt.FormatXML(w.String(), "", "    ", true)
 }
 
 func (t *ConfigLines) Set(name, value string) {

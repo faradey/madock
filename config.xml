@@ -99,9 +99,6 @@
                          using a mail transport) can send. -->
                     <from></from>
                 </sendmail>
-                <nodejs>
-                    <enabled>false</enabled>
-                </nodejs>
                 <browser_libs>false</browser_libs>
             </php>
             <db>
@@ -154,7 +151,15 @@
                 </phpmyadmin>
             </db2>
             <nodejs>
+                <!-- A container of its own, running the project's node process. -->
                 <enabled>false</enabled>
+                <!-- Node inside the application container instead, whatever
+                     language that container runs. It was php/nodejs/enabled
+                     until 3.9.8, which said node was php's business; it is not.
+                     A Python or Go service with a JavaScript front end needs the
+                     same thing, and the version above was already shared. The
+                     two are independent: a project can have both. -->
+                <embedded>false</embedded>
                 <repository>node</repository>
                 <version>18.15.0</version>
                 <env>development</env>

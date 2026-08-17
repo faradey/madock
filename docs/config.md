@@ -141,16 +141,49 @@ does not need a different binary.
 | `timezone` | Container timezone | `UTC` |
 | `php/enabled` | Enable PHP container | `false` (set `true` by setup for PHP-based platforms) |
 | `php/version` | PHP version | `8.2` |
-| `php/nodejs/enabled` | Node.js inside PHP container | `false` |
 | `nodejs/enabled` | Standalone Node.js container | `false` |
+| `nodejs/embedded` | Node.js inside the application container — see below | `false` |
 | `nodejs/env` | `NODE_ENV` inside the container | `development` |
 | `nodejs/script` | What the container runs — see below | *(empty: pick from `package.json`)* |
 | `nodejs/script_type` | How to read `nodejs/script`: `auto`, `package`, `command` | `auto` |
 | `nodejs/browser_libs` | Install the shared libraries a headless browser needs | `false` |
-| `php/browser_libs` | The same for the PHP image (needs `php/nodejs/enabled`) | `false` |
+| `php/browser_libs` | The same for the PHP image (needs `nodejs/embedded`) | `false` |
 | `python/version` | Python version (custom platform) | `3.12` |
 | `go/version` | Go version (custom platform) | `1.22` |
 | `ruby/version` | Ruby version (custom platform) | `3.3` |
+
+## Node.js in two places, and they are different questions
+
+```bash
+madock config:set --name=nodejs/enabled  --value=true   # a container of its own
+madock config:set --name=nodejs/embedded --value=true   # inside the app container
+madock service:enable nodejs/embedded                   # the same thing, shorter
+```
+
+- **`nodejs/enabled`** gives the project a Node container running its own
+  process — a Node backend, a dev server, a worker.
+- **`nodejs/embedded`** puts the Node binaries inside the *application*
+  container, next to whatever language it runs. That is what a build step needs:
+  grunt, webpack, vite, a `npm run build` during deployment.
+
+Both can be true at once, and neither implies the other.
+
+Until 3.9.8 the second was spelled `php/nodejs/enabled`, which said node was
+PHP's business. It is not: a Python service with a JavaScript front end, or a Go
+one with an admin panel, needs exactly the same thing, and the version was
+already shared at `nodejs/version`. The rename carries itself — a migration
+moves the key in the installation config, in every project's registry config, in
+each project's own `.madock/config.xml`, and in any template a project copied
+under `.madock/docker/`.
+
+`php/yarn/enabled` went the same way, to `nodejs/yarn/enabled`. That one was
+never declared at all: no default carried it, three platform configurators set
+it, and one template read it — while a real `nodejs/yarn/enabled` sat unused in
+the defaults.
+
+**Which images offer it:** all of them — php, python, ruby and golang. Every one
+of those base images is Debian or Ubuntu, so the same nodesource install works
+in each.
 
 ## A project with no web server
 

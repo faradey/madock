@@ -102,7 +102,7 @@ func customPhpConfig(config *configs2.ConfigLines, defVersions versions.ToolsVer
 	config.Set("php/xdebug/enabled", configs2.GetOption("php/xdebug/enabled", generalConf, projectConf))
 	config.Set("php/ioncube/enabled", configs2.GetOption("php/ioncube/enabled", generalConf, projectConf))
 
-	config.Set("php/nodejs/enabled", configs2.GetOption("php/nodejs/enabled", generalConf, projectConf))
+	config.Set("nodejs/embedded", configs2.GetOption("nodejs/embedded", generalConf, projectConf))
 	config.Set("nodejs/version", configs2.GetOption("nodejs/version", generalConf, projectConf))
 }
 
