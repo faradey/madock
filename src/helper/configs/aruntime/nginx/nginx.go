@@ -96,8 +96,22 @@ func proxyPreamble(generalConfig map[string]string) string {
 	preamble := "worker_processes 2;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\nserver_names_hash_bucket_size  128;\nserver_names_hash_max_size 1024;\n"
 
 	// Global rate limiting zone (defined once for all projects)
+	//
+	// It was written to catch a request loop rather than an attacker, and the
+	// default said so: 1000 requests a second from one address is a permission,
+	// not a limit. The number moved; the zone did not need to.
 	if generalConfig["proxy/rate_limit/enabled"] == "true" {
-		preamble += "# Rate limiting (protection against infinite loops)\nlimit_req_zone $binary_remote_addr zone=general:10m rate=" + generalConfig["proxy/rate_limit/rate"] + "r/s;\n"
+		preamble += "# Requests per second, per client address\nlimit_req_zone $binary_remote_addr zone=general:10m rate=" + generalConfig["proxy/rate_limit/rate"] + "r/s;\n"
+	}
+
+	// Simultaneous connections per address.
+	//
+	// The other half of resource exhaustion, and the half nothing answered: a
+	// request that never finishes spends no rate at all, so a few hundred slow
+	// connections hold every worker the proxy has while staying under any
+	// per-second limit.
+	if generalConfig["proxy/conn_limit/enabled"] == "true" {
+		preamble += "# Simultaneous connections, per client address\nlimit_conn_zone $binary_remote_addr zone=addr:10m;\n"
 	}
 
 	// Global gzip settings (defined once for all projects)
@@ -224,6 +238,13 @@ func makeProxy(projectName string) {
 						rateLimitReq = "limit_req zone=general burst=" + generalConfig["proxy/rate_limit/burst"] + " nodelay;"
 					}
 
+					// And the connection limit beside it, so a block carries
+					// both halves or neither.
+					connLimit := ""
+					if generalConfig["proxy/conn_limit/enabled"] == "true" {
+						connLimit = "limit_conn addr " + generalConfig["proxy/conn_limit/per_ip"] + ";"
+					}
+
 					// The proxy block belongs to `name`, and until this was
 					// rendered per project it was substituted with the config of
 					// whichever project happened to be starting: the mftf
@@ -242,6 +263,8 @@ func makeProxy(projectName string) {
 						"proxy/timeout/send":    generalConfig["proxy/timeout/send"],
 						"proxy/timeout/read":    generalConfig["proxy/timeout/read"],
 						"proxy/rate_limit/req":  rateLimitReq,
+						"proxy/conn_limit/req":  connLimit,
+						"proxy/max_body_size":   generalConfig["proxy/max_body_size"],
 					})
 
 					err := os.WriteFile(paths.MakeDirsByPath(paths.CacheDir())+"/"+name+"-proxy.conf", []byte(strReplaced), 0755)
