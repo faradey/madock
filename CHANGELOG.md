@@ -1,3 +1,12 @@
+**v3.9.14**
+
+Added:
+- **`config:unset`, because nothing could remove a setting.** madock keeps the project's own `.madock/config.xml` — the copy in git — and a machine-side copy under the installation, seeded from it the first time the project is seen. Reads merge both with the project's copy winning, so *adding* or *changing* a setting in git reaches every machine. **Deleting one does not**: the machine-side copy still has it, `config:set` can only assign, and clearing the cache does not touch the file. The only way to drop a single key was to remove the project and set it up again
+- Measured on a live project: a `custom_commands` block was deleted from the repository, committed and rolled out, and `madock pr` went on working on every machine that had ever run setup. Nothing broke and nobody was told, which is the whole difficulty — a setting retired months ago is still in force and nothing says so
+- It reports by reading back rather than by trusting the write. A key can survive an unset in a way that looks exactly like success, because the project's own config may also set it and that file wins — so the command says which key is still set and where to look, instead of printing "removed" over a value that did not move
+
+Still open, and stated rather than quietly skipped: which copy should win in general. Making `rebuild` reduce the machine-side copy to the project's would fix the class rather than the case, and would also discard everything set with `config:set` on that machine. Telling those two apart needs provenance the config does not record, and that is a decision, not a patch.
+
 **v3.9.13**
 
 Fixed:
