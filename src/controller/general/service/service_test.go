@@ -38,3 +38,39 @@ func TestShortNameRoundTrip(t *testing.T) {
 		t.Errorf("GetByLong(\"nodejs/embedded\") = %q", got)
 	}
 }
+
+// A customer who has typed `service:enable php/nodejs` for two years should not
+// meet "The service doesn't exist." on an upgrade. That message is true and
+// useless: it does not say the thing moved, or where to.
+func TestOldServiceNamesStillResolve(t *testing.T) {
+	for _, c := range []struct{ old, want string }{
+		{"php/nodejs", "nodejs/embedded"},
+		{"php/yarn", "nodejs/yarn"},
+	} {
+		current, renamed := Renamed(c.old)
+		if !renamed {
+			t.Errorf("%q is not recognised as a renamed service", c.old)
+			continue
+		}
+		if current != c.want {
+			t.Errorf("Renamed(%q) = %q, want %q", c.old, current, c.want)
+		}
+		if got := GetByShort(c.old); got != c.want {
+			t.Errorf("GetByShort(%q) = %q, want %q", c.old, got, c.want)
+		}
+	}
+
+	// The old name has to reach the key that is actually read, or it "works"
+	// while switching nothing.
+	if got := ConfigKeyOf("php/nodejs"); got != "nodejs/embedded" {
+		t.Errorf("ConfigKeyOf(\"php/nodejs\") = %q — the old name would switch nothing", got)
+	}
+	if got := ConfigKeyOf("php/yarn"); got != "nodejs/yarn/enabled" {
+		t.Errorf("ConfigKeyOf(\"php/yarn\") = %q", got)
+	}
+
+	// A name that was never renamed must not be dragged through the map.
+	if _, renamed := Renamed("xdebug"); renamed {
+		t.Error("xdebug was reported as renamed")
+	}
+}

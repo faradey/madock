@@ -1,3 +1,9 @@
+**v3.9.9**
+
+Fixed:
+- **The old service names still work, and say what replaced them.** `service:enable php/nodejs` and `service:enable php/yarn` were how people turned those on, and 3.9.8 would have answered `The service "php/nodejs" doesn't exist.` — true and useless, since it says neither that the thing moved nor where to. Both names are accepted, resolve to `nodejs/embedded` and `nodejs/yarn`, and print the new name once. That line is the point: somebody learns the rename from the command they already type, rather than from a changelog they never opened. The aliases are not permanent — they are cheap while the old name is still in people's fingers and in their scripts
+- **`service:list` could not see a setting that is itself the switch.** It walked the config splitting on `/enabled`, so `nodejs/embedded` was enableable and invisible — which is worse than not being enableable at all. It is listed now, and the scope filter moved ahead of the check so an override does not list the same service twice
+
 **v3.9.8**
 
 Changed:

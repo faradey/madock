@@ -185,6 +185,12 @@ the defaults.
 of those base images is Debian or Ubuntu, so the same nodesource install works
 in each.
 
+**The old names still work.** `madock service:enable php/nodejs` and
+`service:enable php/yarn` are accepted, resolve to the new keys, and print the
+new name once so it is learned from the command rather than from a changelog.
+They are aliases, not a second way of spelling it, and they will be removed once
+the new names are the ones in people's fingers.
+
 ## A project with no web server
 
 Some projects answer no request and never will: a queue worker, a bus consumer,

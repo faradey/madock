@@ -55,6 +55,38 @@ var flagKeys = map[string]bool{
 	"nodejs/embedded": true,
 }
 
+// renamedServices maps a name that no longer exists to the one that replaced
+// it.
+//
+// A customer who has typed `service:enable php/nodejs` for two years should not
+// meet "The service doesn't exist." on an upgrade. That message is true and
+// useless: it does not say the thing moved, or where to. So the old name keeps
+// working, and the command says the new one — which is how somebody learns it,
+// rather than by reading a changelog they never opened.
+//
+// These are not kept forever. They are cheap while the old name is still in
+// people's fingers and in their scripts, and they come out when it is not.
+var renamedServices = map[string]string{
+	"php/nodejs": "nodejs/embedded",
+	"php/yarn":   "nodejs/yarn",
+}
+
+// Renamed reports the current name of a service that has been renamed.
+func Renamed(name string) (string, bool) {
+	current, ok := renamedServices[strings.ToLower(name)]
+	return current, ok
+}
+
+// IsFlagKey reports whether a config key is itself a service switch, rather
+// than the <name>/enabled half of one.
+//
+// Everything that walks the config looking for services has to ask this, not
+// just the one that toggles them: a service you can enable and cannot see in
+// the list is worse than one you cannot enable at all.
+func IsFlagKey(key string) bool {
+	return flagKeys[strings.ToLower(key)]
+}
+
 // ConfigKeyOf returns the config key a service name switches.
 func ConfigKeyOf(name string) string {
 	key := GetByShort(name)
@@ -109,6 +141,9 @@ func GetByLong(longName string) string {
 
 func GetByShort(shortName string) string {
 	shortName = strings.ToLower(shortName)
+	if current, renamed := Renamed(shortName); renamed {
+		return current
+	}
 	for key, val := range serviceMap {
 		if val == shortName {
 			shortName = key
