@@ -319,11 +319,57 @@
                 <gzip>
                     <enabled>true</enabled>
                 </gzip>
+                <!-- Requests per second per client address, and how many may
+                     arrive ahead of that rate before nginx refuses.
+
+                     It used to be 1000/2000, which is not a limit but a
+                     permission: it was written to catch a request loop, not an
+                     attacker, and the comment in the code said so. 50 with a
+                     burst of 200 still passes an asset-heavy page in one go —
+                     a browser opens a handful of connections and a Magento
+                     page pulls a few dozen files — while a single address can
+                     no longer occupy the machine on its own.
+
+                     It is per address, so it does nothing against a
+                     distributed flood. Nothing on this side of the wire does;
+                     that is what a proxy in front of the origin is for. -->
                 <rate_limit>
                     <enabled>true</enabled>
-                    <rate>1000</rate>
-                    <burst>2000</burst>
+                    <rate>50</rate>
+                    <burst>200</burst>
                 </rate_limit>
+                <!-- Simultaneous connections per client address. Missing
+                     entirely until now, which left the slow half of resource
+                     exhaustion unanswered: a request that never finishes costs
+                     no rate at all, and a few hundred of them hold every worker
+                     the proxy has. A browser needs six to eight per host, so
+                     100 is generous. -->
+                <conn_limit>
+                    <enabled>true</enabled>
+                    <per_ip>100</per_ip>
+                </conn_limit>
+                <!-- The largest request body the proxy will accept. It was 2G,
+                     hard-coded in every server block, which is an upload nobody
+                     makes through a browser and a cheap way to occupy disk and
+                     workers. 128M covers product images and admin imports; a
+                     project that genuinely needs more sets its own. -->
+                <max_body_size>128M</max_body_size>
+                <!-- The two front-end development ports the shared proxy
+                     publishes: LiveReload on 35729 and Vite on 5173.
+
+                     They are fixed numbers, so they fall outside the
+                     17000-19999 range the firewall guard closes, and they are
+                     published whether or not anything can serve them — Vite
+                     needs nodejs, which a project may not run at all. On a
+                     laptop that is harmless and convenient; on a server it is
+                     a development server answering the internet, which is how
+                     one was found listening on a production host. -->
+                <livereload>
+                    <enabled>true</enabled>
+                </livereload>
+                <vite>
+                    <enabled>true</enabled>
+                </vite>
                 <mailpit>
                     <enabled>true</enabled>
                     <!-- Which address the web interface is published on. It has

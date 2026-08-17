@@ -4,6 +4,16 @@ Fixed:
 - **An installation could stop receiving templates altogether, and look healthy doing it.** The guard added in 3.9.3 skips extraction when the installation directory holds a `go.mod`, on the reasoning that such an install is a clone and git delivers `docker/`. That is true of madock and false of an installation that imports it: madock-pro's install directory is a clone with `go.mod` at the root, but its `docker/` is in `.gitignore` on purpose, because the assets belong to the imported module and arrive by extraction. So extraction switched itself off in the one installation where nothing else brings the templates in, and the tree stopped moving — measured on the development install, `.embedded_version` read **3.6.7** against a **3.9.3** module, with 47 templates still written in the syntax the engine replaced in 3.9.1. Nothing announced it, because the renderer converts the old syntax on the fly and warns: every command worked, from templates two years old. A customer install, being a bare binary with no `go.mod`, was unaffected — so the breakage was confined to the installation the paid edition is developed and tested on, which is the worst place for it to hide
 - The test is now a file in the tree it is a statement about: `docker/embed.go`, the embed declaration. It exists wherever the templates are source, and it appears in no `//go:embed` pattern — those name asset directories — so extraction cannot write it and cannot make an extracted tree pass for a checkout. A test pins the path, because a rename would turn the guard off silently and bring back the reverted-edits defect it was written for
 
+**v3.9.4**
+
+Upgrading:
+- **The shared proxy's request limits become limits.** `proxy/rate_limit` defaulted to 1000 requests a second per address with a burst of 2000, which is not a limit but a permission — it was written to catch a request loop, and the comment in the code said so. The default is now 50 with a burst of 200: an asset-heavy page still loads in one go, while one address can no longer occupy the machine. It remains per address and therefore does nothing against a distributed flood; nothing on this side of the wire does
+- **`client_max_body_size` was 2G, hard-coded in every server block.** That is an upload nobody makes through a browser and a cheap way to hold workers and disk. It is `proxy/max_body_size` now, defaulting to 128M, and a project that genuinely needs more sets its own
+
+Added:
+- **`proxy/conn_limit`, the half of resource exhaustion nothing answered.** A request that never finishes spends no rate at all, so a few hundred slow connections hold every worker the proxy has while staying under any per-second limit. 100 simultaneous connections per address by default, where a browser needs six to eight
+- **`proxy/livereload/enabled` and `proxy/vite/enabled`, both on by default.** The shared proxy publishes LiveReload on 35729 and Vite on 5173 as fixed numbers, so they fall outside the 17000-19999 range the firewall guard closes — and they are published whether or not anything can serve them, since Vite needs nodejs a project may not run. On a laptop that is the point of them; on a server it is a development server answering the internet, which is where one was found. Turning either off removes only its published port
+
 **v3.9.3**
 
 Added:
