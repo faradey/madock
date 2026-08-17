@@ -114,7 +114,7 @@ func Bigcommerce(config *configs2.ConfigLines, defVersions versions.ToolsVersion
 		// for asset pipelines / cli tooling users may want
 		// alongside the SDK.
 		config.Set("nodejs/enabled", "false")
-		config.Set("nodejs/embedded", "true")
+		config.Set("nodejs/embedded/enabled", "true")
 		config.Set("nodejs/yarn/enabled", "true")
 		config.Set("nodejs/version", nodeVer)
 		// Reset stale Node-only setting if user switched away from

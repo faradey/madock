@@ -152,7 +152,7 @@ func Shopify(config *configs2.ConfigLines, defVersions versions.ToolsVersions, g
 	} else {
 		// PHP-stack preset (api-php / laravel-shopify / legacy)
 		config.Set("nodejs/enabled", "false")
-		config.Set("nodejs/embedded", "true")
+		config.Set("nodejs/embedded/enabled", "true")
 		config.Set("nodejs/yarn/enabled", "true")
 		config.Set("nodejs/version", nodeVer)
 		// Reset stale Node-only setting if user switched away from

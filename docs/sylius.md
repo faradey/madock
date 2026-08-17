@@ -106,7 +106,7 @@ yarn dev         # one-shot dev build
 yarn build       # production-style build (what install runs)
 ```
 
-The container ships Node and Yarn via the shared `common/nodejs` Dockerfile snippet (gated by the `nodejs/embedded` + `nodejs/yarn/enabled` flags the env writer sets to `true` for sylius).
+The container ships Node and Yarn via the shared `common/nodejs` Dockerfile snippet (gated by the `nodejs/embedded/enabled` + `nodejs/yarn/enabled` flags the env writer sets to `true` for sylius).
 
 ## Common gotchas
 

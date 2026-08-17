@@ -104,7 +104,7 @@ func TestV398_ReachesEveryCopy(t *testing.T) {
 			t.Errorf("%s still carries the old key:\n%s", path, body)
 		}
 		parsed := configs.ParseXmlFile(path)
-		if got := parsed["scopes/default/nodejs/embedded"]; got != "true" {
+		if got := parsed["scopes/default/nodejs/embedded/enabled"]; got != "true" {
 			t.Errorf("%s: nodejs/embedded is %q, want \"true\"", path, got)
 		}
 		if got := parsed["scopes/default/nodejs/yarn/enabled"]; got != "true" {
@@ -119,7 +119,7 @@ func TestV398_ReachesEveryCopy(t *testing.T) {
 	if strings.Contains(tmpl, ".php.nodejs.enabled") || strings.Contains(tmpl, ".php.yarn.enabled") {
 		t.Errorf("a project's own template still asks for the old key:\n%s", tmpl)
 	}
-	if !strings.Contains(tmpl, ".nodejs.embedded") {
+	if !strings.Contains(tmpl, ".nodejs.embedded.enabled") {
 		t.Errorf("the template was not migrated:\n%s", tmpl)
 	}
 }
@@ -146,10 +146,10 @@ func TestV398_MigratesEveryScope(t *testing.T) {
 	V398()
 
 	parsed := configs.ParseXmlFile(filepath.Join(registry, "config.xml"))
-	if got := parsed["scopes/default/nodejs/embedded"]; got != "true" {
+	if got := parsed["scopes/default/nodejs/embedded/enabled"]; got != "true" {
 		t.Errorf("default scope: %q", got)
 	}
-	if got := parsed["scopes/staging/nodejs/embedded"]; got != "false" {
+	if got := parsed["scopes/staging/nodejs/embedded/enabled"]; got != "false" {
 		t.Errorf("staging scope: %q — a second scope was left behind", got)
 	}
 	_ = execDir
@@ -197,7 +197,9 @@ func TestV398_LeavesUntouchedFilesAlone(t *testing.T) {
     <scopes>
         <default>
             <nodejs>
-                <embedded>true</embedded>
+                <embedded>
+                    <enabled>true</enabled>
+                </embedded>
             </nodejs>
         </default>
     </scopes>
@@ -225,7 +227,7 @@ func TestV398_NewNameWins(t *testing.T) {
     <scopes>
         <default>
             <php><nodejs><enabled>false</enabled></nodejs></php>
-            <nodejs><embedded>true</embedded></nodejs>
+            <nodejs><embedded><enabled>true</enabled></embedded></nodejs>
         </default>
     </scopes>
 </config>
@@ -234,7 +236,7 @@ func TestV398_NewNameWins(t *testing.T) {
 	V398()
 
 	parsed := configs.ParseXmlFile(path)
-	if got := parsed["scopes/default/nodejs/embedded"]; got != "true" {
+	if got := parsed["scopes/default/nodejs/embedded/enabled"]; got != "true" {
 		t.Errorf("the deliberate value was overwritten with %q", got)
 	}
 	if _, still := parsed["scopes/default/php/nodejs/enabled"]; still {

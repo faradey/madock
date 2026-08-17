@@ -1,3 +1,17 @@
+**v3.9.10**
+
+Changed:
+- **The new key is `nodejs/embedded/enabled`, not a bare `nodejs/embedded`.** The short form was the switch itself, and every other service in madock is an `<x>/enabled` pair — so it needed a special case in the resolver, in `service:enable`, in `service:disable` and in `service:list`. That last one is what settles the question: the listing walked the config splitting on `/enabled`, so the setting was enableable and **invisible**, which is worse than not being settable at all. It was caught by somebody asking, not by a test, and the next config walker would have missed it the same way. Shaping it like everything else deleted the special case entirely — about forty lines, and the class of bug with them
+- Nothing was released with the short form: 3.9.8 and 3.9.9 are `-norelease` tags, no server carries them and no customer has the key. `service:enable nodejs/embedded` still reads exactly the same, because `nodejs/embedded` is now an ordinary service prefix rather than a special one
+
+**v3.9.9**
+
+Fixed:
+- **The old service names still work, and say what replaced them.** `service:enable php/nodejs` is documented in four places and worked for every project, because `php/nodejs/enabled` was in the shipped defaults — so 3.9.8 would have met people with `The service "php/nodejs" doesn't exist.`, which is true and useless: it says neither that the thing moved nor where to. It is accepted now, resolves to `nodejs/embedded`, and prints the new name once. That line is the point — somebody learns the rename from the command they already type, rather than from a changelog they never opened
+- `php/yarn` is aliased on the same terms, with one honest difference: it was **never** a registered service and never documented as one. It was in no service map, in no defaults, and worked only where a platform configurator happened to have written `php/yarn/enabled` — shopify, bigcommerce and sylius, three platforms out of eleven. The alias is there for whoever scripted it on one of those, not because it was a supported name
+- Neither alias is permanent. They are cheap while the old name is still in people's fingers and in their scripts, and they come out when it is not
+- **`service:list` could not see a setting that is itself the switch.** It walked the config splitting on `/enabled`, so `nodejs/embedded` was enableable and invisible — which is worse than not being enableable at all. It is listed now, and the scope filter moved ahead of the check so an override does not list the same service twice
+
 **v3.9.8**
 
 Changed:

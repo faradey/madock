@@ -40,6 +40,13 @@ func Execute() {
 	}
 
 	for _, name := range args.Args {
+		// An old name still works, and says so. Silence here would leave
+		// somebody using a name that is one release from disappearing without
+		// ever learning there is a new one.
+		if current, renamed := service.Renamed(name); renamed {
+			fmtc.WarningLn("\"" + name + "\" is now \"" + current + "\". The old name still works for now.")
+		}
+
 		if !service.IsService(name) {
 			continue
 		}

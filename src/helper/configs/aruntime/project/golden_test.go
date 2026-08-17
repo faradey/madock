@@ -60,7 +60,7 @@ func goldenCases() []goldenCase {
 			// and compared against nothing.
 			name: "magento2-php-embedded-node",
 			overrides: map[string]string{
-				"nodejs/embedded":     "true",
+				"nodejs/embedded/enabled":     "true",
 				"nodejs/yarn/enabled": "true",
 			},
 		},
@@ -73,7 +73,7 @@ func goldenCases() []goldenCase {
 				"platform":        "custom",
 				"language":        "python",
 				"php/enabled":     "false",
-				"nodejs/embedded": "true",
+				"nodejs/embedded/enabled": "true",
 			},
 		},
 		{

@@ -23,11 +23,11 @@ import (
 // default carried it, three platform configurators set it, and one template
 // read it, while a real `nodejs/yarn/enabled` sat in the defaults unused.
 var renames = [][2]string{
-	{"php/nodejs/enabled", "nodejs/embedded"},
+	{"php/nodejs/enabled", "nodejs/embedded/enabled"},
 	{"php/yarn/enabled", "nodejs/yarn/enabled"},
 	// The template spelling of the same two, for copies of madock's own
 	// templates that a project keeps under .madock/docker/.
-	{".php.nodejs.enabled", ".nodejs.embedded"},
+	{".php.nodejs.enabled", ".nodejs.embedded.enabled"},
 	{".php.yarn.enabled", ".nodejs.yarn.enabled"},
 }
 
