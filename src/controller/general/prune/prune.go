@@ -1,6 +1,8 @@
 package prune
 
 import (
+	"os"
+
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/controller/general/proxy"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
@@ -23,6 +25,17 @@ func init() {
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralPrune)).(*arg_struct.ControllerGeneralPrune)
+
+	// The name promises `docker system prune` and the body is `docker compose
+	// down` for the current project — with --with-volumes, its data volumes and
+	// images as well. Whatever it is called, it destroys, so the installation's
+	// answer applies here too.
+	if !configs.AllowsDestructiveCommands() {
+		for _, line := range configs.DestructiveRefusal("prune") {
+			fmtc.ErrorLn(line)
+		}
+		os.Exit(1)
+	}
 
 	if configs.IsHasConfig("") {
 		projectname := configs.GetProjectName()

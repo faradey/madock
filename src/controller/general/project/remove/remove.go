@@ -47,6 +47,15 @@ func init() {
 func Execute() {
 	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
+	// Before anything is read, decided or printed: this command deletes a
+	// project's data, and an installation may forbid that.
+	if !configs.AllowsDestructiveCommands() {
+		for _, line := range configs.DestructiveRefusal("project:remove") {
+			fmtc.ErrorLn(line)
+		}
+		os.Exit(1)
+	}
+
 	// A name is answered by the registry, not by the working directory.
 	if args.Name != "" && args.Name != configs.GetProjectName() {
 		removeNamed(args.Name, args.Force)
