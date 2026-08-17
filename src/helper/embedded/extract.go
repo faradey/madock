@@ -56,14 +56,34 @@ func ExtractIfNeeded(appVersion string) {
 	os.WriteFile(markerFile, []byte(appVersion), 0644)
 }
 
-// isSourceCheckout reports whether the installation directory is madock's own
-// source tree.
+// sourceSentinel is the file that says the docker tree in this directory is
+// source rather than an extraction: the embed declaration itself. It is listed
+// in no //go:embed pattern — those name asset directories — so it exists in a
+// clone and never in an extracted tree.
+const sourceSentinel = "docker/embed.go"
+
+// isSourceCheckout reports whether the docker tree in the installation
+// directory is source that git delivers, rather than one extraction is
+// responsible for keeping current.
 //
-// go.mod is the test because it is what tells the two installations apart:
-// install.sh clones the repository, so the templates there are files git owns,
-// while a release binary is unpacked on its own with nothing beside it.
+// The question is about the templates, so the test is a file in the template
+// tree — not go.mod, which was the first answer and the wrong one. go.mod says
+// "this directory is a Go module", and that is true of madock-pro as well:
+// pro's installation is a clone with go.mod at the root, but its docker/ is in
+// .gitignore on purpose, because the assets belong to the imported madock
+// module and arrive by extraction. Testing go.mod therefore switched extraction
+// off in the one installation where nothing else brings the templates in, and
+// that tree simply stopped moving — measured 2026-08-17, `.embedded_version`
+// read 3.6.7 against a 3.9.3 module, with 47 templates still in the syntax the
+// engine replaced in 3.9.1. Nothing announced it: the renderer converts the old
+// syntax on the fly, so everything worked, from templates two years old.
+//
+// `docker/embed.go` is the honest signal. It is the embed declaration, so it
+// exists wherever the tree is source, and it appears in no //go:embed pattern —
+// those name asset directories — so extraction never writes it and cannot make
+// an extracted tree look like a checkout.
 func isSourceCheckout(execDir string) bool {
-	_, err := os.Stat(filepath.Join(execDir, "go.mod"))
+	_, err := os.Stat(filepath.Join(execDir, filepath.FromSlash(sourceSentinel)))
 	return err == nil
 }
 

@@ -1,3 +1,9 @@
+**v3.9.4**
+
+Fixed:
+- **An installation could stop receiving templates altogether, and look healthy doing it.** The guard added in 3.9.3 skips extraction when the installation directory holds a `go.mod`, on the reasoning that such an install is a clone and git delivers `docker/`. That is true of madock and false of an installation that imports it: madock-pro's install directory is a clone with `go.mod` at the root, but its `docker/` is in `.gitignore` on purpose, because the assets belong to the imported module and arrive by extraction. So extraction switched itself off in the one installation where nothing else brings the templates in, and the tree stopped moving — measured on the development install, `.embedded_version` read **3.6.7** against a **3.9.3** module, with 47 templates still written in the syntax the engine replaced in 3.9.1. Nothing announced it, because the renderer converts the old syntax on the fly and warns: every command worked, from templates two years old. A customer install, being a bare binary with no `go.mod`, was unaffected — so the breakage was confined to the installation the paid edition is developed and tested on, which is the worst place for it to hide
+- The test is now a file in the tree it is a statement about: `docker/embed.go`, the embed declaration. It exists wherever the templates are source, and it appears in no `//go:embed` pattern — those name asset directories — so extraction cannot write it and cannot make an extracted tree pass for a checkout. A test pins the path, because a rename would turn the guard off silently and bring back the reverted-edits defect it was written for
+
 **v3.9.3**
 
 Added:
