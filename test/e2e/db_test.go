@@ -66,46 +66,48 @@ func TestDatabaseIsReachable(t *testing.T) {
 		t.Fatalf("the project has no generated database passwords to check against: %q / %q", password, rootPassword)
 	}
 
-	// Asserted line by line, not by searching the whole output, and that is not
-	// fussiness: on this project the generated password is `db` — two characters,
-	// the same as the database name, the user and the host — so "the output does
-	// not contain the password" is false however well the masking works. The
-	// first version of this test failed exactly there, on `host: db`.
-	if line := valueLine(t, info, "password"); strings.Contains(line, password) || !strings.Contains(line, "set (") {
-		t.Errorf("db:info did not describe the database password: %q", line)
+	// Compared as whole values, not searched for anywhere in the output. This
+	// project's credentials are `db` and `password` — two and eight characters,
+	// the same as the database name and a substring of the word "password" in
+	// madock's own label — so both "the output contains the secret" and "the line
+	// contains the secret" are true no matter how well the masking works. Two
+	// versions of this test failed on exactly that, on `host: db` and then on
+	// `root password: set (8)`.
+	if got := valueOf(t, info, "password"); got == password || !strings.HasPrefix(got, "set (") {
+		t.Errorf("db:info did not describe the database password: %q", got)
 	}
-	if line := valueLine(t, info, "root password"); strings.Contains(line, rootPassword) || !strings.Contains(line, "set (") {
-		t.Errorf("db:info did not describe the database root password: %q", line)
+	if got := valueOf(t, info, "root password"); got == rootPassword || !strings.HasPrefix(got, "set (") {
+		t.Errorf("db:info did not describe the database root password: %q", got)
 	}
 
 	// And asked by name, it prints them — the flag is the whole point of the
 	// default being the other way.
 	shown := p.run(1*time.Minute, "db:info", "--show-secrets")
-	if line := valueLine(t, shown, "password"); line != "password: "+password {
-		t.Errorf("db:info --show-secrets did not print the password: %q", line)
+	if got := valueOf(t, shown, "password"); got != password {
+		t.Errorf("db:info --show-secrets printed %q as the password, want %q", got, password)
 	}
-	if line := valueLine(t, shown, "root password"); line != "root password: "+rootPassword {
-		t.Errorf("db:info --show-secrets did not print the root password: %q", line)
+	if got := valueOf(t, shown, "root password"); got != rootPassword {
+		t.Errorf("db:info --show-secrets printed %q as the root password, want %q", got, rootPassword)
 	}
 }
 
 // ansi matches the colour escapes madock writes around every printed line.
 var ansi = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
-// valueLine returns the "<key>: <value>" line for one key, stripped of colour
-// and surrounding space.
+// valueOf returns what one "<key>: <value>" line says, stripped of colour and
+// surrounding space.
 //
-// Per-line, because the interesting assertions here are about one line each and
-// a short secret is a substring of half the output. Fails the test when the key
-// is absent, since every caller is asserting about a line it expects to be
-// there.
-func valueLine(t *testing.T, out, key string) string {
+// The value alone, because every assertion here is an equality against a secret,
+// and a secret that happens to be a substring of the label or of another field is
+// exactly what a containment check cannot survive. Fails the test when the key is
+// absent, since every caller expects the line to be there.
+func valueOf(t *testing.T, out, key string) string {
 	t.Helper()
 
 	for _, line := range strings.Split(ansi.ReplaceAllString(out, ""), "\n") {
 		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, key+":") {
-			return line
+		if value, found := strings.CutPrefix(line, key+":"); found {
+			return strings.TrimSpace(value)
 		}
 	}
 
