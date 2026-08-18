@@ -3,6 +3,7 @@
 package e2e
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -65,17 +66,49 @@ func TestDatabaseIsReachable(t *testing.T) {
 		t.Fatalf("the project has no generated database passwords to check against: %q / %q", password, rootPassword)
 	}
 
-	if strings.Contains(info, password) {
-		t.Errorf("db:info printed the database password in full:\n%s", info)
+	// Asserted line by line, not by searching the whole output, and that is not
+	// fussiness: on this project the generated password is `db` — two characters,
+	// the same as the database name, the user and the host — so "the output does
+	// not contain the password" is false however well the masking works. The
+	// first version of this test failed exactly there, on `host: db`.
+	if line := valueLine(t, info, "password"); strings.Contains(line, password) || !strings.Contains(line, "set (") {
+		t.Errorf("db:info did not describe the database password: %q", line)
 	}
-	if strings.Contains(info, rootPassword) {
-		t.Errorf("db:info printed the database root password in full:\n%s", info)
+	if line := valueLine(t, info, "root password"); strings.Contains(line, rootPassword) || !strings.Contains(line, "set (") {
+		t.Errorf("db:info did not describe the database root password: %q", line)
 	}
-	requireContains(t, info, "password: set (", "db:info should still say a password is set, and how long it is")
 
 	// And asked by name, it prints them — the flag is the whole point of the
 	// default being the other way.
 	shown := p.run(1*time.Minute, "db:info", "--show-secrets")
-	requireContains(t, shown, password, "db:info --show-secrets should print the password")
-	requireContains(t, shown, rootPassword, "db:info --show-secrets should print the root password")
+	if line := valueLine(t, shown, "password"); line != "password: "+password {
+		t.Errorf("db:info --show-secrets did not print the password: %q", line)
+	}
+	if line := valueLine(t, shown, "root password"); line != "root password: "+rootPassword {
+		t.Errorf("db:info --show-secrets did not print the root password: %q", line)
+	}
+}
+
+// ansi matches the colour escapes madock writes around every printed line.
+var ansi = regexp.MustCompile(`\x1b\[[0-9;]*m`)
+
+// valueLine returns the "<key>: <value>" line for one key, stripped of colour
+// and surrounding space.
+//
+// Per-line, because the interesting assertions here are about one line each and
+// a short secret is a substring of half the output. Fails the test when the key
+// is absent, since every caller is asserting about a line it expects to be
+// there.
+func valueLine(t *testing.T, out, key string) string {
+	t.Helper()
+
+	for _, line := range strings.Split(ansi.ReplaceAllString(out, ""), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, key+":") {
+			return line
+		}
+	}
+
+	t.Fatalf("no %q line in:\n%s", key, out)
+	return ""
 }
