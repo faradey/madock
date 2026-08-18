@@ -21,6 +21,7 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
+	ShowSecrets bool `arg:"--show-secrets" help:"Print secret values in full instead of describing them"`
 }
 
 func init() {
@@ -34,7 +35,7 @@ func init() {
 }
 
 func Info() {
-	attr.Parse(new(ArgsStruct))
+	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 	projectConf := configs.GetCurrentProjectConfig()
 	projectName := configs.GetProjectName()
@@ -47,7 +48,7 @@ func Info() {
 		Service:     mainService,
 	}
 
-	printGeneric(ctx)
+	printGeneric(ctx, args.ShowSecrets)
 	printScopeBreakdown(projectName, projectConf)
 
 	if handler, ok := inforeg.Get(projectConf["platform"]); ok {
@@ -58,7 +59,7 @@ func Info() {
 	}
 }
 
-func printGeneric(ctx *inforeg.InfoContext) {
+func printGeneric(ctx *inforeg.InfoContext, showSecrets bool) {
 	conf := ctx.ProjectConf
 	platformName := conf["platform"]
 	if platformName == "" {
@@ -112,7 +113,7 @@ func printGeneric(ctx *inforeg.InfoContext) {
 			dbItems = append(dbItems, fmtc.SectionItem{Key: "user", Value: v})
 		}
 		if v := conf["db/password"]; v != "" {
-			dbItems = append(dbItems, fmtc.SectionItem{Key: "password", Value: maskPassword(v)})
+			dbItems = append(dbItems, fmtc.SectionItem{Key: "password", Value: fmtc.SecretOrValue(v, showSecrets)})
 		}
 		// Read-only lookup — do not allocate a port from `madock info`.
 		if dbPort := ports.GetRegistry().Get(ctx.ProjectName, ports.ServiceDB); dbPort > 0 {
@@ -255,14 +256,3 @@ func collectEnabledServices(conf map[string]string) []enabledService {
 	return out
 }
 
-func maskPassword(v string) string {
-	r := []rune(v)
-	n := len(r)
-	if n <= 2 {
-		return strings.Repeat("*", n)
-	}
-	if n <= 4 {
-		return string(r[0]) + strings.Repeat("*", n-1)
-	}
-	return string(r[0]) + strings.Repeat("*", n-2) + string(r[n-1])
-}

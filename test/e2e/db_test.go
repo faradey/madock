@@ -3,6 +3,7 @@
 package e2e
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -22,6 +23,13 @@ func TestDatabaseIsReachable(t *testing.T) {
 		"--language=none",
 		"--hosts=e2edb.test",
 	)
+
+	// Recognisable on sight, and set before the first start so the containers
+	// are built with them. Finding either string in command output then means
+	// one thing only.
+	p.run(2*time.Minute, "config:set", "-n", "db/password", "-v", dbPassword)
+	p.run(2*time.Minute, "config:set", "-n", "db/root_password", "-v", dbRootPassword)
+
 	p.run(20*time.Minute, "start")
 
 	out := p.query("SELECT 1 AS madock_probe")
@@ -42,4 +50,24 @@ func TestDatabaseIsReachable(t *testing.T) {
 	info := p.run(1*time.Minute, "db:info")
 	requireContains(t, info, "type: MYSQL", "db:info should report the engine")
 	requireContains(t, info, "host: db", "db:info should report the host the commands connect to")
+
+	// The passwords are described, not printed. This command is run to find a
+	// host and a port, and its output then lives in scrollback, in a CI log, in
+	// a screenshot and in the issue somebody pastes it into — a radius the
+	// config file it reads from does not have. On a project borrowing a shared
+	// database the root password printed here is the **provider's**, which
+	// reaches every other project's schema on that server.
+	if strings.Contains(info, dbPassword) {
+		t.Errorf("db:info printed the database password in full:\n%s", info)
+	}
+	if strings.Contains(info, dbRootPassword) {
+		t.Errorf("db:info printed the database root password in full:\n%s", info)
+	}
+	requireContains(t, info, "password: set (", "db:info should still say a password is set, and how long it is")
+
+	// And asked by name, it prints them — the flag is the whole point of the
+	// default being the other way.
+	shown := p.run(1*time.Minute, "db:info", "--show-secrets")
+	requireContains(t, shown, dbPassword, "db:info --show-secrets should print the password")
+	requireContains(t, shown, dbRootPassword, "db:info --show-secrets should print the root password")
 }

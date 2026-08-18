@@ -20,15 +20,20 @@ type DbInfoOutput struct {
 }
 
 type DatabaseInfo struct {
-	Name         string `json:"name"`
-	Type         string `json:"type"`
-	Host         string `json:"host"`
-	Database     string `json:"database"`
-	User         string `json:"user"`
-	Password     string `json:"password"`
-	RootPassword string `json:"root_password,omitempty"`
-	RemoteHost   string `json:"remote_host"`
-	RemotePort   int    `json:"remote_port"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Host     string `json:"host"`
+	Database string `json:"database"`
+	User     string `json:"user"`
+	// The passwords are present only when they were asked for by name, with
+	// --show-secrets. The booleans are always there, so a script can tell "no
+	// password" from "not shown" without the value.
+	Password        string `json:"password,omitempty"`
+	PasswordSet     bool   `json:"password_set"`
+	RootPassword    string `json:"root_password,omitempty"`
+	RootPasswordSet bool   `json:"root_password_set,omitempty"`
+	RemoteHost      string `json:"remote_host"`
+	RemotePort      int    `json:"remote_port"`
 	// Shared and Provider describe a database owned by another project. They
 	// stay absent for the ordinary case of a database inside this project.
 	Shared   bool   `json:"shared,omitempty"`
@@ -60,6 +65,16 @@ func Info() {
 	}
 
 	if args.Json {
+		// The values go, the two booleans stay: a script can still tell a
+		// database with no password from one whose password was not printed,
+		// which is the only thing it could honestly do with a masked string.
+		// JSON is not the safer half — it is what ends up in a CI log.
+		if !args.ShowSecrets {
+			for i := range databases {
+				databases[i].Password = ""
+				databases[i].RootPassword = ""
+			}
+		}
 		output.PrintJSON(DbInfoOutput{Databases: databases})
 		return
 	}
@@ -82,9 +97,9 @@ func Info() {
 		fmtc.SuccessLn("   host: " + db.Host)
 		fmtc.SuccessLn("   name: " + db.Database)
 		fmtc.SuccessLn("   user: " + db.User)
-		fmtc.SuccessLn("   password: " + db.Password)
-		if db.RootPassword != "" {
-			fmtc.SuccessLn("   root password: " + db.RootPassword)
+		fmtc.SuccessLn("   password: " + fmtc.SecretOrValue(db.Password, args.ShowSecrets))
+		if db.RootPasswordSet {
+			fmtc.SuccessLn("   root password: " + fmtc.SecretOrValue(db.RootPassword, args.ShowSecrets))
 		}
 		if db.RemotePort > 0 {
 			fmtc.SuccessLn("   remote HOST:PORT: " + db.RemoteHost + ":" + strconv.Itoa(db.RemotePort))
@@ -105,12 +120,13 @@ func describe(projectConf map[string]string, projectName, service, label string)
 	}
 
 	info := DatabaseInfo{
-		Name:     label,
-		Type:     target.Type,
-		Host:     target.Host,
-		Database: target.Database,
-		User:     target.User,
-		Password: target.Password,
+		Name:        label,
+		Type:        target.Type,
+		Host:        target.Host,
+		Database:    target.Database,
+		User:        target.User,
+		Password:    target.Password,
+		PasswordSet: target.Password != "",
 		// The published port belongs to the project running the container, which
 		// is the provider when the database is shared.
 		//
@@ -125,8 +141,15 @@ func describe(projectConf map[string]string, projectName, service, label string)
 		RemotePort: ports.GetRegistry().Get(target.Project, portService(target.Service)),
 	}
 	// root_password is only meaningful for MySQL/MariaDB.
+	//
+	// It is also the most valuable line this command prints, and the reason the
+	// default is now to describe it rather than show it: on a project that
+	// borrows a shared database, this is the **provider's** root password, which
+	// reaches every other project's schema on that server. The consumer's own
+	// account cannot.
 	if target.Type == "mysql" {
 		info.RootPassword = target.RootPassword
+		info.RootPasswordSet = target.RootPassword != ""
 	}
 	if target.Shared {
 		info.Shared = true

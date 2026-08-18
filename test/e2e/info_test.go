@@ -28,9 +28,12 @@ import (
 //     command people run to *look* must not change what it is looking at. A
 //     project that has never started has no ports, and asking about it must not
 //     give it one.
-// dbPassword is deliberately unlike anything madock generates, so that finding
-// it in command output means one thing only.
-const dbPassword = "e2e-plaintext-password"
+// dbPassword and dbRootPassword are deliberately unlike anything madock
+// generates, so that finding either in command output means one thing only.
+const (
+	dbPassword     = "e2e-plaintext-password"
+	dbRootPassword = "e2e-plaintext-root-password"
+)
 
 func TestInfoReportsWhatIsActuallyPublished(t *testing.T) {
 	p := newProject(t, "e2einfo")

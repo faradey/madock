@@ -219,6 +219,7 @@ type ControllerGeneralDbExecute struct {
 
 type ControllerGeneralDbInfo struct {
 	attr.Arguments
+	ShowSecrets bool `arg:"--show-secrets" help:"Print the passwords in full instead of describing them"`
 }
 
 type ControllerGeneralConfigList struct {
