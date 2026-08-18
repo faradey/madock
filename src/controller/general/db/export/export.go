@@ -120,9 +120,18 @@ func exportMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbExp
 	// single transaction needs no locks at all and is the better choice on
 	// InnoDB anyway: it reads a consistent snapshot without stopping anyone
 	// else's writes, which matters more when the server is shared.
+	//
+	// --skip-lock-tables is the other half, and without it the first was not
+	// enough: mysqldump still issues a `FLUSH TABLES`, which needs RELOAD or
+	// FLUSH_TABLES, and the consumer's account has neither. **Measured on a live
+	// cluster on 2026-08-18**: `db:export` failed with error 1227 for every
+	// consumer of the shared database — ShipLab, Pricesmith and the console — so
+	// none of them could take a dump of their own data with the command that
+	// exists for it, and the workaround was to dump from the provider, as root,
+	// which reaches every other project's tables too.
 	consistency := ""
 	if target.Shared {
-		consistency = " --single-transaction"
+		consistency = " --single-transaction --skip-lock-tables"
 	}
 
 	cmd, prepErr := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", "set -o pipefail; "+target.MySQLDump()+" -u "+login+" -p"+loginPassword+consistency+" -v -h "+target.Host+ignoreTablesStr+" "+target.Database+" | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\\*/\\*/'")

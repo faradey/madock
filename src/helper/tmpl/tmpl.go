@@ -119,6 +119,27 @@ func (r *Renderer) Render(name, body string) (string, error) {
 	return out.String(), nil
 }
 
+// Check parses body and resolves every include it reaches, without executing it.
+//
+// It answers one question — does this template's include set close — and it
+// exists because the commands that render also destroy. `rebuild` and `restart`
+// stop the containers first, so an include that no longer resolves used to end
+// the process with the environment down and a message about a file path.
+// Resolving the includes is cheap, needs no configuration values, and can
+// therefore happen before anything is torn down.
+//
+// Execution is deliberately not attempted: it needs the project's data and can
+// fail for reasons that are not drift, and a preflight that can fail for
+// unrelated reasons is one people learn to ignore.
+func (r *Renderer) Check(name, body string) error {
+	root := template.New(name).Delims(LeftDelim, RightDelim).Option("missingkey=error").Funcs(r.funcMap())
+
+	if _, err := root.Parse(r.source(name, body)); err != nil {
+		return err
+	}
+	return r.loadSnippets(root)
+}
+
 // source is every template's way in, the root and each snippet alike.
 //
 // A template written against the old syntax is converted here rather than read
