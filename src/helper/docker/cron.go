@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -259,7 +260,11 @@ func resolveMainService(projectConf map[string]string) string {
 	return "php"
 }
 
-// getCronJobsFromConfig extracts cron jobs from project configuration
+// getCronJobsFromConfig extracts cron jobs from project configuration.
+//
+// Two spellings reach this map and both are documented: named entries, which
+// parse to cron/jobs/<name>, and a repeated <job> tag, which parses to
+// cron/jobs/job/<n>.
 func getCronJobsFromConfig(projectConf map[string]string) []string {
 	var jobs []string
 	jobsMap := make(map[string]string)
@@ -271,12 +276,14 @@ func getCronJobsFromConfig(projectConf map[string]string) []string {
 		}
 	}
 
-	// Sort keys for consistent order
+	// Sort keys for consistent order. Plain string order would read the tenth
+	// repeated <job> as the second one, so a numeric segment is compared as a
+	// number: job/2 before job/10.
 	keys := make([]string, 0, len(jobsMap))
 	for key := range jobsMap {
 		keys = append(keys, key)
 	}
-	sort.Strings(keys)
+	sort.Slice(keys, func(i, j int) bool { return lessConfigKey(keys[i], keys[j]) })
 
 	for _, key := range keys {
 		jobs = append(jobs, jobsMap[key])
@@ -285,12 +292,89 @@ func getCronJobsFromConfig(projectConf map[string]string) []string {
 	return jobs
 }
 
+// lessConfigKey orders two "/"-separated config keys, comparing a segment as a
+// number when both sides are entirely digits.
+func lessConfigKey(a, b string) bool {
+	as, bs := strings.Split(a, "/"), strings.Split(b, "/")
+	for i := 0; i < len(as) && i < len(bs); i++ {
+		if as[i] == bs[i] {
+			continue
+		}
+		an, aErr := strconv.Atoi(as[i])
+		bn, bErr := strconv.Atoi(bs[i])
+		if aErr == nil && bErr == nil {
+			return an < bn
+		}
+		return as[i] < bs[i]
+	}
+	return len(as) < len(bs)
+}
+
+// platformInstallsOwnCron reports whether CronExecute has a platform branch that
+// writes a crontab of its own. For everything else the config is the only source
+// of jobs, so an empty job list means nothing is scheduled at all.
+func platformInstallsOwnCron(platform string) bool {
+	switch platform {
+	case "magento2", "shopify", "shopware":
+		return true
+	}
+	return false
+}
+
+// CronJobCount reports how many jobs are installed in the container's crontab,
+// and whether the question could be answered at all.
+//
+// This is the half `service cron status` cannot see. The daemon being up says a
+// process is running; it says nothing about there being anything for it to run,
+// and those two answers came apart on a live project for four days without a
+// single line of output anywhere.
+//
+// A container that is not there answers (0, false) — unknown, which is not the
+// same as none and must not be printed as though it were.
+func CronJobCount(projectName string) (int, bool) {
+	projectConf := configs2.GetProjectConfig(projectName)
+	service := resolveMainService(projectConf)
+	service, userOS, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
+
+	out, err := containerExecSilent(GetContainerName(projectConf, projectName, service), userOS, "crontab", "-u", "www-data", "-l")
+	if err != nil {
+		// `crontab -l` exits non-zero when the user simply has no crontab. That
+		// is an answer — none — and only anything else is a failure to ask.
+		if strings.Contains(out, "no crontab for") {
+			return 0, true
+		}
+		return 0, false
+	}
+
+	count := 0
+	for _, line := range strings.Split(out, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		count++
+	}
+	return count, true
+}
+
 // installCronJobsFromConfig installs cron jobs from configuration
 func installCronJobsFromConfig(projectConf map[string]string, projectName string, manual bool) {
 	jobs := getCronJobsFromConfig(projectConf)
 	if len(jobs) == 0 {
+		// An empty list is an instruction, not an absence of one: the config owns
+		// this crontab, and leaving the previous jobs in place means a job deleted
+		// from the config goes on running forever with nothing naming it.
+		// Platform-specific jobs are reinstalled further down, after this.
+		removeCronJobsFromConfig(projectConf, projectName, false)
 		if manual {
 			fmt.Println("No cron jobs defined in configuration")
+		} else if !platformInstallsOwnCron(projectConf["platform"]) {
+			// Auto-invocation, from start or rebuild. The cron daemon has just
+			// been started and there is nothing for it to run, and on these
+			// platforms nothing else will add anything later — so `status` will
+			// go on reporting a scheduler that schedules nothing. Said once,
+			// where the start output is read.
+			fmtc.WarningLn("Cron is started but no jobs are defined in cron/jobs — nothing will run on a schedule.")
 		}
 		return
 	}

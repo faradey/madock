@@ -1,3 +1,16 @@
+**v3.9.17**
+
+Fixed:
+- **A `<jobs>` block with more than one `<job>` in it parsed to no jobs at all.** The XML reader hands a repeated text element over as a list, and the flattener knew three shapes — a string, a branch, a list of branches — so a list of strings matched nothing and the key was dropped without a word. One `<job>` parsed and worked; two or more silently became zero. Nothing downstream could tell that apart from a config with no jobs in it, so cron was started, the crontab was left empty, and `status` reported a scheduler that was running. **Measured on Pricesmith on 2026-08-19**, live and demo: seven jobs in `.madock/config.xml`, `Cron is running`, and `no crontab for www-data` in the container — no reconcile, no bulk-sync polling, no usage submission, for as long as the project had been on that config. The same silence applied to any repeated text tag anywhere in a config, and `<job>` is the only one the shipped defaults document
+- The writer had to learn the shape too, and this is the half that would have been worse than the bug: an index cannot be written as an element, because `<job><0>…</0></job>` is not legal XML and the next read of that file fails with `invalid XML name: 0` — on a file madock wrote itself, from a parser that exits the process on a bad read. A list is written the way it was read, as the tag repeated
+- **Deleting every job from the config left the old ones running in the container.** The install step returned early on an empty list without clearing what the previous one had put there, so a job removed from the config went on firing with nothing naming it. The config owns that crontab; an empty list is an instruction
+- Repeated jobs are ordered by index as a number rather than as text, so the tenth job is no longer installed second
+
+Changed:
+- **`Cron is running` now says how many jobs are installed** — `Cron is running (7 jobs)`, or a warning when the daemon is up with an empty crontab, which is the state the bug above produced and the one the old line read as healthy. The count is read from the container's crontab, not from the config: the config is what was asked for. When the container cannot answer, the line says `installed jobs: unknown` rather than reporting none
+- `status --json` gains `cron_jobs` and `cron_jobs_known`. `cron_jobs` is `-1` when the question could not be asked
+- Starting a project whose `cron/enabled` is true with no jobs defined now says so once, in the start output, on platforms that install no jobs of their own. It was only ever said under `cron:enable`, run by hand — the path nobody takes on a server
+
 **v3.9.16**
 
 Fixed:

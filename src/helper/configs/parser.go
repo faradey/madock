@@ -8,6 +8,7 @@ import (
 	"github.com/sbabiv/xml2map"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -126,7 +127,56 @@ func SetXmlMap(data map[string]interface{}) map[string]interface{} {
 		keys := strings.Split(key, "/")
 		setNestedValue(result, keys, value)
 	}
+	collapseIndexedMaps(result)
 	return result
+}
+
+// collapseIndexedMaps turns {"job": {"0": "a", "1": "b"}} back into
+// {"job": []string{"a", "b"}} so the writer can emit the repeated tag it was
+// parsed from.
+//
+// A repeated text element — <job>a</job><job>b</job> — has no other way to
+// survive a flat string map, so ComposeConfigMap spells it as job/0 and job/1.
+// Writing that back verbatim produces <job><0>a</0></job>, and `0` is not a
+// legal XML name: the next read of that file fails with "invalid XML name: 0"
+// and, since ParseXmlFile is fatal, takes the whole command with it. The
+// heuristic is safe in the other direction for the same reason — a config
+// cannot legitimately contain a child named `0`, because it could never have
+// been parsed.
+func collapseIndexedMaps(m map[string]interface{}) {
+	for key, value := range m {
+		nested, ok := value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		collapseIndexedMaps(nested)
+		if list, ok := indexedMapToSlice(nested); ok {
+			m[key] = list
+		}
+	}
+}
+
+// indexedMapToSlice reports whether every key is a decimal index covering
+// 0..len-1 with a string value, and returns the values in index order.
+func indexedMapToSlice(m map[string]interface{}) ([]string, bool) {
+	if len(m) == 0 {
+		return nil, false
+	}
+	list := make([]string, len(m))
+	seen := make([]bool, len(m))
+	for key, value := range m {
+		idx, err := strconv.Atoi(key)
+		if err != nil || idx < 0 || idx >= len(m) || seen[idx] {
+			return nil, false
+		}
+		str, ok := value.(string)
+		if !ok {
+			return nil, false
+		}
+		list[idx] = str
+		seen[idx] = true
+	}
+	return list, true
 }
 
 // setNestedValue recursively creates nested maps and sets the value at the deepest level.
@@ -181,6 +231,16 @@ func ComposeConfigMap(rawData map[string]interface{}) map[string]string {
 					data[key+"/"+arrKeyStr+"/"+k] = v
 				}
 			}
+		case []string:
+			// A tag repeated with plain text inside — <job>a</job><job>b</job> —
+			// which xml2map hands over as []string. Without this case the type
+			// switch matches nothing and the key is dropped without a word, so a
+			// <jobs> block with two or more <job> lines in it parsed to no jobs at
+			// all while a block with exactly one parsed fine. That is how a live
+			// project ran with cron started and an empty crontab.
+			for arrKey, arrVal := range value.([]string) {
+				data[key+"/"+fmt.Sprintf("%d", arrKey)] = arrVal
+			}
 		}
 	}
 
@@ -234,6 +294,16 @@ func getXMLTokens(s map[string]interface{}, e *xml.Encoder, tokens []xml.Token) 
 	for _, key := range keys {
 		value := s[key]
 		t := xml.StartElement{Name: xml.Name{Local: key}}
+
+		// A list is the one shape that is not a single element: it is the same
+		// tag written again for each entry, which is how it was read.
+		if list, ok := value.([]string); ok {
+			for _, item := range list {
+				tokens = append(tokens, t, xml.CharData(item), xml.EndElement{Name: t.Name})
+			}
+			continue
+		}
+
 		tokens = append(tokens, t)
 		switch value.(type) {
 		case string:
