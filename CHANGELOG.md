@@ -14,6 +14,8 @@ Changed:
 - `status --json` gains `cron_jobs` and `cron_jobs_known`. `cron_jobs` is `-1` when the question could not be asked
 - Starting a project whose `cron/enabled` is true with no jobs defined now says so once, in the start output, on platforms that install no jobs of their own. It was only ever said under `cron:enable`, run by hand — the path nobody takes on a server
 
+Worth saying out loud, because it is the shape rather than the incident: **this is the second time a status line answered a question nobody asks.** `status` printing `exit status 1` was the first. Here it named the daemon while the only reason anyone looks is the jobs — and unlike the first, this one read as reassurance and did so for four days on a live product. A status line has to answer the question its reader has, and where it cannot, say that it cannot: `installed jobs: unknown` is an answer, `Cron is running` was not.
+
 **v3.9.16**
 
 Fixed:
