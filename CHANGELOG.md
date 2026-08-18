@@ -1,3 +1,9 @@
+**v3.9.16**
+
+Fixed:
+- **`restart` stopped the containers before it looked at its arguments.** It was stop-then-start with no parsing of its own, and the parsing lived inside `start` — which is to say it happened after everything was already down. An argument the command does not take, `madock restart php` meant as "restart just the php service", therefore reached the argument parser with the environment already stopped, and the parser ends the process on a bad argument. The message read `too many positional arguments at 'php'`, which sounds like nothing happened; what had happened was every container going down and staying down. **Measured on a production machine on 2026-08-18**: nginx, php, db, redisdb and deployer stopped, the site off the air until somebody ran `madock start` by hand
+- Arguments are read first now, so the same typo costs a refusal and nothing else. `--with-chown` is passed through to `start` rather than re-parsed, because the parser answers only the first call in a process and a second one would have silently dropped the flag; `restart` also declares its arguments, so `madock restart --help` describes them
+
 **v3.9.15**
 
 Fixed:
