@@ -362,9 +362,9 @@ func installCronJobsFromConfig(projectConf map[string]string, projectName string
 	jobs := getCronJobsFromConfig(projectConf)
 	if len(jobs) == 0 {
 		// An empty list is an instruction, not an absence of one: the config owns
-		// this crontab, and leaving the previous jobs in place means a job deleted
-		// from the config goes on running forever with nothing naming it.
-		// Platform-specific jobs are reinstalled further down, after this.
+		// its block, and leaving the previous jobs in place means a job deleted
+		// from the config goes on running forever with nothing naming it. Only
+		// that block goes — Magento's and anything added by hand stay.
 		removeCronJobsFromConfig(projectConf, projectName, false)
 		if manual {
 			fmt.Println("No cron jobs defined in configuration")
@@ -381,15 +381,10 @@ func installCronJobsFromConfig(projectConf map[string]string, projectName string
 
 	containerName := GetContainerName(projectConf, projectName, resolveMainService(projectConf))
 
-	// First, remove existing crontab
-	removeCronJobsFromConfig(projectConf, projectName, false)
-
-	// Build crontab content
-	crontabContent := strings.Join(jobs, "\n") + "\n"
-
-	// Install crontab for www-data user
+	// Read, merge, write: the jobs go into a block of their own and everything
+	// else in the crontab is carried over untouched.
 	err := ContainerExec(containerName, "root", false, "bash", "-c",
-		fmt.Sprintf("echo '%s' | crontab -u www-data -", crontabContent))
+		writeCrontabScript(mergeCrontab(readCrontab(projectConf, projectName), jobs)))
 
 	if manual {
 		if err != nil {
@@ -405,15 +400,33 @@ func installCronJobsFromConfig(projectConf map[string]string, projectName string
 func removeCronJobsFromConfig(projectConf map[string]string, projectName string, manual bool) {
 	containerName := GetContainerName(projectConf, projectName, resolveMainService(projectConf))
 
-	// Remove crontab for www-data user
-	err := ContainerExec(containerName, "root", false, "crontab", "-u", "www-data", "-r")
+	err := ContainerExec(containerName, "root", false, "bash", "-c",
+		writeCrontabScript(removeMadockBlock(readCrontab(projectConf, projectName))))
 
 	if manual {
 		if err != nil {
-			// crontab -r returns error if no crontab exists, which is fine
+			logger.Println(err)
 			fmt.Println("Cron jobs removed (or none existed)")
 		} else {
 			fmtc.SuccessLn("Cron jobs removed")
 		}
 	}
+}
+
+// readCrontab returns www-data's current crontab, or an empty string when there
+// is none or the container cannot be reached.
+//
+// An empty string is safe for both callers: the merge then writes only our own
+// block, which is what a fresh container needs anyway. Getting it wrong in the
+// other direction would not be — a failed read treated as "the crontab is
+// something else" would carry stale text back in.
+func readCrontab(projectConf map[string]string, projectName string) string {
+	service := resolveMainService(projectConf)
+	service, userOS, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
+
+	out, err := containerExecSilent(GetContainerName(projectConf, projectName, service), userOS, "crontab", "-u", "www-data", "-l")
+	if err != nil {
+		return ""
+	}
+	return out
 }
