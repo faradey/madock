@@ -23,13 +23,6 @@ func TestDatabaseIsReachable(t *testing.T) {
 		"--language=none",
 		"--hosts=e2edb.test",
 	)
-
-	// Recognisable on sight, and set before the first start so the containers
-	// are built with them. Finding either string in command output then means
-	// one thing only.
-	p.run(2*time.Minute, "config:set", "-n", "db/password", "-v", dbPassword)
-	p.run(2*time.Minute, "config:set", "-n", "db/root_password", "-v", dbRootPassword)
-
 	p.run(20*time.Minute, "start")
 
 	out := p.query("SELECT 1 AS madock_probe")
@@ -57,10 +50,25 @@ func TestDatabaseIsReachable(t *testing.T) {
 	// config file it reads from does not have. On a project borrowing a shared
 	// database the root password printed here is the **provider's**, which
 	// reaches every other project's schema on that server.
-	if strings.Contains(info, dbPassword) {
+	//
+	// The values are read back from the configuration rather than set to
+	// something recognisable first, and that is not a stylistic choice: the
+	// database initialises its data directory from the credentials in the
+	// generated compose file on its first start, so writing new ones afterwards
+	// gives a project whose config and whose container disagree — measured, as
+	// 60 rounds of "Access denied for user 'root'" and a test that hung for five
+	// minutes before failing. What is under test here is the printing, and the
+	// generated passwords are the honest input for it.
+	password := p.configValue("db/password")
+	rootPassword := p.configValue("db/root_password")
+	if password == "" || rootPassword == "" {
+		t.Fatalf("the project has no generated database passwords to check against: %q / %q", password, rootPassword)
+	}
+
+	if strings.Contains(info, password) {
 		t.Errorf("db:info printed the database password in full:\n%s", info)
 	}
-	if strings.Contains(info, dbRootPassword) {
+	if strings.Contains(info, rootPassword) {
 		t.Errorf("db:info printed the database root password in full:\n%s", info)
 	}
 	requireContains(t, info, "password: set (", "db:info should still say a password is set, and how long it is")
@@ -68,6 +76,6 @@ func TestDatabaseIsReachable(t *testing.T) {
 	// And asked by name, it prints them — the flag is the whole point of the
 	// default being the other way.
 	shown := p.run(1*time.Minute, "db:info", "--show-secrets")
-	requireContains(t, shown, dbPassword, "db:info --show-secrets should print the password")
-	requireContains(t, shown, dbRootPassword, "db:info --show-secrets should print the root password")
+	requireContains(t, shown, password, "db:info --show-secrets should print the password")
+	requireContains(t, shown, rootPassword, "db:info --show-secrets should print the root password")
 }

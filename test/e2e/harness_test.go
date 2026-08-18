@@ -18,6 +18,7 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -270,6 +271,29 @@ func (p *project) configured() bool {
 // generated returns the path of a file in the project's generated runtime.
 func (p *project) generated(relative string) string {
 	return filepath.Join(p.execDir, "aruntime", "projects", p.name, relative)
+}
+
+// configValue reads one setting as the project actually resolves it, through
+// `config:list --json` rather than by parsing config.xml.
+//
+// Which matters for the values worth reading this way: a password is generated
+// at setup and encrypted at rest by the enterprise edition, so the file may hold
+// ciphertext while every command sees the plaintext. Asking madock is the only
+// way to get what the commands get. Returns "" when the setting is not there.
+func (p *project) configValue(key string) string {
+	p.t.Helper()
+
+	var payload struct {
+		Data struct {
+			Config map[string]string `json:"config"`
+		} `json:"data"`
+	}
+
+	out := p.run(2*time.Minute, "config:list", "--json")
+	if err := json.Unmarshal([]byte(jsonPart(out)), &payload); err != nil {
+		p.t.Fatalf("config:list --json did not decode: %v\n%s", err, out)
+	}
+	return payload.Data.Config[key]
 }
 
 // binary returns the madock under test, built for linux by e2e.sh.
