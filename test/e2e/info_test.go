@@ -13,6 +13,16 @@ import (
 	"time"
 )
 
+// dbPassword is deliberately unlike anything madock generates, so that finding
+// it in command output means one thing only.
+//
+// It is set with `config:set` after setup, which is safe here because this test
+// never connects to the database: the container initialises its data directory
+// from the credentials in the generated compose file, so a value written
+// afterwards is visible to every command and to nothing else. A test that
+// queries has to read the generated password instead — see p.configValue.
+const dbPassword = "e2e-plaintext-password"
+
 // TestInfoReportsWhatIsActuallyPublished treats `info` and `info:ports` as the
 // contract they are.
 //
@@ -28,10 +38,6 @@ import (
 //     command people run to *look* must not change what it is looking at. A
 //     project that has never started has no ports, and asking about it must not
 //     give it one.
-// dbPassword is deliberately unlike anything madock generates, so that finding
-// it in command output means one thing only.
-const dbPassword = "e2e-plaintext-password"
-
 func TestInfoReportsWhatIsActuallyPublished(t *testing.T) {
 	p := newProject(t, "e2einfo")
 

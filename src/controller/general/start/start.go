@@ -24,8 +24,17 @@ func init() {
 }
 
 func Execute() {
-	args := attr.Parse(new(arg_struct.ControllerGeneralStart)).(*arg_struct.ControllerGeneralStart)
+	ExecuteWith(attr.Parse(new(arg_struct.ControllerGeneralStart)).(*arg_struct.ControllerGeneralStart))
+}
 
+// ExecuteWith starts the containers from arguments somebody else has already
+// parsed.
+//
+// It exists for `restart`, which has to read the command line *before* it stops
+// anything, and cannot then let this function parse again: attr.Parse answers
+// only the first call in a process — every later one returns the zero struct —
+// so a second parse here would silently drop --with-chown.
+func ExecuteWith(args *arg_struct.ControllerGeneralStart) {
 	if configs2.IsHasConfig("") {
 		projectName := configs2.GetProjectName()
 		projectConf := configs2.GetProjectConfig(projectName)

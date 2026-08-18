@@ -1,6 +1,7 @@
 package project
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -368,16 +369,42 @@ func processOtherCTXFiles(projectName string) {
 }
 
 func GetSnippetFile(projectName, path string) string {
-	snippetFile := paths.GetRunDirPath() + "/.madock/docker/" + strings.Trim(path, "/")
-	if !paths.IsFileExist(snippetFile) {
-		snippetFile = paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + strings.Trim(path, "/")
-		if !paths.IsFileExist(snippetFile) {
-			snippetFile = paths.GetExecDirPath() + "/docker/" + strings.Trim(path, "/")
-			if !paths.IsFileExist(snippetFile) {
-				logger.Fatal("The file " + path + " does not exist")
-			}
+	snippetFile, err := FindSnippetFile(projectName, path)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	return snippetFile
+}
+
+// ErrSnippetMissing is what an unresolvable include is, so a caller can tell it
+// from every other way rendering fails.
+//
+// It exists because that difference decides whether a command may proceed:
+// `rebuild` and `restart` destroy containers before they render, and a missing
+// include therefore used to end the process with the environment already down.
+// A template that fails for any other reason is a defect in the template; this
+// one is drift, and drift can be checked for in advance.
+var ErrSnippetMissing = errors.New("include not found")
+
+// FindSnippetFile resolves an include to a file, or says where it looked.
+//
+// The three places, in order: the project's own override, the machine's copy for
+// this project, and what the installation ships. An override survives every
+// madock upgrade, so a snippet that moves in a release — `php/nodejs` became
+// `common/nodejs` — leaves the override pointing at a path nothing provides, and
+// nothing says so until the next build.
+func FindSnippetFile(projectName, path string) (string, error) {
+	looked := []string{
+		paths.GetRunDirPath() + "/.madock/docker/" + strings.Trim(path, "/"),
+		paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + strings.Trim(path, "/"),
+		paths.GetExecDirPath() + "/docker/" + strings.Trim(path, "/"),
+	}
+
+	for _, candidate := range looked {
+		if paths.IsFileExist(candidate) {
+			return candidate, nil
 		}
 	}
 
-	return snippetFile
+	return "", fmt.Errorf("%w: %s\nLooked in:\n  %s", ErrSnippetMissing, path, strings.Join(looked, "\n  "))
 }

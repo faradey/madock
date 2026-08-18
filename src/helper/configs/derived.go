@@ -1,6 +1,11 @@
 package configs
 
-import "strings"
+import (
+	"sort"
+	"strings"
+
+	"github.com/faradey/madock/v3/src/helper/paths"
+)
 
 // derivedKeys lists config values that are computed from another value rather
 // than configured. A derived key stored in config.xml can only go stale, and a
@@ -17,6 +22,54 @@ var derivedKeys = map[string]string{
 func IsDerived(name string) (string, bool) {
 	source, ok := derivedKeys[name]
 	return source, ok
+}
+
+// DerivedFrom lists the computed keys that follow one source, in a stable order.
+func DerivedFrom(source string) []string {
+	var derived []string
+	for key, from := range derivedKeys {
+		if from == source {
+			derived = append(derived, key)
+		}
+	}
+	sort.Strings(derived)
+	return derived
+}
+
+// RemoveStoredDerived deletes the keys computed from source out of one config
+// file, and reports which ones it removed.
+//
+// The value is recomputed on every read, so a copy stored in a file can only go
+// stale — and a stale copy of a derived key is read by people even when nothing
+// reads it. Measured on a live server: `config:set nodejs/version 22.22.0` left
+// `major_version 20` sitting in the file, and the next person to open it
+// concluded the environment would build Node 20. It would not — the render
+// derives 22 — but nothing in the file says so, and the conclusion cost an
+// evening. So writing the source now takes the stored derivative with it.
+//
+// Only the file given is touched. A derived key in a project's own committed
+// .madock/config.xml is not madock's to delete, which is why the caller reads
+// the result back and says so instead.
+func RemoveStoredDerived(file, source, activeScope string) ([]string, error) {
+	if !paths.IsFileExist(file) {
+		return nil, nil
+	}
+
+	stored := ParseXmlFile(file)
+	var present []string
+	for _, key := range DerivedFrom(source) {
+		if _, ok := stored["scopes/"+activeScope+"/"+key]; ok {
+			present = append(present, key)
+		}
+	}
+	if len(present) == 0 {
+		return nil, nil
+	}
+
+	if err := RemoveKeepingComments(file, present, activeScope); err != nil {
+		return nil, err
+	}
+	return present, nil
 }
 
 // applyDerived fills the computed keys from their sources. It runs on every
