@@ -92,6 +92,23 @@ A service has none of those. It is described where the rest of the environment i
 
 It also removes a subtler cost: a host-side unit keeps the madock binary open, and replacing an open binary with `cp` fails with `Text file busy`. That is a strange thing to discover while updating a server.
 
+## Restarting one of them
+
+A worker holds its code in memory. After a deploy moves `current` to a new release, the container that was already running goes on serving the old one — the symlink moved and the process was never told.
+
+```bash
+madock service:restart worker-queue      # one service
+madock service:restart php worker-queue  # several, in one call
+```
+
+`restart` cannot do this job, and not because it is blunt. It stops every container of the project, `deployer` among them — and on a deployer host `deployer` is the container running the deploy, so a recipe that calls `restart` kills itself at the moment it succeeds. That is why restarting after a deploy stayed a second step for a person to remember, and **on 2026-08-19 three of four projects on one machine were serving a release older than the one `current` pointed at**, twice in the same session. Two of the three people who forgot knew about the trap.
+
+With a service named, the recipe ends by restarting its own application and the deployer container lives to report the result. The same precision matters on a machine where several projects share a database: a project-wide restart there takes the database container down, and every application connected to it.
+
+The names are the ones compose uses — `madock service:restart` with a name it does not have prints the list. The config key works too, so `search/opensearch` finds `opensearch`.
+
+What it reports is the state after the restart, not the fact that a restart was ordered: `docker compose restart` exits zero once the signals are sent, and a worker whose command is broken is gone a moment later. A service that is not running when the command finishes is a failure with the name in it. A service that dies thirty seconds later is not caught here — that is what `madock status` and the worker's own log are for.
+
 ## When this is not enough
 
 `worker` gives you restart-on-exit and nothing more, which is what most projects need. For several copies of one program, per-program logs, a hot reload without a rebuild, or a status command that asks the supervisor rather than docker, madock-pro has [`supervisor`](https://github.com/faradey/madock-pro) — the same idea with a process manager inside the container.

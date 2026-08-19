@@ -51,9 +51,14 @@ func TestRestartReadsArgumentsBeforeStopping(t *testing.T) {
 
 	// An argument the command does not take. It has to fail — and leave the
 	// project exactly as it was.
-	if out, err := p.tryRun(2*time.Minute, "restart", "php"); err == nil {
+	out, err := p.tryRun(2*time.Minute, "restart", "php")
+	if err == nil {
 		t.Errorf("`restart php` was accepted; it takes no positional argument:\n%s", out)
 	}
+	// And it names the command that does what was asked. Refusing correctly
+	// while leaving somebody to find `service:restart` on their own is how the
+	// second step stayed a second step.
+	requireContains(t, out, "service:restart php", "the answer to `restart php`")
 	running("`restart php`")
 
 	// --help is answered, not acted on.
