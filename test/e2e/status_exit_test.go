@@ -17,20 +17,26 @@ import (
 // the only thing left to say "I could not look", which is what it says when
 // docker cannot be asked.
 //
+// The empty state is reached by stopping, not by declining to start: `setup`
+// starts the project itself, which the first version of this test did not know —
+// it asked for status straight after setup and got three running services. And
+// stopping is enough to empty the answer because `status` lists what is up, not
+// what exists: `docker compose ps` without `-a` does not mention a stopped
+// container.
+//
 // p.run fails the test on a non-zero exit, so the call itself is the assertion;
-// the text check is there so a future change to the message does not quietly
-// leave this passing against nothing.
+// the text check is there so a change to the message does not quietly leave this
+// passing against nothing.
 func TestStatusAnswersZeroWhenNothingRuns(t *testing.T) {
 	p := newProject(t, "e2estatusidle")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(20*time.Minute, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2estatusidle.test",
 	)
+	p.run(5*time.Minute, "stop")
 
-	// Never started: there are no containers at all, which is the emptiest the
-	// answer gets.
 	requireContains(t, p.run(2*time.Minute, "status"), "No services found",
-		"status on a project that was set up and never started")
+		"status on a project whose containers are all stopped")
 }
