@@ -2,6 +2,7 @@ package versions
 
 import (
 	"os"
+	"strings"
 
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/paths"
@@ -52,8 +53,32 @@ func V340() {
 	}
 }
 
+// migrateDbType writes the engine beside the repository it was already implied
+// by — and only there.
+//
+// A migration may carry a key across. It may not invent one, and this did:
+// `GetDbType` falls back to "mysql" for anything it cannot read as postgres or
+// mongo, including nothing at all, so a project that had said nothing about a
+// database got `db/type=mysql` written into its own config file. Measured on a
+// project with `db/enabled=false` and no repository: the file came back
+// declaring an engine its author had never chosen, and a declaration in the
+// project's committed config is exactly what a later reader trusts.
+//
+// Two guards, and they are different questions. `db/enabled=false` is the
+// project saying it has no database — absent means enabled, which is how every
+// other reader in the codebase treats it. No repository is the project not
+// having said anything to carry across, so there is nothing to migrate and the
+// fallback would be the invention rather than a rescue: `GetDbType` answers the
+// same "mysql" at read time whether or not this key exists, so a project loses
+// nothing by it staying unwritten.
 func migrateDbType(configPath string, projectConf map[string]string) {
 	if _, hasType := projectConf["db/type"]; hasType {
+		return
+	}
+	if projectConf["db/enabled"] == "false" {
+		return
+	}
+	if strings.TrimSpace(projectConf["db/repository"]) == "" {
 		return
 	}
 
