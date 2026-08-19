@@ -1,3 +1,9 @@
+**v3.9.21**
+
+Fixed:
+- **The `db/type` migration wrote an engine into projects that had never named one.** `GetDbType` answers "mysql" for anything it cannot read as postgres or mongo — nothing at all included — so V340 put `db/type=mysql` into the config of a project with `db/enabled=false` and no repository. A migration may carry a key across; it may not invent one, and the invention lands in the project's own committed file, where every later reader believes it
+- Two guards, answering different questions: `db/enabled=false` is the project saying it has no database (absent still means enabled, as everywhere else in the codebase), and no `db/repository` is the project having said nothing to carry across. Neither costs anything — `GetDbType` falls back the same way at read time whether or not the key was ever written
+
 **v3.9.20**
 
 Added:
