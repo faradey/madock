@@ -40,6 +40,8 @@ func Execute() {
 			os.Exit(1)
 		}
 
+		reportReconciliation(projectName)
+
 		startTime := time.Now()
 
 		// Clear config cache with spinner
@@ -103,5 +105,42 @@ func Execute() {
 	} else {
 		fmtc.WarningIconLn("Set up the project")
 		fmtc.ToDoLn("Run madock setup")
+	}
+}
+
+// reportReconciliation brings the installed configuration in line with the
+// project's and says what that cost.
+//
+// A rebuild is where this belongs: it is the command that already means "make
+// the environment match the configuration", and it is the one people run after
+// pulling a change. Doing it on every read would move settings under a command
+// that was only asked to print something.
+//
+// Nothing here is silent. A setting removed from a machine without a word is the
+// same class of failure as one that refuses to leave — which is the defect being
+// fixed, and it would be a poor trade to swap one for the other.
+func reportReconciliation(projectName string) {
+	result, err := configs.ReconcileRemovedProjectKeys(projectName)
+	if err != nil {
+		// Not fatal, and not hidden. The rebuild that follows is still the one
+		// that was asked for; what could not be done is named.
+		fmtc.WarningLn("Could not compare the installed configuration with the project's: " + err.Error())
+		return
+	}
+
+	if result.Baseline {
+		fmtc.WarningLn("Recorded the project's configuration as the starting point. " +
+			"Settings deleted from it will be removed from this installation from the next rebuild on.")
+		return
+	}
+
+	for _, key := range result.Removed {
+		fmtc.WarningLn("Removed " + key + " — it is no longer in the project's configuration")
+	}
+	for _, key := range result.Kept {
+		fmtc.WarningLn("Kept " + key + " — the project removed it, but this machine holds a different value")
+	}
+	if len(result.Kept) > 0 {
+		fmtc.ToDoLn("madock config:unset <key> to drop one of those as well")
 	}
 }
