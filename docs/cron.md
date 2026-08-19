@@ -1,6 +1,8 @@
 # Cron
 
-Madock provides built-in cron support for running scheduled tasks in your PHP projects.
+Madock provides built-in cron support for running scheduled tasks.
+
+Cron runs in the project's **main service container** — `php` for a PHP project, and `nodejs`, `python`, `golang`, `ruby` or `app` for the others, following `language`. A project with `php/enabled` off still gets cron; it goes in whichever container the project is built around.
 
 ## Commands
 
@@ -17,7 +19,7 @@ madock cron:disable
 ## How It Works
 
 When cron is enabled:
-1. A cron process starts inside the PHP container
+1. A cron process starts inside the main service container
 2. Custom cron jobs from configuration are installed (if defined)
 3. Platform-specific cron jobs are installed automatically:
    - **Magento 2**: runs `bin/magento cron:install` (installs Magento's built-in cron)
@@ -48,7 +50,19 @@ Add jobs to the `<cron>` section in your config:
 - **XML escaping**: Use `&amp;` instead of `&` in commands (e.g., `cmd1 &amp;&amp; cmd2`)
 - Jobs run as the `www-data` user inside the container
 - Each `<job>` element should contain a complete cron entry (schedule + command)
-- Jobs are installed/removed together with `cron:enable` and `cron:disable`
+- Jobs are installed/removed together with `cron:enable` and `cron:disable`, and reinstalled on every `start`, `restart` and `rebuild`
+- The configuration owns this crontab. Removing every `<job>` from it removes them from the container on the next start — a job deleted from the config does not keep running
+- **Use `{{workdir}}` instead of writing the application path out.** It expands to the project's `workdir` when the crontab is installed, which is `/var/www/html` on a plain checkout and `/var/www/html/current` where deployer manages releases. A job that spells the path out is correct on one kind of machine and silently wrong on the other — cron sends its output nowhere, so the job simply stops running:
+  ```xml
+  <apply_due>* * * * * {{workdir}}/scripts/cron/poke.sh /api/cron/apply-due &gt;&gt; /var/www/html/logs/cron.log 2&gt;&amp;1</apply_due>
+  ```
+  Expansion happens at install time, so `crontab -l` shows the real path. `{{workdir}}` is the only placeholder; anything else — and any secret key — is refused, and the job is left out with a warning rather than installed with the placeholder still in it
+- Jobs may also be written as named entries, which is the spelling `config:set` produces:
+  ```xml
+  <jobs>
+      <scheduler>* * * * * cd /var/www/html &amp;&amp; php artisan schedule:run</scheduler>
+  </jobs>
+  ```
 
 ### Cron Schedule Format
 
@@ -104,6 +118,29 @@ madock logs php
 ```
 
 ## Verifying Cron Status
+
+Start with `madock status`, which answers both halves — whether the daemon is up, and whether it has anything to run:
+
+```
+Tools:
+ Cron is running (7 jobs)
+```
+
+The count is read from the container's crontab, not from the configuration. The three other answers each mean something different:
+
+| Line | Meaning |
+|---|---|
+| `Cron is running but no jobs are installed` | The daemon is up and nothing is scheduled. Nothing will fail; nothing will happen either |
+| `Cron is running (installed jobs: unknown)` | The crontab could not be read. Not the same as none |
+| `Cron is enabled but not running` | The configuration asks for cron and the container has none |
+
+`madock status --json` carries the same as `cron_running`, `cron_jobs` and `cron_jobs_known`; `cron_jobs` is `-1` when unknown.
+
+To see the installed entries themselves:
+
+```bash
+madock cli crontab -u www-data -l
+```
 
 Check if cron jobs are running:
 ```bash

@@ -56,11 +56,16 @@ madock status --json
     ],
     "tools": {
       "cron_enabled": false,
+      "cron_running": false,
+      "cron_jobs": -1,
+      "cron_jobs_known": false,
       "debugger_enabled": true
     }
   }
 }
 ```
+
+`cron_enabled` is what the configuration asks for and `cron_running` is what the container has; they can disagree. `cron_jobs` counts the entries actually installed in the crontab — a running daemon with an empty one is a scheduler that schedules nothing — and is `-1` with `cron_jobs_known: false` when the container could not be asked, which is not the same as none.
 
 ### config:list
 

@@ -48,8 +48,14 @@ type ServiceStatus struct {
 }
 
 type ToolsStatus struct {
-	CronEnabled     bool `json:"cron_enabled"`
-	CronRunning     bool `json:"cron_running"`
+	CronEnabled bool `json:"cron_enabled"`
+	CronRunning bool `json:"cron_running"`
+	// CronJobs is how many jobs the container's crontab actually holds, and
+	// CronJobsKnown whether that could be established. A running daemon with an
+	// empty crontab reads as healthy and runs nothing; -1 means the question
+	// could not be asked, which is never rounded down to none.
+	CronJobs        int  `json:"cron_jobs"`
+	CronJobsKnown   bool `json:"cron_jobs_known"`
 	DebuggerEnabled bool `json:"debugger_enabled"`
 }
 
@@ -76,6 +82,12 @@ func Execute() {
 		CronEnabled:     strings.ToLower(projectConf["cron/enabled"]) == "true",
 		CronRunning:     docker.CronRunning(projectName),
 		DebuggerEnabled: strings.ToLower(projectConf["php/xdebug/enabled"]) == "true",
+	}
+	if toolsStatus.CronRunning {
+		toolsStatus.CronJobs, toolsStatus.CronJobsKnown = docker.CronJobCount(projectName)
+	}
+	if !toolsStatus.CronJobsKnown {
+		toolsStatus.CronJobs = -1
 	}
 
 	if args.Json {
@@ -119,7 +131,20 @@ func Execute() {
 
 	fmtc.TitleLn("Tools:")
 	if toolsStatus.CronRunning {
-		fmtc.SuccessLn(" Cron is running")
+		// "Cron is running" answers a question nobody asks. What an operator
+		// wants to know is whether anything is scheduled, and the daemon can be
+		// up with an empty crontab — which is exactly the state a live project
+		// sat in, looking healthy, running nothing.
+		switch {
+		case !toolsStatus.CronJobsKnown:
+			fmtc.SuccessLn(" Cron is running (installed jobs: unknown)")
+		case toolsStatus.CronJobs == 0:
+			fmtc.WarningLn(" Cron is running but no jobs are installed — nothing runs on a schedule")
+		case toolsStatus.CronJobs == 1:
+			fmtc.SuccessLn(" Cron is running (1 job)")
+		default:
+			fmtc.SuccessLn(fmt.Sprintf(" Cron is running (%d jobs)", toolsStatus.CronJobs))
+		}
 	} else if toolsStatus.CronEnabled {
 		fmtc.WarningLn(" Cron is enabled but not running")
 	} else {
