@@ -121,6 +121,12 @@ func knownKeys(t *testing.T) map[string]bool {
 		"project_name",          // lowercased, as containers are named
 		"scope",                 // the active scope, as a name suffix
 		"nginx/hosts",           // the ordered host list, never empty
+		// A block whose children are named by whoever writes them, like
+		// nginx/hosts above. Declaring the parent in config.xml is not the
+		// answer and was tried: an empty <programs></programs> makes it a
+		// value, and the first worker/programs/<name> then fails to build a
+		// tree under a leaf.
+		"worker/programs",
 		"nginx/http2/directive", // computed in the proxy generator, not a setting
 		"proxy/rate_limit/req",  // likewise
 		"os/arch", "os/user/uid", "os/user/name", "os/user/guid", "os/user/ugroup",

@@ -270,7 +270,6 @@
                 -->
                 <enabled>false</enabled>
                 <user></user>
-                <programs></programs>
             </worker>
             <cron>
                 <enabled>false</enabled>
