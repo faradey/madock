@@ -9,7 +9,6 @@ madock runs Saleor 3.x commerce projects locally inside Docker: Python (uvicorn/
 git clone --branch 3.23 https://github.com/saleor/saleor.git my-saleor
 cd my-saleor
 madock setup --platform saleor --preset latest
-madock start
 madock install
 ```
 
