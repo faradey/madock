@@ -54,8 +54,33 @@ func Execute() {
 			return
 		}
 	}
-	fmt.Println("Cloning the project")
 	projectConf := configs.GetCurrentProjectConfig()
+
+	// A deployer-managed project is not something a file copy can reproduce.
+	//
+	// Cloning copies the source tree and untars it into the clone with
+	// `rm -rf /var/www/html/*` first. Under deployer that tree is not the
+	// application: it is `releases/` — every release still on disk — plus
+	// `shared/`, `current` and deployer's own state. The copy would carry all of
+	// it, the clone would inherit `deploy/enabled` pointing at the original's
+	// deploy path, and the result is a project that looks cloned and is a
+	// hybrid of two.
+	//
+	// The same shape as the other refusal in snapshot:restore, and for the same
+	// reason: `/var/www/html` means the application and the mount at once on an
+	// ordinary project, and two different things here.
+	if configs.IsDeployManaged(projectConf) {
+		fmtc.WarningLn("project:clone is refused on a project managed by deployer.")
+		fmt.Println("  Its source tree is releases/, shared/ and current — the deploy layout, not the")
+		fmt.Println("  application. Copying it would produce a project pointing at the original's")
+		fmt.Println("  deploy path, with every old release along for the ride.")
+		fmt.Println("")
+		fmt.Println("  Set up the second environment from the repository instead: create the project,")
+		fmt.Println("  `madock deploy:enable`, and deploy the branch you want into it.")
+		return
+	}
+
+	fmt.Println("Cloning the project")
 	exPath := paths.GetExecDirPath()
 	projectName := configs.GetProjectName()
 	currentDest := paths.MakeDirsByPath(exPath + "/projects/" + projectName + "/")

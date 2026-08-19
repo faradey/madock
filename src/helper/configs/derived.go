@@ -92,6 +92,34 @@ func applyDerived(conf map[string]string) {
 		delete(conf, "nodejs/major_version")
 	}
 
+	// Where the application lives is answered here, once, rather than stored.
+	//
+	// With deployer managing releases the root is `<mount>/current`, and until
+	// now that was a value `deploy:enable` wrote into the config — a copy of a
+	// derivation, made at one moment, kept in one file. Every failure this
+	// caused was the same failure: something read a copy that was stale,
+	// missing, or written out by hand.
+	//
+	// **Three of them in one day, 2026-08-19.** A cron job with the path spelled
+	// out, correct until the project moved to deployer. A systemd unit on the
+	// host naming `current/artisan`, which pointed at a deploy root with no
+	// artisan in it. And a failed deploy that removed the config file holding
+	// the copy, so a rebuild read an older one and installed a scheduler that
+	// ran the wrong command for seventeen minutes on a live application.
+	//
+	// Derived, none of those are possible: there is no copy to go stale, and
+	// the answer survives the file that used to hold it being absent — which is
+	// exactly the window that broke. A consumer asks `workdir` and gets the
+	// truth whether or not deployer is configured, which is the whole point.
+	if strings.TrimSpace(conf["deploy/enabled"]) == "true" {
+		conf["workdir"] = deployRelativeRoot(conf["workdir"])
+		// Only when set: an unset php/workdir means the php container follows
+		// workdir, and inventing one here would fix it in place.
+		if php := strings.TrimSpace(conf["php/workdir"]); php != "" {
+			conf["php/workdir"] = deployRelativeRoot(php)
+		}
+	}
+
 	// msmtp will not send without an envelope sender, and there is no msmtprc in
 	// the image to hold a default. A mail transport supplies one; a bare mail()
 	// call with four arguments does not, and fails with exit 78. Rendering the
@@ -103,4 +131,43 @@ func applyDerived(conf map[string]string) {
 	} else {
 		conf["php/sendmail/from_argument"] = ""
 	}
+}
+
+// deployRelativeRoot puts the active release between the mount point and the
+// application, and says the same thing twice without saying it twice.
+//
+// Idempotent on purpose. Installations that ran `deploy:enable` before this was
+// derived have `/var/www/html/current` sitting in their config, and every read
+// of it must produce the same path rather than `current/current`. The same
+// property makes the derivation safe to apply to a value a person set by hand.
+func deployRelativeRoot(base string) string {
+	base = strings.TrimRight(strings.TrimSpace(base), "/")
+	if base == "" {
+		base = defaultWorkdir
+	}
+	if strings.HasSuffix(base, "/"+deployReleaseLink) {
+		return base
+	}
+	return base + "/" + deployReleaseLink
+}
+
+const (
+	// defaultWorkdir is where a project lives when nothing says otherwise. The
+	// same literal used to be repeated in a dozen fallbacks.
+	defaultWorkdir = "/var/www/html"
+	// deployReleaseLink is deployer's symlink to the release now serving.
+	deployReleaseLink = "current"
+)
+
+// IsDeployManaged reports whether a project's source tree belongs to deployer.
+//
+// It is the question to ask before writing anything into that tree wholesale.
+// On an ordinary project the mount point and the application are the same
+// directory, so `/var/www/html` means both and no caller ever had to choose.
+// Under deployer they are not: the mount holds `releases/`, `shared/`,
+// `current` and deployer's own bookkeeping, and the application is one level
+// down. Code that keeps meaning "the application" while writing to "the mount"
+// is the shape that produced three separate failures on 2026-08-19.
+func IsDeployManaged(conf map[string]string) bool {
+	return strings.TrimSpace(conf["deploy/enabled"]) == "true"
 }
