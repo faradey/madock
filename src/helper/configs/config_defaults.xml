@@ -254,6 +254,23 @@
                 <user>artemis</user>
                 <password>artemis</password>
             </artemis>
+            <worker>
+                <!--
+                    Long-running processes as container services, one per named
+                    entry. Any platform: the image is the project's main service,
+                    so the worker gets the runtime the application has.
+
+                    The user element applies to all of them and is usually needed
+                    on PHP images, where the application runs as www-data.
+
+                    A programs block holds one element per worker, its text the
+                    command: for example a program named "queue" whose command is
+                    "php artisan queue:work redis", or one named "consumer"
+                    running "php bin/console messenger:consume async".
+                -->
+                <enabled>false</enabled>
+                <user></user>
+            </worker>
             <cron>
                 <enabled>false</enabled>
                 <!--<jobs>

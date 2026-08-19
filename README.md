@@ -265,6 +265,7 @@ IMPORTANT: Please, read all items before starting work.
 * [Database import, export, synchronization, phpmyadmin](docs/database.md)
 * [Media synchronization](docs/media.md)
 * [Cron](docs/cron.md)
+* [Workers](docs/workers.md) — long-running processes as services, any platform
 * [ENV variables](docs/env.md)
 * [Memcached](docs/memcached.md)
 * Kibana. URL http://{you_domain_name}/kibana

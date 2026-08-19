@@ -25,6 +25,7 @@ services:
   {{{- template "snippets/docker-compose/grafana-rabbitmq-exporter.yml" .}}}
 {{{- end}}}
   {{{- template "snippets/docker-compose/claude.yml" .}}}
+  {{{- template "snippets/docker-compose/worker.yml" .}}}
 
 {{{template "snippets/docker-compose/volumes.yml" .}}}
 {{{template "snippets/docker-compose/networks.yml" .}}}
