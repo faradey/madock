@@ -6,8 +6,9 @@ import (
 	"fmt"
 
 	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
 	"github.com/faradey/madock/v3/src/controller/general/rebuild"
+	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/docker"
 	"github.com/faradey/madock/v3/src/helper/logger"
@@ -124,6 +125,30 @@ func Execute() {
 }
 
 func RestoreSnapshot(projectName string, projectConf map[string]string, selectedInt int, snapshotNames []string, dbsPath string) {
+	// Refused where deployer owns the source tree, because the file half of a
+	// restore is `rm -rf /var/www/html/*` followed by an untar.
+	//
+	// On an ordinary project that path is the application and the mount at the
+	// same time, which is why the literal was never wrong. Under deployer the
+	// mount holds `releases/`, `shared/`, `current` and deployer's bookkeeping —
+	// so the same line deletes every release **and `shared/`**, which is where
+	// the environment file and, on some projects, the madock config live. None
+	// of that is in the snapshot: it was taken from a tree of a different shape.
+	//
+	// The database half would be fine. The file half is unrecoverable, so the
+	// command stops rather than doing the safe part and then the ruinous one.
+	if configs.IsDeployManaged(projectConf) {
+		fmtc.WarningLn("snapshot:restore is refused on a project managed by deployer.")
+		fmt.Println("  Restoring files here would run `rm -rf` over the deploy root — releases, shared/")
+		fmt.Println("  and the deploy state — and untar a tree of a different shape in their place.")
+		fmt.Println("  shared/ holds the environment file, and the snapshot does not contain it.")
+		fmt.Println("")
+		fmt.Println("  Put the application back with a deploy instead: `madock deploy <stage>`, or")
+		fmt.Println("  `madock deploy:rollback <stage>` for the release that was serving before.")
+		fmt.Println("  For the database alone, `madock db:import` takes the dump from the snapshot.")
+		return
+	}
+
 	containerName := docker.GetContainerName(projectConf, projectName, "snapshot")
 	docker.Down(projectName, false)
 	docker.UpSnapshot(projectName)
