@@ -111,13 +111,13 @@ func applyDerived(conf map[string]string) {
 	// the answer survives the file that used to hold it being absent — which is
 	// exactly the window that broke. A consumer asks `workdir` and gets the
 	// truth whether or not deployer is configured, which is the whole point.
+	// One key, deliberately. `deploy:enable` also used to write `php/workdir`,
+	// and nothing has ever read it: it is declared in no config, rendered by no
+	// template and consulted by no command. A second spelling of the same fact
+	// is how the two get to disagree, so it is not derived here either — the
+	// write is gone from `deploy:enable` instead.
 	if strings.TrimSpace(conf["deploy/enabled"]) == "true" {
 		conf["workdir"] = deployRelativeRoot(conf["workdir"])
-		// Only when set: an unset php/workdir means the php container follows
-		// workdir, and inventing one here would fix it in place.
-		if php := strings.TrimSpace(conf["php/workdir"]); php != "" {
-			conf["php/workdir"] = deployRelativeRoot(php)
-		}
 	}
 
 	// msmtp will not send without an envelope sender, and there is no msmtprc in
