@@ -287,6 +287,26 @@ var (
 	// The loader URL carries the host architecture, so an arm64 laptop and an
 	// amd64 runner render different files from the same template.
 	loaderArch = regexp.MustCompile(`ioncube_loaders_lin_[\w-]+\.tar\.gz`)
+
+	// The same uid and gid again, in the shape the non-PHP language images use:
+	// a build argument rather than a usermod call. Nothing rendered one until
+	// the platform fixtures arrived — python and ruby build this way — so the
+	// first run of those on a Linux runner failed on a macOS uid of 501 against
+	// its own 1001, which is the whole reason a golden is normalised at all.
+	dockerfileUid = regexp.MustCompile(`ARG MADOCK_UID=\d+`)
+	dockerfileGid = regexp.MustCompile(`ARG MADOCK_GID=\d+`)
+
+	// An allocated port inside a URL. `publishedPort` above sees only a compose
+	// list entry, and a project that has to tell its own application where it
+	// lives — Medusa's storefront does, in NEXT_PUBLIC_BASE_URL — writes the
+	// port into an environment variable instead, where nothing was masking it.
+	//
+	// `localhost` only, deliberately. The proxy's golden masks by *position* —
+	// the first distinct port becomes <PORT1>, the second <PORT2>, so a block
+	// pointing at the wrong upstream still shows as a difference — and it does
+	// that after this runs. Masking `host.docker.internal:NNNNN` here left it
+	// nothing to number, and the proxy fixture failed on <PORT1> against <PORT>.
+	urlPort = regexp.MustCompile(`localhost:1[78]\d{3}`)
 )
 
 // Normalise removes what differs between machines and runs.
@@ -304,6 +324,9 @@ func Normalise(content string, env *Env) string {
 	content = groupmodGid.ReplaceAllString(content, "groupmod -g <GID>")
 	content = chownPair.ReplaceAllString(content, "chown ${1}<UID>:<GID>")
 	content = loaderArch.ReplaceAllString(content, "ioncube_loaders_lin_<ARCH>.tar.gz")
+	content = dockerfileUid.ReplaceAllString(content, "ARG MADOCK_UID=<UID>")
+	content = dockerfileGid.ReplaceAllString(content, "ARG MADOCK_GID=<GID>")
+	content = urlPort.ReplaceAllString(content, "localhost:<PORT>")
 
 	return content
 }

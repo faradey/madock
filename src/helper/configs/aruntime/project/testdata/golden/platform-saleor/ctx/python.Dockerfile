@@ -26,8 +26,8 @@ RUN pip install --no-cache-dir uv
 # Match host UID/GID so bind-mounted files stay editable on host and
 # container as the same user. The base image ships no `node`/`www-data`
 # user we can re-use, so create a dedicated `saleor` user.
-ARG MADOCK_UID=501
-ARG MADOCK_GID=20
+ARG MADOCK_UID=<UID>
+ARG MADOCK_GID=<GID>
 RUN groupadd -g ${MADOCK_GID} saleor 2>/dev/null || true \
  && useradd -u ${MADOCK_UID} -g ${MADOCK_GID} -ms /bin/bash saleor 2>/dev/null || true \
  && mkdir -p /var/www && chown ${MADOCK_UID}:${MADOCK_GID} /var/www

@@ -55,7 +55,7 @@ services:
       # them through the project's public nginx host. Override with
       # medusa/storefront/public_backend_url if you use a different scheme.
       NEXT_PUBLIC_MEDUSA_BACKEND_URL: ""
-      NEXT_PUBLIC_BASE_URL: "http://localhost:17009"
+      NEXT_PUBLIC_BASE_URL: "http://localhost:<PORT>"
       NEXT_PUBLIC_DEFAULT_REGION: "gb"
       # macOS Docker bind mounts don't forward inotify events; polling keeps
       # HMR working on both macOS and Linux. Harmless on Linux (small CPU cost).
