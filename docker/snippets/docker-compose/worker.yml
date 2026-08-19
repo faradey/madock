@@ -1,0 +1,63 @@
+{{{- /*
+A long-running process as a container service, for any platform.
+
+The form already existed three times over — shopware-messenger.yml,
+sylius-messenger.yml, saleor-worker.yml — each included only from its own
+platform's compose and gated on a key only that platform has. So a Laravel
+queue worker, a Node job runner or a Python consumer had nowhere to go, and
+the way people solved it was a systemd unit on the host running
+`madock cli <command>`.
+
+Measured on a production machine on 2026-08-19, that costs three things. The
+unit knew the application path and pointed at a deploy root after the move to
+Deployer, where the entrypoint did not exist. Every rebuild kills the
+`docker exec` underneath it, so systemd restarts the chain — the counter had
+reached 74. And `systemctl is-active` answers `active` whether or not the
+container is there, which is a liveness check reading the wrapper rather than
+the work.
+
+A service has none of those: it is described where the rest of the environment
+is described, it dies and returns with the container, and `madock status`
+counts it.
+
+`entrypoint: []` because the language images have one that starts the
+application; a worker replaces it rather than runs after it. The image is the
+main service's, so the worker has exactly the runtime the application has —
+no second Dockerfile to drift.
+
+For process supervision beyond restart-on-exit — several copies of one worker,
+per-program logs, hot reload without a rebuild — madock-pro has `supervisor`.
+This is the plain version and stays in open-source madock, because it is what
+the platform-specific snippets already gave three platforms for free.
+*/}}}
+{{{- if and .worker.enabled .worker.programs}}}
+{{{- range $name, $command := .worker.programs}}}
+{{{- if $command}}}
+  worker-{{{$name}}}:
+    init: true
+    build:
+      context: ctx
+      dockerfile: {{{$.main_service}}}.Dockerfile
+    working_dir: {{{$.workdir}}}
+    {{{- if $.worker.user}}}
+    user: {{{$.worker.user}}}
+    {{{- end}}}
+    entrypoint: []
+    command: ["sh", "-c", "exec {{{$command}}}"]
+    volumes:
+      - ./src:/var/www/html:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{{- range $host := $.nginx.hosts}}}
+      - "{{{$host.name}}}:host-gateway"
+      {{{- end}}}
+    depends_on:
+      - {{{$.main_service}}}
+    {{{- if $.isolation.enabled}}}
+    networks:
+      - isolated
+    {{{- end}}}
+    restart: {{{$.restart_policy}}}
+{{{- end}}}
+{{{- end}}}
+{{{- end}}}

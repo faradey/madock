@@ -12,6 +12,7 @@ services:
   {{{- template "snippets/docker-compose/rabbitmq.yml" .}}}
   {{{- template "snippets/docker-compose/pgadmin.yml" .}}}
   {{{- template "snippets/docker-compose/claude.yml" .}}}
+  {{{- template "snippets/docker-compose/worker.yml" .}}}
 
 {{{template "snippets/docker-compose/volumes.yml" .}}}
 {{{template "snippets/docker-compose/networks.yml" .}}}

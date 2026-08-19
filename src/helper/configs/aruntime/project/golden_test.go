@@ -239,6 +239,32 @@ func goldenCases() []goldenCase {
 				"nodejs/browser_libs": "true",
 			},
 		},
+		{
+			// Two workers on a platform that has no worker snippet of its own.
+			//
+			// Until this existed the form was written three times — Shopware,
+			// Sylius, Saleor — each locked to its own platform's key, so a
+			// Laravel queue or a Node job runner had nowhere to go and ended up
+			// as a systemd unit on the host wrapping `madock cli`. Measured on a
+			// production machine: the unit knew an application path that the
+			// move to Deployer invalidated, every rebuild killed the docker exec
+			// under it (restart counter at 74), and `systemctl is-active` said
+			// `active` regardless of whether the container was there.
+			//
+			// The fixture is two programs rather than one on purpose: they are
+			// named children of the same element, and one of them alone would
+			// not show that each becomes its own service.
+			name: "custom-nodejs-worker",
+			overrides: map[string]string{
+				"platform":                "custom",
+				"language":                "nodejs",
+				"php/enabled":             "false",
+				"nodejs/enabled":          "true",
+				"worker/enabled":          "true",
+				"worker/programs/queue":   "node build/worker.js",
+				"worker/programs/reindex": "node build/reindex.js",
+			},
+		},
 	}
 }
 

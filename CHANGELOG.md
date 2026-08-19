@@ -1,3 +1,12 @@
+**v3.9.18**
+
+Added:
+- **A long-running process can be a service of the environment, on any platform.** `<worker><programs><queue>…</queue></programs></worker>` in the project config, one compose service per named entry, called `worker-<name>`. It gets the main service's image — so a PHP project's worker runs on the PHP image, a Node project's on the Node one, with no second Dockerfile to drift — the project's `workdir` as its working directory, and `entrypoint: []`, because the language images start the application and a worker replaces that rather than running after it
+- The form already existed three times and was locked away each time: `shopware-messenger.yml`, `sylius-messenger.yml` and `saleor-worker.yml` are each included only from their own platform's compose and gated on a key only that platform has. A Laravel queue or a Node job runner had nowhere to go, so people put a systemd unit on the host running `madock cli <command>`. Those three snippets are unchanged and keep their keys; this is the one anybody can use
+- **Measured on a production machine on 2026-08-19, which is what the feature is arguing against.** The unit knew the path `/var/www/html/current/artisan` and pointed at a directory without it after the move to a deployer layout. Every rebuild killed the `docker exec` underneath it and systemd restarted the chain — the counter had reached 74. And `systemctl is-active` answered `active` whether or not the container was there, so the liveness check was reading the wrapper rather than the work. A service dies and returns with the container, and `madock status` counts it
+- It also removes a cost nobody would predict: a host-side unit keeps the madock binary open, and replacing an open binary with `cp` fails with `Text file busy` — discovered while updating a server, which is a poor moment to learn it
+- Documented in [docs/workers.md](docs/workers.md), with a golden fixture rendering two programs on a platform that has no worker snippet of its own
+
 **v3.9.17**
 
 Fixed:
