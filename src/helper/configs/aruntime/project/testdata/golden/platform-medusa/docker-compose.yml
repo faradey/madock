@@ -1,0 +1,107 @@
+name: madock_golden
+services:
+  nginx:
+    init: true
+    build:
+      context: ctx
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "<PORT>:80"
+      - "<PORT>:443"
+    volumes:
+      - ./src:/var/www/html:delegated
+      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    restart: no
+  nodejs:
+    init: true
+    build:
+      context: ctx
+      dockerfile: nodejs.Dockerfile
+    tty: true
+    environment:
+      # Was hardcoded to "development", which is wrong the moment a project
+      # runs on a server: libraries branch on it, and the entrypoint reads it
+      # when no nodejs/script is configured.
+      NODE_ENV: "development"
+      # Polling-based file watching for macOS bind mounts (no inotify forwarding).
+      # Harmless on Linux. Picked up by next/webpack/chokidar/medusa watcher.
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./src:/var/www/html:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    restart: no
+  storefront:
+    init: true
+    build:
+      context: ctx
+      dockerfile: storefront.Dockerfile
+    tty: true
+    working_dir: /var/www/html/storefront
+    ports:
+      - "<PORT>:8000"
+    volumes:
+      - ./src/storefront:/var/www/html/storefront:cached
+    environment:
+      NODE_ENV: "development"
+      # Server-side calls (Next.js SSR) hit the backend inside the docker network.
+      MEDUSA_BACKEND_URL: "http://nodejs:9000"
+      # Browser-side calls (CSR) cannot resolve the docker hostname, so route
+      # them through the project's public nginx host. Override with
+      # medusa/storefront/public_backend_url if you use a different scheme.
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: ""
+      NEXT_PUBLIC_BASE_URL: "http://localhost:17009"
+      NEXT_PUBLIC_DEFAULT_REGION: "gb"
+      # macOS Docker bind mounts don't forward inotify events; polling keeps
+      # HMR working on both macOS and Linux. Harmless on Linux (small CPU cost).
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    restart: no
+  db:
+    init: true
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    # Sized from db/memory, because postgres otherwise takes its stock
+    # shared_buffers of 128MB and the only way to raise it was a copy of the
+    # config in the project. effective_cache_size buys no memory — it tells the
+    # planner how much of the OS cache to expect.
+    command: >
+      postgres
+      -c shared_buffers=192MB
+      -c effective_cache_size=576MB
+    ports:
+      - "<PORT>:5432"
+    environment:
+      POSTGRES_DB: "magento"
+      POSTGRES_USER: "magento"
+      POSTGRES_PASSWORD: "magento"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    restart: no
+  redisdb:
+    init: true
+    build:
+      context: ctx
+      dockerfile: redis.Dockerfile
+    restart: no
+
+volumes:
+  # Declared unconditionally on purpose. Every other entry here is optional, so
+  # gating this one too lets `volumes:` render empty when a project runs without
+  # a database, without search and without grafana — and compose rejects that
+  # with "volumes must be a mapping". An unused named volume costs nothing.
+  dbdata:
+
+networks:
+  madock-proxy:
+    external: true
+

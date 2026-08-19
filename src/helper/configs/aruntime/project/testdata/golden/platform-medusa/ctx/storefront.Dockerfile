@@ -1,0 +1,96 @@
+FROM node:22.14.0
+
+RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
+
+RUN apt-get update && apt-get install -y --no-install-recommends xdg-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN usermod -u <UID> -o node && groupmod -g <GID> -o node \
+    && mkdir -p /var/www && chown <UID>:<GID> /var/www
+
+WORKDIR /var/www/html/storefront
+
+# madock smart entrypoint (storefront variant):
+#   - waits for package.json (clone happens AFTER container start)
+#   - waits for install completion marker (yarn 4: .yarn/install-state.gz,
+#     yarn 1: .yarn-integrity, npm: .package-lock.json, pnpm: .modules.yaml)
+#   - sources .env / .env.local right before exec so the install handler
+#     can write MEDUSA_BACKEND_URL + publishable key without racing the
+#     dev server boot.
+RUN cat > /usr/local/bin/madock-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local/bin/madock-entrypoint
+#!/bin/sh
+set -e
+
+cd "${WORKDIR:-/var/www/html/storefront}" 2>/dev/null || cd /var/www/html/storefront
+
+# run_app execs the dev server as the application user. The entrypoint needs
+# root to wait for code madock writes after the container starts; the server
+# does not, and running it as root makes every file it writes root-owned on the
+# host — including the build output the user then cannot delete. `node` is
+# remapped to the host uid at build time, so dropping to it is what makes the
+# ownership come out right. Same arrangement as the backend image.
+run_app() {
+  if [ "$(id -u)" = "0" ] && id node >/dev/null 2>&1; then
+    HOME=$(getent passwd node | cut -d: -f6)
+    export HOME
+    exec setpriv --reuid=node --regid=node --init-groups "$@"
+  fi
+  exec "$@"
+}
+
+if [ ! -f package.json ]; then
+  echo "[madock] storefront: no package.json in $(pwd) — waiting for project code."
+  while [ ! -f package.json ]; do
+    sleep 5
+  done
+  echo "[madock] storefront: package.json detected — continuing."
+fi
+
+script=$(node -e 'try{var p=require("./package.json").scripts||{};process.stdout.write(p.dev?"dev":(p.start?"start":""))}catch(e){}' 2>/dev/null)
+
+if [ -z "$script" ]; then
+  run_app node
+fi
+
+deps_installed() {
+  [ -d node_modules ] || return 1
+  [ -f .yarn/install-state.gz ] && return 0
+  [ -f node_modules/.yarn-integrity ] && return 0
+  [ -f node_modules/.package-lock.json ] && return 0
+  [ -f node_modules/.modules.yaml ] && return 0
+  return 1
+}
+
+if ! deps_installed; then
+  echo "[madock] storefront: node_modules not ready in $(pwd) — waiting."
+  echo "[madock] Run \"madock install\" (or yarn install) in the storefront folder to bootstrap."
+  while ! deps_installed; do
+    sleep 5
+  done
+  echo "[madock] storefront: node_modules ready — starting dev server."
+fi
+
+if [ -f yarn.lock ]; then
+  pm="yarn"
+elif [ -f pnpm-lock.yaml ]; then
+  pm="pnpm"
+else
+  pm="npm run"
+fi
+
+for envfile in .env .env.local; do
+  if [ -f "$envfile" ]; then
+    set -a
+    . "./$envfile"
+    set +a
+  fi
+done
+
+echo "[madock] storefront starting: $pm $script"
+run_app $pm $script
+MADOCK_EOF
+
+ENV WORKDIR=/var/www/html/storefront
+
+CMD ["/usr/local/bin/madock-entrypoint"]
+

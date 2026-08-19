@@ -1,0 +1,100 @@
+name: madock_golden
+services:
+  nginx:
+    init: true
+    build:
+      context: ctx
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "<PORT>:80"
+      - "<PORT>:443"
+    volumes:
+      - ./src:/var/www/html:delegated
+      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    restart: no
+  ruby:
+    init: true
+    build:
+      context: ctx
+      dockerfile: ruby.Dockerfile
+    tty: true
+    volumes:
+      - ./src:/var/www/html:cached
+      - ./ssh:/var/www/.ssh:ro
+      - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    restart: no
+  storefront:
+    init: true
+    build:
+      context: ctx
+      dockerfile: storefront.Dockerfile
+    tty: true
+    working_dir: /var/www/html/storefront
+    ports:
+      - "<PORT>:3001"
+    volumes:
+      - ./src/storefront:/var/www/html/storefront:cached
+    environment:
+      NODE_ENV: "development"
+      # Server-side calls (Next.js SSR) hit the Rails backend inside
+      # the docker network.
+      SPREE_API_URL: "http://ruby:3000"
+      # Public-facing storefront URL for SEO meta tags.
+      NEXT_PUBLIC_SITE_URL: ""
+      NEXT_PUBLIC_DEFAULT_COUNTRY: "us"
+      NEXT_PUBLIC_DEFAULT_LOCALE: "en"
+      NEXT_PUBLIC_STORE_NAME: "Spree Store"
+      # macOS Docker bind mounts don't forward inotify events; polling
+      # keeps HMR working. Harmless on Linux.
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    restart: no
+  db:
+    init: true
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    # Sized from db/memory, because postgres otherwise takes its stock
+    # shared_buffers of 128MB and the only way to raise it was a copy of the
+    # config in the project. effective_cache_size buys no memory — it tells the
+    # planner how much of the OS cache to expect.
+    command: >
+      postgres
+      -c shared_buffers=192MB
+      -c effective_cache_size=576MB
+    ports:
+      - "<PORT>:5432"
+    environment:
+      POSTGRES_DB: "magento"
+      POSTGRES_USER: "magento"
+      POSTGRES_PASSWORD: "magento"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    restart: no
+  redisdb:
+    init: true
+    build:
+      context: ctx
+      dockerfile: redis.Dockerfile
+    restart: no
+
+volumes:
+  # Declared unconditionally on purpose. Every other entry here is optional, so
+  # gating this one too lets `volumes:` render empty when a project runs without
+  # a database, without search and without grafana — and compose rejects that
+  # with "volumes must be a mapping". An unused named volume costs nothing.
+  dbdata:
+
+networks:
+  madock-proxy:
+    external: true
+
