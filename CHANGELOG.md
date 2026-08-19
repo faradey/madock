@@ -1,3 +1,15 @@
+**v3.9.20**
+
+Added:
+- **`service:restart <name>` restarts one service and leaves the rest of the project running.** `madock service:restart php`, `madock service:restart php worker-queue`. Names are the ones compose uses — a name the project does not have is refused with the list of the ones it does — and a config key resolves too, so `search/opensearch` finds `opensearch`
+- **This is the command a deploy recipe can call, and `restart` is not.** Not for being blunt: `restart` stops every container including `deployer`, which on a deployer host is the container running the deploy, so a recipe calling it dies at the moment it succeeds. Restarting after a deploy therefore stayed a second step for a person to remember — and **on 2026-08-19, on one machine, three of four projects were serving a release older than the one `current` pointed at**, twice in the same session, with two of the three who forgot knowing about the trap. One of them was found only because a new column stayed NULL where the new code always fills it
+- The same precision removes a cost on a shared-database machine, where a project-wide restart takes down the database container every other application on the host is connected to
+- **It reports the state after the restart, not the fact that one was ordered.** `docker compose restart` exits zero once the signals are sent, and a worker with a broken command is gone a moment later; a service that is not running when the command returns is a failure naming the service. A docker that cannot be asked afterwards says so — that is neither success nor failure, and rounding it to either is the silence this command was written against
+- Every name is resolved before anything is restarted, so a typo in the second of two arguments does not leave the first restarted and the caller guessing
+
+Changed:
+- **`madock restart php` now names the command that does what was asked.** It was already refused rather than acted on — that is the 3.9.16 fix and it still holds, containers stay up — but the message was go-arg's "too many positional arguments at 'php'", which reads as a parser complaint and names neither the intent nor the command that serves it
+
 **v3.9.19**
 
 Fixed:

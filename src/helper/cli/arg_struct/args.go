@@ -62,6 +62,10 @@ type ControllerGeneralServiceDisable struct {
 	Global bool `arg:"-g,--global" help:"Global"`
 }
 
+type ControllerGeneralServiceRestart struct {
+	attr.ArgumentsWithArgs
+}
+
 type ControllerGeneralBash struct {
 	attr.Arguments
 	Service string `arg:"-s,--service" help:"Service name (php, nginx, db, etc.)"`

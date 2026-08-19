@@ -2,12 +2,14 @@ package restart
 
 import (
 	"os"
+	"strings"
 
 	"github.com/faradey/madock/v3/src/command"
 	"github.com/faradey/madock/v3/src/controller/general/start"
 	"github.com/faradey/madock/v3/src/controller/general/stop"
 	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v3/src/helper/configs"
 	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
 )
@@ -49,6 +51,18 @@ var (
 //
 // Parsing first turns that into a refusal that costs nothing.
 func Execute() {
+	// A bare word here is somebody asking for one service back, and there is a
+	// command for that now. go-arg would refuse it too — that is the 3.9.16 fix
+	// and it still holds — but "too many positional arguments at 'php'" is a
+	// parser complaint that names neither what was wanted nor what does it.
+	if len(os.Args) > 2 {
+		if name := unexpectedPositional(os.Args[2:]); name != "" {
+			fmtc.ErrorLn("`restart` restarts the whole project and takes no service name.")
+			fmtc.WarningLn("To restart one service: madock service:restart " + name)
+			os.Exit(1)
+		}
+	}
+
 	args := parseArgs()
 
 	// The same rule one step further out. `start` generates the build context,
@@ -62,4 +76,20 @@ func Execute() {
 
 	stopContainers()
 	startContainers(args)
+}
+
+// unexpectedPositional returns the first argument that is not a flag.
+//
+// Every flag this command takes is a boolean, so a bare word is never a flag's
+// value and can be named without ambiguity. If that stops being true — a flag
+// here that takes a value — this reads that value as a service name, and the
+// check has to learn the flag.
+func unexpectedPositional(argv []string) string {
+	for _, arg := range argv {
+		if arg == "" || strings.HasPrefix(arg, "-") {
+			continue
+		}
+		return arg
+	}
+	return ""
 }

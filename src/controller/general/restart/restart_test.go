@@ -24,6 +24,37 @@ func swap(t *testing.T, parse func() *arg_struct.ControllerGeneralStart, stop fu
 	startContainers = start
 }
 
+// `madock restart php` is somebody asking for one service, and there is a
+// command for that.
+//
+// go-arg refuses the argument either way — that is the 3.9.16 fix, and it is
+// what keeps the environment up. What it cannot do is say what was meant: its
+// message reads "too many positional arguments at 'php'", which names neither
+// the want nor the command that serves it.
+func TestABareServiceNameIsRecognisedAsSuch(t *testing.T) {
+	if got := unexpectedPositional([]string{"php"}); got != "php" {
+		t.Errorf("unexpectedPositional([php]) = %q, want php", got)
+	}
+	if got := unexpectedPositional([]string{"--with-chown", "worker-queue"}); got != "worker-queue" {
+		t.Errorf("a service name after a flag was not seen: %q", got)
+	}
+}
+
+// Flags are not service names. Every flag this command takes is a boolean, so
+// nothing here is a value belonging to one.
+func TestFlagsAreNotMistakenForServiceNames(t *testing.T) {
+	for _, argv := range [][]string{
+		nil,
+		{"--with-chown"},
+		{"-c"},
+		{"--quiet", "--with-chown"},
+	} {
+		if got := unexpectedPositional(argv); got != "" {
+			t.Errorf("unexpectedPositional(%v) = %q, want none", argv, got)
+		}
+	}
+}
+
 // The command line is read before a single container is stopped.
 //
 // The order is the fix: go-arg ends the process on an argument the command does

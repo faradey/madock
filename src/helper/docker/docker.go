@@ -178,14 +178,7 @@ func HasContainers(projectName string) bool {
 // somebody read the log there was nothing to go on: start said success and
 // status, asked in between, honestly said running.
 func NotRunning(projectName string) []ServiceState {
-	pp := paths.NewProjectPaths(projectName)
-	composeFile := pp.DockerCompose()
-	if !paths.IsFileExist(composeFile) {
-		return nil
-	}
-
-	out, err := exec.Command("docker", "compose", "-f", composeFile, "-f", pp.DockerComposeOverride(),
-		"ps", "-a", "--format", "json").Output()
+	entries, err := ServiceStates(projectName)
 	if err != nil {
 		// Nothing to report rather than a false alarm: a docker that cannot be
 		// asked is not evidence that a service died.
@@ -193,7 +186,7 @@ func NotRunning(projectName string) []ServiceState {
 	}
 
 	var dead []ServiceState
-	for _, entry := range parseComposePS(out) {
+	for _, entry := range entries {
 		if entry.State != "running" && entry.State != "restarting" {
 			dead = append(dead, entry)
 		}

@@ -79,6 +79,7 @@ Each platform has its own CLI command(s). Use the one matching the project's pla
 ### Services
 - `service:enable` — enable a service
 - `service:disable` — disable a service
+- `service:restart` — restart one service, leaving the rest of the project running
 
 ### Other
 - `logs` — show container logs (flag: `--service`)
