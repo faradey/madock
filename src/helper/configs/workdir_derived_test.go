@@ -59,20 +59,23 @@ func TestWorkdirKeepsACustomRoot(t *testing.T) {
 	}
 }
 
-// php/workdir follows when it is set and is not invented when it is not: an
-// unset one means the php container follows workdir, and writing one here would
-// fix in place a thing that was deliberately left to follow.
-func TestPhpWorkdirFollowsOnlyWhenSet(t *testing.T) {
-	set := map[string]string{"deploy/enabled": "true", "php/workdir": "/var/www/html"}
-	applyDerived(set)
-	if got := set["php/workdir"]; got != "/var/www/html/current" {
-		t.Errorf("php/workdir = %q, want /var/www/html/current", got)
-	}
+// There is one key for this, and php/workdir is not a second one.
+//
+// `deploy:enable` used to write it alongside workdir, and nothing has ever read
+// it: no config declares it, no template renders it, no command consults it.
+// Deriving it too would have kept a second spelling of the same fact alive, and
+// two spellings are how the answers get to disagree — which is the whole defect
+// this change is about. The write is gone; nothing here fills the gap.
+func TestPhpWorkdirIsNotASecondAnswer(t *testing.T) {
+	conf := map[string]string{"deploy/enabled": "true", "php/workdir": "/var/www/html"}
 
-	unset := map[string]string{"deploy/enabled": "true"}
-	applyDerived(unset)
-	if _, exists := unset["php/workdir"]; exists {
-		t.Errorf("php/workdir was invented: %q", unset["php/workdir"])
+	applyDerived(conf)
+
+	if got := conf["php/workdir"]; got != "/var/www/html" {
+		t.Errorf("php/workdir was touched: %q", got)
+	}
+	if got := conf["workdir"]; got != "/var/www/html/current" {
+		t.Errorf("workdir = %q, want /var/www/html/current", got)
 	}
 }
 
