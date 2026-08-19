@@ -1,3 +1,14 @@
+**v3.9.22**
+
+Added:
+- **`rebuild` now removes settings the project has deleted.** madock keeps two copies of a project's configuration — the one in the repository and the one written into the installation at setup — and reads prefer the first, so an added or changed setting arrives on its own while a **deleted** one does not: the read falls through to the installed copy, which still holds it. **Measured on Pricesmith, 2026-08-17**: a `custom_commands` block was removed from the repository, committed and rolled out, and `madock pr` went on working on every machine that had ever run setup. Nothing failed, and nobody was told
+- **What made this unfixable was telling two identical keys apart** — one copied from the project at setup, one typed here with `config:set` — and there was no such distinction anywhere. There is now: madock keeps a snapshot of the project's configuration as it last saw it, and uses it the way a merge base is used. A key that was in the snapshot and is gone from the project was the project's to remove; a key whose installed value no longer matches the snapshot was changed on this machine, and is reported and kept
+- Only what the snapshot recorded is ever a candidate, so `path`, generated passwords, allocated ports — everything madock writes into the installed copy itself — cannot be touched by a deletion in the project. The first rebuild after upgrading records the baseline and removes nothing, and says so
+- Nothing is silent: every key removed is printed with the reason, and so is every key kept. Swapping a setting that refuses to leave for one that vanishes without a word would be a poor trade
+
+Decided:
+- **`status` keeps exiting zero when nothing is running**, and that is now written down and pinned by a test. Zero means the question was answered — "nothing is running" is a true answer to "what is running", and a script that reads it as failure cannot tell a stopped project from a broken one. A non-zero exit is reserved for a question that could not be asked, which is what `status` already does when docker does not answer. Exit codes are documented in [docs/json_output.md](docs/json_output.md)
+
 **v3.9.21**
 
 Fixed:

@@ -193,6 +193,20 @@ madock db:export --json
 }
 ```
 
+## Exit codes
+
+**Zero means the question was answered, not that the answer was cheerful.** `status` on a project whose containers are all stopped — or that was never started — prints what it found and exits 0: "nothing is running" is a true answer to "what is running", and a script that treats it as a failure cannot tell a stopped project from a broken one.
+
+A non-zero exit means the question could not be answered. `status` ends non-zero when docker itself cannot be asked, and says which command failed and what it printed.
+
+Read the state from the payload rather than from the exit code:
+
+```bash
+madock status --json | jq -e '.data.services | length > 0 and all(.[]; .running)'
+```
+
+`cron_jobs` follows the same rule in the other direction: it is `-1`, with `cron_jobs_known` false, when the crontab could not be read. Zero jobs and unknown jobs are different answers, and only one of them is a problem you can act on.
+
 ## Examples
 
 ### Get database password with jq
