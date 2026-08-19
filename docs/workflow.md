@@ -8,6 +8,10 @@ madock/projects/{project name}/env.xml
 
 #### 1. Start containers
 
+`madock setup` ends by building and starting them, so straight after setup there is nothing to start — the project is already up, and `madock status` says so.
+
+`start` is what brings a project back later: after `madock stop`, after a reboot, or in the morning.
+
 ```
 madock start
 ```

@@ -62,8 +62,8 @@ madock setup
 # Select PHP, MySQL, Elasticsearch versions matching your project
 # Enter host (e.g.: magento.local)
 
-# 3. Start containers (with rebuild)
-madock rebuild
+# 3. The containers are already up — setup ends with a rebuild
+madock status
 
 # 4. Install dependencies
 madock composer install
@@ -96,8 +96,8 @@ madock setup
 # Select PHP, MySQL/MariaDB versions matching your project
 # Enter host (e.g.: shopware.local)
 
-# 3. Start containers (with rebuild)
-madock rebuild
+# 3. The containers are already up — setup ends with a rebuild
+madock status
 
 # 4. Install dependencies
 madock composer install
@@ -133,8 +133,8 @@ madock setup
 # Configure language version and other settings
 # Enter host (e.g.: myproject.test)
 
-# 3. Start containers (with rebuild)
-madock rebuild
+# 3. The containers are already up — setup ends with a rebuild
+madock status
 
 # 4. Work inside the container
 madock bash

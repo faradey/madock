@@ -14,8 +14,8 @@ madock setup
 # Choose PHP, MySQL versions matching your project
 # Enter host (e.g.: prestashop.local)
 
-# 3. Start containers
-madock start
+# 3. The containers are already up — setup ends with a rebuild
+madock status
 
 # 4. Install dependencies
 madock composer install
