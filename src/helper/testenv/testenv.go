@@ -112,7 +112,59 @@ func SetupWith(t *testing.T, projectName, hostName string, overrides map[string]
 	// Clean config cache so the new env vars are picked up
 	configs.CleanCache()
 
-	// Create project config via SaveInFile with Magento 2.4.8 settings
+	writeProjectConfig(execDir, runDir, projectName, hostName, overrides)
+
+	// Reset global port registry so it re-reads from the new execDir
+	ports.ResetRegistry()
+
+	return &Env{
+		ExecDir:     execDir,
+		RunDir:      runDir,
+		ProjectName: projectName,
+	}
+}
+
+// AddProject puts a second project into an installation Setup already made.
+//
+// One project is enough for everything generated *inside* a project, and that is
+// what every fixture covered until now. The shared proxy is the exception: it is
+// one file describing every project on the machine, so the interesting part of
+// it — that two projects get their own upstreams, their own server blocks and
+// their own ports, and that neither overwrites the other — cannot be rendered
+// from a single project at all.
+//
+// The second project lives in the same installation and gets a run directory of
+// its own. MADOCK_RUN_DIR moves with it, because that is how madock decides
+// which project it is being asked about.
+func AddProject(t *testing.T, env *Env, projectName, hostName string, overrides map[string]string) *Env {
+	t.Helper()
+
+	runDir := filepath.Join(filepath.Dir(env.RunDir), "run-"+projectName)
+	for _, dir := range []string{
+		runDir,
+		filepath.Join(env.ExecDir, "projects", projectName, "docker", "ctx"),
+		filepath.Join(env.ExecDir, "aruntime", "projects", projectName, "ctx"),
+	} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatalf("Failed to create dir %s: %v", dir, err)
+		}
+	}
+
+	t.Setenv("MADOCK_RUN_DIR", runDir)
+	configs.CleanCache()
+
+	writeProjectConfig(env.ExecDir, runDir, projectName, hostName, overrides)
+
+	return &Env{
+		ExecDir:     env.ExecDir,
+		RunDir:      runDir,
+		ProjectName: projectName,
+	}
+}
+
+// writeProjectConfig writes one project's configuration, defaults first and the
+// caller's overrides on top.
+func writeProjectConfig(execDir, runDir, projectName, hostName string, overrides map[string]string) {
 	projectConfigPath := filepath.Join(execDir, "projects", projectName, "config.xml")
 	projectConfigData := map[string]string{
 		"platform":                                  "magento2",
@@ -223,14 +275,6 @@ func SetupWith(t *testing.T, projectName, hostName string, overrides map[string]
 
 	// Clean cache again after writing config
 	configs.CleanCache()
-	// Reset global port registry so it re-reads from the new execDir
-	ports.ResetRegistry()
-
-	return &Env{
-		ExecDir:     execDir,
-		RunDir:      runDir,
-		ProjectName: projectName,
-	}
 }
 
 // Collect reads every generated file, with the machine-specific parts
