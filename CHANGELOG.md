@@ -9,6 +9,10 @@ Fixed:
 - **A job containing a quote broke the install.** The crontab was written with `echo '<jobs>' | crontab -`, so a single quote anywhere in a command — `php -r 'echo …'` is an ordinary thing to schedule — ended the quoting and handed the rest to the shell. It is written through a quoted heredoc now
 - Repeated jobs are ordered by index as a number rather than as text, so the tenth job is no longer installed second
 
+Added:
+- **`{{workdir}}` in a cron job, so one committed config is right on every machine.** The application root is `/var/www/html` on a plain checkout and `/var/www/html/current` where deployer manages releases, so a job that writes the path out is correct on one kind of machine and wrong on the other — silently, because cron sends its output nowhere. madock's own jobs never had this problem: the magento2 and shopware branches build their command from `workdir`. This gives the config's jobs the same thing. Expansion happens when the crontab is written, so `crontab -l` shows the real path rather than an indirection to read at three in the morning
+- `{{workdir}}` is the only placeholder, and secret keys are refused outright — a crontab is a file, and `{{db/password}}` would put a password in it. A job naming anything else is **not installed**, with a warning saying which placeholder and why: a line still carrying `{{…}}` would run every minute and fail every minute, into /dev/null
+
 Changed:
 - **`Cron is running` now says how many jobs are installed** — `Cron is running (7 jobs)`, or a warning when the daemon is up with an empty crontab, which is the state the bug above produced and the one the old line read as healthy. The count is read from the container's crontab, not from the config: the config is what was asked for. When the container cannot answer, the line says `installed jobs: unknown` rather than reporting none
 - `status --json` gains `cron_jobs` and `cron_jobs_known`. `cron_jobs` is `-1` when the question could not be asked

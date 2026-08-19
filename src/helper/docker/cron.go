@@ -292,6 +292,24 @@ func getCronJobsFromConfig(projectConf map[string]string) []string {
 	return jobs
 }
 
+// resolveCronJobs substitutes the placeholders each job names and drops the
+// ones that cannot be resolved, returning what may be installed and a line
+// about each refusal.
+//
+// Dropping rather than installing verbatim: a line with `{{workdir}}` still in
+// it is a job that runs on schedule and fails on schedule, into /dev/null.
+func resolveCronJobs(jobs []string, projectConf map[string]string) (resolved []string, refusals []string) {
+	for _, job := range jobs {
+		expanded, unresolved := expandCronJob(job, projectConf)
+		if len(unresolved) > 0 {
+			refusals = append(refusals, job+"\n    unresolved: "+strings.Join(unresolved, ", "))
+			continue
+		}
+		resolved = append(resolved, expanded)
+	}
+	return resolved, refusals
+}
+
 // lessConfigKey orders two "/"-separated config keys, comparing a segment as a
 // number when both sides are entirely digits.
 func lessConfigKey(a, b string) bool {
@@ -359,7 +377,13 @@ func CronJobCount(projectName string) (int, bool) {
 
 // installCronJobsFromConfig installs cron jobs from configuration
 func installCronJobsFromConfig(projectConf map[string]string, projectName string, manual bool) {
-	jobs := getCronJobsFromConfig(projectConf)
+	jobs, refusals := resolveCronJobs(getCronJobsFromConfig(projectConf), projectConf)
+	for _, refusal := range refusals {
+		// Always, not only under `manual`: a job that never reaches the crontab
+		// is invisible everywhere else, which is the failure this whole area
+		// keeps producing.
+		fmtc.WarningLn("Cron job not installed — " + refusal)
+	}
 	if len(jobs) == 0 {
 		// An empty list is an instruction, not an absence of one: the config owns
 		// its block, and leaving the previous jobs in place means a job deleted

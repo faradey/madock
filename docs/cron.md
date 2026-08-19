@@ -52,6 +52,11 @@ Add jobs to the `<cron>` section in your config:
 - Each `<job>` element should contain a complete cron entry (schedule + command)
 - Jobs are installed/removed together with `cron:enable` and `cron:disable`, and reinstalled on every `start`, `restart` and `rebuild`
 - The configuration owns this crontab. Removing every `<job>` from it removes them from the container on the next start — a job deleted from the config does not keep running
+- **Use `{{workdir}}` instead of writing the application path out.** It expands to the project's `workdir` when the crontab is installed, which is `/var/www/html` on a plain checkout and `/var/www/html/current` where deployer manages releases. A job that spells the path out is correct on one kind of machine and silently wrong on the other — cron sends its output nowhere, so the job simply stops running:
+  ```xml
+  <apply_due>* * * * * {{workdir}}/scripts/cron/poke.sh /api/cron/apply-due &gt;&gt; /var/www/html/logs/cron.log 2&gt;&amp;1</apply_due>
+  ```
+  Expansion happens at install time, so `crontab -l` shows the real path. `{{workdir}}` is the only placeholder; anything else — and any secret key — is refused, and the job is left out with a warning rather than installed with the placeholder still in it
 - Jobs may also be written as named entries, which is the spelling `config:set` produces:
   ```xml
   <jobs>
