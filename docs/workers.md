@@ -2,7 +2,23 @@
 
 A long-running process — a queue worker, a message consumer, a job runner — as a service of the environment, on any platform.
 
-madock already ships `cron` for commands that run *on a schedule*. A worker is the other kind: a process that starts with the environment and stays up.
+## Worker or cron
+
+Both run a command you configure, and there the resemblance ends. They are different mechanisms, not two spellings of one.
+
+| | [`cron`](cron.md) | `worker` |
+|---|---|---|
+| The command | starts, does its work, exits | starts once and stays up |
+| Where it runs | **inside the existing container**, as a crontab line | **in a container of its own**, added to the compose file |
+| What runs it | the `cron` daemon in the main service | docker, from a compose service |
+| If it exits | nothing happens; cron runs it again at the next tick | docker restarts it, per the project's restart policy |
+| Takes effect after | `start` or `restart` — the crontab is rewritten each time | `rebuild` — the compose file is regenerated |
+| Visible in `madock status` | as `Cron is running (N jobs)` | as its own service, by name |
+| Its output | goes wherever the crontab line sends it, `/dev/null` by default | `madock logs -s worker-<name>` |
+
+Use `cron` for "every five minutes, do this". Use `worker` for "keep consuming this queue". Running `queue:work` from cron is a common way to get two of them at once, both half-dead; running a nightly cleanup as a worker means writing your own sleep loop.
+
+The two are independent — a project can have both, and most that need a worker also need cron.
 
 ## Configuration
 
@@ -31,6 +47,31 @@ madock logs -s worker-queue
 | `user` | no | image default | Applies to every program. Usually `www-data` on PHP images |
 
 **XML-escape `&` as `&amp;`** inside a command, as everywhere else in this file.
+
+## What it renders
+
+The two programs above become two compose services. This is the real output, from the fixture that tests it:
+
+```yaml
+  worker-queue:
+    init: true
+    build:
+      context: ctx
+      dockerfile: nodejs.Dockerfile
+    working_dir: /var/www/html
+    entrypoint: []
+    command: ["sh", "-c", "exec node build/worker.js"]
+    volumes:
+      - ./src:/var/www/html:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    depends_on:
+      - nodejs
+    restart: no
+```
+
+`dockerfile` is the main service's — `nodejs.Dockerfile` here because the project's language is Node, `php.Dockerfile` on a PHP project. `exec` in the command means the process replaces the shell, so docker signals reach it and a stop is a stop rather than a ten-second wait.
 
 ## What a worker gets
 

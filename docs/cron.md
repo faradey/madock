@@ -1,6 +1,8 @@
 # Cron
 
-Madock provides built-in cron support for running scheduled tasks.
+Madock provides built-in cron support for running scheduled tasks — commands that start, do their work and exit.
+
+For a process that has to **stay** running — a queue worker, a message consumer — see [Workers](workers.md). Scheduling `queue:work` from cron is the usual way to end up with several of them at once, each waiting on the next.
 
 Cron runs in the project's **main service container** — `php` for a PHP project, and `nodejs`, `python`, `golang`, `ruby` or `app` for the others, following `language`. A project with `php/enabled` off still gets cron; it goes in whichever container the project is built around.
 
