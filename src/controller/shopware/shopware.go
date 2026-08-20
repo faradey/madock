@@ -12,19 +12,27 @@ import (
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"shopware", "sw"},
-		Handler:  Execute,
-		Help:     "Execute Shopware CLI",
-		Category: "shopware",
-		// The arguments are the Shopware CLI's.
-		PassThrough: true,
-	})
-	command.Register(&command.Definition{
-		Aliases:  []string{"shopware:bin", "sw:b"},
-		Handler:  ExecuteBin,
+		Aliases: []string{"shopware", "sw"},
+		Handler: Execute,
+		// Not "Execute Shopware CLI". This runs `php bin/console`, and Shopware
+		// CLI is a different program — github.com/shopware/shopware-cli, a
+		// separate Go binary that validates an extension against the store's
+		// requirements and builds its zip. madock does not wrap it at all, so the
+		// old wording sent somebody looking for a tool this command is not: they
+		// found the name, ran it, and got a Symfony console.
 		Help:     "Execute Shopware bin/console",
 		Category: "shopware",
 		// The arguments are bin/console's.
+		PassThrough: true,
+	})
+	command.Register(&command.Definition{
+		Aliases: []string{"shopware:bin", "sw:b"},
+		Handler: ExecuteBin,
+		// The wider of the two, despite the narrower name: this runs anything in
+		// the project's bin/, while `shopware` above is locked to bin/console.
+		Help:     "Run an executable from the project's bin/ directory",
+		Category: "shopware",
+		// The arguments belong to whatever in bin/ is being run.
 		PassThrough: true,
 	})
 	command.Register(&command.Definition{
@@ -43,7 +51,7 @@ func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()
 	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/console "+flag)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalChild(err)
 	}
 }
 
@@ -53,7 +61,7 @@ func ExecuteBin() {
 	projectConf := configs.GetCurrentProjectConfig()
 	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && bin/"+flag)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalChild(err)
 	}
 }
 
@@ -79,6 +87,6 @@ func ExecuteConsume() {
 		"cd "+projectConf["workdir"]+" && php bin/console messenger:consume "+args,
 	)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalChild(err)
 	}
 }
