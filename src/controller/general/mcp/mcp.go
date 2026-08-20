@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/helper/paths"
-	"github.com/faradey/madock/v3/src/version"
+	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/version"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )

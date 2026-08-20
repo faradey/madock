@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/testenv"
+	"github.com/faradey/madock/v4/src/helper/testenv"
 )
 
 // Run these with -count=1, always:

@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 // ComposeServices returns the project's services under the names compose knows

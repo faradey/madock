@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 type PackageJSON struct {

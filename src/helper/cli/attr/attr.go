@@ -7,8 +7,8 @@ import (
 	"os/exec"
 
 	"github.com/alexflint/go-arg"
-	"github.com/faradey/madock/v3/src/helper/logger"
-	"github.com/faradey/madock/v3/src/version"
+	"github.com/faradey/madock/v4/src/helper/logger"
+	"github.com/faradey/madock/v4/src/version"
 )
 
 var IsParseArgs = true

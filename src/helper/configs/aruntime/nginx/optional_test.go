@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	configs2 "github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/ports"
-	"github.com/faradey/madock/v3/src/helper/testenv"
+	configs2 "github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/ports"
+	"github.com/faradey/madock/v4/src/helper/testenv"
 )
 
 // A project with nginx/enabled=false disappears from everything the shared proxy

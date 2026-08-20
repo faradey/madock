@@ -1,7 +1,7 @@
 package medusa
 
 import (
-	"github.com/faradey/madock/v3/src/model/versions"
+	"github.com/faradey/madock/v4/src/model/versions"
 )
 
 func init() {

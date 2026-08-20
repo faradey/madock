@@ -13,16 +13,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
-	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
-	configs2 "github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
-	"github.com/faradey/madock/v3/src/helper/configs/aruntime/proxytransform"
-	"github.com/faradey/madock/v3/src/helper/finder"
-	"github.com/faradey/madock/v3/src/helper/logger"
-	"github.com/faradey/madock/v3/src/helper/paths"
-	"github.com/faradey/madock/v3/src/helper/ports"
-	"github.com/faradey/madock/v3/src/helper/setup/tools"
+	"github.com/faradey/madock/v4/src/helper/cli/attr"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	configs2 "github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/v4/src/helper/configs/aruntime/proxytransform"
+	"github.com/faradey/madock/v4/src/helper/finder"
+	"github.com/faradey/madock/v4/src/helper/logger"
+	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/ports"
+	"github.com/faradey/madock/v4/src/helper/setup/tools"
 )
 
 func MakeConf(projectName string) {

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/testenv"
+	"github.com/faradey/madock/v4/src/helper/testenv"
 )
 
 // Run with -count=1: the input is docker/, plain data files the test cache knows

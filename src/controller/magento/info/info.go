@@ -4,8 +4,8 @@
 package info
 
 import (
-	"github.com/faradey/madock/v3/src/helper/docker"
-	inforeg "github.com/faradey/madock/v3/src/info"
+	"github.com/faradey/madock/v4/src/helper/docker"
+	inforeg "github.com/faradey/madock/v4/src/info"
 )
 
 type Handler struct{}

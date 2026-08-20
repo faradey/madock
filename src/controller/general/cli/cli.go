@@ -4,13 +4,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/controller/platform"
-	"github.com/faradey/madock/v3/src/helper/cli"
-	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/docker"
-	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/controller/platform"
+	"github.com/faradey/madock/v4/src/helper/cli"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/docker"
+	"github.com/faradey/madock/v4/src/helper/logger"
 )
 
 func init() {

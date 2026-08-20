@@ -7,21 +7,21 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/controller/general/service"
-	"github.com/faradey/madock/v3/src/controller/platform"
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
-	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/logger"
-	"github.com/faradey/madock/v3/src/helper/paths"
-	"github.com/faradey/madock/v3/src/helper/ports"
-	inforeg "github.com/faradey/madock/v3/src/info"
+	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/controller/general/service"
+	"github.com/faradey/madock/v4/src/controller/platform"
+	"github.com/faradey/madock/v4/src/helper/cli/attr"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/logger"
+	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/ports"
+	inforeg "github.com/faradey/madock/v4/src/info"
 )
 
 type ArgsStruct struct {
 	attr.Arguments
-	ShowSecrets bool `arg:"--show-secrets" help:"Print secret values in full instead of describing them"`
+	ShowSecrets bool `arg:"--show-secrets" help:"Print secret values in full where they are withheld by default"`
 }
 
 func init() {

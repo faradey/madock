@@ -1,14 +1,14 @@
 package enable
 
 import (
-	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/controller/general/rebuild"
-	"github.com/faradey/madock/v3/src/controller/general/service"
-	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
-	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/setup/tools"
+	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/controller/general/rebuild"
+	"github.com/faradey/madock/v4/src/controller/general/service"
+	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v4/src/helper/cli/attr"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/setup/tools"
 )
 
 func init() {

@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/xml"
 	"fmt"
-	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/sbabiv/xml2map"
 	"os"
 	"sort"

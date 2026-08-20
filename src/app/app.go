@@ -5,14 +5,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/controller/general/help"
-	"github.com/faradey/madock/v3/src/controller/general/isnotdefine"
-	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/embedded"
-	"github.com/faradey/madock/v3/src/helper/paths"
-	"github.com/faradey/madock/v3/src/migration"
+	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/controller/general/help"
+	"github.com/faradey/madock/v4/src/controller/general/isnotdefine"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/embedded"
+	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/migration"
 )
 
 // Run is the main entry point for the madock application.

@@ -10,11 +10,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
-	configs2 "github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
-	"github.com/faradey/madock/v3/src/helper/logger"
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/cli/attr"
+	configs2 "github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/v4/src/helper/logger"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 // composeProjectName returns the compose project name madock uses when

@@ -3,11 +3,11 @@ package version
 import (
 	"fmt"
 
-	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
-	"github.com/faradey/madock/v3/src/helper/cli/output"
-	appversion "github.com/faradey/madock/v3/src/version"
+	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v4/src/helper/cli/attr"
+	"github.com/faradey/madock/v4/src/helper/cli/output"
+	appversion "github.com/faradey/madock/v4/src/version"
 )
 
 func init() {

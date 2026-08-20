@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 // Fingerprint hashes everything MakeConf generates for a project: the compose

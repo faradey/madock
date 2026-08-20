@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/tmpl"
+	"github.com/faradey/madock/v4/src/helper/tmpl"
 )
 
 // checkerFor is the preflight's renderer, pointed at one directory of snippets

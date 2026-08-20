@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/docker"
-	"github.com/faradey/madock/v3/src/helper/logger"
-	"github.com/faradey/madock/v3/src/model/versions"
+	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/docker"
+	"github.com/faradey/madock/v4/src/helper/logger"
+	"github.com/faradey/madock/v4/src/model/versions"
 )
 
 // shellSingleQuote wraps s for safe use inside a bash single-quoted string:

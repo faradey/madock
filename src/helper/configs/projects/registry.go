@@ -1,8 +1,8 @@
 package projects
 
 import (
-	configs2 "github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/model/versions"
+	configs2 "github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/model/versions"
 )
 
 // EnvWriter writes platform-specific config entries.

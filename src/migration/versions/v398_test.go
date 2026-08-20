@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/configs"
 )
 
 // installation lays out a madock installation with one project in it and points

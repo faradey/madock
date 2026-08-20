@@ -4,14 +4,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/controller/general/start"
-	"github.com/faradey/madock/v3/src/controller/general/stop"
-	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
-	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/controller/general/start"
+	"github.com/faradey/madock/v4/src/controller/general/stop"
+	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v4/src/helper/cli/attr"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
 )
 
 func init() {
