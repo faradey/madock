@@ -45,6 +45,11 @@ type ServiceStatus struct {
 	Service string `json:"service"`
 	State   string `json:"state"`
 	Running bool   `json:"running"`
+	// Orphan marks a container that belongs to this compose project but is not
+	// among the services its files declare — left behind by an earlier version
+	// of the configuration. Absent for the ordinary case, so a script reading
+	// this can treat its presence as the exception it is.
+	Orphan bool `json:"orphan,omitempty"`
 }
 
 type ToolsStatus struct {
@@ -67,9 +72,16 @@ func Execute() {
 
 	// Get services status
 	servicesData := getContainerStatus(pp.DockerCompose())
+	knownServices, servicesKnown := definedServices(pp.DockerCompose(), pp.DockerComposeOverride())
+	servicesData = markOrphans(servicesData, knownServices, servicesKnown)
 
 	// Get proxy status
 	proxyData := getContainerStatus(paths.ProxyDockerCompose())
+	// The proxy has the same problem and a documented instance of it: disabling
+	// mailpit leaves its container behind, and it went on being listed as one of
+	// the proxy's services.
+	knownProxy, proxyKnown := definedServices(paths.ProxyDockerCompose(), "")
+	proxyData = markOrphans(proxyData, knownProxy, proxyKnown)
 
 	// Get tools status
 	projectConf := configs.GetCurrentProjectConfig()
@@ -104,12 +116,7 @@ func Execute() {
 	fmtc.TitleLn("Services:")
 	if len(servicesData) > 0 {
 		for _, val := range servicesData {
-			row := fmt.Sprintf("%s %s", val.Service, val.State)
-			if val.Running {
-				fmtc.SuccessLn(row)
-			} else {
-				fmtc.WarningLn(row)
-			}
+			printServiceRow(val, "")
 		}
 	} else {
 		fmtc.WarningLn("No services found")
@@ -118,12 +125,7 @@ func Execute() {
 	fmtc.TitleLn("Proxy:")
 	if len(proxyData) > 0 {
 		for _, val := range proxyData {
-			row := fmt.Sprintf(" %s %s", val.Service, val.State)
-			if val.Running {
-				fmtc.SuccessLn(row)
-			} else {
-				fmtc.WarningLn(row)
-			}
+			printServiceRow(val, " ")
 		}
 	} else {
 		fmtc.WarningLn("No services found")
@@ -155,6 +157,25 @@ func Execute() {
 		fmtc.SuccessLn(" Debugger is enabled")
 	} else {
 		fmtc.WarningLn(" Debugger is disabled")
+	}
+}
+
+// printServiceRow writes one line of the human output.
+//
+// An orphan is printed as a warning whatever its state, and said in words rather
+// than left to be inferred from a name the reader is not expecting: a container
+// running here is not the project working, it is the previous configuration
+// still running, and those two look identical in a list.
+func printServiceRow(val ServiceStatus, indent string) {
+	row := fmt.Sprintf("%s%s %s", indent, val.Service, val.State)
+	if val.Orphan {
+		fmtc.WarningLn(row + " — orphan: not in this project's configuration any more")
+		return
+	}
+	if val.Running {
+		fmtc.SuccessLn(row)
+	} else {
+		fmtc.WarningLn(row)
 	}
 }
 
