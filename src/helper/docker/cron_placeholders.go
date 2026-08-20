@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	configs2 "github.com/faradey/madock/v3/src/helper/configs"
+	configs2 "github.com/faradey/madock/v4/src/helper/configs"
 )
 
 // A cron job in the config is written once and installed on machines whose

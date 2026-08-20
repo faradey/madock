@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/faradey/madock/v3/src/helper/tmpl"
+	"github.com/faradey/madock/v4/src/helper/tmpl"
 )
 
 func main() {

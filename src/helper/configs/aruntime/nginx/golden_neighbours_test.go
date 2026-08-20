@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/testenv"
+	"github.com/faradey/madock/v4/src/helper/testenv"
 )
 
 // TestGoldenProxyWithTwoProjects pins the half of the shared proxy that one

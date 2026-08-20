@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/configs"
 )
 
 // The gap config:unset closes, stated as the thing that actually happened: a

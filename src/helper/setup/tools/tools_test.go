@@ -3,7 +3,7 @@ package tools
 import (
 	"testing"
 
-	"github.com/faradey/madock/v3/src/model/versions"
+	"github.com/faradey/madock/v4/src/model/versions"
 )
 
 // withReconfigure sets the package-level mode for one test and restores it, so

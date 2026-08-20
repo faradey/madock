@@ -3,7 +3,7 @@ package platform
 import (
 	"fmt"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/configs"
 )
 
 // Handler defines the interface for platform-specific operations

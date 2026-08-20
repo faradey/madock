@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/helper/cli/shell"
+	"github.com/faradey/madock/v4/src/helper/cli/shell"
 )
 
 // assignmentRe matches an argument that is a shell variable assignment, so the

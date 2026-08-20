@@ -3,8 +3,8 @@ package versions
 import (
 	"os"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 // V372 is a follow-up to V366 that catches projects upgraded from versions

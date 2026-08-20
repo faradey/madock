@@ -45,12 +45,17 @@ func TestDatabaseIsReachable(t *testing.T) {
 	requireContains(t, info, "type: MYSQL", "db:info should report the engine")
 	requireContains(t, info, "host: db", "db:info should report the host the commands connect to")
 
-	// The passwords are described, not printed. This command is run to find a
-	// host and a port, and its output then lives in scrollback, in a CI log, in
-	// a screenshot and in the issue somebody pastes it into — a radius the
-	// config file it reads from does not have. On a project borrowing a shared
-	// database the root password printed here is the **provider's**, which
-	// reaches every other project's schema on that server.
+	// The passwords are printed, because this is the edition that manages a
+	// developer's own laptop: `db:info` is run here to copy a password into a
+	// database client, and the config file it comes from is two directories
+	// away, so withholding it would add a flag to every such use and protect
+	// nothing.
+	//
+	// The paid edition answers the other way and its own suite pins that. There
+	// the same command prints a shared database's **root** password — which
+	// reaches every other project's schema on that server — and the output goes
+	// into a ticket, a screen share or a CI log. Same command, different machine;
+	// the edition decides, through fmtc.HideSecretsByDefault.
 	//
 	// The values are read back from the configuration rather than set to
 	// something recognisable first, and that is not a stylistic choice: the
@@ -69,19 +74,21 @@ func TestDatabaseIsReachable(t *testing.T) {
 	// Compared as whole values, not searched for anywhere in the output. This
 	// project's credentials are `db` and `password` — two and eight characters,
 	// the same as the database name and a substring of the word "password" in
-	// madock's own label — so both "the output contains the secret" and "the line
-	// contains the secret" are true no matter how well the masking works. Two
-	// versions of this test failed on exactly that, on `host: db` and then on
-	// `root password: set (8)`.
-	if got := valueOf(t, info, "password"); got == password || !strings.HasPrefix(got, "set (") {
-		t.Errorf("db:info did not describe the database password: %q", got)
+	// madock's own label — so "the output contains the secret" is true whatever
+	// the command actually printed. Two versions of this test failed on exactly
+	// that, on `host: db` and then on `root password: set (8)`. Reading the value
+	// off its own line is what makes the assertion mean anything, in either
+	// direction.
+	if got := valueOf(t, info, "password"); got != password {
+		t.Errorf("db:info printed %q as the database password, want %q", got, password)
 	}
-	if got := valueOf(t, info, "root password"); got == rootPassword || !strings.HasPrefix(got, "set (") {
-		t.Errorf("db:info did not describe the database root password: %q", got)
+	if got := valueOf(t, info, "root password"); got != rootPassword {
+		t.Errorf("db:info printed %q as the database root password, want %q", got, rootPassword)
 	}
 
-	// And asked by name, it prints them — the flag is the whole point of the
-	// default being the other way.
+	// --show-secrets is accepted and changes nothing here. It has to keep
+	// working: the same command line is written for both editions, and one that
+	// errored on the flag would make every such script edition-specific.
 	shown := p.run(1*time.Minute, "db:info", "--show-secrets")
 	if got := valueOf(t, shown, "password"); got != password {
 		t.Errorf("db:info --show-secrets printed %q as the password, want %q", got, password)

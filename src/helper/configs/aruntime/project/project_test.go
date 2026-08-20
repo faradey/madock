@@ -3,7 +3,7 @@ package project
 import (
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/configs"
 )
 
 func TestCompareVersions(t *testing.T) {

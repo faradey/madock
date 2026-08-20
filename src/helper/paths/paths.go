@@ -1,8 +1,8 @@
 package paths
 
 import (
-	"github.com/faradey/madock/v3/src/helper/hash"
-	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v4/src/helper/hash"
+	"github.com/faradey/madock/v4/src/helper/logger"
 	"io"
 	"os"
 	"os/exec"

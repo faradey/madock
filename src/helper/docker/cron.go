@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	cliHelper "github.com/faradey/madock/v3/src/helper/cli"
-	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
-	configs2 "github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/logger"
+	cliHelper "github.com/faradey/madock/v4/src/helper/cli"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	configs2 "github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/logger"
 )
 
 // containerExecSilent runs a command in the container while capturing stdout/stderr

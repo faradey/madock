@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 // DetectFromGemfile tries to detect Spree (and future Ruby platforms)

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 // ReconcileResult is what one reconciliation did, and it is meant to be printed.

@@ -1,9 +1,9 @@
 package ssl
 
 import (
-	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/helper/configs/aruntime/nginx"
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/helper/configs/aruntime/nginx"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 func init() {

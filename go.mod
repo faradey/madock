@@ -1,4 +1,4 @@
-module github.com/faradey/madock/v3
+module github.com/faradey/madock/v4
 
 go 1.25.0
 

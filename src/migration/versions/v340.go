@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 // V340 migrates config for PostgreSQL and MongoDB support:

@@ -15,9 +15,9 @@ package dbtarget
 import (
 	"strings"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/docker"
-	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/docker"
+	"github.com/faradey/madock/v4/src/helper/logger"
 )
 
 // Target describes the database a command should operate on.

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/paths"
-	"github.com/faradey/madock/v3/src/helper/testenv"
+	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/testenv"
 )
 
 // The shared proxy publishes two fixed development ports: LiveReload on 35729

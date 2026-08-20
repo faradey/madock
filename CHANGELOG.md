@@ -1,4 +1,9 @@
-**v3.9.23**
+**v4.0.0**
+
+Changed:
+- **The module path is now `github.com/faradey/madock/v4`.** Go puts the major version in the import path from v2 on, so a 4.x release cannot keep the old one. Anything importing madock as a library updates its imports; nothing about the binary, the commands or a project's configuration changes with it
+- **`db:info` and `madock info` print passwords again by default in this edition.** The change that described them instead was right for a server and wrong here: madock manages a developer's own laptop, `db:info` is run to copy the value into a database client, and the config file it comes from is two directories away — withholding it added a flag to every such use and protected nothing. The paid edition, which runs on servers where the same command prints a shared database's **root** password into a ticket or a screen share, still withholds it and still takes `--show-secrets`
+- The switch lives in the library and the edition sets it, the same way the help renderer and the command scope resolver already work. Not a configuration option: a setting can be wrong on a server and nothing would say so, while the edition cannot be
 
 Fixed:
 - **`madock install --help` ran a real installation.** On an installed project it printed the assembled `bin/magento setup:install --base-url=… --admin-password=…` line — the password with it — and ran it, over the live database, reaching "Enabling Maintenance Mode" before it stopped on the existing `env.php`. Somebody typing `--help` has asked for the exact opposite of that. **Found on a live stand, 2026-08-20**

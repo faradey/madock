@@ -1,9 +1,9 @@
 package projects
 
 import (
-	configs2 "github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/paths"
-	"github.com/faradey/madock/v3/src/model/versions"
+	configs2 "github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/model/versions"
 )
 
 func SetEnvForProject(projectName string, defVersions versions.ToolsVersions, projectConf map[string]string) {

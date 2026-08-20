@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
-	"github.com/faradey/madock/v3/src/helper/docker"
+	"github.com/faradey/madock/v4/src/helper/cli/attr"
+	"github.com/faradey/madock/v4/src/helper/docker"
 )
 
 // stack is what a real project answers: services the config names, services it

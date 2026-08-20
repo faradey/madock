@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
+	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v4/src/helper/cli/attr"
 )
 
 // swap replaces the three seams for the duration of one test and restores them.

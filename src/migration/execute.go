@@ -1,8 +1,8 @@
 package migration
 
 import (
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/migration/versions"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/migration/versions"
 )
 
 // olderThan compares two versions as versions rather than as strings.

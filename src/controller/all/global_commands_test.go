@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/command"
+	"github.com/faradey/madock/v4/src/command"
 )
 
 // TestGlobalCommands pins which commands may run outside a project.

@@ -5,14 +5,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/command"
-	"github.com/faradey/madock/v3/src/helper/cli/arg_struct"
-	"github.com/faradey/madock/v3/src/helper/cli/attr"
-	"github.com/faradey/madock/v3/src/helper/cli/fmtc"
-	"github.com/faradey/madock/v3/src/helper/cli/output"
-	configs2 "github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/dbtarget"
-	"github.com/faradey/madock/v3/src/helper/ports"
+	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
+	"github.com/faradey/madock/v4/src/helper/cli/attr"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/cli/output"
+	configs2 "github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/dbtarget"
+	"github.com/faradey/madock/v4/src/helper/ports"
 )
 
 type DbInfoOutput struct {
@@ -25,9 +25,10 @@ type DatabaseInfo struct {
 	Host     string `json:"host"`
 	Database string `json:"database"`
 	User     string `json:"user"`
-	// The passwords are present only when they were asked for by name, with
-	// --show-secrets. The booleans are always there, so a script can tell "no
-	// password" from "not shown" without the value.
+	// The passwords are present unless the edition withholds them, in which
+	// case they arrive only when asked for by name with --show-secrets. The
+	// booleans are always there, so a script can tell "no password" from "not
+	// shown" without the value.
 	Password        string `json:"password,omitempty"`
 	PasswordSet     bool   `json:"password_set"`
 	RootPassword    string `json:"root_password,omitempty"`
@@ -69,7 +70,12 @@ func Info() {
 		// database with no password from one whose password was not printed,
 		// which is the only thing it could honestly do with a masked string.
 		// JSON is not the safer half — it is what ends up in a CI log.
-		if !args.ShowSecrets {
+		//
+		// Only where the edition withholds secrets. In the open-source edition
+		// the fields are present as they always were, so a script reading a
+		// password out of `db:info --json` on a developer's laptop keeps
+		// working without learning a new flag.
+		if fmtc.HideSecretsByDefault && !args.ShowSecrets {
 			for i := range databases {
 				databases[i].Password = ""
 				databases[i].RootPassword = ""

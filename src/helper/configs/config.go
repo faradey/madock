@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/faradey/madock/v3/src/helper/logger"
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/logger"
+	"github.com/faradey/madock/v4/src/helper/paths"
 	"github.com/go-xmlfmt/xmlfmt"
 )
 

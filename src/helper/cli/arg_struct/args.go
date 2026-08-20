@@ -1,6 +1,6 @@
 package arg_struct
 
-import "github.com/faradey/madock/v3/src/helper/cli/attr"
+import "github.com/faradey/madock/v4/src/helper/cli/attr"
 
 type ControllerGeneralHelp struct {
 	attr.Arguments
@@ -223,7 +223,7 @@ type ControllerGeneralDbExecute struct {
 
 type ControllerGeneralDbInfo struct {
 	attr.Arguments
-	ShowSecrets bool `arg:"--show-secrets" help:"Print the passwords in full instead of describing them"`
+	ShowSecrets bool `arg:"--show-secrets" help:"Print the passwords in full where they are withheld by default"`
 }
 
 type ControllerGeneralConfigList struct {

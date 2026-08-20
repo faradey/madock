@@ -3,8 +3,8 @@ package versions
 import (
 	"os"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 // V375 pins the historical DB credentials for projects created before the

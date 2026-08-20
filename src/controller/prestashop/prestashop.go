@@ -1,11 +1,11 @@
 package prestashop
 
 import (
-	"github.com/faradey/madock/v3/src/command"
-	cliHelper "github.com/faradey/madock/v3/src/helper/cli"
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/docker"
-	"github.com/faradey/madock/v3/src/helper/logger"
+	"github.com/faradey/madock/v4/src/command"
+	cliHelper "github.com/faradey/madock/v4/src/helper/cli"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/docker"
+	"github.com/faradey/madock/v4/src/helper/logger"
 	"os"
 )
 

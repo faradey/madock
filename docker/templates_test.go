@@ -5,7 +5,7 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/faradey/madock/v3/src/helper/tmpl"
+	"github.com/faradey/madock/v4/src/helper/tmpl"
 )
 
 // TestEveryTemplateParses is what the tag-balance test became.

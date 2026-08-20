@@ -9,11 +9,11 @@ import (
 	"os/exec"
 	"strings"
 
-	configs2 "github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/configs/aruntime/nginx"
-	"github.com/faradey/madock/v3/src/helper/configs/aruntime/project"
-	"github.com/faradey/madock/v3/src/helper/logger"
-	"github.com/faradey/madock/v3/src/helper/paths"
+	configs2 "github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/configs/aruntime/nginx"
+	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/v4/src/helper/logger"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 // UpNginx starts the nginx proxy container

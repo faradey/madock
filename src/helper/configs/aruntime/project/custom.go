@@ -1,6 +1,6 @@
 package project
 
-import "github.com/faradey/madock/v3/src/helper/configs"
+import "github.com/faradey/madock/v4/src/helper/configs"
 
 func init() {
 	RegisterDockerConfGenerator("custom", MakeConfCustom)

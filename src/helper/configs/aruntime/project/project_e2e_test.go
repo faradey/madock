@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/ports"
-	"github.com/faradey/madock/v3/src/helper/testenv"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/ports"
+	"github.com/faradey/madock/v4/src/helper/testenv"
 )
 
 // setupE2EEnvironment creates a test environment with redis enabled on top of the base setup.

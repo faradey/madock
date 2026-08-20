@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/configs"
 )
 
 // registryWith builds an installation holding one project entry, with the

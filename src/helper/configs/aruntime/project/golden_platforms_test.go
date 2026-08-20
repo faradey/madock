@@ -4,10 +4,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/faradey/madock/v3/src/helper/configs"
-	"github.com/faradey/madock/v3/src/helper/configs/projects"
-	"github.com/faradey/madock/v3/src/helper/testenv"
-	"github.com/faradey/madock/v3/src/model/versions"
+	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/configs/projects"
+	"github.com/faradey/madock/v4/src/helper/testenv"
+	"github.com/faradey/madock/v4/src/model/versions"
 )
 
 // platformsWithoutAGolden is every platform madock ships templates for and had
