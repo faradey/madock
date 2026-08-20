@@ -16,6 +16,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute n98-magerun",
 		Category: "magento",
+		// The arguments are n98-magerun's.
+		PassThrough: true,
 	})
 }
 

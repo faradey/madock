@@ -103,6 +103,15 @@ func Execute() {
 	fmtc.WarningLn("Use 'madock help <command>' for more information about a command.")
 }
 
+// ShowCommand prints the detailed help of one command.
+//
+// The dispatcher's entry point for `madock <command> --help`. Same renderer as
+// `madock help <command>` and as the -h/--help go-arg answers inside a command,
+// so all three spellings print the same thing.
+func ShowCommand(name string) {
+	showCommandHelp(name)
+}
+
 func showCommandHelp(name string) {
 	def, ok := command.Get(name)
 	if !ok {

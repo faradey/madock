@@ -33,7 +33,9 @@ func UpNginxWithBuild(projectName string, force bool) {
 	proxyCompose := paths.ProxyDockerCompose()
 	if paths.IsFileExist(proxyCompose) {
 		cmd := exec.Command("docker", "compose", "-f", proxyCompose, "ps", "--format", "json")
-		result, err := cmd.CombinedOutput()
+		// Output, not CombinedOutput: docker's warnings go to stderr and would
+		// otherwise be handed to a JSON reader as if they were data.
+		result, err := cmd.Output()
 		if err != nil {
 			logger.Println(err, result)
 		} else if isProxyRunning(result) {
@@ -243,7 +245,10 @@ func IsProxyRunning() bool {
 	if !paths.IsFileExist(composeFile) {
 		return false
 	}
-	out, err := exec.Command("docker", "compose", "-f", composeFile, "ps", "--format", "json").CombinedOutput()
+	// Output, not CombinedOutput — see the note in status.getContainerStatus:
+	// compose writes deprecation warnings to stderr, and mixing them into the
+	// data is how a JSON reader ends up complaining about English prose.
+	out, err := exec.Command("docker", "compose", "-f", composeFile, "ps", "--format", "json").Output()
 	if err != nil {
 		return false
 	}

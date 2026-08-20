@@ -41,6 +41,25 @@ func TestParseJsonHandlesAnyNumberOfServices(t *testing.T) {
 			input: `[{"Name":"a","Service":"a","State":"running"},{"Name":"b","Service":"b","State":"exited"}]`,
 			want:  2,
 		},
+		{
+			// Docker talking rather than answering. The caller now reads stdout
+			// alone, which keeps this on stderr where compose puts it — but
+			// every `madock status` on a project whose compose file still
+			// carried the obsolete top-level `version` key used to print
+			// "Could not read the container status: invalid character 'i' in
+			// literal true (expecting 'r')", a JSON parser complaining about
+			// English. Ignoring a line of prose costs a line of prose; parsing
+			// one costs the whole status.
+			name: "a warning mixed in with the data",
+			input: `WARN[0000] /path/docker-compose.yml: the attribute ` + "`version`" + ` is obsolete, it will be ignored
+{"Name":"project-php-1","Service":"php","State":"running"}`,
+			want: 1,
+		},
+		{
+			name:  "nothing but a warning",
+			input: `WARN[0000] the attribute ` + "`version`" + ` is obsolete, it will be ignored`,
+			want:  0,
+		},
 	}
 
 	for _, testCase := range cases {

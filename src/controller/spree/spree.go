@@ -17,6 +17,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Spree rails CLI (e.g. `madock spree console`)",
 		Category: "spree",
+		// The arguments are the rails CLI's.
+		PassThrough: true,
 	})
 }
 

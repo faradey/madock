@@ -17,6 +17,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Run a command inside the BigCommerce project's main container (preset-aware)",
 		Category: "bigcommerce",
+		// The arguments belong to whatever runs in the container.
+		PassThrough: true,
 	})
 }
 

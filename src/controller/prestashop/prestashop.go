@@ -15,6 +15,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute PrestaShop CLI",
 		Category: "prestashop",
+		// The arguments are the PrestaShop CLI's.
+		PassThrough: true,
 	})
 }
 

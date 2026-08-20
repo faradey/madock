@@ -15,6 +15,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Shopify web",
 		Category: "shopify",
+		// The arguments belong to the command run in the web container.
+		PassThrough: true,
 	})
 }
 
