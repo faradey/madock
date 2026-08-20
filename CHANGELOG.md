@@ -1,3 +1,11 @@
+**Unreleased**
+
+Fixed:
+- **`status` named a container the project no longer has as one of its services.** `docker compose ps` lists by project rather than by file — the project name comes from the directory the compose file sits in — so a container created from an earlier version of that file keeps being reported after its service is gone from the configuration. Turning `db/enabled` off, or moving a project onto a shared database, left the old container running and `status` calling it a service
+- **It hid a real defect for a day, which is how it was found.** A project whose config said `db/type: MariaDB` generated a compose file with no `db` service at all, and `status --json` went on listing `db` as running — so the first test written for that bug passed against the broken build, and only reading the generated file showed the truth. A status that invents a service is worse than one that says nothing, because it is believed
+- Named, not removed, and that is the decision rather than an omission. The compose file is generated from a config, so a rendering bug decides what counts as an orphan: `--remove-orphans` on `up` would have pointed the deletion at a running database container in exactly the case above. `orphan` is a field in `--json`, absent for ordinary services, and a phrase on the human line
+- The list of services is asked of compose (`config --services`) rather than parsed out of the YAML, so the answer is the one `up` acts on — override files and interpolation included. When compose cannot be asked, or answers with nothing, no container is flagged: an unanswered check must not become "everything here is a leftover"
+
 **v4.0.0**
 
 Changed:
