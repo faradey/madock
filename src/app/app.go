@@ -31,6 +31,13 @@ func Run(appVersion string) {
 	cmdName := strings.ToLower(os.Args[1])
 
 	if def, ok := command.Get(cmdName); ok {
+		// Before the project check, and before the handler. Asking what a command
+		// does is not itself a use of a project, so it answers outside one too.
+		if !def.PassThrough && wantsHelp(os.Args[2:]) {
+			help.ShowCommand(cmdName)
+			return
+		}
+
 		if !command.IsGlobal(def) && !configs.IsHasConfig("") {
 			refuseOutsideProject(cmdName)
 			return
@@ -39,6 +46,29 @@ func Run(appVersion string) {
 	} else {
 		isnotdefine.Execute(cmdName)
 	}
+}
+
+// wantsHelp reports whether the arguments ask for the command's help.
+//
+// `--help` only, never `-h`. The short form is a real flag with a real value
+// elsewhere — `setup:env -h <host>` — and a dispatcher cannot tell the two apart
+// without knowing the command's own flags. Where a command has an argument
+// struct, go-arg still answers -h from inside it; where it has none there is
+// nothing for -h to collide with, and nothing for it to mean either.
+//
+// A `--` ends it, because everything after that belongs to whatever the command
+// passes it to.
+func wantsHelp(argv []string) bool {
+	for _, arg := range argv {
+		if arg == "--" {
+			return false
+		}
+		if arg == "--help" {
+			return true
+		}
+	}
+
+	return false
 }
 
 // refuseOutsideProject explains why a project command will not run here.

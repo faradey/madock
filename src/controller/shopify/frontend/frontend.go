@@ -15,6 +15,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Shopify frontend",
 		Category: "shopify",
+		// The arguments belong to the command run in the frontend container.
+		PassThrough: true,
 	})
 }
 

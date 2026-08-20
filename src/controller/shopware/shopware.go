@@ -16,18 +16,24 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Shopware CLI",
 		Category: "shopware",
+		// The arguments are the Shopware CLI's.
+		PassThrough: true,
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"shopware:bin", "sw:b"},
 		Handler:  ExecuteBin,
 		Help:     "Execute Shopware bin/console",
 		Category: "shopware",
+		// The arguments are bin/console's.
+		PassThrough: true,
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"shopware:consume", "sw:c"},
 		Handler:  ExecuteConsume,
 		Help:     "Run Shopware messenger consumer (foreground) — for debugging",
 		Category: "shopware",
+		// The arguments are messenger:consume's.
+		PassThrough: true,
 	})
 }
 

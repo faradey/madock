@@ -16,6 +16,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute composer command",
 		Category: "general",
+		// The arguments are composer's.
+		PassThrough: true,
 	})
 }
 

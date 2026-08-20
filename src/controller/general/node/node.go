@@ -20,6 +20,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute node command",
 		Category: "general",
+		// The arguments are node's.
+		PassThrough: true,
 	})
 }
 

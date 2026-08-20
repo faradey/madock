@@ -19,6 +19,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute CLI in container. Optional first argument: --service <name>",
 		Category: "general",
+		// Everything after the optional --service belongs to the shell.
+		PassThrough: true,
 	})
 }
 

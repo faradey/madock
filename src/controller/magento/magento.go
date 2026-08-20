@@ -15,6 +15,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Magento CLI",
 		Category: "magento",
+		// The arguments are bin/magento's.
+		PassThrough: true,
 	})
 }
 

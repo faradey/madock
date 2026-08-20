@@ -17,6 +17,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Sylius / Symfony console (bin/console <cmd>)",
 		Category: "sylius",
+		// The arguments are bin/console's.
+		PassThrough: true,
 	})
 }
 

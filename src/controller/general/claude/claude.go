@@ -16,6 +16,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Claude AI assistant",
 		Category: "general",
+		// The arguments are the claude CLI's.
+		PassThrough: true,
 	})
 }
 

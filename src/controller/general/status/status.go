@@ -160,7 +160,23 @@ func Execute() {
 
 func getContainerStatus(composePath string) []ServiceStatus {
 	cmd := exec.Command("docker", "compose", "-f", composePath, "ps", "--format", "json")
-	result, err := cmd.CombinedOutput()
+
+	// Separate streams, not CombinedOutput.
+	//
+	// The error message below needs docker's own words, and CombinedOutput was
+	// how it got them — but it also folded docker's warnings into the JSON.
+	// Compose writes those to stderr and the data to stdout, so a compose file
+	// still carrying the obsolete top-level `version` key put
+	// "the attribute `version` is obsolete, it will be ignored" in front of the
+	// first object, and every single `madock status` on that project printed
+	// "Could not read the container status: invalid character 'i' in literal
+	// true (expecting 'r')" — a JSON parser complaining about English.
+	//
+	// Keeping stderr in its own buffer answers both: the parser sees only data,
+	// and the failure message still quotes docker.
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	result, err := cmd.Output()
 	if err != nil {
 		// The output, not just the exit code. `logger.Fatal(err)` printed
 		// "exit status 1" and threw away the only sentence that said why —
@@ -169,7 +185,7 @@ func getContainerStatus(composePath string) []ServiceStatus {
 		// consistent with a missing compose file, a daemon that is not running
 		// and a compose file docker refuses to parse, and there was no way to
 		// tell from madock at all.
-		logger.Fatal(fmt.Errorf("docker compose ps failed for %s: %w\n%s", composePath, err, string(result)))
+		logger.Fatal(fmt.Errorf("docker compose ps failed for %s: %w\n%s%s", composePath, err, string(result), stderr.String()))
 	}
 
 	var statusData []ServiceStatus
@@ -223,7 +239,13 @@ func parseJson(data []byte) []byte {
 	var objects []string
 	for _, line := range strings.Split(str, "\n") {
 		line = strings.TrimSpace(line)
-		if line != "" {
+		// Only objects. Every line compose prints here is one, so anything else
+		// is docker talking rather than answering — a deprecation warning, a
+		// credential-helper notice, an update banner. The caller now reads
+		// stdout alone, which keeps those on stderr where they belong, but a
+		// warning has reached stdout before and the cost of ignoring one is a
+		// line of prose, while the cost of parsing one is the whole status.
+		if strings.HasPrefix(line, "{") {
 			objects = append(objects, line)
 		}
 	}

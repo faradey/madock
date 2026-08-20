@@ -17,6 +17,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Saleor manage.py CLI",
 		Category: "saleor",
+		// The arguments are manage.py's.
+		PassThrough: true,
 	})
 }
 

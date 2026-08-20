@@ -15,6 +15,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Shopify CLI",
 		Category: "shopify",
+		// The arguments are the Shopify CLI's.
+		PassThrough: true,
 	})
 }
 

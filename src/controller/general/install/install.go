@@ -36,9 +36,16 @@ func RegisterInstallHandler(platform string, handler InstallHandler) {
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"install"},
-		Handler:  Execute,
-		Help:     "Install Magento",
+		Aliases: []string{"install"},
+		Handler: Execute,
+		// Not "Install Magento": the platform comes from the project's own
+		// configuration, and the handler is registered per platform below.
+		//
+		// The warning is in the help text because this command is destructive on
+		// an installed project — it runs the platform's own installer, which for
+		// Magento is `setup:install` over whatever is in the database — and
+		// nothing in its name says so.
+		Help:     "Install the project's platform into its containers. Destructive: on an already installed project this reruns the platform installer over the existing database",
 		Category: "general",
 	})
 

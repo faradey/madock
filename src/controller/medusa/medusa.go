@@ -17,6 +17,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute Medusa CLI",
 		Category: "medusa",
+		// The arguments are the Medusa CLI's.
+		PassThrough: true,
 	})
 }
 

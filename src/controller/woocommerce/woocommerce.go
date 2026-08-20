@@ -16,6 +16,8 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute WP-CLI command",
 		Category: "woocommerce",
+		// The arguments are wp-cli's.
+		PassThrough: true,
 	})
 }
 

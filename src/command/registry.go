@@ -29,6 +29,28 @@ type Definition struct {
 	// whatever generated file happened to carry that name — leftovers from a
 	// version long gone included.
 	Global bool
+
+	// PassThrough marks a command whose arguments are not madock's to read: it
+	// hands os.Args[2:] to another program — composer, bin/magento, npm, wp-cli,
+	// a shell — and `--help` there is a request for that program's help.
+	//
+	// It exists so the dispatcher can answer `madock <command> --help` itself for
+	// everything else. That used to be each command's own job, done by calling
+	// attr.Parse, and a command that skipped it ran instead of explaining itself.
+	// `install` skipped it: `madock install --help` on an installed project built
+	// `bin/magento setup:install` from the project config and ran it, over a live
+	// database, having already printed the admin password on the way. Somebody
+	// typing --help has asked for exactly the opposite of that.
+	//
+	// It was not one command. Measured across the registry on 2026-08-20: eight in
+	// madock (install, stop, ssl:rebuild, mcp, mftf:init, compress, uncompress,
+	// config:cache:clean) and over fifty in madock-pro, backup:create,
+	// firewall:setup, server:init and shared-db:unshare among them. So the check
+	// belongs in the one place every command passes through, and the default is
+	// deliberately the safe one: forgetting this flag on a pass-through command
+	// prints madock's help instead of composer's, which is visible and harmless,
+	// while forgetting to parse in a command was silent and ran it.
+	PassThrough bool
 }
 
 var registry = make(map[string]*Definition)

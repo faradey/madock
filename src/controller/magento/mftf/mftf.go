@@ -17,6 +17,9 @@ func init() {
 		Handler:  Execute,
 		Help:     "Execute MFTF",
 		Category: "magento",
+		// The arguments are MFTF's. `mftf:init` below takes none and is not
+		// marked, so it answers --help rather than reinitialising the project.
+		PassThrough: true,
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"mftf:init"},
