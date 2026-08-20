@@ -115,12 +115,14 @@ func TestInfoReportsWhatIsActuallyPublished(t *testing.T) {
 	requireContains(t, human, "e2einfo.test", "info naming the host")
 	requireContains(t, human, "localhost:"+strconv.Itoa(dbPort), "info agreeing with info:ports about the database port")
 
-	// The password is masked on purpose: `info` is what gets pasted into a chat
-	// or an issue when somebody is asked what their project looks like. The
-	// value was set to something recognisable at setup time precisely so that
-	// leaking it would be unmistakable here.
-	if strings.Contains(human, dbPassword) {
-		t.Errorf("info printed the database password in full:\n%s", human)
+	// The password is printed in full, and in this edition that is the intended
+	// answer: madock manages the machine the person is sitting at, and `info` is
+	// how they read their own project's credentials back. The value was set to
+	// something recognisable at setup time, so a masked one would be
+	// unmistakable here too — which is what the paid edition's own suite asserts
+	// instead, for the servers it runs on.
+	if !strings.Contains(human, dbPassword) {
+		t.Errorf("info did not print the database password this edition is supposed to show:\n%s", human)
 	}
 	requireContains(t, human, "password", "info showing that there is a password at all")
 }
