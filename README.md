@@ -62,10 +62,6 @@ This project is written in Golang and distributed under the MIT License.
 * macOS (Monterey, Sonoma)
 * Windows (10, 11) — via WSL2
 
-## Video
-
-[![madock - install the two Magento 2 projects](https://i9.ytimg.com/vi/_9NvZak_kt8/mq1.jpg?sqp=CPTN95cG&rs=AOn4CLCdHqilfuAftZYHtejLn8v52qWP3g)](https://www.youtube.com/watch?v=_9NvZak_kt8)
-
 ## Installation
 
 You need 5 things on your local machine: `git`, `docker`, `docker-compose`, `golang` and `madock`

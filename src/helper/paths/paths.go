@@ -1,6 +1,7 @@
 package paths
 
 import (
+	"fmt"
 	"github.com/faradey/madock/v4/src/helper/hash"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"io"
@@ -182,22 +183,47 @@ func MakeDirsByPath(val string) string {
 }
 
 func GetActiveProjects() []string {
-	var activeProjects []string
-	cmd := exec.Command("docker", "ps", "--format", "json")
-	result, err := cmd.CombinedOutput()
+	active, err := ActiveProjects()
 	if err != nil {
-		logger.Println(err, string(result))
-	} else {
-		resultString := string(result)
-		projects := GetDirs(MakeDirsByPath(RuntimeProjects()))
-		for _, projectName := range projects {
-			if strings.Contains(resultString, strings.ToLower(projectName)+"-") {
-				activeProjects = append(activeProjects, projectName)
-			}
+		logger.Println(err)
+	}
+
+	return active
+}
+
+// ActiveProjects reports which registered projects have containers running, and
+// says so when it could not find out.
+//
+// GetActiveProjects above swallows that difference, which is right for its
+// callers — `stop` uses it to decide whether the shared proxy is still needed,
+// and there "cannot ask docker" and "nothing is running" lead to the same place.
+// It is wrong for anything that reports to a person: "no projects are running"
+// and "docker did not answer" are different facts, and printing the first when
+// the second is true is the kind of confident wrong answer this codebase keeps
+// finding.
+//
+// One `docker ps` for the whole registry rather than a status call per project.
+func ActiveProjects() ([]string, error) {
+	cmd := exec.Command("docker", "ps", "--format", "json")
+	// Output, not CombinedOutput: docker's warnings go to stderr, and a project
+	// whose name appeared in one would match below.
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	result, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("docker ps failed: %w\n%s", err, stderr.String())
+	}
+
+	var activeProjects []string
+	resultString := string(result)
+	projects := GetDirs(MakeDirsByPath(RuntimeProjects()))
+	for _, projectName := range projects {
+		if strings.Contains(resultString, strings.ToLower(projectName)+"-") {
+			activeProjects = append(activeProjects, projectName)
 		}
 	}
 
-	return activeProjects
+	return activeProjects, nil
 }
 
 func IsFileExist(path string) bool {
