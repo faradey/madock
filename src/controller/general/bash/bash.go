@@ -60,6 +60,6 @@ func Execute() {
 	}
 	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, service), user, true, shell)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalChild(err)
 	}
 }

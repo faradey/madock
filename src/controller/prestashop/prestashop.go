@@ -26,6 +26,6 @@ func Execute() {
 	projectConf := configs.GetCurrentProjectConfig()
 	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/console "+flag)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalChild(err)
 	}
 }
