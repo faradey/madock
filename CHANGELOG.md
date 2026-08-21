@@ -1,4 +1,4 @@
-**Unreleased**
+**v4.0.1**
 
 Added:
 - **`madock sw:cli` runs shopware-cli**, the vendor's extension tooling — `extension validate`, `extension build`, `extension zip`. It is a different program from `bin/console` and a compiled binary rather than a composer package, so it cannot arrive with the project: madock downloads it into the php image, the same way `n98-magerun` arrives in the magento2 image. Not a container of its own — the commands read and write the project's source, which is already mounted there, and nothing about the tool is a service
