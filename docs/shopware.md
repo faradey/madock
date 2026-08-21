@@ -71,9 +71,13 @@ php image instead of expecting it in `vendor/`.
 Off by default. Turn it on and rebuild:
 
 ```bash
-madock config:set --name shopware/cli/enabled --value true
+madock service:enable shopware-cli
 madock rebuild
 ```
+
+`madock config:set --name shopware/cli/enabled --value true` is the same thing
+spelled out. The rebuild is not optional: the binary is added when the image is
+built, so until then the command is not there.
 
 Then:
 
