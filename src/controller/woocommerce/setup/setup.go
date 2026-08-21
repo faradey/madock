@@ -49,9 +49,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 
 	if args.Download && continueSetup {
 		if platformVersion == "" {
-			fmt.Println("")
-			fmtc.Title("Specify WordPress version: ")
-			platformVersion, _ = tools.Waiter()
+			platformVersion = tools.RequireAnswer("Specify WordPress version", "--platform-version")
 		}
 		if platformVersion != "" {
 			toolsDefVersions = woocommerce.GetVersions(platformVersion)
