@@ -1,0 +1,63 @@
+#!/bin/sh
+#
+# Refuse a commit on master. Work lands there through staging and a pull request.
+#
+# Why a hook and not a rule: the rule already existed and was written down, and it
+# was still broken twice in one session on 2026-08-20 — both times by the same
+# slip, `git checkout master` to fast-forward after a merge and then simply not
+# switching back. Nothing failed at the time. The commits were caught by eye and
+# moved with `git branch -f`, which is luck wearing the appearance of a process.
+#
+# What it protects is not master's contents — GitHub's branch protection does that,
+# and a push to master is refused there. It protects the *CI gate*: master requires
+# a pull request, and the checks that gate it are the reason staging exists. A
+# commit made on master is not wrong yet, it is merely in the wrong place, and the
+# cost is only paid later — at the point where the work has to be untangled, or
+# worse, where it is pushed with a lease nobody thinks about.
+#
+# Same shape as the lock on GitHub: not against the owner, against inattention.
+# `git commit --no-verify` skips it, deliberately.
+#
+# Enable once per clone:
+#     git config core.hooksPath .githooks
+
+set -u
+
+branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+
+# A detached HEAD is not a branch and not this hook's business: bisecting,
+# checking out a tag, and the worktrees used to run a test against an older
+# commit all sit there legitimately.
+[ -z "$branch" ] && exit 0
+
+case "$branch" in
+    master|main) ;;
+    *) exit 0 ;;
+esac
+
+# A merge or a rebase in progress means git is driving, not a person: refusing
+# here would leave the repository mid-operation with no obvious way forward.
+git_dir=$(git rev-parse --git-dir 2>/dev/null || echo ".git")
+if [ -e "$git_dir/MERGE_HEAD" ] || [ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ]; then
+    exit 0
+fi
+
+printf '\n\033[31mcommit refused: you are on %s\033[0m\n' "$branch" >&2
+cat >&2 <<'EOF'
+Work lands on master through staging and a pull request — CI gates the merge,
+and a commit made here has to be moved before it can go anywhere.
+
+Move to staging, keeping the changes you have staged:
+
+    git checkout -B staging
+
+If commits are already sitting on master, they are not lost:
+
+    git branch -f staging HEAD
+    git branch -f master origin/master
+    git checkout staging
+
+To commit here anyway: git commit --no-verify
+
+EOF
+exit 1
