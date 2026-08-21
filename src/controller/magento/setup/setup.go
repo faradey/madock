@@ -133,8 +133,7 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 	if !usePreset && toolsDefVersions.Php == "" && detectedVersion == "" {
 		if mageVersion == "" {
 			tools.SetProgressStep(currentStep)
-			fmtc.Title("Specify Magento version: ")
-			mageVersion, _ = tools.Waiter()
+			mageVersion = tools.RequireAnswer("Specify Magento version", "--platform-version")
 		}
 		if mageVersion != "" {
 			toolsDefVersions = magento2.GetVersions(mageVersion)

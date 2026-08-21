@@ -60,9 +60,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	if continueSetup {
 		if toolsDefVersions.Php == "" {
 			if platformVersion == "" {
-				fmt.Println("")
-				fmtc.Title("Specify Shopware version: ")
-				platformVersion, _ = tools.Waiter()
+				platformVersion = tools.RequireAnswer("Specify Shopware version", "--platform-version")
 			}
 			if platformVersion != "" {
 				toolsDefVersions = shopware.GetVersions(platformVersion)

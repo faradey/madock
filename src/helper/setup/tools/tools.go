@@ -464,7 +464,44 @@ func WaiterAndProceed(defVersion *string, availableVersions []string) {
 	setSelectedVersion(defVersion, availableVersions, selected, repoAndVersion)
 }
 
+// RequireAnswer asks for a value that has no default, and refuses rather than
+// asking when nobody is there to answer.
+//
+// `--yes` means "do not ask", and every other question honours that: the
+// selectors take the configured default, or the first real option. The four
+// platform-version prompts had no default to take, so under `--yes` they asked
+// anyway, read EOF from a closed stdin and ended the command with
+// "logger.go:82: EOF" — which names neither the question nor the flag that
+// answers it. A scripted `madock setup -y --platform=shopware` died there every
+// time, and the message sent people looking at their terminal rather than at
+// their command line.
+//
+// It refuses here, before the platform handler goes on to download anything, so
+// the failure costs nothing to recover from.
+func RequireAnswer(question, flag string) string {
+	if nonInteractive {
+		fmtc.ErrorLn(question + " has no default, and --yes means it cannot be asked for.")
+		fmtc.ToDoLn("Pass " + flag)
+		os.Exit(1)
+	}
+
+	fmt.Println("")
+	fmtc.Title(question + ": ")
+	answer, _ := Waiter()
+
+	return answer
+}
+
 func Waiter() (selected, repoAndVersion string) {
+	// The net under RequireAnswer, for any prompt that has not been given one.
+	// Reading stdin with nobody there returns EOF, and EOF as an error message
+	// describes the machinery rather than the mistake.
+	if nonInteractive {
+		fmtc.ErrorLn("A question was reached that --yes cannot answer, and stdin is not attached.")
+		fmtc.ToDoLn("Run without --yes to see what is being asked, then pass it as a flag")
+		os.Exit(1)
+	}
+
 	buf := bufio.NewReader(os.Stdin)
 	sentence, err := buf.ReadBytes('\n')
 	if err != nil {
