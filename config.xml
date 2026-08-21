@@ -315,6 +315,15 @@
                 <messenger>
                     <enabled>false</enabled>
                 </messenger>
+                <!-- shopware-cli, the vendor's extension tooling. Off by
+                     default and downloaded into the php image when enabled, the
+                     same way magento/n98magerun is: it is a compiled Go binary,
+                     not something composer can put in the project. The version
+                     is the vendor's release tag, which carries no `v` prefix. -->
+                <cli>
+                    <enabled>false</enabled>
+                    <version>0.17.3</version>
+                </cli>
             </shopware>
             <medusa>
                 <storefront>

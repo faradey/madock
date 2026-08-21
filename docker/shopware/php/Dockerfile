@@ -7,5 +7,6 @@
 {{{template "snippets/dockerfile/php/mkdir" .}}}
 {{{template "snippets/dockerfile/php/chown" .}}}
 {{{template "snippets/dockerfile/common/nodejs" .}}}
+{{{template "snippets/dockerfile/shopware/cli" .}}}
 {{{template "snippets/dockerfile/php/footer" .}}}
 {{{template "snippets/dockerfile/shopware/init-chown" .}}}

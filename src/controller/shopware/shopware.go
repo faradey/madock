@@ -2,9 +2,11 @@ package shopware
 
 import (
 	"os"
+	"strings"
 
 	"github.com/faradey/madock/v4/src/command"
 	cliHelper "github.com/faradey/madock/v4/src/helper/cli"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
@@ -36,6 +38,17 @@ func init() {
 		PassThrough: true,
 	})
 	command.Register(&command.Definition{
+		Aliases: []string{"shopware:cli", "sw:cli"},
+		Handler: ExecuteCli,
+		// The vendor's own tooling, and a different program from bin/console: it
+		// validates an extension against the store's requirements, builds it and
+		// zips it. `sw:c` is already the messenger consumer, hence `sw:cli`.
+		Help:     "Execute shopware-cli (extension validate, build, zip). Needs shopware/cli/enabled",
+		Category: "shopware",
+		// The arguments are shopware-cli's.
+		PassThrough: true,
+	})
+	command.Register(&command.Definition{
 		Aliases:  []string{"shopware:consume", "sw:c"},
 		Handler:  ExecuteConsume,
 		Help:     "Run Shopware messenger consumer (foreground) — for debugging",
@@ -50,6 +63,32 @@ func Execute() {
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
 	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/console "+flag)
+	if err != nil {
+		logger.FatalChild(err)
+	}
+}
+
+// ExecuteCli runs shopware-cli in the project's php container.
+//
+// The refusal in front of it is the point. shopware-cli is downloaded into the
+// image at build time and only when shopware/cli/enabled says so, so on a project
+// that has not asked for it the exec fails with "shopware-cli: command not found"
+// — a message about a missing binary, which reads as a broken installation rather
+// than as a setting nobody turned on. Naming the key and the rebuild costs one
+// config read and saves the search.
+func ExecuteCli() {
+	projectConf := configs.GetCurrentProjectConfig()
+
+	if strings.ToLower(projectConf["shopware/cli/enabled"]) != "true" {
+		fmtc.ErrorLn("shopware-cli is not installed in this project's php image.")
+		fmtc.ToDoLn("madock config:set --name shopware/cli/enabled --value true")
+		fmtc.ToDoLn("madock rebuild")
+		os.Exit(1)
+	}
+
+	flag := cliHelper.NormalizeCliCommandWithJoin(os.Args[2:])
+	projectName := configs.GetProjectName()
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && shopware-cli "+flag)
 	if err != nil {
 		logger.FatalChild(err)
 	}

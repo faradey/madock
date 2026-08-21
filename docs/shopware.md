@@ -49,12 +49,42 @@ madock sw list
 
 ### Running Bin Scripts
 
-Use `madock swbin` to run scripts from the `bin/` directory:
+Use `madock sw:b` (or `madock shopware:bin`) to run anything in the project's
+`bin/` directory:
 
 ```bash
-madock swbin console cache:clear
-madock swbin build-js.sh
+madock sw:b console cache:clear
+madock sw:b build-js.sh
 ```
+
+`madock sw` is the narrower of the two and always means `bin/console`, so
+`madock sw cache:clear` is the same as the first line above.
+
+### shopware-cli
+
+[shopware-cli](https://github.com/shopware/shopware-cli) is the vendor's
+extension tooling — it validates an extension against the store's requirements,
+builds it and zips it. It is a separate program from `bin/console` and a compiled
+binary rather than a composer package, so madock downloads it into the project's
+php image instead of expecting it in `vendor/`.
+
+Off by default. Turn it on and rebuild:
+
+```bash
+madock config:set --name shopware/cli/enabled --value true
+madock rebuild
+```
+
+Then:
+
+```bash
+madock sw:cli extension validate custom/plugins/MyPlugin
+madock sw:cli extension zip custom/plugins/MyPlugin
+```
+
+The release is pinned by `shopware/cli/version`, so every machine building the
+project gets the same tool. Running it without enabling it first refuses and says
+which key to set, rather than failing with "command not found".
 
 ### Database Operations
 
@@ -228,9 +258,9 @@ as www-data, and respawns on the configured restart policy.
 **2. Foreground consume (for one-off debugging):**
 
 ```bash
-madock sw:consume                 # default: async --time-limit=3600 -vv
-madock sw:consume failed          # drain the failed transport
-madock sw:consume async -vv       # custom args (override defaults)
+madock sw:c                 # default: async --time-limit=3600 -vv
+madock sw:c failed          # drain the failed transport
+madock sw:c async -vv       # custom args (override defaults)
 ```
 
 Runs as www-data inside the existing php container — Ctrl-C to stop.
@@ -283,9 +313,10 @@ REDIS_URL=redis://redisdb:6379
 
 | Command | Description |
 |---------|-------------|
-| `madock sw <command>` | Run Shopware console command |
-| `madock sw:consume [args]` | Run messenger consumer in foreground (debug) |
-| `madock swbin <script>` | Run bin script |
+| `madock sw <command>` | Run `bin/console <command>` |
+| `madock sw:b <script>` | Run anything in the project's `bin/` |
+| `madock sw:cli <args>` | Run shopware-cli (needs `shopware/cli/enabled`) |
+| `madock sw:c [args]` | Run messenger consumer in foreground (debug) |
 | `madock bash -u www-data` | Enter container as www-data |
 | `madock rebuild --with-chown` | Rebuild and fix permissions |
 | `madock composer <args>` | Run composer |
@@ -307,7 +338,7 @@ DATABASE_URL=mysql://magento:magento@db:3306/magento
 
 # Default async transport (Doctrine) — picked up by the madock messenger
 # sidecar service when shopware/messenger/enabled=true, or by
-# `madock sw:consume` for manual debugging.
+# `madock sw:c` for manual debugging.
 # MESSENGER_TRANSPORT_DSN=doctrine://default
 # Or RabbitMQ / Redis:
 # MESSENGER_TRANSPORT_DSN=amqp://guest:guest@rabbitmq:5672/%2f/messages
