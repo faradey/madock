@@ -27,6 +27,6 @@ func Execute() {
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, service), user, true, "bash", "-c", "cd "+workdir+" && "+flag)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalChild(err)
 	}
 }

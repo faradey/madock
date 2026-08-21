@@ -32,10 +32,11 @@ var serviceMap = map[string]string{
 	"saleor/worker":                  "worker",
 	"spree/sidekiq":                  "sidekiq",
 	"spree/storefront":               "storefront",
+	"shopware/cli":                   "shopware-cli",
 	"sylius/messenger":               "messenger",
 	"sylius/encore":                  "encore",
 	"artemis":                        "artemis",
-	"nodejs/embedded":               "embedded-node",
+	"nodejs/embedded":                "embedded-node",
 }
 
 // renamedServices maps a name that no longer exists to the one that replaced

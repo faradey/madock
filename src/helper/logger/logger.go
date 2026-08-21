@@ -1,10 +1,12 @@
 package logger
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
@@ -32,6 +34,47 @@ func SetLogPath(path string) {
 func Fatal(v ...any) {
 	debugger(v...)
 	log.Fatal(v...)
+}
+
+// FatalChild ends the command with the exit code of the program madock ran,
+// rather than with 1.
+//
+// The code is the answer, not decoration. `madock cli bash -c "exit 137"` exited
+// 1, and so did `exit 3` and a failing test suite — so a script could tell that
+// something went wrong and nothing about what: 137 is the OOM killer and means
+// "give it more memory", 1 from a test runner means "fix the code", and the two
+// were indistinguishable. Measured while building a Shopware administration
+// bundle, which Vite ends by being killed.
+//
+// madock had the number the whole time. `exec.Cmd.Run` returns an *exec.ExitError
+// carrying it, the pass-through commands hand that straight to the logger, and
+// the debug log even prints it ("exit status 137") — it just never reached the
+// caller, because log.Fatal exits 1 unconditionally.
+//
+// Anything that is not a child's failure still exits 1: docker refusing to start,
+// a container that does not exist, a path that cannot be read. Those are madock
+// failing, and inventing a code for them would make the number mean two things.
+func FatalChild(err error) {
+	debugger(err)
+	log.Print(err)
+	os.Exit(childExitCode(err))
+}
+
+// childExitCode picks the code to end with. Separated from FatalChild because
+// the exit itself cannot be tested in-process, and the decision is the part
+// worth pinning.
+func childExitCode(err error) int {
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		// -1 is "killed by a signal, no exit status" — a code Unix has no room
+		// for, and passing it on would exit 255 for reasons unrelated to the
+		// child. 1 is the honest answer there.
+		if code := exitErr.ExitCode(); code > 0 {
+			return code
+		}
+	}
+
+	return 1
 }
 
 func Fatalln(v ...any) {

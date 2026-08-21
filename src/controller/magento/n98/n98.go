@@ -29,7 +29,7 @@ func Execute() {
 	if projectConf["platform"] == "magento2" {
 		err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && /var/www/n98magerun/n98-magerun2.phar "+flag)
 		if err != nil {
-			logger.Fatal(err)
+			logger.FatalChild(err)
 		}
 	} else {
 		fmtc.Warning("This command is not supported for " + projectConf["platform"])

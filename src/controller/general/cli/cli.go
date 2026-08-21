@@ -75,6 +75,6 @@ func Execute() {
 
 	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, service), user, true, "bash", "-c", workdir+flag)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalChild(err)
 	}
 }

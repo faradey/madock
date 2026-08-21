@@ -171,6 +171,8 @@ RUN usermod -u <UID> -o www-data && groupmod -g <GID> -o www-data \
     && chown -R <UID>:<GID> /usr/bin/composer
 
 
+
+
 WORKDIR /var/www/html
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \

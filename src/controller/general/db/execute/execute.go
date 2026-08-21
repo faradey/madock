@@ -53,7 +53,7 @@ func executeMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbEx
 	login, loginPassword := target.Login()
 	cmd, err := docker.PrepareContainerExec(target.Container, user, false, target.MySQLClient(), "-u", login, "-p"+loginPassword, "-h", target.Host, target.Database, "-e", args.Query)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalChild(err)
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -82,7 +82,7 @@ func executePostgresql(target dbtarget.Target, args *arg_struct.ControllerGenera
 
 	cmd, err := docker.PrepareContainerExec(target.Container, user, false, "bash", "-c", command)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalChild(err)
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -99,7 +99,7 @@ func executeMongodb(target dbtarget.Target, args *arg_struct.ControllerGeneralDb
 
 	cmd, err := docker.PrepareContainerExec(target.Container, user, false, "mongosh", "--username="+target.User, "--password="+target.Password, "--authenticationDatabase=admin", target.Database, "--eval", args.Query)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalChild(err)
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

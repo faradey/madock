@@ -1,0 +1,31 @@
+{{{- if .shopware.cli.enabled}}}
+# shopware-cli, the vendor's extension tooling: `extension validate`,
+# `extension build`, `extension zip`.
+#
+# It is not part of a Shopware project the way bin/console is. bin/console
+# arrives with the source, installed by composer and versioned with the
+# platform; shopware-cli is a compiled Go binary that composer cannot install at
+# all. So somebody has to put it somewhere, and that is the image — the same
+# answer, and the same shape, as n98-magerun in the magento2 image.
+#
+# In the php container rather than a container of its own: the commands read and
+# write the project's source, which is already mounted here, and a second
+# container would need the same mount, the same uid and the same PHP for the
+# parts that shell out. Nothing about the tool is a service.
+#
+# The archive name is the vendor's own spelling and does not match `uname -m`:
+# x86_64 is "Linux_x86_64" but aarch64 is "Linux_arm64". Mapped rather than
+# interpolated, so an unknown architecture fails the build with a name instead of
+# fetching a 404 and unpacking nothing.
+RUN set -eu; \
+    case "$(uname -m)" in \
+        x86_64) swcli_arch="Linux_x86_64" ;; \
+        aarch64|arm64) swcli_arch="Linux_arm64" ;; \
+        *) echo "shopware-cli: no release for $(uname -m)" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL -o /tmp/shopware-cli.tar.gz \
+        "https://github.com/shopware/shopware-cli/releases/download/{{{.shopware.cli.version}}}/shopware-cli_${swcli_arch}.tar.gz"; \
+    tar -xzf /tmp/shopware-cli.tar.gz -C /usr/local/bin shopware-cli; \
+    rm -f /tmp/shopware-cli.tar.gz; \
+    chmod +x /usr/local/bin/shopware-cli
+{{{- end}}}

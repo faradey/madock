@@ -38,7 +38,7 @@ func Execute() {
 		projectName := configs.GetProjectName()
 		err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && magento-cloud "+flag)
 		if err != nil {
-			logger.Fatal(err)
+			logger.FatalChild(err)
 		}
 	} else {
 		fmtc.Warning("This command is not supported for " + projectConf["platform"])

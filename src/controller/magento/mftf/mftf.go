@@ -51,7 +51,7 @@ func Execute() {
 	if projectConf["platform"] == "magento2" {
 		err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && php vendor/bin/mftf "+flag)
 		if err != nil {
-			logger.Fatal(err)
+			logger.FatalChild(err)
 		}
 	} else {
 		fmtc.Warning("This command is not supported for " + projectConf["platform"])

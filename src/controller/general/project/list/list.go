@@ -11,18 +11,61 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/logger"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 type ArgsStruct struct {
 	attr.Arguments
-	Stale bool `arg:"--stale" help:"Only the entries whose source directory is gone"`
+	Stale   bool `arg:"--stale" help:"Only the entries whose source directory is gone"`
+	Running bool `arg:"--running" help:"Only the projects that have containers running"`
+}
+
+// projectRow is a registry entry plus what is true of it right now.
+//
+// Running is a pointer so that "not running" and "docker could not be asked" are
+// different values in JSON — false and null. They are different facts, and a
+// reader who cannot tell them apart will read an unanswered question as an
+// answer. The registry fields stay in configs.ProjectEntry, where they belong:
+// which projects exist is a property of the installation, and which are up is
+// not.
+type projectRow struct {
+	configs.ProjectEntry
+	Running *bool `json:"running"`
+}
+
+// withRunning pairs each registry entry with whether it is up.
+//
+// `known` false means docker could not be asked, and then every Running stays
+// nil — which is null in JSON and a blank column in the text. That distinction
+// is the whole reason this is a pointer: "no projects are running" and "nobody
+// could find out" are different facts, and reporting the first when the second
+// is true is a confident wrong answer.
+func withRunning(entries []configs.ProjectEntry, active []string, known bool) []projectRow {
+	running := make(map[string]bool, len(active))
+	for _, name := range active {
+		running[name] = true
+	}
+
+	rows := make([]projectRow, 0, len(entries))
+	for _, entry := range entries {
+		row := projectRow{ProjectEntry: entry}
+		if known {
+			// A fresh variable per row: one shared bool would give every row a
+			// pointer to the last answer.
+			isRunning := running[entry.Name]
+			row.Running = &isRunning
+		}
+		rows = append(rows, row)
+	}
+
+	return rows
 }
 
 func init() {
 	command.Register(&command.Definition{
 		Aliases:  []string{"project:list"},
 		Handler:  Execute,
-		Help:     "List registered projects. --stale for the ones whose source is gone",
+		Help:     "List registered projects. --running for the ones that are up, --stale for the ones whose source is gone",
 		Category: "project",
 		ArgsType: new(ArgsStruct),
 		// Global: it describes the installation, not a project, and the reason to
@@ -63,8 +106,31 @@ func Execute() {
 		shown = stale
 	}
 
+	// Asked once for the whole registry — one `docker ps`, not a status call per
+	// project. The question is "who is eating memory", and answering it used to
+	// mean walking the projects and running `status` in each.
+	active, activeErr := paths.ActiveProjects()
+	rows := withRunning(shown, active, activeErr == nil)
+
+	// --running on an answer nobody has is a refusal, not an empty list. The
+	// filtered form exists to be acted on, and "nothing is running" would be a
+	// lie dressed as a result.
+	if args.Running {
+		if activeErr != nil {
+			fmtc.ErrorLn("Cannot tell which projects are running: " + activeErr.Error())
+			os.Exit(1)
+		}
+		filtered := rows[:0]
+		for _, row := range rows {
+			if row.Running != nil && *row.Running {
+				filtered = append(filtered, row)
+			}
+		}
+		rows = filtered
+	}
+
 	if args.Json {
-		out, err := json.MarshalIndent(shown, "", "  ")
+		out, err := json.MarshalIndent(rows, "", "  ")
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -72,7 +138,17 @@ func Execute() {
 		return
 	}
 
-	if len(shown) == 0 {
+	// Said before the list, because every line below is missing a column and the
+	// reader has to know that before reading them rather than after.
+	if activeErr != nil {
+		fmtc.WarningLn("Docker could not be asked which projects are running: " + activeErr.Error())
+	}
+
+	if len(rows) == 0 {
+		if args.Running {
+			fmtc.WarningLn("No registered project has containers running")
+			return
+		}
 		if args.Stale {
 			fmtc.SuccessLn("Every registered project still has its source directory")
 			return
@@ -81,14 +157,23 @@ func Execute() {
 		return
 	}
 
-	for _, entry := range shown {
-		switch entry.State {
+	for _, row := range rows {
+		// Blank rather than "stopped" when the answer is unknown, and blank
+		// rather than a word for a stopped project: the column exists to make a
+		// running project findable in a list of fifty, and filling it in for
+		// every line defeats that.
+		state := "        "
+		if row.Running != nil && *row.Running {
+			state = "running "
+		}
+
+		switch row.State {
 		case configs.ProjectMissingSource:
-			fmtc.ErrorLn(fmt.Sprintf("%-28s source is gone: %s", entry.Name, entry.Path))
+			fmtc.ErrorLn(fmt.Sprintf("%-28s %ssource is gone: %s", row.Name, state, row.Path))
 		case configs.ProjectNoPath:
-			fmtc.WarningLn(fmt.Sprintf("%-28s no path recorded", entry.Name))
+			fmtc.WarningLn(fmt.Sprintf("%-28s %sno path recorded", row.Name, state))
 		default:
-			fmt.Printf("%-28s %s\n", entry.Name, entry.Path)
+			fmt.Printf("%-28s %s%s\n", row.Name, state, row.Path)
 		}
 	}
 
