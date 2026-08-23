@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -21,6 +22,7 @@ import (
 func Run(appVersion string) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 	embedded.ExtractIfNeeded(appVersion)
+	reportTemplateDrift()
 	migration.Apply(appVersion)
 
 	if len(os.Args) <= 1 {
@@ -46,6 +48,39 @@ func Run(appVersion string) {
 	} else {
 		isnotdefine.Execute(cmdName)
 	}
+}
+
+// reportTemplateDrift says, before any command runs, that this binary was not
+// built from the templates it is about to render.
+//
+// It warns and does not stop. On a source checkout the renderer reads the
+// templates off disk, so editing one and running a command is the development
+// loop working as intended — refusing there would break the very workflow the
+// drift is normal in. What is not normal is drift a person did not create, and
+// they cannot tell the two apart without being told the first one exists.
+//
+// The place is here rather than in rebuild, even though rebuild is what the
+// failure destroys: by the time a handler runs, the answer has to be repeated in
+// every command that renders a template, and the one that bites is whichever one
+// nobody added it to.
+func reportTemplateDrift() {
+	drift := embedded.TemplateDrift()
+	if drift == nil {
+		return
+	}
+
+	fmtc.WarningIconLn("This binary was built from different templates than the ones in this tree — " +
+		fmt.Sprintf("%d changed, %d missing from disk, %d new to it", len(drift.Changed), len(drift.Missing), len(drift.Extra)))
+
+	for _, path := range drift.Examples(3) {
+		fmtc.WarningLn("  docker/" + path)
+	}
+	if remainder := drift.Total() - 3; remainder > 0 {
+		fmtc.WarningLn(fmt.Sprintf("  and %d more", remainder))
+	}
+
+	fmtc.ToDoLn("Rebuild it — go build -o madock . in " + paths.GetExecDirPath() +
+		" — unless you are editing templates and know why they differ")
 }
 
 // wantsHelp reports whether the arguments ask for the command's help.

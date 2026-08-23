@@ -1,3 +1,11 @@
+**v4.0.2**
+
+Added:
+- **A binary older than the templates it renders now says so, before the command runs.** In a source checkout the two arrive separately — git delivers `docker/`, a build delivers the binary — and nothing married them, so a `git pull` silently left the installation half-updated. Measured 2026-08-23 on this machine: a 3.9.17 binary built on 19 August against a 4.0.1 tree merged on 21 August, with the php snippets reorganised in between. Every rebuild ended on `failed to read dockerfile: open php.Dockerfile: no such file or directory` — **after the containers were already down**, because `rebuild` destroys them and generates the build context afterwards. Any project on the machine would have hit it on its first rebuild, not only the one that did
+- Nothing could have shown it earlier: `--version` answers for the binary alone, and there is no second version beside it to disagree with. The check compares the templates compiled into the running binary against the ones on disk, so it answers the exact question — *was this binary built from these templates* — rather than asking a clock. Timestamps were the obvious implementation and the wrong one: `git checkout` rewrites mtimes on files it restored and leaves them on files it did not change
+- It warns and does not stop. From source the renderer reads templates off disk, so editing one and running a command is the development loop working — refusing there would break the workflow the drift is normal in. It says how many differ, names three, and gives the `go build` line
+- Silent wherever extraction owns the tree: a downloaded binary unpacks its own snapshot and stamps it, and madock-pro's installation gets `docker/` the same way because the assets belong to the imported module. Neither has a compiler to act on the warning, and in both the two cannot disagree
+
 **v4.0.1**
 
 Added:
