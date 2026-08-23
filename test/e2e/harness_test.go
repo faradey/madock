@@ -246,6 +246,8 @@ func (p *project) destroy() {
 		}
 		return
 	}
+	p.captureDatabaseLogs()
+
 	p.install.destroyProxy(p)
 	if out, err := p.tryRun(5*time.Minute, "project:remove", "--force", "--name="+p.name); err != nil {
 		p.t.Logf("cleanup of %s did not complete: %v\n%s", p.name, err, out)
@@ -259,6 +261,49 @@ func (p *project) destroy() {
 	// a directory this test created.
 	if out, err := exec.Command("sudo", "rm", "-rf", p.runDir).CombinedOutput(); err != nil {
 		p.t.Logf("could not remove %s as root: %v\n%s", p.runDir, err, out)
+	}
+}
+
+// databaseLogTail is how much of each database log a failure is worth. Enough to
+// hold a crash, a recovery and the start-up banner around it; short enough that a
+// failing run stays readable.
+const databaseLogTail = 120
+
+// captureDatabaseLogs puts the database containers' logs into the test output
+// when the test has already failed.
+//
+// It runs from the teardown, before `project:remove`, because that is the only
+// moment they still exist. A CI runner is discarded when the job ends, so a
+// database that misbehaved takes the only account of why with it — and the
+// failure this exists for is one nobody can reproduce on demand:
+// `TestSecondDatabaseImportsIntoItself` failed once in three runs of a full
+// suite, passed alone every time, and left nothing behind but the assertion that
+// a row was missing. A second occurrence with no logs would be worth as little
+// as the first.
+//
+// Both databases, not just the one a test names: the flake is in an import
+// aimed at db2 while db is the one with everything to lose, so the interesting
+// question is what each of them was doing. `logs` answers "no such container"
+// for a project without db2, which is an expected answer here rather than a
+// problem, so it is skipped quietly.
+//
+// Never on a passing test. Logs are only evidence when something needs
+// explaining, and printing them otherwise buries the runs that do.
+func (p *project) captureDatabaseLogs() {
+	if !p.t.Failed() {
+		return
+	}
+
+	for _, service := range []string{"db", "db2"} {
+		out, err := p.tryRun(2*time.Minute, "logs", "-s", service)
+		if err != nil {
+			continue
+		}
+		if strings.TrimSpace(out) == "" {
+			continue
+		}
+		p.t.Logf("--- %s %s: last %d lines of the container log ---\n%s",
+			p.name, service, databaseLogTail, lastLines(out, databaseLogTail))
 	}
 }
 
