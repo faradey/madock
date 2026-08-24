@@ -158,10 +158,10 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--json, -j`     Output in JSON format
  
    
-* `debug:enable`   Enable xdebug
+* `debug:enable`   Enable the debugger for every runtime the project has — PHP (xdebug) and Node (`--inspect`). The Node debugger listens, so it is published on a port from the registry; `madock info:ports` shows it as `nodejs_debug`. `nodejs/debug/break` makes the process wait for the IDE before the first line
 
 
-* `debug:disable`   Disable xdebug
+* `debug:disable`   Disable it again
                      
 
 * `debug:profile:enable`   Enable xdebug profiling

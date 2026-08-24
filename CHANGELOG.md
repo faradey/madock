@@ -1,3 +1,14 @@
+**v4.0.3**
+
+Added:
+- **`debug:enable` now debugs Node as well as PHP**, and on a project with both it turns on both rather than picking one. It was a PHP command wearing a general name: every one of its handlers wrote `php/xdebug/*`, so on a Node project it set a value nothing reads, rebuilt, and reported success — debugging simply absent, arranged by a command that said it had
+- **The two debuggers work in opposite directions, and that is the whole design.** Xdebug *connects out* to the IDE, which is why PHP debugging has never needed a compose change: nothing is published and no port is allocated. `node --inspect` *listens*, so the IDE connects in — which costs a published port, and it is taken from the registry like every other one. Never a fixed 9229: that is a number the second project to start debugging would fight over
+- **`madock info:ports` shows it with no change to that command**, as `nodejs_debug`. It prints every pair the registry holds, so allocating through the registry rather than writing a number into the template is what puts the port in front of the person who needs it
+- `NODE_OPTIONS` rather than a flag on the command, because the entrypoint execs `yarn dev` or `npm run dev` and the dev server is a child of that — a flag on the outer command dies with the package manager, an environment variable is inherited. It binds `0.0.0.0`, not node's default loopback, which inside a container is reachable by nothing
+- `nodejs/debug/break` stops the process before the first line and waits for the IDE. A separate switch and off by default: right for debugging a startup problem, and as a default it would make every debugged container look hung
+- **Node inside the application container (`nodejs/embedded/enabled`) is refused, by name.** It has no container of its own and therefore nothing to publish a port from, which is the entire mechanism its debugger needs — so the command says that and points at the setting that gives it one, instead of turning on a switch that renders nothing
+- The profiler stays PHP-only. `--cpu-prof` writes a file to open afterwards, which is a different command with a different answer, not this one with a second branch
+
 **v4.0.2**
 
 Added:
