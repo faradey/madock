@@ -14,6 +14,27 @@
       # Harmless on Linux. Picked up by next/webpack/chokidar/medusa watcher.
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
+      {{{- if .nodejs.debug.enabled}}}
+      # NODE_OPTIONS rather than a flag on the command, because the entrypoint
+      # execs `yarn dev` / `npm run dev` and the dev server is a child of that.
+      # A flag on the outer command dies with the package manager; an
+      # environment variable is inherited by whatever it spawns.
+      #
+      # 0.0.0.0 and not the default 127.0.0.1: the IDE connects from outside the
+      # container, and a debugger bound to loopback inside it is reachable by
+      # nothing.
+      NODE_OPTIONS: "--inspect{{{if .nodejs.debug.break}}}-brk{{{end}}}=0.0.0.0:9229"
+      {{{- end}}}
+    {{{- if .nodejs.debug.enabled}}}
+    # The port inside the container is fixed and the one on the host is not:
+    # inside there is one node process and nothing to collide with, while two
+    # projects debugging at the same time would fight over a fixed host port.
+    # The registry is what keeps them apart, and it is also what puts the
+    # number into `madock info:ports` without that command knowing anything
+    # about debugging.
+    ports:
+      - "{{{port "nodejs_debug"}}}:9229"
+    {{{- end}}}
     volumes:
       - ./src:/var/www/html:cached
     extra_hosts:

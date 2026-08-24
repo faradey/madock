@@ -53,9 +53,9 @@ Each platform has its own CLI command(s). Use the one matching the project's pla
 - `cron:enable` — enable cron
 - `cron:disable` — disable cron
 
-### Debug (Xdebug)
-- `debug:enable` — enable Xdebug
-- `debug:disable` — disable Xdebug
+### Debug
+- `debug:enable` — enable the debugger for every runtime the project has: PHP (Xdebug) and Node (`--inspect`, on a port from the registry, shown by `info:ports`)
+- `debug:disable` — disable it again
 - `debug:profile:enable` — enable profiler
 - `debug:profile:disable` — disable profiler
 

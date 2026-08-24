@@ -173,6 +173,21 @@
                 <script></script>
                 <script_type>auto</script_type>
                 <browser_libs>false</browser_libs>
+                <!-- Node's debugger, turned on by `madock debug:enable`.
+
+                     Unlike xdebug it listens rather than connecting out, so it
+                     costs a published port — allocated from the registry like
+                     every other one, never a fixed 9229, which two projects
+                     debugging at once would fight over.
+
+                     `break` stops the process before the first line and waits
+                     for an IDE. Right for a startup problem and wrong for
+                     everything else, which is why it is a separate switch: as a
+                     default it would make every debugged container look hung. -->
+                <debug>
+                    <enabled>false</enabled>
+                    <break>false</break>
+                </debug>
                 <yarn>
                     <enabled>false</enabled>
                     <version>1.22.19</version>
