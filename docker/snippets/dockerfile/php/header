@@ -95,7 +95,11 @@ RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{.php.version}}}-fpm.pid/" /etc/
     && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/{{{.php.version}}}/fpm/php-fpm.conf \
     && sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/{{{.php.version}}}/fpm/php-fpm.conf \
     && sed -i "s/listen = .*/listen = 9000/" /etc/php/{{{.php.version}}}/fpm/pool.d/www.conf \
-    && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/{{{.php.version}}}/fpm/pool.d/www.conf
+    && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/{{{.php.version}}}/fpm/pool.d/www.conf \
+    && sed -i "s/^pm.max_children = .*/pm.max_children = {{{.php.fpm.max_children}}}/" /etc/php/{{{.php.version}}}/fpm/pool.d/www.conf \
+    && sed -i "s/^pm.start_servers = .*/pm.start_servers = {{{.php.fpm.start_servers}}}/" /etc/php/{{{.php.version}}}/fpm/pool.d/www.conf \
+    && sed -i "s/^pm.min_spare_servers = .*/pm.min_spare_servers = {{{.php.fpm.min_spare_servers}}}/" /etc/php/{{{.php.version}}}/fpm/pool.d/www.conf \
+    && sed -i "s/^pm.max_spare_servers = .*/pm.max_spare_servers = {{{.php.fpm.max_spare_servers}}}/" /etc/php/{{{.php.version}}}/fpm/pool.d/www.conf
 
 # Unlock ImageMagick PDF coder (default Debian/Ubuntu policy blocks PDF reads,
 # which breaks Imagick-based PDF previews in PHP apps). Local dev only.
