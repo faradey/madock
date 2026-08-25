@@ -69,6 +69,41 @@
                 <composer>
                     <version>2</version>
                 </composer>
+                <!-- The php-fpm pool. Until 4.0.3 none of this was settable and
+                     the pool kept the distribution's own numbers, of which one
+                     matters: max_children = 5.
+
+                     Five is plenty for a CLI and short of what any modern admin
+                     panel opens at once. Measured on the Shopware 6.7 stand — a
+                     cold administration load asks for several hundred assets and
+                     dozens of API calls together, and the ones past the fifth
+                     came back 503. It does not read as "slow": the admin draws
+                     its own "An unexpected error has occurred", and the order
+                     grid is empty while the same query answers 200 on its own.
+
+                     Only the cap is raised here, and that half is measured
+                     rather than reasoned. The same 11-test suite was run against
+                     the same stand with the cap at 40 throughout and only the
+                     spare values moved: 2/1/3 gave 10 passed / 1 flaky and then
+                     1 failed / 9 passed, and 8/4/16 gave 1 failed / 9 passed.
+                     Indistinguishable, and the same test fell over on both
+                     sides — so the pre-warmed pool bought nothing, while eight
+                     idle workers per project is a real memory tax on a machine
+                     running several stands.
+
+                     Which follows from pm = dynamic: a burst spawns up to
+                     max_children as it arrives, and start_servers with the spare
+                     bounds only decides how many wait around beforehand. Raise
+                     them to pre-warm a stand you hit hard from cold — and note
+                     that the first attempt to justify them attributed a whole
+                     suite's result to all four keys changed at once, which is a
+                     coincidence wearing a measurement's clothes. -->
+                <fpm>
+                    <max_children>40</max_children>
+                    <start_servers>2</start_servers>
+                    <min_spare_servers>1</min_spare_servers>
+                    <max_spare_servers>3</max_spare_servers>
+                </fpm>
                 <xdebug>
                     <version>3</version>
                     <ide_key>PHPSTORM</ide_key>

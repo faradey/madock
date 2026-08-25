@@ -113,6 +113,11 @@ type ControllerGeneralDbImport struct {
 
 type ControllerGeneralLogs struct {
 	attr.Arguments
+	// `madock logs php` is what people type, and it used to answer "too many
+	// positional arguments at 'php'" — an error about the parser rather than
+	// about anything the user did wrong, on a command whose help says it shows
+	// container logs. The flag stays: it is what the rest of the commands use.
+	Name    string `arg:"positional" help:"Service name; the same thing --service takes"`
 	Service string `arg:"-s,--service" help:"Service name (php, nginx, db, etc.)"`
 }
 
