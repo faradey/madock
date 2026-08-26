@@ -79,8 +79,8 @@ func reportOverriddenSetting(projectName, want string) {
 		dir := strings.TrimRight(path, "/") + "/.madock"
 		own := dir + "/config.xml"
 		if paths.IsFileExist(own) {
-			fmtc.WarningLn("  " + own + " is merged over madock's own copy and wins. Edit cron/enabled there.")
-			reportReleaseCopy(dir)
+			fmtc.WarningLn("  " + own + " is merged over madock's own copy and wins.")
+			reportWhereToEdit(dir, own)
 		}
 	}
 
@@ -89,31 +89,36 @@ func reportOverriddenSetting(projectName, want string) {
 	}
 }
 
-// reportReleaseCopy says when the file just named is not a file but a way into
-// the current release.
+// reportWhereToEdit names the place this setting is actually changed.
 //
-// Where deployer manages a project, `<path>/.madock` is a symlink to
-// `current/.madock`, so the path above resolves into `releases/<n>/` — a
-// directory the next deploy replaces. Editing there works, and lasts until the
-// next release, at which point the value comes back from the repository and the
-// setting silently reverts. Measured on `extmag` on 2026-08-27: fixing this for
-// one project took three edits, and only the one in git survives a deploy.
-func reportReleaseCopy(dir string) {
+// That place is the project's repository, always: `.madock/config.xml` is
+// written by a person and committed, and no madock command writes into it. On a
+// checkout the file named above *is* that file. On a machine where deployer
+// manages the project it is not — `<path>/.madock` is a symlink to
+// `current/.madock`, so it resolves into `releases/<n>/`, which the next deploy
+// replaces. Editing there works and then silently reverts, which is worse than
+// not working: the value is right for a week and wrong afterwards, with nothing
+// said.
+//
+// Measured on `extmag` on 2026-08-27: turning cron off for one project was done
+// in three files, and only the one in git decides what the next release has.
+func reportWhereToEdit(dir, own string) {
 	info, err := os.Lstat(dir)
 	if err != nil || info.Mode()&os.ModeSymlink == 0 {
+		fmtc.WarningLn("  Change cron/enabled in " + own + " — that file is the project's own and belongs in its repository.")
 		return
 	}
 
 	resolved, err := filepath.EvalSymlinks(dir)
 	if err != nil {
-		// The link is there and its target cannot be read. Still worth saying,
-		// because the half that matters — this is a release, not the source —
-		// does not depend on knowing where it points.
+		// The link is there and its target cannot be read. Still worth saying:
+		// the half that matters is that this is a release rather than the
+		// source, and that does not depend on knowing where it points.
 		resolved = "the current release"
 	}
 
-	fmtc.WarningLn("  That path is a symlink into the current release (" + resolved + ").")
-	fmtc.WarningLn("  An edit there holds until the next deploy, which brings the file back from the repository — change it in the project's repository as well.")
+	fmtc.WarningLn("  That path is a symlink into the current release (" + resolved + "), which the next deploy replaces.")
+	fmtc.WarningLn("  Change cron/enabled in the project's repository and deploy — an edit made here is undone by the next release.")
 }
 
 func Disable() {
