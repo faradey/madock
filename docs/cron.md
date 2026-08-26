@@ -18,6 +18,21 @@ Disable cron:
 madock cron:disable
 ```
 
+Ask whether it is alive, without changing anything:
+```bash
+madock cron:status
+```
+
+`cron:status` is the read-only one, and it answers in the exit code so a script — a deploy check, a monitor — can use it without reading prose:
+
+| Exit | Meaning |
+|---|---|
+| `0` | The configuration and the container agree: cron is running with jobs installed, or cron was never asked for |
+| `1` | A problem: cron is enabled and no daemon is running, or a daemon is running with an empty crontab |
+| `2` | Could not tell — the container did not answer. Never rounded up to healthy |
+
+`--json` prints the same as `enabled`, `running`, `jobs`, `jobs_known`, `state` and `reason`.
+
 ## How It Works
 
 When cron is enabled:
@@ -26,7 +41,7 @@ When cron is enabled:
 3. Platform-specific cron jobs are installed automatically:
    - **Magento 2**: runs `bin/magento cron:install` (installs Magento's built-in cron)
    - **Shopify**: installs Laravel scheduler cron job automatically
-4. The setting persists across container restarts
+4. The setting persists across container restarts, and so does the daemon: no application image starts cron — the php container runs php-fpm and the Node one runs the dev server — so madock starts it again after any restart of that container, including the one a finished deploy performs
 
 ## Custom Cron Jobs
 
@@ -121,7 +136,7 @@ madock logs php
 
 ## Verifying Cron Status
 
-Start with `madock status`, which answers both halves — whether the daemon is up, and whether it has anything to run:
+`madock cron:status` is the direct question, and the only one that answers in an exit code. `madock status` says the same thing among everything else about the project:
 
 ```
 Tools:
@@ -137,6 +152,8 @@ The count is read from the container's crontab, not from the configuration. The 
 | `Cron is enabled but not running` | The configuration asks for cron and the container has none |
 
 `madock status --json` carries the same as `cron_running`, `cron_jobs` and `cron_jobs_known`; `cron_jobs` is `-1` when unknown.
+
+Both answers come from the container's process list, read out of `/proc` by name. They deliberately do not use `service cron status`: given a pidfile, Debian's `pidofproc` only checks that *some* process holds that pid, never that it is cron — and the pidfile lives in the container's filesystem, so after a restart it names a pid from the previous boot. On a busy container that number belongs to something else by then, and the daemon is reported as running with no cron anywhere.
 
 To see the installed entries themselves:
 

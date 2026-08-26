@@ -52,6 +52,7 @@ Each platform has its own CLI command(s). Use the one matching the project's pla
 ### Cron
 - `cron:enable` — enable cron
 - `cron:disable` — disable cron
+- `cron:status` — read-only: is the daemon running and how many jobs are installed (exit 0 healthy, 1 problem, 2 could not tell)
 
 ### Debug
 - `debug:enable` — enable the debugger for every runtime the project has: PHP (Xdebug) and Node (`--inspect`, on a port from the registry, shown by `info:ports`). Node needs `nodejs/script_type=command`: a package script runs through yarn/npm, which take the inspector port themselves
