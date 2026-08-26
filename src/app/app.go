@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -64,22 +65,35 @@ func Run(appVersion string) {
 // every command that renders a template, and the one that bites is whichever one
 // nobody added it to.
 func reportTemplateDrift() {
-	drift := embedded.TemplateDrift()
+	writeTemplateDrift(os.Stderr, embedded.TemplateDrift(), paths.GetExecDirPath())
+}
+
+// writeTemplateDrift writes the warning, and it writes it to **stderr**.
+//
+// Not a detail: on a source checkout drift is the ordinary state of a session
+// spent editing templates, and everything in fmtc prints to stdout. Five lines
+// of warning in front of `project:list --json`, `status --json` or
+// `db:export --json` is not a warning any more — it is malformed output, and
+// every consumer of those commands stops parsing at the first character.
+//
+// Taking a writer rather than printing directly is what lets a test say so.
+func writeTemplateDrift(w io.Writer, drift *embedded.Drift, execDir string) {
 	if drift == nil {
 		return
 	}
 
-	fmtc.WarningIconLn("This binary was built from different templates than the ones in this tree — " +
-		fmt.Sprintf("%d changed, %d missing from disk, %d new to it", len(drift.Changed), len(drift.Missing), len(drift.Extra)))
+	fmt.Fprintf(w, "⚠ This binary was built from different templates than the ones in this tree — "+
+		"%d changed, %d missing from disk, %d new to it\n",
+		len(drift.Changed), len(drift.Missing), len(drift.Extra))
 
 	for _, path := range drift.Examples(3) {
-		fmtc.WarningLn("  docker/" + path)
+		fmt.Fprintln(w, "  docker/"+path)
 	}
 	if remainder := drift.Total() - 3; remainder > 0 {
-		fmtc.WarningLn(fmt.Sprintf("  and %d more", remainder))
+		fmt.Fprintf(w, "  and %d more\n", remainder)
 	}
 
-	fmtc.ToDoLn("Rebuild it — go build -o madock . in " + paths.GetExecDirPath() +
+	fmt.Fprintln(w, "Rebuild it — go build -o madock . in "+execDir+
 		" — unless you are editing templates and know why they differ")
 }
 

@@ -79,8 +79,45 @@ if [ ! -f package.json ]; then
 fi
 
 # has_script <name> — true when package.json declares that script.
+#
+# NODE_OPTIONS is cleared for it deliberately. This helper is a Node process
+# like any other, so an inspector flag in the environment applies to it too —
+# and with --inspect-brk it stops before its first line and waits for a debugger
+# that is not coming. Its stderr goes to /dev/null, so the container would hang
+# here with nothing said at all.
 has_script() {
-  node -e 'try{var p=require("./package.json").scripts||{};process.exit(p[process.argv[1]]?0:1)}catch(e){process.exit(1)}' "$1" 2>/dev/null
+  NODE_OPTIONS= node -e 'try{var p=require("./package.json").scripts||{};process.exit(p[process.argv[1]]?0:1)}catch(e){process.exit(1)}' "$1" 2>/dev/null
+}
+
+# enable_inspector — put the debugger on the process this entrypoint is about to
+# become. Only ever called where that process is the application itself.
+enable_inspector() {
+  flag="--inspect"
+  if [ "${MADOCK_DEBUG_BREAK:-}" = "true" ]; then
+    flag="--inspect-brk"
+  fi
+
+  # 0.0.0.0 and not node's default loopback: the IDE connects from outside the
+  # container, where a debugger bound to 127.0.0.1 inside it is reachable by
+  # nothing.
+  NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }$flag=0.0.0.0:${MADOCK_DEBUG_PORT}"
+  export NODE_OPTIONS
+
+  echo "[madock] debugger listening on 0.0.0.0:${MADOCK_DEBUG_PORT} — madock info:ports has the port on your side"
+  if [ "${MADOCK_DEBUG_BREAK:-}" = "true" ]; then
+    echo "[madock] nodejs/debug/break is on: nothing runs until a debugger attaches."
+  fi
+}
+
+# explain_no_inspector — say why debugging was asked for and not arranged.
+#
+# Refusing to start would be worse: the container is otherwise fine, and the
+# person asked for a debugger, not for the project to stop.
+explain_no_inspector() {
+  echo "[madock] debugging is enabled, and this project starts through $1, which is a Node program itself."
+  echo "[madock] It would take the inspector port and the dev server would start without a debugger,"
+  echo "[madock] so the IDE would attach to $1 rather than to your application. Nothing was changed."
+  echo "[madock] Set nodejs/script_type=command with the command to run, or add --inspect to the script in package.json."
 }
 
 configured=""
@@ -125,6 +162,10 @@ else
 fi
 
 if [ -z "$script" ]; then
+  # A bare REPL is the application here, so the inspector belongs on it.
+  if [ -n "${MADOCK_DEBUG_PORT:-}" ]; then
+    enable_inspector
+  fi
   run_app node
 fi
 
@@ -180,8 +221,17 @@ if [ -f .env ]; then
 fi
 
 if [ "$mode" = "command" ]; then
+  # The command is the application, so the first Node process it starts is the
+  # one worth attaching to.
+  if [ -n "${MADOCK_DEBUG_PORT:-}" ]; then
+    enable_inspector
+  fi
   echo "[madock] starting: $script"
   run_app sh -c "$script"
+fi
+
+if [ -n "${MADOCK_DEBUG_PORT:-}" ]; then
+  explain_no_inspector "$pm"
 fi
 
 echo "[madock] starting: $pm $script"

@@ -15,15 +15,18 @@
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
       {{{- if .nodejs.debug.enabled}}}
-      # NODE_OPTIONS rather than a flag on the command, because the entrypoint
-      # execs `yarn dev` / `npm run dev` and the dev server is a child of that.
-      # A flag on the outer command dies with the package manager; an
-      # environment variable is inherited by whatever it spawns.
-      #
-      # 0.0.0.0 and not the default 127.0.0.1: the IDE connects from outside the
-      # container, and a debugger bound to loopback inside it is reachable by
-      # nothing.
-      NODE_OPTIONS: "--inspect{{{if .nodejs.debug.break}}}-brk{{{end}}}=0.0.0.0:9229"
+      # The port and the intent, not NODE_OPTIONS. Setting NODE_OPTIONS on the
+      # container was the first attempt and it debugs the wrong process: the
+      # entrypoint runs `yarn dev` / `npm run dev`, and yarn, npm and pnpm are
+      # themselves Node programs — they inherit the variable, open the inspector
+      # first and keep it, so the dev server they spawn fails to bind the port
+      # and runs with no debugger at all while the IDE attaches to the package
+      # manager. The entrypoint is the only place that knows what it is about to
+      # start, so the decision belongs there.
+      MADOCK_DEBUG_PORT: "9229"
+      {{{- if .nodejs.debug.break}}}
+      MADOCK_DEBUG_BREAK: "true"
+      {{{- end}}}
       {{{- end}}}
     {{{- if .nodejs.debug.enabled}}}
     # The port inside the container is fixed and the one on the host is not:
