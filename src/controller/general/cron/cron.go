@@ -11,6 +11,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/output"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/docker"
+	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
 type ArgsStruct struct {
@@ -47,6 +48,42 @@ func Enable() {
 	projectConfig := configs.GetProjectConfig(projectName)
 	configs.SetParam(projectName, "cron/enabled", "true", projectConfig["activeScope"], "")
 	docker.CronExecute(projectName, true, true)
+	reportOverriddenSetting(projectName, "true")
+}
+
+// reportOverriddenSetting says so when the value just written is not the value
+// in effect.
+//
+// `cron:enable` writes cron/enabled into the installation's copy of the project
+// config, and a project's own committed .madock/config.xml is merged over that —
+// so on a project whose file says false, the command starts cron, prints "Cron
+// was started", and the setting reads false the moment anybody asks. The daemon
+// really is running, which is what makes it convincing; the next `start` turns
+// it off again, because that is where the effective value is read. Measured on
+// extmag-core-bigcommerce on 2026-08-26.
+//
+// A warning rather than a write: that file belongs to whoever committed it, and
+// madock editing it behind their back is the thing .madock/config.xml exists to
+// prevent.
+func reportOverriddenSetting(projectName, want string) {
+	conf := configs.GetProjectConfig(projectName)
+	inEffect := strings.ToLower(conf["cron/enabled"])
+	if inEffect == want {
+		return
+	}
+
+	fmtc.WarningLn("cron/enabled is " + inEffect + " for this project, not " + want + " — something is overriding what was just written.")
+
+	if path := conf["path"]; path != "" {
+		own := strings.TrimRight(path, "/") + "/.madock/config.xml"
+		if paths.IsFileExist(own) {
+			fmtc.WarningLn("  " + own + " is merged over madock's own copy and wins. Edit cron/enabled there.")
+		}
+	}
+
+	if want == "true" {
+		fmtc.WarningLn("  Cron is running now, and the next `start` will read the effective value and stop it again.")
+	}
 }
 
 func Disable() {
@@ -55,6 +92,7 @@ func Disable() {
 	projectConfig := configs.GetProjectConfig(projectName)
 	configs.SetParam(projectName, "cron/enabled", "false", projectConfig["activeScope"], "")
 	docker.CronExecute(projectName, false, true)
+	reportOverriddenSetting(projectName, "false")
 }
 
 // Report is what `cron:status` answers, in the shape a script reads it.
