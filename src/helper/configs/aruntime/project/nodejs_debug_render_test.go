@@ -42,8 +42,8 @@ func TestNodejsDebugRendersOnlyWhenAskedFor(t *testing.T) {
 		if strings.Contains(body, "9229") {
 			t.Errorf("the debug port was published without being asked for:\n%s", body)
 		}
-		if strings.Contains(body, "NODE_OPTIONS") {
-			t.Errorf("the runtime was started under the debugger without being asked for:\n%s", body)
+		if strings.Contains(body, "MADOCK_DEBUG_PORT") {
+			t.Errorf("the runtime was told to debug without being asked for:\n%s", body)
 		}
 	})
 
@@ -69,15 +69,25 @@ func TestNodejsDebugRendersOnlyWhenAskedFor(t *testing.T) {
 			t.Errorf("the debug port was not allocated from the registry, so info:ports will not show it: %d", port)
 		}
 
-		// The address matters as much as the port: node binds 127.0.0.1 by
-		// default, and a debugger on loopback inside a container is reachable by
-		// nothing at all.
-		if !strings.Contains(body, "--inspect=0.0.0.0:9229") {
-			t.Errorf("the debugger is not listening on an address the IDE can reach:\n%s", body)
+		if !strings.Contains(body, `MADOCK_DEBUG_PORT: "9229"`) {
+			t.Errorf("the entrypoint was not told which port to listen on:\n%s", body)
+		}
+
+		// **Not** NODE_OPTIONS, and this is the fix rather than a preference.
+		// The entrypoint runs `yarn dev` / `npm run dev`, and those are Node
+		// programs: they inherit the variable, open the inspector first and keep
+		// it, so the dev server they spawn binds nothing and the IDE attaches to
+		// the package manager. Only the entrypoint knows what it is about to
+		// start, so only it can decide.
+		// The key form, not the bare word: the comment above it in the template
+		// explains why NODE_OPTIONS is the wrong lever, and naming a thing is
+		// not setting it.
+		if strings.Contains(body, "NODE_OPTIONS:") {
+			t.Errorf("NODE_OPTIONS is set on the container, so the package manager would take the inspector:\n%s", body)
 		}
 
 		// Without a break the process must not wait for anybody.
-		if strings.Contains(body, "--inspect-brk") {
+		if strings.Contains(body, "MADOCK_DEBUG_BREAK") {
 			t.Errorf("the process was made to wait for an IDE without nodejs/debug/break:\n%s", body)
 		}
 	})
@@ -92,8 +102,8 @@ func TestNodejsDebugRendersOnlyWhenAskedFor(t *testing.T) {
 			"nodejs/debug/break":   "true",
 		})
 
-		if !strings.Contains(body, "--inspect-brk=0.0.0.0:9229") {
-			t.Errorf("nodejs/debug/break did not reach the runtime:\n%s", body)
+		if !strings.Contains(body, `MADOCK_DEBUG_BREAK: "true"`) {
+			t.Errorf("nodejs/debug/break did not reach the entrypoint:\n%s", body)
 		}
 	})
 }

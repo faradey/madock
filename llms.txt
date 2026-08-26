@@ -54,7 +54,7 @@ Each platform has its own CLI command(s). Use the one matching the project's pla
 - `cron:disable` — disable cron
 
 ### Debug
-- `debug:enable` — enable the debugger for every runtime the project has: PHP (Xdebug) and Node (`--inspect`, on a port from the registry, shown by `info:ports`)
+- `debug:enable` — enable the debugger for every runtime the project has: PHP (Xdebug) and Node (`--inspect`, on a port from the registry, shown by `info:ports`). Node needs `nodejs/script_type=command`: a package script runs through yarn/npm, which take the inspector port themselves
 - `debug:disable` — disable it again
 - `debug:profile:enable` — enable profiler
 - `debug:profile:disable` — disable profiler

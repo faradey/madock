@@ -154,6 +154,13 @@ func makeCustomPhpDockerfile(projectName string) {
 // from: a platform with its own php/ directory keeps the first names, a custom
 // project's language template keeps the second.
 func makePhpDockerfiles(projectName, withXdebug, withoutXdebug string) {
+	// Before anything is written, because the alternative place for this answer
+	// is inside the container after a full image build — php-fpm checks the pool
+	// against itself at start-up and exits if the numbers disagree.
+	if err := configs.ValidateFpmPool(configs.GetProjectConfig(projectName)); err != nil {
+		logger.Fatalln(err.Error())
+	}
+
 	pp := paths.NewProjectPaths(projectName)
 	ctx := paths.MakeDirsByPath(pp.CtxDir())
 
