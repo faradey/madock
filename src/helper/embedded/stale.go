@@ -2,10 +2,13 @@ package embedded
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 
 	"github.com/faradey/madock/v4/src/helper/paths"
 )
@@ -49,6 +52,57 @@ func (d *Drift) Examples(limit int) []string {
 	}
 
 	return out
+}
+
+// reported keeps the warning to one appearance per run: a command may render
+// several times (project templates, then nginx's) and the answer does not
+// change between them.
+var reported sync.Once
+
+// ReportOnce writes the warning to stderr, at most once per run.
+//
+// **Called from where templates are rendered, and from rebuild's pre-flight —
+// not from the dispatcher.** It used to run before every command, which was
+// accurate and unusable: on a machine where somebody is editing templates, every
+// `db:execute`, `cli` and `setup:upgrade` in every other project carried a
+// warning about a binary its user was not going to rebuild. A warning that is
+// always there is one that stops being read, and this one exists for a failure
+// that took out every environment on the machine once already.
+//
+// The hazard is rendering, so the warning belongs where rendering happens. The
+// exception is rebuild, which destroys the containers first and generates the
+// build context afterwards — there it has to be said in the pre-flight, before
+// anything is taken down, or it arrives after the damage.
+//
+// stderr, not stdout: `--json` output has to stay parseable.
+func ReportOnce() {
+	reported.Do(func() {
+		Report(os.Stderr, TemplateDrift(), paths.GetExecDirPath())
+	})
+}
+
+// Report writes the warning for a drift, and nothing at all when there is none.
+//
+// Takes a writer so a test can say which stream it went to, and a drift so it
+// can be given one that did not have to be produced by a real installation.
+func Report(w io.Writer, drift *Drift, execDir string) {
+	if drift == nil {
+		return
+	}
+
+	fmt.Fprintf(w, "⚠ This binary was built from different templates than the ones in this tree — "+
+		"%d changed, %d missing from disk, %d new to it\n",
+		len(drift.Changed), len(drift.Missing), len(drift.Extra))
+
+	for _, path := range drift.Examples(3) {
+		fmt.Fprintln(w, "  docker/"+path)
+	}
+	if remainder := drift.Total() - 3; remainder > 0 {
+		fmt.Fprintf(w, "  and %d more\n", remainder)
+	}
+
+	fmt.Fprintln(w, "Rebuild it — go build -o madock . in "+execDir+
+		" — unless you are editing templates and know why they differ")
 }
 
 // TemplateDrift reports templates on disk that the running binary was not built

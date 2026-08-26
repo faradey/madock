@@ -1,4 +1,4 @@
-package app
+package embedded
 
 import (
 	"bytes"
@@ -6,10 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"testing/fstest"
-
-	"github.com/faradey/madock/v4/src/helper/embedded"
 )
 
 // The warning belongs on stderr and the reason is not tidiness: on a source
@@ -18,6 +17,8 @@ import (
 // warning any more — they are malformed output, and every consumer stops parsing
 // at the first character.
 func TestDriftWarningStaysOffStdout(t *testing.T) {
+	resetReporting(t)
+
 	dir := t.TempDir()
 	t.Setenv("MADOCK_EXEC_DIR", dir)
 
@@ -26,12 +27,12 @@ func TestDriftWarningStaysOffStdout(t *testing.T) {
 	mustWrite(t, filepath.Join(dir, "docker", "embed.go"), "package dockerassets\n")
 	mustWrite(t, filepath.Join(dir, "docker", "general", "docker-compose.yml"), "edited on disk\n")
 
-	embedded.DockerFS = fstest.MapFS{
+	DockerFS = fstest.MapFS{
 		"general/docker-compose.yml": {Data: []byte("as the binary was built\n")},
 	}
-	t.Cleanup(func() { embedded.DockerFS = nil })
+	t.Cleanup(func() { DockerFS = nil })
 
-	stdout, stderr := capture(t, reportTemplateDrift)
+	stdout, stderr := capture(t, ReportOnce)
 
 	if stdout != "" {
 		t.Errorf("the warning went to stdout, so any --json output is now unparseable:\n%s", stdout)
@@ -47,18 +48,20 @@ func TestDriftWarningStaysOffStdout(t *testing.T) {
 // A binary built from the templates beside it says nothing at all — on either
 // stream. A warning that is always there is one nobody reads.
 func TestNoDriftSaysNothing(t *testing.T) {
+	resetReporting(t)
+
 	dir := t.TempDir()
 	t.Setenv("MADOCK_EXEC_DIR", dir)
 
 	mustWrite(t, filepath.Join(dir, "docker", "embed.go"), "package dockerassets\n")
 	mustWrite(t, filepath.Join(dir, "docker", "general", "docker-compose.yml"), "as the binary was built\n")
 
-	embedded.DockerFS = fstest.MapFS{
+	DockerFS = fstest.MapFS{
 		"general/docker-compose.yml": {Data: []byte("as the binary was built\n")},
 	}
-	t.Cleanup(func() { embedded.DockerFS = nil })
+	t.Cleanup(func() { DockerFS = nil })
 
-	stdout, stderr := capture(t, reportTemplateDrift)
+	stdout, stderr := capture(t, ReportOnce)
 
 	if stdout != "" || stderr != "" {
 		t.Errorf("a binary built from these very templates said something:\nstdout: %s\nstderr: %s", stdout, stderr)
@@ -66,14 +69,14 @@ func TestNoDriftSaysNothing(t *testing.T) {
 }
 
 func TestWriteTemplateDriftCountsAndTrims(t *testing.T) {
-	drift := &embedded.Drift{
+	drift := &Drift{
 		Changed: []string{"general/a.yml", "general/b.yml"},
 		Missing: []string{"snippets/gone"},
 		Extra:   []string{"snippets/new", "snippets/newer"},
 	}
 
 	var out bytes.Buffer
-	writeTemplateDrift(&out, drift, "/opt/madock")
+	Report(&out, drift, "/opt/madock")
 	body := out.String()
 
 	if !strings.Contains(body, "2 changed, 1 missing from disk, 2 new to it") {
@@ -86,6 +89,19 @@ func TestWriteTemplateDriftCountsAndTrims(t *testing.T) {
 	if !strings.Contains(body, "go build -o madock . in /opt/madock") {
 		t.Errorf("the fix does not name the directory to run it in:\n%s", body)
 	}
+}
+
+// resetReporting undoes the once-per-run guard.
+//
+// Without it the second test to call ReportOnce would print nothing and pass for
+// that reason alone — a test that agrees with anything, which is worse than no
+// test. The guard itself is deliberate: a command renders several times and the
+// answer does not change between them.
+func resetReporting(t *testing.T) {
+	t.Helper()
+
+	reported = sync.Once{}
+	t.Cleanup(func() { reported = sync.Once{} })
 }
 
 func mustWrite(t *testing.T, path, body string) {

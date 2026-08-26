@@ -10,6 +10,7 @@ import (
 
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/dockertransform"
+	"github.com/faradey/madock/v4/src/helper/embedded"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
 )
@@ -30,6 +31,13 @@ import (
 // itself is recreate containers — that decision belongs to the caller, which
 // compares Fingerprint against the stack the containers were created from.
 func MakeConf(projectName string) {
+	// Rendering is the moment a binary older than the templates matters, so it
+	// is where the warning belongs. Everything that generates a stack comes
+	// through here, and nothing that merely talks to a container does — which is
+	// what keeps the message off `db:execute` and `cli` in every other project on
+	// a machine where somebody is editing templates.
+	embedded.ReportOnce()
+
 	// get project config
 	projectConf := configs.GetProjectConfig(projectName)
 	pp := paths.NewProjectPaths(projectName)
