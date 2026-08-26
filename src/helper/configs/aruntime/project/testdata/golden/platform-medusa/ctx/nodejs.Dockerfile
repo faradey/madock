@@ -1,187 +1,16 @@
-FROM ubuntu:22.04
+FROM node:22.14.0
 
-ARG DEBIAN_FRONTEND="noninteractive"
-ARG DEBCONF_NOWARNINGS="yes"
+RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
-RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone \
-    && apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y locales \
-    curl \
-    wget \
-    ca-certificates \
-    software-properties-common \
-    git \
-    zip \
-    gzip \
-    mc \
-    mariadb-client \
-    telnet \
-    libmagickwand-dev \
-    imagemagick \
-    libmcrypt-dev \
-    procps \
-    openssh-client \
-    lsof \
-    openssl \
-    msmtp \
-    xdg-utils \
-    libssh2-1-dev \
-    libssh2-1 \
-    jq \
-    && locale-gen en_US.UTF-8 \
-    && LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
+RUN apt-get update && apt-get install -y --no-install-recommends xdg-utils && rm -rf /var/lib/apt/lists/*
+RUN npm install -g grunt-cli
 
-RUN apt-get -y --allow-releaseinfo-change update && apt-get install -y php8.4-bcmath \
-    php8.4-cli \
-    php8.4-common \
-    php8.4-curl \
-    php8.4-dev \
-    php8.4-fpm \
-    php8.4-gd \
-    php8.4-intl \
-    php8.4-mbstring \
-    php8.4-mysql \
-    php8.4-soap \
-    php8.4-sqlite3 \
-    php8.4-xml \
-    php8.4-xsl \
-    php8.4-zip \
-    php8.4-imagick \
-    php8.4-ctype \
-    php8.4-dom \
-    php8.4-fileinfo \
-    php8.4-iconv \
-    php8.4-simplexml \
-    php8.4-sockets \
-    php8.4-tokenizer \
-    php8.4-xmlwriter \
-    php8.4-ssh2 \
-    php8.4-redis
+RUN apt-get update && apt-get install -y cron && rm -rf /var/lib/apt/lists/*
 
-# Optional packages: not all PHP versions ship them as separate packages
-# (e.g. php8.5-opcache is bundled into php8.5-common, php-xmlrpc was dropped
-# from PHP core in 8.0 and may be missing in newer ondrej builds). Install
-# each in its own line so a missing package does not abort the build.
-RUN apt-get install -y php8.4-opcache || true
-RUN apt-get install -y php8.4-xmlrpc || true
-
-SHELL ["/bin/bash", "-c"]
-RUN IFS='.' read major minor patch <<< "8.4" \
-    && if [[ "${major}" -ge "9" ]] || [[ "${major}" = "8" && "${minor}" -ge "4" ]]; then \
-        # PHP 8.4+ — no compatible pecl mcrypt release, skip it
-        apt-get install -y pkg-config libmcrypt-dev \
-        && pecl channel-update pecl.php.net \
-        && echo "Skipping pecl mcrypt for PHP ${major}.${minor} (no compatible release)" \
-    ; elif [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then \
-        pecl install mcrypt-1.0.7 \
-        && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
-        && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/8.4/cli/conf.d/mcrypt.ini" \
-        && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/8.4/fpm/conf.d/mcrypt.ini" \
-    ; fi \
-    && if [[ "${major}" < "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then \
-        apt-get install -y php8.4-mcrypt \
-    ; fi \
-    && if [[ "${major}" < "7" ]]; then \
-        apt-get install -y php8.4-json \
-    ; fi
-
-RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php8.4-fpm.pid/" /etc/php/8.4/fpm/php-fpm.conf \
-    && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/8.4/fpm/php-fpm.conf \
-    && sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/8.4/fpm/php-fpm.conf \
-    && sed -i "s/listen = .*/listen = 9000/" /etc/php/8.4/fpm/pool.d/www.conf \
-    && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/8.4/fpm/pool.d/www.conf \
-    && sed -i "s/^pm.max_children = .*/pm.max_children = 40/" /etc/php/8.4/fpm/pool.d/www.conf \
-    && sed -i "s/^pm.start_servers = .*/pm.start_servers = 2/" /etc/php/8.4/fpm/pool.d/www.conf \
-    && sed -i "s/^pm.min_spare_servers = .*/pm.min_spare_servers = 1/" /etc/php/8.4/fpm/pool.d/www.conf \
-    && sed -i "s/^pm.max_spare_servers = .*/pm.max_spare_servers = 3/" /etc/php/8.4/fpm/pool.d/www.conf
-
-# Unlock ImageMagick PDF coder (default Debian/Ubuntu policy blocks PDF reads,
-# which breaks Imagick-based PDF previews in PHP apps). Local dev only.
-RUN if [ -f /etc/ImageMagick-6/policy.xml ]; then \
-        sed -i 's#rights="none" pattern="PDF"#rights="read|write" pattern="PDF"#' /etc/ImageMagick-6/policy.xml; \
-    fi
-
-
-RUN if [[ "false" = "true" ]]; then set -eux && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
-    && curl -o ioncube.tar.gz http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_<ARCH>.tar.gz \
-    && tar xvfz ioncube.tar.gz \
-    && cd ioncube \
-    && cp ioncube_loader_lin_8.4.so ${EXTENSION_DIR}/ioncube.so \
-    && cd ../ \
-    && rm -rf ioncube \
-    && rm -rf ioncube.tar.gz \
-    && echo "zend_extension=ioncube.so" >> /etc/php/8.4/mods-available/ioncube.ini \
-    && ln -s /etc/php/8.4/mods-available/ioncube.ini /etc/php/8.4/cli/conf.d/10-ioncube.ini \
-    && ln -s /etc/php/8.4/mods-available/ioncube.ini /etc/php/8.4/fpm/conf.d/10-ioncube.ini; fi
-RUN is_composer_version_one="" \
-    && if [[ "2" = "2" ]]; then is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [[ "2" = "1" ]]; then  is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
-    && if [[ -z "${is_composer_version_one}" ]]; then php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version=2; fi
-RUN if [[ "false" = "true" ]]; then pecl install -f xdebug-3.4.4 \
-    && touch /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "zend_extension=xdebug.so" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.mode=debug" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.output_dir=/var/www/html/var" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.profiler_output_name=\"cachegrind.out.%t\"" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.remote_enable=1" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.start_with_request=on" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.remote_autostart=on" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.idekey=PHPSTORM" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.client_host=host.docker.internal" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.remote_host=host.docker.internal" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.remote_port=9003" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.client_port=9003" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.log=/var/www/var/log/xdebug.log" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.log_level=7" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && ln -s /etc/php/8.4/mods-available/xdebug.ini /etc/php/8.4/cli/conf.d/11-xdebug.ini \
-    && ln -s /etc/php/8.4/mods-available/xdebug.ini /etc/php/8.4/fpm/conf.d/11-xdebug.ini; fi
-
-RUN if [[ "false" = "true" && "debug" = "profile" ]]; then echo "xdebug.profiler_enable=1" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.profiler_output_dir=/var/www/html/var" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.xdebug.profiler_enable_trigger=0" >> /etc/php/8.4/mods-available/xdebug.ini \
-    && echo "xdebug.profiler_append=0" >> /etc/php/8.4/mods-available/xdebug.ini; fi
-RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /etc/php/8.4/fpm/php.ini \
-    && sed -i 's/post_max_size = 8M/post_max_size = 80M/g' /etc/php/8.4/fpm/php.ini \
-    && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 50M/g' /etc/php/8.4/fpm/php.ini \
-    && sed -i 's/;max_input_vars = 1000/max_input_vars = 50000/g' /etc/php/8.4/fpm/php.ini
-
-# Where PHP's mail() sends. Written only when there is somewhere for it to go.
-#
-# This used to be unconditional and hardcoded to the mailpit port, which meant
-# that with mailpit disabled every mail() call handed the message to msmtp,
-# which connected to a port nobody was listening on. Mail did not arrive and
-# nothing said so — the setting looked right in php.ini, and the port was the
-# only wrong part of it.
-#
-# php/sendmail/host and php/sendmail/port point somewhere else when they are set:
-# a real relay on the host, another container, a smarthost. Editing php.ini
-# inside a running container is not an alternative — the image is rebuilt from
-# this file and the edit goes with it, which is exactly how a working mail
-# configuration disappears at the next rebuild.
-#
-# php/sendmail/from is the envelope sender. msmtp refuses to send without one —
-# `msmtp: envelope-from address is missing`, exit 78 — and there is no msmtprc
-# here to supply a default. A mail transport passes it (PHP's mail() takes it as
-# the fifth argument, `-f`), so Magento and Laravel are fine either way; a plain
-# mail() call with four arguments is not, and that is what anyone testing their
-# own site tries first. Setting this makes both work.
-RUN sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/8.4/fpm/php.ini \
-    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal"/g' /etc/php/8.4/cli/php.ini
-
-WORKDIR /var/www
-
-RUN apt-get install -y cron
-RUN mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
-RUN usermod -u <UID> -o www-data && groupmod -g <GID> -o www-data \
-    && chown -R <UID>:<GID> /var/www \
-    && chown -R <UID>:<GID> /usr/bin/composer
-
-RUN npm install -g yarn
-
+RUN usermod -u <UID> -o node && groupmod -g <GID> -o node
+RUN usermod -u <UID> -o www-data && groupmod -g <GID> -o www-data
+RUN mkdir -p /var/www && chown <UID>:<GID> /var/www
 WORKDIR /var/www/html
-
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-    && rm -f /var/log/faillog && rm -f /var/log/lastlog
-
-EXPOSE 9001 9003 35729 5173 9998 9999
 
 
 # madock: permissive umask (002) for cross-user file writes in dev — makes
@@ -196,4 +25,219 @@ RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
     && touch /etc/bash.bashrc \
     && printf '\numask 0002\n' >> /etc/bash.bashrc \
     && chmod 644 /etc/madock-umask.sh /etc/profile.d/madock-umask.sh
-CMD ["bash", "-c", "exec php-fpm8.4"]
+
+# madock smart entrypoint:
+#   - if nodejs/script is set, run that (see nodejs/script_type)
+#   - else pick from package.json: "dev" in development, "start" in production
+#   - else fall back to plain `node` REPL
+# Picks the package manager from lockfiles (yarn/pnpm/npm).
+# Refuses to start the dev server when node_modules is missing —
+# the user should run `madock install` first.
+RUN cat > /usr/local/bin/madock-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local/bin/madock-entrypoint
+#!/bin/sh
+set -e
+umask 0002
+
+cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html
+
+# run_app execs the long-running command as the application user.
+#
+# The entrypoint itself needs root: it waits for code that madock writes after
+# the container starts, and reads files whose ownership is not settled yet. The
+# dev server does not, and running it as root is how every file it writes ends
+# up owned by root on the host — `.medusa/client/` was the one that made this
+# visible, and the user could not delete their own project afterwards.
+#
+# This is the arrangement the php side has always had: the php-fpm master starts
+# as root and its workers run as www-data, whose uid is remapped to the host
+# user at build time. `node` is remapped the same way, so dropping to it here
+# makes the two languages agree.
+#
+# HOME comes from passwd rather than being assumed: yarn and npm write caches
+# and logs into it, and leaving root's HOME behind would send them somewhere the
+# app user cannot write.
+run_app() {
+  if [ "$(id -u)" = "0" ] && id node >/dev/null 2>&1; then
+    HOME=$(getent passwd node | cut -d: -f6)
+    export HOME
+    exec setpriv --reuid=node --regid=node --init-groups "$@"
+  fi
+  exec "$@"
+}
+
+# Wait for the project code to appear. madock setup -d clones the
+# starter AFTER the container starts; rather than dropping to a Node
+# REPL and never recovering, idle here until package.json shows up.
+# A bare `node` container (no project) waits forever — that's fine,
+# the user can `docker exec` in or run madock setup -d to populate.
+if [ ! -f package.json ]; then
+  echo "[madock] no package.json in $(pwd) — waiting for project code."
+  while [ ! -f package.json ]; do
+    sleep 5
+  done
+  echo "[madock] package.json detected — continuing."
+fi
+
+# has_script <name> — true when package.json declares that script.
+#
+# NODE_OPTIONS is cleared for it deliberately. This helper is a Node process
+# like any other, so an inspector flag in the environment applies to it too —
+# and with --inspect-brk it stops before its first line and waits for a debugger
+# that is not coming. Its stderr goes to /dev/null, so the container would hang
+# here with nothing said at all.
+has_script() {
+  NODE_OPTIONS= node -e 'try{var p=require("./package.json").scripts||{};process.exit(p[process.argv[1]]?0:1)}catch(e){process.exit(1)}' "$1" 2>/dev/null
+}
+
+# enable_inspector — put the debugger on the process this entrypoint is about to
+# become. Only ever called where that process is the application itself.
+enable_inspector() {
+  flag="--inspect"
+  if [ "${MADOCK_DEBUG_BREAK:-}" = "true" ]; then
+    flag="--inspect-brk"
+  fi
+
+  # 0.0.0.0 and not node's default loopback: the IDE connects from outside the
+  # container, where a debugger bound to 127.0.0.1 inside it is reachable by
+  # nothing.
+  NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }$flag=0.0.0.0:${MADOCK_DEBUG_PORT}"
+  export NODE_OPTIONS
+
+  echo "[madock] debugger listening on 0.0.0.0:${MADOCK_DEBUG_PORT} — madock info:ports has the port on your side"
+  if [ "${MADOCK_DEBUG_BREAK:-}" = "true" ]; then
+    echo "[madock] nodejs/debug/break is on: nothing runs until a debugger attaches."
+  fi
+}
+
+# explain_no_inspector — say why debugging was asked for and not arranged.
+#
+# Refusing to start would be worse: the container is otherwise fine, and the
+# person asked for a debugger, not for the project to stop.
+explain_no_inspector() {
+  echo "[madock] debugging is enabled, and this project starts through $1, which is a Node program itself."
+  echo "[madock] It would take the inspector port and the dev server would start without a debugger,"
+  echo "[madock] so the IDE would attach to $1 rather than to your application. Nothing was changed."
+  echo "[madock] Set nodejs/script_type=command with the command to run, or add --inspect to the script in package.json."
+}
+
+configured=""
+configured_type="auto"
+node_env="${NODE_ENV:-development}"
+
+# mode is "package" (run through the project's package manager) or "command"
+# (hand it to a shell). A path to a file is a command.
+mode="package"
+
+if [ -n "$configured" ]; then
+  case "$configured_type" in
+    package)
+      mode="package"
+      ;;
+    command)
+      mode="command"
+      ;;
+    *)
+      # auto: a name package.json declares is a script, anything else is a
+      # command. Said out loud, because the difference decides what runs and
+      # a typo would otherwise become a shell command that fails at exec.
+      if has_script "$configured"; then
+        mode="package"
+      else
+        mode="command"
+        echo "[madock] \"$configured\" is not a script in package.json — running it as a command."
+      fi
+      ;;
+  esac
+  script="$configured"
+else
+  # No script configured. In production "dev" is the wrong guess: for a
+  # Shopify app it is `shopify app dev`, which prints a verification code and
+  # waits for a human. On a server nobody logs in, it gives up, and the
+  # container dies with it — start reported success minutes earlier.
+  if [ "$node_env" = "production" ]; then
+    if has_script start; then script="start"; elif has_script dev; then script="dev"; fi
+  else
+    if has_script dev; then script="dev"; elif has_script start; then script="start"; fi
+  fi
+fi
+
+if [ -z "$script" ]; then
+  # A bare REPL is the application here, so the inspector belongs on it.
+  if [ -n "${MADOCK_DEBUG_PORT:-}" ]; then
+    enable_inspector
+  fi
+  run_app node
+fi
+
+if [ "$mode" = "package" ] && ! has_script "$script"; then
+  echo "[madock] package.json has no \"$script\" script (nodejs/script_type=package)."
+  echo "[madock] Set nodejs/script to a script it declares, or nodejs/script_type=command to run it as a command."
+  exit 1
+fi
+
+deps_installed() {
+  # node_modules dir is created EARLY in yarn/npm install (during the
+  # link step) — it's not a reliable "install finished" signal. Look
+  # for a real completion marker instead:
+  #   yarn 4: .yarn/install-state.gz written on successful install
+  #   yarn 1: .yarn-integrity hash file in node_modules
+  #   npm:    node_modules/.package-lock.json
+  #   pnpm:   node_modules/.modules.yaml
+  [ -d node_modules ] || return 1
+  [ -f .yarn/install-state.gz ] && return 0
+  [ -f node_modules/.yarn-integrity ] && return 0
+  [ -f node_modules/.package-lock.json ] && return 0
+  [ -f node_modules/.modules.yaml ] && return 0
+  return 1
+}
+
+if ! deps_installed; then
+  echo "[madock] node_modules not ready in $(pwd) — waiting."
+  echo "[madock] Run \"madock install\" (or yarn install) to bootstrap; the dev server will start automatically once the install completes."
+  while ! deps_installed; do
+    sleep 5
+  done
+  echo "[madock] node_modules ready — starting dev server."
+fi
+
+if [ -f yarn.lock ]; then
+  pm="yarn"
+elif [ -f pnpm-lock.yaml ]; then
+  pm="pnpm"
+else
+  pm="npm run"
+fi
+
+# Source .env right before exec so the dev server sees DATABASE_URL /
+# REDIS_URL / SECRET_KEY etc. in process env. We can't source earlier
+# because madock setup -d writes .env only during the install phase,
+# which runs AFTER the container starts — at boot the file does not
+# exist yet. By this point the install has completed (we already
+# waited for its marker), so .env is guaranteed to be present.
+if [ -f .env ]; then
+  set -a
+  . ./.env
+  set +a
+fi
+
+if [ "$mode" = "command" ]; then
+  # The command is the application, so the first Node process it starts is the
+  # one worth attaching to.
+  if [ -n "${MADOCK_DEBUG_PORT:-}" ]; then
+    enable_inspector
+  fi
+  echo "[madock] starting: $script"
+  run_app sh -c "$script"
+fi
+
+if [ -n "${MADOCK_DEBUG_PORT:-}" ]; then
+  explain_no_inspector "$pm"
+fi
+
+echo "[madock] starting: $pm $script"
+run_app $pm $script
+MADOCK_EOF
+
+ENV WORKDIR=/var/www/html
+
+CMD ["/usr/local/bin/madock-entrypoint"]
