@@ -3,6 +3,7 @@ package cron
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/faradey/madock/v4/src/command"
@@ -75,15 +76,44 @@ func reportOverriddenSetting(projectName, want string) {
 	fmtc.WarningLn("cron/enabled is " + inEffect + " for this project, not " + want + " — something is overriding what was just written.")
 
 	if path := conf["path"]; path != "" {
-		own := strings.TrimRight(path, "/") + "/.madock/config.xml"
+		dir := strings.TrimRight(path, "/") + "/.madock"
+		own := dir + "/config.xml"
 		if paths.IsFileExist(own) {
 			fmtc.WarningLn("  " + own + " is merged over madock's own copy and wins. Edit cron/enabled there.")
+			reportReleaseCopy(dir)
 		}
 	}
 
 	if want == "true" {
 		fmtc.WarningLn("  Cron is running now, and the next `start` will read the effective value and stop it again.")
 	}
+}
+
+// reportReleaseCopy says when the file just named is not a file but a way into
+// the current release.
+//
+// Where deployer manages a project, `<path>/.madock` is a symlink to
+// `current/.madock`, so the path above resolves into `releases/<n>/` — a
+// directory the next deploy replaces. Editing there works, and lasts until the
+// next release, at which point the value comes back from the repository and the
+// setting silently reverts. Measured on `extmag` on 2026-08-27: fixing this for
+// one project took three edits, and only the one in git survives a deploy.
+func reportReleaseCopy(dir string) {
+	info, err := os.Lstat(dir)
+	if err != nil || info.Mode()&os.ModeSymlink == 0 {
+		return
+	}
+
+	resolved, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		// The link is there and its target cannot be read. Still worth saying,
+		// because the half that matters — this is a release, not the source —
+		// does not depend on knowing where it points.
+		resolved = "the current release"
+	}
+
+	fmtc.WarningLn("  That path is a symlink into the current release (" + resolved + ").")
+	fmtc.WarningLn("  An edit there holds until the next deploy, which brings the file back from the repository — change it in the project's repository as well.")
 }
 
 func Disable() {

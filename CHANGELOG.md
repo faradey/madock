@@ -1,3 +1,8 @@
+**v4.1.1**
+
+Fixed:
+- **The warning about an overridden `cron/enabled` named a file that a deploy replaces.** 4.1.0 started saying which copy of the config wins, and pointed at `<path>/.madock/config.xml`. Where deployer manages the project that path is a symlink to `current/.madock`, so it resolves into `releases/<n>/` — an edit there is real, and it lasts until the next release brings the file back from the repository. Measured on `extmag` on 2026-08-27: turning cron off for one project took three edits, in the runtime copy, in the release, and in git, and only the last one survives a deploy. The warning now says the path is a release and that the repository has to be changed as well
+
 **v4.1.0**
 
 Fixed:
