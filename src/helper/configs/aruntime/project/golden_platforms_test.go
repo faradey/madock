@@ -8,6 +8,22 @@ import (
 	"github.com/faradey/madock/v4/src/helper/configs/projects"
 	"github.com/faradey/madock/v4/src/helper/testenv"
 	"github.com/faradey/madock/v4/src/model/versions"
+
+	// The version providers register themselves in init(), and in the real
+	// binary they arrive with the platform controllers. The controllers cannot
+	// be imported here — they import this package — so the leaf packages are
+	// named directly. Without them GetVersionsForPlatform answers "no such
+	// platform", `language` goes unwritten, and every fixture quietly renders
+	// through the general fallback: that is exactly how Medusa's application
+	// image came to be pinned as php-fpm.
+	_ "github.com/faradey/madock/v4/src/model/versions/bigcommerce"
+	_ "github.com/faradey/madock/v4/src/model/versions/medusa"
+	_ "github.com/faradey/madock/v4/src/model/versions/prestashop"
+	_ "github.com/faradey/madock/v4/src/model/versions/saleor"
+	_ "github.com/faradey/madock/v4/src/model/versions/shopify"
+	_ "github.com/faradey/madock/v4/src/model/versions/shopware"
+	_ "github.com/faradey/madock/v4/src/model/versions/spree"
+	_ "github.com/faradey/madock/v4/src/model/versions/sylius"
 )
 
 // platformsWithoutAGolden is every platform madock ships templates for and had
@@ -103,6 +119,28 @@ func writePlatformDefaults(t *testing.T, execDir, projectName, platform string) 
 	config := new(configs.ConfigLines)
 	config.EnvFile = filepath.Join(execDir, "projects", projectName, "config.xml")
 	config.ActiveScope = "default"
+
+	// `platform` and `language` are written by the shared path that setup goes
+	// through before it reaches the platform's own writer, and this fixture used
+	// to skip them — which made every golden less representative than it looked.
+	//
+	// `language` decides which template tree answers when a platform ships no
+	// file of its own: the resolver tries the platform, then
+	// docker/languages/<language>/, then docker/general/service/. With the key
+	// empty, the language step is skipped and everything lands on the general
+	// one — so Medusa, a Node platform with no Dockerfile of its own, had its
+	// application image pinned here as **php-fpm on ubuntu**, and the fixture
+	// would have gone on approving that if the real resolution ever broke.
+	config.Set("platform", platform)
+
+	defaults, ok := versions.GetVersionsForPlatform(platform, "")
+	if !ok {
+		t.Fatalf("no version provider is registered for %q, so this fixture would render through the "+
+			"general fallback and pin whatever that produces — add the blank import above", platform)
+	}
+	if defaults.Language != "" {
+		config.Set("language", defaults.Language)
+	}
 
 	// The base configuration stands in for the general one, which is what the
 	// writers read defaults out of — credentials, timezone, the switches a

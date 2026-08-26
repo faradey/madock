@@ -35,6 +35,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "golden.test:host-gateway"
+    depends_on:
+      - nodejs
     restart: no
 
 volumes:

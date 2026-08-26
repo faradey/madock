@@ -60,6 +60,21 @@ func TestValidateFpmPool(t *testing.T) {
 			wantErr: "not a number",
 		},
 		{
+			// Present and empty is not the same as absent, and treating it as
+			// such was a hole in the first version of this check: the defaults
+			// only fill keys that are *missing*, so an empty one survives into
+			// the template as `pm.max_children = ` and php-fpm refuses to start
+			// — from inside the container, after a full image build.
+			name:    "set to nothing",
+			conf:    pool("", "2", "1", "3"),
+			wantErr: "set to nothing",
+		},
+		{
+			name:    "set to whitespace",
+			conf:    pool("40", "  ", "1", "3"),
+			wantErr: "set to nothing",
+		},
+		{
 			// Half a pool is answered by the embedded defaults for the rest, and
 			// comparing against numbers this installation may not be using would
 			// refuse a configuration that works.

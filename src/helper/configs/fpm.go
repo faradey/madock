@@ -3,6 +3,7 @@ package configs
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // fpmPool is the set of pool keys that have to agree with each other.
@@ -35,9 +36,23 @@ func ValidateFpmPool(conf map[string]string) error {
 
 	for _, key := range fpmPool {
 		raw, ok := conf[key]
-		if !ok || raw == "" {
-			// Nothing set — the embedded defaults answer for it, and those agree.
+		if !ok {
+			// Absent — the embedded defaults answer for it, and those agree.
 			continue
+		}
+
+		// Present and empty is a different thing, and it used to be waved
+		// through here on the same reasoning as absent. It is not the same: the
+		// defaults only fill keys that are *missing* (ConfigMapping skips any
+		// key already in the map, whatever its value), so an empty one survives
+		// all the way into the template and renders `pm.max_children = `. Then
+		// php-fpm refuses to start, from inside the container, after a full
+		// image build — which is the answer this function exists to move
+		// earlier.
+		if strings.TrimSpace(raw) == "" {
+			return fmt.Errorf("%s is set to nothing. Remove the key to take the default, or give it a number — "+
+				"an empty one reaches php-fpm as `pm.%s = ` and it refuses to start",
+				key, strings.TrimPrefix(key, "php/fpm/"))
 		}
 
 		value, err := strconv.Atoi(raw)
@@ -52,9 +67,10 @@ func ValidateFpmPool(conf map[string]string) error {
 	}
 
 	if len(values) != len(fpmPool) {
-		// A partially configured pool is answered by the defaults for the rest,
-		// and mixing the two here would compare a number against one this
-		// installation may not be using.
+		// Some keys are absent entirely and the defaults answer for those. What
+		// this installation will actually run is a mixture of the two, and
+		// comparing a configured number against a default it may not be using
+		// would refuse a pool that works.
 		return nil
 	}
 

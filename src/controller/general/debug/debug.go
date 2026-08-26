@@ -121,10 +121,48 @@ func setDebug(value string) {
 	// generated again — which is what makes the number worth pointing at rather
 	// than printing here, where it would be the previous rebuild's.
 	if value == "true" && projectConf["nodejs/enabled"] == "true" {
-		fmtc.ToDoLn("madock info:ports — the debugger listens on the port published for nodejs_debug")
+		if nodeInspectorAttaches(projectConf) {
+			fmtc.ToDoLn("madock info:ports — the debugger listens on the port published for nodejs_debug")
+		} else {
+			warnAboutThePackageManager(projectConf)
+		}
 	}
 
 	rebuild.Execute()
+}
+
+// nodeInspectorAttaches reports whether the node container will actually end up
+// with a debugger on it.
+//
+// Only `nodejs/script_type=command` can promise it. Everything else runs through
+// the project's package manager, and yarn, npm and pnpm are Node programs: they
+// take the inspector port themselves, the dev server they spawn cannot bind it
+// and runs without a debugger, and the IDE attaches to the wrapper. The
+// entrypoint refuses to arrange that and says so in the container's log — which
+// is a poor place to learn it, because the command that switched debugging on
+// reported success minutes earlier.
+//
+// The one case this calls wrong is a project with no `dev` or `start` script at
+// all, where the entrypoint falls back to a bare `node` and the inspector does
+// attach. The warning is worded to allow for it rather than pretending it cannot
+// happen.
+func nodeInspectorAttaches(projectConf map[string]string) bool {
+	return projectConf["nodejs/script_type"] == "command"
+}
+
+func warnAboutThePackageManager(projectConf map[string]string) {
+	fmtc.WarningLn("Node is switched on for debugging, but this project starts through its package manager, " +
+		"which is a Node program itself and takes the inspector port before the application can.")
+	fmtc.WarningLn("Nothing will be listening on nodejs_debug unless the container ends up running node directly.")
+
+	if script := projectConf["nodejs/script"]; script != "" {
+		fmtc.ToDoLn("madock config:set -n nodejs/script_type -v command — with nodejs/script holding the command to run " +
+			"(it is currently \"" + script + "\")")
+		return
+	}
+
+	fmtc.ToDoLn("madock config:set -n nodejs/script -v \"<the command that starts your app>\" " +
+		"and nodejs/script_type to command, or add --inspect to the script in package.json")
 }
 
 func verb(value string) string {
