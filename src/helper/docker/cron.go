@@ -30,6 +30,30 @@ func containerExecSilent(container, user string, command ...string) (string, err
 	return buf.String(), execErr
 }
 
+// cronDaemonProbe answers whether a cron daemon is among the container's
+// processes, by name, reading /proc directly.
+//
+// It replaces `service cron status`, which cannot answer this. Debian's
+// `status_of_proc -p /var/run/crond.pid` reaches `pidofproc` in
+// /lib/lsb/init-functions, and that function — given a pidfile — does no more
+// than `kill -0` on the number it holds. It never checks that the process is
+// cron. The pidfile lives in the container's filesystem and survives
+// `docker restart`, so after a restart it names a pid from the previous boot;
+// on a busy container that number belongs to something else by then, `kill -0`
+// succeeds, and cron is reported as running while no cron exists. Measured on a
+// live Node project on 2026-08-26: `ps` had no cron, `madock status` said
+// "Cron is running (6 jobs)", and the six jobs were real — the crontab survives
+// the restart too, so the count agrees with the lie and makes it convincing.
+//
+// /proc rather than `ps` or `pgrep`: neither is guaranteed to be installed in an
+// application image, and a missing binary would be indistinguishable from a dead
+// daemon. `crond` is matched alongside `cron` for images that ship busybox cron.
+const cronDaemonProbe = `for c in /proc/[0-9]*/comm; do
+	read name < "$c" 2>/dev/null || continue
+	case "$name" in cron|crond) exit 0 ;; esac
+done
+exit 1`
+
 // CronExecute starts or stops cron service in the container
 // CronRunning asks the container whether cron is actually running.
 //
@@ -46,11 +70,54 @@ func CronRunning(projectName string) bool {
 	service := resolveMainService(projectConf)
 	service, userOS, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
 
-	cmd, err := PrepareContainerExec(GetContainerName(projectConf, projectName, service), userOS, false, "service", "cron", "status")
+	cmd, err := PrepareContainerExec(GetContainerName(projectConf, projectName, service), userOS, false, "sh", "-c", cronDaemonProbe)
 	if err != nil {
 		return false
 	}
 	return cmd.Run() == nil
+}
+
+// EnsureCronAfterRestart starts cron again when the container it lives in has
+// just been restarted.
+//
+// Nothing in an application image starts cron: the php container's CMD is
+// php-fpm and the Node one's is the dev server, so the daemon exists only
+// because `start`, `rebuild` or `cron:enable` ran a command inside a container
+// that was already up. Restart that container and the daemon is gone, while its
+// crontab — which lives in the container's filesystem — is still there. Nothing
+// says so.
+//
+// That is not a hypothetical: `service:restart` is what a finished deploy runs,
+// so on a Node project every deploy silently stopped the scheduler. Measured on
+// 2026-08-26 across three occurrences on one machine, the worst of them six
+// hours old and found by accident.
+//
+// A service the project does not run its application in is restarted without
+// this — nginx has no cron in it to lose.
+func EnsureCronAfterRestart(projectName string, restarted []string) {
+	projectConf := configs2.GetProjectConfig(projectName)
+	if !cronNeedsRearm(projectConf, restarted) {
+		return
+	}
+
+	fmtc.TitleLn("Restarting cron: the container it runs in was restarted")
+	CronExecute(projectName, true, false)
+}
+
+// cronNeedsRearm reports whether a restart of these services took the cron
+// daemon down with it.
+func cronNeedsRearm(projectConf map[string]string, restarted []string) bool {
+	if strings.ToLower(projectConf["cron/enabled"]) != "true" {
+		return false
+	}
+
+	main := resolveMainService(projectConf)
+	for _, service := range restarted {
+		if service == main {
+			return true
+		}
+	}
+	return false
 }
 
 func CronExecute(projectName string, flag, manual bool) {
@@ -177,7 +244,13 @@ func CronExecute(projectName string, flag, manual bool) {
 			}
 		}
 	} else {
-		_, err := containerExecSilent(GetContainerName(projectConf, projectName, service), userOS, "service", "cron", "status")
+		// Reachability, not `service cron status`. What has to be true for the
+		// removal below to make sense is that the container answers — the jobs
+		// are in its crontab whether or not a daemon is currently reading them,
+		// and skipping the removal because the daemon happens to be down leaves
+		// a project that was told to stop with every job still installed, ready
+		// to run the moment anything starts cron again.
+		_, err := containerExecSilent(GetContainerName(projectConf, projectName, service), userOS, "true")
 		if err == nil {
 			// First, remove config-based jobs (for all platforms)
 			removeCronJobsFromConfig(projectConf, projectName, manual)
@@ -241,23 +314,11 @@ func CronExecute(projectName string, flag, manual bool) {
 }
 
 // resolveMainService determines the main service name based on project config.
-// This is a local helper to avoid importing the platform package (which would cause an import cycle).
+// This is a local name for the shared helper, kept because the platform package
+// — which answers the same question for the handlers — cannot be imported here
+// without an import cycle.
 func resolveMainService(projectConf map[string]string) string {
-	if lang, ok := projectConf["language"]; ok && lang != "" && lang != "php" {
-		switch lang {
-		case "nodejs":
-			return "nodejs"
-		case "python":
-			return "python"
-		case "golang":
-			return "golang"
-		case "ruby":
-			return "ruby"
-		case "none":
-			return "app"
-		}
-	}
-	return "php"
+	return configs2.ResolveMainService(projectConf, "php")
 }
 
 // getCronJobsFromConfig extracts cron jobs from project configuration.

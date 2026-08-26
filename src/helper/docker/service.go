@@ -64,7 +64,17 @@ func RestartServices(projectName string, services []string) error {
 	args := append([]string{"compose", "-f", composeFile, "-f", pp.DockerComposeOverride(), "restart"}, services...)
 	cmd := exec.Command("docker", args...)
 	attachOutput(cmd)
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	// A container comes back running the image's CMD and nothing else, so
+	// anything madock started *inside* it is gone — cron above all, since no
+	// application image starts it. Rearming belongs here rather than in the
+	// `service:restart` controller: the other caller is the restart a finished
+	// deploy performs, which is where the scheduler was actually being lost.
+	EnsureCronAfterRestart(projectName, services)
+	return nil
 }
 
 // ServiceStates returns one row per container of the project, running or not.
