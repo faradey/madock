@@ -13,6 +13,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/v4/src/helper/docker"
+	"github.com/faradey/madock/v4/src/helper/embedded"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
 )
@@ -39,6 +40,12 @@ func Execute() {
 		if project.ReportBrokenIncludes(projectName) {
 			os.Exit(1)
 		}
+
+		// The one command that cannot wait for the renderer to say it: rebuild
+		// takes the containers down and generates the build context afterwards,
+		// so a warning from MakeConf would arrive with the environment already
+		// gone — which is the failure the check exists for.
+		embedded.ReportOnce()
 
 		reportReconciliation(projectName)
 
