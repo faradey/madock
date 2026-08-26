@@ -2,6 +2,26 @@ package debug
 
 import "testing"
 
+// `debug:enable` used to finish by pointing at `info:ports` whenever the project
+// had a node container, which is a promise it cannot keep: with anything but an
+// explicit command the container starts through its package manager, the
+// entrypoint refuses to hand that the inspector, and nothing listens on the
+// published port. The IDE then answers "connection refused" and the explanation
+// is in the container's log — minutes after the command reported success.
+func TestNodeInspectorAttaches(t *testing.T) {
+	if !nodeInspectorAttaches(map[string]string{"nodejs/script_type": "command"}) {
+		t.Error("an explicit command is exactly the case the inspector can be put on")
+	}
+
+	// The default is "auto", and the empty value is what a project written
+	// before the key existed has.
+	for _, scriptType := range []string{"", "auto", "package"} {
+		if nodeInspectorAttaches(map[string]string{"nodejs/script_type": scriptType}) {
+			t.Errorf("script_type %q runs through the package manager, and it takes the port", scriptType)
+		}
+	}
+}
+
 // One command, and the project decides what it means. The alternative was a
 // single `debug/enabled` derived from `language`, and this is the case that
 // rules it out: a PHP application with a JavaScript front end in its own

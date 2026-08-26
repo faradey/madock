@@ -200,10 +200,15 @@ fi
 
 if [ -f yarn.lock ]; then
   pm="yarn"
+  pm_name="yarn"
 elif [ -f pnpm-lock.yaml ]; then
   pm="pnpm"
+  pm_name="pnpm"
 else
   pm="npm run"
+  # The name on its own, because $pm carries the subcommand: a message built
+  # from it read "starts through npm run, which is a Node program itself".
+  pm_name="npm"
 fi
 
 # Source .env right before exec so the dev server sees DATABASE_URL /
@@ -229,7 +234,7 @@ if [ "$mode" = "command" ]; then
 fi
 
 if [ -n "${MADOCK_DEBUG_PORT:-}" ]; then
-  explain_no_inspector "$pm"
+  explain_no_inspector "$pm_name"
 fi
 
 echo "[madock] starting: $pm $script"
