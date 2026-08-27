@@ -1,6 +1,9 @@
 package embedded
 
 import (
+	"errors"
+	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -49,17 +52,93 @@ func ExtractIfNeeded(appVersion string) {
 	}
 
 	written := map[string]bool{}
+	var failures []ExtractFailure
 	if DockerFS != nil {
-		extractFS(DockerFS, filepath.Join(execDir, "docker"), written)
+		failures = append(failures, extractFS(DockerFS, filepath.Join(execDir, "docker"), written)...)
 	}
 	if ScriptsFS != nil {
-		extractFS(ScriptsFS, filepath.Join(execDir, "scripts"), written)
+		failures = append(failures, extractFS(ScriptsFS, filepath.Join(execDir, "scripts"), written)...)
+	}
+
+	// An incomplete extraction is not allowed to draw any conclusion from what
+	// it managed to write, and all three of the steps below would.
+	//
+	// `removeWithdrawn` is the dangerous one: it deletes what the previous
+	// manifest names and this run did not write, so a truncated run reads its
+	// own gap as "the release withdrew these" and removes templates that are
+	// still shipped and still on disk. A partial extraction would stop being a
+	// tree missing what it never wrote and become one actively stripped of what
+	// worked yesterday.
+	//
+	// `writeManifest` would then publish that gap as the record of what
+	// extraction owns, so the next run — even a healthy one — inherits a
+	// manifest that has forgotten two thirds of the tree.
+	//
+	// And the version stamp would make it stick: `ExtractIfNeeded` returns early
+	// when the marker equals the running version, so stamping a run that failed
+	// declares the installation current and nothing retries it. Leaving it
+	// unstamped is what makes the tree repair itself the moment the permissions
+	// are fixed, at the cost of the warning repeating until then — which is the
+	// right way round for a fault nothing else reports.
+	if len(failures) > 0 {
+		reportFailures(os.Stderr, failures, execDir)
+		return
 	}
 
 	removeWithdrawn(execDir, written)
 	writeManifest(execDir, written)
 
 	os.WriteFile(markerFile, []byte(appVersion), 0644)
+}
+
+// ExtractFailure is one file the extraction could not put on disk.
+type ExtractFailure struct {
+	// Path is relative to the installation directory, slash-separated —
+	// `docker/snippets/…`, the way the rest of madock names a template.
+	Path string
+	Err  error
+}
+
+// reportFailures says what did not reach the disk, and why.
+//
+// On stderr, for the reason the drift warning is: `--json` output has to stay
+// parseable, and this one repeats on every command until somebody fixes the
+// permissions.
+func reportFailures(w io.Writer, failures []ExtractFailure, execDir string) {
+	if len(failures) == 0 {
+		return
+	}
+
+	sort.Slice(failures, func(i, j int) bool { return failures[i].Path < failures[j].Path })
+
+	fmt.Fprintf(w, "⚠ %d of madock's own templates could not be written into %s — the tree is incomplete\n",
+		len(failures), execDir)
+
+	const named = 3
+	for i, failure := range failures {
+		if i == named {
+			break
+		}
+		fmt.Fprintf(w, "  %s: %v\n", failure.Path, reason(failure.Err))
+	}
+	if remainder := len(failures) - named; remainder > 0 {
+		fmt.Fprintf(w, "  and %d more\n", remainder)
+	}
+
+	fmt.Fprintln(w, "Nothing was deleted and the version stamp was left alone, so the next madock command tries again.")
+	fmt.Fprintln(w, "Until then a build can stop at \"no such file or directory\" for a template that should exist.")
+}
+
+// reason strips the wrapper that already names the path, so the line does not
+// carry it twice: an *fs.PathError prints as `open /opt/…/worker.yml:
+// permission denied`, and the path is the first thing on the line already.
+func reason(err error) error {
+	var pathErr *fs.PathError
+	if errors.As(err, &pathErr) {
+		return pathErr.Err
+	}
+
+	return err
 }
 
 // manifestFile lists what the last extraction put on disk.
@@ -151,23 +230,112 @@ func isSourceCheckout(execDir string) bool {
 	return err == nil
 }
 
-func extractFS(fsys fs.FS, destDir string, written map[string]bool) {
+// extractFS writes one embedded tree to disk and returns what it could not
+// write, having written everything else.
+//
+// **The callback never returns an error, and that is the whole point.**
+// `fs.WalkDir` reads any non-nil answer as "stop the walk", and this one used to
+// return `os.WriteFile`'s directly while `extractFS` discarded the walk's
+// result — so a single file that could not be written ended the extraction
+// where it stood, silently, and everything lexically after it never reached the
+// disk.
+//
+// Measured on the `shopify-e2e` machine on 2026-08-27: exactly one file in the
+// tree, `docker/snippets/docker-compose/worker.yml`, was left owned by root by a
+// single run under `MADOCK_USER=root` five days earlier. Every extraction since
+// stopped on it — 202 files of 309 — and nothing about the installation looked
+// wrong: the directories exist, because the previous pass created them before
+// the failing write; `.embedded_version` was stamped, because it is written
+// after this returns and this returned normally; `status` and `project:list`
+// work, because they need no templates. The only symptom was a build printing
+// three paths it had looked for a snippet in, and it cost an hour to reach the
+// cause.
+//
+// A partial extraction that says nothing is worse than one that stops: the one
+// that stops gets fixed the same minute.
+func extractFS(fsys fs.FS, destDir string, written map[string]bool) []ExtractFailure {
+	var failures []ExtractFailure
+
+	// The path a person can act on is the one in the installation, not the one
+	// inside the embed — they differ by the tree's name (`docker`, `scripts`).
+	fail := func(path string, err error) {
+		named := path
+		if rel, relErr := filepath.Rel(paths.GetExecDirPath(), filepath.Join(destDir, path)); relErr == nil {
+			named = filepath.ToSlash(rel)
+		}
+		failures = append(failures, ExtractFailure{Path: named, Err: err})
+	}
+
 	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil || path == "." {
-			return err
+		if err != nil {
+			fail(path, err)
+			return nil
+		}
+		if path == "." {
+			return nil
 		}
 		target := filepath.Join(destDir, path)
 		if d.IsDir() {
-			return os.MkdirAll(target, 0755)
+			if err := os.MkdirAll(target, 0755); err != nil {
+				fail(path, err)
+				// fs.SkipDir is the one non-nil answer WalkDir does not treat as
+				// a failure, so the rest of the tree still gets written. Without
+				// it every file under an unreachable directory is reported
+				// separately, and one bad directory becomes a screen of noise
+				// saying a single thing.
+				return fs.SkipDir
+			}
+			return nil
 		}
 		data, err := fs.ReadFile(fsys, path)
 		if err != nil {
-			return err
+			fail(path, err)
+			return nil
 		}
-		os.MkdirAll(filepath.Dir(target), 0755)
+		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+			fail(path, err)
+			return nil
+		}
+		if err := writeExtracted(target, data); err != nil {
+			fail(path, err)
+			return nil
+		}
+		// Recorded after the write, never before. The manifest is what
+		// `removeWithdrawn` deletes by, so a file claimed and not written is a
+		// file the next run believes extraction owns.
 		if rel, relErr := filepath.Rel(paths.GetExecDirPath(), target); relErr == nil {
 			written[filepath.ToSlash(rel)] = true
 		}
-		return os.WriteFile(target, data, 0755)
+		return nil
 	})
+
+	return failures
+}
+
+// writeExtracted writes one template, replacing the file outright when it cannot
+// be written in place.
+//
+// The case this exists for is the one that was found on disk: a run under
+// `MADOCK_USER=root` leaves root-owned files in the installation, and every
+// later extraction as the ordinary user is refused on them for good. Unlink
+// permission on Unix belongs to the containing directory rather than to the
+// file, so removing it and writing afresh succeeds wherever the directory is
+// ours — the tree repairs itself instead of needing a chown nobody knows to run.
+//
+// Only on a permission error, and deliberately so. A write that failed for any
+// other reason has not told us that replacing the file would help, and removing
+// it first would turn "could not update this template" into "this template is
+// gone".
+func writeExtracted(target string, data []byte) error {
+	err := os.WriteFile(target, data, 0755)
+	if err == nil || !errors.Is(err, fs.ErrPermission) {
+		return err
+	}
+
+	if removeErr := os.Remove(target); removeErr != nil {
+		// The write error is the one worth reporting: it says what was refused.
+		return err
+	}
+
+	return os.WriteFile(target, data, 0755)
 }
