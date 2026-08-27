@@ -1,3 +1,10 @@
+**v4.1.6**
+
+Fixed:
+- **A registry entry that resolves to nothing was invisible to the command written to find it.** `projects/<name>` is a symlink wherever a project was set up from a temporary checkout, and when the target goes — a `/tmp` directory a reboot cleared — the entry was skipped, on the reasoning that an entry whose own directory is gone is not an entry. True, and the wrong conclusion: the name is still in the registry and nothing said so. Measured on the BigCommerce cluster VM on 2026-08-27, where four such entries sat: `project:list` answered `No projects are registered in this installation` and `project:list --stale`, which exists for exactly "the source is gone", answered `Every registered project still has its source directory`. A confident wrong answer from the check written for the case, and the one wrong answer that reads as good news
+- Such an entry is now reported as `broken-link`, and the listing names what it points at — usually a temporary directory, which tells the reader what happened without a search
+- **A directory with no `config.xml` is still skipped, deliberately.** It was tempting to report those too, since a madock run outside a project leaves one named after the current directory. But `projects/` legitimately holds support directories beside the projects — `bin`, `docker` and `assets` on the installation this was checked on — so reporting them would put three lines of noise on every machine, and the existing test that pins this was right
+
 **v4.1.5**
 
 Fixed:

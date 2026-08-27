@@ -151,7 +151,7 @@ func Execute() {
 			return
 		}
 		if args.Stale {
-			fmtc.SuccessLn("Every registered project still has its source directory")
+			fmtc.SuccessLn("Every registry entry resolves, and every project still has its source directory")
 			return
 		}
 		fmtc.WarningLn("No projects are registered in this installation")
@@ -171,6 +171,8 @@ func Execute() {
 		switch row.State {
 		case configs.ProjectMissingSource:
 			fmtc.ErrorLn(fmt.Sprintf("%-28s %ssource is gone: %s", row.Name, state, row.Path))
+		case configs.ProjectBrokenLink:
+			fmtc.ErrorLn(fmt.Sprintf("%-28s %sregistry entry links to nothing: %s", row.Name, state, row.Path))
 		case configs.ProjectNoPath:
 			fmtc.WarningLn(fmt.Sprintf("%-28s %sno path recorded", row.Name, state))
 		default:
