@@ -130,6 +130,21 @@ func warnOnce(err error) {
 
 var warnOnceGuard sync.Once
 
+// Path is where the debug log is being written.
+//
+// Exported because messages that send somebody to it have to name it. "See
+// debug.log for details" was measured on a live server on 2026-08-27 to be
+// unusable advice: the file is in the installation directory, the person looked
+// in the project and in their home, found nothing, and had to work the failure
+// out from the state of the crontab instead. The path is known here; printing
+// it costs nothing.
+func Path() string {
+	if customPath != "" {
+		return customPath
+	}
+	return defaultLogPath()
+}
+
 // defaultLogPath puts debug.log in the installation directory.
 //
 // MADOCK_EXEC_DIR is read here rather than through the paths package, which

@@ -90,6 +90,121 @@ func stripMadockBlock(existing string) []string {
 	return kept
 }
 
+// Magento marks its own block `#~ MAGENTO START <sha256(BP)> … #~ MAGENTO END
+// <sha256(BP)>`, where BP is the installation's base path. `cron:remove` finds
+// the block by recomputing that hash from where it is run — so on a deployer
+// layout, where BP is `…/releases/<n>` and every release is a new directory, the
+// command run from the new release cannot see the previous release's block and
+// reports success without touching it.
+//
+// Measured on extmag.com on 2026-08-27: after one deploy the crontab carried two
+// MAGENTO blocks, `releases/159` and `releases/160`, so `cron:run` started twice
+// a minute out of two trees. The second half is the one that bites later:
+// `deploy:cleanup` removes `releases/159`, and the entry stays behind pointing
+// into nothing — a php that fails every minute into a shared log.
+//
+// Magento cannot fix this by construction, so the cleanup is madock's.
+const (
+	magentoBlockStart = "#~ MAGENTO START"
+	magentoBlockEnd   = "#~ MAGENTO END"
+)
+
+// stripStaleMagentoBlocks removes every Magento block except the one belonging
+// to the installation now running, and leaves everything else alone.
+//
+// `keepPath` is the base path of the current installation, resolved through the
+// `current` symlink — the block to keep is the first one whose command names it.
+//
+// A second block naming the *same* path is dropped too, and that is not
+// tidiness. `cron:install` clears the old block by calling the same
+// `cleanMagentoSection` that `cron:remove` uses, and that function cannot remove
+// the last block in the file — measured 2026-08-27 on extmag.com and traced to
+// `Shell::execute`, which builds its return value with `implode(PHP_EOL, …)` so
+// the string ends at the END marker while the regex demands a newline after it.
+// So an install over an install duplicates rather than replaces, and every
+// duplicate runs `cron:run` again every minute.
+func stripStaleMagentoBlocks(existing, keepPath string) (string, []string) {
+	if strings.TrimSpace(keepPath) == "" {
+		return existing, nil
+	}
+	kept := false
+	return filterMagentoBlocks(existing, func(block []string) bool {
+		if kept {
+			return false
+		}
+		for _, line := range block {
+			if strings.Contains(line, keepPath) {
+				kept = true
+				return true
+			}
+		}
+		return false
+	})
+}
+
+// removeAllMagentoBlocks takes out every Magento block, which is what disabling
+// cron has to do.
+//
+// `bin/magento cron:remove` is not enough and cannot be made enough: it reports
+// success and leaves the last block in the file, so a project told to stop went
+// on running `cron:run` every minute with `cron:disable` having said it was
+// removed.
+func removeAllMagentoBlocks(existing string) (string, []string) {
+	return filterMagentoBlocks(existing, func([]string) bool { return false })
+}
+
+// filterMagentoBlocks rewrites the crontab keeping the Magento blocks `keep`
+// accepts, and returns what was dropped.
+func filterMagentoBlocks(existing string, keep func(block []string) bool) (string, []string) {
+	var kept, dropped []string
+	var block []string
+	inBlock := false
+
+	for _, line := range strings.Split(existing, "\n") {
+		trimmed := strings.TrimSpace(line)
+
+		switch {
+		case strings.HasPrefix(trimmed, magentoBlockStart):
+			inBlock = true
+			block = []string{line}
+			continue
+		case strings.HasPrefix(trimmed, magentoBlockEnd) && inBlock:
+			block = append(block, line)
+			if keep(block) {
+				kept = append(kept, block...)
+			} else {
+				dropped = append(dropped, block...)
+			}
+			inBlock = false
+			block = nil
+			continue
+		}
+
+		if inBlock {
+			block = append(block, line)
+			continue
+		}
+
+		kept = append(kept, line)
+	}
+
+	// A start marker with no end takes the rest with it, and is kept rather than
+	// dropped: an unterminated block is damage of some other kind, and removing
+	// what is left of it would hide it.
+	if inBlock {
+		kept = append(kept, block...)
+	}
+
+	for len(kept) > 0 && strings.TrimSpace(kept[len(kept)-1]) == "" {
+		kept = kept[:len(kept)-1]
+	}
+
+	if len(dropped) == 0 {
+		return existing, nil
+	}
+	return joinCrontab(kept), dropped
+}
+
 func joinCrontab(lines []string) string {
 	if len(lines) == 0 {
 		return ""

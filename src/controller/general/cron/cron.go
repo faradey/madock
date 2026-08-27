@@ -146,6 +146,11 @@ type Report struct {
 	Running   bool `json:"running"`
 	Jobs      int  `json:"jobs"`
 	JobsKnown bool `json:"jobs_known"`
+	// StaleJobs are installed jobs whose command names something the container
+	// does not have — a release that has been cleaned up, a script that moved.
+	// They run every minute and fail every minute, and the job count above
+	// reports them as healthy work.
+	StaleJobs []string `json:"stale_jobs,omitempty"`
 	// State is the verdict the exit code carries: ok, problem or unknown.
 	State string `json:"state"`
 	// Reason says what is wrong, and is empty when nothing is.
@@ -185,6 +190,7 @@ func Status() {
 		if !report.JobsKnown {
 			report.Jobs = -1
 		}
+		report.StaleJobs, _ = docker.CronJobsWithMissingPaths(projectName)
 	}
 
 	switch {
@@ -194,6 +200,13 @@ func Status() {
 	case report.Running && report.Jobs == 0:
 		report.State = "problem"
 		report.Reason = "cron is running and no jobs are installed — nothing runs on a schedule"
+	case len(report.StaleJobs) > 0:
+		// A count of installed jobs is not a count of working ones, and this is
+		// the shape that hides: an entry left by a release that has since been
+		// removed runs every minute, fails every minute into a redirect, and is
+		// counted here as healthy work.
+		report.State = "problem"
+		report.Reason = fmt.Sprintf("%d installed job(s) name a path this container does not have — they run and fail every time", len(report.StaleJobs))
 	case report.Running:
 		report.State = "ok"
 	case report.Enabled:
@@ -234,6 +247,9 @@ func printReport(report Report) {
 		fmtc.WarningLn(report.Reason)
 		if report.Enabled && !report.Running {
 			fmt.Println("  Start it with `madock cron:enable`.")
+		}
+		for _, job := range report.StaleJobs {
+			fmt.Println("  " + job)
 		}
 	default:
 		fmtc.WarningLn(report.Reason)

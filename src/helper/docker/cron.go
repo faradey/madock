@@ -157,6 +157,7 @@ func CronExecute(projectName string, flag, manual bool) {
 					logger.Println(err)
 					fmtc.WarningLn(err.Error())
 				}
+				dropStaleMagentoBlocks(projectConf, projectName, containerName, workdir)
 			} else {
 				// Auto-invocation (start/rebuild). On a fresh container the Magento DI
 				// can be in a "warming up" state for the first several seconds:
@@ -191,12 +192,13 @@ func CronExecute(projectName string, flag, manual bool) {
 				} else {
 					out, cerr := containerExecSilent(containerName, "www-data", "bash", "-c", cmd)
 					if cerr != nil {
-						fmtc.WarningLn("Magento cron setup failed — scheduled jobs may NOT run. See debug.log for details.")
+						fmtc.WarningLn("Magento cron setup failed — scheduled jobs may NOT run. Details: " + logger.Path())
 						logger.Println(cerr)
 						if out != "" {
 							logger.Println(out)
 						}
 					}
+					dropStaleMagentoBlocks(projectConf, projectName, containerName, workdir)
 				}
 			}
 		} else if projectConf["platform"] == "shopify" {
@@ -257,12 +259,30 @@ func CronExecute(projectName string, flag, manual bool) {
 
 			// Then, platform-specific cron removal
 			if projectConf["platform"] == "magento2" {
-				err := ContainerExec(GetContainerName(projectConf, projectName, "php"), "www-data", false, "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove")
+				containerName := GetContainerName(projectConf, projectName, "php")
+				err := ContainerExec(containerName, "www-data", false, "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove")
+				if manual && err != nil {
+					logger.Println(err)
+				}
+
+				// And then the same thing again, ourselves, because
+				// `cron:remove` cannot finish the job. It clears the block with
+				// a regex that demands a newline after the END marker, and the
+				// crontab it matches against comes from `Shell::execute`, which
+				// joins the lines with `implode(PHP_EOL, …)` — so the string
+				// ends at the marker and the **last** block in the file is never
+				// matched. The command still reports success. Measured on
+				// extmag.com on 2026-08-27, with the base path and the trailing
+				// newline both verified correct first.
+				//
+				// A project told to stop must actually stop, so what Magento
+				// leaves behind is removed here.
+				removed := removeMagentoBlocks(projectConf, projectName, containerName)
 				if manual {
-					if err != nil {
-						logger.Println(err)
-					} else {
+					if removed {
 						fmt.Println("Cron was removed from Magento")
+					} else {
+						fmt.Println("No Magento cron entries were installed")
 					}
 				}
 			} else if projectConf["platform"] == "shopify" {
@@ -311,6 +331,73 @@ func CronExecute(projectName string, flag, manual bool) {
 			}
 		}
 	}
+}
+
+// dropStaleMagentoBlocks removes the Magento crontab blocks left behind by
+// earlier releases.
+//
+// `cron:install` writes a block keyed to the base path it runs from, and
+// `cron:remove` finds a block only by recomputing that key — so on a deployer
+// layout each release installs a block and none of them can remove another's.
+// The blocks pile up, every one of them starting `cron:run` every minute out of
+// its own tree, and once `deploy:cleanup` removes the release the entry keeps
+// running into a directory that is gone.
+//
+// The current base path is asked of the container rather than taken from the
+// config: `workdir` is `…/current` on a deployed project, while the block names
+// the release the symlink pointed at when it was written.
+func dropStaleMagentoBlocks(projectConf map[string]string, projectName, containerName, workdir string) {
+	if strings.TrimSpace(workdir) == "" {
+		return
+	}
+
+	resolved, err := containerExecSilent(containerName, "www-data", "sh", "-c", "cd "+workdir+" && pwd -P")
+	if err != nil {
+		logger.Println(fmt.Errorf("magento cron cleanup: could not resolve %s in the container: %w", workdir, err))
+		return
+	}
+	basePath := strings.TrimSpace(resolved)
+	if basePath == "" {
+		return
+	}
+
+	existing := readCrontab(projectConf, projectName)
+	cleaned, dropped := stripStaleMagentoBlocks(existing, basePath)
+	if len(dropped) == 0 {
+		return
+	}
+
+	if err := ContainerExec(containerName, "root", false, "bash", "-c", writeCrontabScript(cleaned)); err != nil {
+		logger.Println(fmt.Errorf("magento cron cleanup: %w", err))
+		fmtc.WarningLn("Could not remove the Magento cron entries left by earlier releases — see " + logger.Path())
+		return
+	}
+
+	// Said out loud rather than done quietly: these entries were running, and
+	// somebody may be looking for why a job stopped appearing twice.
+	fmtc.SuccessLn("Removed Magento cron entries left by earlier releases:")
+	for _, line := range dropped {
+		if trimmed := strings.TrimSpace(line); trimmed != "" && !strings.HasPrefix(trimmed, "#~ MAGENTO") {
+			fmt.Println("  " + trimmed)
+		}
+	}
+}
+
+// removeMagentoBlocks takes every Magento block out of the crontab and reports
+// whether there was one.
+func removeMagentoBlocks(projectConf map[string]string, projectName, containerName string) bool {
+	existing := readCrontab(projectConf, projectName)
+	cleaned, dropped := removeAllMagentoBlocks(existing)
+	if len(dropped) == 0 {
+		return false
+	}
+
+	if err := ContainerExec(containerName, "root", false, "bash", "-c", writeCrontabScript(cleaned)); err != nil {
+		logger.Println(fmt.Errorf("removing the Magento cron block: %w", err))
+		fmtc.WarningLn("Magento cron entries are still installed — see " + logger.Path())
+		return false
+	}
+	return true
 }
 
 // resolveMainService determines the main service name based on project config.
@@ -434,6 +521,51 @@ func CronJobCount(projectName string) (int, bool) {
 		count++
 	}
 	return count, true
+}
+
+// cronDeadPathProbe prints every installed job whose command names a path the
+// container does not have.
+//
+// The redirect is cut off first: a job writing into a log file that has not been
+// created yet is healthy, and reporting it would make the check unusable on the
+// day it matters. What is left is the interpreter and the script, which have to
+// exist for the job to do anything at all.
+const cronDeadPathProbe = `crontab -u www-data -l 2>/dev/null | while IFS= read -r line; do
+	case "$line" in ''|'#'*) continue ;; esac
+	command=${line%%>*}
+	for token in $command; do
+		case "$token" in
+			/*) [ -e "$token" ] || { printf '%s\n' "$line"; break; } ;;
+		esac
+	done
+done`
+
+// CronJobsWithMissingPaths lists the installed jobs that name something the
+// container does not have, and whether the question could be answered.
+//
+// This is the failure the daemon check cannot see and the job count actively
+// hides. Measured on extmag.com on 2026-08-27: a deploy left the previous
+// release's Magento block in the crontab, so two jobs ran every minute out of
+// two trees — and once `deploy:cleanup` removes that release, the entry stays,
+// naming a directory that is gone. `cron:status` counted two jobs and called it
+// healthy, which is exactly what it looked like.
+func CronJobsWithMissingPaths(projectName string) ([]string, bool) {
+	projectConf := configs2.GetProjectConfig(projectName)
+	service := resolveMainService(projectConf)
+	service, userOS, _ := cliHelper.GetEnvForUserServiceWorkdir(service, "root", "")
+
+	out, err := containerExecSilent(GetContainerName(projectConf, projectName, service), userOS, "sh", "-c", cronDeadPathProbe)
+	if err != nil {
+		return nil, false
+	}
+
+	var dead []string
+	for _, line := range strings.Split(out, "\n") {
+		if trimmed := strings.TrimSpace(line); trimmed != "" {
+			dead = append(dead, trimmed)
+		}
+	}
+	return dead, true
 }
 
 // installCronJobsFromConfig installs cron jobs from configuration

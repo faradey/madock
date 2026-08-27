@@ -28,10 +28,12 @@ madock cron:status
 | Exit | Meaning |
 |---|---|
 | `0` | The configuration and the container agree: cron is running with jobs installed, or cron was never asked for |
-| `1` | A problem: cron is enabled and no daemon is running, or a daemon is running with an empty crontab |
+| `1` | A problem: cron is enabled and no daemon is running, a daemon is running with an empty crontab, or an installed job names a path the container does not have |
 | `2` | Could not tell — the container did not answer. Never rounded up to healthy |
 
-`--json` prints the same as `enabled`, `running`, `jobs`, `jobs_known`, `state` and `reason`.
+`--json` prints the same as `enabled`, `running`, `jobs`, `jobs_known`, `state`, `reason` and `stale_jobs`.
+
+`stale_jobs` is the half a job count cannot answer. An entry whose command names a directory that no longer exists runs every minute and fails every minute into its redirect, and it is counted among the installed jobs as though it were working. On a deployer layout that happens by itself: Magento marks its crontab block with a hash of the base path, so a block installed from `releases/159` cannot be removed by `cron:remove` run from `releases/160`, and once `deploy:cleanup` removes the old release the entry stays behind. madock removes those blocks itself after installing its own — `cron:status` reports whatever is left.
 
 ## How It Works
 
