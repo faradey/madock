@@ -12,6 +12,7 @@
 #   ./test/e2e/e2e.sh reset         delete it and build it again
 #   ./test/e2e/e2e.sh auth          give the VM your composer credentials
 #   ./test/e2e/e2e.sh run-local     no VM — only where the daemon is disposable
+#   ./test/e2e/e2e.sh run --quarantined   include the tests under quarantine
 #   ./test/e2e/e2e.sh plan-shards 8 split the suite into N groups, as JSON
 #
 # The suite is behind the `e2e` build tag, so `go test ./...` does not compile
@@ -130,10 +131,14 @@ cmd_run() {
     # transcript and to anything that matches commands by prefix, and this is
     # the one switch that changes a five-minute run into an hour-long one.
     platforms=""
-    if [ "${1:-}" = "--platforms" ]; then
-        platforms="yes"
-        shift
-    fi
+    quarantined=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --platforms)   platforms="yes"; shift ;;
+            --quarantined) quarantined="yes"; shift ;;
+            *) break ;;
+        esac
+    done
     [ "${MADOCK_E2E_PLATFORMS:-}" = "yes" ] && platforms="yes"
 
     ensure_running
@@ -172,6 +177,7 @@ cmd_run() {
     limactl shell "$VM_NAME" -- env \
         MADOCK_E2E_BIN="$binary" \
         MADOCK_E2E_PLATFORMS="$platforms" \
+        MADOCK_E2E_QUARANTINED="$quarantined" \
         PATH="/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin" \
         sh -c "cd '$repo_root' && go test -tags=e2e -count=1 -v -timeout=$timeout ./test/e2e/...$quoted"
 }
@@ -194,10 +200,14 @@ To insist anyway: MADOCK_E2E_ALLOW_LOCAL_DOCKER=yes $0 run-local"
     # Same switch as `run`, so the CI job that wants the platform tests asks for
     # them the same way a person does.
     platforms=""
-    if [ "${1:-}" = "--platforms" ]; then
-        platforms="yes"
-        shift
-    fi
+    quarantined=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --platforms)   platforms="yes"; shift ;;
+            --quarantined) quarantined="yes"; shift ;;
+            *) break ;;
+        esac
+    done
     [ "${MADOCK_E2E_PLATFORMS:-}" = "yes" ] && platforms="yes"
 
     goarch=$(go env GOHOSTARCH)
@@ -214,6 +224,7 @@ To insist anyway: MADOCK_E2E_ALLOW_LOCAL_DOCKER=yes $0 run-local"
     [ "$platforms" = "yes" ] && timeout="90m"
 
     MADOCK_E2E_BIN="$binary" MADOCK_E2E_PLATFORMS="$platforms" \
+        MADOCK_E2E_QUARANTINED="$quarantined" \
         go test -tags=e2e -count=1 -v -timeout="$timeout" ./test/e2e/... "$@"
 }
 
