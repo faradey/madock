@@ -1,3 +1,10 @@
+**v4.1.9**
+
+Fixed:
+- **A project with `db/enabled=false` was still given a database image.** `MakeDBDockerfile` is called from twelve places and only two of them checked whether the project has a database; with the database off there is no version to render — the platform default supplies the repository and nothing supplies the tag — so the file came out as `FROM mariadb:`, which is not a valid reference and would not build
+- It broke nothing, which is why it lasted: compose renders no `db` service for a disabled database, so nothing ever built the file. What it cost was a reader's time. Found on the BigCommerce cluster VM while chasing something else, where two cluster consumers — projects whose database comes from the provider — each carried one, and it reads exactly like a broken image until you establish that neither has a database at all
+- The gate is in `MakeDBDockerfile` rather than at the call sites, because the call sites are what got it wrong. The `mariadb` in it was never the defect: that is the BigCommerce platform default, not a global one
+
 **v4.1.8**
 
 Fixed:

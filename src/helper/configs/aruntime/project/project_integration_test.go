@@ -266,3 +266,37 @@ func TestMakeConf_VolumesNeverEmpty(t *testing.T) {
 		t.Errorf("volumes section is empty; compose would fail with \"volumes must be a mapping\". Next line: %q", firstLine)
 	}
 }
+
+// A project whose database is switched off must not be handed a database image.
+//
+// Ten of the twelve callers of MakeDBDockerfile had no gate, and with
+// `db/enabled=false` there is no version to render — the platform default
+// supplies the repository and nothing supplies the tag — so the file came out
+// as `FROM mariadb:`, which is not a valid reference.
+//
+// Nothing broke, and that is why it lasted: compose renders no `db` service for
+// a disabled database, so the file was never built. It cost a reader instead.
+// Found on the BigCommerce cluster VM, where two cluster consumers — projects
+// whose database comes from the provider — each carried one, and it reads
+// exactly like a broken image until you check that neither has a database at
+// all.
+func TestNoDatabaseImageWhenTheDatabaseIsOff(t *testing.T) {
+	env := testenv.SetupWith(t, "consumer", "consumer.test", map[string]string{
+		"db/enabled": "false",
+	})
+
+	MakeConf(env.ProjectName)
+
+	ctxDir := filepath.Join(env.ExecDir, "aruntime", "projects", env.ProjectName, "ctx")
+
+	if _, err := os.Stat(filepath.Join(ctxDir, "db.Dockerfile")); err == nil {
+		body, _ := os.ReadFile(filepath.Join(ctxDir, "db.Dockerfile"))
+		t.Errorf("a project with no database was given a database image:\n%s", string(body))
+	}
+
+	// The rest of the project is still rendered — the gate is about the
+	// database, not about the project.
+	if _, err := os.Stat(filepath.Join(env.ExecDir, "aruntime", "projects", env.ProjectName, "docker-compose.yml")); err != nil {
+		t.Errorf("the project was not rendered at all: %v", err)
+	}
+}
