@@ -1,3 +1,11 @@
+**v4.1.7**
+
+Added:
+- **`project:orphans`** — what is left on this machine of projects the registry no longer knows. A project's volume outlives its directory, and after that nothing named it: it is not in the registry, `project:list` reads the registry, and `project:remove` needs a registry entry there is none of. On a server, where destructive commands are switched off as shipped, the only cleanup available was to delete the directories and leave the volumes — turning litter that can be seen into litter that cannot. Found a real one on the machine it was written on the first time it ran: three volumes belonging to a project retired long ago
+- **It removes nothing and prints the command rather than running it.** Deleting these stays with `project:remove`, behind `allow_destructive_commands`. A `--remove` flag here would be a second route past that switch, and the switch is what stops a habit from becoming an accident
+- Only what madock made: the compose label is on every stack on the machine, and reporting somebody else's would be calling a stranger's disk our mess. A name the registry still holds is left alone even when madock cannot read its entry — that is `project:list --stale`'s business, and two commands arguing about one thing is how both stop being believed
+- `--json` for tooling, and a non-zero exit when something is found, the way `project:list --stale` answers
+
 **v4.1.6**
 
 Fixed:
