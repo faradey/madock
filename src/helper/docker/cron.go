@@ -523,21 +523,45 @@ func CronJobCount(projectName string) (int, bool) {
 	return count, true
 }
 
-// cronDeadPathProbe prints every installed job whose command names a path the
-// container does not have.
+// cronDeadPathProbe prints every installed job whose *executable* the container
+// does not have.
 //
-// The redirect is cut off first: a job writing into a log file that has not been
-// created yet is healthy, and reporting it would make the check unusable on the
-// day it matters. What is left is the interpreter and the script, which have to
-// exist for the job to do anything at all.
-const cronDeadPathProbe = `crontab -u www-data -l 2>/dev/null | while IFS= read -r line; do
+// Only the program is checked, and the script when the program is an
+// interpreter. An argument is not a path, however much it looks like one:
+// pricer-shopify schedules
+// `.../poke.sh /api/cron/apply-due >> .../cron.log`, where the second word is a
+// URL route — checking every absolute-looking token reported all six of its
+// working jobs as broken the first time this ran against a real crontab. A
+// check that cries wolf on a healthy project is worse than no check, because it
+// is the one people learn to skip.
+//
+// The redirect is cut off first for the same reason: a job writing into a log
+// file that does not exist yet is healthy.
+// `set -f` is not decoration: a crontab line starts with five fields that are
+// usually `*`, and splitting it without disabling globbing expands those into
+// the names of whatever files happen to be in the working directory. The first
+// version of this probe did exactly that and silently reported nothing at all,
+// including for a job whose script was demonstrably missing.
+const cronDeadPathProbe = `set -f
+crontab -u www-data -l 2>/dev/null | while IFS= read -r line; do
 	case "$line" in ''|'#'*) continue ;; esac
 	command=${line%%>*}
-	for token in $command; do
-		case "$token" in
-			/*) [ -e "$token" ] || { printf '%s\n' "$line"; break; } ;;
-		esac
-	done
+	set -- $command
+	# Five schedule fields, then the program.
+	[ $# -ge 6 ] || continue
+	shift 5
+	program=$1
+	script=$2
+	case "$program" in
+		/*) [ -e "$program" ] || { printf '%s\n' "$line"; continue; } ;;
+	esac
+	case "${program##*/}" in
+		php|php[0-9]*|python|python[0-9]*|node|perl|ruby|sh|bash)
+			case "$script" in
+				/*) [ -e "$script" ] || printf '%s\n' "$line" ;;
+			esac
+			;;
+	esac
 done`
 
 // CronJobsWithMissingPaths lists the installed jobs that name something the
