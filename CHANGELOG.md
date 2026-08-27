@@ -1,3 +1,9 @@
+**v4.1.3**
+
+Fixed:
+- **The stale-job check called six working jobs broken the first time it met a real crontab.** It tested every absolute-looking word in the command, and `pricer-shopify` schedules `.../poke.sh /api/cron/apply-due` — where the second word is a URL route, not a path. Only the program is checked now, and the script after it when the program is an interpreter; arguments are left alone. A check that cries wolf on a healthy project is worse than no check, because it is the one people learn to skip
+- **And before that it reported nothing at all, for a reason worth writing down.** A crontab line begins with five fields that are usually `*`, and splitting it without `set -f` expands them into the names of whatever files are in the working directory — so the fields shifted and the program was never examined. Both faults were found by running the check against the machines rather than against the tests, which passed throughout
+
 **v4.1.2**
 
 Fixed:

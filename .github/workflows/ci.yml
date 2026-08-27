@@ -90,8 +90,12 @@ jobs:
   e2e:
     name: End-to-end
     needs: test
+    # 45 was five minutes over the suite's own budget, so the two ran out
+    # together and the job was killed at whichever fired first. The inner
+    # timeout is 60m now; this one has to be able to outlive it, or a suite that
+    # would have said which test hung gets replaced by a job that says nothing.
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
 
