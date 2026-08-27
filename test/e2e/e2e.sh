@@ -204,7 +204,12 @@ To insist anyway: MADOCK_E2E_ALLOW_LOCAL_DOCKER=yes $0 run-local"
     printf 'building madock for linux/%s\n' "$goarch"
     ( cd "$repo_root" && GOOS=linux GOARCH="$goarch" go build -o "$binary" . )
 
-    timeout="40m"
+    # 40m was the suite's own running time, not a margin. It passed at 33–36
+    # minutes for months and then began being killed mid-test on a slower
+    # runner, with `panic: test timed out` — which reads exactly like a hung
+    # command and is nothing of the sort. The suite grows; the budget has to
+    # leave room for that, and for a runner having a bad morning.
+    timeout="60m"
     [ "$platforms" = "yes" ] && timeout="90m"
 
     MADOCK_E2E_BIN="$binary" MADOCK_E2E_PLATFORMS="$platforms" \
