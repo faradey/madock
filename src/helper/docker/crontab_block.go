@@ -109,23 +109,56 @@ const (
 	magentoBlockEnd   = "#~ MAGENTO END"
 )
 
-// stripStaleMagentoBlocks removes every Magento block that does not belong to
-// the installation now running, and leaves everything else alone.
+// stripStaleMagentoBlocks removes every Magento block except the one belonging
+// to the installation now running, and leaves everything else alone.
 //
 // `keepPath` is the base path of the current installation, resolved through the
-// `current` symlink — the block to keep is the one whose command names it.
-// A block is dropped only when it names some *other* absolute path under the
-// same parent: a crontab written by a Magento that madock does not manage, or a
-// line whose shape is not understood, is not ours to delete.
+// `current` symlink — the block to keep is the first one whose command names it.
+//
+// A second block naming the *same* path is dropped too, and that is not
+// tidiness. `cron:install` clears the old block by calling the same
+// `cleanMagentoSection` that `cron:remove` uses, and that function cannot remove
+// the last block in the file — measured 2026-08-27 on extmag.com and traced to
+// `Shell::execute`, which builds its return value with `implode(PHP_EOL, …)` so
+// the string ends at the END marker while the regex demands a newline after it.
+// So an install over an install duplicates rather than replaces, and every
+// duplicate runs `cron:run` again every minute.
 func stripStaleMagentoBlocks(existing, keepPath string) (string, []string) {
 	if strings.TrimSpace(keepPath) == "" {
 		return existing, nil
 	}
+	kept := false
+	return filterMagentoBlocks(existing, func(block []string) bool {
+		if kept {
+			return false
+		}
+		for _, line := range block {
+			if strings.Contains(line, keepPath) {
+				kept = true
+				return true
+			}
+		}
+		return false
+	})
+}
 
+// removeAllMagentoBlocks takes out every Magento block, which is what disabling
+// cron has to do.
+//
+// `bin/magento cron:remove` is not enough and cannot be made enough: it reports
+// success and leaves the last block in the file, so a project told to stop went
+// on running `cron:run` every minute with `cron:disable` having said it was
+// removed.
+func removeAllMagentoBlocks(existing string) (string, []string) {
+	return filterMagentoBlocks(existing, func([]string) bool { return false })
+}
+
+// filterMagentoBlocks rewrites the crontab keeping the Magento blocks `keep`
+// accepts, and returns what was dropped.
+func filterMagentoBlocks(existing string, keep func(block []string) bool) (string, []string) {
 	var kept, dropped []string
 	var block []string
 	inBlock := false
-	blockNamesKeepPath := false
 
 	for _, line := range strings.Split(existing, "\n") {
 		trimmed := strings.TrimSpace(line)
@@ -133,12 +166,11 @@ func stripStaleMagentoBlocks(existing, keepPath string) (string, []string) {
 		switch {
 		case strings.HasPrefix(trimmed, magentoBlockStart):
 			inBlock = true
-			blockNamesKeepPath = false
 			block = []string{line}
 			continue
 		case strings.HasPrefix(trimmed, magentoBlockEnd) && inBlock:
 			block = append(block, line)
-			if blockNamesKeepPath {
+			if keep(block) {
 				kept = append(kept, block...)
 			} else {
 				dropped = append(dropped, block...)
@@ -150,9 +182,6 @@ func stripStaleMagentoBlocks(existing, keepPath string) (string, []string) {
 
 		if inBlock {
 			block = append(block, line)
-			if strings.Contains(line, keepPath) {
-				blockNamesKeepPath = true
-			}
 			continue
 		}
 

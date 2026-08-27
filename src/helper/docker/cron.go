@@ -259,12 +259,30 @@ func CronExecute(projectName string, flag, manual bool) {
 
 			// Then, platform-specific cron removal
 			if projectConf["platform"] == "magento2" {
-				err := ContainerExec(GetContainerName(projectConf, projectName, "php"), "www-data", false, "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove")
+				containerName := GetContainerName(projectConf, projectName, "php")
+				err := ContainerExec(containerName, "www-data", false, "bash", "-c", "cd "+projectConf["workdir"]+" && php bin/magento cron:remove")
+				if manual && err != nil {
+					logger.Println(err)
+				}
+
+				// And then the same thing again, ourselves, because
+				// `cron:remove` cannot finish the job. It clears the block with
+				// a regex that demands a newline after the END marker, and the
+				// crontab it matches against comes from `Shell::execute`, which
+				// joins the lines with `implode(PHP_EOL, …)` — so the string
+				// ends at the marker and the **last** block in the file is never
+				// matched. The command still reports success. Measured on
+				// extmag.com on 2026-08-27, with the base path and the trailing
+				// newline both verified correct first.
+				//
+				// A project told to stop must actually stop, so what Magento
+				// leaves behind is removed here.
+				removed := removeMagentoBlocks(projectConf, projectName, containerName)
 				if manual {
-					if err != nil {
-						logger.Println(err)
-					} else {
+					if removed {
 						fmt.Println("Cron was removed from Magento")
+					} else {
+						fmt.Println("No Magento cron entries were installed")
 					}
 				}
 			} else if projectConf["platform"] == "shopify" {
@@ -363,6 +381,23 @@ func dropStaleMagentoBlocks(projectConf map[string]string, projectName, containe
 			fmt.Println("  " + trimmed)
 		}
 	}
+}
+
+// removeMagentoBlocks takes every Magento block out of the crontab and reports
+// whether there was one.
+func removeMagentoBlocks(projectConf map[string]string, projectName, containerName string) bool {
+	existing := readCrontab(projectConf, projectName)
+	cleaned, dropped := removeAllMagentoBlocks(existing)
+	if len(dropped) == 0 {
+		return false
+	}
+
+	if err := ContainerExec(containerName, "root", false, "bash", "-c", writeCrontabScript(cleaned)); err != nil {
+		logger.Println(fmt.Errorf("removing the Magento cron block: %w", err))
+		fmtc.WarningLn("Magento cron entries are still installed — see " + logger.Path())
+		return false
+	}
+	return true
 }
 
 // resolveMainService determines the main service name based on project config.

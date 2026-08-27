@@ -82,6 +82,49 @@ func TestAnUnknownBasePathRemovesNothing(t *testing.T) {
 	}
 }
 
+// Two blocks naming the same installation are a duplicate, not a pair.
+//
+// `cron:install` clears the previous block through the same function
+// `cron:remove` uses, and that one cannot remove the last block in the file — so
+// installing over an install appends instead of replacing, and both copies run
+// `cron:run` every minute.
+func TestADuplicateOfTheCurrentBlockIsRemoved(t *testing.T) {
+	duplicated := `#~ MAGENTO START 1286826a
+* * * * * /usr/bin/php8.5 /var/www/html/releases/160/bin/magento cron:run
+#~ MAGENTO END 1286826a
+#~ MAGENTO START 1286826a
+* * * * * /usr/bin/php8.5 /var/www/html/releases/160/bin/magento cron:run
+#~ MAGENTO END 1286826a
+`
+
+	cleaned, dropped := stripStaleMagentoBlocks(duplicated, "/var/www/html/releases/160")
+
+	if strings.Count(cleaned, "cron:run") != 1 {
+		t.Errorf("the duplicate is still installed and runs twice a minute:\n%s", cleaned)
+	}
+	if len(dropped) == 0 {
+		t.Error("the duplicate was removed without saying so")
+	}
+}
+
+// Disabling cron has to remove every Magento block, including the last one —
+// which `bin/magento cron:remove` reports as removed and leaves in place.
+func TestDisablingRemovesEveryMagentoBlock(t *testing.T) {
+	crontab := "#~ MADOCK START\n* * * * * /bin/true\n#~ MADOCK END\n" + twoReleaseCrontab
+
+	cleaned, dropped := removeAllMagentoBlocks(crontab)
+
+	if strings.Contains(cleaned, "MAGENTO") {
+		t.Errorf("a Magento block survived being disabled:\n%s", cleaned)
+	}
+	if len(dropped) == 0 {
+		t.Error("nothing was reported as removed")
+	}
+	if !strings.Contains(cleaned, "/bin/true") {
+		t.Errorf("disabling Magento's cron removed somebody else's job:\n%s", cleaned)
+	}
+}
+
 // An unterminated block is damage of another kind. Removing what is left of it
 // would hide that, so it is kept.
 func TestAnUnterminatedBlockIsKept(t *testing.T) {
