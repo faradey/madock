@@ -87,15 +87,56 @@ jobs:
       - name: Check the end-to-end tests still compile
         run: go vet -tags=e2e ./test/...
 
-  e2e:
-    name: End-to-end
+  # The suite is split across runners, and the split is computed rather than
+  # written down.
+  #
+  # It cannot be made parallel from the inside: madock's proxy is a compose stack
+  # with a fixed name and fixed ports, so two tests starting a project on one
+  # machine operate on the same containers. Separate runners are separate
+  # disposable machines, which is the only parallelism available — and it takes
+  # the suite from three quarters of an hour to about ten minutes.
+  #
+  # A hand-kept list of test names per group would be the obvious way and has one
+  # failure nothing reports: a test added to no group never runs again, and CI
+  # stays green while covering less. `plan-shards` asks the package itself, so a
+  # new test is always in exactly one group.
+  e2e-plan:
+    name: Plan the end-to-end shards
     needs: test
-    # 45 was five minutes over the suite's own budget, so the two ran out
-    # together and the job was killed at whichever fired first. The inner
-    # timeout is 60m now; this one has to be able to outlive it, or a suite that
-    # would have said which test hung gets replaced by a job that says nothing.
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 10
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - id: plan
+        name: Split the suite
+        run: |
+          shards=$(./test/e2e/e2e.sh plan-shards 8)
+          echo "$shards"
+          echo "shards=$shards" >> "$GITHUB_OUTPUT"
+
+  e2e-shard:
+    name: e2e shard ${{ matrix.shard }}
+    needs: e2e-plan
+    runs-on: ubuntu-latest
+    # A shard is an eighth of a suite that used to take 45 minutes, so 40 is
+    # room for a runner having a bad morning rather than a budget. It still has
+    # to outlive the inner timeout the suite sets for itself, or a run that would
+    # have named the test that hung is replaced by a job that says nothing.
+    timeout-minutes: 40
+    strategy:
+      # One shard failing says nothing about the other seven, and cancelling
+      # them turns "which tests are broken" into "at least one is".
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.e2e-plan.outputs.shards) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -107,7 +148,52 @@ jobs:
       # run-local refuses to touch a daemon that might be somebody's own; CI=true
       # is what tells it this one is disposable. GitHub sets it.
       - name: Run the end-to-end suite
-        run: ./test/e2e/e2e.sh run-local
+        run: |
+          set -o pipefail
+          ./test/e2e/e2e.sh run-local -run '${{ matrix.run }}' | tee shard.log
+
+      # The other half of computing the split: this shard was given a number of
+      # tests, and it has to have run that many. A regex that matches nothing —
+      # a rename, a name that needs escaping — otherwise passes, silently, as a
+      # shard with no work in it.
+      #
+      # Only top-level results are counted; a subtest's line is indented.
+      - name: Every test in this shard actually ran
+        run: |
+          ran=$(grep -c '^--- \(PASS\|FAIL\|SKIP\): ' shard.log || true)
+          if [ "$ran" -ne '${{ matrix.count }}' ]; then
+            echo "shard ${{ matrix.shard }} was given ${{ matrix.count }} tests and ran $ran" >&2
+            exit 1
+          fi
+
+  # The name of this job is the name of the required status check on master, and
+  # that is the whole reason it exists.
+  #
+  # Branch protection names contexts as strings. A matrix publishes one context
+  # per shard — `e2e shard 1`, `e2e shard 2` — so `End-to-end` would simply never
+  # appear again and every pull request would wait for it forever.
+  #
+  # `if: always()` and the explicit test are not belt and braces either: a job
+  # that only lists `needs` is **skipped** when a dependency fails, and a skipped
+  # required check is not a failed one — the merge would be allowed on a red
+  # suite. Reading the results and failing on anything that is not success is
+  # what makes this an answer rather than a formality.
+  e2e:
+    name: End-to-end
+    needs: [e2e-plan, e2e-shard]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every shard passed
+        run: |
+          plan='${{ needs.e2e-plan.result }}'
+          shards='${{ needs.e2e-shard.result }}'
+          echo "plan: $plan, shards: $shards"
+          if [ "$plan" != success ] || [ "$shards" != success ]; then
+            echo "the end-to-end suite did not pass" >&2
+            exit 1
+          fi
 
   # The platform tests install a real store — Shopware and Medusa here, from
   # public packages. They are the only tests that can see a broken image, a

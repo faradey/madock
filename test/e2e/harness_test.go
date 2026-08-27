@@ -350,8 +350,25 @@ func binary() string {
 	return path
 }
 
+// listingOnly reports whether this process was asked to print the names of the
+// tests rather than run any of them.
+//
+// `go test -list` still goes through TestMain, so the guard below refused it
+// for want of a binary that listing does not need. CI splits the suite across
+// runners by asking for that list, and a question that starts no containers
+// should not require the thing containers are started with.
+func listingOnly() bool {
+	for _, arg := range os.Args[1:] {
+		if arg == "-test.list" || strings.HasPrefix(arg, "-test.list=") {
+			return true
+		}
+	}
+
+	return false
+}
+
 func TestMain(m *testing.M) {
-	if os.Getenv("MADOCK_E2E_BIN") == "" {
+	if os.Getenv("MADOCK_E2E_BIN") == "" && !listingOnly() {
 		// A plain `go test -tags=e2e ./...` on a laptop would otherwise start
 		// containers on the developer's own daemon, which is exactly what this
 		// package exists to avoid.

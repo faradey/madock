@@ -12,6 +12,7 @@
 #   ./test/e2e/e2e.sh reset         delete it and build it again
 #   ./test/e2e/e2e.sh auth          give the VM your composer credentials
 #   ./test/e2e/e2e.sh run-local     no VM — only where the daemon is disposable
+#   ./test/e2e/e2e.sh plan-shards 8 split the suite into N groups, as JSON
 #
 # The suite is behind the `e2e` build tag, so `go test ./...` does not compile
 # it and the pre-push hook stays fast. Nothing here touches your machine's own
@@ -273,6 +274,59 @@ cmd_status() {
     limactl list "$VM_NAME" 2>/dev/null || printf 'no VM named %s\n' "$VM_NAME"
 }
 
+# cmd_plan_shards splits the suite into N groups and prints them as JSON, for a
+# CI matrix to fan out over.
+#
+# **The suite cannot be made parallel from the inside.** madock's proxy is a
+# compose stack with a fixed name and fixed ports, so two tests that start a
+# project on one machine operate on the same containers — which is why the suite
+# runs its tests one after another and takes three quarters of an hour. Separate
+# runners are separate disposable machines, and that is the only parallelism
+# available here.
+#
+# **The list is asked for, never written down.** A hand-kept list of names per
+# group looks like the obvious way to do this and has one failure that nothing
+# reports: a test added to no group is a test that never runs again, and the
+# suite goes on being green. `go test -list` is the package's own answer, so a
+# new test is always in exactly one group, and the caller is handed the count so
+# it can check that the group it was given is the group that ran.
+#
+# The groups are round-robin over the sorted names, which balances well enough:
+# the tests run between twenty seconds and two minutes, so a group is within a
+# minute of its neighbours. Balancing by measured duration needs timings kept
+# somewhere, and would buy that minute.
+cmd_plan_shards() {
+    buckets="${1:-8}"
+
+    case "$buckets" in
+        ''|*[!0-9]*) die "plan-shards takes a number of groups, got: $buckets" ;;
+    esac
+    [ "$buckets" -gt 0 ] || die "plan-shards needs at least one group"
+
+    names=$(cd "$repo_root" && go test -tags=e2e -list '.*' ./test/e2e/... | grep '^Test' | sort)
+    [ -n "$names" ] || die "the end-to-end package listed no tests.
+That is either a build failure above or a package that no longer contains the suite,
+and splitting an empty list into groups would produce a CI run that tests nothing."
+
+    printf '%s\n' "$names" | awk -v buckets="$buckets" '
+        {
+            slot = (NR - 1) % buckets
+            group[slot] = group[slot] "|" $0
+            count[slot]++
+        }
+        END {
+            printf "["
+            first = 1
+            for (i = 0; i < buckets; i++) {
+                if (count[i] == 0) continue
+                if (!first) printf ","
+                printf "{\"shard\":%d,\"count\":%d,\"run\":\"^(%s)$\"}", i + 1, count[i], substr(group[i], 2)
+                first = 0
+            }
+            printf "]\n"
+        }'
+}
+
 command=${1:-}
 [ $# -gt 0 ] && shift
 
@@ -280,6 +334,7 @@ case "$command" in
     up)        cmd_up ;;
     run)       cmd_run "$@" ;;
     run-local) cmd_run_local "$@" ;;
+    plan-shards) cmd_plan_shards "$@" ;;
     auth)   cmd_auth ;;
     shell)  cmd_shell ;;
     down)   cmd_down ;;
