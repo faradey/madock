@@ -15,14 +15,15 @@ func init() {
 		// --version and -v are registered as command names, not flags: the
 		// dispatcher matches os.Args[1] literally, so this is what makes
 		// "madock --version" work at all.
-		Aliases:  []string{"version", "--version", "-v"},
-		Handler:  Execute,
-		Help:     "Show madock version",
-		Category: "general",
-		ArgsType: new(arg_struct.ControllerGeneralVersion),
-			// Global: answers about the binary, not a project.
-		Global:   true,
-})
+		Aliases:    []string{"version", "--version", "-v"},
+		JSONOutput: true,
+		Handler:    Execute,
+		Help:       "Show madock version. Supports --json (-j) output",
+		Category:   "general",
+		ArgsType:   new(arg_struct.ControllerGeneralVersion),
+		// Global: answers about the binary, not a project.
+		Global: true,
+	})
 }
 
 func Execute() {

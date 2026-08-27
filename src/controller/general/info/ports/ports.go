@@ -25,11 +25,12 @@ type PortsOutput struct {
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"info:ports"},
-		Handler:  Execute,
-		Help:     "Show project ports. Supports --json (-j) output",
-		Category: "general",
-		ArgsType: new(arg_struct.ControllerGeneralInfoPorts),
+		Aliases:    []string{"info:ports"},
+		JSONOutput: true,
+		Handler:    Execute,
+		Help:       "Show project ports. Supports --json (-j) output",
+		Category:   "general",
+		ArgsType:   new(arg_struct.ControllerGeneralInfoPorts),
 	})
 }
 
