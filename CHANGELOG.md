@@ -1,3 +1,12 @@
+**v4.1.8**
+
+Fixed:
+- **The node container set `NODE_ENV=development`, so `next build` built a production bundle in development mode.** Next obeys the variable instead of setting `production` itself, and React's internals then disagree with themselves: prerendering `/_global-error` dies on `useContext` with a null dispatcher. No Next application in madock could be built for production
+- The cost was in the finding. Next prints `You are using a non-standard "NODE_ENV" value` as the first line of every build, and that line went past about ten times — a warning printed always is indistinguishable from noise until it is the cause. React 19.1 against 19.2, Node 22 against 24, Next 16.2 against 16.3, styled-components, `transpilePackages`, the root layout and a custom error page were all ruled out first; an application of two files with none of our dependencies failed the same way, which is what finally pointed at the environment
+- **madock needs the value, but not the name.** It decides one thing — whether the entrypoint starts `dev` or `start` when `nodejs/script` is not configured — and under the standard name that private choice was published to every tool in the container. It travels as `MADOCK_NODE_ENV` now; a project's own `NODE_ENV` is still honoured, so anything that set it deliberately keeps working
+- **The same line was hardcoded in the Medusa and Spree storefronts**, both of which run Next, so two shipped platforms had the defect as well. Removed there: `next dev` and `next build` each decide for themselves. `sylius-encore` is left alone — Encore takes its mode from its command, and there is no measurement for it
+- The test is in the container rather than in the rendered file, because the question is what the container ends up with. It checks both directions: `NODE_ENV` is unset, and `MADOCK_NODE_ENV` is there — without the second, the entrypoint could no longer tell `dev` from `start` and the fix would have broken starting instead
+
 **v4.1.7**
 
 Added:

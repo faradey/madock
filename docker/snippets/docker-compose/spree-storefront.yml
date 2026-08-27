@@ -11,7 +11,11 @@
     volumes:
       - ./src/{{{.spree.storefront.path}}}:{{{.spree.storefront.workdir}}}:cached
     environment:
-      NODE_ENV: "development"
+      # No NODE_ENV here: this container runs Next, and `next build` obeys the
+      # variable instead of setting `production` itself — a production bundle
+      # built in development mode, with React's internals disagreeing with
+      # themselves. `next dev` and `next build` each decide for themselves. See
+      # the nodejs service for the measurement this comes from.
       # Server-side calls (Next.js SSR) hit the Rails backend inside
       # the docker network.
       SPREE_API_URL: "http://ruby:3000"

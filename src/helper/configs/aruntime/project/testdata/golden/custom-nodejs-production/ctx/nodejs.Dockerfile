@@ -133,7 +133,12 @@ explain_no_inspector() {
 
 configured="docker-start"
 configured_type="command"
-node_env="${NODE_ENV:-development}"
+# madock's own, not NODE_ENV: the value decides which script to start and
+# nothing else, and under the standard name every tool in the container obeyed
+# it — `next build` built a production bundle in development mode. NODE_ENV is
+# still honoured when a project sets it itself, so an existing project that
+# relies on it keeps working.
+node_env="${MADOCK_NODE_ENV:-${NODE_ENV:-development}}"
 
 # mode is "package" (run through the project's package manager) or "command"
 # (hand it to a shell). A path to a file is a command.
