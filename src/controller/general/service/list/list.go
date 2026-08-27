@@ -15,11 +15,12 @@ import (
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"service:list"},
-		Handler:  Execute,
-		Help:     "List services. Supports --json (-j) output",
-		Category: "service",
-		ArgsType: new(arg_struct.ControllerGeneralServiceList),
+		Aliases:    []string{"service:list"},
+		JSONOutput: true,
+		Handler:    Execute,
+		Help:       "List services. Supports --json (-j) output",
+		Category:   "service",
+		ArgsType:   new(arg_struct.ControllerGeneralServiceList),
 	})
 }
 

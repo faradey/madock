@@ -19,11 +19,12 @@ import (
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"status"},
-		Handler:  Execute,
-		Help:     "Show container status. Supports --json (-j) output",
-		Category: "general",
-		ArgsType: new(arg_struct.ControllerGeneralStatus),
+		Aliases:    []string{"status"},
+		JSONOutput: true,
+		Handler:    Execute,
+		Help:       "Show container status. Supports --json (-j) output",
+		Category:   "general",
+		ArgsType:   new(arg_struct.ControllerGeneralStatus),
 	})
 }
 

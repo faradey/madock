@@ -35,11 +35,12 @@ func init() {
 		ArgsType: new(ArgsStruct),
 	})
 	command.Register(&command.Definition{
-		Aliases:  []string{"cron:status"},
-		Handler:  Status,
-		Help:     "Report whether cron is running and how many jobs are installed. Supports --json (-j). Exit code: 0 healthy, 1 problem, 2 could not tell",
-		Category: "cron",
-		ArgsType: new(ArgsStruct),
+		Aliases:    []string{"cron:status"},
+		JSONOutput: true,
+		Handler:    Status,
+		Help:       "Report whether cron is running and how many jobs are installed. Supports --json (-j). Exit code: 0 healthy, 1 problem, 2 could not tell",
+		Category:   "cron",
+		ArgsType:   new(ArgsStruct),
 	})
 }
 

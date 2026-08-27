@@ -37,11 +37,12 @@ func dumpPrefix(target dbtarget.Target) string {
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"db:export"},
-		Handler:  Export,
-		Help:     "Export database",
-		Category: "database",
-		ArgsType: new(arg_struct.ControllerGeneralDbExport),
+		Aliases:    []string{"db:export"},
+		JSONOutput: true,
+		Handler:    Export,
+		Help:       "Export database. Supports --json (-j) output",
+		Category:   "database",
+		ArgsType:   new(arg_struct.ControllerGeneralDbExport),
 	})
 }
 

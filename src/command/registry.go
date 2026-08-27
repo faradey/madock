@@ -51,6 +51,28 @@ type Definition struct {
 	// prints madock's help instead of composer's, which is visible and harmless,
 	// while forgetting to parse in a command was silent and ran it.
 	PassThrough bool
+
+	// JSONOutput marks a command that actually honours --json.
+	//
+	// The flag is declared once, on the argument struct every command embeds, so
+	// every command accepts it and most of them ignore it in silence. That is not
+	// a tidiness problem: `db:execute --json "SELECT * FROM
+	// extmag_shipper_account"` was accepted, answered with the client's ordinary
+	// TSV, and the result was archived as a `.json` file that is not JSON — a dump
+	// of the one set of credentials on this machine that nobody can reissue. The
+	// command did nothing wrong that could be seen; a flag that is accepted reads
+	// as a flag that works.
+	//
+	// So an unimplemented --json is now refused by the dispatcher, and the default
+	// is deliberately the strict one: forgetting this on a command that formats
+	// JSON breaks that command loudly the first time anyone runs it, while the
+	// other way round is exactly the silence above. Pass-through commands are
+	// exempt — there --json belongs to composer, npm or bin/magento, and madock
+	// has no business reading it.
+	//
+	// madock-pro registers its own definitions and marks its own, the way it does
+	// for Global through a resolver.
+	JSONOutput bool
 }
 
 var registry = make(map[string]*Definition)

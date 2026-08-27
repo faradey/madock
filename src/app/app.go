@@ -3,6 +3,7 @@ package app
 import (
 	"log"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/faradey/madock/v4/src/command"
@@ -38,6 +39,14 @@ func Run(appVersion string) {
 			return
 		}
 
+		// Before the project check, because the answer does not depend on where
+		// the command was run, and a person who asked for JSON should learn it is
+		// not on offer rather than learn about the directory first.
+		if !def.PassThrough && !def.JSONOutput && wantsJSON(os.Args[2:]) {
+			refuseJSON(cmdName)
+			return
+		}
+
 		if !command.IsGlobal(def) && !configs.IsHasConfig("") {
 			refuseOutsideProject(cmdName)
 			return
@@ -69,6 +78,50 @@ func wantsHelp(argv []string) bool {
 	}
 
 	return false
+}
+
+// wantsJSON reports whether the arguments ask for JSON output.
+//
+// Exact tokens only, and everything after a `--` belongs to whatever the command
+// passes it to — the same rule wantsHelp follows, for the same reason.
+func wantsJSON(argv []string) bool {
+	for _, arg := range argv {
+		if arg == "--" {
+			return false
+		}
+		if arg == "--json" || arg == "-j" || strings.HasPrefix(arg, "--json=") {
+			return true
+		}
+	}
+
+	return false
+}
+
+// refuseJSON explains that this command has no JSON output, instead of running
+// and printing something else.
+//
+// The flag is declared once for every command, so until now every command took
+// it and almost none of them did anything with it. `db:execute --json` was the
+// expensive case: it answered with the mysql client's TSV, and the result was
+// archived as a `.json` file holding the carrier accounts — the one set of
+// credentials here that nobody can reissue — with a value already corrupted in
+// it. Nothing about the command's behaviour could have told anyone.
+func refuseJSON(cmdName string) {
+	fmtc.ErrorLn(cmdName + " has no JSON output, and --json would have been ignored")
+
+	supported := make([]string, 0)
+	for _, def := range command.GetAll() {
+		if def.JSONOutput && len(def.Aliases) > 0 {
+			supported = append(supported, def.Aliases[0])
+		}
+	}
+	sort.Strings(supported)
+
+	if len(supported) > 0 {
+		fmtc.ToDoLn("Commands that do answer in JSON: " + strings.Join(supported, ", "))
+	}
+
+	os.Exit(1)
 }
 
 // refuseOutsideProject explains why a project command will not run here.

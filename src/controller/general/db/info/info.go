@@ -43,11 +43,12 @@ type DatabaseInfo struct {
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"db:info"},
-		Handler:  Info,
-		Help:     "Show database info. Supports --json (-j) output",
-		Category: "database",
-		ArgsType: new(arg_struct.ControllerGeneralDbInfo),
+		Aliases:    []string{"db:info"},
+		JSONOutput: true,
+		Handler:    Info,
+		Help:       "Show database info. Supports --json (-j) output",
+		Category:   "database",
+		ArgsType:   new(arg_struct.ControllerGeneralDbInfo),
 	})
 }
 

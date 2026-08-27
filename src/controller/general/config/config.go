@@ -23,11 +23,12 @@ func init() {
 		Category: "config",
 	})
 	command.Register(&command.Definition{
-		Aliases:  []string{"config:list"},
-		Handler:  ShowEnv,
-		Help:     "List configuration. Supports --json (-j) output",
-		Category: "config",
-		ArgsType: new(arg_struct.ControllerGeneralConfigList),
+		Aliases:    []string{"config:list"},
+		JSONOutput: true,
+		Handler:    ShowEnv,
+		Help:       "List configuration. Supports --json (-j) output",
+		Category:   "config",
+		ArgsType:   new(arg_struct.ControllerGeneralConfigList),
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"config:set"},

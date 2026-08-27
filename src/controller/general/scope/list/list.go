@@ -23,11 +23,12 @@ type ScopeInfo struct {
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"scope:list"},
-		Handler:  Execute,
-		Help:     "List scopes. Supports --json (-j) output",
-		Category: "scope",
-		ArgsType: new(arg_struct.ControllerGeneralScopeList),
+		Aliases:    []string{"scope:list"},
+		JSONOutput: true,
+		Handler:    Execute,
+		Help:       "List scopes. Supports --json (-j) output",
+		Category:   "scope",
+		ArgsType:   new(arg_struct.ControllerGeneralScopeList),
 	})
 }
 

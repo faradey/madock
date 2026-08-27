@@ -63,11 +63,12 @@ func withRunning(entries []configs.ProjectEntry, active []string, known bool) []
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"project:list"},
-		Handler:  Execute,
-		Help:     "List registered projects. --running for the ones that are up, --stale for the ones whose source is gone",
-		Category: "project",
-		ArgsType: new(ArgsStruct),
+		Aliases:    []string{"project:list"},
+		JSONOutput: true,
+		Handler:    Execute,
+		Help:       "List registered projects. --running for the ones that are up, --stale for the ones whose source is gone. Supports --json (-j) output",
+		Category:   "project",
+		ArgsType:   new(ArgsStruct),
 		// Global: it describes the installation, not a project, and the reason to
 		// run it is usually that something about the registry is wrong — which is
 		// not a moment to require standing in a working project.
