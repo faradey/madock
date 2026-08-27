@@ -90,6 +90,92 @@ func stripMadockBlock(existing string) []string {
 	return kept
 }
 
+// Magento marks its own block `#~ MAGENTO START <sha256(BP)> … #~ MAGENTO END
+// <sha256(BP)>`, where BP is the installation's base path. `cron:remove` finds
+// the block by recomputing that hash from where it is run — so on a deployer
+// layout, where BP is `…/releases/<n>` and every release is a new directory, the
+// command run from the new release cannot see the previous release's block and
+// reports success without touching it.
+//
+// Measured on extmag.com on 2026-08-27: after one deploy the crontab carried two
+// MAGENTO blocks, `releases/159` and `releases/160`, so `cron:run` started twice
+// a minute out of two trees. The second half is the one that bites later:
+// `deploy:cleanup` removes `releases/159`, and the entry stays behind pointing
+// into nothing — a php that fails every minute into a shared log.
+//
+// Magento cannot fix this by construction, so the cleanup is madock's.
+const (
+	magentoBlockStart = "#~ MAGENTO START"
+	magentoBlockEnd   = "#~ MAGENTO END"
+)
+
+// stripStaleMagentoBlocks removes every Magento block that does not belong to
+// the installation now running, and leaves everything else alone.
+//
+// `keepPath` is the base path of the current installation, resolved through the
+// `current` symlink — the block to keep is the one whose command names it.
+// A block is dropped only when it names some *other* absolute path under the
+// same parent: a crontab written by a Magento that madock does not manage, or a
+// line whose shape is not understood, is not ours to delete.
+func stripStaleMagentoBlocks(existing, keepPath string) (string, []string) {
+	if strings.TrimSpace(keepPath) == "" {
+		return existing, nil
+	}
+
+	var kept, dropped []string
+	var block []string
+	inBlock := false
+	blockNamesKeepPath := false
+
+	for _, line := range strings.Split(existing, "\n") {
+		trimmed := strings.TrimSpace(line)
+
+		switch {
+		case strings.HasPrefix(trimmed, magentoBlockStart):
+			inBlock = true
+			blockNamesKeepPath = false
+			block = []string{line}
+			continue
+		case strings.HasPrefix(trimmed, magentoBlockEnd) && inBlock:
+			block = append(block, line)
+			if blockNamesKeepPath {
+				kept = append(kept, block...)
+			} else {
+				dropped = append(dropped, block...)
+			}
+			inBlock = false
+			block = nil
+			continue
+		}
+
+		if inBlock {
+			block = append(block, line)
+			if strings.Contains(line, keepPath) {
+				blockNamesKeepPath = true
+			}
+			continue
+		}
+
+		kept = append(kept, line)
+	}
+
+	// A start marker with no end takes the rest with it, and is kept rather than
+	// dropped: an unterminated block is damage of some other kind, and removing
+	// what is left of it would hide it.
+	if inBlock {
+		kept = append(kept, block...)
+	}
+
+	for len(kept) > 0 && strings.TrimSpace(kept[len(kept)-1]) == "" {
+		kept = kept[:len(kept)-1]
+	}
+
+	if len(dropped) == 0 {
+		return existing, nil
+	}
+	return joinCrontab(kept), dropped
+}
+
 func joinCrontab(lines []string) string {
 	if len(lines) == 0 {
 		return ""

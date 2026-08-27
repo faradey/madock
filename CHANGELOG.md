@@ -1,3 +1,11 @@
+**v4.1.2**
+
+Fixed:
+- **Every deploy left the previous release's Magento cron block installed, and Magento cannot remove it.** `CrontabManager` marks its block `#~ MAGENTO START <sha256(BP)>` and finds it again by recomputing that hash from wherever it runs — so on a deployer layout, where `BP` is `…/releases/<n>`, `cron:remove` run from the new release cannot see the old release's block and reports success without touching it. Measured on extmag.com on 2026-08-27: after one deploy the crontab carried blocks for `releases/159` and `releases/160`, and `cron:run` started twice a minute out of two trees. The delayed half is worse: `deploy:cleanup` removes the old release and the entry stays, running a php that fails every minute into a shared log. madock removes those blocks itself now, after installing the current one, and prints what it removed — a schedule that quietly stops being double is worth a line
+- The block to keep is the one naming the base path the container resolves `workdir` to, asked of the container rather than taken from the config: `workdir` is `…/current` on a deployed project while the block names the release the symlink pointed at when it was written. An unterminated block, or a base path that cannot be resolved, removes nothing — damage of another kind is not something to tidy away
+- **`cron:status` counted a job that cannot run as a working one.** An entry naming a directory that no longer exists is counted among the installed jobs, which is exactly how the state above looked healthy while half of it was failing every minute. It is reported separately now, as `stale_jobs` in `--json` and as a problem in the exit code, checking the command rather than the whole line — a job writing into a log file that does not exist yet is healthy, and flagging it would make the check unusable on the day it matters
+- **"See debug.log for details" named a file the reader could not find.** The log is in the installation directory; on a live server the person looked in the project and in their home, found nothing, and worked the failure out from the state of the crontab instead. The message prints the path now, from `logger.Path()`
+
 **v4.1.1**
 
 Fixed:
