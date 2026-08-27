@@ -3,6 +3,7 @@ package cron
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/faradey/madock/v4/src/command"
@@ -75,14 +76,53 @@ func reportOverriddenSetting(projectName, want string) {
 	fmtc.WarningLn("cron/enabled is " + inEffect + " for this project, not " + want + " — something is overriding what was just written.")
 
 	if path := conf["path"]; path != "" {
-		own := strings.TrimRight(path, "/") + "/.madock/config.xml"
-		if paths.IsFileExist(own) {
-			fmtc.WarningLn("  " + own + " is merged over madock's own copy and wins. Edit cron/enabled there.")
+		dir := strings.TrimRight(path, "/") + "/.madock"
+		if own := dir + "/config.xml"; paths.IsFileExist(own) {
+			for _, line := range whereToEditLines(dir, own) {
+				fmtc.WarningLn("  " + line)
+			}
 		}
 	}
 
 	if want == "true" {
 		fmtc.WarningLn("  Cron is running now, and the next `start` will read the effective value and stop it again.")
+	}
+}
+
+// whereToEditLines says which file overrides the setting and where it is
+// actually changed.
+//
+// The place is the project's repository in both cases: `.madock/config.xml` is
+// written by a person and committed, and no madock command writes into it. What
+// differs is whether the path on this machine *is* that file. On a checkout it
+// is. Where deployer manages the project it is not — `<path>/.madock` is a
+// symlink to `current/.madock` and resolves into `releases/<n>/`, which the next
+// deploy replaces. An edit there works and then silently reverts, which is worse
+// than not working: the value is right for a week and wrong afterwards, with
+// nothing said.
+//
+// Measured on `extmag` on 2026-08-27: turning cron off for one project was done
+// in three files, and only the one in git decides what the next release carries.
+func whereToEditLines(dir, own string) []string {
+	info, err := os.Lstat(dir)
+	if err != nil || info.Mode()&os.ModeSymlink == 0 {
+		return []string{
+			own + " is the project's own file and wins over madock's copy.",
+			"Change cron/enabled there — it is committed to the project's repository.",
+		}
+	}
+
+	resolved, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		// The link is there and its target cannot be read. Still worth saying:
+		// the half that matters is that this is a release rather than the
+		// source, and that does not depend on knowing where it points.
+		resolved = "the current release"
+	}
+
+	return []string{
+		own + " wins over madock's copy, and that path is a symlink into the current release (" + resolved + ").",
+		"Change cron/enabled in the project's repository and deploy — an edit made here is undone by the next release.",
 	}
 }
 

@@ -1,3 +1,9 @@
+**v4.1.1**
+
+Fixed:
+- **The warning about an overridden `cron/enabled` sent the reader to a file a deploy replaces.** 4.1.0 started saying which copy of the config wins and pointed at `<path>/.madock/config.xml` with "edit it there". On a checkout that is the right file. Where deployer manages the project it is a symlink to `current/.madock` and resolves into `releases/<n>/`, so the edit works and is undone by the next release — worse than not working, because the value is right for a week and wrong afterwards with nothing said. The warning now names the repository, which is where that file is edited in either case, and says the path is a release when it is one. Measured on `extmag` on 2026-08-27, where turning cron off for one project was done in three files
+- Which of those three decides is settled rather than assumed: `ConfigMapping` fills only keys that are **missing**, and the project's own `.madock/config.xml` is read before the installation's copy — so the release wins, and editing the runtime copy under `/opt/madock/projects/<name>/` changes nothing while the project's file names the key
+
 **v4.1.0**
 
 Fixed:
