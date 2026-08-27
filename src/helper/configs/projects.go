@@ -407,6 +407,19 @@ const (
 	// project's own directory, which is exactly what nobody does for a project
 	// they have forgotten about.
 	ProjectNoPath = "no-path"
+	// ProjectBrokenLink — the registry entry is a symlink to a directory that no
+	// longer exists, so nothing about the project can be read at all.
+	//
+	// It used to be skipped, on the reasoning that an entry pointing at nothing
+	// is not a project. True, and the wrong conclusion: it is still a name in
+	// the registry, and the commands written to find exactly this said the
+	// opposite of it. Measured on the BigCommerce cluster VM on 2026-08-27 —
+	// four entries linked into a /tmp directory a reboot had cleared, and
+	// `project:list` answered "No projects are registered" while
+	// `project:list --stale`, which exists for "the source is gone", answered
+	// "Every registered project still has its source directory". A confident
+	// wrong answer from the check written for the case.
+	ProjectBrokenLink = "broken-link"
 )
 
 // ProjectEntry is one registry entry and what is true about it.
@@ -437,13 +450,33 @@ func ListProjectsIn(execDir string) []ProjectEntry {
 		// symlink to a directory says false. Registry entries are symlinks wherever
 		// a project was set up from a temporary checkout, and on a cluster VM with
 		// four such projects this command answered "No projects are registered" —
-		// the one wrong answer that reads as good news. A broken symlink fails the
-		// Stat and is skipped, which is right for an entry pointing at nothing.
-		info, statErr := os.Stat(filepath.Join(execDir, "projects", entry.Name()))
-		if statErr != nil || !info.IsDir() {
+		// the one wrong answer that reads as good news.
+		//
+		// **An entry that resolves to nothing is reported, not skipped.** It was
+		// dropped here, which left the registry holding names no command would
+		// say out loud — see ProjectBrokenLink for what that cost.
+		entryPath := filepath.Join(execDir, "projects", entry.Name())
+		info, statErr := os.Stat(entryPath)
+		if statErr != nil {
+			if _, lstatErr := os.Lstat(entryPath); lstatErr != nil {
+				continue
+			}
+			// It is there and it resolves to nothing: a symlink whose target is
+			// gone. The target is worth naming — it is usually a temporary
+			// directory a reboot cleared, and that tells the reader what
+			// happened without a search.
+			target, _ := os.Readlink(entryPath)
+			out = append(out, ProjectEntry{Name: entry.Name(), Path: target, State: ProjectBrokenLink})
 			continue
 		}
-		configPath := filepath.Join(execDir, "projects", entry.Name(), "config.xml")
+		if !info.IsDir() {
+			continue
+		}
+		// A directory with no config.xml is not an entry and is not litter
+		// either: `projects/` holds support directories beside the projects —
+		// `bin`, `docker` and `assets` on the installation this was checked on.
+		// Reporting those would put three lines of noise on every machine.
+		configPath := filepath.Join(entryPath, "config.xml")
 		if !paths.IsFileExist(configPath) {
 			continue
 		}
