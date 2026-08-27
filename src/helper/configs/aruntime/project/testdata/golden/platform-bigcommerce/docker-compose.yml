@@ -7,10 +7,25 @@ services:
       dockerfile: nodejs.Dockerfile
     tty: true
     environment:
-      # Was hardcoded to "development", which is wrong the moment a project
-      # runs on a server: libraries branch on it, and the entrypoint reads it
-      # when no nodejs/script is configured.
-      NODE_ENV: "development"
+      # **Not NODE_ENV.** This is madock's own decision — which script the
+      # entrypoint starts when `nodejs/script` is not configured — and naming it
+      # NODE_ENV published a private choice to every tool in the container.
+      #
+      # `next build` obeys it instead of setting `production` itself, so a
+      # production bundle was built in development mode and React's internals
+      # disagreed with themselves: prerendering `/_global-error` died on
+      # `useContext` with a null dispatcher. Next says so in the first line of
+      # every build — "You are using a non-standard NODE_ENV value" — and that
+      # line went past about ten times, because a warning printed always is
+      # indistinguishable from noise until it is the cause. The search cost an
+      # hour and ruled out React, Node, Next, styled-components and the app's
+      # own layout before an application of two files failed the same way.
+      #
+      # Nothing has to set NODE_ENV: `next dev` sets development, `next build`
+      # and `next start` set production. A project that genuinely wants it can
+      # put it in its own package.json script, where it applies to one command
+      # rather than to everything that runs in the container.
+      MADOCK_NODE_ENV: "development"
       # Polling-based file watching for macOS bind mounts (no inotify forwarding).
       # Harmless on Linux. Picked up by next/webpack/chokidar/medusa watcher.
       WATCHPACK_POLLING: "true"
