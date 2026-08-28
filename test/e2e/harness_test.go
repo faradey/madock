@@ -526,24 +526,53 @@ func (p *project) databaseDiagnosis(service string) string {
 // red run on a hosted runner is the only place the answer lives, and this is
 // what it will be asked.
 //
-// The file holds the version that wrote the directory, and **its presence proves
-// nothing** — that is worth saying, because it is the mistake this probe was
-// nearly built around. On a healthy, freshly initialised database it is there
-// too. Measured in the Lima VM on 2026-08-28, on a project set up seconds
-// earlier:
+// **The first answer it gave refuted the theory it was built for**, which is why
+// it now asks a different question. On the master run of 2026-08-28 it printed:
 //
 //	/var/lib/mysql/mysql_upgrade_info: 10.6.28-MariaDB
-//	datadir entries: 13
-//	mysql schema present: yes
+//	datadir entries: 12
 //
-// So the signal is a version that is **not** the one the image is running, or
-// that file sitting beside a log with no "Initializing database files" in it.
-// Either way the next failure answers instead of prompting another theory.
+// The same version the image runs — so the directory was not left by an older
+// MariaDB, and "a data directory from another version" is dead. What survived
+// the answer is narrower and stranger: the directory was there (no
+// "Initializing database files" in the log), it was made by this same image,
+// and the account the project connects with is not in it. A freshly initialised
+// one has thirteen entries; this had twelve.
+//
+// So the count is replaced by names, and the accounts are listed. A schema that
+// belongs to another project, or a user list from a database that is not this
+// one, says where the directory came from — and the leading suspect is
+// snapshot:restore, which copies a data directory wholesale and is exactly what
+// the test that failed was doing.
+//
+// The healthy baseline, measured in the Lima VM on a project set up seconds
+// earlier, so a reader has something to compare against:
+//
+//	schemas: db sys performance_schema mysql
+//	accounts (mariadb): db@% healthcheck@127.0.0.1 healthcheck@::1
+//	                    healthcheck@localhost mariadb.sys@localhost
+//	                    root@localhost root@%
+//
+// `db` is the project's own schema and `db@%` its account. A schema named after
+// another project, or that list without `db@%` in it, is the answer.
+//
+// Note what the version file cannot tell anybody: it is written on a fresh
+// initialisation too, so its presence never meant reuse. That reading was in
+// this comment for one run, and the probe took it out.
 func (p *project) datadirProvenance(service string) string {
 	const probe = "for f in /var/lib/mysql/mariadb_upgrade_info /var/lib/mysql/mysql_upgrade_info; do " +
 		"[ -f \"$f\" ] && echo \"$f: $(cat \"$f\")\"; done; " +
-		"echo \"datadir entries: $(ls -1 /var/lib/mysql 2>/dev/null | wc -l)\"; " +
-		"echo \"mysql schema present: $([ -d /var/lib/mysql/mysql ] && echo yes || echo no)\""
+		"echo \"schemas: $(find /var/lib/mysql -maxdepth 1 -mindepth 1 -type d -printf '%f ' 2>/dev/null)\"; " +
+		// The client is mysql on one image and mariadb on the other, and the
+		// password arrives under either name — asking for both costs nothing
+		// and staying silent here would be silence in the one place that
+		// matters. An empty answer is itself informative: it means the root
+		// password this project was started with does not open this directory,
+		// which is what a directory from somewhere else looks like.
+		"pw=\"${MARIADB_ROOT_PASSWORD:-$MYSQL_ROOT_PASSWORD}\"; " +
+		"for c in mariadb mysql; do command -v $c >/dev/null 2>&1 || continue; " +
+		"echo \"accounts ($c): $($c -N -B -uroot -p\"$pw\" " +
+		"-e \"SELECT CONCAT(user,'@',host) FROM mysql.user ORDER BY user\" 2>&1 | tr '\\n' ' ')\"; break; done"
 
 	out, err := p.tryRun(time.Minute, "cli", "--service", service, "sh", "-c", probe)
 	if err != nil {
