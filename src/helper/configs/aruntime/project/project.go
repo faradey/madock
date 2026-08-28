@@ -247,15 +247,38 @@ func resolveMainServicePort(projectConf map[string]string) string {
 	return "3000"
 }
 
+// MakeDBDockerfile renders the database image, and only when the project has a
+// database.
+//
+// The gate is here rather than at the call sites because ten of the twelve
+// callers did not have one. With `db/enabled=false` there is no version to
+// render — the platform default supplies the repository and nothing supplies
+// the tag — so the file came out as `FROM mariadb:`, which is not a valid
+// reference and would not build.
+//
+// It broke nothing, and that is why it survived: compose renders no `db`
+// service for a disabled database, so nothing ever built the file. What it cost
+// was a reader's time. Found on the BigCommerce cluster VM on 2026-08-27 while
+// chasing something else, it reads as a broken image for two projects and took
+// a while to be dismissed — the two projects are cluster consumers whose
+// database comes from the provider, and neither has any business owning an
+// image.
+//
+// The `mariadb` in it is not a mystery worth chasing either: it is the
+// BigCommerce platform default (model/versions/bigcommerce), not a global one.
+// Only the empty tag was the defect.
 func MakeDBDockerfile(projectName string) {
+	projectConf := configs.GetProjectConfig(projectName)
+	if strings.ToLower(projectConf["db/enabled"]) == "false" {
+		return
+	}
+
 	pp := paths.NewProjectPaths(projectName)
 	ctx := paths.MakeDirsByPath(pp.CtxDir())
 
 	file := GetDockerConfigFile(projectName, "/db/Dockerfile", "")
 	str := Render(projectName, file, "db/Dockerfile", nil)
 	write(ctx+"/db.Dockerfile", dockertransform.ApplyDockerfileTransform("db.Dockerfile", str))
-
-	projectConf := configs.GetProjectConfig(projectName)
 
 	// my.cnf is only needed for MySQL/MariaDB
 	if configs.GetDbType(projectConf) == "mysql" {

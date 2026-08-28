@@ -129,3 +129,47 @@ func TestWriteCrontabScriptRemovesWhenEmpty(t *testing.T) {
 		t.Errorf("expected a removal:\n%s", script)
 	}
 }
+
+// The state the exit code cannot answer: is cron installed for the release this
+// project resolves to now?
+//
+// `cron:remove && cron:install && cron:run` exits 1 in the ordinary case on
+// every deploy after the first — cron:remove leaves the last block whatever it
+// reports, so cron:install finds one and refuses. Reading that as failure
+// printed "Magento cron setup failed — scheduled jobs may NOT run" on healthy
+// deploys: measured on extmag.com release 174, four times in one day, each time
+// with the crontab holding one cron:run for that release and a job finished 23
+// seconds earlier.
+func TestMagentoBlockCovers(t *testing.T) {
+	const crontab = `MAILTO=""
+#~ MAGENTO START 5f4dcc3b
+* * * * * /usr/bin/php /var/www/html/releases/173/bin/magento cron:run 2>&1
+#~ MAGENTO END 5f4dcc3b
+#~ MAGENTO START 7c6a180b
+* * * * * /usr/bin/php /var/www/html/releases/174/bin/magento cron:run 2>&1
+#~ MAGENTO END 7c6a180b
+`
+
+	if !magentoBlockCovers(crontab, "/var/www/html/releases/174") {
+		t.Error("the block for the current release was not found, so a healthy deploy would raise the alarm")
+	}
+	// A block for a release that is gone is not this release being installed —
+	// that is exactly the state a deploy leaves behind and the one the alarm is
+	// actually for.
+	if magentoBlockCovers(crontab, "/var/www/html/releases/175") {
+		t.Error("a release with no block of its own was reported as installed")
+	}
+	if magentoBlockCovers("", "/var/www/html/releases/174") {
+		t.Error("an empty crontab was reported as having cron installed")
+	}
+	// An unresolved workdir must not read as installed: an unanswered question
+	// is not a yes.
+	if magentoBlockCovers(crontab, "") {
+		t.Error("an empty base path was reported as covered")
+	}
+	// A line outside a Magento block is somebody else's job and says nothing
+	// about Magento's cron.
+	if magentoBlockCovers("* * * * * /var/www/html/releases/174/bin/other\n", "/var/www/html/releases/174") {
+		t.Error("a line outside a Magento block was counted as the Magento block")
+	}
+}

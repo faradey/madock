@@ -152,12 +152,12 @@ func CronExecute(projectName string, flag, manual bool) {
 			// has been the proven sequence in madock from 2022 until commit ca6a668.
 			cmd := "cd " + workdir + " && php bin/magento cron:remove && php bin/magento cron:install && php bin/magento cron:run"
 			if manual {
-				err = ContainerExec(containerName, "www-data", false, "bash", "-c", cmd)
-				if err != nil {
-					logger.Println(err)
-					fmtc.WarningLn(err.Error())
-				}
+				// Silent, then judged by state — the same reason as the deploy
+				// path below: this sequence exits 1 in the ordinary case, and
+				// printing that as an error taught everyone to ignore it.
+				out, cerr := containerExecSilent(containerName, "www-data", "bash", "-c", cmd)
 				dropStaleMagentoBlocks(projectConf, projectName, containerName, workdir)
+				reportMagentoCronState(projectConf, projectName, containerName, workdir, out, cerr)
 			} else {
 				// Auto-invocation (start/rebuild). On a fresh container the Magento DI
 				// can be in a "warming up" state for the first several seconds:
@@ -191,14 +191,8 @@ func CronExecute(projectName string, flag, manual bool) {
 					logger.Println(fmt.Sprintf("magento2 cron: cron:* namespace still empty after %d attempts; cron:install/cron:run skipped. Last probe output:\n%s", probeAttempts, probeOut))
 				} else {
 					out, cerr := containerExecSilent(containerName, "www-data", "bash", "-c", cmd)
-					if cerr != nil {
-						fmtc.WarningLn("Magento cron setup failed — scheduled jobs may NOT run. Details: " + logger.Path())
-						logger.Println(cerr)
-						if out != "" {
-							logger.Println(out)
-						}
-					}
 					dropStaleMagentoBlocks(projectConf, projectName, containerName, workdir)
+					reportMagentoCronState(projectConf, projectName, containerName, workdir, out, cerr)
 				}
 			}
 		} else if projectConf["platform"] == "shopify" {
@@ -331,6 +325,52 @@ func CronExecute(projectName string, flag, manual bool) {
 			}
 		}
 	}
+}
+
+// reportMagentoCronState says whether cron is set up, by looking at what is
+// installed rather than at how the install sequence exited.
+//
+// The sequence is `cron:remove && cron:install && cron:run`, and on every
+// deploy after the first it exits 1 in the ordinary case: `cron:remove` leaves
+// the last block in the crontab whatever it reports, so `cron:install` finds
+// one already there, prints "Crontab has already been generated and saved" and
+// stops the chain. Reading that as failure printed "Magento cron setup failed —
+// scheduled jobs may NOT run" on healthy deploys — measured on extmag.com,
+// release 174, four times in one day, each time with the crontab holding one
+// cron:run for that very release, `cron` running by name, and a job that had
+// completed 23 seconds earlier.
+//
+// **The two messages are separated, and that is most of the point.** "The old
+// entry could not be removed" is Magento behaving as it always has and belongs
+// in the log; "cron is not installed" is an outage and belongs on the screen.
+// Printing one text for both is what made the alarm meaningless — and this is
+// the second wrong answer from this probe, the first having been silence while
+// production had no scheduler for six hours.
+func reportMagentoCronState(projectConf map[string]string, projectName, containerName, workdir, out string, cerr error) {
+	if cerr != nil {
+		logger.Println(cerr)
+		if out != "" {
+			logger.Println(out)
+		}
+	}
+
+	resolved, err := containerExecSilent(containerName, "www-data", "sh", "-c", "cd "+workdir+" && pwd -P")
+	basePath := strings.TrimSpace(resolved)
+	if err != nil || basePath == "" {
+		// Could not ask. Never rounded to "fine": an unanswered check is its own
+		// answer, and the exit code is not a substitute for it.
+		logger.Println(fmt.Errorf("magento cron: could not resolve %s in the container: %w", workdir, err))
+		fmtc.WarningLn("Could not tell whether Magento cron is installed — see " + logger.Path())
+		return
+	}
+
+	if magentoBlockCovers(readCrontab(projectConf, projectName), basePath) {
+		// Installed. If the sequence complained on the way, that is Magento's
+		// own refusal to install over an existing block, and it is in the log.
+		return
+	}
+
+	fmtc.WarningLn("Magento cron is not installed — scheduled jobs will NOT run. Details: " + logger.Path())
 }
 
 // dropStaleMagentoBlocks removes the Magento crontab blocks left behind by

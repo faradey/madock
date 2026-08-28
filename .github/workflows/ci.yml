@@ -145,6 +145,40 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      # Sign in to the registry before anything pulls an image.
+      #
+      # A runner pulls anonymously and shares its outbound address with
+      # thousands of others, so the rate limit is spent by strangers. Measured
+      # 2026-08-27 23:23: three shards of one run failed inside the same minute,
+      # each on a different image — `unauthorized: authentication required` for
+      # mailcatcher, `failed to resolve source metadata` for postgres:16 and for
+      # ubuntu:22.04. No test reported a wrong answer; three of them could not
+      # fetch what they needed, and the run reads exactly like a regression in
+      # the change under review. The change under review was the first thing
+      # suspected, which is the real cost of this.
+      #
+      # An authenticated pull is counted against the account rather than the
+      # address, and a free account is enough.
+      #
+      # **The check is inside the step, not in an `if`.** The `secrets` context
+      # is not available to a step's condition — `if: secrets.X != ''` evaluates
+      # against nothing and skips the step every time, which is a login that is
+      # never performed and never reported. A fork has no secret, and there the
+      # run should fail on the limit if it must, not on an empty password.
+      #
+      # Plain CLI rather than an action: this is two lines of shell, and an
+      # action is a supply chain.
+      - name: Sign in to the image registry
+        env:
+          REGISTRY_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          REGISTRY_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -z "$REGISTRY_USER" ] || [ -z "$REGISTRY_TOKEN" ]; then
+            echo "No registry credentials on this run — pulling anonymously, which is rate limited by address."
+            exit 0
+          fi
+          printf '%s' "$REGISTRY_TOKEN" | docker login -u "$REGISTRY_USER" --password-stdin
+
       # run-local refuses to touch a daemon that might be somebody's own; CI=true
       # is what tells it this one is disposable. GitHub sets it.
       - name: Run the end-to-end suite
@@ -221,6 +255,40 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+
+      # Sign in to the registry before anything pulls an image.
+      #
+      # A runner pulls anonymously and shares its outbound address with
+      # thousands of others, so the rate limit is spent by strangers. Measured
+      # 2026-08-27 23:23: three shards of one run failed inside the same minute,
+      # each on a different image — `unauthorized: authentication required` for
+      # mailcatcher, `failed to resolve source metadata` for postgres:16 and for
+      # ubuntu:22.04. No test reported a wrong answer; three of them could not
+      # fetch what they needed, and the run reads exactly like a regression in
+      # the change under review. The change under review was the first thing
+      # suspected, which is the real cost of this.
+      #
+      # An authenticated pull is counted against the account rather than the
+      # address, and a free account is enough.
+      #
+      # **The check is inside the step, not in an `if`.** The `secrets` context
+      # is not available to a step's condition — `if: secrets.X != ''` evaluates
+      # against nothing and skips the step every time, which is a login that is
+      # never performed and never reported. A fork has no secret, and there the
+      # run should fail on the limit if it must, not on an empty password.
+      #
+      # Plain CLI rather than an action: this is two lines of shell, and an
+      # action is a supply chain.
+      - name: Sign in to the image registry
+        env:
+          REGISTRY_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          REGISTRY_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -z "$REGISTRY_USER" ] || [ -z "$REGISTRY_TOKEN" ]; then
+            echo "No registry credentials on this run — pulling anonymously, which is rate limited by address."
+            exit 0
+          fi
+          printf '%s' "$REGISTRY_TOKEN" | docker login -u "$REGISTRY_USER" --password-stdin
 
       - name: Install Shopware and Medusa for real
         run: ./test/e2e/e2e.sh run-local --platforms -run 'TestMagentoInstallsAndAnswers|TestShopwareInstallsAndAnswers|TestMedusaInstallsAndAnswers'

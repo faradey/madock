@@ -1,3 +1,18 @@
+**v4.1.10**
+
+Fixed:
+- **The cron check cried wolf on every healthy deploy.** `cron:remove && cron:install && cron:run` exits 1 in the ordinary case on every deploy after the first: `cron:remove` leaves the last block in the crontab whatever it reports, so `cron:install` finds one already there, prints "Crontab has already been generated and saved" and stops the chain. That exit code was read as failure, and "Magento cron setup failed — scheduled jobs may NOT run" went out on deploys where cron was fine. Measured on extmag.com, release 174: the crontab held exactly one `cron:run` naming that release, `cron` was running by name, a job had completed successfully 23 seconds earlier, and the alarm printed four times in one day
+- **The setup is judged by what is installed now, not by how the sequence exited.** The crontab is read back and matched against the base path the project resolves to in the container; a workdir that cannot be resolved says so rather than being rounded to "fine"
+- **The two messages are separated, and that is most of the fix.** "The old entry could not be removed" is Magento behaving as it always has and belongs in the log; "cron is not installed" is an outage and belongs on the screen. One text for both is what made the alarm meaningless
+- This is the second wrong answer from this probe, in the opposite direction. The first — `service cron status` reporting a daemon that was gone — let production run six hours with nothing scheduled. Crying wolf is the more expensive of the two: it teaches people to look away from the one occasion the check is right
+
+**v4.1.9**
+
+Fixed:
+- **A project with `db/enabled=false` was still given a database image.** `MakeDBDockerfile` is called from twelve places and only two of them checked whether the project has a database; with the database off there is no version to render — the platform default supplies the repository and nothing supplies the tag — so the file came out as `FROM mariadb:`, which is not a valid reference and would not build
+- It broke nothing, which is why it lasted: compose renders no `db` service for a disabled database, so nothing ever built the file. What it cost was a reader's time. Found on the BigCommerce cluster VM while chasing something else, where two cluster consumers — projects whose database comes from the provider — each carried one, and it reads exactly like a broken image until you establish that neither has a database at all
+- The gate is in `MakeDBDockerfile` rather than at the call sites, because the call sites are what got it wrong. The `mariadb` in it was never the defect: that is the BigCommerce platform default, not a global one
+
 **v4.1.8**
 
 Fixed:
