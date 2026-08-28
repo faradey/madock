@@ -33,15 +33,15 @@ func TestShopwareInstallsAndAnswers(t *testing.T) {
 		t.Skip("platform tests are opt-in: ./test/e2e/e2e.sh run --platforms -run TestShopware")
 	}
 
-	// Skipped from 2026-08-14: no Shopware release installs at all, and the reason
-	// is neither ours nor a version we can pick around.
+	// Skipped from 2026-08-14 to 2026-08-29, while no Shopware release installed at
+	// all. Kept because the version below was chosen against it.
 	//
 	// Shopware declares its dependencies as exact versions, and packagist keeps
 	// publishing advisories against versions already released. Composer 2.8 and
 	// later refuse to install a package that has one — the container's composer is
-	// 2.10.2 — and an exact requirement leaves it nothing else to choose. So every
-	// release stops at a different wall, verified by resolving each one with that
-	// composer rather than by reading metadata:
+	// 2.10.2 — and an exact requirement leaves it nothing else to choose. What
+	// stopped each release, resolved with that composer rather than read off
+	// metadata:
 	//
 	//   6.7.13.0            mcp/sdk ^0.6.0, and 0.6.0 is the only match: advisory
 	//                       PKSA-p9gd-j6gr-6f9t, published 2026-08-14 06:19 UTC
@@ -49,28 +49,33 @@ func TestShopwareInstallsAndAnswers(t *testing.T) {
 	//                       the same advisory by another path
 	//   6.7.11.0            dompdf/dompdf pinned at 3.1.4, which carries six
 	//
-	// Pinning an older release was tried and is what proved the shape of this: each
-	// one fails on its own blocked package, and the older it is the more advisories
-	// its pins have collected. The test was green sixteen hours before the first
-	// failure, on the same code.
+	// Two blockers there, not three: the first two are one advisory reached by two
+	// paths. Counting three independent walls makes a pattern out of two points, and
+	// predicts a fourth blocked package that never appeared.
 	//
-	// Composer can install it — `--no-security-blocking` resolves 6.7.13.0 to the
-	// last package — so the choice was between installing packages with known
-	// advisories onto every stand this test stands in for, and not installing. We
-	// chose not to install, and to leave the platform job honest about Medusa
-	// rather than red about something upstream.
+	// 6.7.13.1 lifts the constraint, mcp/sdk resolves to 0.7.1, and the tree
+	// installs with blocking still on — measured on 2026-08-29 against a real stand,
+	// both sides of it: the old pin refusing with the text above, the new one at
+	// exit 0. So the pin moved rather than the skip being traded for
+	// `--no-security-blocking`. That flag was available the whole time and was
+	// always the wrong answer: it installs packages with known advisories onto every
+	// stand this test stands in for.
 	//
-	// Re-enable when a Shopware release resolves with blocking on. That needs one of
-	// mcp/sdk 0.7.1 (which is out) to become acceptable to shopware/core's
-	// constraint, or the advisories against dompdf's pinned version to be answered
-	// by a release Shopware allows.
-	t.Skip("no Shopware release currently installs: composer blocks its exact dependency pins over advisories — see the comment above")
+	// If this goes red at the install step, suspect packagist before suspecting the
+	// change under test. The pin is exact, advisories are published against releases
+	// that already exist, and 6.7.13.1 can be blocked tomorrow the way 6.7.13.0 was
+	// — by an upstream package, with nothing here having moved. What the failure
+	// looks like: composer naming a package and an advisory ID. The answer is the
+	// next Shopware release, and the check is one command in a container, never on
+	// the host, whose composer is too old to know advisories exist:
+	//
+	//   madock cli --service php composer update --dry-run
 
 	p := newProject(t, "e2eshopware")
 
 	p.run(45*time.Minute, "setup", "-y", "-d", "-i",
 		"--platform=shopware",
-		"--platform-version=6.7.13.0",
+		"--platform-version=6.7.13.1",
 		"--php=8.3",
 		"--hosts=e2eshopware.test",
 	)
