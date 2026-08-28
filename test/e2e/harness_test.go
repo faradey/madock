@@ -472,9 +472,11 @@ func refusesTheHost(out string) bool {
 // the initialisation banner, one that was reused goes straight to "ready for
 // connections" and creates no accounts. Twice now that log was the missing piece.
 func (p *project) databaseDiagnosis(service string) string {
+	report := p.datadirProvenance(service)
+
 	logs, err := p.tryRun(time.Minute, "logs", "-s", service)
 	if err != nil {
-		return "\n(could not read the " + service + " log: " + err.Error() + ")"
+		return report + "\n(could not read the " + service + " log: " + err.Error() + ")"
 	}
 
 	lines := strings.Split(strings.TrimRight(logs, "\n"), "\n")
@@ -490,14 +492,65 @@ func (p *project) databaseDiagnosis(service string) string {
 	// That mistake was made on this suite, from these logs.
 	const head, tail = 25, 25
 	if len(lines) <= head+tail {
-		return "\n--- the whole " + service + " log (" + strconv.Itoa(len(lines)) + " lines) ---\n" + strings.Join(lines, "\n")
+		return report + "\n--- the whole " + service + " log (" + strconv.Itoa(len(lines)) + " lines) ---\n" + strings.Join(lines, "\n")
 	}
 
-	return "\n--- first " + strconv.Itoa(head) + " lines of the " + service + " log (where initialisation is decided) ---\n" +
+	return report + "\n--- first " + strconv.Itoa(head) + " lines of the " + service + " log (where initialisation is decided) ---\n" +
 		strings.Join(lines[:head], "\n") +
 		"\n--- " + strconv.Itoa(len(lines)-head-tail) + " lines omitted ---\n" +
 		"--- last " + strconv.Itoa(tail) + " lines ---\n" +
 		strings.Join(lines[len(lines)-tail:], "\n")
+}
+
+// datadirProvenance asks the database which version created the data directory
+// it is running on.
+//
+// This exists for one failure that has resisted every other kind of evidence:
+// `ERROR 1130 (HY000): Host '…' is not allowed to connect`, from the *first*
+// database of a project that does not configure it, on runs where the container
+// log carries
+//
+//	[Entrypoint]: MariaDB upgrade … required, but skipped due to $MARIADB_AUTO_UPGRADE
+//
+// and no "Initializing database files" above it. That reads as a data directory
+// somebody else made: the entrypoint found one, skipped initialisation, and so
+// never created the account the project connects with. It is permanent, not a
+// race — the harness spends a minute of refusalGrace waiting for something that
+// will not happen.
+//
+// **Where a fresh project would get one has not been established, and every
+// theory so far has been wrong.** A leaked volume was ruled out by measurement
+// (project:remove takes the volume with it), and a project-name collision by
+// counting (51 tests, 51 distinct names). It does not reproduce in the Lima VM:
+// two runs there, single test and whole shard in order, both green. So the next
+// red run on a hosted runner is the only place the answer lives, and this is
+// what it will be asked.
+//
+// The file holds the version that wrote the directory, and **its presence proves
+// nothing** — that is worth saying, because it is the mistake this probe was
+// nearly built around. On a healthy, freshly initialised database it is there
+// too. Measured in the Lima VM on 2026-08-28, on a project set up seconds
+// earlier:
+//
+//	/var/lib/mysql/mysql_upgrade_info: 10.6.28-MariaDB
+//	datadir entries: 13
+//	mysql schema present: yes
+//
+// So the signal is a version that is **not** the one the image is running, or
+// that file sitting beside a log with no "Initializing database files" in it.
+// Either way the next failure answers instead of prompting another theory.
+func (p *project) datadirProvenance(service string) string {
+	const probe = "for f in /var/lib/mysql/mariadb_upgrade_info /var/lib/mysql/mysql_upgrade_info; do " +
+		"[ -f \"$f\" ] && echo \"$f: $(cat \"$f\")\"; done; " +
+		"echo \"datadir entries: $(ls -1 /var/lib/mysql 2>/dev/null | wc -l)\"; " +
+		"echo \"mysql schema present: $([ -d /var/lib/mysql/mysql ] && echo yes || echo no)\""
+
+	out, err := p.tryRun(time.Minute, "cli", "--service", service, "sh", "-c", probe)
+	if err != nil {
+		return "\n--- " + service + " data directory: could not be read (" + err.Error() + ") ---\n"
+	}
+
+	return "\n--- " + service + " data directory, and what wrote it ---\n" + strings.TrimRight(out, "\n") + "\n"
 }
 
 // freshTable creates a table, replacing one an earlier run may have left.
