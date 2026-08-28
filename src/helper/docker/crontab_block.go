@@ -248,3 +248,42 @@ func lineContains(s, delimiter string) bool {
 	}
 	return false
 }
+
+// magentoBlockCovers reports whether the crontab already holds a Magento block
+// for this base path — that is, whether cron is installed for the release the
+// project resolves to now.
+//
+// It exists because the exit code of the install sequence cannot answer that.
+// `cron:remove` leaves the last block in the file whatever it reports, so the
+// `cron:install` that follows finds one already there, prints "Crontab has
+// already been generated and saved" and exits 1 — the normal case on every
+// deploy after the first. The chain is joined by `&&`, so that 1 stopped it and
+// was read as a failure to set cron up.
+//
+// Measured on extmag.com, release 174: the alarm printed on a deploy where the
+// crontab held exactly one cron:run naming that release, `cron` was running by
+// name, and a job had completed successfully 23 seconds earlier. Four such
+// alarms in one day, all of them wrong.
+//
+// This is the second wrong answer from the same probe. The first, in
+// MADOCK-CRON-DEPLOY.md, was the opposite: `service cron status` reported a
+// daemon that was gone, and production went six hours with nothing scheduled.
+// A check that cries wolf is the more expensive of the two, because it teaches
+// people to look away from the one occasion it is right.
+func magentoBlockCovers(existing, basePath string) bool {
+	if strings.TrimSpace(basePath) == "" {
+		return false
+	}
+
+	found := false
+	filterMagentoBlocks(existing, func(block []string) bool {
+		for _, line := range block {
+			if strings.Contains(line, basePath) {
+				found = true
+			}
+		}
+		return true
+	})
+
+	return found
+}
