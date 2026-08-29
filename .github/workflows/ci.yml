@@ -17,21 +17,44 @@ name: CI
 # `staging` is where work is verified and `master` is where verified work lands.
 # The end-to-end suite only ever runs here — the build tag keeps it out of the
 # pre-push hook, and the Lima VM on a laptop is the iteration loop, not the
-# verdict — so a branch that CI does not watch is a branch whose e2e nobody has
-# run. master then receives a fast-forward of exactly the tree that was green.
+# verdict.
 #
-# It costs a second run of the same tree on master. That is deliberate: the run
-# on master is the record of what master did, and re-running is cheaper than
-# reasoning about whether a green run on another ref still applies.
+# **One run per landing, and until 2026-08-29 there were three.** The push to
+# staging, the pull request, and master after the merge — all of the same commit,
+# every job in each, including the eight e2e shards and the two platform
+# installs. That is what spent an hourly Docker Hub quota in a morning and turned
+# somebody else's pull request red.
 #
-# The nightly schedule is for the platform job below, which installs Magento,
-# Shopware and Medusa from their vendors. What that job catches is mostly not
-# ours: an image tag withdrawn, a starter repository moved, a package that no
-# longer resolves. None of it arrives with a commit, so waiting for a push to
-# find out means finding out from a customer instead.
+# The one kept is the strongest of the three, which is why this is a deletion
+# rather than a trade. A push run tests a branch head. A pull request run tests
+# the **merge result** — head merged into master — and branch protection has
+# `strict: true`, so a branch that is behind cannot land until it is updated.
+# The tree the pull request proves green is therefore the tree master becomes.
+#
+# That is also what makes the post-merge run on master redundant rather than
+# merely expensive: it re-ran a tree that had already been tested in exactly that
+# shape. The argument for keeping it was that it is "the record of what master
+# did", and the record is real — it is just a record of a question already
+# answered, bought at a full suite. The nightly run below is on the default
+# branch, so master is still exercised on its own every day, against the world as
+# it is that morning rather than as it was at the merge.
+#
+# What this gives up, said plainly rather than left to be discovered:
+#
+#   - a push to staging with no pull request open gets no run. Work lands through
+#     a pull request here, so verification happens when landing is proposed
+#     instead of when the branch moves. `workflow_dispatch` covers a branch
+#     parked for later.
+#   - a direct push to master gets no run. `enforce_admins` is off, so the owner
+#     can still push past the gate; that is meant to be a deliberate act in an
+#     incident, and it now has no CI behind it until the nightly.
+#
+# The nightly schedule is also what the platform job below is for: it installs
+# Magento, Shopware and Medusa from their vendors, and what it catches is mostly
+# not ours — an image tag withdrawn, a starter repository moved, a package that
+# no longer resolves. None of that arrives with a commit, so waiting for a push
+# to find out means finding out from a customer instead.
 on:
-  push:
-    branches: [master, staging]
   pull_request:
   schedule:
     - cron: '17 3 * * *'
@@ -43,15 +66,16 @@ permissions:
   contents: read
 
 # A pull request that gets three pushes in a minute should run the third one,
-# not all three. Every commit on the default branch gets its own run, because
-# those runs are the record of what master did.
+# not all three. Everything else — the nightly, a run asked for by hand — gets
+# its own group and is never cancelled.
 #
 # The exemption has to be in the group and not only in cancel-in-progress.
 # GitHub keeps one run in progress and one waiting per group: a third arrival
 # replaces the one that was waiting, and the replaced run is cancelled before it
-# starts a single job. Three pushes in quick succession therefore left the middle
-# commit with no run at all — observed twice on master before this was written
-# down. Putting the commit in the group means pushes never share one.
+# starts a single job. Three arrivals in quick succession therefore left the
+# middle one with no run at all — observed twice on master, back when pushes
+# there were a trigger. Putting the commit in the group is what stops those
+# sharing one.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
