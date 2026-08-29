@@ -1,7 +1,7 @@
 {{{- if and .grafana.enabled .rabbitmq.enabled}}}
   rabbitmqexporter:
     init: true
-    image: kbudde/rabbitmq-exporter
+    image: {{{.grafana.rabbitmq_exporter.repository}}}:{{{.grafana.rabbitmq_exporter.version}}}
     environment:
       RABBIT_URL: http://rabbitmq:15672
       RABBIT_USER: {{{.rabbitmq.user}}}

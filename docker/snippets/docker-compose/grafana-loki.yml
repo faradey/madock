@@ -1,7 +1,7 @@
 {{{- if .grafana.enabled}}}
   loki:
     init: true
-    image: grafana/loki:2.9.10
+    image: {{{.grafana.loki.repository}}}:{{{.grafana.loki.version}}}
     command: --config.file=/etc/loki/local-config.yaml
     user: root
     volumes:

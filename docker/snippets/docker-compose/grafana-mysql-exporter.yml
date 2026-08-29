@@ -1,7 +1,7 @@
 {{{- if .grafana.enabled}}}
   dbexporter:
     init: true
-    image: prom/mysqld-exporter
+    image: {{{.grafana.mysqld_exporter.repository}}}:{{{.grafana.mysqld_exporter.version}}}
     volumes:
       - ./ctx/grafana/mysql-exporter.my.cnf:/.my.cnf
     networks:
