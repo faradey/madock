@@ -352,6 +352,23 @@ jobs:
           set -o pipefail
           ./test/e2e/e2e.sh run-local --quarantined -run 'TestSecondDatabaseIsItsOwnDatabase' | tee quarantine.log
 
+      # The same guard the shards carry, and here it matters more. `-run` with a
+      # name that matches nothing — a rename, a test finally deleted — makes
+      # `go test` exit 0 having run nothing, and this job would go green. On any
+      # other job that reads as "it passed". On this one it reads as "the flake
+      # has stopped", which is the single conclusion it exists to support and the
+      # one nobody would check.
+      #
+      # A SKIP counts: it means the test ran and the quarantine flag did not
+      # reach it, which is its own defect and exactly the state this job was
+      # created to end.
+      - name: The quarantined test actually ran
+        run: |
+          if ! grep -q '^--- \(PASS\|FAIL\|SKIP\): TestSecondDatabaseIsItsOwnDatabase' quarantine.log; then
+            echo "no top-level result for TestSecondDatabaseIsItsOwnDatabase — it was renamed, removed, or -run matched nothing" >&2
+            exit 1
+          fi
+
       - name: Keep the log
         if: always()
         uses: actions/upload-artifact@v4
