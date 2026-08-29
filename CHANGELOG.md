@@ -1,3 +1,10 @@
+**v4.1.12**
+
+Changed:
+- **Six more images are named in the config**, which 4.1.11 said were already there and were not. The `grafana` block named one image while its stack is six containers: loki, promtail (in two snippets), prometheus, the mysqld exporter and the rabbitmq exporter lived in their compose files, so a reader checking the config would have concluded grafana was a single image. **Three of them carried no tag at all** — `latest` spelled invisibly, and worse than writing it, because nothing in the file suggests a version was ever decided
+- The project's own nginx was a literal `FROM` in its Dockerfile. It is a different container from the shared proxy, whose version moved in 4.1.11, and the two read alike enough that moving one was reported as moving both
+- **Pinned at what runs, not at what is newest.** loki and promtail stay on 2.9.10 — 3.x is a major move and belongs in a change that says so — and the three untagged ones are pinned at whatever `latest` resolved to on 2026-08-29, so nothing changes today and the next move becomes a decision
+
 **v4.1.11**
 
 Fixed:
