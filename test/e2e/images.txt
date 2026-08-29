@@ -23,3 +23,9 @@
 
 axllent/mailpit:latest
 ubuntu:22.04
+
+# Added 2026-08-29 from the first run of the list above, which is exactly what
+# the "Images this job actually used" step is for: the shards reported three
+# images from Docker Hub and the list held two. Nobody would have guessed this
+# one by reading the templates — it is not in any of them.
+alpine:3
