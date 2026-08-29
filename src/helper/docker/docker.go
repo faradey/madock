@@ -562,19 +562,31 @@ func upProjectWithBuild(projectName string, withChown bool, refresh bool) {
 // When compose is too old to be told, the old behaviour stands — see
 // composeSupportsPullPolicy for why that direction and not the other.
 func dockerComposePull(composeFiles []string, refresh bool) {
-	composeFiles = append(composeFiles, "pull")
-	if !refresh && composeSupportsPullPolicy() {
-		composeFiles = append(composeFiles, "--policy", "missing")
-	}
-	if attr.IsQuiet {
-		composeFiles = append(composeFiles, "--quiet")
-	}
-	cmd := exec.Command("docker", composeFiles...)
+	cmd := exec.Command("docker", pullArgs(composeFiles, refresh, composeSupportsPullPolicy(), attr.IsQuiet)...)
 	attachOutput(cmd)
 	err := cmd.Run()
 	if err != nil {
 		logger.Fatal(err)
 	}
+}
+
+// pullArgs builds the argument list, separated so it can be asserted.
+//
+// Worth its own function because the green run does not answer this: the e2e
+// harness logs a madock command and its duration and keeps the output unless
+// the command fails, so a suite that passes says nothing about whether the flag
+// was on. Whether compose then honours it is compose's business and documented;
+// whether madock asks for it is ours.
+func pullArgs(composeFiles []string, refresh, policySupported, quiet bool) []string {
+	args := append(append([]string{}, composeFiles...), "pull")
+	if !refresh && policySupported {
+		args = append(args, "--policy", "missing")
+	}
+	if quiet {
+		args = append(args, "--quiet")
+	}
+
+	return args
 }
 
 // attachOutput connects cmd stdout/stderr to os.Stdout/os.Stderr unless quiet mode is active
