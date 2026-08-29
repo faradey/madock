@@ -501,6 +501,26 @@
                          reached through an ssh tunnel. Empty means all
                          interfaces, which on a server means anyone. -->
                     <interface_ip>127.0.0.1:</interface_ip>
+                    <!-- Named here like every other service, rather than written
+                         into the compose template, so it can be raised in one
+                         place and overridden per project.
+
+                         It was `axllent/mailpit:latest` until 2026-08-29, and a
+                         floating tag is not merely untidy: compose has to
+                         resolve it before it can know whether the local image is
+                         current, so it asks the registry on every `madock start`
+                         whatever is already on the daemon. Measured in CI that
+                         day — the image was loaded from a cache, the log said
+                         `Loaded image: axllent/mailpit:latest`, and compose
+                         still reported `mailcatcher Pulling` and failed on
+                         Docker Hub's rate limit, while `nginx`, which has no tag
+                         to resolve, said `Skipped - No image to be pulled` in
+                         the same run.
+
+                         So the proxy no longer changes underneath everybody
+                         either: it moves when this number moves. -->
+                    <repository>axllent/mailpit</repository>
+                    <version>v1.31.0</version>
                 </mailpit>
             </proxy>
             <container_name_prefix>madock_</container_name_prefix>

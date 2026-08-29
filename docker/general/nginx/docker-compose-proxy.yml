@@ -25,21 +25,7 @@ services:
 
 {{{- if .proxy.mailpit.enabled}}}
   mailcatcher:
-    # Pinned, and `:latest` here was not merely untidy — it was a request to the
-    # registry on every `madock start` anybody ever runs.
-    #
-    # A floating tag has to be resolved before compose can know whether the local
-    # image is current, so it asks, whatever is on the daemon. Measured
-    # 2026-08-29 in CI: the image was loaded from a cache and present, the log
-    # says `Loaded image: axllent/mailpit:latest`, and compose still reported
-    # `mailcatcher Pulling` and then failed on Docker Hub's rate limit — while
-    # `nginx`, which has no tag to resolve, reported `Skipped - No image to be
-    # pulled` in the same run. Every project start was paying for that question.
-    #
-    # Pinning also means the proxy stops silently changing under everybody. It
-    # moves when this line moves, which is the behaviour every other service here
-    # already has.
-    image: axllent/mailpit:v1.31.0
+    image: {{{.proxy.mailpit.repository}}}:{{{.proxy.mailpit.version}}}
     ports:
       # SMTP. Published on every interface on purpose: the php containers reach
       # it through host.docker.internal, which resolves to the host gateway
