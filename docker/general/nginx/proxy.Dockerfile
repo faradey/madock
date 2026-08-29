@@ -1,3 +1,3 @@
-FROM nginx:1.28
+FROM {{{.proxy.nginx.repository}}}:{{{.proxy.nginx.version}}}
 COPY . /
 EXPOSE 35729

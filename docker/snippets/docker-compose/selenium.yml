@@ -1,7 +1,7 @@
 {{{- if .magento.mftf.enabled}}}
   selenium:
     init: true
-    image: selenium/standalone-chrome:latest
+    image: {{{.magento.mftf.selenium.repository}}}:{{{.magento.mftf.selenium.version}}}
     platform: linux/amd64
     ports:
       - "{{{port "selenium"}}}:7900"
