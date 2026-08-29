@@ -501,24 +501,23 @@
                          reached through an ssh tunnel. Empty means all
                          interfaces, which on a server means anyone. -->
                     <interface_ip>127.0.0.1:</interface_ip>
-                    <!-- Named here like every other service, rather than written
-                         into the compose template, so it can be raised in one
-                         place and overridden per project.
+                    <!-- Named here like every other service, rather than
+                         written into the compose template, so it can be raised
+                         in one place and overridden per project or per machine.
 
-                         It was `axllent/mailpit:latest` until 2026-08-29, and a
-                         floating tag is not merely untidy: compose has to
-                         resolve it before it can know whether the local image is
-                         current, so it asks the registry on every `madock start`
-                         whatever is already on the daemon. Measured in CI that
-                         day — the image was loaded from a cache, the log said
-                         `Loaded image: axllent/mailpit:latest`, and compose
-                         still reported `mailcatcher Pulling` and failed on
-                         Docker Hub's rate limit, while `nginx`, which has no tag
-                         to resolve, said `Skipped - No image to be pulled` in
-                         the same run.
+                         It was `axllent/mailpit:latest` until 2026-08-29. The
+                         reason for pinning is reproducibility and nothing more:
+                         the proxy is shared by every project on the machine, and
+                         a floating tag means it changes underneath all of them
+                         on whatever day upstream publishes. It moves when this
+                         number moves now.
 
-                         So the proxy no longer changes underneath everybody
-                         either: it moves when this number moves. -->
+                         Said plainly because the first attempt got it wrong:
+                         pinning does NOT stop the registry being asked. That was
+                         `docker compose pull`, which asks about every image
+                         whether or not the machine has it, and it is fixed where
+                         it lives — dockerComposePull now passes compose's
+                         missing pull policy unless this really is a rebuild. -->
                     <repository>axllent/mailpit</repository>
                     <version>v1.31.0</version>
                 </mailpit>

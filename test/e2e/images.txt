@@ -9,18 +9,18 @@
 #
 # One line per image, exact tags. Comments and blank lines are ignored.
 #
-# **Keep `:latest` out of here, and out of the templates.** A floating tag has to
-# be resolved before compose can know whether the local image is current, so it
-# asks the registry on every `up` whatever is on the daemon — and that question
-# is counted against the limit.
+# **Keep `:latest` out of here, and out of the templates** — for
+# reproducibility, not for the rate limit. A floating tag means the proxy every
+# project on the machine shares changes on whatever day upstream publishes.
 #
-# This is measured, and it is why caching alone was not enough. On 2026-08-29 a
-# shard loaded mailpit out of the cache, the log said `Loaded image:
-# axllent/mailpit:latest`, and compose still reported `mailcatcher Pulling` and
-# failed on the rate limit — while `nginx`, with no tag to resolve, said
-# `Skipped - No image to be pulled` in the same run. The cache put the image
-# there; the tag made it ask anyway. mailpit is pinned in
-# docker/general/nginx/docker-compose-proxy.yml now.
+# It is worth saying which of those two this is, because the first explanation
+# here was the wrong one. The registry was being asked about images the machine
+# already had, and the cause was `docker compose pull`, which asks about every
+# image whether or not it is present — measured on 2026-08-29, when a shard
+# loaded mailpit out of this cache, logged `Loaded image:`, and compose still
+# reported `Pulling` and failed on the limit. Pinning the tag changed nothing
+# about that; the fix is in dockerComposePull, which now asks only for what is
+# missing unless the run really is a rebuild.
 #
 # **This list is grown from evidence, not from reading the templates.** The
 # images come out of madock's config at render time, so which ones a given test

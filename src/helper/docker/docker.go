@@ -79,7 +79,7 @@ func dockerRun(subject string, args ...string) {
 // UpWithBuild starts both nginx proxy and project containers with build
 func UpWithBuild(projectName string, withChown bool) {
 	UpNginxWithBuild(projectName, true)
-	UpProjectWithBuild(projectName, withChown)
+	UpProjectWithBuildRefresh(projectName, withChown)
 }
 
 // Down stops project containers. When the compose file is present it
@@ -407,8 +407,29 @@ func prepareHomeDirs() (string, error) {
 	return home, nil
 }
 
-// UpProjectWithBuild starts project containers with build
+// UpProjectWithBuild starts project containers with build, fetching only the
+// images this machine does not already have.
+//
+// This is the ordinary path — creating containers, recreating them after a
+// config change, recovering from a failed `compose start`. None of those is a
+// reason to go and look for a newer image, and madock-pro's branch environments
+// call it too, so the signature is left alone deliberately: the better default
+// reaches every caller without a coordinated version bump across two
+// repositories.
 func UpProjectWithBuild(projectName string, withChown bool) {
+	upProjectWithBuild(projectName, withChown, false)
+}
+
+// UpProjectWithBuildRefresh is the same, and also looks for newer images.
+//
+// Only rebuild and clone want this. It is what the pull was added for in 2021,
+// and separating it is what lets every other caller stop asking the registry
+// about images it already has.
+func UpProjectWithBuildRefresh(projectName string, withChown bool) {
+	upProjectWithBuild(projectName, withChown, true)
+}
+
+func upProjectWithBuild(projectName string, withChown bool, refresh bool) {
 	var err error
 	globalComposer := paths.ComposerDir()
 	if !paths.IsFileExist(globalComposer) {
@@ -482,7 +503,7 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 		"--no-deps",
 		"-d",
 	}
-	dockerComposePull([]string{"compose", "-f", composeFile, "-f", composeFileOS})
+	dockerComposePull([]string{"compose", "-f", composeFile, "-f", composeFileOS}, refresh)
 	cmd := exec.Command("docker", profilesOn...)
 	attachOutput(cmd)
 	err = cmd.Run()
@@ -522,9 +543,29 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 	project.RecordApplied(projectName)
 }
 
-// dockerComposePull pulls images for docker-compose
-func dockerComposePull(composeFiles []string) {
+// dockerComposePull fetches the images a compose file names.
+//
+// `refresh` is the difference between the two reasons this is ever called, and
+// it was one reason until 2026-08-29 because compose had no way to say the
+// other. It was added in 2021 for exactly one of them — the commit says so:
+// "add pulling images from docker hub with rebuild command run" — and a rebuild
+// does mean go and see whether there is a newer image. Starting a project does
+// not; there it only has to be present.
+//
+// Told apart, because `docker compose pull` asks the registry about every image
+// whether or not the machine already has it. Measured in CI on 2026-08-29: the
+// image had just been loaded from a cache, the log said `Loaded image:`, and
+// compose reported `Pulling` and then failed on Docker Hub's rate limit. Every
+// first start of every installation was paying for a question it knew the
+// answer to.
+//
+// When compose is too old to be told, the old behaviour stands — see
+// composeSupportsPullPolicy for why that direction and not the other.
+func dockerComposePull(composeFiles []string, refresh bool) {
 	composeFiles = append(composeFiles, "pull")
+	if !refresh && composeSupportsPullPolicy() {
+		composeFiles = append(composeFiles, "--policy", "missing")
+	}
 	if attr.IsQuiet {
 		composeFiles = append(composeFiles, "--quiet")
 	}
@@ -556,7 +597,9 @@ func UpSnapshot(projectName string) {
 		"--no-deps",
 		"-d",
 	}
-	dockerComposePull([]string{"compose", "-f", composerFile})
+	// A snapshot only needs the image present; it is not a place to go
+	// looking for a newer one.
+	dockerComposePull([]string{"compose", "-f", composerFile}, false)
 	cmd := exec.Command("docker", profilesOn...)
 	attachOutput(cmd)
 	err := cmd.Run()
