@@ -1,0 +1,29 @@
+name: Load the warmed images
+description: >
+  Restores the image tar warmed once per run and loads it into this job's daemon,
+  so the suite does not pull from Docker Hub. Silent and harmless on a miss — the
+  suite then pulls as it always did, which is slower and rate limited but not
+  broken.
+
+runs:
+  using: composite
+  steps:
+    - id: cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.docker-images
+        key: docker-images-${{ hashFiles('test/e2e/images.txt') }}
+
+    # A miss must not fail the job. The cache is an optimisation against a
+    # third party's rate limit, and a job that refuses to run without it would
+    # turn a slow run into a red one — which is the failure this whole thing
+    # exists to stop.
+    - name: Load
+      shell: bash
+      run: |
+        if [ ! -f ~/.docker-images/images.tar.gz ]; then
+          echo "No warmed images on this run — the suite will pull, as it did before."
+          exit 0
+        fi
+        gunzip -c ~/.docker-images/images.tar.gz | docker load
+        docker image ls --format '{{.Repository}}:{{.Tag}}' | sort -u
