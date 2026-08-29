@@ -162,14 +162,22 @@
                 <pgadmin>
                     <enabled>false</enabled>
                     <repository>dpage/pgadmin4</repository>
-                    <version>latest</version>
+                    <!-- Pinned on 2026-08-29, with the rest of them. `latest` on
+                         a shared machine means the tool changes on whatever day
+                         upstream publishes, and nobody connects that to the
+                         morning it started behaving differently. -->
+                    <version>9.17</version>
                     <email>admin@admin.com</email>
                     <password>admin</password>
                 </pgadmin>
                 <mongo_express>
                     <enabled>false</enabled>
                     <repository>mongo-express</repository>
-                    <version>latest</version>
+                    <!-- 1.0.2 is where `latest` points, and where it has pointed
+                         since May 2024: this project publishes rarely. Pinned so
+                         that a release after such a gap arrives as a decision
+                         rather than as a Tuesday. -->
+                    <version>1.0.2</version>
                 </mongo_express>
             </db>
             <db2>
@@ -348,6 +356,19 @@
                 <timezone>America/Chicago</timezone>
                 <mftf>
                     <enabled>false</enabled>
+                    <!-- The browser the functional tests drive. Named here
+                         rather than written into the compose template, so a
+                         suite that needs a particular Chrome can say so.
+
+                         selenium tags a Chrome major, so this is the browser
+                         version as much as the image version. It was `latest`,
+                         which for a test runner is the worst of the two
+                         directions: a suite that passed yesterday and fails
+                         today, with nothing in the repository changed. -->
+                    <selenium>
+                        <repository>selenium/standalone-chrome</repository>
+                        <version>151.0</version>
+                    </selenium>
                     <admin_user>admin</admin_user>
                     <otp_shared_secret>MFZWIZTHNBVGW3D2</otp_shared_secret>
                 </mftf>
@@ -423,6 +444,19 @@
             </sylius>
             <proxy>
                 <enabled>true</enabled>
+                <!-- The image the shared proxy is built from. It lived in
+                     docker/general/nginx/proxy.Dockerfile as a literal `FROM
+                     nginx:1.28`, which made it the one version on this machine
+                     that could only be changed by editing madock itself — the
+                     proxy is not a project, so no project's config could reach
+                     it.
+
+                     Pinned there already, so this changes who may move it and
+                     not what runs. -->
+                <nginx>
+                    <repository>nginx</repository>
+                    <version>1.28</version>
+                </nginx>
                 <timeout>
                     <connect>60</connect>
                     <send>300</send>

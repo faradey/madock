@@ -1,3 +1,13 @@
+**v4.1.11**
+
+Fixed:
+- **`docker compose pull` was asking the registry about images the machine already had.** It asks about every image whether or not it is present, and madock called it on the first start of every installation. Measured in CI on 2026-08-29: the image had just been loaded from a local cache, the log said `Loaded image:`, and compose still reported `Pulling` and then failed on Docker Hub's rate limit
+- **Told apart by what the run is for, which is what the 2021 commit that added the pull meant.** Its message says so: "add pulling images from docker hub with rebuild command run". A rebuild does mean go and look for a newer image; creating containers, recreating them after a config change and recovering from a failed `compose start` do not — there the image only has to be present. Rebuild and clone keep the old behaviour, everything else asks only for what is missing
+- The flag that makes this possible arrived in compose v2.22.0, and madock declares no minimum compose version anywhere, so the version is asked for rather than assumed. An unknown flag is not a degradation — compose exits non-zero and `madock start` dies — so where the version cannot be read, the old behaviour stands
+
+Changed:
+- **The mailpit image is named in the config like every other service** (`proxy/mailpit/repository` and `version`), so it can be raised in one place, per machine or per project, instead of being editable only by changing madock. It was `axllent/mailpit:latest` and is now pinned: the proxy is shared by every project on a machine, and a floating tag means it changes underneath all of them on whatever day upstream publishes
+
 **v4.1.10**
 
 Fixed:
