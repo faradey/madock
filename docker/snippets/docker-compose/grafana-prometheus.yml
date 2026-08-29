@@ -1,7 +1,7 @@
 {{{- if .grafana.enabled}}}
   prometheus:
     init: true
-    image: prom/prometheus
+    image: {{{.grafana.prometheus.repository}}}:{{{.grafana.prometheus.version}}}
     command: --config.file=/etc/prometheus/prometheus-config.yml
     volumes:
       - ./ctx/grafana/prometheus-config.yml:/etc/prometheus/prometheus-config.yml

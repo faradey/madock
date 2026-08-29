@@ -1,7 +1,7 @@
 {{{- if .grafana.enabled}}}
   promtail:
     init: true
-    image: grafana/promtail:2.9.10
+    image: {{{.grafana.promtail.repository}}}:{{{.grafana.promtail.version}}}
     volumes:
       - ./ctx/grafana/promtail-config.yml:/etc/promtail/config.yml
       - ./src/var/log:/var/log

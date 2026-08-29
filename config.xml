@@ -38,6 +38,15 @@
                      false leaves out the container, the vhost, the block in the
                      shared proxy, the name in the certificate and the ports. -->
                 <enabled>true</enabled>
+                <!-- The project's own web server, which is a different container
+                     from the shared proxy and had its version in a different
+                     place: a literal FROM in docker/snippets/dockerfile/nginx.
+                     Moving only the proxy's left this one behind, and the two
+                     read alike enough that it was reported as done.
+
+                     Same version as before, 1.28. -->
+                <repository>nginx</repository>
+                <version>1.28</version>
                 <port>
                     <unsecure>80</unsecure>
                     <secure>443</secure>
@@ -575,6 +584,38 @@
                 <enabled>false</enabled>
                 <repository>grafana/grafana</repository>
                 <version>11.1.5</version>
+                <!-- The rest of the stack, which used to be written into its
+                     compose snippets: five containers that this block did not
+                     mention at all, so a reader checking the config would have
+                     concluded grafana was one image.
+
+                     loki and promtail stay on 2.9.10, the version already
+                     running. Pinning is not upgrading — 3.x is a major move and
+                     belongs in a change that says so. The three exporters below
+                     carried no tag whatsoever, which is `latest` spelled
+                     invisibly; they are pinned at what `latest` resolved to on
+                     2026-08-29, so nothing changes today and the next move is a
+                     decision. -->
+                <loki>
+                    <repository>grafana/loki</repository>
+                    <version>2.9.10</version>
+                </loki>
+                <promtail>
+                    <repository>grafana/promtail</repository>
+                    <version>2.9.10</version>
+                </promtail>
+                <prometheus>
+                    <repository>prom/prometheus</repository>
+                    <version>v3.14.0</version>
+                </prometheus>
+                <mysqld_exporter>
+                    <repository>prom/mysqld-exporter</repository>
+                    <version>v0.20.0</version>
+                </mysqld_exporter>
+                <rabbitmq_exporter>
+                    <repository>kbudde/rabbitmq-exporter</repository>
+                    <version>1.0.0</version>
+                </rabbitmq_exporter>
                 <auth>
                     <enabled>false</enabled>
                     <user></user>

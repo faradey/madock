@@ -1,4 +1,4 @@
-FROM nginx:1.28
+FROM {{{.nginx.repository}}}:{{{.nginx.version}}}
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
