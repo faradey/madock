@@ -292,3 +292,70 @@ jobs:
 
       - name: Install Shopware and Medusa for real
         run: ./test/e2e/e2e.sh run-local --platforms -run 'TestMagentoInstallsAndAnswers|TestShopwareInstallsAndAnswers|TestMedusaInstallsAndAnswers'
+
+  # The tests under quarantine, run where the defect actually appears.
+  #
+  # A quarantine is meant to take a test out from under the merge gate, not out
+  # of existence, and until this job it did the second.
+  # `TestSecondDatabaseIsItsOwnDatabase` was quarantined with a probe built into
+  # it to name the schemas and the accounts in the data directory it keeps
+  # finding — and nothing passed MADOCK_E2E_QUARANTINED anywhere, so the test
+  # never ran and the probe could never fire. "Waiting for the next red run" was
+  # waiting for something that could not happen. MADOCK-BACKLOG.md, item 37.
+  #
+  # It cannot go back into the shards: it fails intermittently and not on its own
+  # subject, and a required check that flakes blocks landings which have nothing
+  # to do with it.
+  #
+  # So: nightly and on demand, never on a pull request, and deliberately absent
+  # from `required_status_checks`. Red here is a measurement, not a gate — which
+  # is also why it must not be added to that list before the defect is fixed.
+  #
+  # Three attempts in parallel rather than one. The failure was seen once and did
+  # not reproduce in two full local runs, so the useful variable is how many
+  # disposable daemons it is offered per night. Separate runners, so the fixed
+  # project name cannot collide.
+  quarantine:
+    name: Quarantined tests (not a gate)
+    needs: test
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        attempt: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Sign in to the image registry
+        env:
+          REGISTRY_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          REGISTRY_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -z "$REGISTRY_USER" ] || [ -z "$REGISTRY_TOKEN" ]; then
+            echo "No registry credentials on this run — pulling anonymously, which is rate limited by address."
+            exit 0
+          fi
+          printf '%s' "$REGISTRY_TOKEN" | docker login -u "$REGISTRY_USER" --password-stdin
+
+      # The output is the entire point of this job, so the log is kept whatever
+      # happens: the probe prints the upgrade-info file, the schema names and the
+      # account list, and a failed run whose log was thrown away costs a night.
+      - name: Run the quarantined tests
+        run: |
+          set -o pipefail
+          ./test/e2e/e2e.sh run-local --quarantined -run 'TestSecondDatabaseIsItsOwnDatabase' | tee quarantine.log
+
+      - name: Keep the log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quarantine-attempt-${{ matrix.attempt }}
+          path: quarantine.log
+          if-no-files-found: warn
