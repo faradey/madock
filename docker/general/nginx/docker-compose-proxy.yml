@@ -25,7 +25,7 @@ services:
 
 {{{- if .proxy.mailpit.enabled}}}
   mailcatcher:
-    image: axllent/mailpit:latest
+    image: {{{.proxy.mailpit.repository}}}:{{{.proxy.mailpit.version}}}
     ports:
       # SMTP. Published on every interface on purpose: the php containers reach
       # it through host.docker.internal, which resolves to the host gateway

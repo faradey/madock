@@ -84,7 +84,13 @@ func UpNginxWithBuild(projectName string, force bool) {
 				nginx.GenerateSslCert(ctxPath, false)
 			}
 
-			dockerComposePull([]string{"compose", "-f", proxyCompose})
+			// force is proxy:rebuild, and only there is looking for a newer
+			// image the point. Every other start reaches here through
+			// UpNginx, which passes false: the proxy image only has to be
+			// present, and asking the registry about one already on the
+			// machine is what this used to do on the first start of every
+			// installation.
+			dockerComposePull([]string{"compose", "-f", proxyCompose}, force)
 
 			err := os.WriteFile(confCache, []byte("config cache"), 0755)
 			if err != nil {

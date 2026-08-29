@@ -501,6 +501,25 @@
                          reached through an ssh tunnel. Empty means all
                          interfaces, which on a server means anyone. -->
                     <interface_ip>127.0.0.1:</interface_ip>
+                    <!-- Named here like every other service, rather than
+                         written into the compose template, so it can be raised
+                         in one place and overridden per project or per machine.
+
+                         It was `axllent/mailpit:latest` until 2026-08-29. The
+                         reason for pinning is reproducibility and nothing more:
+                         the proxy is shared by every project on the machine, and
+                         a floating tag means it changes underneath all of them
+                         on whatever day upstream publishes. It moves when this
+                         number moves now.
+
+                         Said plainly because the first attempt got it wrong:
+                         pinning does NOT stop the registry being asked. That was
+                         `docker compose pull`, which asks about every image
+                         whether or not the machine has it, and it is fixed where
+                         it lives — dockerComposePull now passes compose's
+                         missing pull policy unless this really is a rebuild. -->
+                    <repository>axllent/mailpit</repository>
+                    <version>v1.31.0</version>
                 </mailpit>
             </proxy>
             <container_name_prefix>madock_</container_name_prefix>

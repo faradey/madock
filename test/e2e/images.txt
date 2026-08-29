@@ -1,0 +1,38 @@
+# Images the end-to-end suite pulls from Docker Hub, warmed once per run and
+# loaded from GitHub's cache by every job that needs them.
+#
+# Why this file exists: Docker Hub allows 200 pulls an hour to an authenticated
+# free account, and a single pull request costs two runs of nine jobs. On
+# 2026-08-29 three pull requests in one morning spent the hour's budget and every
+# shard went red on `toomanyrequests` — wearing the face of a regression in the
+# change under review, which is the expensive part.
+#
+# One line per image, exact tags. Comments and blank lines are ignored.
+#
+# **Keep `:latest` out of here, and out of the templates** — for
+# reproducibility, not for the rate limit. A floating tag means the proxy every
+# project on the machine shares changes on whatever day upstream publishes.
+#
+# It is worth saying which of those two this is, because the first explanation
+# here was the wrong one. The registry was being asked about images the machine
+# already had, and the cause was `docker compose pull`, which asks about every
+# image whether or not it is present — measured on 2026-08-29, when a shard
+# loaded mailpit out of this cache, logged `Loaded image:`, and compose still
+# reported `Pulling` and failed on the limit. Pinning the tag changed nothing
+# about that; the fix is in dockerComposePull, which now asks only for what is
+# missing unless the run really is a rebuild.
+#
+# **This list is grown from evidence, not from reading the templates.** The
+# images come out of madock's config at render time, so which ones a given test
+# uses cannot be read off a file. Every job prints what its daemon ended up
+# holding, under "Images this job actually used"; anything appearing there and
+# missing here is a pull that is still being paid for.
+
+axllent/mailpit:v1.31.0
+ubuntu:22.04
+
+# Added 2026-08-29 from the first run of the list above, which is exactly what
+# the "Images this job actually used" step is for: the shards reported three
+# images from Docker Hub and the list held two. Nobody would have guessed this
+# one by reading the templates — it is not in any of them.
+alpine:3
