@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/faradey/madock/v4/src/controller/general/install"
 	"github.com/faradey/madock/v4/src/controller/general/rebuild"
@@ -179,7 +178,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 // dependency on git / composer / npm.
 func DownloadBigcommerce(projectName, presetCode string) {
 	target := paths.GetRunDirPath()
-	if !isDirEmpty(target) {
+	if !paths.IsDirEmpty(target) {
 		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
 		return
 	}
@@ -245,37 +244,13 @@ func runInContainer(projectConf map[string]string, projectName, serviceHint, use
 	}
 }
 
-func isDirEmpty(path string) bool {
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		return true
-	}
-	for _, e := range entries {
-		if e.Name() == ".madock" || e.Name() == "." || e.Name() == ".." {
-			continue
-		}
-		return false
-	}
-	return true
-}
-
+// findPresetByName is the shared lookup with this platform's own table.
+//
+// The table stays here because it is data — which words this platform
+// accepts — while the matching is the same everywhere and used to be six
+// copies that had drifted into three behaviours.
 func findPresetByName(name string) *preset.Preset {
-	name = strings.ToLower(name)
 	presets := preset.GetBigcommercePresets()
-
-	for _, p := range presets {
-		if strings.ToLower(p.Name) == name ||
-			strings.ToLower(p.Versions.PlatformVersion) == name {
-			return &p
-		}
-	}
-	for _, p := range presets {
-		lowerName := strings.ToLower(p.Name)
-		lowerVer := strings.ToLower(p.Versions.PlatformVersion)
-		if strings.Contains(lowerName, name) || strings.Contains(lowerVer, name) {
-			return &p
-		}
-	}
 	aliases := map[string]string{
 		"next":       "catalyst",
 		"storefront": "catalyst",
@@ -285,12 +260,6 @@ func findPresetByName(name string) *preset.Preset {
 		"app":        "app-node",
 		"node":       "app-node",
 	}
-	if alias, ok := aliases[name]; ok {
-		for _, p := range presets {
-			if p.Versions.PlatformVersion == alias {
-				return &p
-			}
-		}
-	}
-	return nil
+
+	return preset.Find(presets, aliases, name)
 }

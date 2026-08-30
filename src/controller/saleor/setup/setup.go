@@ -149,7 +149,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 // when the version is empty or doesn't look like a Saleor release tag.
 func DownloadSaleor(projectName, platformVersion string) {
 	target := paths.GetRunDirPath()
-	if !isDirEmpty(target) {
+	if !paths.IsDirEmpty(target) {
 		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
 		return
 	}
@@ -200,47 +200,18 @@ func branchFromVersion(v string) string {
 
 // isDirEmpty returns true when path doesn't exist or holds no entries
 // besides dotfiles madock itself may have created (.madock/).
-func isDirEmpty(path string) bool {
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		return true
-	}
-	for _, e := range entries {
-		if e.Name() == ".madock" || e.Name() == "." || e.Name() == ".." {
-			continue
-		}
-		return false
-	}
-	return true
-}
-
+// findPresetByName is the shared lookup with this platform's own table.
+//
+// The table stays here because it is data — which words this platform
+// accepts — while the matching is the same everywhere and used to be six
+// copies that had drifted into three behaviours.
 func findPresetByName(name string) *preset.Preset {
-	name = strings.ToLower(name)
 	presets := preset.GetSaleorPresets()
-
-	for _, p := range presets {
-		if strings.ToLower(p.Name) == name {
-			return &p
-		}
-	}
-	for _, p := range presets {
-		lowerName := strings.ToLower(p.Name)
-		if strings.Contains(lowerName, name) ||
-			strings.Contains(p.Versions.PlatformVersion, name) {
-			return &p
-		}
-	}
 	aliases := map[string]string{
 		"latest": "3.23",
 		"stable": "3.20",
 		"3":      "3.23",
 	}
-	if alias, ok := aliases[name]; ok {
-		for _, p := range presets {
-			if strings.Contains(p.Name, alias) {
-				return &p
-			}
-		}
-	}
-	return nil
+
+	return preset.Find(presets, aliases, name)
 }
