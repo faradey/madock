@@ -1,3 +1,15 @@
+**v4.1.13**
+
+Fixed:
+- **Cron did not come back when a container did.** Nothing in an application image starts it — the CMD is php-fpm — so the daemon existed only for as long as the container it was started in, and anything that recreates that container takes it away and **leaves the crontab**: the jobs are there, nothing reads them, nothing fails, every check stays green. Measured on a production host rebooted for a plan change on 2026-08-30: containers up, applications answering, cron down in both projects that had it, carrying billing periods, carrier charges, storage counts and every Shopify sync
+- **The image starts cron now, not madock.** Re-arming after `service:restart` was already there and could never cover this: on a host reboot Docker brings the containers back on its own and madock is not running at all
+- **The signal is the crontab, not the config.** A config value is baked in when the image is built, so enabling cron and rebooting without a rebuild would produce the same silence again. Jobs in the crontab are true at the moment the container starts, and `cron:disable` removes them, so a project told to stop has none. A Debian crontab is never empty — it ships an explanatory header — so the check is for a line that is neither blank nor a comment, and there is a test for exactly that case
+- Failing to start cron never blocks the application: a container that refuses to serve because its scheduler is unhappy is worse than the silence being fixed
+
+Changed:
+- **Built on Go 1.27.** Go supports a line until two newer ones exist, so 1.25 stopped receiving fixes on 2026-08-19, the day 1.27 shipped — eleven days before this was noticed, because the check meant to catch it ended its calendar a release early and an empty end-of-life date reads as supported. Nothing needs installing: `GOTOOLCHAIN=auto` fetches what `go.mod` requires and CI reads the same file
+- The php image's CMD is exec form. With an entrypoint in place the shell form would have been wrapped in another `/bin/sh`, and the direct exec is what keeps php-fpm as the process that receives signals
+
 **v4.1.12**
 
 Changed:
