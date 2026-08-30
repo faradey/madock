@@ -39,6 +39,18 @@ name: CI
 # branch, so master is still exercised on its own every day, against the world as
 # it is that morning rather than as it was at the merge.
 #
+# **A push to master is back in the list, and it runs one job.** Removing it
+# entirely broke something an hour old, and the two were never checked together:
+# GitHub scopes a cache by the ref that wrote it, and a pull request may read its
+# own scope and the base branch's — nothing else. With master never running,
+# nothing wrote the base branch's, so four consecutive pull requests each missed
+# the image cache and each saved another copy under the same key. Measured on the
+# API, not inferred: six entries, one key, refs `refs/pull/102..105/merge`.
+#
+# So `images` runs on a push to master and everything else is gated off it. That
+# is one short job per landing rather than a second suite, and the shared cache
+# is fresh the moment a change lands instead of at the next nightly.
+#
 # What this gives up, said plainly rather than left to be discovered:
 #
 #   - a push to staging with no pull request open gets no run. Work lands through
@@ -56,6 +68,19 @@ name: CI
 # to find out means finding out from a customer instead.
 on:
   pull_request:
+  # Only the `images` job runs here, and only to write a cache the pull requests
+  # can read. Everything else is gated on the event below, so this does not bring
+  # back the second full run that was removed above.
+  #
+  # It is here because of what the removal broke, which took a measurement to
+  # see: GitHub scopes a cache by the ref that wrote it, and a pull request can
+  # read its own scope and the base branch's — nothing else. With master never
+  # running, nothing ever wrote the base branch's, so four consecutive pull
+  # requests each missed and each saved another copy under the same key. The
+  # cache and the trigger change were made an hour apart and never checked
+  # together.
+  push:
+    branches: [master]
   schedule:
     - cron: '17 3 * * *'
   workflow_dispatch:
@@ -83,6 +108,11 @@ concurrency:
 jobs:
   test:
     name: Build and unit tests
+    # A push to master is here for one job only, and it is not this one. Gating
+    # the root of the graph is what keeps the rest out: everything below reaches
+    # master through `needs: test`, and a job whose dependency is skipped is
+    # skipped too.
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -314,7 +344,13 @@ jobs:
   e2e:
     name: End-to-end
     needs: [e2e-plan, e2e-shard]
-    if: always()
+    # `always()` is what makes this a real gate rather than a formality — a job
+    # that only lists `needs` is skipped when a dependency fails, and a skipped
+    # required check is not a failed one. It is also why this job cannot be left
+    # to the cascade: on a push to master its dependencies are skipped, it would
+    # run anyway, read "skipped" as "did not pass" and paint master red for a
+    # suite nobody asked to run.
+    if: always() && github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
