@@ -50,29 +50,9 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 
 	if !usePreset && args.PlatformVersion == "" && continueSetup {
-		presets := preset.GetShopifyPresets()
-		presetOptions := make([]fmtc.PresetOption, 0, len(presets)+1)
-		for _, p := range presets {
-			presetOptions = append(presetOptions, fmtc.PresetOption{
-				Name:        p.Name,
-				Description: p.Description,
-				IsCustom:    false,
-			})
-		}
-		presetOptions = append(presetOptions, fmtc.PresetOption{
-			Name:        preset.CustomPreset.Name,
-			Description: preset.CustomPreset.Description,
-			IsCustom:    true,
-		})
-
-		fmt.Println("")
-		fmtc.TitleLn("Choose a Shopify SDK preset:")
-		selectedIdx := fmtc.SelectPreset("Configuration", presetOptions)
-		if selectedIdx < len(presets) {
-			toolsDefVersions = presets[selectedIdx].Versions
+		if selected := preset.Choose(preset.GetShopifyPresets(), "Choose a Shopify SDK preset:"); selected != nil {
+			toolsDefVersions = selected.Versions
 			usePreset = true
-			fmt.Println("")
-			fmtc.SuccessIconLn(fmt.Sprintf("Using preset: %s", presets[selectedIdx].Name))
 		}
 	}
 

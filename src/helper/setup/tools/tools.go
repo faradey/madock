@@ -3,15 +3,12 @@ package tools
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/logger"
-	"github.com/faradey/madock/v4/src/helper/paths"
 	"github.com/faradey/madock/v4/src/model/versions"
 )
 
@@ -345,43 +342,6 @@ func RubyVersion(defVersion *string) {
 	SelectInteractive("Ruby Version", availableVersions, defVersion)
 }
 
-func setTitleAndRecommended(title string, recommended *string) {
-	// Title is now shown as part of the selector box
-	fmt.Println("")
-}
-
-func PrepareVersions(availableVersions []string) {
-	for index, ver := range availableVersions {
-		if ver != "" {
-			fmt.Println(strconv.Itoa(index) + ") " + ver)
-		}
-	}
-}
-
-// PrepareVersionsStyled displays versions in a styled selector box
-func PrepareVersionsStyled(title string, availableVersions []string, recommended string) {
-	var options []fmtc.SelectorOption
-	recommendedKey := ""
-
-	for index, ver := range availableVersions {
-		if ver == "" {
-			continue
-		}
-		key := strconv.Itoa(index)
-		isRecommended := ver == recommended
-		if isRecommended {
-			recommendedKey = key
-		}
-		options = append(options, fmtc.SelectorOption{
-			Key:         key,
-			Value:       ver,
-			Recommended: isRecommended,
-		})
-	}
-
-	fmtc.Selector(title, options, recommendedKey)
-}
-
 // SelectInteractive runs an interactive selector and returns the selected value
 func SelectInteractive(title string, availableVersions []string, defVersion *string) {
 	// In reconfigure mode, ask whether to change the current value
@@ -449,21 +409,6 @@ func SelectInteractive(title string, availableVersions []string, defVersion *str
 	}
 }
 
-func Invitation(ver *string) {
-	if *ver != "" {
-		fmt.Println("Enter the item number or press Enter to select the recommended item")
-	} else {
-		fmt.Println("Enter the item number")
-	}
-
-	fmt.Print("> ")
-}
-
-func WaiterAndProceed(defVersion *string, availableVersions []string) {
-	selected, repoAndVersion := Waiter()
-	setSelectedVersion(defVersion, availableVersions, selected, repoAndVersion)
-}
-
 // RequireAnswer asks for a value that has no default, and refuses rather than
 // asking when nobody is there to answer.
 //
@@ -520,23 +465,6 @@ func Waiter() (selected, repoAndVersion string) {
 	}
 
 	return
-}
-
-func setSelectedVersion(defVersion *string, availableVersions []string, selected, repoAndVersion string) {
-	selectedInt, err := strconv.Atoi(selected)
-	if selected == "" && *defVersion != "" {
-		fmtc.SuccessLn("Your choice: " + *defVersion)
-	} else if selected == "0" {
-		*defVersion = repoAndVersion
-		fmtc.SuccessLn("Your choice: " + *defVersion)
-	} else if selected != "" && err == nil && len(availableVersions) >= selectedInt {
-		version := strings.Split(availableVersions[selectedInt], " ")
-		*defVersion = version[0]
-		fmtc.SuccessLn("Your choice: " + *defVersion)
-	} else {
-		fmtc.WarningLn("Choose one of the options offered")
-		WaiterAndProceed(defVersion, availableVersions)
-	}
 }
 
 // PopulateFromConfig fills ToolsVersions fields from existing project config
@@ -611,18 +539,5 @@ func PopulateFromConfig(tv *versions.ToolsVersions, conf map[string]string) {
 		case "mongodb":
 			tv.DbType = "MongoDB"
 		}
-	}
-}
-
-func copyFile(pathFrom, pathTo string) {
-	b, err := os.ReadFile(pathFrom)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	pathToAsSlice := strings.Split(pathTo, "/")
-	paths.MakeDirsByPath(strings.Join(pathToAsSlice[:len(pathToAsSlice)-1], "/"))
-	err = os.WriteFile(pathTo, b, 0755)
-	if err != nil {
-		log.Fatalf("Unable to write file: %v", err)
 	}
 }
