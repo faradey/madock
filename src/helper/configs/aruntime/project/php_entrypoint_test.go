@@ -139,3 +139,112 @@ func runPhpEntrypoint(t *testing.T, crontabBody string) string {
 
 	return string(out) + string(calls)
 }
+
+// The same contract on the Node side, and the reason it is a separate test: the
+// php one passes on an image the reported failure never touched.
+//
+// A Shopify or Medusa project runs its application in the node container — there
+// is no php container in it at all — and the production machine that came back
+// from a reboot with no scheduler was running two Node apps. Fixing php alone
+// left the measured case exactly as it was, which the php test could not say and
+// a live run did within a minute.
+func TestNodejsEntrypointStartsCronOnlyWhenThereAreJobs(t *testing.T) {
+	t.Run("jobs installed: cron is started", func(t *testing.T) {
+		calls := runNodejsCronEntrypoint(t, "*/5 * * * * /bin/true\n")
+
+		if !strings.Contains(calls, "service cron start") {
+			t.Errorf("cron was not started while jobs were installed:\n%s", calls)
+		}
+	})
+
+	t.Run("only comments: cron stays down", func(t *testing.T) {
+		calls := runNodejsCronEntrypoint(t, "# m h  dom mon dow   command\n")
+
+		if strings.Contains(calls, "service cron start") {
+			t.Errorf("cron was started for a crontab holding nothing but comments:\n%s", calls)
+		}
+	})
+
+	t.Run("crontab refuses: nothing blows up", func(t *testing.T) {
+		// `set -e` is on in this entrypoint, so a crontab that exits non-zero
+		// would end the container before the application ever started. What is
+		// not covered here is the image that has no `crontab` at all — the
+		// harness cannot hide the host's — and that branch is the `command -v`
+		// guard, whose absence would show up as this same failure.
+		calls := runNodejsCronEntrypoint(t, "\x00refuse")
+
+		if strings.Contains(calls, "service cron start") {
+			t.Errorf("cron was started although the crontab could not be read:\n%s", calls)
+		}
+	})
+}
+
+// runNodejsCronEntrypoint runs only the cron guard out of the node entrypoint.
+//
+// The rest of that script waits for a project on disk and execs a dev server,
+// which is another test's subject; this takes the guard itself, which is the
+// part with a decision in it.
+func runNodejsCronEntrypoint(t *testing.T, crontabBody string) string {
+	t.Helper()
+
+	projectName := "nodecron"
+	installation := testenv.SetupWith(t, projectName, "nodecron.test", map[string]string{
+		"platform":       "custom",
+		"nodejs/enabled": "true",
+	})
+
+	MakeConf(projectName)
+
+	rendered := testenv.Collect(t, filepath.Join(installation.ExecDir, "aruntime", "projects", projectName), installation)
+
+	var dockerfile string
+	for name, body := range rendered {
+		if strings.HasSuffix(name, "ctx/nodejs.Dockerfile") {
+			dockerfile = body
+		}
+	}
+	if dockerfile == "" {
+		t.Fatal("MakeConf produced no nodejs.Dockerfile")
+	}
+
+	body := entrypointBody(t, dockerfile)
+	if _, rest, found := strings.Cut(body, "\n"); found {
+		body = rest
+	}
+
+	// The guard, and nothing after it. Cut at the comment that opens the next
+	// section rather than at a line number, which would drift.
+	guard, _, found := strings.Cut(body, "# run_app execs")
+	if !found {
+		t.Fatal("the node entrypoint no longer has the section this test cuts at")
+	}
+
+	dir := t.TempDir()
+	scriptPath := filepath.Join(dir, "guard")
+	writeExecutable(t, scriptPath, guard)
+
+	bin := filepath.Join(dir, "bin")
+	marker := filepath.Join(dir, "service.calls")
+
+	if crontabBody == "\x00refuse" {
+		writeExecutable(t, filepath.Join(bin, "crontab"), "#!/bin/sh\necho 'no crontab for user' >&2\nexit 1\n")
+	} else {
+		writeExecutable(t, filepath.Join(bin, "crontab"), "#!/bin/sh\ncat <<'CRONTAB_EOF'\n"+crontabBody+"CRONTAB_EOF\n")
+	}
+	writeExecutable(t, filepath.Join(bin, "service"), "#!/bin/sh\necho \"service $*\" >> "+marker+"\n")
+
+	// The stubs come first, and the system directories stay: the guard pipes
+	// through `grep`, and a PATH holding only the stubs made every case answer
+	// "no jobs" because grep was not found — a test environment failing in a way
+	// that reads exactly like the code being right.
+	cmd := exec.Command("sh", scriptPath)
+	cmd.Env = []string{"PATH=" + bin + ":" + os.Getenv("PATH"), "WORKDIR=" + dir}
+
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("the guard failed: %v\n%s", err, out)
+	}
+
+	calls, _ := os.ReadFile(marker)
+
+	return string(calls)
+}
