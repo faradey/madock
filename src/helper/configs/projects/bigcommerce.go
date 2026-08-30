@@ -14,10 +14,10 @@ func init() {
 // Bigcommerce presets map to different stack flavours:
 //   - catalyst : Node-only (Next.js storefront)
 //   - stencil  : Node-only (Stencil CLI for theme dev — proxies the
-//                live store, no DB needed locally)
+//     live store, no DB needed locally)
 //   - api-php  : PHP + MariaDB + Redis (raw bigcommerce/api SDK)
 //   - app-node : Node-only (Express + Next.js embedded app, OAuth
-//                session storage via SQLite/JSON file by default)
+//     session storage via SQLite/JSON file by default)
 //
 // The preset is stored in `bigcommerce/preset` so it survives config
 // rewrites and so install + setup controllers can branch on it.
@@ -94,8 +94,22 @@ func Bigcommerce(config *configs2.ConfigLines, defVersions versions.ToolsVersion
 	} else {
 		config.Set("php/enabled", "false")
 		config.Set("php/xdebug/enabled", "false")
-		config.Set("redis/enabled", "false")
-		config.Set("db/type", "")
+
+		// A node preset needs neither by default — Catalyst and Stencil are a
+		// storefront and a theme, and they talk to BigCommerce rather than to a
+		// database of their own. But defaulting and overruling are different
+		// things, and this branch used to do the second: whatever the project
+		// had asked for was replaced, in silence, while the php branch three
+		// lines above reads the same keys and says in a comment that it
+		// respects them.
+		//
+		// It stopped being theoretical when our own BigCommerce line was
+		// decided: Core is Node with Prisma and BullMQ, so it needs both a
+		// database and Redis, and this branch forbade exactly what that stack
+		// requires. The workaround was `platform custom` with the whole stack
+		// spelled out by hand, carrying a comment about this defect.
+		config.Set("redis/enabled", defaultTo(projectConf["redis/enabled"], "false"))
+		config.Set("db/type", projectConf["db/type"])
 	}
 
 	// Node stack.
@@ -129,4 +143,16 @@ func Bigcommerce(config *configs2.ConfigLines, defVersions versions.ToolsVersion
 	config.Set("grafana/auth/enabled", configs2.GetOption("grafana/auth/enabled", generalConf, projectConf))
 	config.Set("grafana/auth/user", configs2.GetOption("grafana/auth/user", generalConf, projectConf))
 	config.Set("grafana/auth/password", configs2.GetOption("grafana/auth/password", generalConf, projectConf))
+}
+
+// defaultTo is the project's answer when it gave one, and the fallback when it
+// did not. An empty string is "not asked for", which is what an absent key
+// looks like after the config is flattened — it is not the same as a project
+// asking for nothing.
+func defaultTo(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+
+	return value
 }
