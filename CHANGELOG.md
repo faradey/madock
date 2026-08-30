@@ -1,3 +1,8 @@
+**v4.1.16**
+
+Changed:
+- **Fifteen functions now say they exist to be called from madock-pro.** A reachability analysis over this module alone reports 61 unreachable functions, and fifteen of them are what pro is built on — the hook registry, the licence gate, the template trees pro installs over these, the password generator that replaces this module weak defaults on every server, the guard on destructive commands. Every one is genuinely unreachable from here, because being called from the other side is the point; read without that context they are dead code with tidy comments, and an audit proposed deleting some
+
 **v4.1.15**
 
 Fixed:
