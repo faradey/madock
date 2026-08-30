@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/faradey/madock/v4/src/controller/general/install"
 	"github.com/faradey/madock/v4/src/controller/general/rebuild"
@@ -168,7 +167,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 // frontend pipeline.
 func DownloadSylius(projectName string) {
 	target := paths.GetRunDirPath()
-	if !isDirEmpty(target) {
+	if !paths.IsDirEmpty(target) {
 		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
 		return
 	}
@@ -199,48 +198,19 @@ func DownloadSylius(projectName string) {
 
 // isDirEmpty returns true when path doesn't exist or holds no entries
 // besides dotfiles madock itself may have created (.madock/).
-func isDirEmpty(path string) bool {
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		return true
-	}
-	for _, e := range entries {
-		if e.Name() == ".madock" || e.Name() == "." || e.Name() == ".." {
-			continue
-		}
-		return false
-	}
-	return true
-}
-
+// findPresetByName is the shared lookup with this platform's own table.
+//
+// The table stays here because it is data — which words this platform
+// accepts — while the matching is the same everywhere and used to be six
+// copies that had drifted into three behaviours.
 func findPresetByName(name string) *preset.Preset {
-	name = strings.ToLower(name)
 	presets := preset.GetSyliusPresets()
-
-	for _, p := range presets {
-		if strings.ToLower(p.Name) == name {
-			return &p
-		}
-	}
-	for _, p := range presets {
-		lowerName := strings.ToLower(p.Name)
-		if strings.Contains(lowerName, name) ||
-			strings.Contains(p.Versions.PlatformVersion, name) {
-			return &p
-		}
-	}
 	aliases := map[string]string{
 		"latest": "2",
 		"stable": "1.13",
 		"2":      "2",
 		"1":      "1.13",
 	}
-	if alias, ok := aliases[name]; ok {
-		for _, p := range presets {
-			if strings.Contains(p.Name, alias) {
-				return &p
-			}
-		}
-	}
-	return nil
+
+	return preset.Find(presets, aliases, name)
 }

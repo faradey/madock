@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 
 	"github.com/faradey/madock/v4/src/controller/general/install"
 	"github.com/faradey/madock/v4/src/controller/general/rebuild"
@@ -170,7 +168,7 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 // Runs inside the nodejs container so the host has no git dependency.
 func DownloadMedusa(projectName string) {
 	target := paths.GetRunDirPath()
-	if !isDirEmpty(target) {
+	if !paths.IsDirEmpty(target) {
 		fmtc.WarningLn("Skipping download — project directory is not empty: " + target)
 		return
 	}
@@ -202,7 +200,7 @@ func DownloadMedusa(projectName string) {
 	// and by docker as root before that. Skipping on existence alone meant the
 	// storefront was never cloned on a clean project, which shows up much later
 	// as a site that has a backend and no shop.
-	if !isDirEmpty(storefrontTarget) {
+	if !paths.IsDirEmpty(storefrontTarget) {
 		fmtc.WarningLn("Skipping storefront download — " + storefrontTarget + " already has content.")
 		return
 	}
@@ -244,43 +242,15 @@ func runMedusaInContainer(projectConf map[string]string, projectName, serviceHin
 // Empty directories are skipped rather than the one name, because that is the
 // property that matters: an empty directory is not a project, whoever created
 // it.
-func isDirEmpty(path string) bool {
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		return true
-	}
-	for _, e := range entries {
-		if e.Name() == ".madock" || e.Name() == "." || e.Name() == ".." {
-			continue
-		}
-		if e.IsDir() && isDirEmpty(filepath.Join(path, e.Name())) {
-			continue
-		}
-		return false
-	}
-	return true
-}
-
 // findPresetByName resolves --preset value to a Medusa preset.
 // Accepts exact names, fragments, and aliases like "latest", "stable", "legacy", "v2", "v1".
+// findPresetByName is the shared lookup with this platform's own table.
+//
+// The table stays here because it is data — which words this platform
+// accepts — while the matching is the same everywhere and used to be six
+// copies that had drifted into three behaviours.
 func findPresetByName(name string) *preset.Preset {
-	name = strings.ToLower(name)
 	presets := preset.GetMedusaPresets()
-
-	for _, p := range presets {
-		if strings.ToLower(p.Name) == name {
-			return &p
-		}
-	}
-
-	for _, p := range presets {
-		lowerName := strings.ToLower(p.Name)
-		if strings.Contains(lowerName, name) ||
-			strings.Contains(p.Versions.PlatformVersion, name) {
-			return &p
-		}
-	}
-
 	aliases := map[string]string{
 		"latest": "2.x",
 		"stable": "2.0",
@@ -290,12 +260,6 @@ func findPresetByName(name string) *preset.Preset {
 		"2":      "2.x",
 		"1":      "1.x",
 	}
-	if alias, ok := aliases[name]; ok {
-		for _, p := range presets {
-			if strings.Contains(p.Name, alias) {
-				return &p
-			}
-		}
-	}
-	return nil
+
+	return preset.Find(presets, aliases, name)
 }
