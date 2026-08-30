@@ -36,7 +36,7 @@ func TestProxyCommandsControlTheProxy(t *testing.T) {
 		"--hosts=e2eproxyctl.test",
 	)
 	p.run(20*time.Minute, "start")
-	requireCertificateFor(t, "e2eproxyctl.test")
+	requireCertificateFor(t, p, "e2eproxyctl.test")
 
 	// stop. Without this the rest of the test cannot fail: a proxy that was
 	// never taken down answers every later check whether or not the command
@@ -58,25 +58,25 @@ func TestProxyCommandsControlTheProxy(t *testing.T) {
 	// path from creating it: UpNginx decides between the two by asking compose
 	// whether the container is running, and a stopped container must not count.
 	p.run(5*time.Minute, "proxy:start")
-	requireCertificateFor(t, "e2eproxyctl.test")
+	requireCertificateFor(t, p, "e2eproxyctl.test")
 
 	// reload with the proxy up. It re-parses routing and certificates in place,
 	// so the project has to still be served afterwards — a reload that takes
 	// the site down is worse than one that does nothing.
 	p.run(3*time.Minute, "proxy:reload")
-	requireCertificateFor(t, "e2eproxyctl.test")
+	requireCertificateFor(t, p, "e2eproxyctl.test")
 
 	// restart is stop plus start in one command, and it is what the certificate
 	// test uses. Kept here for the sequence, not for the certificate.
 	p.run(5*time.Minute, "proxy:restart")
-	requireCertificateFor(t, "e2eproxyctl.test")
+	requireCertificateFor(t, p, "e2eproxyctl.test")
 
 	// rebuild throws the container away and builds it again. It is the heaviest
 	// of the four and the one most likely to come back without the routing it
 	// had: the configuration is regenerated from the project registry, not from
 	// whatever the old container was serving.
 	p.run(10*time.Minute, "proxy:rebuild")
-	requireCertificateFor(t, "e2eproxyctl.test")
+	requireCertificateFor(t, p, "e2eproxyctl.test")
 }
 
 // requireProxyUnreachable waits for port 443 to stop accepting connections.

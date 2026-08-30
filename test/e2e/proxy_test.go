@@ -40,16 +40,16 @@ func TestProxyRoutesEveryProjectOverHTTPS(t *testing.T) {
 	// regeneration is written from the project being started rather than from
 	// every project, the first one disappears from the proxy — which is exactly
 	// how it once behaved.
-	requireCertificateFor(t, "e2eproxya.test")
-	requireCertificateFor(t, "e2eproxyb.test")
+	requireCertificateFor(t, first, "e2eproxya.test")
+	requireCertificateFor(t, first, "e2eproxyb.test")
 
 	// proxy:restart is the operation that took HTTPS down before. It has no
 	// project argument, so nothing about it says which projects it is allowed
 	// to forget.
 	second.run(5*time.Minute, "proxy:restart")
 
-	requireCertificateFor(t, "e2eproxya.test")
-	requireCertificateFor(t, "e2eproxyb.test")
+	requireCertificateFor(t, first, "e2eproxya.test")
+	requireCertificateFor(t, first, "e2eproxyb.test")
 }
 
 // requireCertificateFor opens a TLS connection to the proxy asking for the given
@@ -59,7 +59,7 @@ func TestProxyRoutesEveryProjectOverHTTPS(t *testing.T) {
 // container serving nothing, so the HTTP response would be a 502 and would say
 // nothing about routing — whereas the certificate is chosen by server name, and
 // getting the right one back means the proxy knows the project.
-func requireCertificateFor(t *testing.T, host string) {
+func requireCertificateFor(t *testing.T, p *project, host string) {
 	t.Helper()
 
 	dialer := &net.Dialer{Timeout: 10 * time.Second}
@@ -102,6 +102,9 @@ func requireCertificateFor(t *testing.T, host string) {
 
 		if time.Now().After(deadline) {
 			t.Errorf("%s: could not complete a TLS handshake with the proxy: %v", host, lastErr)
+			// Nothing answered on 443, and that is three situations wearing one
+			// message. Ask before giving up.
+			describeProxy(t, p)
 			return
 		}
 		time.Sleep(2 * time.Second)
@@ -121,12 +124,12 @@ func TestChangedHostGetsItsOwnCertificate(t *testing.T) {
 		"--hosts=e2ehost-before.test",
 	)
 	p.run(20*time.Minute, "start")
-	requireCertificateFor(t, "e2ehost-before.test")
+	requireCertificateFor(t, p, "e2ehost-before.test")
 
 	// Hosts live one per store code, so the key is a path rather than `hosts`.
 	// `--hosts=` on setup writes the base one.
 	p.run(2*time.Minute, "config:set", "-n", "nginx/hosts/base/name", "-v", "e2ehost-after.test")
 	p.run(10*time.Minute, "restart")
 
-	requireCertificateFor(t, "e2ehost-after.test")
+	requireCertificateFor(t, p, "e2ehost-after.test")
 }

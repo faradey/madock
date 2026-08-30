@@ -59,5 +59,5 @@ func TestRemovingAProjectTakesItOutOfTheProxy(t *testing.T) {
 	}
 
 	requireContains(t, afterRemove, "e2estays.test", "the neighbour's routing survived the removal")
-	requireCertificateFor(t, "e2estays.test")
+	requireCertificateFor(t, staying, "e2estays.test")
 }

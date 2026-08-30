@@ -39,7 +39,7 @@ func TestSslRebuildIssuesANewCertificate(t *testing.T) {
 
 	ctx := filepath.Join(p.execDir, "aruntime", "ctx")
 	caBefore := fileDigest(t, filepath.Join(ctx, "madockCA.pem"))
-	servedBefore := servedCertificateDigest(t, "e2essl.test")
+	servedBefore := servedCertificateDigest(t, p, "e2essl.test")
 	if servedBefore == "" {
 		t.Fatal("the proxy served no certificate before the rebuild")
 	}
@@ -54,7 +54,7 @@ func TestSslRebuildIssuesANewCertificate(t *testing.T) {
 	// asserted: nginx holds the certificate it loaded, so whether a rebuild
 	// alone is enough depends on madock reloading it, and that is a decision
 	// this test should report rather than encode.
-	if immediate := servedCertificateDigest(t, "e2essl.test"); immediate == servedBefore {
+	if immediate := servedCertificateDigest(t, p, "e2essl.test"); immediate == servedBefore {
 		t.Logf("ssl:rebuild replaced the files but the running proxy still serves the old certificate; a reload is required")
 	}
 
@@ -64,13 +64,13 @@ func TestSslRebuildIssuesANewCertificate(t *testing.T) {
 	// the old workers are still answering with the certificate they loaded.
 	// Reading once immediately after the command measures that moment and calls
 	// it a defect.
-	if !certificateChangedWithin(t, "e2essl.test", servedBefore, time.Minute) {
+	if !certificateChangedWithin(t, p, "e2essl.test", servedBefore, time.Minute) {
 		t.Errorf("a minute after ssl:rebuild and proxy:reload the proxy still serves the old certificate (%s)", servedBefore)
 	}
 
 	// And it still has to be a certificate for this project. A rebuild that
 	// produced something valid for nothing would satisfy every check above.
-	requireCertificateFor(t, "e2essl.test")
+	requireCertificateFor(t, p, "e2essl.test")
 }
 
 // TestConfigCacheCleanRemovesTheCacheAndNothingElse covers `config:cache:clean`,
@@ -116,7 +116,7 @@ func TestConfigCacheCleanRemovesTheCacheAndNothingElse(t *testing.T) {
 	// And the environment still comes back. The markers that were deleted are
 	// exactly the ones the proxy path reads.
 	p.run(10*time.Minute, "restart")
-	requireCertificateFor(t, "e2econfcache.test")
+	requireCertificateFor(t, p, "e2econfcache.test")
 	requireContains(t, p.run(3*time.Minute, "status"), "db running", "the database after a cache clean and restart")
 }
 
@@ -136,7 +136,7 @@ func fileDigest(t *testing.T, path string) string {
 
 // servedCertificateDigest returns the sha256 of the certificate the proxy
 // offers for a host, or "" if it offers none.
-func servedCertificateDigest(t *testing.T, host string) string {
+func servedCertificateDigest(t *testing.T, p *project, host string) string {
 	t.Helper()
 
 	dialer := &net.Dialer{Timeout: 10 * time.Second}
@@ -160,6 +160,7 @@ func servedCertificateDigest(t *testing.T, host string) string {
 			_ = conn.Close()
 		}
 		if time.Now().After(deadline) {
+			describeProxy(t, p)
 			t.Fatalf("%s: could not complete a TLS handshake with the proxy: %v", host, err)
 		}
 		time.Sleep(2 * time.Second)
@@ -168,12 +169,12 @@ func servedCertificateDigest(t *testing.T, host string) string {
 
 // certificateChangedWithin waits for the proxy to start offering a certificate
 // other than the one given.
-func certificateChangedWithin(t *testing.T, host, previous string, within time.Duration) bool {
+func certificateChangedWithin(t *testing.T, p *project, host, previous string, within time.Duration) bool {
 	t.Helper()
 
 	deadline := time.Now().Add(within)
 	for {
-		if current := servedCertificateDigest(t, host); current != "" && current != previous {
+		if current := servedCertificateDigest(t, p, host); current != "" && current != previous {
 			return true
 		}
 		if time.Now().After(deadline) {
