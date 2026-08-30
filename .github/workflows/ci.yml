@@ -166,6 +166,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Printed because it decides behaviour and is invisible everywhere else.
+      # `docker compose pull --policy` exists from compose v2.22.0, and madock
+      # asks for the version before using the flag rather than assuming it —
+      # an unknown flag is not a degradation, compose exits non-zero and
+      # `madock start` dies. So when a run shows the registry being asked about
+      # an image that was already loaded from this cache, the first question is
+      # which of the two happened: the flag was not passed, or it was and did
+      # not help. That question came up twice in two days with nothing in any
+      # log able to answer it.
+      #
+      # No test accompanies this. Asserting that a line appears in a log is a
+      # restatement of the line.
+      - name: Which compose this runner has
+        run: docker compose version
+
       - id: cache
         uses: actions/cache@v4
         with:
