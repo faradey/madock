@@ -210,4 +210,49 @@ RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
     && touch /etc/bash.bashrc \
     && printf '\numask 0002\n' >> /etc/bash.bashrc \
     && chmod 644 /etc/madock-umask.sh /etc/profile.d/madock-umask.sh
+
+# Start cron when the container has jobs and nothing else would.
+#
+# Nothing in an application image starts cron: this one's CMD is php-fpm. The
+# daemon existed only because `start`, `rebuild` or `cron:enable` ran a command
+# inside a container that was already up — so anything that restarts the
+# container takes the daemon with it and **leaves the crontab**. The jobs are
+# still there, nothing reads them, nothing fails, and every HTTP check stays
+# green.
+#
+# madock already re-arms it after `service:restart`, which is where a deploy lost
+# it. That cannot cover the case this exists for: when the host reboots, Docker
+# brings the containers back by its restart policy and **madock is not running at
+# all**. Measured on 2026-08-30, on a production machine rebooted for a plan
+# change — containers up, applications answering, cron down in both projects that
+# had it, found only because `cron:status` was taught to ask the right question
+# three days earlier.
+#
+# The signal is the crontab rather than the config, deliberately. A config value
+# is baked in when the image is built, so enabling cron and rebooting without a
+# rebuild would bring back the same silence. Jobs in the crontab mean jobs that
+# are meant to run — `cron:disable` removes them, so a project told to stop has
+# none — and that is true at the moment the container starts, not at the moment
+# it was built.
+#
+# Failure to start cron never blocks the application: a container that refuses to
+# serve because its scheduler is unhappy is a worse outcome than the one being
+# fixed.
+RUN cat > /usr/local/bin/madock-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local/bin/madock-entrypoint
+#!/bin/sh
+has_jobs() {
+    # A line that is neither blank nor a comment. Debian keeps the explanatory
+    # header in every crontab, so "the file is not empty" would start cron for a
+    # project that has no jobs at all.
+    crontab -u "$1" -l 2>/dev/null | grep -qE '^[^#[:space:]]'
+}
+
+if has_jobs www-data || has_jobs root; then
+    service cron start >/dev/null 2>&1 || true
+fi
+
+exec "$@"
+MADOCK_EOF
+
+ENTRYPOINT ["/usr/local/bin/madock-entrypoint"]
 CMD ["bash", "-c", "exec php-fpm8.4"]

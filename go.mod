@@ -1,6 +1,6 @@
 module github.com/faradey/madock/v4
 
-go 1.25.0
+go 1.27.0
 
 require (
 	github.com/alexflint/go-arg v1.4.3
