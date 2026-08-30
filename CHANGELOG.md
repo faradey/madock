@@ -1,3 +1,9 @@
+**v4.1.14**
+
+Fixed:
+- **The cron entrypoint reaches the Node image, which is the side that actually failed.** 4.1.13 put it in the php image, and a Shopify or Medusa project has no php container at all — its application runs in the node one, and the production machine that came back from a reboot with no scheduler was running two Node apps. The php test passed throughout, on an image the failure never touched; what found it was setting up a project, installing a job, restarting the container and looking
+- Two conditions the node entrypoint imposes and php does not: it runs under `set -e`, so the guard cannot be allowed to end the container, and cron is opt-in per platform there, so `crontab` may be absent from the image entirely
+
 **v4.1.13**
 
 Fixed:
