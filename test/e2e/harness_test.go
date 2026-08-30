@@ -608,3 +608,31 @@ func requireFile(t *testing.T, path, what string) {
 		t.Errorf("%s: %v", what, err)
 	}
 }
+
+// describeProxy prints what the proxy was doing when a TLS handshake failed.
+//
+// The assertion in proxy_test and ssl_cache_test is the handshake, and a failed
+// handshake says one thing: nothing answered on 443. That is three different
+// situations — the proxy never started, it started and is not listening yet, or
+// it is up and refusing — and the message cannot tell them apart. Both tests
+// have failed that way on a runner, in different shards and on different
+// branches, and each time the only honest reading was "we do not know".
+//
+// So the failure asks. `status` says whether the container exists and is
+// running; `proxy:logs` is where nginx writes the reason it would not bind. It
+// runs after the test has already failed, so nothing here can turn a pass into
+// a failure — and it is deliberately not an assertion: what it prints is
+// evidence for a person, not a verdict.
+func describeProxy(t *testing.T, p *project) {
+	t.Helper()
+
+	for _, args := range [][]string{{"status"}, {"proxy:logs", "--tail=40"}} {
+		out, err := p.tryRun(2*time.Minute, args...)
+		label := strings.Join(args, " ")
+		if err != nil {
+			t.Logf("madock %s could not be asked: %v", label, err)
+			continue
+		}
+		t.Logf("madock %s:\n%s", label, strings.TrimSpace(out))
+	}
+}
