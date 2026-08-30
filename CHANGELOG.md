@@ -1,3 +1,12 @@
+**v4.1.15**
+
+Fixed:
+- **A node preset defaults, and no longer overrules.** Three lines of the same `if/else` disagreed: the php branch reads `redis/enabled` from the project and says in a comment that it respects an explicit disable, while the node branch replaced whatever the project had asked for, in silence, along with `db/type`. Catalyst and Stencil need neither, so `false` and empty are the right defaults — but a project that wrote something there wrote it on purpose
+- It stopped being theoretical when the BigCommerce line was decided: its Core is Node with Prisma and BullMQ, so it needs both a database and Redis, and this branch forbade exactly what that stack requires. The workaround was `platform custom` with the stack spelled out by hand
+
+Changed:
+- **A failed TLS handshake in the end-to-end suite now asks the proxy what it was doing.** Two tests assert that handshake and both have failed on a runner with the same sentence — nothing answered on 443 — which is three situations wearing one message. `status` and `proxy:logs` run after the failure, so neither can turn a pass into a failure and neither is an assertion
+
 **v4.1.14**
 
 Fixed:
