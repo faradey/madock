@@ -38,6 +38,29 @@ umask 0002
 
 cd "${WORKDIR:-/var/www/html}" 2>/dev/null || cd /var/www/html
 
+# Start cron when this container has jobs and nothing else would.
+#
+# The same hole as the php image, and this is the side the reported failure was
+# actually on: a Shopify or Medusa project runs its application here, not in a
+# php container, and the production machine that came back from a reboot with no
+# scheduler was running two Node apps. Fixing only php would have left the
+# measured case exactly as it was — found by running it rather than by the test,
+# which passes on an image the failure never touched.
+#
+# The condition is the crontab rather than the config, for the reason written out
+# in the php footer: config is baked in at build time, jobs in the crontab are
+# true when the container starts, and cron:disable removes them.
+#
+# Before anything else in this entrypoint, and never fatal: `set -e` is on, the
+# steps below wait on code madock writes after start, and a scheduler that
+# cannot start must not be what stops the application from serving.
+if command -v crontab >/dev/null 2>&1; then
+    if crontab -u www-data -l 2>/dev/null | grep -qE '^[^#[:space:]]' \
+        || crontab -u root -l 2>/dev/null | grep -qE '^[^#[:space:]]'; then
+        service cron start >/dev/null 2>&1 || true
+    fi
+fi
+
 # run_app execs the long-running command as the application user.
 #
 # The entrypoint itself needs root: it waits for code that madock writes after
