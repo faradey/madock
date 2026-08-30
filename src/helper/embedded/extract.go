@@ -26,8 +26,11 @@ func SetDockerFS(f fs.FS) {
 	DockerFS = f
 }
 
-// SetScriptsFS installs the script tree an installation unpacks. See
-// SetDockerFS: same seam, same caller, same reason it looks unreachable here.
+// SetScriptsFS installs the script tree an installation unpacks.
+//
+// Extension point for madock-pro: same seam as SetDockerFS, same caller, same
+// reason it is unreachable from here. Spelled out rather than cross-referenced,
+// because the phrase is what a search finds and a pointer to a neighbour is not.
 func SetScriptsFS(f fs.FS) {
 	ScriptsFS = f
 }

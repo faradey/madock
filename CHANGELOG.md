@@ -1,3 +1,8 @@
+**v4.1.17**
+
+Changed:
+-  says the marker phrase itself rather than pointing at its neighbour. A cross-reference is not what a search finds, and being findable is the whole purpose of the phrase
+
 **v4.1.16**
 
 Changed:
