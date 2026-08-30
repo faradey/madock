@@ -19,7 +19,17 @@ type PasswordGenerator func(length int) (string, error)
 
 var passwordGenerator PasswordGenerator
 
-// SetPasswordGenerator sets a custom password generator.
+// SetPasswordGenerator installs the generator used for service passwords.
+//
+// Extension point for madock-pro, and the reason the weak defaults in
+// config.xml are a product boundary rather than an oversight: community ships
+// `root_password = password`, and pro replaces it — along with db2, rabbitmq,
+// redis, valkey, elasticsearch, opensearch and grafana — with crypto/rand values
+// on setup and rebuild. That is where a server's real passwords come from.
+//
+// An audit on 2026-08-31 read this as a finished security feature nobody had
+// wired up, because nothing in this module calls it. It is wired up on the other
+// side of the boundary.
 func SetPasswordGenerator(gen PasswordGenerator) {
 	passwordGenerator = gen
 }

@@ -50,6 +50,9 @@ func ComposeServices(projectName string) ([]string, error) {
 // step for a person, and why on 2026-08-19 three of four projects on one
 // machine were serving code from a release older than `current` — the symlink
 // had moved and the process had not been told.
+// Extension point for madock-pro: its post-deploy hook is the only caller, and
+// that hook is the answer to the paragraph above — the step a person used to
+// forget.
 func RestartServices(projectName string, services []string) error {
 	if len(services) == 0 {
 		return errors.New("no services named")

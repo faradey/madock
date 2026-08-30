@@ -16,10 +16,18 @@ import (
 var DockerFS fs.FS
 var ScriptsFS fs.FS
 
+// SetDockerFS installs the template tree an installation unpacks.
+//
+// Extension point for madock-pro, and the most load-bearing one there is: pro's
+// own `main` sets both of these before anything runs, which is how a pro
+// installation ends up with pro's templates rather than community's. Nothing in
+// this module calls either — the binary that does is the other one.
 func SetDockerFS(f fs.FS) {
 	DockerFS = f
 }
 
+// SetScriptsFS installs the script tree an installation unpacks. See
+// SetDockerFS: same seam, same caller, same reason it looks unreachable here.
 func SetScriptsFS(f fs.FS) {
 	ScriptsFS = f
 }

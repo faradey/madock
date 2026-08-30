@@ -29,7 +29,9 @@ func IsTTYAvailable() bool {
 	return term.IsTerminal(int(os.Stdin.Fd()))
 }
 
-// SetCommandInterceptor sets a custom interceptor for docker exec commands.
+// SetCommandInterceptor installs an interceptor for docker exec commands.
+//
+// Extension point for madock-pro. Unreachable from this module by design.
 func SetCommandInterceptor(i CommandInterceptor) {
 	commandInterceptor = i
 }

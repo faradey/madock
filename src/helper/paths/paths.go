@@ -17,7 +17,11 @@ type PathValidator func(envName, value string) error
 
 var pathValidator PathValidator
 
-// SetPathValidator sets a custom validator for MADOCK_* env var overrides.
+// SetPathValidator installs the validator for MADOCK_* environment overrides.
+//
+// Extension point for madock-pro: its pathguard hook registers here, and that is
+// what stops a destructive command being pointed at a directory it should not
+// reach. Unreachable from this module by design.
 func SetPathValidator(v PathValidator) {
 	pathValidator = v
 }

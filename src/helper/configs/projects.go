@@ -51,6 +51,10 @@ func SetDefaultOverride(key, value string) {
 }
 
 // GetDefaultConfigXML returns the raw embedded config_defaults.xml bytes.
+//
+// Extension point for madock-pro, which reads the shipped defaults to tell an
+// edition's own values apart from the ones a machine has changed. Unreachable
+// from this module by design.
 func GetDefaultConfigXML() []byte {
 	return defaultConfigXML
 }
