@@ -11,7 +11,11 @@ type DockerTransformer interface {
 
 var transformer DockerTransformer
 
-// SetDockerTransformer sets a custom transformer for Docker files.
+// SetDockerTransformer installs the transformer applied to generated Docker
+// files.
+//
+// Extension point for madock-pro, which uses it to keep secrets out of the
+// files it renders. Unreachable from this module by design.
 func SetDockerTransformer(t DockerTransformer) {
 	transformer = t
 }

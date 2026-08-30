@@ -33,7 +33,12 @@ type SSHConfigProvider interface {
 
 var sshConfigProvider SSHConfigProvider
 
-// SetSSHConfigProvider sets a custom provider for creating SSH client configurations.
+// SetSSHConfigProvider installs the provider that builds SSH client
+// configurations.
+//
+// Extension point for madock-pro, whose provider is the one that reads
+// `ssh/key_path` and falls back to the agent. Unreachable from this module by
+// design.
 func SetSSHConfigProvider(p SSHConfigProvider) {
 	sshConfigProvider = p
 }

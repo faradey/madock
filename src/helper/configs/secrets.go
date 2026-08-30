@@ -20,6 +20,10 @@ var SecretKeys = map[string]bool{
 }
 
 // RegisterSecretKey marks an additional config key as secret.
+//
+// Extension point for madock-pro, and seven keys arrive through it. Community
+// has no encryption, so it registers none — which is why this looks unreachable
+// here and is the whole mechanism there.
 func RegisterSecretKey(key string) {
 	SecretKeys[key] = true
 }
@@ -32,7 +36,12 @@ type SecretsProvider interface {
 
 var secretsProvider SecretsProvider
 
-// SetSecretsProvider sets a custom secrets provider for encrypting/decrypting config values.
+// SetSecretsProvider installs the provider that encrypts and decrypts config
+// values.
+//
+// Extension point for madock-pro. Nothing in this repository encrypts anything:
+// the keys registered above are plain text in community and enciphered in pro,
+// and this is the seam between those two answers.
 func SetSecretsProvider(p SecretsProvider) {
 	secretsProvider = p
 }

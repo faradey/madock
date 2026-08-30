@@ -119,19 +119,32 @@ func Register(def *Definition) {
 	}
 }
 
-// Use adds a global middleware applied to all commands
+// Use adds a global middleware applied to all commands.
+//
+// Extension point for madock-pro: the licence gate is registered here, which is
+// what makes a paid command refuse before it runs. Unreachable from this module
+// by design.
 func Use(m Middleware) {
 	globalMiddlewares = append(globalMiddlewares, m)
 }
 
-// AddBefore adds a before-hook to the command registered under the given alias
+// AddBefore adds a before-hook to the command registered under the given alias.
+//
+// Extension point for madock-pro, and eleven of its hooks arrive here. See
+// AddAfter for why this looks unreachable and is not.
 func AddBefore(alias string, hook Handler) {
 	if def, ok := registry[alias]; ok {
 		def.Before = append(def.Before, hook)
 	}
 }
 
-// AddAfter adds an after-hook to the command registered under the given alias
+// AddAfter adds an after-hook to the command registered under the given alias.
+//
+// Extension point for madock-pro. Nothing in this repository calls it, and that
+// is correct: pro registers 26 after-hooks through it — deploy, backup, cron,
+// ssl and the rest — from its own `init`. A reachability analysis of this module
+// alone reports it as unreachable, which is how the whole hook mechanism came to
+// be listed as dead code in an audit on 2026-08-31.
 func AddAfter(alias string, hook Handler) {
 	if def, ok := registry[alias]; ok {
 		def.After = append(def.After, hook)

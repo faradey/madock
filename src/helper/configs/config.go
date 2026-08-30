@@ -20,6 +20,9 @@ import (
 var ConfigFilePermissions os.FileMode = 0644
 
 // SetConfigFilePermissions overrides the file mode for config XML files.
+//
+// Extension point for madock-pro, where a config holding enciphered secrets is
+// written tighter than 0644. Unreachable from this module by design.
 func SetConfigFilePermissions(perm os.FileMode) {
 	ConfigFilePermissions = perm
 }
