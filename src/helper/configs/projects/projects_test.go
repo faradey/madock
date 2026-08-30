@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	configs2 "github.com/faradey/madock/v4/src/helper/configs"
-	magento2 "github.com/faradey/madock/v4/src/model/versions/magento2"
 	"github.com/faradey/madock/v4/src/model/versions"
+	magento2 "github.com/faradey/madock/v4/src/model/versions/magento2"
 )
 
 func TestMagento2ConfigSets(t *testing.T) {
@@ -25,18 +25,18 @@ func TestMagento2ConfigSets(t *testing.T) {
 		RabbitMQ:        "3.13",
 	}
 	generalConf := map[string]string{
-		"timezone":       "UTC",
-		"php/xdebug/ide_key": "PHPSTORM",
-		"php/xdebug/enabled": "false",
+		"timezone":            "UTC",
+		"php/xdebug/ide_key":  "PHPSTORM",
+		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
-		"db/root_password":   "password",
-		"db/user":            "magento",
-		"db/password":        "magento",
-		"db/database":        "magento",
-		"redis/enabled":      "false",
-		"nodejs/enabled":     "false",
-		"nodejs/version":     "18.15.0",
-		"rabbitmq/enabled":   "false",
+		"db/root_password":    "password",
+		"db/user":             "magento",
+		"db/password":         "magento",
+		"db/database":         "magento",
+		"redis/enabled":       "false",
+		"nodejs/enabled":      "false",
+		"nodejs/version":      "18.15.0",
+		"rabbitmq/enabled":    "false",
 	}
 	projectConf := map[string]string{}
 
@@ -69,7 +69,7 @@ func TestMagento2WithElasticsearch(t *testing.T) {
 		RabbitMQ:        "3.9",
 	}
 	generalConf := map[string]string{
-		"timezone":        "UTC",
+		"timezone":            "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -107,7 +107,7 @@ func TestMagento2WithCustomDbRepo(t *testing.T) {
 		RabbitMQ:        "3.13",
 	}
 	generalConf := map[string]string{
-		"timezone":        "UTC",
+		"timezone":            "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -138,7 +138,7 @@ func TestShopifyConfigSets(t *testing.T) {
 		NodeJs:   "18.15.0",
 	}
 	generalConf := map[string]string{
-		"timezone":        "UTC",
+		"timezone":            "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -161,7 +161,7 @@ func TestCustomConfigSets(t *testing.T) {
 		Db:       "10.6",
 	}
 	generalConf := map[string]string{
-		"timezone":        "UTC",
+		"timezone":            "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -190,7 +190,7 @@ func TestShopwareConfigSets(t *testing.T) {
 		Db:       "10.6",
 	}
 	generalConf := map[string]string{
-		"timezone":        "UTC",
+		"timezone":            "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -219,7 +219,7 @@ func TestPrestaShopConfigSets(t *testing.T) {
 		Db:       "10.6",
 	}
 	generalConf := map[string]string{
-		"timezone":        "UTC",
+		"timezone":            "UTC",
 		"php/xdebug/ide_key":  "PHPSTORM",
 		"php/xdebug/enabled":  "false",
 		"php/ioncube/enabled": "false",
@@ -262,16 +262,16 @@ func TestMagento2_248_ConfigValues(t *testing.T) {
 	Magento2(config, defVersions, generalConf, projectConf)
 
 	expected := map[string]string{
-		"php/version":                "8.4",
-		"php/enabled":                "true",
-		"php/composer/version":       "2",
-		"db/version":                 "11.4",
-		"search/opensearch/enabled":  "true",
-		"search/opensearch/version":  "2.19.0",
+		"php/version":                  "8.4",
+		"php/enabled":                  "true",
+		"php/composer/version":         "2",
+		"db/version":                   "11.4",
+		"search/opensearch/enabled":    "true",
+		"search/opensearch/version":    "2.19.0",
 		"search/elasticsearch/enabled": "false",
-		"redis/version":              "8.0",
-		"rabbitmq/version":           "4.1",
-		"public_dir":                 "pub",
+		"redis/version":                "8.0",
+		"rabbitmq/version":             "4.1",
+		"public_dir":                   "pub",
 	}
 
 	for key, want := range expected {
@@ -323,13 +323,13 @@ func TestMagento2_248_ConfigSaveRoundTrip(t *testing.T) {
 	// Verify key values survive the round-trip (stored under scopes/default/)
 	checks := map[string]string{
 		"scopes/default/php/version":               "8.4",
-		"scopes/default/php/enabled":                "true",
-		"scopes/default/db/version":                 "11.4",
-		"scopes/default/search/opensearch/enabled":  "true",
-		"scopes/default/search/opensearch/version":  "2.19.0",
-		"scopes/default/redis/version":              "8.0",
-		"scopes/default/rabbitmq/version":           "4.1",
-		"scopes/default/public_dir":                 "pub",
+		"scopes/default/php/enabled":               "true",
+		"scopes/default/db/version":                "11.4",
+		"scopes/default/search/opensearch/enabled": "true",
+		"scopes/default/search/opensearch/version": "2.19.0",
+		"scopes/default/redis/version":             "8.0",
+		"scopes/default/rabbitmq/version":          "4.1",
+		"scopes/default/public_dir":                "pub",
 	}
 
 	for key, want := range checks {
@@ -364,4 +364,65 @@ func TestDbVersionFormatParsing(t *testing.T) {
 			t.Logf("Input %q: hasRepo=%v", tt.input, tt.expectRepo)
 		})
 	}
+}
+
+// A node preset defaults to no database and no Redis, and must not overrule a
+// project that asked for them.
+//
+// The two are different, and this branch used to do the second: whatever the
+// project had set was replaced in silence, while the php branch of the same
+// function reads the same keys and carries a comment saying it respects them.
+//
+// Found when our own BigCommerce line was decided — Core is Node with Prisma
+// and BullMQ, so it needs both, and the preset forbade exactly that. The
+// workaround was `platform custom` with the stack spelled out by hand.
+func TestBigcommerceNodePresetDoesNotOverruleTheProject(t *testing.T) {
+	defVersions := versions.ToolsVersions{
+		Platform:        "bigcommerce",
+		PlatformVersion: "catalyst",
+		NodeJs:          "22.20.0",
+	}
+	generalConf := map[string]string{"timezone": "UTC"}
+
+	t.Run("silent by default", func(t *testing.T) {
+		config := new(configs2.ConfigLines)
+
+		Bigcommerce(config, defVersions, generalConf, map[string]string{})
+
+		if got := config.Lines["redis/enabled"]; got != "false" {
+			t.Errorf("redis/enabled = %q, want false — a storefront needs none", got)
+		}
+		if got := config.Lines["db/type"]; got != "" {
+			t.Errorf("db/type = %q, want empty", got)
+		}
+	})
+
+	t.Run("what the project asked for survives", func(t *testing.T) {
+		config := new(configs2.ConfigLines)
+
+		Bigcommerce(config, defVersions, generalConf, map[string]string{
+			"redis/enabled": "true",
+			"db/type":       "mysql",
+		})
+
+		if got := config.Lines["redis/enabled"]; got != "true" {
+			t.Errorf("redis/enabled = %q, want true — the project asked for it", got)
+		}
+		if got := config.Lines["db/type"]; got != "mysql" {
+			t.Errorf("db/type = %q, want mysql — the project asked for it", got)
+		}
+	})
+
+	t.Run("an explicit no is still a no", func(t *testing.T) {
+		// The value equals the default, and that must not make it a special
+		// case: a project saying "false" and a project saying nothing are the
+		// same outcome for a reason, not by accident.
+		config := new(configs2.ConfigLines)
+
+		Bigcommerce(config, defVersions, generalConf, map[string]string{"redis/enabled": "false"})
+
+		if got := config.Lines["redis/enabled"]; got != "false" {
+			t.Errorf("redis/enabled = %q, want false", got)
+		}
+	})
 }
