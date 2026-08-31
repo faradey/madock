@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
 	"github.com/go-xmlfmt/xmlfmt"
@@ -160,9 +161,24 @@ func IsHasConfig(projectName string) bool {
 	if projectName == "" {
 		projectName = GetProjectName()
 	}
-	PrepareDirsForProject(projectName)
+
 	runtimeConfigPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
 	inProjectConfigExists := paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml")
+
+	// Only where a *new* entry would be created, and before any directory is made
+	// for it. A project that is already registered keeps working from wherever it
+	// was set up — this refuses to add to the problem, it does not go back and
+	// break installations that already carry one.
+	if !paths.IsFileExist(runtimeConfigPath) && inProjectConfigExists {
+		if refusal := RegistrationRefusal(paths.GetRunDirPath()); len(refusal) > 0 {
+			for _, line := range refusal {
+				fmtc.ErrorLn(line)
+			}
+			os.Exit(1)
+		}
+	}
+
+	PrepareDirsForProject(projectName)
 	if !paths.IsFileExist(runtimeConfigPath) && inProjectConfigExists {
 		err := paths.Copy(paths.GetRunDirPath()+"/.madock/config.xml", runtimeConfigPath)
 		if err != nil {

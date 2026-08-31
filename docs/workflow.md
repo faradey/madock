@@ -239,6 +239,17 @@ This command shows you the following items:
 
 * `project:remove`   Remove project (project folder, madock project configuration, volumes, images, containers)
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--registry-only`  Remove only what the installation holds for the project — its
+registry entry, generated runtime, block in the shared proxy, port reservation and containers.
+The project directory is never touched. Requires `--name`, and the name is never taken from the
+working directory: this is how an entry that was registered inside somebody else's directory is
+removed without deleting that directory
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Without `--registry-only` the command ends with a recursive delete of the
+directory it is run in — and that is `os.Getwd()`, which keeps whatever symlinks the shell walked
+through, so `cd release/current` and `cd -P release/current` destroy different things. The
+confirmation now says which directory the delete will actually be given
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;An installation can forbid this command, and `prune --with-volumes` with it —
 see `allow_destructive_commands` in [config.md](config.md). madock-pro ships it forbidden
 

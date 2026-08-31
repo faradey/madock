@@ -274,6 +274,94 @@ func GetProjectName() string {
 // so two recordings of "the same" directory can differ textually; we
 // want them to compare equal so GetProjectName doesn't auto-suffix a
 // project that's actually the user's current one.
+// RegistrationRefusal answers whether a directory may become a new project, and
+// returns the refusal to print when it may not.
+//
+// Registration is silent and automatic: madock takes the project name from the
+// name of the working directory and records that directory as the source the
+// first time it sees a .madock/config.xml there. Run it inside a Deployer release
+// and the result is a project called `current`, pointing into a live application.
+// Three of those were found on one server, holding ports and blocks in the shared
+// proxy for applications that already had entries of their own.
+//
+// Two refusals, and the second is not a tidiness rule:
+//
+//   - the directory resolves inside a project that is already registered. There
+//     is nothing to register: the application is here already, under its own name.
+//   - the directory is itself a symlink. The recorded path would then be a name
+//     that moves — a Deployer `current` points at the next release after the next
+//     deploy, and the entry silently comes to describe a directory nobody chose.
+//
+// It refuses rather than guessing an owner. Deciding by itself that a command
+// typed in a release directory was meant for the application would make every
+// other command in madock act on a project the caller did not name — including
+// the one that deletes it.
+//
+// Returns nil when registration is fine, so the caller reads as a guard.
+func RegistrationRefusal(runDir string) []string {
+	if runDir == "" {
+		return nil
+	}
+
+	resolved := canonicalProjectPath(runDir)
+
+	owner, ownerPath := "", ""
+	for _, entry := range ListProjects() {
+		if entry.Path == "" {
+			continue
+		}
+		entryPath := canonicalProjectPath(entry.Path)
+		if !paths.IsFileExist(entryPath) {
+			continue
+		}
+		if !strings.HasPrefix(resolved, strings.TrimRight(entryPath, "/")+string(filepath.Separator)) {
+			continue
+		}
+		// The deepest registered project is the one the caller is standing in.
+		if len(entryPath) > len(ownerPath) {
+			owner, ownerPath = entry.Name, entryPath
+		}
+	}
+
+	if owner != "" {
+		lines := []string{
+			"This directory is inside project '" + owner + "', which is already registered.",
+			"  here:       " + runDir,
+		}
+		if resolved != runDir {
+			lines = append(lines, "  resolves to "+resolved)
+		}
+		lines = append(lines,
+			"  project:    "+owner+" at "+ownerPath,
+			"",
+			"Registering it would create a second project for the same application, named after this",
+			"directory — which is how an installation ends up with entries called 'current'. They hold",
+			"ports and a block in the shared proxy, and nothing they hold belongs to them.",
+			"",
+			"Run madock from the project itself:",
+			"  cd "+ownerPath,
+		)
+		return lines
+	}
+
+	if info, err := os.Lstat(runDir); err == nil && info.Mode()&os.ModeSymlink != 0 {
+		return []string{
+			"This directory is a symlink, so the path recorded for the project would be a name that moves.",
+			"  here:       " + runDir,
+			"  resolves to " + resolved,
+			"",
+			"A deploy layout repoints such a link at the next release, and the entry then describes a",
+			"directory nobody chose — while every command that reads it keeps reporting success.",
+			"",
+			"Run madock from the directory the project actually lives in, and if that is a release of a",
+			"deployed application, from the application rather than from the release:",
+			"  madock project:list",
+		}
+	}
+
+	return nil
+}
+
 // IsSamePath reports whether two recorded paths mean the same directory, with the
 // same normalisation GetProjectName uses. Exported for callers that destroy things
 // and must be sure the directory in front of them is the one they think it is.
@@ -424,6 +512,22 @@ const (
 	// "Every registered project still has its source directory". A confident
 	// wrong answer from the check written for the case.
 	ProjectBrokenLink = "broken-link"
+	// ProjectNestedPath — the recorded path resolves inside another registered
+	// project. Nothing about it is missing, which is exactly why every check
+	// written for a bad entry said it was fine.
+	//
+	// It is how a registry grows ghosts. The project name is the name of the
+	// working directory, so running madock inside a Deployer release registers
+	// `current`, and three such entries were found on one server: `current`,
+	// `current-2` and `current-3`, pointing into three different applications.
+	// They hold ports and a block in the shared proxy on behalf of a project
+	// that does not exist, and `project:list --stale` answered "Every registry
+	// entry resolves" about all three, because the path was there.
+	//
+	// Removing one must never be done by standing in it — project:remove ends
+	// with a recursive delete of the working directory, and that directory is a
+	// live release. --registry-only is the way out.
+	ProjectNestedPath = "nested-path"
 )
 
 // ProjectEntry is one registry entry and what is true about it.
@@ -431,6 +535,11 @@ type ProjectEntry struct {
 	Name  string `json:"name"`
 	Path  string `json:"path"`
 	State string `json:"state"`
+	// Owner is set for ProjectNestedPath: the registered project whose directory
+	// this entry's path sits inside. Named rather than merely flagged, because
+	// the whole risk of this state is that the reader does not know whose
+	// directory they are about to be told to cd into.
+	Owner string `json:"owner,omitempty"`
 }
 
 // ListProjectsIn reads the registry under an installation directory.
@@ -499,7 +608,55 @@ func ListProjectsIn(execDir string) []ProjectEntry {
 		out = append(out, ProjectEntry{Name: entry.Name(), Path: path, State: state})
 	}
 
+	markNested(out)
+
 	return out
+}
+
+// markNested finds the entries whose directory lives inside another project's.
+//
+// A second pass, because the question is about the registry as a whole and not
+// about any one entry: read on its own, such an entry is in perfect health — the
+// path is recorded, the directory is there, and every check written for a bad
+// entry passes. What is wrong is only visible beside the other entries.
+//
+// Symlinks are resolved on both sides before comparing. That is not tidiness: on
+// a Deployer layout the recorded path is `<app>/current`, a symlink into
+// `<app>/releases/N`, and comparing the paths as written finds nothing.
+func markNested(entries []ProjectEntry) {
+	resolved := make([]string, len(entries))
+	for i, entry := range entries {
+		if entry.State == ProjectOk {
+			resolved[i] = canonicalProjectPath(entry.Path)
+		}
+	}
+
+	for i := range entries {
+		if entries[i].State != ProjectOk || resolved[i] == "" {
+			continue
+		}
+
+		// The deepest containing project wins: with both `/var/www` and
+		// `/var/www/shop` registered, an entry under the latter belongs to the
+		// latter, and naming the former would send the reader to the wrong place.
+		owner, ownerPath := "", ""
+		for j := range entries {
+			if i == j || entries[j].State != ProjectOk || resolved[j] == "" {
+				continue
+			}
+			if !strings.HasPrefix(resolved[i], strings.TrimRight(resolved[j], "/")+string(filepath.Separator)) {
+				continue
+			}
+			if len(resolved[j]) > len(ownerPath) {
+				owner, ownerPath = entries[j].Name, resolved[j]
+			}
+		}
+
+		if owner != "" {
+			entries[i].State = ProjectNestedPath
+			entries[i].Owner = owner
+		}
+	}
 }
 
 // ListProjects reads the registry of the installation in use.

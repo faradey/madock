@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/faradey/madock/v4/src/command"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
@@ -16,7 +17,7 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
-	Stale   bool `arg:"--stale" help:"Only the entries whose source directory is gone"`
+	Stale   bool `arg:"--stale" help:"Only the entries that are not a project of their own: source gone, link broken, or path inside another project"`
 	Running bool `arg:"--running" help:"Only the projects that have containers running"`
 }
 
@@ -66,7 +67,7 @@ func init() {
 		Aliases:    []string{"project:list"},
 		JSONOutput: true,
 		Handler:    Execute,
-		Help:       "List registered projects. --running for the ones that are up, --stale for the ones whose source is gone. Supports --json (-j) output",
+		Help:       "List registered projects. --running for the ones that are up, --stale for the entries that are not a project of their own. Supports --json (-j) output",
 		Category:   "project",
 		ArgsType:   new(ArgsStruct),
 		// Global: it describes the installation, not a project, and the reason to
@@ -151,7 +152,7 @@ func Execute() {
 			return
 		}
 		if args.Stale {
-			fmtc.SuccessLn("Every registry entry resolves, and every project still has its source directory")
+			fmtc.SuccessLn("Every registry entry resolves, and every project has a source directory of its own")
 			return
 		}
 		fmtc.WarningLn("No projects are registered in this installation")
@@ -173,6 +174,8 @@ func Execute() {
 			fmtc.ErrorLn(fmt.Sprintf("%-28s %ssource is gone: %s", row.Name, state, row.Path))
 		case configs.ProjectBrokenLink:
 			fmtc.ErrorLn(fmt.Sprintf("%-28s %sregistry entry links to nothing: %s", row.Name, state, row.Path))
+		case configs.ProjectNestedPath:
+			fmtc.ErrorLn(fmt.Sprintf("%-28s %sregistered inside project '%s': %s", row.Name, state, row.Owner, row.Path))
 		case configs.ProjectNoPath:
 			fmtc.WarningLn(fmt.Sprintf("%-28s %sno path recorded", row.Name, state))
 		default:
@@ -184,8 +187,27 @@ func Execute() {
 	// the summary is that a stale entry is easy to miss in a list of fifty.
 	if !args.Stale && len(stale) > 0 {
 		fmt.Println()
-		fmtc.WarningLn(fmt.Sprintf("%d of %d entries have no source directory. They keep their ports and their routing.", len(stale), len(entries)))
+		fmtc.WarningLn(fmt.Sprintf("%d of %d entries are not a project of their own: the source is gone, the entry links to nothing, or the path is inside another project. They keep their ports and their routing.", len(stale), len(entries)))
 		fmtc.ToDoLn("Run madock project:list --stale to see only those")
+	}
+
+	// The nested ones need saying separately, because the obvious way to remove a
+	// project — stand in its directory and run project:remove — is the one thing
+	// that must not be done to them: the directory is somebody else's live
+	// release, and the command ends with a recursive delete of it.
+	nested := make([]string, 0, len(shown))
+	for _, row := range shown {
+		if row.State == configs.ProjectNestedPath {
+			nested = append(nested, row.Name)
+		}
+	}
+	if len(nested) > 0 {
+		fmt.Println()
+		fmtc.WarningLn("Registered inside another project, most likely by running madock in a release directory: " + strings.Join(nested, ", "))
+		fmtc.ToDoLn("Drop the record without touching the directory:")
+		for _, name := range nested {
+			fmtc.ToDoLn("  madock project:remove --name=" + name + " --registry-only")
+		}
 	}
 
 	if args.Stale {
