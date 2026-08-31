@@ -164,3 +164,31 @@ func TestRemovalTargetLines_PlainDirectoryStaysOneLine(t *testing.T) {
 		t.Fatalf("expected a single line naming the directory, got %#v", lines)
 	}
 }
+
+// The ban on destructive commands is what madock-pro ships on servers, and it
+// refused the one removal that cannot destroy anything — which is how three
+// registry entries pointing into live releases stayed on a production host with
+// no way to remove them.
+func TestRegistryOnlyAllowed_UnderTheBan(t *testing.T) {
+	cases := []struct {
+		state string
+		want  bool
+		why   string
+	}{
+		{configs.ProjectNestedPath, true, "the path is inside another project, so the entry owns nothing"},
+		{configs.ProjectMissingSource, true, "the source directory is gone"},
+		{configs.ProjectBrokenLink, true, "the entry resolves to nothing at all"},
+		{configs.ProjectOk, false, "a healthy project: its record is its madock configuration"},
+		{configs.ProjectNoPath, false, "legacy entry of a project that may still exist — not a thing to guess about"},
+	}
+
+	for _, c := range cases {
+		if got := registryOnlyAllowed(c.state, false); got != c.want {
+			t.Errorf("state %q under the ban = %v, want %v — %s", c.state, got, c.want, c.why)
+		}
+		// With the ban lifted every state is the caller's business.
+		if !registryOnlyAllowed(c.state, true) {
+			t.Errorf("state %q was refused on an installation that allows destructive commands", c.state)
+		}
+	}
+}

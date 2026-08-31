@@ -250,6 +250,10 @@ directory it is run in — and that is `os.Getwd()`, which keeps whatever symlin
 through, so `cd release/current` and `cd -P release/current` destroy different things. The
 confirmation now says which directory the delete will actually be given
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--registry-only` runs on an installation that forbids this command when the
+entry named is not a project of its own — source gone, link broken, or path inside another project.
+It leaves volumes and images alone, so the exemption cannot destroy data
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;An installation can forbid this command, and `prune --with-volumes` with it —
 see `allow_destructive_commands` in [config.md](config.md). madock-pro ships it forbidden
 

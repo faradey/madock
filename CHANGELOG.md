@@ -1,3 +1,10 @@
+**v4.1.19**
+
+Fixed:
+- **The ban on destructive commands refused the one removal that destroys nothing.** madock-pro ships `allow_destructive_commands` false on servers, and it covered `project:remove --registry-only` wholesale — so the three entries 4.1.18 taught `project:list` to name, sitting on a production host and pointing into live releases, still could not be removed. The machine that most needs the ban is the machine where such entries accumulate, and the only way out was to turn the ban off on production for the length of the cleanup
+- **The exemption is by state, not by flag.** An entry whose source is gone, whose link resolves to nothing, or whose path is inside another registered project owns nothing that could be lost — a port reservation and a block in the shared proxy, both on behalf of something that does not exist. A healthy project is refused as before: its record is its madock configuration, passwords and ports and stack, and nothing recreates it. `no-path` is refused too, being a legacy entry of a project that may well still exist
+- **And the exemption cannot destroy data even if an entry turns out to have some**: registry-only removal no longer passes `-v --rmi all`. Containers of that name go and come back from the configuration; volumes and images stay, findable by `prune` and the orphans command
+
 **v4.1.18**
 
 Fixed:

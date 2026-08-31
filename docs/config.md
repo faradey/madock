@@ -125,6 +125,13 @@ project's data may run on this machine:
 
 - **`project:remove`** — the registry entry, the generated runtime, the ports,
   the volumes, the images, and a recursive delete of the project directory.
+- **`project:remove --registry-only`** is covered too, with one exception: an
+  entry that is not a project of its own — its source directory gone, its link
+  resolving to nothing, or its path inside another registered project — may be
+  removed while the setting is `false`. Such an entry owns nothing that could be
+  lost, and refusing kept three of them on a production host with no way to clean
+  up. Containers of that name go; volumes and images are left, so the exemption
+  cannot destroy data even if the entry turns out to have some.
 - **`prune --with-volumes`** — `docker compose down -v --rmi all`: the data
   volumes and the images. The database is gone and nothing brings it back.
 

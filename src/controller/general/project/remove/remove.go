@@ -51,7 +51,11 @@ func Execute() {
 
 	// Before anything is read, decided or printed: this command deletes a
 	// project's data, and an installation may forbid that.
-	if !configs.AllowsDestructiveCommands() {
+	//
+	// --registry-only answers this for itself, once it knows which entry was
+	// named. It has to: what such a removal costs is a property of the entry,
+	// not of the command, and that cannot be known here.
+	if !args.RegistryOnly && !configs.AllowsDestructiveCommands() {
 		for _, line := range configs.DestructiveRefusal("project:remove") {
 			fmtc.ErrorLn(line)
 		}
@@ -247,7 +251,7 @@ func removeProject(projectName string) {
 	}
 	fmtc.WarningLn("  containers, images and volumes of the project")
 
-	removeRegistered(projectName, true)
+	removeRegistered(projectName, true, true)
 
 	// The project's own directory, and only when standing in it. Split out so
 	// that removing an entry by name — where the source is gone and the caller
@@ -261,7 +265,7 @@ func removeProject(projectName string) {
 // its containers, its registry entry, its generated runtime, its block in the
 // shared proxy and its port reservation. Everything except the project's own
 // directory, which is the caller's to decide about.
-func removeRegistered(projectName string, reclaimSource bool) {
+func removeRegistered(projectName string, reclaimSource, withVolumes bool) {
 	pp := paths.NewProjectPaths(projectName)
 
 	// Before the containers go: anything they wrote as root has to be handed
@@ -277,7 +281,10 @@ func removeRegistered(projectName string, reclaimSource bool) {
 		docker.ReclaimProjectFiles(projectName)
 	}
 
-	docker.Down(projectName, true)
+	// withVolumes false is what makes a registry-only removal safe to allow on an
+	// installation that forbids destructive commands: containers are not data and
+	// come back from the configuration, volumes and images are and do not.
+	docker.Down(projectName, withVolumes)
 
 	if err := os.RemoveAll(paths.GetExecDirPath() + "/projects/" + projectName + "/"); err != nil {
 		logger.Fatal(err)
@@ -396,8 +403,9 @@ func removeNamed(projectName string, force bool) {
 
 	// No reclaim: the source directory is gone, so there is nothing to hand back
 	// — and the caller is standing somewhere unrelated, which is the one place
-	// the fallback would chown.
-	removeRegistered(projectName, false)
+	// the fallback would chown. Volumes do go: this branch runs only for an entry
+	// whose source is gone, and it is gated on the installation allowing it.
+	removeRegistered(projectName, false, true)
 }
 
 // removeRegistryOnly drops what the installation holds for a name and nothing else.
@@ -412,6 +420,39 @@ func removeNamed(projectName string, force bool) {
 //
 // So the source is not merely left alone here, it is unreachable from this path:
 // nothing below takes a directory, and removeRegistered has never deleted one.
+// registryOnlyAllowed decides whether a registry-only removal may run on an
+// installation that forbids destructive commands.
+//
+// The ban exists to stop a project's data being destroyed, and for a healthy
+// project this removal still does that: the entry it deletes is the project's
+// madock configuration — database passwords, ports, the stack — and nothing
+// recreates it. So the ban holds there.
+//
+// It does not hold for an entry that is not a project of its own. A record whose
+// source directory is gone, whose link resolves to nothing, or whose path lives
+// inside another project owns nothing that could be lost: what it holds is a
+// port reservation and a block in the shared proxy, both on behalf of something
+// that does not exist. Refusing there protected nothing and left three such
+// entries on a production host with no way to remove them — the machine that
+// most needs the ban is the machine where they accumulate.
+//
+// Paired with withVolumes=false in this path, so what runs under the exemption
+// cannot delete data even if an entry turns out to have some.
+func registryOnlyAllowed(state string, destructiveAllowed bool) bool {
+	if destructiveAllowed {
+		return true
+	}
+
+	switch state {
+	case configs.ProjectMissingSource, configs.ProjectBrokenLink, configs.ProjectNestedPath:
+		return true
+	}
+
+	// ProjectOk, and ProjectNoPath — a legacy entry of a project that may well
+	// still exist, which is not something to guess about under a ban.
+	return false
+}
+
 func removeRegistryOnly(projectName string, force bool) {
 	// Taken from --name only. The working directory is what invented these
 	// entries in the first place, and a command whose entire promise is "the
@@ -434,6 +475,19 @@ func removeRegistryOnly(projectName string, force bool) {
 	if entry == nil {
 		fmtc.ErrorLn("No project named '" + projectName + "' is registered in this installation")
 		fmtc.ToDoLn("madock project:list")
+		os.Exit(1)
+	}
+
+	if !registryOnlyAllowed(entry.State, configs.AllowsDestructiveCommands()) {
+		for _, line := range configs.DestructiveRefusal("project:remove --registry-only") {
+			fmtc.ErrorLn(line)
+		}
+		fmtc.ErrorLn("")
+		fmtc.ErrorLn("'" + projectName + "' is a project in its own right, and its record is its madock")
+		fmtc.ErrorLn("configuration — passwords, ports, the stack. Nothing recreates that.")
+		fmtc.ToDoLn("Entries that are not a project of their own are removable here without changing")
+		fmtc.ToDoLn("that setting — source gone, link broken, or path inside another project:")
+		fmtc.ToDoLn("  madock project:list --stale")
 		os.Exit(1)
 	}
 
@@ -464,7 +518,12 @@ func removeRegistryOnly(projectName string, force bool) {
 		}
 	}
 
-	removeRegistered(projectName, false)
+	// Neither the source nor the project's data: containers go, volumes and images
+	// stay. An orphaned volume is recoverable and findable — `prune` and the
+	// orphans command exist for exactly that — while a volume deleted under an
+	// installation that forbids destructive commands is the thing the setting was
+	// put there to prevent.
+	removeRegistered(projectName, false, false)
 }
 
 // definition returns this command's registration, for tests that assert on it.
