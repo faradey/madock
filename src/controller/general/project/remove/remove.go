@@ -265,6 +265,41 @@ func removeProject(projectName string) {
 // its containers, its registry entry, its generated runtime, its block in the
 // shared proxy and its port reservation. Everything except the project's own
 // directory, which is the caller's to decide about.
+// reloadFailureLines says what a failed proxy reload means, in place of the
+// error's own text.
+//
+// `docker compose exec nginx nginx -s reload` against a proxy that is not
+// running fails, and an exec.ExitError's Error() is the whole of `exit status
+// 1` — no command, no stderr, no hint. Removing a project printed exactly that
+// one line above "Project was removed successfully", which reads as a removal
+// that half failed and is nothing of the sort: the registry, the runtime and
+// the ports are gone, and the generated configuration on disk is correct and
+// waiting for the next start.
+//
+// Measured while cleaning two orphaned entries off a laptop where the proxy was
+// simply not up. The same refusal already has a good sentence in `proxy:reload`
+// — this path had the bare code instead.
+func reloadFailureLines(err error, proxyRunning bool) []string {
+	if err == nil {
+		return nil
+	}
+
+	if !proxyRunning {
+		return []string{
+			"The shared proxy is not running, so its configuration was not reloaded",
+			"The project is removed and the generated configuration is up to date — it applies on the next madock proxy:start",
+		}
+	}
+
+	// It is running and the reload still failed, which is a real fault and the
+	// only case where the underlying text is worth showing.
+	return []string{
+		"The shared proxy is running but did not reload its configuration: " + err.Error(),
+		"The project is removed; the proxy is still serving the previous configuration",
+		"Look at madock proxy:logs, then madock proxy:restart",
+	}
+}
+
 func removeRegistered(projectName string, reclaimSource, withVolumes bool) {
 	pp := paths.NewProjectPaths(projectName)
 
@@ -312,7 +347,9 @@ func removeRegistered(projectName string, reclaimSource, withVolumes bool) {
 	if len(remaining) > 0 {
 		nginx.MakeConf(remaining[0])
 		if err := docker.ReloadNginx(); err != nil {
-			logger.Println(err)
+			for _, line := range reloadFailureLines(err, docker.IsProxyRunning()) {
+				fmtc.WarningLn(line)
+			}
 		}
 	}
 
