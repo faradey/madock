@@ -272,13 +272,18 @@ func makeProxy(projectName string) {
 						logger.Fatalln(err)
 					}
 
-					allFileData += "\n" + strReplaced
+					// Transformed here, where the project is known by name, and
+					// not written to the cache in that form: the cache holds the
+					// rendered block, the suffix is applied on the way into the
+					// file so a transformer can change its mind without a stale
+					// copy outliving it.
+					allFileData += "\n" + proxytransform.ApplyProject(name, strReplaced)
 				} else {
 					strReplaced, err := os.ReadFile(paths.CacheDir() + "/" + name + "-proxy.conf")
 					if err != nil {
 						logger.Fatalln(err)
 					}
-					allFileData += "\n" + string(strReplaced)
+					allFileData += "\n" + proxytransform.ApplyProject(name, string(strReplaced))
 				}
 			}
 		}
