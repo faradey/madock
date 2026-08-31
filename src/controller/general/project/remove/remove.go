@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/faradey/madock/v4/src/command"
@@ -19,8 +20,9 @@ import (
 
 type ArgsStruct struct {
 	attr.Arguments
-	Force bool   `arg:"-f,--force" help:"Skip interactive confirmations (requires --name)"`
-	Name  string `arg:"-n,--name" help:"Project name to remove (required with --force)"`
+	Force        bool   `arg:"-f,--force" help:"Skip interactive confirmations (requires --name)"`
+	Name         string `arg:"-n,--name" help:"Project name to remove (required with --force)"`
+	RegistryOnly bool   `arg:"--registry-only" help:"Remove only what the installation holds for the project — registry entry, runtime, proxy block, ports and containers. The project directory is never touched (requires --name)"`
 }
 
 func init() {
@@ -54,6 +56,18 @@ func Execute() {
 			fmtc.ErrorLn(line)
 		}
 		os.Exit(1)
+	}
+
+	// Asked for explicitly, and answered before anything looks at the working
+	// directory: this is the one form that is defined not to touch the source.
+	//
+	// A flag rather than a rule inside the existing branch. A destructive command
+	// should do what its invocation says and nothing else — an entry that quietly
+	// removes less because the code guessed the caller meant less is how somebody
+	// learns, once, that it can also guess the other way.
+	if args.RegistryOnly {
+		removeRegistryOnly(args.Name, args.Force)
+		return
 	}
 
 	// A name is answered by the registry, not by the working directory.
@@ -96,7 +110,9 @@ func Execute() {
 		fmt.Println("The following items will be removed:")
 		fmt.Println(paths.GetExecDirPath() + "/projects/" + projectName + "/")
 		fmt.Println(pp.RuntimeDir())
-		fmt.Println(paths.GetRunDirPath())
+		for _, line := range removalTargetLines(paths.GetRunDirPath()) {
+			fmt.Println(line)
+		}
 		fmt.Println("Containers, images and volumes associated with the project.")
 		fmt.Println("")
 		fmt.Println("Enter the project name \"" + projectName + "\" to confirm the deletion of the project")
@@ -156,6 +172,69 @@ func mayRemove(projectName string) bool {
 	return true
 }
 
+// resolvedRemovalPath answers what os.RemoveAll(dir) will actually destroy.
+//
+// The scale of this command is a property of the shell, not of the command. The
+// directory it deletes is os.Getwd(), which keeps whatever symlinks the shell
+// walked through, so one line typed two ways destroys two different things. On a
+// Deployer layout — releases/N with a `current` symlink pointing at one of them —
+// this was measured rather than reasoned about:
+//
+//	cd .../current      Getwd keeps the link  → RemoveAll unlinks `current`, releases survive
+//	cd -P .../current   Getwd is physical     → RemoveAll takes the whole release directory
+//
+// Both printed the same warning, naming `.../current`, which is true of neither
+// half of that table. So the second return says whether the path is itself a
+// link (the link goes, the target stays) and the first names the directory that
+// really goes when it is not.
+func resolvedRemovalPath(dir string) (string, bool) {
+	if dir == "" {
+		return dir, false
+	}
+
+	if info, err := os.Lstat(dir); err == nil && info.Mode()&os.ModeSymlink != 0 {
+		if target, err := filepath.EvalSymlinks(dir); err == nil {
+			return target, true
+		}
+		if target, err := os.Readlink(dir); err == nil {
+			return target, true
+		}
+		return dir, true
+	}
+
+	// Not a link itself, but a parent component may be one — and then RemoveAll
+	// reaches straight through it into the real directory.
+	if resolved, err := filepath.EvalSymlinks(dir); err == nil {
+		return resolved, false
+	}
+
+	return dir, false
+}
+
+// removalTargetLines is what the person confirming gets to read.
+//
+// It says the resolved path out loud whenever it differs from the one typed:
+// in a release directory that is the difference between `.../current` and
+// `.../releases/847`, and nobody stops at the first spelling.
+func removalTargetLines(dir string) []string {
+	target, isLink := resolvedRemovalPath(dir)
+
+	switch {
+	case isLink && target != dir:
+		return []string{
+			dir,
+			"    a symlink: the link goes, " + target + " stays",
+		}
+	case !isLink && target != dir:
+		return []string{
+			dir,
+			"    resolves to " + target + " — that is the directory that will be deleted",
+		}
+	}
+
+	return []string{dir}
+}
+
 func removeProject(projectName string) {
 	// Say what is about to go even when --force skipped the interactive listing:
 	// this is the one command that deletes the directory the caller is standing in.
@@ -163,10 +242,12 @@ func removeProject(projectName string) {
 	fmtc.WarningLn("Removing project '" + projectName + "':")
 	fmtc.WarningLn("  " + paths.GetExecDirPath() + "/projects/" + projectName + "/")
 	fmtc.WarningLn("  " + pp.RuntimeDir())
-	fmtc.WarningLn("  " + paths.GetRunDirPath())
+	for _, line := range removalTargetLines(paths.GetRunDirPath()) {
+		fmtc.WarningLn("  " + line)
+	}
 	fmtc.WarningLn("  containers, images and volumes of the project")
 
-	removeRegistered(projectName)
+	removeRegistered(projectName, true)
 
 	// The project's own directory, and only when standing in it. Split out so
 	// that removing an entry by name — where the source is gone and the caller
@@ -180,13 +261,21 @@ func removeProject(projectName string) {
 // its containers, its registry entry, its generated runtime, its block in the
 // shared proxy and its port reservation. Everything except the project's own
 // directory, which is the caller's to decide about.
-func removeRegistered(projectName string) {
+func removeRegistered(projectName string, reclaimSource bool) {
 	pp := paths.NewProjectPaths(projectName)
 
 	// Before the containers go: anything they wrote as root has to be handed
 	// back, or the deletion below stops at the first such file and leaves the
 	// project half removed.
-	docker.ReclaimProjectFiles(projectName)
+	//
+	// Only when the source directory is this command's to delete. ReclaimProjectFiles
+	// falls back to a container that mounts the *working directory* and chowns it
+	// recursively — harmless when that directory is the project being destroyed,
+	// and not harmless at all when the caller is standing somewhere else, which is
+	// every call that removes an entry by name.
+	if reclaimSource {
+		docker.ReclaimProjectFiles(projectName)
+	}
 
 	docker.Down(projectName, true)
 
@@ -259,10 +348,26 @@ func removeNamed(projectName string, force bool) {
 		os.Exit(1)
 	}
 
+	// Registered inside somebody else's project. The advice below must not be
+	// printed for this one: the directory is another project's live release, and
+	// "cd there and remove it" ends in a recursive delete of it.
+	if entry.State == configs.ProjectNestedPath {
+		fmtc.ErrorLn("Entry '" + projectName + "' is registered inside another project: " + entry.Path)
+		if entry.Owner != "" {
+			fmtc.ErrorLn("  that directory belongs to '" + entry.Owner + "'")
+		}
+		fmtc.ErrorLn("Do not remove it from there: this command deletes the directory it is run in.")
+		fmtc.ToDoLn("Drop the installation's record of it and leave the directory alone:")
+		fmtc.ToDoLn("  madock project:remove --name=" + projectName + " --registry-only")
+		os.Exit(1)
+	}
+
 	if entry.State == configs.ProjectOk {
 		fmtc.ErrorLn("Project '" + projectName + "' still has its source directory: " + entry.Path)
 		fmtc.ToDoLn("Remove it from there, so the directory goes with it:")
 		fmtc.ToDoLn("  cd " + entry.Path + " && madock project:remove --force --name=" + projectName)
+		fmtc.ToDoLn("Or drop only the installation's record of it, keeping the directory:")
+		fmtc.ToDoLn("  madock project:remove --name=" + projectName + " --registry-only")
 		os.Exit(1)
 	}
 
@@ -289,7 +394,77 @@ func removeNamed(projectName string, force bool) {
 		}
 	}
 
-	removeRegistered(projectName)
+	// No reclaim: the source directory is gone, so there is nothing to hand back
+	// — and the caller is standing somewhere unrelated, which is the one place
+	// the fallback would chown.
+	removeRegistered(projectName, false)
+}
+
+// removeRegistryOnly drops what the installation holds for a name and nothing else.
+//
+// The case it is written for is an entry whose directory exists and is not its
+// own: madock run inside a Deployer release registers a project called `current`,
+// pointing into a live application. Three of those were found on one server. The
+// entry is not harmless — it holds ports and a server block in the shared proxy —
+// and until now there was no way to remove it: removeNamed refuses while the
+// directory exists, and its advice was to go and remove it from there, which ends
+// with a recursive delete of that application's release.
+//
+// So the source is not merely left alone here, it is unreachable from this path:
+// nothing below takes a directory, and removeRegistered has never deleted one.
+func removeRegistryOnly(projectName string, force bool) {
+	// Taken from --name only. The working directory is what invented these
+	// entries in the first place, and a command whose entire promise is "the
+	// directory is not the target" must not be reading the target off it.
+	if projectName == "" {
+		fmtc.ErrorLn("--registry-only requires --name: the entry to drop is named, never taken from the working directory")
+		fmtc.ToDoLn("madock project:list --stale")
+		os.Exit(1)
+	}
+
+	var entry *configs.ProjectEntry
+	for _, candidate := range configs.ListProjects() {
+		if candidate.Name == projectName {
+			found := candidate
+			entry = &found
+			break
+		}
+	}
+
+	if entry == nil {
+		fmtc.ErrorLn("No project named '" + projectName + "' is registered in this installation")
+		fmtc.ToDoLn("madock project:list")
+		os.Exit(1)
+	}
+
+	fmtc.WarningLn("Removing the installation's record of '" + projectName + "':")
+	fmtc.WarningLn("  " + paths.GetExecDirPath() + "/projects/" + projectName + "/")
+	fmtc.WarningLn("  " + paths.NewProjectPaths(projectName).RuntimeDir())
+	fmtc.WarningLn("  its block in the shared proxy and its port reservation")
+	fmtc.WarningLn("  containers, images and volumes of the project")
+	if entry.Path != "" {
+		fmtc.SuccessLn("  the directory itself is left alone: " + entry.Path)
+	}
+	if entry.State == configs.ProjectNestedPath && entry.Owner != "" {
+		fmtc.SuccessLn("  it belongs to project '" + entry.Owner + "', which keeps its own entry")
+	}
+
+	if !force {
+		fmt.Println("")
+		fmt.Println("Enter the project name \"" + projectName + "\" to confirm")
+		fmt.Print("> ")
+		buf := bufio.NewReader(os.Stdin)
+		sentence, err := buf.ReadBytes('\n')
+		if err != nil {
+			logger.Fatalln(err)
+		}
+		if strings.TrimSpace(string(sentence)) != projectName {
+			fmtc.WarningLn("Nothing was removed. The entered value does not match the project name.")
+			return
+		}
+	}
+
+	removeRegistered(projectName, false)
 }
 
 // definition returns this command's registration, for tests that assert on it.

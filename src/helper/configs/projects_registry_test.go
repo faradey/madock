@@ -145,3 +145,165 @@ func TestStaleFilterSeesAnEntryThatResolvesToNothing(t *testing.T) {
 		t.Errorf("--stale would report %d entries, want 1 — an entry pointing at nothing is exactly what it is for", stale)
 	}
 }
+
+// registryOf builds an installation whose entries record the given paths.
+func registryOf(t *testing.T, entries map[string]string) string {
+	t.Helper()
+
+	execDir := t.TempDir()
+	for name, path := range entries {
+		dir := filepath.Join(execDir, "projects", name)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		body := `<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <scopes>
+        <default>
+            <path>` + path + `</path>
+        </default>
+    </scopes>
+</config>`
+		if err := os.WriteFile(filepath.Join(dir, "config.xml"), []byte(body), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	return execDir
+}
+
+// The ghost this state was written for, built the way the server made it: a
+// Deployer application registered at its root, and a second entry called
+// `current` — the name of the release symlink — created by running madock inside
+// a release.
+//
+// Every check written for a bad entry passes on it: the path is recorded and the
+// directory is there. `project:list --stale` answered "Every registry entry
+// resolves" about three of these.
+func TestNestedEntryIsNotHealthy(t *testing.T) {
+	base, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app := filepath.Join(base, "ops-console")
+	release := filepath.Join(app, "releases", "847")
+	if err := os.MkdirAll(release, 0755); err != nil {
+		t.Fatal(err)
+	}
+	current := filepath.Join(app, "current")
+	if err := os.Symlink(release, current); err != nil {
+		t.Fatal(err)
+	}
+
+	execDir := registryOf(t, map[string]string{
+		"ops-console": app,
+		"current":     current,
+	})
+
+	byName := make(map[string]ProjectEntry)
+	stale := 0
+	for _, entry := range ListProjectsIn(execDir) {
+		byName[entry.Name] = entry
+		if entry.State != ProjectOk {
+			stale++
+		}
+	}
+
+	if got := byName["current"].State; got != ProjectNestedPath {
+		t.Errorf("state of the entry inside the application = %q, want %q", got, ProjectNestedPath)
+	}
+	if got := byName["current"].Owner; got != "ops-console" {
+		t.Errorf("owner = %q, want ops-console — the reader has to be told whose directory it is", got)
+	}
+	if byName["ops-console"].State != ProjectOk {
+		t.Errorf("the application itself is a healthy project, got state %q", byName["ops-console"].State)
+	}
+	if stale != 1 {
+		t.Errorf("--stale would report %d entries, want 1", stale)
+	}
+}
+
+// The comparison happens on resolved paths, and this is the half that fails
+// without it: `current` is a symlink, so as written it is not inside anything —
+// its target is.
+func TestNestedDetectionResolvesTheReleaseSymlink(t *testing.T) {
+	base, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The application root is somewhere else entirely; only the release lives
+	// under it. Comparing the paths as written would find nothing.
+	app := filepath.Join(base, "app")
+	release := filepath.Join(app, "releases", "12")
+	if err := os.MkdirAll(release, 0755); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(base, "elsewhere-current")
+	if err := os.Symlink(release, link); err != nil {
+		t.Fatal(err)
+	}
+
+	execDir := registryOf(t, map[string]string{"app": app, "ghost": link})
+
+	for _, entry := range ListProjectsIn(execDir) {
+		if entry.Name == "ghost" && entry.State != ProjectNestedPath {
+			t.Errorf("state = %q, want %q: the link resolves into the application", entry.State, ProjectNestedPath)
+		}
+	}
+}
+
+// With nested projects registered, the deepest one owns the entry: sending the
+// reader to the outer project would name a directory that is not the one in
+// front of them.
+func TestNestedEntryBelongsToTheDeepestProject(t *testing.T) {
+	base, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	outer := filepath.Join(base, "www")
+	inner := filepath.Join(outer, "shop")
+	nested := filepath.Join(inner, "release")
+	if err := os.MkdirAll(nested, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	execDir := registryOf(t, map[string]string{"www": outer, "shop": inner, "ghost": nested})
+
+	for _, entry := range ListProjectsIn(execDir) {
+		if entry.Name != "ghost" {
+			continue
+		}
+		if entry.Owner != "shop" {
+			t.Errorf("owner = %q, want shop — the deepest containing project", entry.Owner)
+		}
+	}
+}
+
+// A sibling directory is not a nested one. The check compares path prefixes, and
+// a prefix test without the separator would call /var/www/shop2 a child of
+// /var/www/shop.
+func TestSiblingWithASharedPrefixIsNotNested(t *testing.T) {
+	base, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	shop := filepath.Join(base, "shop")
+	shop2 := filepath.Join(base, "shop2")
+	for _, dir := range []string{shop, shop2} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	execDir := registryOf(t, map[string]string{"shop": shop, "shop2": shop2})
+
+	for _, entry := range ListProjectsIn(execDir) {
+		if entry.State != ProjectOk {
+			t.Errorf("%s: state = %q, want ok — these are siblings", entry.Name, entry.State)
+		}
+	}
+}
