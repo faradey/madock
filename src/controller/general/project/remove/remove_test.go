@@ -1,6 +1,7 @@
 package remove
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -190,5 +191,40 @@ func TestRegistryOnlyAllowed_UnderTheBan(t *testing.T) {
 		if !registryOnlyAllowed(c.state, true) {
 			t.Errorf("state %q was refused on an installation that allows destructive commands", c.state)
 		}
+	}
+}
+
+// What a removal used to print when the proxy was not up: `exit status 1`, the
+// entire text an exec.ExitError carries, one line above "Project was removed
+// successfully". Nothing had failed about the removal — the registry, the
+// runtime and the ports were gone and the generated configuration was correct —
+// but the pair reads as a half-finished destructive command, which is the worst
+// thing for this particular command to look like.
+func TestReloadFailureLines(t *testing.T) {
+	err := errors.New("exit status 1")
+
+	if lines := reloadFailureLines(nil, false); lines != nil {
+		t.Errorf("no error should say nothing, got %v", lines)
+	}
+
+	down := strings.Join(reloadFailureLines(err, false), "\n")
+	if strings.Contains(down, "exit status") {
+		t.Errorf("a proxy that is not running is not a fault to quote a code for:\n%s", down)
+	}
+	if !strings.Contains(down, "not running") || !strings.Contains(down, "proxy:start") {
+		t.Errorf("the reader has to learn why and what applies the config:\n%s", down)
+	}
+	if !strings.Contains(down, "removed") {
+		t.Errorf("it must say the removal itself succeeded:\n%s", down)
+	}
+
+	// Running and still refusing is a real fault, and there the underlying text
+	// is the only clue anyone has.
+	up := strings.Join(reloadFailureLines(err, true), "\n")
+	if !strings.Contains(up, "exit status 1") {
+		t.Errorf("a running proxy that will not reload should carry the error text:\n%s", up)
+	}
+	if !strings.Contains(up, "proxy:logs") {
+		t.Errorf("and should say where to look:\n%s", up)
 	}
 }

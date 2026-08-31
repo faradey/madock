@@ -1,3 +1,9 @@
+**v4.1.21**
+
+Fixed:
+- **A removal printed `exit status 1` one line above "Project was removed successfully".** That string is the whole of what an `exec.ExitError` carries — no command, no stderr — and it came from reloading the shared proxy, which fails when the proxy is not running. Nothing about the removal had failed: the registry entry, the runtime and the port reservations were gone and the generated configuration on disk was correct. The pair read as a destructive command that half worked, which is the worst thing this particular command can look like. Found while clearing two orphaned entries off a laptop whose proxy was simply down
+- **The failure now says which of the two it is.** Proxy not running: the removal succeeded and the configuration applies at the next `proxy:start`, no code quoted. Proxy running and refusing to reload: that is a real fault, so the error text is shown along with `proxy:logs` and `proxy:restart` — the only case where the underlying string is worth anything. `proxy:reload` has had a sentence like this for a while; this path had the bare code
+
 **v4.1.20**
 
 Fixed:
