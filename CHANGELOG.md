@@ -1,3 +1,9 @@
+**v4.1.20**
+
+Fixed:
+- **A proxy.conf transformer had no way to learn whose blocks it was rewriting, so it asked the working directory.** `proxytransform.Apply` hands over the finished file — every project's server blocks concatenated — and says nothing about the project, while the file is regenerated *on behalf of* a project the caller need not be standing in: during a removal it is regenerated for whichever project is left. Measured on a production installation on 2026-08-31, seven projects and forty service locations, all carrying a single obfuscation suffix, because one project's configuration had been applied to the whole file. The same run minted and persisted configuration for a home directory that was not a project at all, turning it into a registry entry that `project:list` then reported
+- **`ApplyProject(projectName, content)` is the answer**: a second chain, run over one project's blocks before they are concatenated, told which project they are. An empty name runs nothing rather than falling back to the current directory — that fallback is the defect, not a safety net. The whole-file chain is unchanged and independent, for transformers that genuinely operate on the assembled file
+
 **v4.1.19**
 
 Fixed:
