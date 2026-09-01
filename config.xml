@@ -77,6 +77,29 @@
                 <version>8.2</version>
                 <composer>
                     <version>2</version>
+                    <!-- Every project's composer home has always been one
+                         directory, ~/.composer, shared by the whole machine.
+                         That shares two things at once, and only one of them is
+                         wanted.
+
+                         shared_home shares the global INSTALL — composer.json
+                         and vendor/. Anything put there with
+                         `composer global require` from one project's container
+                         is the version every other project runs. Measured
+                         2026-09-01: moving one project's pinned Deployer from
+                         ^7 to ^8 moved all seven on the host, and the version
+                         reported inside a container whose own compose line read
+                         `deployer/deployer:^7` was 8.0.5.
+
+                         shared_cache shares the DOWNLOADS, which is the half
+                         worth having — 83 MB on that machine, fetched once.
+
+                         Both default to true: nothing changes for anyone who
+                         does not ask. shared_home=false with shared_cache=true
+                         gives a project its own tools at its own versions while
+                         downloads stay shared. -->
+                    <shared_home>true</shared_home>
+                    <shared_cache>true</shared_cache>
                 </composer>
                 <!-- The php-fpm pool. Until 4.0.3 none of this was settable and
                      the pool kept the distribution's own numbers, of which one
