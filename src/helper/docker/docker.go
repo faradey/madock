@@ -445,25 +445,25 @@ func upProjectWithBuild(projectName string, withChown bool, refresh bool) {
 	}
 
 	pp := paths.NewProjectPaths(projectName)
-	src := paths.MakeDirsByPath(pp.ComposerDir())
 
-	if fi, err := os.Lstat(src); err == nil {
-		if fi.Mode()&os.ModeSymlink != os.ModeSymlink {
-			err = os.RemoveAll(src)
-			if err == nil {
-				err = os.Symlink(composerGlobalDir+"/.composer", src)
-				if err != nil {
-					logger.Fatal(err)
-				}
-			} else {
-				fmt.Println(err)
-			}
-		}
-	} else {
-		err = os.Symlink(composerGlobalDir+"/.composer", src)
-		if err != nil {
-			logger.Fatal(err)
-		}
+	// Whether this project shares the machine's composer home, or keeps one of
+	// its own. Shared is the default and the behaviour madock has always had —
+	// see composer_home.go for what each half of the sharing costs.
+	//
+	// MakeDirsByPath is deliberately NOT called here any more: it created a
+	// real directory that the next few lines then deleted, which made the code
+	// read as though it were removing something a user had put there.
+	projectConf := configs2.GetProjectConfig(projectName)
+	sharedHome := !strings.EqualFold(projectConf["php/composer/shared_home"], "false")
+	sharedCache := !strings.EqualFold(projectConf["php/composer/shared_cache"], "false")
+
+	notice, composerErr := prepareProjectComposerDir(
+		pp.ComposerDir(), composerGlobalDir+"/.composer", sharedHome, sharedCache)
+	if composerErr != nil {
+		logger.Fatal(composerErr)
+	}
+	if notice != "" {
+		fmt.Println(notice)
 	}
 
 	sshDir := pp.SSHDir()
@@ -510,8 +510,6 @@ func upProjectWithBuild(projectName string, withChown bool, refresh bool) {
 	if err != nil {
 		logger.Fatal(err)
 	}
-
-	projectConf := configs2.GetProjectConfig(projectName)
 
 	if val, ok := projectConf["cron/enabled"]; ok && val == "true" {
 		CronExecute(projectName, true, false)
