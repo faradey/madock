@@ -1,3 +1,10 @@
+**v4.1.23**
+
+Fixed:
+- **A container left over from a service the project no longer has is no longer reported as a failed one.** Containers are listed by the project's label, and the label outlives the service: turn `nginx/enabled` off on a project with no web surface and its container stays behind, exited, still labelled. Every `start` since then warned `nginx — exited` about a service the project does not have, while `status` — which reads the generated stack — did not list nginx at all. Two commands disagreed about something that does not exist, and the one raising the alarm was the wrong one
+- **Leftovers are now named as leftovers**, with the cure (`madock rebuild`) instead of a log to read. A genuinely dead service is reported exactly as before
+- **The declared set is asked of the stack generator rather than read out of the generated file.** An override file may add a service, and a service present only there would otherwise be called a leftover — which is the very mistake this catches. When the set cannot be established, nothing is called a leftover and the output is what it was before: a check that cannot tell must not invent a category
+
 **v4.1.22**
 
 Added:
