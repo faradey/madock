@@ -2,6 +2,7 @@ package start
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/faradey/madock/v4/src/command"
@@ -52,7 +53,24 @@ func ExecuteWith(args *arg_struct.ControllerGeneralStart) {
 		// "up" returning zero only says the containers were created. Report a
 		// service whose main process is already gone instead of claiming
 		// success and leaving the reason in a log nobody has been told to read.
-		if dead := docker.NotRunning(projectName); len(dead) > 0 {
+		dead, orphans := docker.NotRunningAndOrphans(projectName)
+
+		// A leftover is not a failure and must not be reported as one. It is a
+		// container from a service the stack no longer declares — switching
+		// `nginx/enabled` off leaves one behind — and it keeps the compose
+		// project label, so `ps -a` goes on listing it after the service is
+		// gone. Said as "nginx — exited" it accuses a service that this project
+		// does not have, on every start, while `status` does not list it at all.
+		if len(orphans) > 0 {
+			names := make([]string, 0, len(orphans))
+			for _, service := range orphans {
+				names = append(names, service.Service)
+			}
+			fmtc.WarningIconLn("Left over from a service this project no longer has: " + strings.Join(names, ", "))
+			fmtc.ToDoLn("madock rebuild   # recreates the stack and clears them")
+		}
+
+		if len(dead) > 0 {
 			fmtc.WarningIconLn(fmt.Sprintf("Containers started in %s, but some are not running:", elapsed))
 			for _, service := range dead {
 				line := "  " + service.Service + " — " + service.State
