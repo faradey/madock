@@ -178,20 +178,85 @@ func HasContainers(projectName string) bool {
 // somebody read the log there was nothing to go on: start said success and
 // status, asked in between, honestly said running.
 func NotRunning(projectName string) []ServiceState {
+	dead, _ := NotRunningAndOrphans(projectName)
+	return dead
+}
+
+// NotRunningAndOrphans splits what `docker compose ps -a` returns into the two
+// things it mixes: services of this stack that are not running, and containers
+// left over from services the stack no longer declares.
+//
+// `ps -a` lists containers by compose project label, and a label outlives the
+// service. Turn a service off — `nginx/enabled=false` on a project with no web
+// surface, say — and its container stays behind, exited, wearing the label for
+// ever. Reported as "nginx — exited" it reads as a service that failed to
+// start, on every single start, while `status` (which reads the compose file)
+// does not list nginx at all. Two commands then disagree about a service that
+// does not exist, and the one raising the alarm is the one that is wrong.
+//
+// Found on a project with `nginx/enabled=false` and no web surface at all, so
+// the warning could never be anything but noise there.
+//
+// The classification needs to know what the stack declares. When that cannot be
+// established, everything is reported as before — a check that cannot tell must
+// not invent a new category, and the old behaviour is the safe one.
+func NotRunningAndOrphans(projectName string) (dead []ServiceState, orphans []ServiceState) {
 	entries, err := ServiceStates(projectName)
 	if err != nil {
 		// Nothing to report rather than a false alarm: a docker that cannot be
 		// asked is not evidence that a service died.
+		return nil, nil
+	}
+	return classifyStates(entries, DeclaredServices(projectName))
+}
+
+// classifyStates is the decision on its own: which stopped containers belong to
+// the stack and which are left over from a service it no longer has.
+//
+// declared == nil means "could not be established", and then nothing is called
+// an orphan.
+func classifyStates(entries []ServiceState, declared map[string]bool) (dead []ServiceState, orphans []ServiceState) {
+	for _, entry := range entries {
+		if entry.State == "running" || entry.State == "restarting" {
+			continue
+		}
+		if declared != nil && !declared[entry.Service] {
+			orphans = append(orphans, entry)
+			continue
+		}
+		dead = append(dead, entry)
+	}
+	return dead, orphans
+}
+
+// DeclaredServices returns the services this project's compose files define, or
+// nil when docker cannot be asked.
+//
+// It asks compose rather than reading the YAML: an override file may add a
+// service, and a service present only there would otherwise be mistaken for a
+// leftover — the exact error this function exists to prevent, made by the code
+// meant to catch it.
+func DeclaredServices(projectName string) map[string]bool {
+	pp := paths.NewProjectPaths(projectName)
+	composeFile := pp.DockerCompose()
+	if !paths.IsFileExist(composeFile) {
 		return nil
 	}
-
-	var dead []ServiceState
-	for _, entry := range entries {
-		if entry.State != "running" && entry.State != "restarting" {
-			dead = append(dead, entry)
+	out, err := exec.Command("docker", "compose", "-f", composeFile, "-f", pp.DockerComposeOverride(),
+		"config", "--services").Output()
+	if err != nil {
+		return nil
+	}
+	declared := make(map[string]bool)
+	for _, line := range strings.Split(string(out), "\n") {
+		if name := strings.TrimSpace(line); name != "" {
+			declared[name] = true
 		}
 	}
-	return dead
+	if len(declared) == 0 {
+		return nil
+	}
+	return declared
 }
 
 // parseComposePS reads `docker compose ps --format json` in both shapes it
