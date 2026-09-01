@@ -1,3 +1,13 @@
+**v4.1.22**
+
+Added:
+- **A project can keep a composer home of its own — `php/composer/shared_home` and `php/composer/shared_cache`, both `true` by default.** Every project's composer home has always been one shared directory, and that shares two things at once. The download cache is the half worth sharing: 83 MB on the machine this was measured on, fetched once. The global install is the other half, and it means anything put there with `composer global require` from one project's container is the version every other project runs, whatever their own configuration says. `shared_home=false` with `shared_cache=true` gives a project its own tools at its own versions while downloads stay shared
+- **What it cost to find.** madock-pro pins a Deployer version per project and writes it into each project's compose file. Moving one project from `^7` to `^8` on a production host moved all seven: inside a container whose own compose line read `deployer/deployer:^7`, the version reported was 8.0.5. One of those projects carried a deploy recipe that only parses under v7, so its next deploy would have failed with nothing in its own configuration to explain why. Nothing was wrong with the pin — it simply could not hold, because the install it pins is shared
+
+Fixed:
+- **The project composer directory is no longer created only to be deleted a line later.** `MakeDirsByPath` made a real directory, and the next few lines removed it and put the symlink in its place. Harmless, and it made the code read as though it were deleting something a user had put there — which is how it was read
+- **Replacing a non-empty composer directory now says so.** It is still replaced, since the invariant is that the path is a link to the shared home, but a directory with packages in it is a signal rather than rubbish. Silence there is how "it reinstalled itself again" becomes unexplainable
+
 **v4.1.21**
 
 Fixed:
