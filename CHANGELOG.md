@@ -1,3 +1,10 @@
+**v4.1.25**
+
+Added:
+- **Every release now ships `SHA256SUMS`.** A release page and a copy of it look identical, and until now nothing published let anyone tell one from the other. A checksum answers half of that — "is this the file that was published" — for every platform at once, including the ones that will never carry an Apple signature. The README carries the verification command, with its limit stated: it says nothing about **who** built the binary
+- **The macOS binaries are signed and notarised.** The release workflow now stops at a draft, and `scripts/sign-release.sh <tag>` finishes it on the machine that holds the Developer ID key — the key does not travel, so neither does the signing. Signing rewrites a binary, so publishing first and signing later would leave checksums that do not match the files, which reads exactly like a substituted download; as a draft, the release is invisible until every artifact is final
+- **Both a signed binary and a stapled disk image**, because they answer different questions. Measured against Apple on 2026-09-02: a bare executable is accepted by notarisation but the ticket cannot be stapled to it (`Error 73`, and a zip is refused outright), so Gatekeeper resolves it online; a signed `.dmg` staples, validates, and `spctl` reports `accepted, source=Notarized Developer ID` — the only form that verifies with no network
+
 **v4.1.24**
 
 Fixed:
