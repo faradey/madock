@@ -106,16 +106,15 @@ mv ~/Downloads/madock-darwin-arm64 ~/.madock/madock     # Apple Silicon
 # 2. Make it executable
 chmod +x ~/.madock/madock
 
-# 3. Remove the Gatekeeper quarantine flag (binaries are not Apple-notarized)
-xattr -dr com.apple.quarantine ~/.madock/madock
-
-# 4. Symlink into your $PATH (the real file stays in ~/.madock)
+# 3. Symlink into your $PATH (the real file stays in ~/.madock)
 sudo ln -s ~/.madock/madock /opt/homebrew/bin/madock    # Apple Silicon
 # sudo ln -s ~/.madock/madock /usr/local/bin/madock      # Intel
 
-# 5. Check it works (first run auto-extracts docker/ and scripts/ into ~/.madock)
+# 4. Check it works (first run auto-extracts docker/ and scripts/ into ~/.madock)
 madock
 ```
+
+Since v4.1.25 the macOS binaries are signed with our Developer ID and notarised by Apple, so they run without stripping the quarantine flag. Gatekeeper resolves the notarisation **online**: on a machine with no network, use the `.dmg` for your architecture instead — the ticket is stapled to it and verifies offline.
 
 If macOS still blocks it: **System Settings → Privacy & Security → "Open Anyway"**.
 </details>
