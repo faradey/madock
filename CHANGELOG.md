@@ -1,3 +1,19 @@
+**v4.2.0**
+
+This is the release the 4.1.x entries below were building towards. Those numbers were `-norelease` tags — versions cut for madock-pro to import, never published — and this is the first public release since v4.0.0.
+
+Released:
+- **The composer installer is fetched over TLS** (4.1.24). Every php image build read it over plain HTTP and piped it straight into php, so anyone on the path to getcomposer.org chose what ran as root inside the container being built
+- **A project can keep its own composer home** (4.1.22) — `php/composer/shared_home` and `php/composer/shared_cache`, both `true` by default, so nothing changes for anyone who does not ask. The shared home is why a per-project tool version cannot hold: whatever the last container bootstrap installed is what every project runs
+- **A container left over from a removed service is no longer reported as a failed one** (4.1.23). Turning a service off leaves its container behind, labelled; every `start` since then accused a service the project does not have, while `status` did not list it at all
+- **Releases carry `SHA256SUMS`, and the macOS binaries are signed and notarised.** The release is published as a draft and finished by `scripts/sign-release.sh` on the machine that holds the Developer ID key. A bare binary is notarised — Gatekeeper resolves the ticket online — and a stapled `.dmg` is shipped alongside for machines with no network
+
+Fixed:
+- **Release notes no longer list internal version bumps.** The generator walks from the previous *published* release, so a public page opened with a dozen `Release 4.1.2x` lines: numbers nobody can download, describing steps between two releases nobody saw
+
+Upgrading:
+- macOS: the install no longer needs `xattr -dr com.apple.quarantine`. The binaries are notarised; strip nothing
+
 **v4.1.25**
 
 Added:

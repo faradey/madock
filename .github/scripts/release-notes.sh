@@ -60,12 +60,27 @@ if [ -n "$notes" ]; then
     echo ""
 fi
 
+# Internal version bumps are dropped, and that is the whole of this filter.
+#
+# Releases are cut from a line that also carries `-norelease` tags — versions
+# built for madock-pro to import, never published to anybody. The commits that
+# raise those numbers are called `Release 4.1.23` or, in older history, just
+# `4.1.17`, and a public release listing forty commits used to open with a dozen
+# of them: version numbers a reader cannot download, describing steps between two
+# releases they never saw. v4.1.25 shipped that way before it was withdrawn.
+#
+# What is dropped is only the bump commit itself. Everything it collected — the
+# real changes — is already in the list under its own subject.
+drop_version_bumps() {
+    grep -Ev '^- (Release )?v?[0-9]+\.[0-9]+\.[0-9]+$' || true
+}
+
 echo "## What's Changed"
 echo ""
 if [ -n "$prev" ]; then
-    git log --no-merges --pretty='- %s' "${prev}..${current}"
+    git log --no-merges --pretty='- %s' "${prev}..${current}" | drop_version_bumps
 else
-    git log --no-merges --pretty='- %s' "${current}"
+    git log --no-merges --pretty='- %s' "${current}" | drop_version_bumps
 fi
 echo ""
 if [ -n "$prev" ]; then
