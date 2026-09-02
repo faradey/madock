@@ -68,8 +68,22 @@ jobs:
           sh .github/scripts/release-notes.sh "$current" "$prev" > RELEASE_NOTES.md
           cat RELEASE_NOTES.md
 
-      - name: Release
+      # Published as a DRAFT on purpose, and this is not caution — it is the only
+      # ordering in which the page is never wrong.
+      #
+      # The macOS binaries are signed and notarised afterwards, on the machine
+      # that holds the Developer ID key, because that key does not leave it. And
+      # signing rewrites the file: a signature is embedded, not attached. So a
+      # release published here and signed later would carry, for as long as that
+      # takes, binaries whose checksums do not match the SHA256SUMS beside them —
+      # a mismatch that reads exactly like a substituted file.
+      #
+      # `scripts/sign-release.sh <tag>` signs, notarises, rebuilds SHA256SUMS from
+      # the signed files, and flips the draft to published. Until it runs, the
+      # release exists but nobody can download half of it.
+      - name: Release (draft)
         uses: softprops/action-gh-release@v2
         with:
           body_path: RELEASE_NOTES.md
           files: dist/*
+          draft: true
