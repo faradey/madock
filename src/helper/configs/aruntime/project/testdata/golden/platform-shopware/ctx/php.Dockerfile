@@ -113,8 +113,8 @@ RUN if [[ "false" = "true" ]]; then set -eux && EXTENSION_DIR="$( php -i | grep 
     && ln -s /etc/php/8.4/mods-available/ioncube.ini /etc/php/8.4/cli/conf.d/10-ioncube.ini \
     && ln -s /etc/php/8.4/mods-available/ioncube.ini /etc/php/8.4/fpm/conf.d/10-ioncube.ini; fi
 RUN is_composer_version_one="" \
-    && if [[ "2" = "2" ]]; then is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [[ "2" = "1" ]]; then  is_composer_version_one="1" && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
-    && if [[ -z "${is_composer_version_one}" ]]; then php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version=2; fi
+    && if [[ "2" = "2" ]]; then is_composer_version_one="1" && php -r "readfile('https://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [[ "2" = "1" ]]; then  is_composer_version_one="1" && php -r "readfile('https://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
+    && if [[ -z "${is_composer_version_one}" ]]; then php -r "readfile('https://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version=2; fi
 RUN if [[ "false" = "true" ]]; then pecl install -f xdebug-3.4.4 \
     && touch /etc/php/8.4/mods-available/xdebug.ini \
     && echo "zend_extension=xdebug.so" >> /etc/php/8.4/mods-available/xdebug.ini \
