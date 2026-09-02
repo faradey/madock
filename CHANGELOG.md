@@ -1,3 +1,10 @@
+**v4.1.24**
+
+Fixed:
+- **The php image build fetched the composer installer over plain HTTP and piped it straight into php.** Three branches of the snippet, so every php.Dockerfile madock renders carried it. Anyone able to sit on the path to getcomposer.org — a café network, a compromised resolver, a proxy in a corporate estate — chose what ran as root inside every container built through madock, while the build output looked entirely ordinary. `https://` is the whole fix; the golden fixtures move with the snippet because it is rendered into each of them
+- **Not included, deliberately:** composer's documented install also verifies the downloaded installer against a published signature. That is worth having and is a larger change — a second fetch, a second failure mode, and a decision about what a build should do when the signature endpoint is unreachable — so it is a change of its own rather than a rider on a one-word fix
+- Templates ship inside the binary and are unpacked by the first run of a newer one, so this reaches a machine when its binary is replaced, not when the fix is released
+
 **v4.1.23**
 
 Fixed:
