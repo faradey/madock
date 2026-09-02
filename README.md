@@ -83,6 +83,15 @@ Each release ships a single self-contained binary on the [Releases page](https:/
 | Linux ARM | `madock-linux-arm64` |
 | Windows (via WSL2) | `madock-linux-amd64` |
 
+Every release also ships `SHA256SUMS`. To check the file you downloaded is the file that was published:
+
+```shell
+# from the directory holding the binary and SHA256SUMS
+shasum -a 256 --ignore-missing -c SHA256SUMS
+```
+
+It answers "is this the published file", not "who built it" — the second question needs a signature, which these binaries do not yet carry.
+
 > **Important:** the binary keeps its working data (`docker/`, `scripts/`, `projects/`, `aruntime/`) **next to itself** — these are auto-extracted on first run. Put the binary in a **dedicated, writable folder** (e.g. `~/.madock/`) and add it to your `PATH` via a symlink. Do **not** drop the real file straight into a system directory like `/opt/homebrew/bin` or `/usr/local/bin` — only the symlink goes there.
 
 <details>

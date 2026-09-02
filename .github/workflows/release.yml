@@ -39,6 +39,20 @@ jobs:
               go build -trimpath -ldflags="-s -w" -o "dist/${out}${ext}"
           done
 
+      # Answers "did I download what they published" for every platform at once,
+      # including the ones that will never be signed. It is not a signature: it
+      # proves the file matches this page, not who built it. Cheap enough that
+      # the absence was never a decision, only an omission.
+      #
+      # Written from inside dist/ so the file lists bare names — `shasum -c
+      # SHA256SUMS` then works wherever the user unpacked them — and generated
+      # before the checksum file exists, so it never tries to hash itself.
+      - name: Checksums
+        run: |
+          cd dist
+          shasum -a 256 * > SHA256SUMS
+          cat SHA256SUMS
+
       - name: Generate changelog
         env:
           GH_TOKEN: ${{ github.token }}
