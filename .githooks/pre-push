@@ -33,6 +33,29 @@ fail() {
     exit 1
 }
 
+# A release tag is checked before anything else, because it is the one push in
+# this repository whose mistake is visible to strangers. The workflow refuses the
+# same numbers, but it refuses them after the tag exists — and a tag that has been
+# published is withdrawn rather than corrected. That happened to v4.1.25 on
+# 2026-09-02.
+#
+# git feeds pre-push the refs on stdin as "<local ref> <local sha> <remote ref>
+# <remote sha>", so this reads what is actually being pushed rather than guessing
+# from the working tree. `-norelease` tags are the internal line and are skipped:
+# the release workflow ignores them too.
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+    case "$remote_ref" in
+        refs/tags/v*-norelease) ;;
+        refs/tags/v*)
+            tag=${remote_ref#refs/tags/}
+            if ! version_output=$(sh .github/scripts/check-release-version.sh "$tag" 2>&1); then
+                printf '%s\n' "$version_output" >&2
+                fail "this release number is not one we publish"
+            fi
+            ;;
+    esac
+done
+
 if ! command -v go >/dev/null 2>&1; then
     fail "go is not installed, so nothing here can be checked"
 fi

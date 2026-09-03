@@ -24,6 +24,12 @@ jobs:
         with:
           go-version-file: go.mod
 
+      # First, before anything is built or published. A wrong number caught here
+      # costs a failed job; caught after publication it costs a withdrawn
+      # release, which is what happened to v4.1.25 on 2026-09-02.
+      - name: Check the release number
+        run: sh .github/scripts/check-release-version.sh "${GITHUB_REF_NAME}"
+
       - name: Build binaries
         run: |
           mkdir -p dist
