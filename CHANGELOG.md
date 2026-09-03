@@ -1,3 +1,9 @@
+**v4.2.1**
+
+Fixed:
+- **A release number we do not publish is now refused before anything is built.** v4.2.0 was v4.1.25 first: a number taken from the internal `-norelease` line, published, and withdrawn. Nothing objected at any point — the tag was accepted, the workflow built it, the page went up. Two rules now stand in the way: a published tag is single-digit in every segment, which is what every release since 3.8.0 has been, and the tag must equal `const Version`, so nobody meets a `madock version` that appears on no release page
+- The check runs in the release workflow, before the build, and in the pre-push hook, before the tag leaves the machine — a pushed tag is withdrawn rather than corrected. Internal `-norelease` tags are skipped by both
+
 **v4.2.0**
 
 This is the release the 4.1.x entries below were building towards. Those numbers were `-norelease` tags — versions cut for madock-pro to import, never published — and this is the first public release since v4.0.0.
