@@ -43,7 +43,16 @@ fail() {
 # <remote sha>", so this reads what is actually being pushed rather than guessing
 # from the working tree. `-norelease` tags are the internal line and are skipped:
 # the release workflow ignores them too.
-while read -r _local_ref _local_sha remote_ref _remote_sha; do
+# A deletion is not a release, and it used to be refused as one. Deleting a tag
+# pushes an all-zero local sha with the tag as the remote ref, so the check ran
+# against a number the tree no longer declares and refused the withdrawal —
+# measured on 2026-09-08 while removing v4.2.2 after its release was pulled.
+# The one thing a deletion cannot do is publish a wrong number.
+while read -r _local_ref local_sha remote_ref _remote_sha; do
+    case "$local_sha" in
+        *[!0]*) ;;
+        *) continue ;;
+    esac
     case "$remote_ref" in
         refs/tags/v*-norelease) ;;
         refs/tags/v*)
