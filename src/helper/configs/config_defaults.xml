@@ -346,7 +346,7 @@
                 <opensearch>
                     <enabled>false</enabled>
                     <memory_limit>2512m</memory_limit>
-                    <heap>800m</heap>
+                    <heap>1g</heap>
                     <repository>opensearchproject/opensearch</repository>
                     <version>2.19.1</version>
                     <auth>

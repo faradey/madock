@@ -51,6 +51,11 @@ func MakeConf(projectName string) {
 	if err != nil {
 		logger.Fatal(err)
 	}
+	// Before anything is written: a heap that does not fit its container limit
+	// produces a container that dies on start and a deploy that fails somewhere
+	// else entirely. See search_memory.go.
+	verifySearchMemory(projectConf)
+
 	makeNginxDockerfile(projectName)
 	makeNginxConf(projectName)
 	makeDockerCompose(projectName)
