@@ -329,6 +329,8 @@
                 <engine>elasticsearch</engine>
                 <elasticsearch>
                     <enabled>false</enabled>
+                    <memory_limit>2512m</memory_limit>
+                    <heap>800m</heap>
                     <repository>elasticsearch</repository>
                     <version>8.4.3</version>
                     <auth>
@@ -343,6 +345,8 @@
                 </elasticsearch>
                 <opensearch>
                     <enabled>false</enabled>
+                    <memory_limit>2512m</memory_limit>
+                    <heap>800m</heap>
                     <repository>opensearchproject/opensearch</repository>
                     <version>2.19.1</version>
                     <auth>

@@ -1,3 +1,9 @@
+**v4.2.6**
+
+Added:
+- **The search engine's memory is a setting** — `search/opensearch/memory_limit`, `search/opensearch/heap`, and the same pair for `elasticsearch`, each defaulting to the number that was compiled in (`2512m` and `800m`), so a machine that sets nothing renders what it rendered before. Measured on extmag.com: java held 1650 MB of RSS against 12.4 MB of indices and 21 products, on a 5.8 GB machine, and every project paid the same regardless of catalogue size
+- Two keys rather than one, because the container limit and the JVM heap cannot be derived from each other: the heap has to leave room for lucene's off-heap memory, and a limit below the heap makes the kernel kill the container instead of java throwing. Changing either used to mean copying the compose snippet into the project's `.madock/docker/`, which is a copy that drifts from the shipped one in silence — and one such copy already existed on a production machine
+
 **v4.2.5**
 
 Added:

@@ -7,7 +7,7 @@
     deploy:
       resources:
         limits:
-          memory: 2512m
+          memory: {{{.search.opensearch.memory_limit}}}
     ulimits:
       memlock:
         soft: -1
@@ -19,7 +19,7 @@
       OPENSEARCH_DISCOVERY_TYPE: 'single-node'
       DISABLE_INSTALL_DEMO_CONFIG: 'true'
       DISABLE_SECURITY_PLUGIN: 'true'
-      ES_JAVA_OPTS: '-Xms800m -Xmx800m'
+      ES_JAVA_OPTS: '-Xms{{{.search.opensearch.heap}}} -Xmx{{{.search.opensearch.heap}}}'
     volumes:
       - opensearch_vlm_{{{.search.opensearch.version}}}:/usr/share/opensearch/data
     restart: {{{.restart_policy}}}
