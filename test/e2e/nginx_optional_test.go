@@ -3,6 +3,7 @@
 package e2e
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -101,4 +102,71 @@ func TestNginxOffKeepsTheProjectOutOfTheSharedProxy(t *testing.T) {
 	// it here would pin a behaviour that does not exist; it is written up in
 	// MADOCK-E2E-PLAN.md instead, where it can be decided rather than enforced
 	// by a red test.
+}
+
+// TestAProjectShippedWithoutNginxNeverTakesTheWebPorts is the other order, and
+// it is the one real projects use.
+//
+// `nginx/enabled` is not usually typed at a machine: it is committed in the
+// project's own `.madock/config.xml`, which is how extmag-core-shopify ships —
+// Core accepts no request from anywhere, so a vhost would mean a certificate, a
+// block in the shared proxy and an open port for nothing. That file is read
+// before the first render, so the switch is off the first time anything asks
+// for a port.
+//
+// Which is what makes the claim in `configs.NginxEnabled` — "false leaves out
+// the container, the vhost, the block in the shared proxy, the name in the
+// certificate and the ports" — true of this path and false of the other. A
+// project set up with the web server on and switched off afterwards keeps the
+// numbers it already has: `setup` renders, and allocates, before there is a
+// project for `config:set` to write to, and nothing hands a number back except
+// `project:remove`. Measured both ways in the VM on 2026-09-08.
+func TestAProjectShippedWithoutNginxNeverTakesTheWebPorts(t *testing.T) {
+	install := newInstallation(t)
+	p := install.project("e2eshippedoff")
+
+	// Written before setup, exactly as a repository carries it.
+	madockDir := filepath.Join(p.runDir, ".madock")
+	if err := os.MkdirAll(madockDir, 0o755); err != nil {
+		t.Fatalf("creating %s: %v", madockDir, err)
+	}
+	// The platform and the language belong in this file as well, exactly as
+	// extmag-core-shopify carries them. A file holding only the nginx switch
+	// looks like it should work and does not: the project's own config wins
+	// over what `setup` was told, so app.Dockerfile rendered from a config with
+	// no platform and docker stopped with "failed to read dockerfile:
+	// app.Dockerfile". Measured, and it is the reason this fixture is not
+	// shorter.
+	writeString(t, filepath.Join(madockDir, "config.xml"), `<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <scopes>
+        <default>
+            <platform>custom</platform>
+            <language>none</language>
+            <nginx>
+                <enabled>false</enabled>
+            </nginx>
+        </default>
+    </scopes>
+</config>
+`)
+
+	p.run(5*time.Minute, "setup", "-y",
+		"--platform=custom",
+		"--language=none",
+		"--hosts=e2eshippedoff.test",
+	)
+	p.run(20*time.Minute, "start")
+
+	compose := readFile(t, p.generated("docker-compose.yml"))
+	if strings.Contains(compose, "\n  nginx:") {
+		t.Fatalf("the project declares an nginx service, so its own config.xml was not read and nothing below means anything:\n%s", compose)
+	}
+
+	registry := readFile(t, filepath.Join(install.dir, "aruntime", "ports.conf"))
+	for _, key := range []string{p.name + "/nginx=", p.name + "/nginx_ssl="} {
+		if strings.Contains(registry, key) {
+			t.Errorf("%s is reserved for a project that ships without a web server:\n%s", key, registry)
+		}
+	}
 }
