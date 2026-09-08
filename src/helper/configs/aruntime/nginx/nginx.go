@@ -95,44 +95,24 @@ func proxyPreamble(generalConfig map[string]string) string {
 	// proxy service in compose — which needs no extra privilege.
 	preamble := "worker_processes 2;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\nserver_names_hash_bucket_size  128;\nserver_names_hash_max_size 1024;\n"
 
-	// The client address, when something else terminated the connection.
+	// Anything the enterprise edition wants at the top of the http block.
 	//
-	// This comes first on purpose. The realip module runs at the post-read phase,
-	// before limit_req and limit_conn are evaluated, so the two zones below and
-	// the access log all pick up the rewritten address — which is the entire
-	// reason to have it. Put a CDN in front of the proxy without this and every
-	// visitor in the world counts as one of a few dozen edge addresses: the rate
-	// limit stops protecting anything and starts throttling everyone together.
+	// The one thing that goes here today is the realip module — the directives
+	// that take the client address from a CDN header — and it is deliberately
+	// not in this repository. It belongs to the edition that sells the shared
+	// proxy's operation, and putting a copy here would mean two implementations
+	// of one trust boundary.
 	//
-	// Off by default. On a machine reached directly, trusting a header would let
-	// any client choose the address the limiter counts.
-	if generalConfig["proxy/real_ip/enabled"] == "true" {
-		trusted, rejected := TrustedRealIPRanges(generalConfig["proxy/real_ip/trusted"])
-
-		for _, entry := range rejected {
-			// Visible in the file rather than dropped in silence: a trusted
-			// range that was quietly discarded looks identical to one that
-			// works, and the difference is whether the client address is real.
-			preamble += "# real_ip: ignored '" + entry + "' — not an address or CIDR\n"
-		}
-
-		if len(trusted) == 0 {
-			preamble += "# real_ip: enabled with no usable trusted range, so nothing is trusted\n"
-		} else {
-			preamble += "# Real client address, taken from a header only for these upstreams\n"
-			for _, entry := range trusted {
-				preamble += "set_real_ip_from " + entry + ";\n"
-			}
-			header := generalConfig["proxy/real_ip/header"]
-			if header == "" {
-				header = "CF-Connecting-IP"
-			}
-			preamble += "real_ip_header " + header + ";\n"
-			if generalConfig["proxy/real_ip/recursive"] == "true" {
-				preamble += "real_ip_recursive on;\n"
-			}
-		}
-	}
+	// Position is the whole reason this is a seam rather than a patch applied
+	// afterwards. The realip module runs at the post-read phase, before
+	// limit_req and limit_conn are evaluated, so whatever it rewrites has to be
+	// in the file **before** the two zones below and before the access log
+	// format — a hook that edited the finished file would have to find that spot
+	// again, and would be one regeneration away from losing it.
+	//
+	// Community renders nothing here, which is what the empty extension list
+	// means: no CDN support, and no half of one either.
+	preamble += PreambleExtensions(generalConfig)
 
 	// Global rate limiting zone (defined once for all projects)
 	//
