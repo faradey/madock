@@ -1,3 +1,16 @@
+**v4.2.5**
+
+Added:
+- **Five things that were literals in the code are settings now**, each with the value it had compiled in, so a machine that sets nothing renders what it rendered before — proved by the golden fixtures, which did not move
+- `proxy/worker/*` and `proxy/server_names_hash/*`. The second is the one with teeth: nginx **refuses to start** when a hostname does not fit `server_names_hash_bucket_size`, and the shared proxy is one per machine, so that refusal takes every project down together. Raising it used to mean editing Go and rebuilding the binary
+- `proxy/ssl/protocols` and `proxy/ssl/ciphers`. The demand to narrow TLS arrives from outside — an audit, a payment provider, a customer's security review — and used to need a new binary on every machine
+- `php/limits/memory`, `php/limits/max_execution_time`, `php/limits/max_execution_time_web`. Three copies of one number lived inside the platform vhosts, and a project could not change them without copying a 240-line vhost into `.madock/docker/` and letting it drift. An import or a reindex through the web is what runs into them, and what that looks like is a 500 with nothing in the nginx log
+- `php/ini/*` — `post_max_size`, `upload_max_filesize`, `max_input_vars`, `session_cookie_lifetime`. The four that get changed first, and editing them inside a running container does not survive the next rebuild
+- `nginx/max_body_size` for the project's own vhost, named to match `proxy/max_body_size` in the shared proxy. Two limits sit in the path and the smaller one wins: the vhost promised 2G while the proxy stopped the request at 128M, and an upload that dies between them says nothing useful
+
+Changed:
+- Platform vhosts that deliberately carry a smaller limit keep it — PrestaShop's 16M and WooCommerce's 64M are not the common 2G and were left alone
+
 **v4.2.4**
 
 Added:

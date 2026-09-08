@@ -76,6 +76,14 @@
                         <code>base</code>
                     </www>
                 </hosts>-->
+                <!-- The largest request body this project's own vhost accepts.
+                     
+                     Two limits sit in the path and both have to allow an upload:
+                     this one and proxy/max_body_size in the shared proxy, which
+                     is the smaller of the two by default. The vhost used to
+                     promise 2G while the proxy stopped the request at 128M, and
+                     an upload that dies between them says nothing useful. -->
+                <max_body_size>2G</max_body_size>
                 <ssl>
                     <enabled>true</enabled>
                 </ssl>
@@ -149,6 +157,36 @@
                      that the first attempt to justify them attributed a whole
                      suite's result to all four keys changed at once, which is a
                      coincidence wearing a measurement's clothes. -->
+                <!-- What php-fpm is told per request by the vhost.
+                     
+                     These were three copies of the same number inside the
+                     platform vhosts (magento2, shopware, sylius and the shared
+                     php snippet), and a project could not change them without
+                     copying a 240-line vhost into its own .madock/docker.
+                     An import or a reindex through the web is exactly what runs
+                     into them, and what it looks like is a 500 with nothing in
+                     the nginx log to explain it.
+
+                     max_execution_time_web is the shorter one used for ordinary
+                     page requests on Magento; max_execution_time is what the
+                     long-running entry points get. -->
+                <limits>
+                    <memory>756M</memory>
+                    <max_execution_time>18000</max_execution_time>
+                    <max_execution_time_web>600</max_execution_time_web>
+                </limits>
+                <!-- php.ini values written when the image is built.
+                     
+                     Editing php.ini inside a running container does not survive
+                     the next rebuild — the image is built from the template, and
+                     the edit goes with it. These are the four that get changed
+                     first, so they are keys rather than literals in a snippet. -->
+                <ini>
+                    <post_max_size>80M</post_max_size>
+                    <upload_max_filesize>50M</upload_max_filesize>
+                    <max_input_vars>50000</max_input_vars>
+                    <session_cookie_lifetime>2592000</session_cookie_lifetime>
+                </ini>
                 <fpm>
                     <max_children>40</max_children>
                     <start_servers>2</start_servers>
@@ -508,6 +546,30 @@
                     <repository>nginx</repository>
                     <version>1.28</version>
                 </nginx>
+                <!-- Worker and hash-table settings for the shared proxy.
+                     
+                     bucket_size is the one with teeth: nginx refuses to start
+                     when a hostname does not fit it, and the shared proxy is one
+                     per machine — that refusal takes every project down at once.
+                     It used to be a literal in the binary, so raising it meant a
+                     new build. -->
+                <worker>
+                    <processes>2</processes>
+                    <rlimit_nofile>200000</rlimit_nofile>
+                    <connections>4096</connections>
+                </worker>
+                <server_names_hash>
+                    <bucket_size>128</bucket_size>
+                    <max_size>1024</max_size>
+                </server_names_hash>
+                <!-- What TLS the proxy offers. A setting because the demand to
+                     narrow it comes from outside — an audit, a payment provider,
+                     a customer's security review — and used to need a code
+                     change and a new binary on every machine. -->
+                <ssl>
+                    <protocols>TLSv1.2 TLSv1.3</protocols>
+                    <ciphers>ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384</ciphers>
+                </ssl>
                 <timeout>
                     <connect>60</connect>
                     <send>300</send>

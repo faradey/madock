@@ -93,7 +93,22 @@ func proxyPreamble(generalConfig map[string]string) string {
 	// accepts requests faster into the same queue. If priority is ever genuinely
 	// wanted, the container-native knob is a cgroup weight — cpu_shares/cpus on the
 	// proxy service in compose — which needs no extra privilege.
-	preamble := "worker_processes 2;\nworker_rlimit_nofile 200000;\nevents {\n    worker_connections 4096;\nuse epoll;\n}\nhttp {\nserver_names_hash_bucket_size  128;\nserver_names_hash_max_size 1024;\n"
+	// The worker and hash-table numbers are settings rather than literals, and
+	// one of them is the reason why: nginx **refuses to start** when a hostname
+	// does not fit `server_names_hash_bucket_size`, saying so and naming the
+	// value to raise. The shared proxy is one per machine, so that refusal takes
+	// every project down together — and until now the only cure was editing Go
+	// and rebuilding the binary.
+	//
+	// Defaults are exactly the numbers that were compiled in, so a machine that
+	// sets nothing renders the file it rendered before, byte for byte. That is
+	// what the golden fixtures check.
+	preamble := "worker_processes " + settingOr(generalConfig, "proxy/worker/processes", "2") + ";\n" +
+		"worker_rlimit_nofile " + settingOr(generalConfig, "proxy/worker/rlimit_nofile", "200000") + ";\n" +
+		"events {\n    worker_connections " + settingOr(generalConfig, "proxy/worker/connections", "4096") + ";\nuse epoll;\n}\n" +
+		"http {\n" +
+		"server_names_hash_bucket_size  " + settingOr(generalConfig, "proxy/server_names_hash/bucket_size", "128") + ";\n" +
+		"server_names_hash_max_size " + settingOr(generalConfig, "proxy/server_names_hash/max_size", "1024") + ";\n"
 
 	// Anything the enterprise edition wants at the top of the http block.
 	//
@@ -412,13 +427,21 @@ func GenerateSslCert(ctxPath string, force bool) {
 			log.Fatalf("Unable to write file: %v", err)
 		}
 
+		// Which TLS versions and ciphers the proxy offers.
+		//
+		// A setting because the demand to narrow it arrives from outside — an
+		// audit, a payment processor, a customer's security review — and used to
+		// need a code change and a new binary on every machine. The defaults are
+		// the values that were compiled in.
+		generalConfig := configs2.GetGeneralConfig()
 		sslConfigFileContent := "ssl_session_cache shared:le_nginx_SSL:1m;\n" +
 			"ssl_session_timeout 1440m;\n" +
 			"\n" +
-			"ssl_protocols TLSv1.2 TLSv1.3;\n" +
+			"ssl_protocols " + settingOr(generalConfig, "proxy/ssl/protocols", "TLSv1.2 TLSv1.3") + ";\n" +
 			"ssl_prefer_server_ciphers on;\n" +
 			"\n" +
-			"ssl_ciphers \"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384\";"
+			"ssl_ciphers \"" + settingOr(generalConfig, "proxy/ssl/ciphers",
+			"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384") + "\";"
 
 		err = os.WriteFile(ctxPath+"/options-ssl-nginx.conf", []byte(sslConfigFileContent), 0755)
 		if err != nil {
@@ -587,4 +610,18 @@ func GenerateSslCert(ctxPath string, force bool) {
 			logger.Fatal(err)
 		}
 	}
+}
+
+// settingOr returns a configured value, or the default when the key is absent
+// or empty.
+//
+// Empty is treated as absent on purpose: a key present with no value is what an
+// edited config looks like mid-thought, and rendering an empty directive gives
+// nginx a file it refuses to load — on the shared proxy, for every project at
+// once.
+func settingOr(generalConfig map[string]string, key, fallback string) string {
+	if value := generalConfig[key]; value != "" {
+		return value
+	}
+	return fallback
 }
