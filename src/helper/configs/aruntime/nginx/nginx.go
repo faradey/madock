@@ -342,6 +342,12 @@ func makeProxy(projectName string) {
 func makeDockerfile(projectName string) {
 	/* Create nginx Dockerfile configuration */
 	ctxPath := paths.MakeDirsByPath(paths.CtxDir())
+
+	// The TLS options travel with the generated configuration, not with the
+	// certificate: they are derived from settings, and a certificate that still
+	// covers the current hosts is not regenerated. See WriteSslOptions.
+	WriteSslOptions(ctxPath)
+
 	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/proxy.Dockerfile"
 	project.RenderTo(projectName, nginxDefFile, "general/nginx/proxy.Dockerfile", ctxPath+"/Dockerfile", nil)
 	/* END Create nginx Dockerfile configuration */
@@ -427,26 +433,7 @@ func GenerateSslCert(ctxPath string, force bool) {
 			log.Fatalf("Unable to write file: %v", err)
 		}
 
-		// Which TLS versions and ciphers the proxy offers.
-		//
-		// A setting because the demand to narrow it arrives from outside — an
-		// audit, a payment processor, a customer's security review — and used to
-		// need a code change and a new binary on every machine. The defaults are
-		// the values that were compiled in.
-		generalConfig := configs2.GetGeneralConfig()
-		sslConfigFileContent := "ssl_session_cache shared:le_nginx_SSL:1m;\n" +
-			"ssl_session_timeout 1440m;\n" +
-			"\n" +
-			"ssl_protocols " + settingOr(generalConfig, "proxy/ssl/protocols", "TLSv1.2 TLSv1.3") + ";\n" +
-			"ssl_prefer_server_ciphers on;\n" +
-			"\n" +
-			"ssl_ciphers \"" + settingOr(generalConfig, "proxy/ssl/ciphers",
-			"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384") + "\";"
-
-		err = os.WriteFile(ctxPath+"/options-ssl-nginx.conf", []byte(sslConfigFileContent), 0755)
-		if err != nil {
-			log.Fatalf("Unable to write file: %v", err)
-		}
+		WriteSslOptions(ctxPath)
 
 		doGenerateSsl := false
 		if !paths.IsFileExist(ctxPath + "/madockCA.pem") {
@@ -624,4 +611,32 @@ func settingOr(generalConfig map[string]string, key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+// WriteSslOptions writes the TLS options every server block includes.
+//
+// Written on every generation rather than beside the certificate, and the
+// difference is the whole reason this is a function: the file is derived from
+// settings, not from the certificate, but it used to be written only inside
+// GenerateSslCert — which does nothing when the certificate already covers the
+// current hosts. So changing `proxy/ssl/protocols` and starting the project
+// left the old file in place and the proxy went on offering what it offered
+// before. Measured in the VM: limited to TLSv1.3, the proxy still completed a
+// TLS 1.2 handshake, and only the end-to-end test saw it — the generated text
+// was correct and unread.
+func WriteSslOptions(ctxPath string) {
+	generalConfig := configs2.GetGeneralConfig()
+
+	content := "ssl_session_cache shared:le_nginx_SSL:1m;\n" +
+		"ssl_session_timeout 1440m;\n" +
+		"\n" +
+		"ssl_protocols " + settingOr(generalConfig, "proxy/ssl/protocols", "TLSv1.2 TLSv1.3") + ";\n" +
+		"ssl_prefer_server_ciphers on;\n" +
+		"\n" +
+		"ssl_ciphers \"" + settingOr(generalConfig, "proxy/ssl/ciphers",
+		"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384") + "\";"
+
+	if err := os.WriteFile(ctxPath+"/options-ssl-nginx.conf", []byte(content), 0755); err != nil {
+		log.Fatalf("Unable to write file: %v", err)
+	}
 }
