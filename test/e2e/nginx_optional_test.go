@@ -13,16 +13,24 @@ import (
 // `nginx/enabled`, and it is the half the unit tests cannot reach.
 //
 // Those decide what one project renders. This decides what happens to the file
-// every project on the machine is served through, which is a different question
-// and the one that has been wrong: the per-project block is **cached**, so
-// switching the web server off has to delete that cache rather than skip it —
-// otherwise the next start of any neighbour reads the cached copy and puts the
-// block back. A project with no web server would then be routed to a container
-// that does not exist, and the only symptom is a 502 on a hostname nobody
-// configured.
+// every project on the machine is served through: a project with no web server
+// must lose its server block, its neighbours must keep theirs, and the next
+// start of any other project must not put it back. Routing a hostname at a
+// container that does not exist shows up as a 502 that nobody configured.
 //
-// Two projects, because one cannot show it: the resurrection needs somebody
-// else's `start` to happen after the switch.
+// Two projects, because one cannot show the second half: the block is rebuilt
+// on somebody else's `start`, not on the switch.
+//
+// **What the sabotage measured, and it is worth writing down.** The generator
+// both deletes the project's cached block and skips the project; deleting the
+// cache is what the code comments are about, and leaving that deletion out
+// changes nothing observable — this test passed against a binary that skipped
+// the cache instead of removing it, because the skip happens *before* anything
+// reads the cache. What the test does discriminate is the skip itself: with
+// that removed, both assertions go red, the routing and the resurrection alike.
+// So the cache deletion is defence against a future reordering rather than
+// something any test can currently see, and this comment is the only place that
+// says so.
 func TestNginxOffKeepsTheProjectOutOfTheSharedProxy(t *testing.T) {
 	install := newInstallation(t)
 
