@@ -1,3 +1,10 @@
+**v4.2.3**
+
+Changed:
+- **The CDN client-address support added in 4.2.2 is gone from this repository, and 4.2.2 is withdrawn.** It belongs to the paid edition — the shared proxy's operation is what that edition sells — and keeping a copy here would have meant two implementations of one trust boundary. The release page for 4.2.2 has been removed; nothing that reached a machine is lost, because the feature ships again from madock-pro
+- **What is left here is a seam, not a stub.** `nginx.RegisterPreambleExtension` lets an edition render text at the top of the http block, above the rate-limit and connection zones and above the log format. Position is why it is a seam at all: the realip module runs at the post-read phase, so its directives have to be in the file before those zones — a hook that edited the finished file would have to find that spot again and would be one regeneration away from losing it
+- Community registers no extension, so the generated proxy configuration is byte for byte what it was before 4.2.2
+
 **v4.2.2**
 
 Added:
