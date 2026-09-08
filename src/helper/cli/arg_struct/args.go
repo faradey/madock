@@ -80,8 +80,9 @@ type ControllerGeneralCleanCache struct {
 
 type ControllerGeneralConfig struct {
 	attr.Arguments
-	Name  string `arg:"-n,--name" help:"Parameter name"`
-	Value string `arg:"-v,--value" help:"Parameter value"`
+	Name   string `arg:"-n,--name" help:"Parameter name"`
+	Value  string `arg:"-v,--value" help:"Parameter value"`
+	Global bool   `arg:"-g,--global" help:"Write it to the installation's own config, where the shared proxy and other installation-wide settings are read from"`
 }
 
 type ControllerGeneralConfigUnset struct {

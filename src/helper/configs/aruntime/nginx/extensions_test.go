@@ -60,3 +60,45 @@ func TestNoExtensionsRenderNothing(t *testing.T) {
 		t.Errorf("with no extensions registered the seam rendered %q", got)
 	}
 }
+
+// The worker and hash numbers are settings now, and this is the half that
+// matters: the defaults are already pinned by the golden fixtures, so what needs
+// saying is that a configured value actually reaches the file.
+//
+// bucket_size is the reason the feature exists. nginx refuses to start when a
+// hostname does not fit it — on the shared proxy that is every project on the
+// machine — and raising it used to mean editing Go and rebuilding the binary.
+func TestProxyWorkerSettingsReachTheFile(t *testing.T) {
+	preamble := proxyPreamble(map[string]string{
+		"proxy/worker/processes":              "8",
+		"proxy/worker/rlimit_nofile":          "65535",
+		"proxy/worker/connections":            "16384",
+		"proxy/server_names_hash/bucket_size": "256",
+		"proxy/server_names_hash/max_size":    "4096",
+	})
+
+	for _, want := range []string{
+		"worker_processes 8;",
+		"worker_rlimit_nofile 65535;",
+		"worker_connections 16384;",
+		"server_names_hash_bucket_size  256;",
+		"server_names_hash_max_size 4096;",
+	} {
+		if !strings.Contains(preamble, want) {
+			t.Errorf("missing %q:\n%s", want, preamble)
+		}
+	}
+}
+
+// A key present with no value is what a config looks like mid-edit, and an empty
+// directive is a file nginx will not load — on the shared proxy, for everybody.
+// So empty falls back to the compiled default rather than through.
+func TestAnEmptySettingFallsBackToTheDefault(t *testing.T) {
+	preamble := proxyPreamble(map[string]string{
+		"proxy/worker/processes": "",
+	})
+
+	if !strings.Contains(preamble, "worker_processes 2;") {
+		t.Errorf("an empty setting did not fall back to the default:\n%s", preamble)
+	}
+}

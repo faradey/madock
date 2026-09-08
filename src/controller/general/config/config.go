@@ -79,11 +79,30 @@ func SetEnvOption() {
 	if _, ok := projectConfig["activeScope"]; ok {
 		activeScope = projectConfig["activeScope"]
 	}
-	if len(name) > 0 && configs.IsOption(name) {
-		projectName := configs.GetProjectName()
-		configs.SetParam(projectName, name, val, activeScope, "")
-		dropStaleDerived(projectName, name, activeScope)
+	if len(name) == 0 || !configs.IsOption(name) {
+		return
 	}
+
+	// --global writes the installation's own config, and the flag exists because
+	// its absence was a silent no-op.
+	//
+	// The shared proxy is one per machine, so everything under `proxy/` is read
+	// from <install>/projects/config.xml and not from any project. `config:set`
+	// only ever wrote the project — so `config:set -n proxy/worker/processes -v 3`
+	// was accepted, written, visible in `config:list`, and changed nothing about
+	// the proxy. The only way to set such a value was to edit the installation
+	// file by hand, which is not something a command should require while
+	// appearing to work.
+	//
+	// `config:unset` has had `--global` all along; this is the other half of it.
+	if args.Global {
+		configs.SetParam(configs.MainConfigCode, name, val, "default", configs.MainConfigCode)
+		return
+	}
+
+	projectName := configs.GetProjectName()
+	configs.SetParam(projectName, name, val, activeScope, "")
+	dropStaleDerived(projectName, name, activeScope)
 }
 
 // dropStaleDerived takes the stored copy of a computed key out of the file when
