@@ -30,6 +30,49 @@ version_file="src/version/version.go"
 
 fail() { printf '%s\n' "$*" >&2; exit 1; }
 
+# An internal tag is checked too, and only the second rule applies to it.
+#
+# `-norelease` publishes nothing, so the single-digit rule is not its business —
+# internal patch numbers run into the twenties on purpose. What still matters is
+# the agreement between the tag and `const Version`, and for an internal tag it
+# matters MORE than for a published one: madock-pro imports the module by tag,
+# so a tag cut from a tree whose constant has not moved produces a pro binary
+# that reports the older madock version — and `embedded.ExtractIfNeeded`
+# compares that same constant against `.embedded_version`, so the templates
+# beside the binary are never refreshed. A template change shipped in such a
+# release does not reach a single server, and nothing says so.
+#
+# Measured on 2026-09-08: v4.2.2-norelease was cut from a tree still declaring
+# 4.2.1. Four machines took the new binary and kept `.embedded_version` at
+# 4.2.1. Nothing was broken by it — that release changed no template — which is
+# exactly why it would have gone unnoticed until one did.
+case "$tag" in
+    *-norelease)
+        internal_tag="${tag%-norelease}"
+        case "$internal_tag" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) fail "refusing \"$tag\": \"$internal_tag\" is not a version number." ;;
+        esac
+
+        [ -f "$version_file" ] || fail "cannot read $version_file from $(pwd)"
+        declared=$(sed -n 's/^const Version = "\(.*\)"$/\1/p' "$version_file")
+        [ -n "$declared" ] || fail "no \`const Version\` found in $version_file"
+
+        if [ "v$declared" != "$internal_tag" ]; then
+            fail "the internal tag and the binary disagree about the version.
+
+  tag:            $tag
+  $version_file:  $declared
+
+madock-pro imports this module by tag, so a pro build made from it reports
+$declared. The same constant decides whether the templates unpacked beside a
+binary are refreshed, so a template change in this release would reach no
+server and say nothing. Bump $version_file and tag the commit that carries it."
+        fi
+        exit 0
+        ;;
+esac
+
 # Single digit per segment. Not a style preference: it is what every published
 # release has been, and it is what keeps the public numbering separate from the
 # internal one, where the patch runs into the twenties.
