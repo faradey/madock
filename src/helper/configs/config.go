@@ -277,14 +277,46 @@ func IsOption(name string) bool {
 	return false
 }
 
+// GetHosts lists the project's hosts, each with the website code it is served
+// as.
+//
+// **The key is the code, and that is not a naming convention — it reaches
+// Magento.** `nginx/hosts/<key>/name` becomes an entry in the vhost's
+// `map $http_host $MAGE_RUN_CODE`, so the key is handed to the application as
+// the website code. A host added as `www` therefore asks Magento for a website
+// called "www"; on extmag.com that was NoSuchEntityException and HTTP 500 on
+// every request to www.extmag.com, first seen 2026-09-06.
+//
+// Removing such a host is worse than leaving it: `server_name` is built from
+// this same list, so the name would fall out of the project's block and land on
+// the shared proxy's default — answered with somebody else's certificate.
+//
+// So a host may now name its code explicitly: `nginx/hosts/<key>/code`. Two
+// hosts can then share one website — `www` served as `base` — which is the case
+// this exists for. Absent, the code is the key, exactly as before; nothing
+// written by any earlier version changes meaning.
 func GetHosts(data map[string]string) []map[string]string {
 	var hosts []map[string]string
 	sortedKeys := SortMap(data)
 	for _, key := range sortedKeys {
-		if strings.Contains(key, "/hosts/") && data[key] != "" {
-			items := strings.Split(key, "/")
-			hosts = append(hosts, map[string]string{"name": data[key], "code": items[len(items)-2]})
+		// Only the `name` leaf declares a host. This used to accept any key
+		// under `hosts/`, which was harmless while `name` was the only leaf
+		// there and became wrong the moment `code` joined it: the code key
+		// would have been read as a host of its own, named after the code and
+		// coded after the host.
+		if !strings.Contains(key, "/hosts/") || !strings.HasSuffix(key, "/name") || data[key] == "" {
+			continue
 		}
+
+		items := strings.Split(key, "/")
+		hostKey := items[len(items)-2]
+
+		code := hostKey
+		if declared := data[strings.TrimSuffix(key, "/name")+"/code"]; declared != "" {
+			code = declared
+		}
+
+		hosts = append(hosts, map[string]string{"name": data[key], "code": code})
 	}
 
 	return hosts

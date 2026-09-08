@@ -52,10 +52,29 @@
                     <secure>443</secure>
                     <internal>80</internal>
                 </port>
+                <!-- Each host is a key, a name, and optionally the website code it
+                     is served as.
+
+                     The key is the code by default, and on Magento that is not a
+                     convention: it reaches the application as MAGE_RUN_CODE. A
+                     host added under a key that names no website answers 500 to
+                     every request — measured on extmag.com, where `www` asked
+                     Magento for a website called "www" and got
+                     NoSuchEntityException.
+
+                     `code` is how two hosts share one website: www served as
+                     base. Removing the host instead is worse, because server_name
+                     is built from this same list — the name would fall out of the
+                     project's block and land on the shared proxy's default, with
+                     somebody else's certificate. -->
                 <!--<hosts>
                     <base>
                         <name>example.com</name>
                     </base>
+                    <www>
+                        <name>www.example.com</name>
+                        <code>base</code>
+                    </www>
                 </hosts>-->
                 <ssl>
                     <enabled>true</enabled>
