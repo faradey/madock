@@ -60,8 +60,8 @@ func goldenCases() []goldenCase {
 			// and compared against nothing.
 			name: "magento2-php-embedded-node",
 			overrides: map[string]string{
-				"nodejs/embedded/enabled":     "true",
-				"nodejs/yarn/enabled": "true",
+				"nodejs/embedded/enabled": "true",
+				"nodejs/yarn/enabled":     "true",
 			},
 		},
 		{
@@ -70,9 +70,9 @@ func goldenCases() []goldenCase {
 			// one does, and before 3.9.8 there was no way to ask for it.
 			name: "custom-python-embedded-node",
 			overrides: map[string]string{
-				"platform":        "custom",
-				"language":        "python",
-				"php/enabled":     "false",
+				"platform":                "custom",
+				"language":                "python",
+				"php/enabled":             "false",
 				"nodejs/embedded/enabled": "true",
 			},
 		},

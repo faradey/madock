@@ -7,7 +7,7 @@
     deploy:
       resources:
         limits:
-          memory: 2512m
+          memory: {{{.search.elasticsearch.memory_limit}}}
     ulimits:
       memlock:
         soft: -1
@@ -17,7 +17,7 @@
         hard: 65536
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms800m -Xmx800m"
+      - "ES_JAVA_OPTS=-Xms{{{.search.elasticsearch.heap}}} -Xmx{{{.search.elasticsearch.heap}}}"
       - "cluster.routing.allocation.disk.threshold_enabled=false"
       - "index.blocks.read_only_allow_delete"
     volumes:
