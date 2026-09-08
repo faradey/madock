@@ -1,3 +1,13 @@
+**v4.2.4**
+
+Added:
+- **A host can name the website code it is served as — `nginx/hosts/<key>/code`.** The key has always been the code, and on Magento that is not a naming convention: it is handed to the application as `MAGE_RUN_CODE` through the vhost's `map $http_host $MAGE_RUN_CODE`. So a host added under `www` asked Magento for a website called "www" and got `NoSuchEntityException` — measured on extmag.com, where every request to www.extmag.com answered 500 from 2026-09-06
+- **Removing such a host is worse than leaving it**, which is why a code and not a deletion. `server_name` is built from the same list, so the name would fall out of the project's block and land on the shared proxy's default — answered with another project's certificate
+- Absent, the code is still the key. Nothing written by an earlier version changes meaning
+
+Fixed:
+- **A key under `hosts/` that is not a name is no longer read as a host.** The loop accepted anything below `hosts/`, which was harmless while `name` was the only leaf and would have turned each new `code` into a phantom host — named after the code, coded after the host, and put into `server_name`
+
 **v4.2.3**
 
 Changed:
