@@ -526,6 +526,47 @@
                     <enabled>true</enabled>
                     <per_ip>100</per_ip>
                 </conn_limit>
+                <!-- Where the client address comes from when something else
+                     terminated the connection — a CDN, or a load balancer in
+                     front of this machine.
+
+                     Both limits above are keyed on the client address, and so is
+                     the access log. Put Cloudflare in front of the proxy without
+                     this and that address becomes the CDN edge: a few dozen
+                     addresses standing in for the whole internet, so the rate
+                     limit throttles every visitor together and the log stops
+                     answering "who did this". Found the hard way on extmag.com,
+                     where the question "which address attacked us" had no answer
+                     because the log had rotated — adding a layer that removes the
+                     address permanently would have been worse.
+
+                     Off by default, and that is not caution: on a machine reached
+                     directly, trusting a header lets any client choose the
+                     address the limiter counts and the admin allow-lists believe.
+                     It is safe only once the origin refuses traffic that does not
+                     come from the CDN.
+
+                     `trusted` is a comma-separated list. The word `cloudflare`
+                     expands to the ranges shipped in
+                     src/helper/configs/aruntime/nginx/realip.go (fetched
+                     2026-09-08); anything else is taken as a literal address or
+                     CIDR, so a stack behind both a CDN and a company balancer can
+                     name both. An entry that is not an address is dropped and
+                     said so in the generated file — nginx refuses to start on a
+                     bad one, which would take every project on the machine down
+                     for a typo in one.
+
+                     `header` is CF-Connecting-IP for Cloudflare, which carries
+                     exactly one address and cannot be appended to. Use
+                     X-Forwarded-For only with `recursive` on, and only when every
+                     hop that could add to it is in `trusted` — otherwise a client
+                     that sends its own X-Forwarded-For picks its address. -->
+                <real_ip>
+                    <enabled>false</enabled>
+                    <trusted>cloudflare</trusted>
+                    <header>CF-Connecting-IP</header>
+                    <recursive>false</recursive>
+                </real_ip>
                 <!-- The largest request body the proxy will accept. It was 2G,
                      hard-coded in every server block, which is an upload nobody
                      makes through a browser and a cheap way to occupy disk and

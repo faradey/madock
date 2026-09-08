@@ -1,3 +1,11 @@
+**v4.2.2**
+
+Added:
+- **The shared proxy can take the client address from a CDN header** — `proxy/real_ip/enabled`, off by default, with `trusted` (the word `cloudflare`, or literal addresses and CIDRs), `header` (default `CF-Connecting-IP`) and `recursive`. Both per-client protections the proxy has are keyed on `$binary_remote_addr` — the rate limit zone and the connection limit zone — and so is the access log, so putting a CDN in front without this makes every visitor in the world look like one of a few dozen edge addresses: the rate limit throttles everyone together instead of anybody in particular, and the log stops answering which address did something
+- Off by default because it is the trust boundary, not a preference: on a directly reachable machine a trusted header lets the client choose the address the limiter counts. It is safe only once the origin refuses traffic that did not come through the CDN
+- A `trusted` entry that is not an address or CIDR is dropped and said so in the generated file. nginx refuses to start on a bad `set_real_ip_from`, and the shared proxy is one per machine — a typo in one project's config would otherwise take every project down at once. Enabled with nothing usable left, it trusts nobody and says that too, rather than reading as working
+- Cloudflare's ranges are shipped rather than fetched (`src/helper/configs/aruntime/nginx/realip.go`, taken from cloudflare.com/ips-v4 and ips-v6 on 2026-09-08): a proxy that asks a vendor at start is a proxy that does not start when the vendor is down
+
 **v4.2.1**
 
 Fixed:
