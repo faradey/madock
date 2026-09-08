@@ -221,3 +221,58 @@ func cronFromJSON(t *testing.T, p *project) (running, enabled bool) {
 	}
 	return payload.Data.Tools.CronRunning, payload.Data.Tools.CronEnabled
 }
+
+// TestCronComesBackAfterARebuildAndARestart covers the two commands that take
+// the container away entirely, which is a harder case than a restart of one
+// service.
+//
+// `service:restart` leaves the container's filesystem alone: the crontab is
+// still in it, and only the daemon has to be started again. `rebuild` recreates
+// the container from the image, so the crontab is gone with it — a scheduler
+// that comes back with an empty crontab reports "Cron is running" and runs
+// nothing, which is the same silence as a dead daemon wearing a healthy status.
+// `restart` is stop-then-start and has to arrive at the same place.
+//
+// The job count is therefore the assertion that matters here, not the process.
+func TestCronComesBackAfterARebuildAndARestart(t *testing.T) {
+	p := newProject(t, "e2ecronrebuild")
+
+	p.run(5*time.Minute, "setup", "-y",
+		"--platform=custom",
+		"--language=none",
+		"--hosts=e2ecronrebuild.test",
+	)
+	installCronJob(t, p, "* * * * * /bin/true")
+	p.run(20*time.Minute, "start")
+	p.run(5*time.Minute, "cron:enable")
+
+	if running, _ := cronFromJSON(t, p); !running {
+		t.Fatal("cron did not start, so neither command below proves anything")
+	}
+
+	for _, step := range []struct {
+		name string
+		args []string
+	}{
+		{"rebuild", []string{"rebuild"}},
+		{"restart", []string{"restart"}},
+	} {
+		p.run(25*time.Minute, step.args...)
+
+		if running, _ := cronFromJSON(t, p); !running {
+			t.Errorf("%s left cron dead", step.name)
+		}
+		if got := cronProcesses(t, p, "app"); got == "" {
+			t.Errorf("no cron process in the container after %s", step.name)
+		}
+
+		// The jobs, which a rebuild destroys along with the container. A daemon
+		// with nothing to run is the failure this test exists for.
+		out, err := p.tryRun(3*time.Minute, "cron:status")
+		if err != nil {
+			t.Errorf("cron:status reports a problem after %s: %v\n%s", step.name, err, out)
+			continue
+		}
+		requireContains(t, out, "1 job", "the job count after "+step.name)
+	}
+}
