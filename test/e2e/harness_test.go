@@ -166,6 +166,19 @@ func (p *project) run(timeout time.Duration, args ...string) string {
 	if err != nil {
 		p.t.Fatalf("madock %s failed: %v\n%s", strings.Join(args, " "), err, out)
 	}
+
+	// Anything that regenerates the runtime is swept for template syntax that
+	// was copied out instead of evaluated. It costs milliseconds and it is
+	// checked here rather than in one test because the interesting renders
+	// belong to the platform tests: Magento, Shopware and Medusa each pull in
+	// snippets a `custom` project never touches. See placeholders_test.go.
+	if len(args) > 0 {
+		switch args[0] {
+		case "start", "rebuild", "setup":
+			p.requireRendered()
+		}
+	}
+
 	return out
 }
 
