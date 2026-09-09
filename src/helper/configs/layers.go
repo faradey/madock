@@ -112,3 +112,15 @@ func (layerExtensionMissing) Error() string {
 	return "keeping a key out on this machine is a madock-pro feature. " +
 		"In this edition the project's committed .madock/config.xml wins every key it declares"
 }
+
+// ConfigByScope resolves one scope out of a parsed configuration file, the way
+// every layer in this package is resolved.
+//
+// Exported for the extension, and part of the seam rather than an accident of
+// visibility: an extension that reads a layer file for itself — to report what
+// it removed, say — has to resolve scopes identically or its answer disagrees
+// with the merge for reasons nobody will find. Reimplementing eight lines is
+// exactly how that happens.
+func ConfigByScope(config map[string]string, activeScope string) map[string]string {
+	return getConfigByScope(config, activeScope)
+}
