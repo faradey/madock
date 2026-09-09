@@ -121,6 +121,11 @@ type ControllerGeneralLogs struct {
 	// container logs. The flag stays: it is what the rest of the commands use.
 	Name    string `arg:"positional" help:"Service name; the same thing --service takes"`
 	Service string `arg:"-s,--service" help:"Service name (php, nginx, db, etc.)"`
+	// The container's stream holds what happened since the container was
+	// created, and a rebuild creates a new one. --file reads what the service
+	// wrote to the persisted log instead, which is the copy that survives.
+	File bool   `arg:"-f,--file" help:"Read the persisted log files instead of the container's stream"`
+	Tail string `arg:"--tail" help:"With --file: how many lines from the end of each file (default 200)"`
 }
 
 type ControllerGeneralPatch struct {

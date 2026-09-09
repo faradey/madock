@@ -1,3 +1,11 @@
+**v4.2.9**
+
+Added:
+- **The persisted logs are rotated**, so the files 4.2.8 started keeping cannot fill a disk. Copy-and-truncate rather than rename-and-signal: the writer is in another container and madock is not its parent, so there is no way to tell nginx or mysqld to reopen a file. Copying the contents aside and truncating in place leaves their file descriptors pointing at the same inode, which is the standard answer for containers — the cost is the window between the copy and the truncate, and the sizes are large enough that it is rare
+- **`madock logs:rotate`**, because rotation on start alone is rotation that never happens: a server starts a project once and leaves it running for months. `start` still rotates, which covers a laptop; a cron entry or a person covers the rest
+- **`madock logs --file`** reads the persisted files instead of the container's stream, with `--tail` for how much. The stream holds what happened since the container was created, so after a rebuild it is empty of everything worth having — which is exactly the state a production machine was in during an intrusion review
+- `logs/persist/keep` and `logs/persist/max_size` are read here; a size neither this code nor a person can read stops the rotation with a warning rather than inventing a threshold, because a guessed default means "rotate later than you asked" and is found as a full disk
+
 **v4.2.8**
 
 Added:
