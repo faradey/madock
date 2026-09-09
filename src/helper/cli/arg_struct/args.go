@@ -87,8 +87,9 @@ type ControllerGeneralConfig struct {
 
 type ControllerGeneralConfigUnset struct {
 	attr.Arguments
-	Name   []string `arg:"-n,--name" help:"Parameter name. May be given more than once"`
-	Global bool     `arg:"-g,--global" help:"Also remove it from the installation's own config"`
+	Name    []string `arg:"-n,--name" help:"Parameter name. May be given more than once"`
+	Global  bool     `arg:"-g,--global" help:"Also remove it from the installation's own config"`
+	Machine bool     `arg:"-m,--machine" help:"Keep the key out on this machine, even when the project's committed .madock/config.xml sets it"`
 }
 
 type ControllerGeneralDbExport struct {
@@ -238,6 +239,7 @@ type ControllerGeneralDbInfo struct {
 
 type ControllerGeneralConfigList struct {
 	attr.Arguments
+	Origin bool `arg:"-o,--origin" help:"Say which file each value comes from, and list what this machine removed"`
 }
 
 type ControllerGeneralTemplateConvert struct {

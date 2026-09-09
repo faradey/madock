@@ -14,11 +14,11 @@ func init() {
 // Shopify presets map to different stack flavours:
 //   - hydrogen         : Node-only (Hydrogen storefront)
 //   - app-remix        : Node-only (Shopify App Remix template; Prisma
-//                        uses SQLite by default, no DB container needed)
+//     uses SQLite by default, no DB container needed)
 //   - api-php          : PHP + MariaDB + Redis (raw shopify-api SDK)
 //   - laravel-shopify  : PHP + Node + MariaDB + Redis (full Laravel app)
 //   - <empty / legacy> : PHP + Node + MariaDB + Redis (backwards-
-//                        compatible default)
+//     compatible default)
 //
 // The preset is stored in `shopify/preset` so it survives config
 // rewrites and so install + setup controllers can branch on it.
