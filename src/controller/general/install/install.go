@@ -19,7 +19,7 @@ import (
 )
 
 // shellSingleQuote wraps s for safe use inside a bash single-quoted string:
-// every embedded ' is replaced with '\'' (close quote, escaped quote, reopen).
+// every embedded ' is replaced with '\” (close quote, escaped quote, reopen).
 func shellSingleQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }

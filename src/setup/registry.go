@@ -10,7 +10,7 @@ import (
 type SetupContext struct {
 	ProjectName     string
 	ProjectConf     map[string]string
-	ContinueSetup  bool
+	ContinueSetup   bool
 	Args            *arg_struct.ControllerGeneralSetup
 	DetectedVersion string
 	Language        string

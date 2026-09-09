@@ -171,9 +171,15 @@ func GetProjectConfigOnly(projectName string) map[string]string {
 		// empty projectPath is safe here.
 		warnMissingProjectPath(projectName)
 	}
-	defaultConfig := GetProjectConfigInProject(projectPath)
+	projectFileConfig := GetProjectConfigInProject(projectPath)
+
+	// The last moment the layers are separate. See layers.go: an extension may
+	// remove from one of them here, and after the merge below nothing outside
+	// this function can tell which file a value came from.
+	adjustLayers(projectFileConfig, activeConfig, GetGeneralConfig())
+
 	activeProjectConfig := make(map[string]string)
-	ConfigMapping(defaultConfig, activeProjectConfig)
+	ConfigMapping(projectFileConfig, activeProjectConfig)
 	ConfigMapping(activeConfig, activeProjectConfig)
 	return activeProjectConfig
 }

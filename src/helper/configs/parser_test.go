@@ -146,8 +146,8 @@ func TestSetXmlMap_EmptyLeafPromotedToBranch(t *testing.T) {
 	// like "scopes/default/dnsmasq/domain" = "test".
 	// The empty leaf must be promoted to a branch (map) so the nested key is preserved.
 	input := map[string]interface{}{
-		"scopes/default":                    "",
-		"scopes/default/dnsmasq/domain":     "test",
+		"scopes/default":                "",
+		"scopes/default/dnsmasq/domain": "test",
 	}
 	got := SetXmlMap(input)
 

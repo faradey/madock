@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/faradey/madock/v4/src/command"
@@ -62,6 +63,11 @@ func ShowEnv() {
 			Project: projectName,
 			Config:  lines,
 		})
+		return
+	}
+
+	if args.Origin {
+		printOrigins(projectName, lines)
 		return
 	}
 
@@ -185,6 +191,17 @@ func UnsetEnvOption() {
 	}
 
 	projectName := configs.GetProjectName()
+
+	// --machine is the other half of the warning this command already prints
+	// below: deleting a line from the machine's file cannot beat the project's
+	// committed `.madock/config.xml`, which wins every key it declares. Keeping
+	// a key out needs a record rather than a deletion, and that record is
+	// madock-pro's — see configs.RegisterLayerExtension.
+	if args.Machine {
+		keepOutOnThisMachine(projectName, args.Name, activeScope)
+		return
+	}
+
 	files := []string{paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"}
 	if args.Global {
 		files = append(files, paths.GetExecDirPath()+"/config.xml")
@@ -228,4 +245,94 @@ func CacheClean() {
 		logger.Fatal(err)
 	}
 	paths.MakeDirsByPath(paths.CacheDir())
+}
+
+// keepOutOnThisMachine records a refusal through whatever edition is running,
+// and says plainly when this one cannot.
+//
+// The report is read back from the assembled configuration rather than trusted:
+// removing a key does not always make it disappear — a value underneath it
+// applies instead — and saying "removed" over a key that merely changed is the
+// kind of report that gets believed once and checked never.
+func keepOutOnThisMachine(projectName string, names []string, activeScope string) {
+	if !configs.LayerExtensionRegistered() {
+		fmtc.ErrorLn("This edition cannot keep a key out on this machine.")
+		fmtc.ToDoLn("The project's committed .madock/config.xml wins every key it declares. " +
+			"Removing one from there, or madock-pro, are the two ways.")
+		return
+	}
+
+	before := configs.GetCurrentProjectConfig()
+
+	for _, name := range names {
+		key := strings.ToLower(name)
+		if err := configs.DeclareLayerKeyRemoved(projectName, key, activeScope); err != nil {
+			fmtc.ErrorLn(err.Error())
+			continue
+		}
+		fmtc.SuccessLn("\"" + key + "\" is kept out on this machine.")
+	}
+
+	configs.CleanCache()
+	after := configs.GetCurrentProjectConfig()
+
+	for _, name := range names {
+		key := strings.ToLower(name)
+		was, hadBefore := before[key]
+		now, hasNow := after[key]
+		switch {
+		case hadBefore && !hasNow:
+			fmtc.SuccessLn("  " + key + ": was \"" + was + "\", now unset")
+		case hadBefore && was != now:
+			fmtc.SuccessLn("  " + key + ": was \"" + was + "\", now \"" + now + "\" from the layer underneath")
+		case !hadBefore && !hasNow:
+			fmtc.ToDoLn("  " + key + " was not set by anything — the record stands for whatever arrives later")
+		}
+	}
+}
+
+// printOrigins says which file each value came from, and what is being kept
+// out.
+//
+// The second half is the one that cannot be seen any other way: a key kept out
+// is simply absent, which looks exactly like a key nobody ever set — and on a
+// machine where somebody did that six months ago, "looks like nobody set it" is
+// how it gets set again.
+func printOrigins(projectName string, config map[string]string) {
+	project := configs.GetProjectConfigInProject(config["path"])
+	general := configs.GetGeneralConfig()
+
+	keys := make([]string, 0, len(config))
+	for key := range config {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		origin := "this machine or a default"
+		switch {
+		case sameValue(project, key, config[key]):
+			origin = "project .madock/config.xml"
+		case sameValue(general, key, config[key]):
+			origin = "installation"
+		}
+		fmt.Println(key + " " + config[key] + "  [" + origin + "]")
+	}
+
+	kept := configs.LayerKeysRemoved(projectName)
+	if len(kept) == 0 {
+		return
+	}
+
+	fmt.Println()
+	fmt.Println("Kept out on this machine:")
+	for _, key := range kept {
+		fmt.Println("  " + key)
+	}
+}
+
+func sameValue(layer map[string]string, key, value string) bool {
+	stored, ok := layer[key]
+
+	return ok && stored == value
 }

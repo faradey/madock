@@ -366,7 +366,7 @@ func displayConfigSummary(v versions.ToolsVersions, projectName string) {
 				},
 			},
 			{
-				Name: "Search Engine",
+				Name:  "Search Engine",
 				Items: getSearchEngineItems(v),
 			},
 			{

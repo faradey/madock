@@ -23,9 +23,9 @@ func init() {
 		Help:     "Setup project",
 		Category: "setup",
 		ArgsType: new(arg_struct.ControllerGeneralSetup),
-			// Global: this is the command that turns a directory into a project.
-		Global:   true,
-})
+		// Global: this is the command that turns a directory into a project.
+		Global: true,
+	})
 }
 
 func Execute() {
@@ -144,7 +144,7 @@ func Execute() {
 		handler.Execute(&setupreg.SetupContext{
 			ProjectName:     projectName,
 			ProjectConf:     projectConf,
-			ContinueSetup:  continueSetup,
+			ContinueSetup:   continueSetup,
 			Args:            args,
 			DetectedVersion: detectedVersion,
 			Language:        language,
