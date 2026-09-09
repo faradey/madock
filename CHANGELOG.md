@@ -1,3 +1,10 @@
+**v4.2.10**
+
+Fixed:
+- **The optional PHP extensions reported success and installed nothing.** Each line in that block ran `apt-get install … || true` in its own layer, while the `apt-get update` belonged to the layer above — so on a cached build they ran against whatever index that layer had left behind, and `|| true` swallowed the result. Measured on the Magento stand: a full rebuild exited 0, every service came up, and `php -r extension_loaded('ldap')` printed 0 with nothing in `mods-available` and no dpkg entry. The same hole covered `opcache`, `xmlrpc` and `memcached` — opcache above all, since without it every request recompiles and nothing says so
+- Each optional install now refreshes the index first, `ldap` verifies itself with `php -m` immediately afterwards, and the fallback is `|| echo "madock: <package> is not available in this index"` rather than `|| true`. A package this image could not get is said out loud where somebody would see it
+- **An end-to-end test asks the running container, not the Dockerfile.** The rendered line was correct throughout — reading it was how the hole stayed open — so the test starts a PHP project and reads `php -m`, matching whole lines so a substring cannot report a hole as filled
+
 **v4.2.9**
 
 Added:

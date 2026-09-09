@@ -57,25 +57,45 @@ RUN apt-get -y --allow-releaseinfo-change update && apt-get install -y php{{{.ph
     php{{{.php.version}}}-ssh2 \
     php{{{.php.version}}}-redis
 
-# Optional packages: not all PHP versions ship them as separate packages
+# Optional packages: not all PHP versions ship them as separate packages.
+#
+# Each line refreshes the index first, and that is not belt and braces: the
+# install above is a separate layer, so on a cached build these run against
+# whatever index that layer left behind — which apt may consider expired, and
+# which predates any package added to the PPA since. Measured on the Magento
+# stand 2026-09-10: the image built green, `apt-cache policy php8.4-ldap`
+# printed nothing inside the container, and the extension was simply absent.
+#
+# And `|| echo` rather than `|| true`: the failure above was invisible precisely
+# because the line swallowed it. A package this image could not get is now said
+# out loud in the build output, which is the only place anybody would look.
 # (e.g. php8.5-opcache is bundled into php8.5-common, php-xmlrpc was dropped
 # from PHP core in 8.0 and may be missing in newer ondrej builds). Install
 # each in its own line so a missing package does not abort the build.
-RUN apt-get install -y php{{{.php.version}}}-opcache || true
+RUN apt-get -y --allow-releaseinfo-change update \
+    && apt-get install -y php{{{.php.version}}}-opcache \
+    || echo "madock: php{{{.php.version}}}-opcache is not available in this index"
 # ldap is here rather than in the hard list above for the same reason as the two
 # beside it: a package missing for one PHP version would abort the whole image,
 # and this one is needed by a minority of projects — an application that
 # authenticates against a directory. Without it there is nowhere to test LDAP at
 # all: `ext-ldap` appears in no madock image, measured 2026-09-09 across the
 # whole docker/ tree.
-RUN apt-get install -y php{{{.php.version}}}-ldap || true
-RUN apt-get install -y php{{{.php.version}}}-xmlrpc || true
+RUN apt-get -y --allow-releaseinfo-change update \
+    && apt-get install -y php{{{.php.version}}}-ldap \
+    && php -m | grep -qi '^ldap$' \
+    || echo "madock: php{{{.php.version}}}-ldap is not available in this index — LDAP will not work in this image"
+RUN apt-get -y --allow-releaseinfo-change update \
+    && apt-get install -y php{{{.php.version}}}-xmlrpc \
+    || echo "madock: php{{{.php.version}}}-xmlrpc is not available in this index"
 
 {{{- if .memcached.enabled}}}
 # Pulled in only while the memcached service is enabled — it is the one extension
 # with a service behind it. ondrej lags a release or two behind for the newest PHP
 # versions, so a hard failure here would break the image for everyone else.
-RUN apt-get install -y php{{{.php.version}}}-memcached || true
+RUN apt-get -y --allow-releaseinfo-change update \
+    && apt-get install -y php{{{.php.version}}}-memcached \
+    || echo "madock: php{{{.php.version}}}-memcached is not available in this index"
 {{{- end}}}
 
 SHELL ["/bin/bash", "-c"]
