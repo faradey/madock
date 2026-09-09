@@ -26,7 +26,7 @@ func GetDefaultVersions(language string) map[string]string {
 		}
 	case "nodejs":
 		return map[string]string{
-			"nodejs/version": "20.19.0",
+			"nodejs/version":      "20.19.0",
 			"nodejs/yarn/version": "3.6.4",
 		}
 	}

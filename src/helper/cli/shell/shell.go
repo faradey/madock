@@ -15,7 +15,7 @@ import "strings"
 // A single quote inside the value is the case worth spelling out: it would end
 // the string early and hand the remainder to the shell as commands. The
 // standard escape closes the quoted run, emits an escaped quote and opens a
-// new one — 'it'\''s' is the four tokens the shell then joins back into one.
+// new one — 'it'\”s' is the four tokens the shell then joins back into one.
 func Quote(value string) string {
 	return "'" + strings.ReplaceAll(value, "'", `'\''`) + "'"
 }

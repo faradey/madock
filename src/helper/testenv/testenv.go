@@ -179,7 +179,7 @@ func writeProjectConfig(execDir, runDir, projectName, hostName string, overrides
 		"php/xdebug/enabled":                        "false",
 		"php/xdebug/mode":                           "debug",
 		"php/ioncube/enabled":                       "false",
-		"nodejs/embedded/enabled":                        "false",
+		"nodejs/embedded/enabled":                   "false",
 		"timezone":                                  "UTC",
 		"workdir":                                   "/var/www/html",
 		"public_dir":                                "pub",

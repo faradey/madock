@@ -1,3 +1,10 @@
+**v4.2.7**
+
+Added:
+- **A seam in the layering of configuration** — `configs.RegisterLayerExtension`. The layers fill each other's gaps, so the `.madock/config.xml` committed beside the source wins every key it declares and no layer can take one away. That is felt only where the committed file **arrives by a deploy**, on a machine the project was not written for — a demo server inheriting the production hostnames — and deploying is madock-pro's, so the answer is too: this repository says where a layer may be adjusted and nothing about what the adjustment is. Same arrangement as `nginx.RegisterPreambleExtension`
+- Nothing here registers an extension, so the layers merge exactly as they did before, and a test pins that. The installation-wide layer is handed over as a **copy**: the real one is cached for the process and shared by every project read in it, so a removal made for one project would otherwise follow the next
+- `config:unset --machine` and `config:list --origin` are the flags that reach it. Without an extension they say which edition does this rather than accepting the flag and doing nothing
+
 **v4.2.6**
 
 Added:
