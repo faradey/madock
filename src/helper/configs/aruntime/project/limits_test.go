@@ -172,9 +172,18 @@ func TestTheServicesWriteLogsWhereARebuildCannotReach(t *testing.T) {
 	// The slow query log, which was never configured at all: log_error,
 	// general_log and log_slow_query were all commented out in the shipped
 	// config, so no madock project has ever recorded a slow query anywhere.
+	//
+	// `log_error` stays unset, and that is asserted below rather than left to
+	// chance: MariaDB writes its error log to a file or to stderr, never both,
+	// and pointing it at the file empties the stream `madock logs -s db` reads.
+	// The first version of this change did exactly that, and CI answered with
+	// "the database never wrote anything recognisable to its log" plus a project
+	// whose database never became ready at all.
 	mycnf := readGenerated(t, env, "ctx/my.cnf")
+	if strings.Contains(mycnf, "log_error =") {
+		t.Errorf("log_error was pointed at a file — `madock logs -s db` goes silent:\n%s", firstLines(mycnf, 40))
+	}
 	for _, want := range []string{
-		"log_error = /var/log/madock/mysql-error.log",
 		"slow_query_log = 1",
 		"slow_query_log_file = /var/log/madock/mysql-slow.log",
 	} {
