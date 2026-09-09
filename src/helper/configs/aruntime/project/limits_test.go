@@ -151,9 +151,13 @@ func TestTheServicesWriteLogsWhereARebuildCannotReach(t *testing.T) {
 	MakeConf("logsproject")
 
 	compose := readGenerated(t, env, "docker-compose.yml")
-	if strings.Count(compose, "./logs:/var/log/madock") < 2 {
-		t.Errorf("the log directory is not mounted into both the web server and the database:\n%s",
+	if strings.Count(compose, "logsdata:/var/log/madock") < 2 {
+		t.Errorf("the log volume is not mounted into both the web server and the database:\n%s",
 			firstLines(compose, 80))
+	}
+	// Declared as well as mounted, or compose refuses the file outright.
+	if !strings.Contains(compose, "\n  logsdata:") {
+		t.Errorf("the log volume is mounted and never declared:\n%s", firstLines(compose, 80))
 	}
 
 	vhost := readGenerated(t, env, "ctx/nginx.conf")
@@ -192,15 +196,14 @@ func TestTheServicesWriteLogsWhereARebuildCannotReach(t *testing.T) {
 		}
 	}
 
-	// And the directory itself, writable by services that do not run as this
-	// user: nginx is root inside its image, MariaDB is uid 999, and a directory
-	// they cannot write to loses the log for the same reason as before.
-	info, err := os.Stat(filepath.Join(env.ExecDir, "aruntime", "projects", "logsproject", "logs"))
-	if err != nil {
-		t.Fatalf("the log directory was not created: %v", err)
-	}
-	if mode := info.Mode().Perm(); mode&0o022 == 0 {
-		t.Errorf("the log directory is %04o — the database cannot write to it", mode)
+	// A named volume rather than a directory under aruntime, and the reason is
+	// worth keeping: the bind mount put root-owned files into the project's
+	// runtime directory, and `project:remove` — which runs as the person, not as
+	// root — then could not delete the project at all. CI found it as a database
+	// that would not start, because the leftover volume of the undeleted project
+	// still carried the old root password.
+	if strings.Contains(compose, "./logs:") {
+		t.Error("the logs went back to a bind mount, which project:remove cannot clean up")
 	}
 }
 

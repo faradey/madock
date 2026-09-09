@@ -15,7 +15,7 @@
       # the container's own directory, so `rebuild` deletes it — measured on a
       # production machine mid-incident, where three deploys left no HTTP record
       # of the minute being investigated.
-      - ./logs:/var/log/madock:delegated
+      - logsdata:/var/log/madock
       {{{- end}}}
     extra_hosts:
       - "host.docker.internal:host-gateway"

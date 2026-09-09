@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -56,16 +55,6 @@ func MakeConf(projectName string) {
 	// produces a container that dies on start and a deploy that fails somewhere
 	// else entirely. See search_memory.go.
 	verifySearchMemory(projectConf)
-
-	// The directory the services write their logs into, created before compose
-	// can mount it. World-writable on purpose: nginx runs as root inside its
-	// image and MariaDB as uid 999, and a directory owned by the person running
-	// madock is one the database silently cannot write to — the log would then
-	// be missing for the same reason it was missing before, which is the whole
-	// point of the feature.
-	if projectConf["logs/persist/enabled"] == "true" {
-		makeLogsDir(pp.RuntimeDir())
-	}
 
 	makeNginxDockerfile(projectName)
 	makeNginxConf(projectName)
@@ -461,23 +450,4 @@ func FindSnippetFile(projectName, path string) (string, error) {
 	}
 
 	return "", fmt.Errorf("%w: %s\nLooked in:\n  %s", ErrSnippetMissing, path, strings.Join(looked, "\n  "))
-}
-
-// makeLogsDir creates <runtime>/logs and leaves it writable by every service.
-//
-// It lives beside the generated runtime rather than under the project's source:
-// on a machine with a deployer layout the source is a release directory and goes
-// with the next deploy, which is exactly the disappearance this feature exists to
-// stop.
-func makeLogsDir(runtimeDir string) {
-	dir := filepath.Join(runtimeDir, "logs")
-	if err := os.MkdirAll(dir, 0o777); err != nil {
-		logger.Fatalln("creating the log directory " + dir + ": " + err.Error())
-	}
-	// MkdirAll obeys the umask, so the mode above is a request rather than a
-	// result. Said again explicitly, because a directory created 0755 under a
-	// default umask is one the database cannot write to at all.
-	if err := os.Chmod(dir, 0o777); err != nil {
-		logger.Fatalln("opening the log directory " + dir + " to the services: " + err.Error())
-	}
 }
