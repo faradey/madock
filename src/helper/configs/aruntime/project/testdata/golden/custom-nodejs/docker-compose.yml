@@ -11,6 +11,11 @@ services:
     volumes:
       - ./src:/var/www/html:delegated
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+      # Logs a rebuild cannot take away. Docker keeps a container's stdout in
+      # the container's own directory, so `rebuild` deletes it — measured on a
+      # production machine mid-incident, where three deploys left no HTTP record
+      # of the minute being investigated.
+      - ./logs:/var/log/madock:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "golden.test:host-gateway"
@@ -34,6 +39,7 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+      - ./logs:/var/log/madock:delegated
     restart: no
   nodejs:
     init: true

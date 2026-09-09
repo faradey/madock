@@ -17,6 +17,7 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+      - ./logs:/var/log/madock:delegated
     restart: no
   app:
     init: true

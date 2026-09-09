@@ -136,3 +136,78 @@ func TestSearchMemoryReachesTheComposeFile(t *testing.T) {
 		})
 	}
 }
+
+// The logs have to outlive the container, and the generated files are the first
+// half of that claim.
+//
+// Measured on production during an intrusion review on 2026-09-09: three deploys
+// recreated the containers and the HTTP records for the minute under
+// investigation were gone from disk and from `madock logs`. Docker keeps a
+// container's stdout inside the container's own directory, so a rebuild deletes
+// it — the services have to write files on a mounted path as well.
+func TestTheServicesWriteLogsWhereARebuildCannotReach(t *testing.T) {
+	env := testenv.SetupWith(t, "logsproject", "logs.test", nil)
+
+	MakeConf("logsproject")
+
+	compose := readGenerated(t, env, "docker-compose.yml")
+	if strings.Count(compose, "./logs:/var/log/madock") < 2 {
+		t.Errorf("the log directory is not mounted into both the web server and the database:\n%s",
+			firstLines(compose, 80))
+	}
+
+	vhost := readGenerated(t, env, "ctx/nginx.conf")
+	for _, want := range []string{
+		"access_log /var/log/madock/nginx-access.log;",
+		// And to the stream as well, or `madock logs` goes quiet — the two are
+		// not alternatives.
+		"access_log /dev/stdout;",
+		"error_log  /var/log/madock/nginx-error.log warn;",
+	} {
+		if !strings.Contains(vhost, want) {
+			t.Errorf("missing %q in the generated vhost:\n%s", want, firstLines(vhost, 40))
+		}
+	}
+
+	// The slow query log, which was never configured at all: log_error,
+	// general_log and log_slow_query were all commented out in the shipped
+	// config, so no madock project has ever recorded a slow query anywhere.
+	mycnf := readGenerated(t, env, "ctx/my.cnf")
+	for _, want := range []string{
+		"log_error = /var/log/madock/mysql-error.log",
+		"slow_query_log = 1",
+		"slow_query_log_file = /var/log/madock/mysql-slow.log",
+	} {
+		if !strings.Contains(mycnf, want) {
+			t.Errorf("missing %q in the generated my.cnf:\n%s", want, firstLines(mycnf, 40))
+		}
+	}
+
+	// And the directory itself, writable by services that do not run as this
+	// user: nginx is root inside its image, MariaDB is uid 999, and a directory
+	// they cannot write to loses the log for the same reason as before.
+	info, err := os.Stat(filepath.Join(env.ExecDir, "aruntime", "projects", "logsproject", "logs"))
+	if err != nil {
+		t.Fatalf("the log directory was not created: %v", err)
+	}
+	if mode := info.Mode().Perm(); mode&0o022 == 0 {
+		t.Errorf("the log directory is %04o — the database cannot write to it", mode)
+	}
+}
+
+// Off means off: a machine that says so gets what it had before, with no mount
+// and no directives.
+func TestLogPersistenceCanBeTurnedOff(t *testing.T) {
+	env := testenv.SetupWith(t, "logsoffproject", "logsoff.test", map[string]string{
+		"logs/persist/enabled": "false",
+	})
+
+	MakeConf("logsoffproject")
+
+	if compose := readGenerated(t, env, "docker-compose.yml"); strings.Contains(compose, "/var/log/madock") {
+		t.Error("the log mount was rendered for a project that turned it off")
+	}
+	if vhost := readGenerated(t, env, "ctx/nginx.conf"); strings.Contains(vhost, "/var/log/madock") {
+		t.Error("the log directives were rendered for a project that turned it off")
+	}
+}

@@ -18,6 +18,9 @@
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+      {{{- if .logs.persist.enabled}}}
+      - ./logs:/var/log/madock:delegated
+      {{{- end}}}
     {{{- if .isolation.enabled}}}
     networks:
       - isolated

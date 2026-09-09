@@ -1,3 +1,11 @@
+**v4.2.8**
+
+Added:
+- **Logs that a rebuild cannot take away.** Docker keeps a container's stdout inside the container's own directory, so `rebuild` deletes it. Measured on a production machine during an intrusion review on 2026-09-09: three deploys recreated the containers, and the HTTP records for the minute being investigated were gone from disk and from `madock logs`. nginx and the database now write files into `<install>/aruntime/projects/<name>/logs`, mounted as `/var/log/madock`, which lives outside the release and outside the container
+- nginx writes to the file **and** to the stream, because they answer different questions: `madock logs` reads what is happening now, the file holds what happened last week. The database is the exception — MariaDB writes its error log to a file or to stderr, not both — and that trade is taken deliberately, since the stream is the copy that disappears
+- **A slow query log, for the first time.** `log_error`, `general_log` and `log_slow_query` were all commented out in the shipped `my.cnf`, so no madock project has ever recorded a slow query anywhere. It is not disabled now, it was never configured: `long_query_time` is 2 seconds
+- `logs/persist/enabled` turns the whole thing off, and off means no mount and no directives. `logs/persist/keep` and `logs/persist/max_size` are read by the rotation that follows this change
+
 **v4.2.7**
 
 Added:
