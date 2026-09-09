@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/faradey/madock/v4/src/command"
@@ -63,11 +62,6 @@ func ShowEnv() {
 			Project: projectName,
 			Config:  lines,
 		})
-		return
-	}
-
-	if args.Origin {
-		printOrigins(projectName, lines)
 		return
 	}
 
@@ -191,20 +185,6 @@ func UnsetEnvOption() {
 	}
 
 	projectName := configs.GetProjectName()
-
-	// --machine is the other half of the warning this command already prints.
-	//
-	// Deleting a line from the machine's file cannot beat the project's own
-	// committed `.madock/config.xml` — that file wins every key it declares, so
-	// the command removed the key, read it back, found it still there and said
-	// so. That was all it could do. This records a refusal instead: the key
-	// stays out on this machine whatever the repository ships, which is what a
-	// devops needs on a demo server carrying production hostnames.
-	if args.Machine {
-		declareOnThisMachine(projectName, args.Name, activeScope)
-		return
-	}
-
 	files := []string{paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"}
 	if args.Global {
 		files = append(files, paths.GetExecDirPath()+"/config.xml")
@@ -248,88 +228,4 @@ func CacheClean() {
 		logger.Fatal(err)
 	}
 	paths.MakeDirsByPath(paths.CacheDir())
-}
-
-// declareOnThisMachine writes the <unset> declarations and reports what each one
-// took away, read back from the assembled configuration rather than assumed.
-func declareOnThisMachine(projectName string, names []string, activeScope string) {
-	before := configs.GetCurrentProjectConfig()
-
-	for _, name := range names {
-		key := strings.ToLower(name)
-		if err := configs.DeclareUnset(projectName, key, activeScope); err != nil {
-			fmtc.ErrorLn(err.Error())
-			fmtc.ToDoLn("Protected: " + strings.Join(configs.ProtectedFromUnset(), ", "))
-			continue
-		}
-		fmtc.SuccessLn("\"" + key + "\" is kept out on this machine.")
-	}
-
-	configs.CleanCache()
-	after := configs.GetCurrentProjectConfig()
-
-	// What actually changed, which is not always what was asked for: a key the
-	// project never set disappears from nothing, and one with a default
-	// underneath it falls back rather than vanishing.
-	for _, name := range names {
-		key := strings.ToLower(name)
-		was, hadBefore := before[key]
-		now, hasNow := after[key]
-		switch {
-		case hadBefore && !hasNow:
-			fmtc.SuccessLn("  " + key + ": was \"" + was + "\", now unset")
-		case hadBefore && was != now:
-			fmtc.SuccessLn("  " + key + ": was \"" + was + "\", now \"" + now + "\" from the layer underneath")
-		case !hadBefore && !hasNow:
-			fmtc.ToDoLn("  " + key + " was not set by anything — the declaration stands for whatever arrives later")
-		}
-	}
-}
-
-// printOrigins says where each value comes from and what this machine removed.
-//
-// The removal is the half that cannot be seen otherwise: a key that was unset is
-// simply absent, which looks exactly like a key nobody ever set — and on a
-// machine where somebody did that six months ago, "looks like nobody set it" is
-// how it gets set again.
-func printOrigins(projectName string, config map[string]string) {
-	project := configs.GetProjectConfigInProject(config["path"])
-	machine := configs.GetProjectConfigOnlyMachine(projectName)
-	general := configs.GetGeneralConfig()
-
-	keys := make([]string, 0, len(config))
-	for key := range config {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		origin := "default"
-		switch {
-		case has(project, key, config[key]):
-			origin = "project .madock/config.xml"
-		case has(machine, key, config[key]):
-			origin = "this machine"
-		case has(general, key, config[key]):
-			origin = "installation"
-		}
-		fmt.Println(key + " " + config[key] + "  [" + origin + "]")
-	}
-
-	removed := configs.DeclaredUnsets(projectName)
-	if len(removed) == 0 {
-		return
-	}
-
-	fmt.Println()
-	fmt.Println("Kept out on this machine:")
-	for _, key := range removed {
-		fmt.Println("  " + key)
-	}
-}
-
-func has(layer map[string]string, key, value string) bool {
-	stored, ok := layer[key]
-
-	return ok && stored == value
 }

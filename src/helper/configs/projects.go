@@ -125,35 +125,17 @@ func GetProjectConfig(projectName string) map[string]string {
 	if projectName == GetProjectName() {
 		if len(projectConfig) == 0 {
 			config := GetProjectConfigOnly(projectName)
-			mergeGeneral(config)
+			ConfigMapping(GetGeneralConfig(), config)
 			applyDerived(config)
 			projectConfig = config
 		}
 		return projectConfig
 	} else {
 		config := GetProjectConfigOnly(projectName)
-		mergeGeneral(config)
+		ConfigMapping(GetGeneralConfig(), config)
 		applyDerived(config)
 		return config
 	}
-}
-
-// mergeGeneral folds the installation's own configuration in underneath what
-// the project and the machine already decided.
-//
-// It is a function rather than two lines because of the same `<unset>` block:
-// the installation file is the weakest layer, so what it removes is removed from
-// everything above it — the machine's file and the project's alike. That is the
-// one place an installation-wide decision can outrank a project, and it is
-// deliberately limited to removal.
-func mergeGeneral(config map[string]string) {
-	general := GetGeneralConfig()
-
-	removals := unsetKeys(general)
-	stripUnset(general)
-	applyUnset(removals, config)
-
-	ConfigMapping(general, config)
 }
 
 func GetProjectConfigOnly(projectName string) map[string]string {
@@ -189,19 +171,9 @@ func GetProjectConfigOnly(projectName string) map[string]string {
 		// empty projectPath is safe here.
 		warnMissingProjectPath(projectName)
 	}
-	projectFileConfig := GetProjectConfigInProject(projectPath)
-
-	// The machine's own file may remove what the repository ships. See unset.go
-	// for the shape and for why the same declaration is refused in the project's
-	// file: this is where a devops takes a hostname off a demo server without
-	// forking the repository to do it.
-	removals := unsetKeys(activeConfig)
-	stripUnset(activeConfig)
-	refuseUnsetInTheProjectFile(projectFileConfig)
-	applyUnset(removals, projectFileConfig)
-
+	defaultConfig := GetProjectConfigInProject(projectPath)
 	activeProjectConfig := make(map[string]string)
-	ConfigMapping(projectFileConfig, activeProjectConfig)
+	ConfigMapping(defaultConfig, activeProjectConfig)
 	ConfigMapping(activeConfig, activeProjectConfig)
 	return activeProjectConfig
 }

@@ -1,16 +1,3 @@
-**v4.2.7**
-
-Added:
-- **A machine can remove a setting the project ships** — `<unset>` in `<install>/projects/<name>/config.xml`, or in the installation's own `projects/config.xml`. Until now the layers only filled each other's gaps, so the committed `.madock/config.xml` won every key it declared and nothing on the machine could take one away: the demo server answered on the production hostnames because the repository says so, and the ways out were editing a file that belongs to the repository or forking it
-- **It removes the key from the layers above it, not from the finished configuration.** So the machine's own value applies afterwards, or the shipped default does — a key only disappears when nothing below defines it, which is exactly the host case. The alternative reading would leave a hole where a template expects a value
-- A path takes the whole subtree with it: `nginx/hosts/www` removes `name`, `code` and anything else under it, because a host is several keys and naming them one by one is how one gets left behind
-- **`madock config:unset --machine <key>`** writes the declaration, and reports what it took away by reading the configuration back rather than by trusting the write
-- **`madock config:list --origin`** says which file each value comes from and lists what this machine has removed. A key that was unset is otherwise indistinguishable from a key nobody ever set — which is how it gets set again six months later
-
-Refused, deliberately:
-- **`<unset>` in the project's own `.madock/config.xml` is ignored, with a line saying so.** It cannot work — an unset removes keys from the layers above the file that declares it, and nothing sits above that one — and it should not: that file arrives by `git pull` and a deploy, so a line in it would take settings away on every machine at once with nobody on those machines deciding anything. The block is dropped and the run continues; stopping instead would let one committed line take every madock command on a machine down
-- `path`, `platform` and `php/version` cannot be unset at all. Removing one produces no error, it produces a stack whose templates interpolate an empty string
-
 **v4.2.6**
 
 Added:
