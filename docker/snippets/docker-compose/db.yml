@@ -18,6 +18,13 @@
     volumes:
       - dbdata:/var/lib/mysql
       - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+      {{{- if .logs.persist.enabled}}}
+      # Logs a rebuild cannot take away. Docker keeps a container's stdout in
+      # the container's own directory, so `rebuild` deletes it — measured on a
+      # production machine mid-incident, where three deploys left no HTTP record
+      # of the minute being investigated.
+      - logsdata:/var/log/madock
+      {{{- end}}}
     {{{- if .isolation.enabled}}}
     networks:
       - isolated

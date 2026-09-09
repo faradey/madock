@@ -136,3 +136,90 @@ func TestSearchMemoryReachesTheComposeFile(t *testing.T) {
 		})
 	}
 }
+
+// The logs have to outlive the container, and the generated files are the first
+// half of that claim.
+//
+// Measured on production during an intrusion review on 2026-09-09: three deploys
+// recreated the containers and the HTTP records for the minute under
+// investigation were gone from disk and from `madock logs`. Docker keeps a
+// container's stdout inside the container's own directory, so a rebuild deletes
+// it — the services have to write files on a mounted path as well.
+func TestTheServicesWriteLogsWhereARebuildCannotReach(t *testing.T) {
+	env := testenv.SetupWith(t, "logsproject", "logs.test", nil)
+
+	MakeConf("logsproject")
+
+	compose := readGenerated(t, env, "docker-compose.yml")
+	if strings.Count(compose, "logsdata:/var/log/madock") < 2 {
+		t.Errorf("the log volume is not mounted into both the web server and the database:\n%s",
+			firstLines(compose, 80))
+	}
+	// Declared as well as mounted, or compose refuses the file outright.
+	if !strings.Contains(compose, "\n  logsdata:") {
+		t.Errorf("the log volume is mounted and never declared:\n%s", firstLines(compose, 80))
+	}
+
+	vhost := readGenerated(t, env, "ctx/nginx.conf")
+	for _, want := range []string{
+		"access_log /var/log/madock/nginx-access.log;",
+		// And to the stream as well, or `madock logs` goes quiet — the two are
+		// not alternatives.
+		"access_log /dev/stdout;",
+		"error_log  /var/log/madock/nginx-error.log warn;",
+	} {
+		if !strings.Contains(vhost, want) {
+			t.Errorf("missing %q in the generated vhost:\n%s", want, firstLines(vhost, 40))
+		}
+	}
+
+	// The slow query log, which was never configured at all: log_error,
+	// general_log and log_slow_query were all commented out in the shipped
+	// config, so no madock project has ever recorded a slow query anywhere.
+	//
+	// `log_error` stays unset, and that is asserted below rather than left to
+	// chance: MariaDB writes its error log to a file or to stderr, never both,
+	// and pointing it at the file empties the stream `madock logs -s db` reads.
+	// The first version of this change did exactly that, and CI answered with
+	// "the database never wrote anything recognisable to its log" plus a project
+	// whose database never became ready at all.
+	mycnf := readGenerated(t, env, "ctx/my.cnf")
+	if strings.Contains(mycnf, "log_error =") {
+		t.Errorf("log_error was pointed at a file — `madock logs -s db` goes silent:\n%s", firstLines(mycnf, 40))
+	}
+	for _, want := range []string{
+		"slow_query_log = 1",
+		"slow_query_log_file = /var/log/madock/mysql-slow.log",
+	} {
+		if !strings.Contains(mycnf, want) {
+			t.Errorf("missing %q in the generated my.cnf:\n%s", want, firstLines(mycnf, 40))
+		}
+	}
+
+	// A named volume rather than a directory under aruntime, and the reason is
+	// worth keeping: the bind mount put root-owned files into the project's
+	// runtime directory, and `project:remove` — which runs as the person, not as
+	// root — then could not delete the project at all. CI found it as a database
+	// that would not start, because the leftover volume of the undeleted project
+	// still carried the old root password.
+	if strings.Contains(compose, "./logs:") {
+		t.Error("the logs went back to a bind mount, which project:remove cannot clean up")
+	}
+}
+
+// Off means off: a machine that says so gets what it had before, with no mount
+// and no directives.
+func TestLogPersistenceCanBeTurnedOff(t *testing.T) {
+	env := testenv.SetupWith(t, "logsoffproject", "logsoff.test", map[string]string{
+		"logs/persist/enabled": "false",
+	})
+
+	MakeConf("logsoffproject")
+
+	if compose := readGenerated(t, env, "docker-compose.yml"); strings.Contains(compose, "/var/log/madock") {
+		t.Error("the log mount was rendered for a project that turned it off")
+	}
+	if vhost := readGenerated(t, env, "ctx/nginx.conf"); strings.Contains(vhost, "/var/log/madock") {
+		t.Error("the log directives were rendered for a project that turned it off")
+	}
+}

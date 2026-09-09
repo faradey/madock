@@ -62,6 +62,13 @@ RUN apt-get -y --allow-releaseinfo-change update && apt-get install -y php8.4-bc
 # from PHP core in 8.0 and may be missing in newer ondrej builds). Install
 # each in its own line so a missing package does not abort the build.
 RUN apt-get install -y php8.4-opcache || true
+# ldap is here rather than in the hard list above for the same reason as the two
+# beside it: a package missing for one PHP version would abort the whole image,
+# and this one is needed by a minority of projects — an application that
+# authenticates against a directory. Without it there is nowhere to test LDAP at
+# all: `ext-ldap` appears in no madock image, measured 2026-09-09 across the
+# whole docker/ tree.
+RUN apt-get install -y php8.4-ldap || true
 RUN apt-get install -y php8.4-xmlrpc || true
 
 SHELL ["/bin/bash", "-c"]

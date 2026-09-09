@@ -10,6 +10,13 @@
     volumes:
       - ./src:/var/www/html:delegated
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+      {{{- if .logs.persist.enabled}}}
+      # Logs a rebuild cannot take away. Docker keeps a container's stdout in
+      # the container's own directory, so `rebuild` deletes it — measured on a
+      # production machine mid-incident, where three deploys left no HTTP record
+      # of the minute being investigated.
+      - logsdata:/var/log/madock
+      {{{- end}}}
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{- range $host := .nginx.hosts}}}

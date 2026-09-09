@@ -33,6 +33,11 @@ services:
     volumes:
       - ./src:/var/www/html:delegated
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+      # Logs a rebuild cannot take away. Docker keeps a container's stdout in
+      # the container's own directory, so `rebuild` deletes it — measured on a
+      # production machine mid-incident, where three deploys left no HTTP record
+      # of the minute being investigated.
+      - logsdata:/var/log/madock
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "golden.test:host-gateway"
@@ -97,6 +102,15 @@ volumes:
   # a database, without search and without grafana — and compose rejects that
   # with "volumes must be a mapping". An unused named volume costs nothing.
   dbdata:
+  # The logs the services write as files. A named volume rather than a bind
+  # mount, and that is the second answer to the same question: a bind mount put
+  # root-owned files under aruntime/projects/<name>/, and `project:remove` —
+  # which runs as the person, not as root — then could not delete the project
+  # directory at all. CI found it as a database that would not start, because
+  # the leftover volume from the undeleted project carried the old root
+  # password. A named volume survives `rebuild` exactly as dbdata does, and
+  # `project:remove` takes it down with everything else.
+  logsdata:
   opensearch_vlm_2.19.0:
 
 networks:
