@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/faradey/madock/v4/src/command"
+	"github.com/faradey/madock/v4/src/controller/general/logs"
 	"github.com/faradey/madock/v4/src/controller/platform"
 	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
@@ -46,6 +47,18 @@ func ExecuteWith(args *arg_struct.ControllerGeneralStart) {
 
 		handler := platform.GetOrDefault(platformName)
 		handler.Start(projectName, args.WithChown, projectConf)
+
+		// Rotation runs here rather than on a schedule, because madock has no
+		// scheduler of its own on the host: the crontab it installs lives in the
+		// PHP container, and the logs live in a volume that container does not
+		// mount. A start is the one moment something is guaranteed to run.
+		//
+		// It is not enough on its own — a server starts a project once and
+		// leaves it up for months — which is why `madock logs:rotate` exists as
+		// a command a person or a cron entry can call.
+		for _, line := range logs.RotateProject(projectName, projectConf) {
+			fmt.Println(line)
+		}
 
 		elapsed := time.Since(startTime).Round(time.Second)
 		fmt.Println("")
