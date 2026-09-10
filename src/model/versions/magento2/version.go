@@ -5,9 +5,42 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/faradey/madock/v4/src/helper/paths"
 	"github.com/faradey/madock/v4/src/model/versions"
 )
+
+// This package decides which tool versions a Magento release wants, and until
+// 2026-09-10 it also went and found the release — reading `composer.json` from
+// the run directory, which meant importing `helper/paths` from a model.
+//
+// That is a layer looking both ways: `helper/preset` and `helper/setup/tools`
+// import this package, and this package imported a helper. Not a cycle Go would
+// refuse, which is exactly why it survived — nothing complains, and the next
+// helper this reaches for is the one that closes the loop for real.
+//
+// The reading now happens through a variable the caller may replace, defaulting
+// to the working directory. The package still answers the same question; it no
+// longer knows how the project is laid out on disk.
+
+// ComposerJSON is where the Magento edition and version are read from when the
+// caller does not name a version. Replaceable so that a caller with its own idea
+// of the project's root — or a test — can say so.
+var ComposerJSON = func() string {
+	// MADOCK_RUN_DIR by hand, and the duplication is deliberate: reading it
+	// through `helper/paths` is the import this change removes. The name is
+	// pinned by a test that asks `paths.GetRunDirPath` for the same answer, so
+	// the two cannot drift apart quietly — which is the only way a duplicated
+	// constant hurts.
+	if dir := strings.TrimSpace(os.Getenv("MADOCK_RUN_DIR")); dir != "" {
+		return dir + "/composer.json"
+	}
+
+	dir, err := os.Getwd()
+	if err != nil {
+		return "composer.json"
+	}
+
+	return dir + "/composer.json"
+}
 
 func init() {
 	versions.RegisterProvider("magento2", GetVersions)
@@ -42,7 +75,7 @@ func GetVersions(ver string) versions.ToolsVersions {
 }
 
 func getMagentoVersion() (edition, version string) {
-	composerPath := paths.GetRunDirPath() + "/composer.json"
+	composerPath := ComposerJSON()
 	txt, err := os.ReadFile(composerPath)
 	if err == nil {
 		re := regexp.MustCompile(`(?is)"magento/product-(community|enterprise)-edition".*?:.*?"[^0-9]*?([\.0-9]{5,}?(-p.*?|))"`)

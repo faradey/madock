@@ -1,3 +1,9 @@
+**v4.2.15**
+
+Changed:
+- **A model no longer reaches into a helper.** `model/versions/magento2` read `composer.json` through `helper/paths`, while `helper/preset` and `helper/setup/tools` import that same model — a layer looking both ways. Go refuses only real cycles, so nothing ever complained, which is why it survived. The path now comes from a replaceable `magento2.ComposerJSON`, defaulting to `MADOCK_RUN_DIR` or the working directory; the answer is the same and a test in `helper/paths` holds the two spellings together, so the duplicated environment name cannot drift
+- **The layers are written down and checked.** `.go-arch-lint.yml` declares fourteen components and what each may import, so the next inversion is caught where it is introduced rather than years later. Two of its optional linters stay off on purpose and the file says why: the deep scan reads our registry callbacks backwards, and the vendor rule belongs to the edition that has vendor rules to enforce
+
 **v4.2.14**
 
 Changed:

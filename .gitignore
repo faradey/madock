@@ -1,5 +1,6 @@
 *
 !/main.go
+!/.go-arch-lint.yml
 !/LICENSE
 !/README.md
 !/install.sh
