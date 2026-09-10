@@ -13,7 +13,6 @@ import (
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
-	"github.com/faradey/madock/v4/src/helper/logrotate"
 )
 
 func init() {
@@ -60,13 +59,13 @@ func Execute() {
 	projectName := configs.GetProjectName()
 	container := docker.GetContainerName(projectConf, projectName, service)
 
-	// --file answers the question the stream cannot: what happened before the
-	// last rebuild. Docker keeps a container's output inside the container's own
-	// directory and deletes it with the container, which on a production machine
-	// meant three deploys erased the HTTP record of an intrusion. The services
-	// also write files into a volume, and this reads those.
+	// --file reads the persisted copies, and this edition has none: the volume,
+	// the rotation and the reader are madock-pro's. Said rather than ignored —
+	// a flag that is accepted and does nothing is the failure this whole area
+	// kept producing.
 	if args.File {
-		showPersisted(container, args.Tail)
+		fmtc.ErrorLn("Reading persisted log files is a madock-pro feature.")
+		fmtc.ToDoLn("In this edition `madock logs` shows the container's own stream, which docker deletes with the container.")
 
 		return
 	}
@@ -77,31 +76,5 @@ func Execute() {
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		logger.Fatal(err)
-	}
-}
-
-// showPersisted prints the tail of every persisted log the service has.
-//
-// One `sh -c` inside the container rather than a copy out to the host: the files
-// live in a volume, and the only thing guaranteed to be able to read a volume is
-// something that mounts it. Missing files are not an error — a project that has
-// only just started has written nothing yet, and saying "no such file" about
-// that would read as a fault.
-func showPersisted(container, tail string) {
-	if tail == "" {
-		tail = "200"
-	}
-
-	script := "cd " + logrotate.LogDir + " 2>/dev/null || { echo 'no persisted logs for this service yet'; exit 0; }; " +
-		"found=0; for f in *.log*; do [ -f \"$f\" ] || continue; found=1; " +
-		"echo \"--- $f ---\"; tail -n " + tail + " \"$f\"; done; " +
-		"[ \"$found\" = 1 ] || echo 'no persisted logs for this service yet'"
-
-	cmd := exec.Command("docker", "exec", container, "sh", "-c", script)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		fmtc.ErrorLn("Could not read the persisted logs of " + container + ": " + err.Error())
-		fmtc.ToDoLn("The container has to be running: this reads a volume, and a volume is readable only from inside.")
 	}
 }

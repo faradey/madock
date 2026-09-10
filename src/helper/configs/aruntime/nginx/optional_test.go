@@ -111,37 +111,3 @@ func read(t *testing.T, path string) string {
 	}
 	return string(body)
 }
-
-// The shared proxy keeps its own copy, and on most of our machines it is the
-// only copy there is.
-//
-// Every Node application here runs without a web server of its own — the
-// project has no nginx at all — so the shared proxy holds the only HTTP record
-// on the box. `/var/log/nginx/access.log` is the image's symlink to stdout,
-// which docker deletes with the container.
-func TestTheSharedProxyKeepsItsOwnLog(t *testing.T) {
-	preamble := proxyPreamble(map[string]string{"logs/persist/enabled": "true"})
-
-	for _, want := range []string{
-		"access_log /var/log/madock/proxy-access.log main;",
-		// The stream stays, because `madock proxy:logs` reads it.
-		"access_log /var/log/nginx/access.log main;",
-		"error_log /var/log/madock/proxy-error.log warn;",
-	} {
-		if !strings.Contains(preamble, want) {
-			t.Errorf("missing %q in the proxy configuration:\n%s", want, preamble)
-		}
-	}
-}
-
-// And an installation that turned it off gets what it had before.
-func TestTheSharedProxyRespectsTheSetting(t *testing.T) {
-	preamble := proxyPreamble(map[string]string{"logs/persist/enabled": "false"})
-
-	if strings.Contains(preamble, "/var/log/madock/") {
-		t.Errorf("the proxy wrote to the volume for an installation that turned it off:\n%s", preamble)
-	}
-	if !strings.Contains(preamble, "access_log /var/log/nginx/access.log main;") {
-		t.Errorf("and it stopped writing to the stream as well:\n%s", preamble)
-	}
-}
