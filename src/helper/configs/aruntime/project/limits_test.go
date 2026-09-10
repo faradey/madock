@@ -85,7 +85,7 @@ func firstLines(text string, n int) string {
 //
 // They were `memory: 2512m` and `-Xms800m -Xmx800m` inside the compose
 // snippets, so every project paid the same regardless of catalogue size.
-// Measured on extmag.com on 2026-09-09: java held 1650 MB of RSS against
+// Measured on a live Magento store on 2026-09-09: java held 1650 MB of RSS against
 // 12.4 MB of indices and 21 products, on a machine with 5.8 GB. The only way
 // to change it was to copy the snippet into the project's own .madock/docker,
 // which is a copy that then drifts from the shipped one in silence — and that
@@ -162,7 +162,7 @@ func TestTheServicesWriteLogsWhereARebuildCannotReach(t *testing.T) {
 
 	// The directives live in their own file, mounted into conf.d, which nginx
 	// includes inside the http block. They were in the vhost until 2026-09-10
-	// and that failed in the one place it mattered: extmag.com ships its own
+	// and that failed in the one place it mattered: a project may ship its own
 	// `nginx/conf/default.conf` in `.madock/docker/`, which replaces madock's
 	// template wholesale — the volume was mounted, the database wrote its slow
 	// log, and nginx wrote nothing at all.
