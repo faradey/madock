@@ -325,13 +325,6 @@
                     <version>1.22.19</version>
                 </yarn>
             </nodejs>
-            <logs>
-                <persist>
-                    <enabled>true</enabled>
-                    <keep>5</keep>
-                    <max_size>20M</max_size>
-                </persist>
-            </logs>
             <search>
                 <engine>elasticsearch</engine>
                 <elasticsearch>

@@ -1,3 +1,13 @@
+**v4.2.14**
+
+Changed:
+- **Log persistence moved to madock-pro.** The volume, the fragment that carries the nginx directives, the shared proxy's own log, `logs:rotate` and `logs --file` are gone from here. Half of the feature could not work in this edition anyway: rotation runs on `start`, and a server starts a project once and leaves it running for months, so the only thing that keeps those files bounded is a scheduled run — and scheduling is madock-pro's. Nothing was ever published with it: every version that carried it was tagged `-norelease`
+- **The slow query log stays, and is repaired.** It pointed at a directory that only existed when something mounted one, which is a database that does not start; it now writes into `/var/lib/mysql`, which is already the `dbdata` volume, so it survives a rebuild on its own and needs nothing else. `log_error` stays on stderr, where `madock logs -s db` reads it
+
+Added:
+- **Two extension points**, so the edition that owns the feature can reach what it needs. `project.RegisterCtxFile` adds a generated file to a project's `ctx/` — and removes one it says should not exist, because the mount using it is conditional on the same setting. The shared proxy's compose file now passes through `dockertransform.ApplyComposeTransform` under its own name, which was the one generated file nothing could reach
+- `madock logs --file` remains as a flag and says which edition reads persisted files, rather than being accepted and doing nothing
+
 **v4.2.13**
 
 Fixed:

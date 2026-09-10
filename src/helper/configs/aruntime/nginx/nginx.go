@@ -18,6 +18,7 @@ import (
 	configs2 "github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/proxytransform"
+	"github.com/faradey/madock/v4/src/helper/dockertransform"
 	"github.com/faradey/madock/v4/src/helper/finder"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
@@ -164,21 +165,6 @@ func proxyPreamble(generalConfig map[string]string) string {
 	// Global log format and access log
 	preamble += "# Access log format\nlog_format main '$remote_addr - $host [$time_local] \"$request\" '\n                '$status $body_bytes_sent \"$http_referer\" '\n                '\"$http_user_agent\" $request_time';\n"
 	preamble += "access_log /var/log/nginx/access.log main;\n"
-
-	// And to a file the container's death cannot take, when the installation
-	// asks for it.
-	//
-	// The shared proxy is the one container that sees every request on the
-	// machine, and on a host whose projects have no web server of their own —
-	// every Node application behind this proxy — it holds the *only* HTTP
-	// record there is. `/var/log/nginx/access.log` above is the image's symlink
-	// to stdout, which docker keeps inside the container's directory and
-	// deletes with it. That is what left a production machine with no record of
-	// an intrusion after three deploys.
-	if settingOr(generalConfig, "logs/persist/enabled", "true") == "true" {
-		preamble += "access_log /var/log/madock/proxy-access.log main;\n"
-		preamble += "error_log /var/log/madock/proxy-error.log warn;\n"
-	}
 
 	return preamble
 }
@@ -368,11 +354,29 @@ func makeDockerfile(projectName string) {
 	/* END Create nginx Dockerfile configuration */
 }
 
+// ProxyComposeName is what the compose transform is told this file is called.
+// The projects' files are named after themselves — `docker-compose.yml` and its
+// overrides — so the proxy needs a name of its own, and one it cannot collide
+// with.
+const ProxyComposeName = "docker-compose-proxy.yml"
+
 func makeDockerCompose(projectName string) {
 	/* Copy nginx docker-compose configuration */
 	paths.MakeDirsByPath(paths.CtxDir())
 	nginxDefFile := paths.GetExecDirPath() + "/docker/general/nginx/docker-compose-proxy.yml"
-	project.RenderTo(projectName, nginxDefFile, "general/nginx/docker-compose-proxy.yml", paths.ProxyDockerCompose(), nil)
+
+	// Through the same transform the projects' compose files go through, and
+	// under its own name so an extension can tell which file it has.
+	//
+	// The proxy's compose was the one generated file nothing could reach: it is
+	// written straight to disk here, so an extension that wanted to give the
+	// shared proxy a volume — a log that outlives the container, say — had
+	// nowhere to do it. Everything else in this repository already offers that
+	// seam; this closes the gap rather than adding a new idea.
+	rendered := project.Render(projectName, nginxDefFile, "general/nginx/docker-compose-proxy.yml", nil)
+	if err := os.WriteFile(paths.ProxyDockerCompose(), []byte(dockertransform.ApplyComposeTransform(ProxyComposeName, rendered)), 0755); err != nil {
+		logger.Fatalln("writing the proxy compose file: " + err.Error())
+	}
 	/* END Create nginx Dockerfile configuration */
 }
 

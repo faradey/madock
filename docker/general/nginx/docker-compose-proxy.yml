@@ -7,14 +7,6 @@ services:
     volumes:
       - ./ctx/proxy.conf:/etc/nginx/nginx.conf:delegated
       - ./ctx/:/sslcert/:delegated
-      {{{- if .logs.persist.enabled}}}
-      # A volume of its own: the proxy is its own compose project (`aruntime`),
-      # so it cannot share a project's. Named rather than bound to a directory,
-      # for the reason the project side learned the hard way — nginx writes as
-      # root, and a bind mount leaves files nothing running as the person can
-      # delete.
-      - proxylogs:/var/log/madock
-      {{{- end}}}
     ports:
       - {{{.nginx.interface_ip}}}{{{.nginx.port.unsecure}}}:80
       - {{{.nginx.interface_ip}}}{{{.nginx.port.secure}}}:443
@@ -54,9 +46,3 @@ services:
 networks:
   madock-proxy:
     external: true
-
-{{{- if .logs.persist.enabled}}}
-
-volumes:
-  proxylogs:
-{{{- end}}}
