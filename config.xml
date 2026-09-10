@@ -328,8 +328,8 @@
             <logs>
                 <persist>
                     <enabled>true</enabled>
-                    <keep>7</keep>
-                    <max_size>50M</max_size>
+                    <keep>5</keep>
+                    <max_size>20M</max_size>
                 </persist>
             </logs>
             <search>

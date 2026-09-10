@@ -89,7 +89,11 @@ func TestEveryServiceThatKeepsFilesIsRotated(t *testing.T) {
 	RotateProject("someproject", conf(nil))
 
 	joined := strings.Join(*seen, " ")
-	for _, want := range []string{"madock_someproject-nginx-1", "madock_someproject-db-1"} {
+	// The shared proxy among them: it is not one of the project's services, it
+	// lives in its own compose project, and leaving it out of the list left it
+	// out of rotation entirely — on the container that sees every request on
+	// the machine.
+	for _, want := range []string{"madock_someproject-nginx-1", "madock_someproject-db-1", "aruntime-nginx-1"} {
 		if !strings.Contains(joined, want) {
 			t.Errorf("%s was never rotated, only: %v", want, *seen)
 		}

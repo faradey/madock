@@ -27,6 +27,16 @@ func init() {
 // list here is the same edit as adding the mount.
 var rotatingServices = []string{"nginx", "db"}
 
+// proxyContainer is the shared proxy, and it is rotated separately because it
+// is not one of the project's services at all: it lives in its own compose
+// project (`aruntime`), one per machine, with a volume of its own.
+//
+// Left out of the list above it was left out of rotation entirely — and it is
+// the container that sees every request on the machine, so its access log is
+// the one that grows fastest. Found by asking where the rotation ran rather
+// than by trusting the list.
+const proxyContainer = "aruntime-nginx-1"
+
 // RotateExecute is `madock logs:rotate`, and it is also what `start` calls.
 //
 // It is a command of its own because rotation on start alone is rotation that
@@ -65,21 +75,27 @@ func RotateProject(projectName string, projectConf map[string]string) []string {
 	plan := logrotate.Plan{MaxSize: maxSize, Keep: keep}
 
 	var reported []string
+	containers := make([]string, 0, len(rotatingServices)+1)
 	for _, service := range rotatingServices {
-		container := docker.GetContainerName(projectConf, projectName, service)
+		containers = append(containers, docker.GetContainerName(projectConf, projectName, service))
+	}
+	containers = append(containers, proxyContainer)
+
+	for _, container := range containers {
 		out, err := logrotate.Rotate(container, plan)
 		if err != nil {
 			// A container that is not running is the ordinary case — a project
-			// with no database, a service switched off — and it is not worth a
-			// word. Anything else is, because a rotation that never runs is a
-			// disk that fills silently, which is what this exists to prevent.
+			// with no database, a service switched off, a machine with no proxy
+			// up — and it is not worth a word. Anything else is, because a
+			// rotation that never runs is a disk that fills silently, which is
+			// what this exists to prevent.
 			if !containerAbsent(out) {
-				fmtc.WarningLn("could not rotate the logs of " + service + ": " + err.Error())
+				fmtc.WarningLn("could not rotate the logs of " + container + ": " + err.Error())
 			}
 			continue
 		}
 		if out != "" {
-			reported = append(reported, service+": "+out)
+			reported = append(reported, container+": "+out)
 		}
 	}
 

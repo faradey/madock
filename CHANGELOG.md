@@ -1,3 +1,11 @@
+**v4.2.13**
+
+Fixed:
+- **The shared proxy's log was never rotated.** Rotation walked the project's own services, and the proxy is not one of them — it lives in its own compose project, one per machine, with a volume of its own. It is also the container that sees every request on the machine, so its access log is the one that grows fastest. Found by asking where the rotation actually ran rather than by trusting the list it walked
+
+Changed:
+- **The rotation defaults are smaller**: `logs/persist/max_size` 20M and `logs/persist/keep` 5, from 50M and 7. The old pair allowed roughly 800 MB per project in the worst case — four files, each with seven rotated copies — which is a great deal on a laptop and buys nothing an incident review needs
+
 **v4.2.12**
 
 Fixed:
