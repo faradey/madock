@@ -97,7 +97,7 @@ func stripMadockBlock(existing string) []string {
 // command run from the new release cannot see the previous release's block and
 // reports success without touching it.
 //
-// Measured on extmag.com on 2026-08-27: after one deploy the crontab carried two
+// Measured on a live store on 2026-08-27: after one deploy the crontab carried two
 // MAGENTO blocks, `releases/159` and `releases/160`, so `cron:run` started twice
 // a minute out of two trees. The second half is the one that bites later:
 // `deploy:cleanup` removes `releases/159`, and the entry stays behind pointing
@@ -118,7 +118,7 @@ const (
 // A second block naming the *same* path is dropped too, and that is not
 // tidiness. `cron:install` clears the old block by calling the same
 // `cleanMagentoSection` that `cron:remove` uses, and that function cannot remove
-// the last block in the file — measured 2026-08-27 on extmag.com and traced to
+// the last block in the file — measured 2026-08-27 on a live store and traced to
 // `Shell::execute`, which builds its return value with `implode(PHP_EOL, …)` so
 // the string ends at the END marker while the regex demands a newline after it.
 // So an install over an install duplicates rather than replaces, and every
@@ -260,7 +260,7 @@ func lineContains(s, delimiter string) bool {
 // deploy after the first. The chain is joined by `&&`, so that 1 stopped it and
 // was read as a failure to set cron up.
 //
-// Measured on extmag.com, release 174: the alarm printed on a deploy where the
+// Measured on a live store, release 174: the alarm printed on a deploy where the
 // crontab held exactly one cron:run naming that release, `cron` was running by
 // name, and a job had completed successfully 23 seconds earlier. Four such
 // alarms in one day, all of them wrong.

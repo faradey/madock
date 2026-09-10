@@ -266,7 +266,7 @@ func CronExecute(projectName string, flag, manual bool) {
 				// joins the lines with `implode(PHP_EOL, …)` — so the string
 				// ends at the marker and the **last** block in the file is never
 				// matched. The command still reports success. Measured on
-				// extmag.com on 2026-08-27, with the base path and the trailing
+				// a live store on 2026-08-27, with the base path and the trailing
 				// newline both verified correct first.
 				//
 				// A project told to stop must actually stop, so what Magento
@@ -335,7 +335,7 @@ func CronExecute(projectName string, flag, manual bool) {
 // the last block in the crontab whatever it reports, so `cron:install` finds
 // one already there, prints "Crontab has already been generated and saved" and
 // stops the chain. Reading that as failure printed "Magento cron setup failed —
-// scheduled jobs may NOT run" on healthy deploys — measured on extmag.com,
+// scheduled jobs may NOT run" on healthy deploys — measured on a live store,
 // release 174, four times in one day, each time with the crontab holding one
 // cron:run for that very release, `cron` running by name, and a job that had
 // completed 23 seconds earlier.
@@ -608,7 +608,7 @@ done`
 // container does not have, and whether the question could be answered.
 //
 // This is the failure the daemon check cannot see and the job count actively
-// hides. Measured on extmag.com on 2026-08-27: a deploy left the previous
+// hides. Measured on a live store on 2026-08-27: a deploy left the previous
 // release's Magento block in the crontab, so two jobs ran every minute out of
 // two trees — and once `deploy:cleanup` removes that release, the entry stays,
 // naming a directory that is gone. `cron:status` counted two jobs and called it

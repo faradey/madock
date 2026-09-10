@@ -284,8 +284,8 @@ func IsOption(name string) bool {
 // Magento.** `nginx/hosts/<key>/name` becomes an entry in the vhost's
 // `map $http_host $MAGE_RUN_CODE`, so the key is handed to the application as
 // the website code. A host added as `www` therefore asks Magento for a website
-// called "www"; on extmag.com that was NoSuchEntityException and HTTP 500 on
-// every request to www.extmag.com, first seen 2026-09-06.
+// called "www"; on a live store that was NoSuchEntityException and HTTP 500 on
+// every request to the www host, first seen 2026-09-06.
 //
 // Removing such a host is worse than leaving it: `server_name` is built from
 // this same list, so the name would fall out of the project's block and land on

@@ -7,24 +7,24 @@ import "testing"
 // a host added under a key that names no website answers 500 to every request.
 func TestHostCodeDefaultsToTheKey(t *testing.T) {
 	hosts := GetHosts(map[string]string{
-		"nginx/hosts/base/name": "extmag.com",
+		"nginx/hosts/base/name": "example.com",
 	})
 
 	if len(hosts) != 1 {
 		t.Fatalf("hosts = %v, want one", hosts)
 	}
-	if hosts[0]["name"] != "extmag.com" || hosts[0]["code"] != "base" {
-		t.Errorf("host = %v, want name=extmag.com code=base", hosts[0])
+	if hosts[0]["name"] != "example.com" || hosts[0]["code"] != "base" {
+		t.Errorf("host = %v, want name=example.com code=base", hosts[0])
 	}
 }
 
-// The case this was written for: www.extmag.com served by the website the bare
+// The case this was written for: www.example.com served by the website the bare
 // domain is served by. Before it, the only way to have www answer at all was to
 // name the key `base`, which the bare domain already used.
 func TestAHostCanNameTheWebsiteItShares(t *testing.T) {
 	hosts := GetHosts(map[string]string{
-		"nginx/hosts/base/name": "extmag.com",
-		"nginx/hosts/www/name":  "www.extmag.com",
+		"nginx/hosts/base/name": "example.com",
+		"nginx/hosts/www/name":  "www.example.com",
 		"nginx/hosts/www/code":  "base",
 	})
 
@@ -36,11 +36,11 @@ func TestAHostCanNameTheWebsiteItShares(t *testing.T) {
 	for _, host := range hosts {
 		byName[host["name"]] = host["code"]
 	}
-	if byName["extmag.com"] != "base" {
-		t.Errorf("extmag.com is served as %q, want base", byName["extmag.com"])
+	if byName["example.com"] != "base" {
+		t.Errorf("example.com is served as %q, want base", byName["example.com"])
 	}
-	if byName["www.extmag.com"] != "base" {
-		t.Errorf("www.extmag.com is served as %q, want base — that is the whole feature", byName["www.extmag.com"])
+	if byName["www.example.com"] != "base" {
+		t.Errorf("www.example.com is served as %q, want base — that is the whole feature", byName["www.example.com"])
 	}
 }
 
@@ -50,8 +50,8 @@ func TestAHostCanNameTheWebsiteItShares(t *testing.T) {
 // after the code, coded after the host, and put into server_name.
 func TestACodeKeyIsNotAHostOfItsOwn(t *testing.T) {
 	hosts := GetHosts(map[string]string{
-		"nginx/hosts/base/name": "extmag.com",
-		"nginx/hosts/www/name":  "www.extmag.com",
+		"nginx/hosts/base/name": "example.com",
+		"nginx/hosts/www/name":  "www.example.com",
 		"nginx/hosts/www/code":  "base",
 	})
 
@@ -67,7 +67,7 @@ func TestACodeKeyIsNotAHostOfItsOwn(t *testing.T) {
 // to remove, arriving through the feature itself.
 func TestAnEmptyCodeFallsBackToTheKey(t *testing.T) {
 	hosts := GetHosts(map[string]string{
-		"nginx/hosts/second/name": "second.extmag.com",
+		"nginx/hosts/second/name": "second.example.com",
 		"nginx/hosts/second/code": "",
 	})
 

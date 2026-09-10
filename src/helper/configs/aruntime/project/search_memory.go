@@ -11,7 +11,7 @@ import (
 // A heap larger than the container's memory limit kills the container on start,
 // and almost nothing says so.
 //
-// Measured on extmag.com on 2026-09-09: the limit was lowered to 768m while the
+// Measured on a live store on 2026-09-09: the limit was lowered to 768m while the
 // node still took a 1 GB heap from the image's own jvm.options. OpenSearch was
 // killed during startup, `setup:upgrade` failed in the deploy that followed, and
 // the only visible sign was the service missing from `madock status` — no line
