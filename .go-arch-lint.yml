@@ -1,0 +1,167 @@
+version: 3
+workdir: .
+
+allow:
+  # Import-level rules only.
+  #
+  # The deep scan follows method calls and injections, and this codebase is
+  # built on registries: a controller registers its handler with `info`, a
+  # platform registers its versions with `model/versions`, a hook registers with
+  # `command`. By imports the registry depends on nobody, which is the whole
+  # point of the pattern; by injection every registrant flows into it, and the
+  # scan reports that as a dependency the wrong way round. Left on, the file
+  # would have to grant the registry a dependency on everything that registers —
+  # which is the opposite of what the layering says, written down as if it were
+  # true.
+  deepScan: false
+  depOnAnyVendor: true
+
+# The layers, and the one rule that matters: a model does not reach for a
+# helper.
+#
+# `src/model/versions/magento2` imported `helper/paths` to find composer.json,
+# while `helper/preset` and `helper/setup/tools` import that model — a layer
+# looking both ways. Go does not refuse it, since it is not a cycle between
+# packages, and that is precisely why it survived: nothing complained, and the
+# next helper the model reached for would have closed the loop for real.
+#
+# The unattached directories below are not violations, they are the parts of
+# this tree nobody has had reason to draw yet. A component that is not declared
+# is reported, which is the point — the file says what the tree is, and a new
+# directory has to be placed deliberately.
+
+components:
+  command:
+    in: src/command/**
+  controller:
+    in: src/controller/**
+  helper:
+    in: src/helper/**
+  version:
+    in: src/version/**
+  model:
+    in: src/model/**
+  migration:
+    in: src/migration/**
+  setup:
+    in: src/setup/**
+  tools:
+    in: tools/**
+  info:
+    in: src/info/**
+  embedded-assets:
+    in:
+      - docker/**
+      - scripts/**
+  app:
+    in: src/app/**
+  tests:
+    in: test/**
+  main:
+    in: .
+
+deps:
+  command:
+    mayDependOn:
+      - info
+      - embedded-assets
+      - model
+      - helper
+      - version
+  controller:
+    mayDependOn:
+      - info
+      - embedded-assets
+      - model
+      - migration
+      - setup
+      - command
+      - controller
+      - helper
+      - version
+  helper:
+    mayDependOn:
+      - info
+      - embedded-assets
+      - model
+      - migration
+      - setup
+      - helper
+      - version
+      - command
+  version:
+    anyVendorDeps: true
+  # No helper here, deliberately: this is the inversion the file exists for, and
+  # a test file counts as an import — the agreement test that keeps the run
+  # directory in step lives in `helper/paths` for exactly that reason.
+  model:
+    mayDependOn:
+      - version
+      - model
+  migration:
+    mayDependOn:
+      - helper
+      - version
+      - model
+      - migration
+  setup:
+    mayDependOn:
+      - info
+      - embedded-assets
+      - helper
+      - version
+      - model
+      - controller
+      - command
+  tools:
+    mayDependOn:
+      - helper
+      - version
+      - model
+  # The command registry's own descriptions: a leaf, and it must stay one.
+  info:
+    anyVendorDeps: true
+  # The embedded template and script trees. They carry a single `embed.go` each
+  # and depend on nothing; declaring them keeps `check` quiet about files that
+  # are not code so much as cargo.
+  # Their tests render the templates they carry, which is the one thing those
+  # trees legitimately reach for.
+  embedded-assets:
+    mayDependOn:
+      - helper
+    anyVendorDeps: true
+  app:
+    mayDependOn:
+      - info
+      - embedded-assets
+      - model
+      - migration
+      - setup
+      - command
+      - controller
+      - helper
+      - version
+  tests:
+    mayDependOn:
+      - info
+      - embedded-assets
+      - model
+      - migration
+      - setup
+      - app
+      - command
+      - controller
+      - helper
+      - version
+  main:
+    mayDependOn:
+      - info
+      - embedded-assets
+      - model
+      - migration
+      - setup
+      - app
+      - command
+      - controller
+      - helper
+      - version
