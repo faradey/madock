@@ -11,6 +11,10 @@ services:
     volumes:
       - ./src:/var/www/html:delegated
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+      # The logging fragment goes into conf.d, which nginx includes inside the
+      # http block, so it covers every server block — including a vhost the
+      # project ships itself and which replaces madock's template entirely.
+      - ./ctx/madock-logs.conf:/etc/nginx/conf.d/00-madock-logs.conf:delegated
       # Logs a rebuild cannot take away. Docker keeps a container's stdout in
       # the container's own directory, so `rebuild` deletes it — measured on a
       # production machine mid-incident, where three deploys left no HTTP record

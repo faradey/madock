@@ -137,7 +137,7 @@ func TestWriteCrontabScriptRemovesWhenEmpty(t *testing.T) {
 // every deploy after the first — cron:remove leaves the last block whatever it
 // reports, so cron:install finds one and refuses. Reading that as failure
 // printed "Magento cron setup failed — scheduled jobs may NOT run" on healthy
-// deploys: measured on extmag.com release 174, four times in one day, each time
+// deploys: measured on a live store release 174, four times in one day, each time
 // with the crontab holding one cron:run for that release and a job finished 23
 // seconds earlier.
 func TestMagentoBlockCovers(t *testing.T) {

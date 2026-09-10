@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// The crontab measured on extmag.com on 2026-08-27, after one deploy: two
+// The crontab measured on a live store on 2026-08-27, after one deploy: two
 // Magento blocks, one per release, both running `cron:run` every minute out of
 // their own tree. Magento cannot remove the older one — `cron:remove` finds a
 // block by recomputing sha256 of the base path it is run from, and that path is

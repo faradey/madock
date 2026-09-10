@@ -85,7 +85,7 @@ func firstLines(text string, n int) string {
 //
 // They were `memory: 2512m` and `-Xms800m -Xmx800m` inside the compose
 // snippets, so every project paid the same regardless of catalogue size.
-// Measured on extmag.com on 2026-09-09: java held 1650 MB of RSS against
+// Measured on a live Magento store on 2026-09-09: java held 1650 MB of RSS against
 // 12.4 MB of indices and 21 products, on a machine with 5.8 GB. The only way
 // to change it was to copy the snippet into the project's own .madock/docker,
 // which is a copy that then drifts from the shipped one in silence — and that
@@ -160,7 +160,13 @@ func TestTheServicesWriteLogsWhereARebuildCannotReach(t *testing.T) {
 		t.Errorf("the log volume is mounted and never declared:\n%s", firstLines(compose, 80))
 	}
 
-	vhost := readGenerated(t, env, "ctx/nginx.conf")
+	// The directives live in their own file, mounted into conf.d, which nginx
+	// includes inside the http block. They were in the vhost until 2026-09-10
+	// and that failed in the one place it mattered: a project may ship its own
+	// `nginx/conf/default.conf` in `.madock/docker/`, which replaces madock's
+	// template wholesale — the volume was mounted, the database wrote its slow
+	// log, and nginx wrote nothing at all.
+	logsConf := readGenerated(t, env, "ctx/madock-logs.conf")
 	for _, want := range []string{
 		"access_log /var/log/madock/nginx-access.log;",
 		// And to the stream as well, or `madock logs` goes quiet — the two are
@@ -168,9 +174,12 @@ func TestTheServicesWriteLogsWhereARebuildCannotReach(t *testing.T) {
 		"access_log /dev/stdout;",
 		"error_log  /var/log/madock/nginx-error.log warn;",
 	} {
-		if !strings.Contains(vhost, want) {
-			t.Errorf("missing %q in the generated vhost:\n%s", want, firstLines(vhost, 40))
+		if !strings.Contains(logsConf, want) {
+			t.Errorf("missing %q in the generated logging fragment:\n%s", want, logsConf)
 		}
+	}
+	if !strings.Contains(compose, "madock-logs.conf:/etc/nginx/conf.d/00-madock-logs.conf") {
+		t.Errorf("the logging fragment is generated and never mounted:\n%s", firstLines(compose, 60))
 	}
 
 	// The slow query log, which was never configured at all: log_error,
@@ -222,4 +231,73 @@ func TestLogPersistenceCanBeTurnedOff(t *testing.T) {
 	if vhost := readGenerated(t, env, "ctx/nginx.conf"); strings.Contains(vhost, "/var/log/madock") {
 		t.Error("the log directives were rendered for a project that turned it off")
 	}
+}
+
+// nginx has to start after every PHP container its vhost names, and the second
+// one was missing.
+//
+// nginx resolves upstream hostnames when it loads its configuration, not on the
+// first request, so a container that is not yet in docker's DNS is not a slow
+// start — it is `[emerg] host not found in upstream "php_without_xdebug:9000"`
+// and an nginx that exits 1 and stays down. Reported from outside as issue #150
+// on 2026-09-10, with compose output showing nginx up at 0.2s and
+// php_without_xdebug at 0.8s.
+func TestNginxWaitsForBothPhpContainers(t *testing.T) {
+	env := testenv.SetupWith(t, "xdebugorder", "xdebugorder.test", map[string]string{
+		"php/enabled":        "true",
+		"php/xdebug/enabled": "true",
+	})
+
+	MakeConf("xdebugorder")
+
+	compose := readGenerated(t, env, "docker-compose.yml")
+	if !strings.Contains(compose, "php_without_xdebug") {
+		t.Fatalf("the second php container is not in this stack at all:\n%s", firstLines(compose, 60))
+	}
+
+	depends := composeSection(compose, "  nginx:")
+	if !strings.Contains(depends, "- php_without_xdebug") {
+		t.Errorf("nginx does not wait for php_without_xdebug:\n%s", depends)
+	}
+	if !strings.Contains(depends, "- php") {
+		t.Errorf("nginx does not wait for php:\n%s", depends)
+	}
+}
+
+// And it must not name a service that is not there: compose refuses the whole
+// file over a dependency on an undefined service, which would take down every
+// project that runs without xdebug — that is, most of them.
+func TestNginxDoesNotWaitForAContainerThatDoesNotExist(t *testing.T) {
+	env := testenv.SetupWith(t, "noxdebugorder", "noxdebugorder.test", map[string]string{
+		"php/enabled":        "true",
+		"php/xdebug/enabled": "false",
+	})
+
+	MakeConf("noxdebugorder")
+
+	compose := readGenerated(t, env, "docker-compose.yml")
+	if strings.Contains(compose, "- php_without_xdebug") {
+		t.Errorf("nginx depends on a container this stack never renders:\n%s", firstLines(compose, 60))
+	}
+}
+
+// composeSection returns one service's block, from its key to the next service
+// at the same indentation.
+func composeSection(compose, key string) string {
+	start := strings.Index(compose, key)
+	if start < 0 {
+		return ""
+	}
+	rest := compose[start+len(key):]
+	for offset := 0; offset < len(rest); offset++ {
+		if rest[offset] != '\n' {
+			continue
+		}
+		line := rest[offset+1:]
+		if len(line) > 2 && line[0] == ' ' && line[1] == ' ' && line[2] != ' ' {
+			return compose[start : start+len(key)+offset]
+		}
+	}
+
+	return compose[start:]
 }

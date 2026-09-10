@@ -127,6 +127,33 @@ func makeNginxConf(projectName string) {
 
 	pp := paths.NewProjectPaths(projectName)
 	RenderTo(projectName, defFile, "nginx/conf/default.conf", paths.MakeDirsByPath(pp.CtxDir())+"/nginx.conf", nil)
+
+	makeNginxLogsConf(projectName, pp)
+}
+
+// makeNginxLogsConf writes the http-level logging fragment, or removes it when
+// the project has turned persistence off.
+//
+// Removal matters as much as writing: the file is mounted unconditionally in
+// the compose template, so one left behind from an earlier configuration would
+// go on directing logs into a volume that is no longer declared, and nginx
+// would refuse to start over a path it cannot open.
+func makeNginxLogsConf(projectName string, pp *paths.ProjectPaths) {
+	target := paths.MakeDirsByPath(pp.CtxDir()) + "/madock-logs.conf"
+
+	if configs.GetProjectConfig(projectName)["logs/persist/enabled"] != "true" {
+		if err := os.Remove(target); err != nil && !os.IsNotExist(err) {
+			logger.Fatalln("removing " + target + ": " + err.Error())
+		}
+
+		return
+	}
+
+	source := GetDockerConfigFileOptional(projectName, "nginx/conf/madock-logs.conf", "general")
+	if source == "" {
+		return
+	}
+	RenderTo(projectName, source, "nginx/conf/madock-logs.conf", target, nil)
 }
 
 func MakePhpDockerfile(projectName string) {
