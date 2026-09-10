@@ -1,3 +1,9 @@
+**v4.2.12**
+
+Fixed:
+- **The log directives were in the vhost, and a project may replace the vhost.** They now live in `ctx/madock-logs.conf`, mounted into `conf.d`, which nginx includes inside the http block — so they cover every server block a project has, including one it ships itself in `.madock/docker/`. Measured on extmag.com on 2026-09-10: the volume was mounted, the database wrote its slow log, and nginx wrote nothing, because that project carries its own `nginx/conf/default.conf`. A server block that sets its own `access_log` still wins for that server, which is correct
+- **The shared proxy had no persisted log at all**, and on a machine whose projects run without a web server of their own — every Node application behind it — that container holds the only HTTP record there is. It now writes `proxy-access.log` and `proxy-error.log` into a volume of its own, while keeping the stream `proxy:logs` reads
+
 **v4.2.11**
 
 Fixed:

@@ -165,6 +165,21 @@ func proxyPreamble(generalConfig map[string]string) string {
 	preamble += "# Access log format\nlog_format main '$remote_addr - $host [$time_local] \"$request\" '\n                '$status $body_bytes_sent \"$http_referer\" '\n                '\"$http_user_agent\" $request_time';\n"
 	preamble += "access_log /var/log/nginx/access.log main;\n"
 
+	// And to a file the container's death cannot take, when the installation
+	// asks for it.
+	//
+	// The shared proxy is the one container that sees every request on the
+	// machine, and on a host whose projects have no web server of their own —
+	// every Node application behind this proxy — it holds the *only* HTTP
+	// record there is. `/var/log/nginx/access.log` above is the image's symlink
+	// to stdout, which docker keeps inside the container's directory and
+	// deletes with it. That is what left a production machine with no record of
+	// an intrusion after three deploys.
+	if settingOr(generalConfig, "logs/persist/enabled", "true") == "true" {
+		preamble += "access_log /var/log/madock/proxy-access.log main;\n"
+		preamble += "error_log /var/log/madock/proxy-error.log warn;\n"
+	}
+
 	return preamble
 }
 

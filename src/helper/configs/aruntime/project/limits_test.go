@@ -160,7 +160,13 @@ func TestTheServicesWriteLogsWhereARebuildCannotReach(t *testing.T) {
 		t.Errorf("the log volume is mounted and never declared:\n%s", firstLines(compose, 80))
 	}
 
-	vhost := readGenerated(t, env, "ctx/nginx.conf")
+	// The directives live in their own file, mounted into conf.d, which nginx
+	// includes inside the http block. They were in the vhost until 2026-09-10
+	// and that failed in the one place it mattered: extmag.com ships its own
+	// `nginx/conf/default.conf` in `.madock/docker/`, which replaces madock's
+	// template wholesale — the volume was mounted, the database wrote its slow
+	// log, and nginx wrote nothing at all.
+	logsConf := readGenerated(t, env, "ctx/madock-logs.conf")
 	for _, want := range []string{
 		"access_log /var/log/madock/nginx-access.log;",
 		// And to the stream as well, or `madock logs` goes quiet — the two are
@@ -168,9 +174,12 @@ func TestTheServicesWriteLogsWhereARebuildCannotReach(t *testing.T) {
 		"access_log /dev/stdout;",
 		"error_log  /var/log/madock/nginx-error.log warn;",
 	} {
-		if !strings.Contains(vhost, want) {
-			t.Errorf("missing %q in the generated vhost:\n%s", want, firstLines(vhost, 40))
+		if !strings.Contains(logsConf, want) {
+			t.Errorf("missing %q in the generated logging fragment:\n%s", want, logsConf)
 		}
+	}
+	if !strings.Contains(compose, "madock-logs.conf:/etc/nginx/conf.d/00-madock-logs.conf") {
+		t.Errorf("the logging fragment is generated and never mounted:\n%s", firstLines(compose, 60))
 	}
 
 	// The slow query log, which was never configured at all: log_error,
