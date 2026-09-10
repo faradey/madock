@@ -223,3 +223,72 @@ func TestLogPersistenceCanBeTurnedOff(t *testing.T) {
 		t.Error("the log directives were rendered for a project that turned it off")
 	}
 }
+
+// nginx has to start after every PHP container its vhost names, and the second
+// one was missing.
+//
+// nginx resolves upstream hostnames when it loads its configuration, not on the
+// first request, so a container that is not yet in docker's DNS is not a slow
+// start — it is `[emerg] host not found in upstream "php_without_xdebug:9000"`
+// and an nginx that exits 1 and stays down. Reported from outside as issue #150
+// on 2026-09-10, with compose output showing nginx up at 0.2s and
+// php_without_xdebug at 0.8s.
+func TestNginxWaitsForBothPhpContainers(t *testing.T) {
+	env := testenv.SetupWith(t, "xdebugorder", "xdebugorder.test", map[string]string{
+		"php/enabled":        "true",
+		"php/xdebug/enabled": "true",
+	})
+
+	MakeConf("xdebugorder")
+
+	compose := readGenerated(t, env, "docker-compose.yml")
+	if !strings.Contains(compose, "php_without_xdebug") {
+		t.Fatalf("the second php container is not in this stack at all:\n%s", firstLines(compose, 60))
+	}
+
+	depends := composeSection(compose, "  nginx:")
+	if !strings.Contains(depends, "- php_without_xdebug") {
+		t.Errorf("nginx does not wait for php_without_xdebug:\n%s", depends)
+	}
+	if !strings.Contains(depends, "- php") {
+		t.Errorf("nginx does not wait for php:\n%s", depends)
+	}
+}
+
+// And it must not name a service that is not there: compose refuses the whole
+// file over a dependency on an undefined service, which would take down every
+// project that runs without xdebug — that is, most of them.
+func TestNginxDoesNotWaitForAContainerThatDoesNotExist(t *testing.T) {
+	env := testenv.SetupWith(t, "noxdebugorder", "noxdebugorder.test", map[string]string{
+		"php/enabled":        "true",
+		"php/xdebug/enabled": "false",
+	})
+
+	MakeConf("noxdebugorder")
+
+	compose := readGenerated(t, env, "docker-compose.yml")
+	if strings.Contains(compose, "- php_without_xdebug") {
+		t.Errorf("nginx depends on a container this stack never renders:\n%s", firstLines(compose, 60))
+	}
+}
+
+// composeSection returns one service's block, from its key to the next service
+// at the same indentation.
+func composeSection(compose, key string) string {
+	start := strings.Index(compose, key)
+	if start < 0 {
+		return ""
+	}
+	rest := compose[start+len(key):]
+	for offset := 0; offset < len(rest); offset++ {
+		if rest[offset] != '\n' {
+			continue
+		}
+		line := rest[offset+1:]
+		if len(line) > 2 && line[0] == ' ' && line[1] == ' ' && line[2] != ' ' {
+			return compose[start : start+len(key)+offset]
+		}
+	}
+
+	return compose[start:]
+}

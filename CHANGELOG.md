@@ -1,3 +1,9 @@
+**v4.2.11**
+
+Fixed:
+- **nginx could exit 1 at start when xdebug is on**, with `[emerg] host not found in upstream "php_without_xdebug:9000"`. nginx resolves upstream hostnames when it loads its configuration rather than on the first request, so a PHP container that is not yet in docker's DNS does not make nginx slow — it makes it dead, and it stays dead because the restart policy is `no`. The vhost has named that second container as an upstream all along; the compose file did not wait for it. Reported as issue #150 with the compose output showing nginx up at 0.2s and `php_without_xdebug` at 0.8s
+- The dependency is rendered only where that container exists: compose refuses a whole file over a dependency on an undefined service, which would take down every project running without xdebug — that is, most of them. Both halves are pinned by tests
+
 **v4.2.10**
 
 Fixed:

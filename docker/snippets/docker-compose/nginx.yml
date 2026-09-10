@@ -25,6 +25,19 @@
     {{{- if .main_service_enabled}}}
     depends_on:
       - {{{.main_service}}}
+      {{{- if and .php.enabled .php.xdebug.enabled}}}
+      # The second PHP container is named in the vhost as an upstream, and nginx
+      # resolves upstream hostnames **when it loads its configuration** — not on
+      # the first request. So a container that is not in docker's DNS yet is not
+      # a slow start, it is `[emerg] host not found in upstream
+      # "php_without_xdebug:9000"` and an nginx that exits 1 and stays down.
+      #
+      # Reported from outside on 2026-09-10 (issue #150), with the compose
+      # output showing exactly that order: nginx started at 0.2s,
+      # php_without_xdebug at 0.8s. Starting nginx by hand afterwards worked,
+      # which is what a race looks like from the outside.
+      - php_without_xdebug
+      {{{- end}}}
     {{{- end}}}
     {{{- if .isolation.enabled}}}
     networks:
