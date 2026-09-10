@@ -1,3 +1,12 @@
+**v4.2.16**
+
+Fixed:
+- **Grafana was given a Redis datasource on projects that run no Redis.** `redis/enabled` defaults to false, and the datasource, its dashboard and two Redis plugins were provisioned regardless. Measured on a Magento project: the datasource's health endpoint answered `400 Bad Request` against `redis://redisdb:6379`, a host nothing renders, next to a dashboard of empty panels — which reads as a broken installation rather than as a service nobody switched on. The RabbitMQ dashboard is now gated the same way. Loki, Prometheus and the MySQL parts are untouched and were verified as working in the same run: both datasources answer "successfully connected" and the `dbexporter:9104` target is up
+- **Grafana plugins were installed without versions, and one was silently downgraded.** `redis-app` installs its own copy of `redis-datasource`, so a single container start downloaded 2.2.0 and then wrote 2.1.1 over it — visible only in the container's log. Plugins are now pinned
+
+Added:
+- `grafana/plugins` and `grafana/redis_plugins` — the plugin list is a setting rather than a constant, so a plugin can be added, pinned or moved without a new madock. The redis pair is installed only where redis runs
+
 **v4.2.15**
 
 Changed:

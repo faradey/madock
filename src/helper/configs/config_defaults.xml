@@ -729,6 +729,20 @@
                     <user></user>
                     <password></password>
                 </auth>
+                <!-- Plugins, with versions, installed by the container on every
+                     start. A version is part of each entry for a reason found by
+                     reading the container's own log: `redis-app` depends on
+                     `redis-datasource` and installs its own copy, so an unpinned
+                     list downloaded 2.2.0 and then replaced it with 2.1.1 —
+                     a downgrade nothing reported. Entries are `id version`,
+                     separated by commas, exactly as Grafana expects.
+
+                     It is a setting rather than a constant so a plugin can be
+                     added or moved without a new madock: this list is handed to
+                     the container as GF_INSTALL_PLUGINS and nothing here reads
+                     it. The redis pair is installed only where redis runs. -->
+                <plugins>grafana-clock-panel 3.2.4</plugins>
+                <redis_plugins>redis-datasource 2.2.0</redis_plugins>
             </grafana>
             <!--<custom_commands>
                 <ci>

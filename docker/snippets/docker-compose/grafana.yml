@@ -7,7 +7,11 @@
     environment:
       GF_SERVER_ROOT_URL: "https://{{{(index .nginx.hosts 0).name}}}/grafana/"
       GF_SERVER_DOMAIN: "{{{(index .nginx.hosts 0).name}}}"
-      GF_INSTALL_PLUGINS: grafana-clock-panel,redis-datasource,redis-app,redis-explorer-app
+{{{- if .redis.enabled}}}
+      GF_INSTALL_PLUGINS: "{{{.grafana.plugins}}},{{{.grafana.redis_plugins}}}"
+{{{- else}}}
+      GF_INSTALL_PLUGINS: "{{{.grafana.plugins}}}"
+{{{- end}}}
       GF_SERVE_FROM_SUB_PATH: true
       GF_SERVER_PROTOCOL: http
 {{{- if .grafana.auth.enabled}}}
@@ -23,9 +27,13 @@
     volumes:
       - grafanadata:/var/lib/grafana
       - ./ctx/grafana/dashboard-mysql.json:/etc/grafana/dashboards/mysql.json
-      - ./ctx/grafana/dashboard-redis.json:/etc/grafana/dashboards/redis.json
       - ./ctx/grafana/dashboard-loki.json:/etc/grafana/dashboards/loki.json
+{{{- if .redis.enabled}}}
+      - ./ctx/grafana/dashboard-redis.json:/etc/grafana/dashboards/redis.json
+{{{- end}}}
+{{{- if .rabbitmq.enabled}}}
       - ./ctx/grafana/dashboard-rabbitmq.json:/etc/grafana/dashboards/rabbitmq.json
+{{{- end}}}
     entrypoint:
       - sh
       - -euc
@@ -44,6 +52,7 @@
           isDefault: true
           version: 1
           editable: false
+{{{- if .redis.enabled}}}
         - name: Redis
           type: redis-datasource
           uid: PA7F6415749A3297A
@@ -53,6 +62,7 @@
           basicAuth: false
           version: 1
           editable: false
+{{{- end}}}
         - name: Prometheus
           type: prometheus
           uid: PBFA97CFB590B2093
