@@ -5,6 +5,7 @@ Fixed:
 - **Grafana plugins were installed without versions, and one was silently downgraded.** `redis-app` installs its own copy of `redis-datasource`, so a single container start downloaded 2.2.0 and then wrote 2.1.1 over it — visible only in the container's log. Plugins are now pinned
 
 Added:
+- **`grafana/logs/paths` — promtail watches what the configuration says.** It held four fixed jobs, all of them Magento's own log files, and the only directory it could see was the application's `var/log`; a project that is not Magento collected nothing at all while Loki looked healthy — measured in a VM, `label/job/values` came back empty on a freshly started project with monitoring on. Each key becomes a Loki `job` label, so a path of one's own is a key. `all` keeps its name because the shipped dashboard queries `{job="all"}`, and a new `web` entry points into the volume madock-pro mounts there — harmless without that edition, since promtail simply watches a path where no file appears
 - `grafana/plugins` and `grafana/redis_plugins` — the plugin list is a setting rather than a constant, so a plugin can be added, pinned or moved without a new madock. The redis pair is installed only where redis runs
 
 **v4.2.15**

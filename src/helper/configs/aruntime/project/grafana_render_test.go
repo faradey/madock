@@ -1,6 +1,8 @@
 package project
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -92,6 +94,44 @@ func TestGrafanaPluginsCarryVersions(t *testing.T) {
 	for _, plugin := range strings.Split(strings.Trim(strings.SplitN(line, ":", 2)[1], " \""), ",") {
 		if len(strings.Fields(plugin)) != 2 {
 			t.Errorf("plugin %q carries no version, so its dependency can replace it with an older build: %s", plugin, line)
+		}
+	}
+}
+
+// TestPromtailWatchesWhatTheConfigSays is the reason the scrape config stopped
+// being a fixed list.
+//
+// It held four jobs, all of them Magento's own log files, and the only directory
+// promtail could see was the application's `var/log`. A project that is not
+// Magento collected nothing at all, and Loki answered an empty list of labels
+// while looking healthy — measured in the VM, `label/job/values` came back empty
+// on a freshly started project with monitoring on.
+//
+// The `all` job is asserted by name because the shipped Loki dashboard queries
+// `{job="all"}`: renaming it empties the dashboard, and nothing else would say
+// so.
+func TestPromtailWatchesWhatTheConfigSays(t *testing.T) {
+	env := testenv.SetupWith(t, "grafanalogs", "grafanalogs.test", map[string]string{
+		"grafana/enabled":                "true",
+		"grafana/logs/paths/queueworker": "/var/log/queue/*.log",
+	})
+
+	MakeConf(env.ProjectName)
+
+	rendered, err := os.ReadFile(filepath.Join(env.ExecDir, "aruntime", "projects", env.ProjectName, "ctx", "grafana", "promtail-config.yml"))
+	if err != nil {
+		t.Fatalf("no promtail config was rendered: %v", err)
+	}
+	config := string(rendered)
+
+	for _, wanted := range []string{
+		"job_name: queueworker",
+		"__path__: /var/log/queue/*.log",
+		"job: all",
+		"__path__: /var/log/madock/*.log",
+	} {
+		if !strings.Contains(config, wanted) {
+			t.Errorf("%q is missing from the scrape config:\n%s", wanted, config)
 		}
 	}
 }

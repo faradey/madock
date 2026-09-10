@@ -8,31 +8,19 @@ positions:
 clients:
   - url: http://loki:3100/loki/api/v1/push
 
+# One job per entry under `grafana/logs/paths`, the key becoming the `job` label
+# Loki is queried by.
+#
+# These used to be four fixed jobs, all of them Magento's own log files, and the
+# only directory promtail could see was the application's `var/log`. On a project
+# that is not Magento — a Node application, anything `custom` — nothing was
+# collected at all, while Loki looked perfectly healthy. Measured in the VM on a
+# freshly started project with monitoring on: `label/job/values` came back empty.
+#
+# The `web` entry points into the volume madock-pro mounts here, so a machine
+# with that edition also collects the web server's access and error logs. It is
+# harmless without it: promtail watches a path where no file ever appears.
 scrape_configs:
-  - job_name: system
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: system
-          __path__: /var/log/system.log
-
-  - job_name: exception
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: exception
-          __path__: /var/log/exception.log
-
-  - job_name: debug
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: debug
-          __path__: /var/log/debug.log
-
   - job_name: all
     static_configs:
       - targets:
@@ -40,3 +28,31 @@ scrape_configs:
         labels:
           job: all
           __path__: /var/log/*log
+  - job_name: debug
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: debug
+          __path__: /var/log/debug.log
+  - job_name: exception
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: exception
+          __path__: /var/log/exception.log
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          __path__: /var/log/system.log
+  - job_name: web
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: web
+          __path__: /var/log/madock/*.log

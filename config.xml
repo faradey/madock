@@ -743,6 +743,24 @@
                      it. The redis pair is installed only where redis runs. -->
                 <plugins>grafana-clock-panel 3.2.4</plugins>
                 <redis_plugins>redis-datasource 2.2.0</redis_plugins>
+                <!-- What promtail watches, one entry per Loki `job` label.
+                     `all` is the entry the shipped Loki dashboard queries, so
+                     renaming it empties that dashboard.
+
+                     The first four are the application's own logs, mounted from
+                     the project source. `web` points into the volume madock-pro
+                     mounts here and is harmless without that edition: promtail
+                     simply watches a path where no file ever appears. Add a
+                     path of your own by adding a key. -->
+                <logs>
+                    <paths>
+                        <all>/var/log/*log</all>
+                        <system>/var/log/system.log</system>
+                        <exception>/var/log/exception.log</exception>
+                        <debug>/var/log/debug.log</debug>
+                        <web>/var/log/madock/*.log</web>
+                    </paths>
+                </logs>
             </grafana>
             <!--<custom_commands>
                 <ci>
