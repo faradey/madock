@@ -1,0 +1,105 @@
+name: Cache what the image builds download
+description: >
+  Puts a caching HTTP proxy on the runner and points every image build at it,
+  so the packages apt fetches inside a Dockerfile come from this runner's disk
+  on the second run instead of from an Ubuntu mirror on every run.
+
+  Why: on 2026-09-11 the nightly went red in five shards, and in each one only
+  the first test failed — on `madock setup`, past its deadline — while the rest
+  of the shard ran with setup at eight seconds. The build log named it:
+  archive.ubuntu.com handed over 144 MB in eleven minutes, nine times slower
+  than the day before. The image cache in images.txt cannot help there: it warms
+  the pulls, and this is apt inside our own Dockerfile, which every build runs.
+
+  How it reaches the builds without touching madock, and without touching the
+  containers either: the runner redirects every plain-HTTP connection leaving a
+  container for the outside world into squid, in intercept mode. No proxy
+  variable anywhere. The first version put a proxy into ~/.docker/config.json,
+  and the docker client handed that not only to builds but — under compose — to
+  the service containers too: Shopware's install then asked OpenSearch over
+  `http://opensearch:9200`, the request went to squid, squid could not reach a
+  compose network, and the install died with ServiceUnavailableHttpException.
+  Traffic between containers never leaves their bridge, so the redirect below
+  cannot see it; only what is bound for a public address is caught.
+
+  squid rather than apt-cacher-ng because a build also fetches things that are
+  not packages — the composer installer, ionCube, Node — and squid passes
+  through what it does not cache. HTTPS is not touched at all: it is not port
+  80. apt's mirror is plain HTTP, which is the half that matters.
+
+  Silent and harmless on a miss: the first run after the key changes pays the
+  mirror once and leaves the cache behind for the next.
+
+runs:
+  using: composite
+  steps:
+    # Restore only. actions/cache saves in its post step — and not when the job
+    # failed, which is the case this exists for: on the day the mirror is slow
+    # every shard fails on its first setup, nothing is saved, and the next run
+    # starts empty again. Measured over three runs of the first version, each
+    # printing "Cache not found for input keys". The save is a separate step in
+    # the workflow with `if: always()`.
+    #
+    # The key carries the run id so it never hits exactly; restore-keys pick
+    # the newest cache for these Dockerfile snippets, then the newest of any —
+    # a template edit costs one partial miss rather than a full one.
+    - uses: actions/cache/restore@v4
+      with:
+        path: ~/.squid-cache
+        key: squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}-${{ github.run_id }}
+        restore-keys: |
+          squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}-
+          squid-${{ runner.os }}-
+
+    # squid runs as the runner's own user, with everything under its home: the
+    # cache has to be readable by the user that saves it at the end of the job,
+    # and a directory owned by the `proxy` account is not.
+    - name: Start the proxy
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get install -y -qq squid >/dev/null
+        sudo systemctl stop squid 2>/dev/null || true
+        mkdir -p ~/.squid-cache ~/.squid-run
+        cat > ~/.squid-run/squid.conf <<EOF
+        http_port 3128
+        http_port 3129 intercept
+        pid_filename $HOME/.squid-run/squid.pid
+        cache_log $HOME/.squid-run/cache.log
+        access_log $HOME/.squid-run/access.log
+        coredump_dir $HOME/.squid-run
+        cache_dir ufs $HOME/.squid-cache 2000 16 256
+        maximum_object_size 512 MB
+        cache_mem 128 MB
+        acl localnet src 172.16.0.0/12 10.0.0.0/8 192.168.0.0/16 127.0.0.0/8
+        http_access allow localnet
+        http_access deny all
+        refresh_pattern . 10080 100% 10080 override-expire ignore-no-cache ignore-no-store ignore-private
+        EOF
+        # -N with -z: in squid 5 and later the directory initialisation forks
+        # into the background like a normal start and leaves a live pid file,
+        # so the real start that follows refuses with "Squid is already
+        # running". Measured on the first run of this action.
+        squid -f ~/.squid-run/squid.conf -N -z 2>/dev/null || true
+        squid -f ~/.squid-run/squid.conf
+        for i in 1 2 3 4 5; do
+          curl -s -o /dev/null -x http://127.0.0.1:3128 http://archive.ubuntu.com/ubuntu/ && break
+          sleep 1
+        done
+        curl -s -o /dev/null -w 'proxy answers %{http_code}\n' -x http://127.0.0.1:3128 http://archive.ubuntu.com/ubuntu/
+
+        # Every plain-HTTP connection from a container to a public address
+        # is redirected into squid. Container-to-container traffic stays on
+        # its bridge and never reaches this chain; addresses inside the
+        # private ranges are excluded as well, so a service published on the
+        # runner is not caught either.
+        # One chain rather than one rule: iptables takes a single -d, so the
+        # private ranges are excluded one line each and the redirect is what
+        # remains.
+        sudo iptables -t nat -N SQUID
+        sudo iptables -t nat -A SQUID -d 172.16.0.0/12 -j RETURN
+        sudo iptables -t nat -A SQUID -d 10.0.0.0/8 -j RETURN
+        sudo iptables -t nat -A SQUID -d 192.168.0.0/16 -j RETURN
+        sudo iptables -t nat -A SQUID -p tcp -j REDIRECT --to-ports 3129
+        sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -s 172.16.0.0/12 -j SQUID
+        echo "container HTTP on port 80 goes through squid; the cache holds $(du -sh ~/.squid-cache | cut -f1)"
