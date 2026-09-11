@@ -11,15 +11,21 @@ description: >
   than the day before. The image cache in images.txt cannot help there: it warms
   the pulls, and this is apt inside our own Dockerfile, which every build runs.
 
-  How it reaches the builds without touching madock: the docker client injects
-  the proxies in ~/.docker/config.json into every build as http_proxy build
-  arguments — build only, under compose, so containers themselves are not
-  proxied and composer, npm and the tests' own HTTP are untouched. The proxy is
+  How it reaches the builds without touching madock, and without touching the
+  containers either: the runner redirects every plain-HTTP connection leaving a
+  container for the outside world into squid, in intercept mode. No proxy
+  variable anywhere. The first version put a proxy into ~/.docker/config.json,
+  and the docker client handed that not only to builds but — under compose — to
+  the service containers too: Shopware's install then asked OpenSearch over
+  `http://opensearch:9200`, the request went to squid, squid could not reach a
+  compose network, and the install died with ServiceUnavailableHttpException.
+  Traffic between containers never leaves their bridge, so the redirect below
+  cannot see it; only what is bound for a public address is caught.
+
   squid rather than apt-cacher-ng because a build also fetches things that are
-  not packages — the composer installer, ionCube, Node — and squid passes those
-  through while apt-cacher-ng refuses what it does not recognise. HTTPS goes
-  through as CONNECT and is not cached; apt's mirror is plain HTTP, which is the
-  half that matters.
+  not packages — the composer installer, ionCube, Node — and squid passes
+  through what it does not cache. HTTPS is not touched at all: it is not port
+  80. apt's mirror is plain HTTP, which is the half that matters.
 
   Silent and harmless on a miss: the first run after the key changes pays the
   mirror once and leaves the cache behind for the next.
@@ -57,6 +63,7 @@ runs:
         mkdir -p ~/.squid-cache ~/.squid-run
         cat > ~/.squid-run/squid.conf <<EOF
         http_port 3128
+        http_port 3129 intercept
         pid_filename $HOME/.squid-run/squid.pid
         cache_log $HOME/.squid-run/cache.log
         access_log $HOME/.squid-run/access.log
@@ -81,15 +88,12 @@ runs:
         done
         curl -s -o /dev/null -w 'proxy answers %{http_code}\n' -x http://127.0.0.1:3128 http://archive.ubuntu.com/ubuntu/
 
-        # Builds run inside the daemon's default bridge, where the runner is
-        # the gateway. The client injects this into every build as http_proxy;
-        # the login that may already be in this file is kept.
-        gateway=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
-        mkdir -p ~/.docker
-        if [ -f ~/.docker/config.json ]; then
-          jq --arg p "http://$gateway:3128" '.proxies.default.httpProxy = $p | .proxies.default.httpsProxy = $p' ~/.docker/config.json > ~/.docker/config.json.new
-        else
-          jq -n --arg p "http://$gateway:3128" '{proxies:{default:{httpProxy:$p, httpsProxy:$p}}}' > ~/.docker/config.json.new
-        fi
-        mv ~/.docker/config.json.new ~/.docker/config.json
-        echo "builds go through http://$gateway:3128; the cache holds $(du -sh ~/.squid-cache | cut -f1)"
+        # Every plain-HTTP connection from a container to a public address
+        # is redirected into squid. Container-to-container traffic stays on
+        # its bridge and never reaches this chain; addresses inside the
+        # private ranges are excluded as well, so a service published on the
+        # runner is not caught either.
+        sudo iptables -t nat -A PREROUTING -p tcp --dport 80 \
+          -s 172.16.0.0/12 ! -d 172.16.0.0/12 ! -d 10.0.0.0/8 ! -d 192.168.0.0/16 \
+          -j REDIRECT --to-ports 3129
+        echo "container HTTP on port 80 goes through squid; the cache holds $(du -sh ~/.squid-cache | cut -f1)"

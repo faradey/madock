@@ -309,9 +309,6 @@ jobs:
           fi
           printf '%s' "$REGISTRY_TOKEN" | docker login -u "$REGISTRY_USER" --password-stdin
 
-      # Between the login and the images on purpose: the login writes
-      # ~/.docker/config.json and this step adds to that file rather than
-      # replacing it.
       - name: Cache what the image builds download
         uses: ./.github/actions/apt-cache
 
@@ -466,9 +463,6 @@ jobs:
           fi
           printf '%s' "$REGISTRY_TOKEN" | docker login -u "$REGISTRY_USER" --password-stdin
 
-      # Between the login and the images on purpose: the login writes
-      # ~/.docker/config.json and this step adds to that file rather than
-      # replacing it.
       - name: Cache what the image builds download
         uses: ./.github/actions/apt-cache
 
@@ -553,9 +547,6 @@ jobs:
       # The output is the entire point of this job, so the log is kept whatever
       # happens: the probe prints the upgrade-info file, the schema names and the
       # account list, and a failed run whose log was thrown away costs a night.
-      # Between the login and the images on purpose: the login writes
-      # ~/.docker/config.json and this step adds to that file rather than
-      # replacing it.
       - name: Cache what the image builds download
         uses: ./.github/actions/apt-cache
 
