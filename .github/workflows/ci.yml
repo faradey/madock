@@ -309,6 +309,12 @@ jobs:
           fi
           printf '%s' "$REGISTRY_TOKEN" | docker login -u "$REGISTRY_USER" --password-stdin
 
+      # Between the login and the images on purpose: the login writes
+      # ~/.docker/config.json and this step adds to that file rather than
+      # replacing it.
+      - name: Cache what the image builds download
+        uses: ./.github/actions/apt-cache
+
       - name: Load the warmed images
         uses: ./.github/actions/load-images
 
@@ -318,6 +324,15 @@ jobs:
         run: |
           set -o pipefail
           ./test/e2e/e2e.sh run-local -run '${{ matrix.run }}' | tee shard.log
+
+      # The only evidence the download cache does anything: a proxy that
+      # answers but never hits is a runner doing more work for the same result.
+      - name: How the download cache did
+        if: always()
+        run: |
+          hits=$(grep -c 'TCP_\(HIT\|MEM_HIT\|REFRESH_UNMODIFIED\)' ~/.squid-run/access.log 2>/dev/null || true)
+          misses=$(grep -c 'TCP_MISS' ~/.squid-run/access.log 2>/dev/null || true)
+          echo "download cache: ${hits:-0} hits, ${misses:-0} misses, $(du -sh ~/.squid-cache 2>/dev/null | cut -f1) on disk"
 
 
       # The other half of computing the split: this shard was given a number of
@@ -440,11 +455,26 @@ jobs:
           fi
           printf '%s' "$REGISTRY_TOKEN" | docker login -u "$REGISTRY_USER" --password-stdin
 
+      # Between the login and the images on purpose: the login writes
+      # ~/.docker/config.json and this step adds to that file rather than
+      # replacing it.
+      - name: Cache what the image builds download
+        uses: ./.github/actions/apt-cache
+
       - name: Load the warmed images
         uses: ./.github/actions/load-images
 
       - name: Install Shopware and Medusa for real
         run: ./test/e2e/e2e.sh run-local --platforms -run 'TestMagentoInstallsAndAnswers|TestShopwareInstallsAndAnswers|TestMedusaInstallsAndAnswers'
+
+      # The only evidence the download cache does anything: a proxy that
+      # answers but never hits is a runner doing more work for the same result.
+      - name: How the download cache did
+        if: always()
+        run: |
+          hits=$(grep -c 'TCP_\(HIT\|MEM_HIT\|REFRESH_UNMODIFIED\)' ~/.squid-run/access.log 2>/dev/null || true)
+          misses=$(grep -c 'TCP_MISS' ~/.squid-run/access.log 2>/dev/null || true)
+          echo "download cache: ${hits:-0} hits, ${misses:-0} misses, $(du -sh ~/.squid-cache 2>/dev/null | cut -f1) on disk"
 
       - name: Images this job actually used
         if: always()
@@ -504,6 +534,12 @@ jobs:
       # The output is the entire point of this job, so the log is kept whatever
       # happens: the probe prints the upgrade-info file, the schema names and the
       # account list, and a failed run whose log was thrown away costs a night.
+      # Between the login and the images on purpose: the login writes
+      # ~/.docker/config.json and this step adds to that file rather than
+      # replacing it.
+      - name: Cache what the image builds download
+        uses: ./.github/actions/apt-cache
+
       - name: Load the warmed images
         uses: ./.github/actions/load-images
 
@@ -511,6 +547,15 @@ jobs:
         run: |
           set -o pipefail
           ./test/e2e/e2e.sh run-local --quarantined -run 'TestSecondDatabaseIsItsOwnDatabase' | tee quarantine.log
+
+      # The only evidence the download cache does anything: a proxy that
+      # answers but never hits is a runner doing more work for the same result.
+      - name: How the download cache did
+        if: always()
+        run: |
+          hits=$(grep -c 'TCP_\(HIT\|MEM_HIT\|REFRESH_UNMODIFIED\)' ~/.squid-run/access.log 2>/dev/null || true)
+          misses=$(grep -c 'TCP_MISS' ~/.squid-run/access.log 2>/dev/null || true)
+          echo "download cache: ${hits:-0} hits, ${misses:-0} misses, $(du -sh ~/.squid-cache 2>/dev/null | cut -f1) on disk"
 
       # The same guard the shards carry, and here it matters more. `-run` with a
       # name that matches nothing — a rename, a test finally deleted — makes

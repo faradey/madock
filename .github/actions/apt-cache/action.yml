@@ -1,0 +1,84 @@
+name: Cache what the image builds download
+description: >
+  Puts a caching HTTP proxy on the runner and points every image build at it,
+  so the packages apt fetches inside a Dockerfile come from this runner's disk
+  on the second run instead of from an Ubuntu mirror on every run.
+
+  Why: on 2026-09-11 the nightly went red in five shards, and in each one only
+  the first test failed — on `madock setup`, past its deadline — while the rest
+  of the shard ran with setup at eight seconds. The build log named it:
+  archive.ubuntu.com handed over 144 MB in eleven minutes, nine times slower
+  than the day before. The image cache in images.txt cannot help there: it warms
+  the pulls, and this is apt inside our own Dockerfile, which every build runs.
+
+  How it reaches the builds without touching madock: the docker client injects
+  the proxies in ~/.docker/config.json into every build as http_proxy build
+  arguments — build only, under compose, so containers themselves are not
+  proxied and composer, npm and the tests' own HTTP are untouched. The proxy is
+  squid rather than apt-cacher-ng because a build also fetches things that are
+  not packages — the composer installer, ionCube, Node — and squid passes those
+  through while apt-cacher-ng refuses what it does not recognise. HTTPS goes
+  through as CONNECT and is not cached; apt's mirror is plain HTTP, which is the
+  half that matters.
+
+  Silent and harmless on a miss: the first run after the key changes pays the
+  mirror once and leaves the cache behind for the next.
+
+runs:
+  using: composite
+  steps:
+    # Keyed on the Dockerfile snippets: a change to what gets installed is the
+    # moment the cache should start over. restore-keys falls back to the newest
+    # cache of any key, so a template edit costs one partial miss rather than a
+    # full one. Saved automatically when the job ends.
+    - uses: actions/cache@v4
+      with:
+        path: ~/.squid-cache
+        key: squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}
+        restore-keys: |
+          squid-${{ runner.os }}-
+
+    # squid runs as the runner's own user, with everything under its home: the
+    # cache has to be readable by the user that saves it at the end of the job,
+    # and a directory owned by the `proxy` account is not.
+    - name: Start the proxy
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get install -y -qq squid >/dev/null
+        sudo systemctl stop squid 2>/dev/null || true
+        mkdir -p ~/.squid-cache ~/.squid-run
+        cat > ~/.squid-run/squid.conf <<EOF
+        http_port 3128
+        pid_filename $HOME/.squid-run/squid.pid
+        cache_log $HOME/.squid-run/cache.log
+        access_log $HOME/.squid-run/access.log
+        coredump_dir $HOME/.squid-run
+        cache_dir ufs $HOME/.squid-cache 2000 16 256
+        maximum_object_size 512 MB
+        cache_mem 128 MB
+        acl localnet src 172.16.0.0/12 10.0.0.0/8 192.168.0.0/16 127.0.0.0/8
+        http_access allow localnet
+        http_access deny all
+        refresh_pattern . 10080 100% 10080 override-expire ignore-no-cache ignore-no-store ignore-private
+        EOF
+        squid -f ~/.squid-run/squid.conf -z 2>/dev/null || true
+        squid -f ~/.squid-run/squid.conf
+        for i in 1 2 3 4 5; do
+          curl -s -o /dev/null -x http://127.0.0.1:3128 http://archive.ubuntu.com/ubuntu/ && break
+          sleep 1
+        done
+        curl -s -o /dev/null -w 'proxy answers %{http_code}\n' -x http://127.0.0.1:3128 http://archive.ubuntu.com/ubuntu/
+
+        # Builds run inside the daemon's default bridge, where the runner is
+        # the gateway. The client injects this into every build as http_proxy;
+        # the login that may already be in this file is kept.
+        gateway=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
+        mkdir -p ~/.docker
+        if [ -f ~/.docker/config.json ]; then
+          jq --arg p "http://$gateway:3128" '.proxies.default.httpProxy = $p | .proxies.default.httpsProxy = $p' ~/.docker/config.json > ~/.docker/config.json.new
+        else
+          jq -n --arg p "http://$gateway:3128" '{proxies:{default:{httpProxy:$p, httpsProxy:$p}}}' > ~/.docker/config.json.new
+        fi
+        mv ~/.docker/config.json.new ~/.docker/config.json
+        echo "builds go through http://$gateway:3128; the cache holds $(du -sh ~/.squid-cache | cut -f1)"
