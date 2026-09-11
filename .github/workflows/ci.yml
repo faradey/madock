@@ -334,14 +334,6 @@ jobs:
           misses=$(grep -c 'TCP_MISS' ~/.squid-run/access.log 2>/dev/null || true)
           echo "download cache: ${hits:-0} hits, ${misses:-0} misses, $(du -sh ~/.squid-cache 2>/dev/null | cut -f1) on disk"
 
-      # Saved whether the job passed or not — see the shard job.
-      - name: Keep the download cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: ~/.squid-cache
-          key: squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}-${{ github.run_id }}-${{ github.job }}
-
       # Saved whether the job passed or not — a failed first setup on a slow
       # mirror is exactly the run whose downloads are worth keeping. One shard
       # saves; the packages are the same in all of them, and eight copies a
