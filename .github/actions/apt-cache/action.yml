@@ -27,15 +27,22 @@ description: >
 runs:
   using: composite
   steps:
-    # Keyed on the Dockerfile snippets: a change to what gets installed is the
-    # moment the cache should start over. restore-keys falls back to the newest
-    # cache of any key, so a template edit costs one partial miss rather than a
-    # full one. Saved automatically when the job ends.
-    - uses: actions/cache@v4
+    # Restore only. actions/cache saves in its post step — and not when the job
+    # failed, which is the case this exists for: on the day the mirror is slow
+    # every shard fails on its first setup, nothing is saved, and the next run
+    # starts empty again. Measured over three runs of the first version, each
+    # printing "Cache not found for input keys". The save is a separate step in
+    # the workflow with `if: always()`.
+    #
+    # The key carries the run id so it never hits exactly; restore-keys pick
+    # the newest cache for these Dockerfile snippets, then the newest of any —
+    # a template edit costs one partial miss rather than a full one.
+    - uses: actions/cache/restore@v4
       with:
         path: ~/.squid-cache
-        key: squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}
+        key: squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}-${{ github.run_id }}
         restore-keys: |
+          squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}-
           squid-${{ runner.os }}-
 
     # squid runs as the runner's own user, with everything under its home: the

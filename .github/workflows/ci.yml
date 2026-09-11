@@ -334,6 +334,25 @@ jobs:
           misses=$(grep -c 'TCP_MISS' ~/.squid-run/access.log 2>/dev/null || true)
           echo "download cache: ${hits:-0} hits, ${misses:-0} misses, $(du -sh ~/.squid-cache 2>/dev/null | cut -f1) on disk"
 
+      # Saved whether the job passed or not — see the shard job.
+      - name: Keep the download cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.squid-cache
+          key: squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}-${{ github.run_id }}-${{ github.job }}
+
+      # Saved whether the job passed or not — a failed first setup on a slow
+      # mirror is exactly the run whose downloads are worth keeping. One shard
+      # saves; the packages are the same in all of them, and eight copies a
+      # run would push everything else out of the cache quota.
+      - name: Keep the download cache
+        if: always() && matrix.shard == 1
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.squid-cache
+          key: squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}-${{ github.run_id }}
+
 
       # The other half of computing the split: this shard was given a number of
       # tests, and it has to have run that many. A regex that matches nothing —
@@ -476,6 +495,14 @@ jobs:
           misses=$(grep -c 'TCP_MISS' ~/.squid-run/access.log 2>/dev/null || true)
           echo "download cache: ${hits:-0} hits, ${misses:-0} misses, $(du -sh ~/.squid-cache 2>/dev/null | cut -f1) on disk"
 
+      # Saved whether the job passed or not — see the shard job.
+      - name: Keep the download cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.squid-cache
+          key: squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}-${{ github.run_id }}-${{ github.job }}
+
       - name: Images this job actually used
         if: always()
         run: docker image ls --format '{{.Repository}}:{{.Tag}}' | sort -u
@@ -556,6 +583,14 @@ jobs:
           hits=$(grep -c 'TCP_\(HIT\|MEM_HIT\|REFRESH_UNMODIFIED\)' ~/.squid-run/access.log 2>/dev/null || true)
           misses=$(grep -c 'TCP_MISS' ~/.squid-run/access.log 2>/dev/null || true)
           echo "download cache: ${hits:-0} hits, ${misses:-0} misses, $(du -sh ~/.squid-cache 2>/dev/null | cut -f1) on disk"
+
+      # Saved whether the job passed or not — see the shard job.
+      - name: Keep the download cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.squid-cache
+          key: squid-${{ runner.os }}-${{ hashFiles('docker/snippets/dockerfile/**') }}-${{ github.run_id }}-${{ github.job }}
 
       # The same guard the shards carry, and here it matters more. `-run` with a
       # name that matches nothing — a rename, a test finally deleted — makes
