@@ -62,7 +62,11 @@ runs:
         http_access deny all
         refresh_pattern . 10080 100% 10080 override-expire ignore-no-cache ignore-no-store ignore-private
         EOF
-        squid -f ~/.squid-run/squid.conf -z 2>/dev/null || true
+        # -N with -z: in squid 5 and later the directory initialisation forks
+        # into the background like a normal start and leaves a live pid file,
+        # so the real start that follows refuses with "Squid is already
+        # running". Measured on the first run of this action.
+        squid -f ~/.squid-run/squid.conf -N -z 2>/dev/null || true
         squid -f ~/.squid-run/squid.conf
         for i in 1 2 3 4 5; do
           curl -s -o /dev/null -x http://127.0.0.1:3128 http://archive.ubuntu.com/ubuntu/ && break
