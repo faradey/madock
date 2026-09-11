@@ -93,7 +93,13 @@ runs:
         # its bridge and never reaches this chain; addresses inside the
         # private ranges are excluded as well, so a service published on the
         # runner is not caught either.
-        sudo iptables -t nat -A PREROUTING -p tcp --dport 80 \
-          -s 172.16.0.0/12 ! -d 172.16.0.0/12 ! -d 10.0.0.0/8 ! -d 192.168.0.0/16 \
-          -j REDIRECT --to-ports 3129
+        # One chain rather than one rule: iptables takes a single -d, so the
+        # private ranges are excluded one line each and the redirect is what
+        # remains.
+        sudo iptables -t nat -N SQUID
+        sudo iptables -t nat -A SQUID -d 172.16.0.0/12 -j RETURN
+        sudo iptables -t nat -A SQUID -d 10.0.0.0/8 -j RETURN
+        sudo iptables -t nat -A SQUID -d 192.168.0.0/16 -j RETURN
+        sudo iptables -t nat -A SQUID -p tcp -j REDIRECT --to-ports 3129
+        sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -s 172.16.0.0/12 -j SQUID
         echo "container HTTP on port 80 goes through squid; the cache holds $(du -sh ~/.squid-cache | cut -f1)"
