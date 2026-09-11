@@ -1,3 +1,8 @@
+**v4.2.17**
+
+Fixed:
+- **A database recreated while it was still initialising was left half-made — the "MariaDB directory already full on a fresh project" that could never be reproduced.** The image initialises its data directory on the first start: a temporary server, the account SQL, a stop, a real start. `setup` starts the containers and that sequence begins; a `rebuild`, a `stop` or a `start` after `config:set` within the next ten seconds took the container down in the middle of it. The directory then had the `mysql` schema — so the next start skipped initialisation — and whichever accounts the script had reached: root@localhost with a password, no root@'%', and every `db:execute` answering `ERROR 1130 (HY000): Host '…' is not allowed to connect` for as long as the volume lived. It did not reproduce on a developer machine because there the initialisation finishes before anyone types the next command; CI and a person on a new server are slower. Reproduced on purpose in a VM — setup, then rebuild at once — and it fails every time without the fix. madock now waits for the entrypoint's own "init process done" before stopping or recreating a database container, three minutes at most, and says so while it waits
+
 **v4.2.16**
 
 Fixed:

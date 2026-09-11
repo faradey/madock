@@ -88,6 +88,8 @@ func UpWithBuild(projectName string, withChown bool) {
 // files), it falls back to scanning docker by the compose project
 // label so orphan containers/volumes/networks/images still get cleaned.
 func Down(projectName string, withVolumes bool) {
+	WaitForDatabaseInit(projectName)
+
 	pp := paths.NewProjectPaths(projectName)
 	composeFile := pp.DockerCompose()
 	composeFileOS := pp.DockerComposeOverride()
@@ -288,6 +290,8 @@ func parseComposePS(psOutput []byte) []ServiceState {
 // without recreating or rebuilding anything — which is what a snapshot needs:
 // the data directory has to be quiet, not gone.
 func Stop(projectName string) error {
+	WaitForDatabaseInit(projectName)
+
 	pp := paths.NewProjectPaths(projectName)
 	composeFile := pp.DockerCompose()
 	if !paths.IsFileExist(composeFile) {
@@ -495,6 +499,10 @@ func UpProjectWithBuildRefresh(projectName string, withChown bool) {
 }
 
 func upProjectWithBuild(projectName string, withChown bool, refresh bool) {
+	// --force-recreate below stops whatever is running, and a database that is
+	// still initialising must not be stopped: see dbinit.go.
+	WaitForDatabaseInit(projectName)
+
 	var err error
 	globalComposer := paths.ComposerDir()
 	if !paths.IsFileExist(globalComposer) {
