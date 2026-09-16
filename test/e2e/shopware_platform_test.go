@@ -70,12 +70,17 @@ func TestShopwareInstallsAndAnswers(t *testing.T) {
 	// the host, whose composer is too old to know advisories exist:
 	//
 	//   madock cli --service php composer update --dry-run
+	//
+	// 6.7.14.1: resolved on 2026-09-16 in a container with composer blocking on —
+	// 10 installs, 48 updates, no advisories — and the stand was moved to it the
+	// same day. That was an update of an existing tree, not the fresh install
+	// this test performs; the nightly run is what says whether the fresh one holds.
 
 	p := newProject(t, "e2eshopware")
 
 	p.run(45*time.Minute, "setup", "-y", "-d", "-i",
 		"--platform=shopware",
-		"--platform-version=6.7.13.1",
+		"--platform-version=6.7.14.1",
 		"--php=8.3",
 		"--hosts=e2eshopware.test",
 	)
