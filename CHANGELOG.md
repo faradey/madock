@@ -1,3 +1,12 @@
+**v4.2.18**
+
+Fixed:
+- **`madock info` on Magento dropped modules and buried the rest under composer warnings.** The module list was built by taking the `name` out of each `vendor/<pkg>/composer.json` and looking for it in the root `composer.json` and the lock; a package whose upstream had renamed itself (the lock says one name, the vendored file another) matched neither and was skipped without a word. Measured on a large B2B store: 136 third-party modules in `app/etc/config.php`, 135 printed. Modules are now matched to their package by path through `vendor/composer/installed.json`, which is also where the installed version comes from — three modules that used to print `"no version"` now have one
+- The latest version was fetched with one `composer show --all` per module, and composer's stderr went straight to the terminal: a repository with an expired subscription printed its two-line warning 135 times, once between every pair of rows, and the run took three and a half minutes. It is one `composer outdated --all` for the whole tree now — 30 seconds on the same project — with stderr discarded. A package whose repository refused to answer shows `-` for its latest version instead of repeating the installed one as if it were current, and a composer that could not answer at all is reported as a warning rather than silently faked
+
+Added:
+- **`madock info --format=text|json|md|xml`.** Every section — project, hosts, database, services, scopes, and the platform's own — goes through one report model and one set of renderers, so all four formats carry the same data; `--json` is `--format=json`. An unknown format is refused before any container is asked anything. Platform handlers now return report blocks instead of printing, which is what made the platform half renderable at all
+
 **v4.2.17**
 
 Fixed:
