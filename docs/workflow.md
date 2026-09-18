@@ -181,7 +181,7 @@ This command shows you the following items:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--path, -p`   Public output directory relative to site root (default: diffs)
                      
    
-* `info`   Show information about third-parties modules (name, current version, latest version, status)
+* `info`   Show the project: hosts, database, enabled services, scopes, and on Magento the edition plus every third-party module (name, composer package, installed version, latest version, status). `--format=text|json|md|xml` picks the output; `--json` (-j) is the same as `--format=json`. Latest versions come from one `composer outdated --all` call, so the Magento half takes as long as composer needs to ask the repositories — about half a minute on a large project
 
 * `info:ports`   Show allocated ports for the current project. Supports --json (-j) output
 

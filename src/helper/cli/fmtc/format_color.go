@@ -2,6 +2,8 @@ package fmtc
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/faradey/madock/v4/src/helper/cli/color"
 )
 
@@ -19,6 +21,13 @@ func ErrorLn(txt string) {
 
 func WarningLn(txt string) {
 	Warning(txt + "\n")
+}
+
+// WarningErrLn is WarningLn on stderr, for a warning raised while a command
+// may be answering in JSON or XML on stdout: a line of yellow text inside the
+// document is a parse error for whoever asked for the document.
+func WarningErrLn(txt string) {
+	fmt.Fprintln(os.Stderr, color.Yellow+txt+color.Reset)
 }
 
 func Warning(txt string) {

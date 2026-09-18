@@ -47,8 +47,30 @@ var HideSecretsByDefault = false
 // database client — and where the value is withheld by default, the answer to
 // that is one visible word on the command line.
 func SecretOrValue(value string, show bool) string {
+	// Either edition can land here: madock has no key at all, madock-pro has
+	// one that did not fit (and has already said so, once). Neither answer is
+	// the password, and "set (44)" would be the ciphertext's length.
+	if IsCiphertext(value) {
+		return "encrypted; cannot be read on this machine"
+	}
 	if show || !HideSecretsByDefault {
 		return value
 	}
 	return Secret(value)
+}
+
+// EncryptedPrefix marks a config value madock-pro has enciphered. The prefix
+// is that edition's, repeated here so this one can recognise what it cannot
+// read: a value with it is a ciphertext, never a password anybody typed.
+const EncryptedPrefix = "ENC:"
+
+// IsCiphertext reports whether a value is a madock-pro ciphertext that reached
+// this edition undecrypted — a project configured by pro, read by madock.
+//
+// Printing such a value as the password was the behaviour of `madock info`
+// until 4.2.18: `password: ENC:Rv8N5Zv…`, in green, as if it were the thing to
+// paste into a database client. It was the stored bytes, and the stored bytes
+// are only a password on a machine holding the key that made them.
+func IsCiphertext(value string) bool {
+	return len(value) > len(EncryptedPrefix) && value[:len(EncryptedPrefix)] == EncryptedPrefix
 }
