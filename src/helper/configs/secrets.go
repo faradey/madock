@@ -81,7 +81,18 @@ func encryptIfSecret(key, value string) string {
 // Reported once per run rather than per value: a project config holds several
 // secrets and they all fail together, so one line says it and a dozen bury it.
 func decryptIfSecret(key, value string) string {
-	if secretsProvider == nil || !isSecretKey(key) {
+	if !isSecretKey(key) {
+		return value
+	}
+	// No provider is this edition: a project whose secrets madock-pro
+	// enciphered is now being read by madock, which has no key and never will.
+	// Said once, for the same reason as below — and said at all because the
+	// ciphertext otherwise travels on as the password and the database is the
+	// one that complains.
+	if secretsProvider == nil {
+		if fmtc.IsCiphertext(value) {
+			reportEncryptedWithoutProvider(key)
+		}
 		return value
 	}
 	decrypted, err := secretsProvider.Decrypt(key, value)
@@ -97,12 +108,23 @@ var secretReportOnce sync.Once
 
 func reportUnreadableSecret(key string, err error) {
 	secretReportOnce.Do(func() {
-		fmtc.WarningLn("A secret in this project's configuration could not be decrypted: " + key)
-		fmtc.WarningLn("  " + err.Error())
-		fmtc.WarningLn("  The value is being used as it is stored, so anything reading it — a database, an")
-		fmtc.WarningLn("  admin tool, a mail relay — will refuse it and blame its own credentials.")
-		fmtc.WarningLn("  This machine's master key is what cannot read it. Under sudo the key is looked for")
-		fmtc.WarningLn("  in /root rather than in your home, and a missing one is generated rather than found.")
+		// stderr: the config is read before any command answers, and the
+		// command may be answering in JSON.
+		fmtc.WarningErrLn("A secret in this project's configuration could not be decrypted: " + key)
+		fmtc.WarningErrLn("  " + err.Error())
+		fmtc.WarningErrLn("  The value is being used as it is stored, so anything reading it — a database, an")
+		fmtc.WarningErrLn("  admin tool, a mail relay — will refuse it and blame its own credentials.")
+		fmtc.WarningErrLn("  This machine's master key is what cannot read it. Under sudo the key is looked for")
+		fmtc.WarningErrLn("  in /root rather than in your home, and a missing one is generated rather than found.")
+	})
+}
+
+func reportEncryptedWithoutProvider(key string) {
+	secretReportOnce.Do(func() {
+		fmtc.WarningErrLn("A secret in this project's configuration is encrypted and this edition has no key: " + key)
+		fmtc.WarningErrLn("  It was written by madock-pro. madock passes the stored ciphertext on as it is, so a")
+		fmtc.WarningErrLn("  database or a mail relay reading it will refuse it and blame its own credentials.")
+		fmtc.WarningErrLn("  Set the value again with `madock config:set` to store it in plain text here.")
 	})
 }
 

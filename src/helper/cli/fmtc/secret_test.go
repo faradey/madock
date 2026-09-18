@@ -60,3 +60,27 @@ func TestSecretOrValueOnlyRevealsWhenAskedOnceHidingIsOn(t *testing.T) {
 		t.Errorf("--show-secrets did not print the value: %q", got)
 	}
 }
+
+// A ciphertext is not a password in either edition. madock has no key, and
+// madock-pro reached this line only after its key failed — either way the
+// stored bytes are what would be printed, and until 4.2.18 `madock info` did
+// print them, in green, as the thing to paste into a client.
+func TestSecretOrValueNamesACiphertextInsteadOfPrintingIt(t *testing.T) {
+	const ciphertext = "ENC:Rv8N5ZvCZDq6pXzZfyl2MMmN4QsNNy4ZGZzYSGtMONzEqz4="
+
+	for _, show := range []bool{false, true} {
+		got := SecretOrValue(ciphertext, show)
+		if got == ciphertext {
+			t.Errorf("show=%v: the ciphertext was printed as if it were the password", show)
+		}
+		if got == Secret(ciphertext) {
+			t.Errorf("show=%v: the ciphertext was described as a set password of %d characters", show, len(ciphertext))
+		}
+	}
+
+	// The prefix has to be the whole test: "ENC" inside a password is a
+	// password, and a bare "ENC:" is not a value at all.
+	if IsCiphertext("myENC:pass") || IsCiphertext("ENC:") {
+		t.Error("IsCiphertext matched something that is not a stored ciphertext")
+	}
+}
