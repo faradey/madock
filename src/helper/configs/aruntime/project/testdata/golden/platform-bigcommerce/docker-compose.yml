@@ -47,6 +47,11 @@ services:
     volumes:
       - ./src:/var/www/html:delegated
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+      # The project's own server-scope snippets, rendered by makeNginxConf from
+      # .madock/docker/nginx/vhost.d/. Mounted whether or not there are any: the
+      # vhost includes the directory unconditionally, and a bind mount of a path
+      # that does not exist is created by docker as root.
+      - ./ctx/nginx-vhost.d:/etc/nginx/vhost.d:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "golden.test:host-gateway"

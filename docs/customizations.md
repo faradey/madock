@@ -31,6 +31,33 @@ Default list of properties that can be customised:
 * [docker/docker-compose.yml](../docker/magento2/docker-compose.yml)
 * etc.
 
+### Adding to the nginx vhost without copying it
+
+A project that needs one `location` of its own does not have to copy the whole
+`nginx/conf/default.conf` — a copy stops receiving the template's fixes from
+the day it is made. Put a file in `.madock/docker/nginx/vhost.d/` instead:
+
+```
+.madock/docker/nginx/vhost.d/10-health.conf
+```
+```nginx
+location = /healthz {
+    alias {{{.workdir}}}/pub/health.txt;
+}
+```
+
+Every `*.conf` there (or in `<MADOCK_ROOT>/projects/<PROJECT_NAME>/docker/nginx/vhost.d/`,
+for a snippet that stays on one machine) is rendered with the same template
+syntax as the vhost and included **inside the server block**, before the
+platform's own rules. So a regex `location` of yours wins over the template's,
+because nginx takes the first regex match in file order. A directive the
+template already sets — `client_max_body_size`, `root` — cannot be repeated
+here; nginx refuses a duplicate. Those come from the configuration
+(`nginx/max_body_size`, `public_dir`).
+
+A snippet removed from the project is removed from nginx on the next `start`
+or `rebuild`, like any other rendered file.
+
 ## Template syntax
 
 Every file under `docker/` is a Go [text/template](https://pkg.go.dev/text/template)

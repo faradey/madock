@@ -131,6 +131,66 @@ func makeNginxConf(projectName string) {
 
 	pp := paths.NewProjectPaths(projectName)
 	RenderTo(projectName, defFile, "nginx/conf/default.conf", paths.MakeDirsByPath(pp.CtxDir())+"/nginx.conf", nil)
+	makeNginxVhostSnippets(projectName, pp.CtxDir()+"/nginx-vhost.d")
+}
+
+// nginxVhostDir is where a project keeps its own additions to the server block,
+// relative to a docker overlay directory (.madock/docker or projects/<name>/docker).
+const nginxVhostDir = "nginx/vhost.d"
+
+// makeNginxVhostSnippets renders the project's server-scope nginx snippets into
+// the build context, where the compose file mounts them as /etc/nginx/vhost.d.
+//
+// Until this existed a project had exactly one way to add a location of its
+// own: copy the platform's whole vhost into .madock/docker/ — 288 lines for
+// Magento — and from that day the copy received none of the template's fixes.
+// Measured on a live store: its copy had drifted on the dot-file regex and on
+// the limits that come from the configuration. conf.d could not take the
+// snippet, because conf.d is included at http level and a location needs
+// server scope.
+//
+// Two source directories, the same two the rest of the overlay reads and in the
+// same order: a file in .madock/docker travels with the repository and wins over
+// one of the same name in projects/<name>/docker, which stays on this machine.
+// Each snippet goes through the template engine, so it can say
+// {{{.workdir}}} the way the vhost does.
+//
+// The directory is always created and always cleared first. Created, because
+// the mount and the include are unconditional and docker makes a missing bind
+// source as root; cleared, because a snippet removed from the project has to
+// leave the rendered copy too, or nginx keeps serving a rule nobody can find.
+func makeNginxVhostSnippets(projectName, destination string) {
+	paths.MakeDirsByPath(destination)
+
+	entries, err := os.ReadDir(destination)
+	if err != nil {
+		logger.Fatal(fmt.Errorf("reading %s: %w", destination, err))
+	}
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), ".conf") {
+			if err := os.Remove(destination + "/" + entry.Name()); err != nil {
+				logger.Fatal(fmt.Errorf("removing a stale snippet %s: %w", entry.Name(), err))
+			}
+		}
+	}
+
+	rendered := map[string]bool{}
+	for _, source := range []string{
+		paths.GetRunDirPath() + "/.madock/docker/" + nginxVhostDir,
+		paths.GetExecDirPath() + "/projects/" + projectName + "/docker/" + nginxVhostDir,
+	} {
+		files, err := os.ReadDir(source)
+		if err != nil {
+			continue // no snippets in this layer, which is every project until it needs one
+		}
+		for _, file := range files {
+			if file.IsDir() || !strings.HasSuffix(file.Name(), ".conf") || rendered[file.Name()] {
+				continue
+			}
+			rendered[file.Name()] = true
+			RenderTo(projectName, source+"/"+file.Name(), nginxVhostDir+"/"+file.Name(), destination+"/"+file.Name(), nil)
+		}
+	}
 }
 
 func MakePhpDockerfile(projectName string) {
