@@ -1,3 +1,8 @@
+**Unreleased**
+
+Fixed:
+- **A Shopware install without a search engine ended in `exit status 1` after completing.** `setup --search-engine=none` wrote `.env`, ran `system:install`, and the store answered — then the chain's last link, `bin/console es:index`, refused with `[ERROR] Elasticsearch indexing is disabled` and madock declared the finished install failed. The `SHOPWARE_ES_*` block was conditional on an engine being chosen; the indexing command was not. Measured 2026-09-21 on 6.7.14.1: `bin/console --version` answering, `plugin:list` answering, exit 1. `es:index` now runs only when Elasticsearch or OpenSearch is enabled, and the chain is built by a function a unit test can read — proved by making the index unconditional again and watching the test go red
+
 **v4.2.18**
 
 Fixed:
