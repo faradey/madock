@@ -186,6 +186,26 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 		host = hosts[0]["name"]
 	}
 
+	installCommand := shopwareInstallCommand(projectConf, host, isSampleData)
+
+	fmt.Println(installCommand)
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Shopware installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Shopware Admin URI: /admin")
+	fmtc.SuccessLn("[SUCCESS]: Shopware Admin User: admin")
+	fmtc.SuccessLn("[SUCCESS]: Shopware Admin Password: shopware")
+}
+
+// shopwareInstallCommand builds the bash chain the install runs inside the php
+// container. Pure, so a test can read what an install would do without one.
+func shopwareInstallCommand(projectConf map[string]string, host string, isSampleData bool) string {
+	searchEnabled := projectConf["search/elasticsearch/enabled"] == "true" ||
+		projectConf["search/opensearch/enabled"] == "true"
+
 	installCommand := "sed -i 's/APP_URL=http:\\/\\/127.0.0.1:8000/APP_URL=https:\\/\\/" + host + "/g' .env "
 	installCommand += "&& sed -i 's/DATABASE_URL=mysql:\\/\\/root:root@localhost\\/shopware/DATABASE_URL=mysql:\\/\\/" + projectConf["db/user"] + ":" + projectConf["db/password"] + "@db:3306\\/" + projectConf["db/database"] + "/g' .env "
 	if projectConf["search/elasticsearch/enabled"] == "true" {
@@ -215,18 +235,16 @@ func Shopware(projectName, platformVer string, isSampleData bool) {
 	if isSampleData {
 		installCommand += "&& composer require swag/demo-data shopware/dev-tools && bin/console framework:demodata "
 	}
-	installCommand += "&& bin/console es:index "
-
-	fmt.Println(installCommand)
-	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
-	if err != nil {
-		logger.Fatal(err)
+	// Only with a search engine. Without one `es:index` refuses with
+	// "Elasticsearch indexing is disabled", the && chain returns 1, and an
+	// install that has just completed is reported as failed — measured
+	// 2026-09-21 with --search-engine=none on 6.7.14.1: store up, bin/console
+	// answering, exit status 1. Same condition as the SHOPWARE_ES_* block above.
+	if searchEnabled {
+		installCommand += "&& bin/console es:index "
 	}
-	fmt.Println("")
-	fmtc.SuccessLn("[SUCCESS]: Shopware installation complete.")
-	fmtc.SuccessLn("[SUCCESS]: Shopware Admin URI: /admin")
-	fmtc.SuccessLn("[SUCCESS]: Shopware Admin User: admin")
-	fmtc.SuccessLn("[SUCCESS]: Shopware Admin Password: shopware")
+
+	return installCommand
 }
 
 func WooCommerce(projectName, platformVer string, isSampleData bool) {

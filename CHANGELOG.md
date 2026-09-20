@@ -1,3 +1,11 @@
+**v4.2.19**
+
+Fixed:
+- **A Shopware install without a search engine ended in `exit status 1` after completing.** `setup --search-engine=none` wrote `.env`, ran `system:install`, and the store answered — then the chain's last link, `bin/console es:index`, refused with `[ERROR] Elasticsearch indexing is disabled` and madock declared the finished install failed. The `SHOPWARE_ES_*` block was conditional on an engine being chosen; the indexing command was not. Measured 2026-09-21 on 6.7.14.1: `bin/console --version` answering, `plugin:list` answering, exit 1. `es:index` now runs only when Elasticsearch or OpenSearch is enabled, and the chain is built by a function a unit test can read — proved by making the index unconditional again and watching the test go red
+
+Added:
+- **A project can add to its nginx vhost without copying it.** Every `*.conf` in `.madock/docker/nginx/vhost.d/` (or `projects/<name>/docker/nginx/vhost.d/` for one machine) is rendered with the template syntax and included inside the server block of every platform's vhost, before the platform's own rules. Until now one extra `location` meant copying the whole vhost into `.madock/docker/` — 288 lines for Magento — and the copy stopped receiving the template's fixes: measured on a live store, whose copy had drifted on the dot-file regex and on the limits that come from the configuration. `conf.d` could not take the snippet, since it is included at http level and a location needs server scope. The include comes first so a project's regex location wins over the template's; a directive the template already sets cannot be repeated and stays in the configuration. A snippet removed from the project leaves nginx on the next start — the rendered directory is cleared before each render, and a test holds that, proved by disabling the clearing
+
 **v4.2.18**
 
 Fixed:
