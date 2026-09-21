@@ -27,7 +27,9 @@ import (
 // which was the whole lesson. It asks the running container what it loaded.
 func TestTheOptionalExtensionsAreActuallyInTheImage(t *testing.T) {
 	p := newProject(t, "e2ephpext")
-	p.run(5*time.Minute, "setup", "-y",
+	// Fifteen minutes for the same reason as the memory-limit test: a php image
+	// is twenty-three apt steps, and a slow mirror has cost more than five.
+	p.run(15*time.Minute, "setup", "-y",
 		"--platform=custom",
 		"--language=php",
 		"--hosts=e2ephpext.test",

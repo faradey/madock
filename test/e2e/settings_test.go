@@ -89,7 +89,13 @@ func TestPhpMemoryLimitReachesTheRunningInterpreter(t *testing.T) {
 	install := newInstallation(t)
 	p := install.project("e2ephplimit")
 
-	p.run(5*time.Minute, "setup", "-y",
+	// Fifteen minutes, not five: a php setup builds the image, and the image is
+	// twenty-three apt steps on ubuntu:22.04. On the nightly of 2026-09-21 the
+	// second of them alone took 182.6 s — one fetch at 13.4 kB/s from the
+	// mirror — and the build finished seconds after the five-minute deadline
+	// had already failed the test. What is measured below is memory_limit, not
+	// the speed of an apt mirror.
+	p.run(15*time.Minute, "setup", "-y",
 		"--platform=custom",
 		"--language=php",
 		"--hosts=e2ephplimit.test",

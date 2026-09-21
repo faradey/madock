@@ -1,3 +1,8 @@
+**Unreleased**
+
+Tests:
+- **The two php setups in the e2e suite get fifteen minutes, not five.** The nightly of 2026-09-21 failed `TestPhpMemoryLimitReachesTheRunningInterpreter` on `context deadline exceeded` while the php image was still building: the second of its twenty-three apt steps took 182.6 s on its own — one fetch at 13.4 kB/s from the Ubuntu mirror — and the build completed seconds after the test had given up. The same commit had passed the suite twice that morning. Three other slow setups already ran at twenty minutes; these two measured memory_limit and loaded extensions, not the speed of a mirror
+
 **v4.2.21**
 
 Fixed:
