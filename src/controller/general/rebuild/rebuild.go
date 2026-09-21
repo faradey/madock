@@ -3,6 +3,7 @@ package rebuild
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/faradey/madock/v4/src/command"
@@ -48,6 +49,10 @@ func Execute() {
 		embedded.ReportOnce()
 
 		reportReconciliation(projectName)
+
+		if args.Changed && rebuildChanged(projectName, args.WithChown) {
+			return
+		}
 
 		startTime := time.Now()
 
@@ -150,4 +155,43 @@ func reportReconciliation(projectName string) {
 	if len(result.Kept) > 0 {
 		fmtc.ToDoLn("madock config:unset <key> to drop one of those as well")
 	}
+}
+
+// rebuildChanged applies only what changed and reports true when that was
+// enough. False hands the run back to the full rebuild, which is right when
+// the change is global, when a service was removed, or when the question
+// could not be answered at all.
+//
+// This is what a deploy calls. The deployer used to run a full rebuild
+// whenever the release's .madock/ tree differed from the last one, and the
+// tree differing says nothing about how much: on 2026-09-21 a production
+// store paid a database and search restart — five connection refusals in the
+// application log and a 500 to a visitor — for a release whose only change was
+// the nginx vhost.
+//
+// Nothing is stopped before the stack is rendered, which is the other half of
+// the point: the full rebuild takes the containers down first and generates
+// afterwards, so a template that fails to render leaves the environment gone.
+func rebuildChanged(projectName string, withChown bool) bool {
+	// Render from the current configuration; this is what the diff compares.
+	docker.UpNginx(projectName)
+
+	diff := project.DiffStack(projectName)
+	switch {
+	case diff.Empty():
+		fmtc.SuccessIconLn("Nothing changed since these containers were created — nothing to rebuild")
+		return true
+	case !diff.Narrow():
+		fmtc.WarningLn("The change is not one service's own — rebuilding the whole stack")
+		return false
+	}
+
+	startTime := time.Now()
+	fmtc.TitleLn("Applying the change to " + strings.Join(append(append([]string{}, diff.Recreate...), diff.Restart...), ", ") + "...")
+	if err := docker.ApplyStackDiff(projectName, diff, withChown); err != nil {
+		fmtc.WarningIconLn(err.Error())
+		os.Exit(1)
+	}
+	fmtc.SuccessIconLn(fmt.Sprintf("Applied in %s; every other container was left running", time.Since(startTime).Round(time.Second)))
+	return true
 }

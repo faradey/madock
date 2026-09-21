@@ -170,6 +170,7 @@ type ControllerGeneralRebuild struct {
 	attr.Arguments
 	Force     bool `arg:"-f,--force" help:"Force"`
 	WithChown bool `arg:"-c,--with-chown" help:"With Chown"`
+	Changed   bool `arg:"--changed" help:"Only the services whose definition or files changed; nginx reloads for a vhost edit. Everything else is left running"`
 }
 
 type ControllerGeneralRemoteSyncDb struct {

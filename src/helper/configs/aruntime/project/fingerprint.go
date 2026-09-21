@@ -90,6 +90,10 @@ func RecordApplied(projectName string) {
 		return
 	}
 	_ = os.WriteFile(appliedFingerprintPath(projectName), []byte(fingerprint), 0644)
+	// The per-service half of the same record — what each container was
+	// created from — so the next change can be narrowed to the services it
+	// touches. See stackdiff.go.
+	RecordStack(projectName)
 }
 
 // NeedsRecreate reports that the generated stack differs from the one the

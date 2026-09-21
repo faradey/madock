@@ -1,3 +1,12 @@
+**v4.2.20**
+
+Changed:
+- **A change to the stack touches only the services it belongs to.** `start` used to know one thing — whether the rendered stack differed from what the containers were created from — and recreated everything when it did. It now keeps that record per service, in two halves: the service's definition (its compose block, Dockerfile and what the Dockerfile copies in) and the generated files mounted into it. A vhost or `vhost.d/` change is `nginx -t` and `nginx -s reload`, no container restarted; a `my.cnf` change restarts the database and nothing else; a php Dockerfile recreates php alone, and nginx reloads afterwards because it resolves upstreams when it loads its configuration and would otherwise hold the old address; a service added is created. A service removed, a network, a named volume, or no record from before still recreates the whole stack, as before. The record is read off `docker compose config`, so an edition's transformer counts. Measured on the sandbox: a `vhost.d/` snippet → "nginx (files)", reload, 200 through the proxy, the database's `ready for connections` count unchanged; `redis/enabled=true` → one container created, nothing else recreated. Why: on 2026-09-21 a production store's deploy carried one change, the nginx vhost, and paid a MariaDB and OpenSearch restart for it — five `SQLSTATE[HY000] [2002] Connection refused` in the application log and a 500 to a live visitor, about a minute without a database for a file nginx reloads in place
+- **A vhost that does not parse no longer takes nginx down.** The reload is preceded by `nginx -t`; a failing test is printed with nginx's own words, the old configuration keeps serving, and `start` says to rebuild
+
+Added:
+- **`madock rebuild --changed`** — the table above as a command: apply what changed and leave every other container running; nothing changed says so and stops; a change that is not one service's own hands over to the full rebuild. Nothing is stopped before the stack is rendered, so a template that fails to render fails with the environment still up. This is what the deployer now runs after a release
+
 **v4.2.19**
 
 Fixed:

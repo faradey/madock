@@ -486,7 +486,7 @@ func prepareHomeDirs() (string, error) {
 // reaches every caller without a coordinated version bump across two
 // repositories.
 func UpProjectWithBuild(projectName string, withChown bool) {
-	upProjectWithBuild(projectName, withChown, false)
+	upProjectWithBuild(projectName, withChown, false, nil)
 }
 
 // UpProjectWithBuildRefresh is the same, and also looks for newer images.
@@ -495,10 +495,16 @@ func UpProjectWithBuild(projectName string, withChown bool) {
 // and separating it is what lets every other caller stop asking the registry
 // about images it already has.
 func UpProjectWithBuildRefresh(projectName string, withChown bool) {
-	upProjectWithBuild(projectName, withChown, true)
+	upProjectWithBuild(projectName, withChown, true, nil)
 }
 
-func upProjectWithBuild(projectName string, withChown bool, refresh bool) {
+// upProjectWithBuild creates the stack, or — when services are named — only
+// those, leaving every other container untouched (`--no-deps` is already
+// there; the names narrow `up` to them). The stack record is written by the
+// caller when services are named, because the caller still has work to do
+// after this returns and a record written early would say "applied" about a
+// change that then failed.
+func upProjectWithBuild(projectName string, withChown bool, refresh bool, services []string) {
 	// --force-recreate below stops whatever is running, and a database that is
 	// still initialising must not be stopped: see dbinit.go.
 	WaitForDatabaseInit(projectName)
@@ -576,6 +582,7 @@ func upProjectWithBuild(projectName string, withChown bool, refresh bool) {
 		"--no-deps",
 		"-d",
 	}
+	profilesOn = append(profilesOn, services...)
 	dockerComposePull([]string{"compose", "-f", composeFile, "-f", composeFileOS}, refresh)
 	cmd := exec.Command("docker", profilesOn...)
 	attachOutput(cmd)
@@ -584,10 +591,16 @@ func upProjectWithBuild(projectName string, withChown bool, refresh bool) {
 		logger.Fatal(err)
 	}
 
-	if val, ok := projectConf["cron/enabled"]; ok && val == "true" {
-		CronExecute(projectName, true, false)
-	} else {
-		CronExecute(projectName, false, false)
+	// The cron daemon lives in the application container and only madock
+	// starts it, so a recreated main service comes back with its crontab and
+	// no process to run it. Recreating anything else leaves the daemon alone.
+	mainService := configs2.ResolveMainService(projectConf, "php")
+	if services == nil || contains(services, mainService) {
+		if val, ok := projectConf["cron/enabled"]; ok && val == "true" {
+			CronExecute(projectName, true, false)
+		} else {
+			CronExecute(projectName, false, false)
+		}
 	}
 
 	if withChown {
@@ -595,7 +608,6 @@ func upProjectWithBuild(projectName string, withChown bool, refresh bool) {
 		// The service running the application code, not "php" — a Node, Python
 		// or Go project has no php container, and reaching for one turned
 		// --with-chown into a fatal error on those platforms.
-		mainService := configs2.ResolveMainService(projectConf, "php")
 		chownCmd := "chown -R " + usr.Uid + ":" + usr.Gid + " " + projectConf["workdir"]
 		if mainService == "php" {
 			// Only the php image mounts the composer home.
@@ -611,7 +623,18 @@ func upProjectWithBuild(projectName string, withChown bool, refresh bool) {
 	// The containers now match the generated stack. Recorded last, so a failed
 	// up leaves the old record and the next start retries instead of assuming
 	// the change went in.
-	project.RecordApplied(projectName)
+	if services == nil {
+		project.RecordApplied(projectName)
+	}
+}
+
+func contains(list []string, want string) bool {
+	for _, item := range list {
+		if item == want {
+			return true
+		}
+	}
+	return false
 }
 
 // dockerComposePull fetches the images a compose file names.
