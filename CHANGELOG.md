@@ -1,3 +1,9 @@
+**v4.2.21**
+
+Fixed:
+- **`rebuild --changed` could skip a change the per-service record had not seen.** "Nothing changed" was answered from the record alone; when the whole-stack fingerprint disagreed — a generated file moved that no service is recorded as mounting or building from — the two cannot be told apart from "the record missed something", and only one of those is safe to skip. It now rebuilds the whole stack in that case, and says why. A project with no record at all — the first run after 4.2.20, or a cleared cache — is named as such and rebuilt once, instead of being described as a change that is not one service's own
+- **Two ways a mounted or copied file could drop out of the record without a word**, found by reading the code again rather than by a failure: a bind source written relative to the compose file matched nothing under `ctx/` and was skipped, and a `COPY scripts/*.sh` was hashed as a literal path that does not exist. Relative sources resolve against the runtime directory; COPY and ADD sources are globbed. Both hold a test that was red before the fix
+
 **v4.2.20**
 
 Changed:

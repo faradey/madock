@@ -228,7 +228,15 @@ func recordFromComposeConfig(configJSON []byte, runtimeDir string) (stackRecord,
 			if v.Type != "bind" {
 				continue
 			}
-			source := filepath.Clean(v.Source)
+			source := v.Source
+			// `docker compose config` writes bind sources absolute; a relative
+			// one is relative to the compose file, which lives in the runtime
+			// directory. Left relative it would match nothing below and a
+			// mounted file would silently drop out of the record.
+			if !filepath.IsAbs(source) {
+				source = filepath.Join(runtimeDir, source)
+			}
+			source = filepath.Clean(source)
 			// Only what MakeConf generated. The source tree, the composer home
 			// and ~/.ssh are mounted too, and hashing them would make every
 			// edit of the application a reason to restart a container.
@@ -293,9 +301,19 @@ func hashBuildInputs(h interface{ Write([]byte) (int, error) }, build json.RawMe
 	h.Write([]byte{0})
 
 	for _, source := range copiedSources(string(content)) {
-		if err := hashPath(h, filepath.Join(context, source)); err != nil {
-			// Missing sources fail the build, not the diff.
-			continue
+		// A COPY source may be a pattern — `COPY scripts/*.sh /usr/local/bin/`
+		// — and a pattern hashed as a literal path matches nothing, so the
+		// files behind it would change without the record noticing.
+		matches, _ := filepath.Glob(filepath.Join(context, source))
+		if matches == nil {
+			matches = []string{filepath.Join(context, source)}
+		}
+		sort.Strings(matches)
+		for _, match := range matches {
+			if err := hashPath(h, match); err != nil {
+				// Missing sources fail the build, not the diff.
+				continue
+			}
 		}
 	}
 	return nil
