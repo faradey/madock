@@ -62,10 +62,31 @@ madock config:set --name=php/version --value=8.2
 
 **When a change takes effect.** The compose files and Dockerfiles are rendered
 from the config on every `start`, `restart` and `rebuild`. If the render differs
-from what the running containers were created from, `start` says so and recreates
-them — `docker compose start` only wakes existing containers and would otherwise
-keep running the old definition. A change that no template reads (an SSH host, a
-cron flag) renders identically and starts the containers as they are.
+from what the running containers were created from, `start` says so and brings
+them in line — `docker compose start` only wakes existing containers and would
+otherwise keep running the old definition. A change that no template reads (an
+SSH host, a cron flag) renders identically and starts the containers as they are.
+
+**How much is touched depends on what changed.** `start` knows what each
+container was created from, per service, and does the least that applies:
+
+| What changed | What happens |
+|---|---|
+| a file nginx mounts — the vhost, a `vhost.d/` snippet | `nginx -t`, then `nginx -s reload`; no container restarts |
+| a file another service mounts — `my.cnf`, a php ini | that service is restarted |
+| a service's own definition — its Dockerfile, image, environment, ports | that service is recreated (and its image rebuilt); nginx reloads so it resolves the new address |
+| a service added | it is created |
+| a service removed, a network or named volume, anything outside one service | the whole stack is recreated, as before |
+
+A vhost edit therefore no longer costs a database restart. Measured on a live
+store before this existed: a release whose only change was the nginx vhost
+recreated every container — MariaDB and OpenSearch restarted, five
+`Connection refused` in the application log, a 500 to a visitor.
+
+`madock rebuild` still recreates everything; that is what it is for. `madock
+rebuild --changed` applies the table above and leaves every other container
+running, and falls back to the full rebuild when the change is not one
+service's own. It is what a deploy runs.
 
 Derived options cannot be set: `nodejs/major_version` is computed from
 `nodejs/version` on every read, so `config:set` refuses it and names the option to

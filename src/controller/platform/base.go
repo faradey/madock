@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"strings"
 
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
@@ -60,10 +61,25 @@ func (h *BaseHandler) Start(projectName string, withChown bool, projectConf map[
 	// one. When the generated stack no longer matches what the containers were
 	// created from, the only honest move is to recreate them.
 	if project.NeedsRecreate(projectName) {
-		fmtc.WarningLn("Configuration changed since these containers were created.")
-		fmtc.ToDoLn("Recreating containers")
-		docker.UpProjectWithBuild(projectName, withChown)
-		return
+		// What changed decides how much is touched. A vhost edit is an nginx
+		// reload; a php Dockerfile is one container; a network is everything.
+		// Recreating the whole stack for the first of those cost a production
+		// store a minute without its database — see project/stackdiff.go.
+		if diff := project.DiffStack(projectName); diff.Narrow() {
+			fmtc.WarningLn("Configuration changed for " + describeDiff(diff) + " since these containers were created.")
+			if err := docker.ApplyStackDiff(projectName, diff, withChown); err != nil {
+				fmtc.WarningIconLn(err.Error())
+				fmtc.ToDoLn("madock rebuild   # recreates the whole stack")
+				return
+			}
+			// The rest of the stack was left alone and may be stopped; fall
+			// through to wake it.
+		} else {
+			fmtc.WarningLn("Configuration changed since these containers were created.")
+			fmtc.ToDoLn("Recreating containers")
+			docker.UpProjectWithBuild(projectName, withChown)
+			return
+		}
 	}
 
 	// Nothing to wake. `docker compose start` succeeds with nothing to do when
@@ -96,6 +112,12 @@ func (h *BaseHandler) Start(projectName string, withChown bool, projectConf map[
 		fmtc.ToDoLn("Creating containers")
 		docker.UpProjectWithBuild(projectName, withChown)
 	} else {
+		// The containers match the rendered stack — the fingerprint said so
+		// above — so this is the moment to record what each one was created
+		// from. A project that predates the per-service record gets one here,
+		// on its first start, instead of a full recreate on its first change.
+		project.RecordApplied(projectName)
+
 		if withChown {
 			h.executeChown(projectName, projectConf)
 		}
@@ -164,4 +186,17 @@ func (h *BaseHandler) executeChown(projectName string, projectConf map[string]st
 	if err != nil {
 		logger.Fatal(err)
 	}
+}
+
+// describeDiff names what a narrowed change touches, in the terms the user
+// configured: services, not hashes.
+func describeDiff(diff project.StackDiff) string {
+	var parts []string
+	if len(diff.Recreate) > 0 {
+		parts = append(parts, strings.Join(diff.Recreate, ", "))
+	}
+	for _, service := range diff.Restart {
+		parts = append(parts, service+" (files)")
+	}
+	return strings.Join(parts, ", ")
 }
