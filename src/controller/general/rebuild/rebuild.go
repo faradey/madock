@@ -178,6 +178,19 @@ func rebuildChanged(projectName string, withChown bool) bool {
 
 	diff := project.DiffStack(projectName)
 	switch {
+	case !diff.Known:
+		// No record of what the containers were created from — the first run
+		// after this arrived, or a cleared cache. One full rebuild writes it.
+		fmtc.WarningLn("No record of what these containers were created from — rebuilding the whole stack once")
+		return false
+	case diff.Empty() && project.NeedsRecreate(projectName):
+		// The per-service record sees no difference docker would act on, but
+		// the whole-stack fingerprint says a generated file changed. Either a
+		// file nothing mounts or builds from moved — harmless — or the record
+		// missed something it should have seen. The two cannot be told apart
+		// here, and only one of them is safe to skip, so neither is.
+		fmtc.WarningLn("A generated file changed that no service is recorded as using — rebuilding the whole stack")
+		return false
 	case diff.Empty():
 		fmtc.SuccessIconLn("Nothing changed since these containers were created — nothing to rebuild")
 		return true

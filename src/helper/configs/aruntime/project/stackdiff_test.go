@@ -298,3 +298,53 @@ func TestDiffWithoutARecordIsUnknown(t *testing.T) {
 		t.Error("an unknown diff must be neither narrow nor empty")
 	}
 }
+
+// Older compose writes bind sources relative to the compose file. Relative
+// must mean "under the runtime directory", or a mounted file drops out of the
+// record and its edits are never seen.
+func TestRelativeBindSourceIsResolvedAgainstTheRuntimeDir(t *testing.T) {
+	dir := t.TempDir()
+	stack := func() []byte {
+		data, _ := json.Marshal(map[string]any{
+			"services": map[string]any{
+				"nginx": map[string]any{
+					"image": "nginx:1.27",
+					"volumes": []map[string]any{
+						{"type": "bind", "source": "./ctx/nginx.conf", "target": "/etc/nginx/conf.d/default.conf"},
+					},
+				},
+			},
+		})
+		return data
+	}
+	writeCtx(t, dir, map[string]string{"nginx.conf": "server { listen 80; }\n"})
+	before, err := recordFromComposeConfig(stack(), dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeCtx(t, dir, map[string]string{"nginx.conf": "server { listen 8080; }\n"})
+	after, err := recordFromComposeConfig(stack(), dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := diffStacks(before, after); !reflect.DeepEqual(diff.Restart, []string{"nginx"}) {
+		t.Errorf("an edit behind a relative bind source produced %+v", diff)
+	}
+}
+
+// A COPY with a pattern names files the record has to follow.
+func TestCopiedGlobIsFollowed(t *testing.T) {
+	dir := t.TempDir()
+	ctx := baseCtx()
+	ctx["php.Dockerfile"] = "FROM php:8.4-fpm\nCOPY scripts/*.sh /usr/local/bin/\n"
+	ctx["scripts/a.sh"] = "echo a\n"
+	ctx["scripts/b.sh"] = "echo b\n"
+	before := record(t, dir, ctx)
+
+	ctx["scripts/b.sh"] = "echo B\n"
+	after := record(t, dir, ctx)
+
+	if diff := diffStacks(before, after); !reflect.DeepEqual(diff.Recreate, []string{"php"}) {
+		t.Errorf("a change behind a COPY glob produced %+v", diff)
+	}
+}
