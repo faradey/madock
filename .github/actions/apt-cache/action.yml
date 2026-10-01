@@ -54,10 +54,17 @@ runs:
     # squid runs as the runner's own user, with everything under its home: the
     # cache has to be readable by the user that saves it at the end of the job,
     # and a directory owned by the `proxy` account is not.
+    #
+    # The update is not optional. The runner image ships its package index
+    # frozen at the day the image was built, and the mirror drops a superseded
+    # revision once a new one lands: on 2026-10-01 every job of the nightly
+    # stopped here on a 404 for libdbi-perl 1.643-4ubuntu0.1, a squid
+    # dependency, before a single test ran.
     - name: Start the proxy
       shell: bash
       run: |
         set -euo pipefail
+        sudo apt-get update -qq
         sudo apt-get install -y -qq squid >/dev/null
         sudo systemctl stop squid 2>/dev/null || true
         mkdir -p ~/.squid-cache ~/.squid-run
