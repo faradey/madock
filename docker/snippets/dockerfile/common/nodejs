@@ -8,10 +8,10 @@ RUN set -eux; \
     command -v npm >/dev/null 2>&1 || apt-get install -y npm; \
     node -v; npm -v
 RUN mkdir -p /var/www/.npm && chown {{{.os.user.uid}}}:{{{.os.user.guid}}} /var/www/.npm
-RUN npm install -g grunt-cli
+RUN npm install -g grunt-cli && npm cache clean --force
 {{{- end}}}
 {{{- if .nodejs.yarn.enabled}}}
-RUN npm install -g yarn
+RUN npm install -g yarn && npm cache clean --force
 {{{- end}}}
 {{{- if .php.browser_libs}}}
 # Shared libraries a headless browser needs — see the note in

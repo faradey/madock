@@ -1,0 +1,15 @@
+# The timezone is set after the packages, not before them.
+#
+# It used to open the first RUN, and a layer's cache key is its whole command —
+# so the project's timezone was part of the key of the heaviest layer in the
+# image, and of every layer built on it. Two projects on one machine with
+# different timezones therefore shared nothing past the base image: two full
+# copies of the PHP toolchain for the sake of one symlink. Set here, the layers
+# above are the same for every timezone and docker keeps one copy of them.
+#
+# The end state is the same as before. tzdata arrives above as a dependency
+# (php-fpm and python3 both pull it; checked in a production php container on
+# 2026-10-07), configures itself to UTC in the noninteractive install, and these
+# two lines are what it would have read had they come first. Where nothing pulls
+# tzdata the link dangles, exactly as it did when it was written first.
+RUN ln -snf /usr/share/zoneinfo/{{{.timezone}}} /etc/localtime && echo {{{.timezone}}} > /etc/timezone

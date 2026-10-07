@@ -3,8 +3,7 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NOWARNINGS="yes"
 
-RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone \
-    && apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y locales \
+RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y locales \
     curl \
     wget \
     ca-certificates \
@@ -107,7 +106,8 @@ RUN IFS='.' read major minor patch <<< "8.4" \
     ; fi \
     && if [[ "${major}" < "7" ]]; then \
         apt-get install -y php8.4-json \
-    ; fi
+    ; fi \
+    && rm -rf /tmp/pear
 
 RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php8.4-fpm.pid/" /etc/php/8.4/fpm/php-fpm.conf \
     && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/8.4/fpm/php-fpm.conf \
@@ -124,6 +124,23 @@ RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php8.4-fpm.pid/" /etc/php/8.4/fpm/php
 RUN if [ -f /etc/ImageMagick-6/policy.xml ]; then \
         sed -i 's#rights="none" pattern="PDF"#rights="read|write" pattern="PDF"#' /etc/ImageMagick-6/policy.xml; \
     fi
+
+# The timezone is set after the packages, not before them.
+#
+# It used to open the first RUN, and a layer's cache key is its whole command —
+# so the project's timezone was part of the key of the heaviest layer in the
+# image, and of every layer built on it. Two projects on one machine with
+# different timezones therefore shared nothing past the base image: two full
+# copies of the PHP toolchain for the sake of one symlink. Set here, the layers
+# above are the same for every timezone and docker keeps one copy of them.
+#
+# The end state is the same as before. tzdata arrives above as a dependency
+# (php-fpm and python3 both pull it; checked in a production php container on
+# 2026-10-07), configures itself to UTC in the noninteractive install, and these
+# two lines are what it would have read had they come first. Where nothing pulls
+# tzdata the link dangles, exactly as it did when it was written first.
+RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone
+
 
 
 RUN is_composer_version_one="" \
@@ -146,7 +163,8 @@ RUN if [[ "false" = "true" ]]; then pecl install -f xdebug-3.4.4 \
     && echo "xdebug.log=/var/www/var/log/xdebug.log" >> /etc/php/8.4/mods-available/xdebug.ini \
     && echo "xdebug.log_level=7" >> /etc/php/8.4/mods-available/xdebug.ini \
     && ln -s /etc/php/8.4/mods-available/xdebug.ini /etc/php/8.4/cli/conf.d/11-xdebug.ini \
-    && ln -s /etc/php/8.4/mods-available/xdebug.ini /etc/php/8.4/fpm/conf.d/11-xdebug.ini; fi
+    && ln -s /etc/php/8.4/mods-available/xdebug.ini /etc/php/8.4/fpm/conf.d/11-xdebug.ini \
+    && rm -rf /tmp/pear; fi
 
 RUN if [[ "false" = "true" && "debug" = "profile" ]]; then echo "xdebug.profiler_enable=1" >> /etc/php/8.4/mods-available/xdebug.ini \
     && echo "xdebug.profiler_output_dir=/var/www/html/var" >> /etc/php/8.4/mods-available/xdebug.ini \
@@ -197,8 +215,8 @@ RUN set -eux; \
     command -v npm >/dev/null 2>&1 || apt-get install -y npm; \
     node -v; npm -v
 RUN mkdir -p /var/www/.npm && chown <UID>:<GID> /var/www/.npm
-RUN npm install -g grunt-cli
-RUN npm install -g yarn
+RUN npm install -g grunt-cli && npm cache clean --force
+RUN npm install -g yarn && npm cache clean --force
 
 WORKDIR /var/www/html
 
