@@ -1,4 +1,8 @@
-**Unreleased**
+**v4.3.0**
+
+Upgrading:
+- **Every project rebuilds its php image once**, at its next `start` or `rebuild`: the timezone moved out of the first layer (below), so the rendered Dockerfile differs from the one the image was built from. Expect one longer start per project; nothing has to be done by hand
+- **The first `start` of a project after upgrading from 4.2.0 recreates its whole stack once.** Since 4.2.20 `start` applies a change to the services it belongs to, from a per-service record of what each container was created from; a project started only by older versions has no such record yet, and without it nothing can be told apart, so everything is recreated and the record written. Measured on a demo server on 2026-10-07: 6 m 32 s for one project. Every later change is applied service by service — a php Dockerfile change on a production store took 12 s with every other container left running
 
 Changed:
 - **The timezone is set after the packages, not before them.** It opened the first RUN of the php header (and of `php_without_xdebug`, `header-ubuntu` and the golang header), and a layer's cache key is its whole command — so two projects on one machine with different timezones shared nothing past the ubuntu base, and kept two full copies of the PHP toolchain for one symlink. On an e2e VM two php images of one version and one timezone shared 1.615 GB of about 1.9 GB; that is the share a second timezone discarded. The setting is now its own RUN after the toolchain (`snippets/dockerfile/common/timezone`), with the same end state: tzdata comes in as a php-fpm dependency and is overwritten the way it would have read it. **The rendered Dockerfile changes, so every project rebuilds its php image once, at its next `start` or `rebuild`.** `TestPhpImagesOfDifferentTimezonesShareTheToolchain` builds two projects that differ only in the timezone and counts the layers their images share
