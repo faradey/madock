@@ -3,8 +3,7 @@ FROM {{{.os.name}}}:{{{.os.version}}}
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NOWARNINGS="yes"
 
-RUN ln -snf /usr/share/zoneinfo/{{{.timezone}}} /etc/localtime && echo {{{.timezone}}} > /etc/timezone \
-    && apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y locales \
+RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y locales \
     curl \
     wget \
     ca-certificates \
@@ -116,7 +115,8 @@ RUN IFS='.' read major minor patch <<< "{{{.php.version}}}" \
     ; fi \
     && if [[ "${major}" < "7" ]]; then \
         apt-get install -y php{{{.php.version}}}-json \
-    ; fi
+    ; fi \
+    && rm -rf /tmp/pear
 
 RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{.php.version}}}-fpm.pid/" /etc/php/{{{.php.version}}}/fpm/php-fpm.conf \
     && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/{{{.php.version}}}/fpm/php-fpm.conf \
@@ -133,4 +133,6 @@ RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php{{{.php.version}}}-fpm.pid/" /etc/
 RUN if [ -f /etc/ImageMagick-6/policy.xml ]; then \
         sed -i 's#rights="none" pattern="PDF"#rights="read|write" pattern="PDF"#' /etc/ImageMagick-6/policy.xml; \
     fi
+
+{{{template "snippets/dockerfile/common/timezone" .}}}
 

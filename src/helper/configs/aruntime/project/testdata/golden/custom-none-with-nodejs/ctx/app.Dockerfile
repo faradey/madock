@@ -3,8 +3,7 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NOWARNINGS="yes"
 
-RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone \
-    && apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y \
+RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y \
     locales \
     curl \
     wget \
@@ -22,6 +21,23 @@ RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone \
     jq \
     build-essential \
     && locale-gen en_US.UTF-8
+
+# The timezone is set after the packages, not before them.
+#
+# It used to open the first RUN, and a layer's cache key is its whole command —
+# so the project's timezone was part of the key of the heaviest layer in the
+# image, and of every layer built on it. Two projects on one machine with
+# different timezones therefore shared nothing past the base image: two full
+# copies of the PHP toolchain for the sake of one symlink. Set here, the layers
+# above are the same for every timezone and docker keeps one copy of them.
+#
+# The end state is the same as before. tzdata arrives above as a dependency
+# (php-fpm and python3 both pull it; checked in a production php container on
+# 2026-10-07), configures itself to UTC in the noninteractive install, and these
+# two lines are what it would have read had they come first. Where nothing pulls
+# tzdata the link dangles, exactly as it did when it was written first.
+RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone
+
 RUN apt-get install -y cron
 RUN mkdir -p /var/www/.ssh/ && mkdir -p /var/www/scripts/ && mkdir -p /var/www/var/ && mkdir -p /var/www/var/log/
 RUN usermod -u <UID> -o www-data && groupmod -g <GID> -o www-data \

@@ -1,5 +1,9 @@
 **Unreleased**
 
+Changed:
+- **The timezone is set after the packages, not before them.** It opened the first RUN of the php header (and of `php_without_xdebug`, `header-ubuntu` and the golang header), and a layer's cache key is its whole command — so two projects on one machine with different timezones shared nothing past the ubuntu base, and kept two full copies of the PHP toolchain for one symlink. On an e2e VM two php images of one version and one timezone shared 1.615 GB of about 1.9 GB; that is the share a second timezone discarded. The setting is now its own RUN after the toolchain (`snippets/dockerfile/common/timezone`), with the same end state: tzdata comes in as a php-fpm dependency and is overwritten the way it would have read it. **The rendered Dockerfile changes, so every project rebuilds its php image once, at its next `start` or `rebuild`.** `TestPhpImagesOfDifferentTimezonesShareTheToolchain` builds two projects that differ only in the timezone and counts the layers their images share
+- **pecl's and npm's caches are removed in the layer that made them.** The footer cleared `/tmp` in a later layer, which hides the files and frees nothing; `/tmp/pear` after the mcrypt and xdebug installs, and npm's cache after `grunt-cli` and `yarn`, now go in the same RUN
+
 Tests:
 - **The two php setups in the e2e suite get fifteen minutes, not five.** The nightly of 2026-09-21 failed `TestPhpMemoryLimitReachesTheRunningInterpreter` on `context deadline exceeded` while the php image was still building: the second of its twenty-three apt steps took 182.6 s on its own — one fetch at 13.4 kB/s from the Ubuntu mirror — and the build completed seconds after the test had given up. The same commit had passed the suite twice that morning. Three other slow setups already ran at twenty minutes; these two measured memory_limit and loaded extensions, not the speed of a mirror
 
