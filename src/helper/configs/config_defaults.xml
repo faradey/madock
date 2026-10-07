@@ -32,6 +32,18 @@
                 <name>ubuntu</name>
                 <version>22.04</version>
             </os>
+            <!-- The application container of a project in another language than
+                 php — none, python and ruby build it on the ubuntu header, golang
+                 on the golang image. Same rules as php/packages: default is the
+                 first layer's list, exactly what the template wrote, and applies
+                 to the ubuntu-based three (the golang image keeps its own list);
+                 extra goes last, for all four. -->
+            <app>
+                <packages>
+                    <default>locales curl wget ca-certificates software-properties-common git zip gzip mc mariadb-client procps openssh-client lsof openssl jq build-essential</default>
+                    <extra></extra>
+                </packages>
+            </app>
             <nginx>
                 <!-- A project that answers no request needs no web server: a queue
                      worker, a bus consumer, the owner of a shared database schema.
@@ -224,6 +236,38 @@
                     <from></from>
                 </sendmail>
                 <browser_libs>false</browser_libs>
+                <!-- What the php image installs, as settings rather than a list
+                     inside a template, so a project takes what it needs without
+                     copying the Dockerfile — a copy that then stops receiving
+                     every later fix.
+
+                     Space-separated names. packages/default is the apt list of
+                     the first layer and extensions/default the php<version>-*
+                     packages of the second; both default to exactly what the
+                     template used to write, so a project that sets nothing
+                     builds the image it built before, byte for byte.
+
+                     Nothing in them is enforced. Some names are what madock and
+                     its editions rely on — docs/image_packages.md lists them and
+                     what stops working without each — and removing one is the
+                     project's decision. A project that sets its own default
+                     also stops receiving names madock adds to the default later:
+                     the setting holds its list whole.
+
+                     extra is the way to add a tool: installed as the image's
+                     last layers, after everything every project shares, so the
+                     heavy layers below stay one copy on the machine. A name the
+                     index does not have is reported in the build output and
+                     skipped, never fatal — a rebuild that stops halfway on a
+                     server leaves the site down. -->
+                <packages>
+                    <default>locales curl wget ca-certificates software-properties-common git zip gzip mc mariadb-client telnet libmagickwand-dev imagemagick libmcrypt-dev procps openssh-client lsof openssl msmtp xdg-utils libssh2-1-dev libssh2-1 jq</default>
+                    <extra></extra>
+                </packages>
+                <extensions>
+                    <default>bcmath cli common curl dev fpm gd intl mbstring mysql soap sqlite3 xml xsl zip imagick ctype dom fileinfo iconv simplexml sockets tokenizer xmlwriter ssh2 redis</default>
+                    <extra></extra>
+                </extensions>
             </php>
             <db>
                 <enabled>true</enabled>
@@ -324,6 +368,11 @@
                     <enabled>false</enabled>
                     <version>1.22.19</version>
                 </yarn>
+                <!-- apt packages added to the node container's image, as its last
+                     layer. Same rules as php/packages/extra. -->
+                <packages>
+                    <extra></extra>
+                </packages>
             </nodejs>
             <search>
                 <engine>elasticsearch</engine>

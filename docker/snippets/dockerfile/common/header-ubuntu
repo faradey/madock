@@ -4,22 +4,8 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NOWARNINGS="yes"
 
 RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y \
-    locales \
-    curl \
-    wget \
-    ca-certificates \
-    software-properties-common \
-    git \
-    zip \
-    gzip \
-    mc \
-    mariadb-client \
-    procps \
-    openssh-client \
-    lsof \
-    openssl \
-    jq \
-    build-essential \
+    {{{aptLines "" .app.packages.default}}} \
     && locale-gen en_US.UTF-8
 
 {{{template "snippets/dockerfile/common/timezone" .}}}
+{{{- template "snippets/dockerfile/common/packages-extra" .app.packages.extra}}}

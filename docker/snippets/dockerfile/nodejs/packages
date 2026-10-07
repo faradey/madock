@@ -12,3 +12,4 @@ RUN npm install -g grunt-cli
 # installs into a running container is gone at the next rebuild anyway.
 RUN npx --yes playwright install-deps chromium
 {{{- end}}}
+{{{- template "snippets/dockerfile/common/packages-extra" .nodejs.packages.extra}}}

@@ -264,6 +264,7 @@ IMPORTANT: Please, read all items before starting work.
 * [VSCODE + Xdebug Setup](docs/xdebug_vscode.md)
 * [PHPStorm + Xdebug Setup](docs/xdebug_phpstorm.md)
 * [Docker images list](docs/docker_images.md)
+* [Image packages](docs/image_packages.md) — add tools to an image, or own its package list
 * [Customizations](docs/customizations.md)
 * [Docker Compose override](docs/docker_compose_override.md)
 * [Database import, export, synchronization, phpmyadmin](docs/database.md)

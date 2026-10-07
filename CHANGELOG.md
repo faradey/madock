@@ -1,3 +1,8 @@
+**Unreleased**
+
+Added:
+- **The packages of an image are settings.** `php/packages/default` and `php/extensions/default` are the two lists the php image installs, `app/packages/default` the list of the ubuntu-based application image (`none`, `python`, `ruby`); each defaults to exactly what the template wrote, so a project that sets nothing renders the same Dockerfile byte for byte — every existing golden fixture is unchanged, and nothing rebuilds. `php/packages/extra`, `php/extensions/extra`, `app/packages/extra` and `nodejs/packages/extra` add to an image as its **last** layers, after everything projects share, so the heavy layers stay one copy on the machine whatever a project adds. A name the package index lacks is reported in the build output and skipped rather than stopping the build. The index those layers fetch is left in place: the first version removed it, and the e2e test failed on `Package cron is not available` — the cron step installs without fetching its own index, from the one a previous layer left. Nothing in a default list is enforced: `docs/image_packages.md` names what madock and madock-pro rely on and what stops working without each, checked against both codebases. A project that sets its own `default` stops receiving names madock adds later — the setting holds its list whole — which is why adding a tool is `extra`. `TestExtraPackagesReachTheImage` asks the running container for a package and an extension added this way, beside a name that does not exist; `TestAptLinesKeepsTheHandWrittenShape` and the golden fixtures fail when the rendered list moves by a byte
+
 **v4.3.0**
 
 Upgrading:

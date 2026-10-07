@@ -324,3 +324,25 @@ func TestCompareVersions(t *testing.T) {
 		}
 	}
 }
+
+// A package list moved from a literal into a setting has to render the way the
+// literal was written — the first name where the call stands, each next one on
+// its own line behind " \" — or the layer's cache key changes and every image
+// rebuilds once for nothing.
+func TestAptLinesKeepsTheHandWrittenShape(t *testing.T) {
+	got := render(t, `install -y {{{aptLines "" .php.packages.default}}} \`, map[string]string{
+		"php/packages/default": "locales curl  wget",
+	})
+	want := "install -y locales \\\n    curl \\\n    wget \\"
+	if got != want {
+		t.Errorf("rendered\n%q\nwant\n%q", got, want)
+	}
+
+	got = render(t, `{{{aptLines (printf "php%s-" .php.version) .php.extensions.default}}}`, map[string]string{
+		"php/version":            "8.4",
+		"php/extensions/default": "cli fpm",
+	})
+	if got != "php8.4-cli \\\n    php8.4-fpm" {
+		t.Errorf("prefixed list rendered %q", got)
+	}
+}

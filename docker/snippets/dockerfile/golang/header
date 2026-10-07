@@ -22,3 +22,4 @@ RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get ins
     && locale-gen en_US.UTF-8
 
 {{{template "snippets/dockerfile/common/timezone" .}}}
+{{{- template "snippets/dockerfile/common/packages-extra" .app.packages.extra}}}
