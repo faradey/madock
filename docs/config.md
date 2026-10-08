@@ -202,6 +202,93 @@ does not need a different binary.
 | `go/version` | Go version (custom platform) | `1.22` |
 | `ruby/version` | Ruby version (custom platform) | `3.3` |
 
+## Limits, php.ini, memory and the proxy
+
+These used to be literals inside templates; they are settings now, and each
+default is the value that was compiled in, so a project that sets nothing gets
+what it had. Set a project's value with `config:set` and apply it with
+`madock rebuild --changed`, which touches only the services the change belongs
+to — a vhost change is an `nginx -s reload`, a php change recreates php alone:
+
+```bash
+madock config:set --name=php/limits/memory --value=2G
+madock config:set --name=php/ini/upload_max_filesize --value=200M
+madock config:set --name=nginx/max_body_size --value=200M
+madock rebuild --changed
+```
+
+`config:set` writes `~/.madock/projects/<project>/config.xml`. A key that the
+project's own `.madock/config.xml` sets wins over it — edit it there instead.
+
+### PHP
+
+| Key | Default | What it is | Applied by |
+|---|---|---|---|
+| `php/limits/memory` | `756M` | `memory_limit` for web requests, passed by the vhost | nginx reload |
+| `php/limits/max_execution_time` | `18000` | time limit for the long-running entry points (setup, imports) | nginx reload |
+| `php/limits/max_execution_time_web` | `600` | time limit for ordinary page requests | nginx reload |
+| `php/ini/post_max_size` | `80M` | `php.ini` | php rebuild |
+| `php/ini/upload_max_filesize` | `50M` | `php.ini` | php rebuild |
+| `php/ini/max_input_vars` | `50000` | `php.ini` | php rebuild |
+| `php/ini/session_cookie_lifetime` | `2592000` | `php.ini` | php rebuild |
+| `php/fpm/max_children` | `40` | the most workers php-fpm starts | php rebuild |
+| `php/fpm/start_servers` | `2` | workers started at boot | php rebuild |
+| `php/fpm/min_spare_servers` | `1` | idle workers kept at least | php rebuild |
+| `php/fpm/max_spare_servers` | `3` | idle workers kept at most | php rebuild |
+
+`php.ini` values are written when the image is built, so editing `php.ini`
+inside a running container does not survive the next rebuild. Every idle worker
+holds memory of its own, which is why the spare values are small: a burst
+spawns up to `max_children` as it arrives.
+
+An upload has to pass three limits, and the smallest one wins:
+`php/ini/upload_max_filesize` (and `post_max_size`), the project's
+`nginx/max_body_size` (default `2G`), and the shared proxy's
+`proxy/max_body_size` (default `128M`, below).
+
+### Memory of the services
+
+| Key | Default | What it is | Applied by |
+|---|---|---|---|
+| `db/memory` | `768M` | the database's budget, divided between its buffers in `my.cnf` | db restart |
+| `search/opensearch/heap` | `1g` | the JVM heap | search recreate |
+| `search/opensearch/memory_limit` | `2512m` | the container's limit | search recreate |
+| `search/elasticsearch/heap` | `800m` | the JVM heap | search recreate |
+| `search/elasticsearch/memory_limit` | `2512m` | the container's limit | search recreate |
+| `memcached/memory` | `256` | megabytes | memcached recreate |
+
+The search engine needs memory beyond its heap, so the limit has to be well
+above it; a heap that does not fit under its limit is refused when the
+configuration is rendered, rather than killed later.
+
+### The shared proxy
+
+There is one proxy per machine, so its settings belong to the installation, not
+to a project: set them with `--global`, and apply them with `madock proxy:start`,
+which regenerates the proxy configuration and reloads it when it changed.
+
+```bash
+madock config:set --global --name=proxy/max_body_size --value=512M
+madock config:set --global --name=proxy/ssl/protocols --value="TLSv1.3"
+madock proxy:start
+```
+
+| Key | Default | What it is |
+|---|---|---|
+| `proxy/max_body_size` | `128M` | the largest request body the proxy accepts |
+| `proxy/ssl/protocols` | `TLSv1.2 TLSv1.3` | `ssl_protocols` |
+| `proxy/ssl/ciphers` | a modern ECDHE/CHACHA20 list | `ssl_ciphers`, colon-separated |
+| `proxy/worker/processes` | `2` | `worker_processes` |
+| `proxy/worker/connections` | `4096` | `worker_connections` |
+| `proxy/worker/rlimit_nofile` | `200000` | `worker_rlimit_nofile` |
+| `proxy/server_names_hash/bucket_size` | `128` | raise it when nginx refuses a long host name |
+| `proxy/server_names_hash/max_size` | `1024` | raise it with many host names on one machine |
+
+Without `--global`, a `proxy/` key is written into the project and changes
+nothing — the proxy reads the installation's config only. A value nginx cannot
+read stops the proxy, and the proxy serves every project on the machine; check
+`madock proxy:logs` after a change.
+
 ## Node.js in two places, and they are different questions
 
 ```bash
