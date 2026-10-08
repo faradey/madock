@@ -179,9 +179,20 @@
                      into them, and what it looks like is a 500 with nothing in
                      the nginx log to explain it.
 
-                     max_execution_time_web is the shorter one used for ordinary
-                     page requests on Magento; max_execution_time is what the
-                     long-running entry points get. -->
+                     max_execution_time is what every request through the front
+                     controller gets, on every platform (index.php, and on
+                     Magento get.php, static.php and the error pages too).
+                     max_execution_time_web is narrower than its name: only
+                     Magento's web setup wizard, /setup/index.php, reads it.
+                     The two literals were carried over as they stood when they
+                     became keys (18000 and 600), and this comment described them
+                     the other way round until 2026-10-08.
+
+                     These are not php.ini values. nginx hands them to php-fpm
+                     per request as PHP_VALUE, so they differ per location, apply
+                     to web requests only — never to the CLI, cron or queue
+                     consumers — and change with an nginx reload instead of an
+                     image rebuild. -->
                 <limits>
                     <memory>756M</memory>
                     <max_execution_time>18000</max_execution_time>

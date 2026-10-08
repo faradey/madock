@@ -225,8 +225,8 @@ project's own `.madock/config.xml` sets wins over it — edit it there instead.
 | Key | Default | What it is | Applied by |
 |---|---|---|---|
 | `php/limits/memory` | `756M` | `memory_limit` for web requests, passed by the vhost | nginx reload |
-| `php/limits/max_execution_time` | `18000` | time limit for the long-running entry points (setup, imports) | nginx reload |
-| `php/limits/max_execution_time_web` | `600` | time limit for ordinary page requests | nginx reload |
+| `php/limits/max_execution_time` | `18000` | time limit of every web request through the front controller, on every platform | nginx reload |
+| `php/limits/max_execution_time_web` | `600` | time limit of Magento's web setup wizard (`/setup`) only — narrower than its name | nginx reload |
 | `php/ini/post_max_size` | `80M` | `php.ini` | php rebuild |
 | `php/ini/upload_max_filesize` | `50M` | `php.ini` | php rebuild |
 | `php/ini/max_input_vars` | `50000` | `php.ini` | php rebuild |
@@ -236,8 +236,15 @@ project's own `.madock/config.xml` sets wins over it — edit it there instead.
 | `php/fpm/min_spare_servers` | `1` | idle workers kept at least | php rebuild |
 | `php/fpm/max_spare_servers` | `3` | idle workers kept at most | php rebuild |
 
-`php.ini` values are written when the image is built, so editing `php.ini`
-inside a running container does not survive the next rebuild. Every idle worker
+**`php/limits` and `php/ini` are two different mechanisms**, which is why they
+are two groups. `php/limits` is not written into `php.ini` at all: nginx hands
+it to php-fpm with every request as `PHP_VALUE`, per location — which is how the
+setup wizard and the storefront get different time limits — so it applies to
+web requests only, never to the CLI, cron or queue consumers, and an nginx
+reload applies it. `php/ini` values are written into php-fpm's `php.ini` when
+the image is built — the CLI keeps its own `php.ini` and is not changed — so
+they need a php rebuild, and an edit to `php.ini` inside a running container
+does not survive the next one. Every idle worker
 holds memory of its own, which is why the spare values are small: a burst
 spawns up to `max_children` as it arrives.
 
