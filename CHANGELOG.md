@@ -1,4 +1,4 @@
-**Unreleased**
+**v4.3.3**
 
 Added:
 - **Global npm packages are settings: `nodejs/npm/default` and `nodejs/npm/extra`.** `grunt-cli` was installed into every image that has node — the node container, node embedded in the application image, the claude container — whether or not the project builds anything with grunt. `default` is that list and renders the same line as before; emptying it installs none. `extra` is installed after it, all at once and then one by one, so a name the registry does not have is reported in the build output rather than stopping the build halfway on a server. yarn stays behind `nodejs/yarn/enabled`. `TestNpmGlobalPackagesAreSettings` fails against the old templates in all four places, the nodejs language image included
