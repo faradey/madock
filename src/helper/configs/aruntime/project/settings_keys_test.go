@@ -71,6 +71,50 @@ func TestNpmGlobalPackagesAreSettings(t *testing.T) {
 	}
 }
 
+// The dashboards were pinned to linux/x86_64 on every machine, so on an arm64
+// Mac they ran emulated even where an arm64 image exists. Only versions
+// published for amd64 alone ask for it now. Checked on Docker Hub 2026-10-08:
+// kibana has arm64 from 7.16, opensearch-dashboards from 1.1.
+func TestDashboardsRunNativeWhereAnImageExists(t *testing.T) {
+	for _, tc := range []struct {
+		engine, version, service string
+		amd64                    bool
+	}{
+		{"elasticsearch", "7.10.1", "kibana", true},
+		{"elasticsearch", "7.17.5", "kibana", false},
+		{"opensearch", "1.0.0", "opensearchdashboard", true},
+		{"opensearch", "2.19.1", "opensearchdashboard", false},
+	} {
+		t.Run(tc.service+"-"+tc.version, func(t *testing.T) {
+			name := "dash" + strings.ReplaceAll(tc.engine+tc.version, ".", "")
+			env := testenv.SetupWith(t, name, name+".test", map[string]string{
+				"search/engine":                             tc.engine,
+				"search/" + tc.engine + "/enabled":           "true",
+				"search/" + tc.engine + "/version":           tc.version,
+				"search/" + tc.engine + "/dashboard/enabled": "true",
+			})
+
+			MakeConf(name)
+
+			compose := readGenerated(t, env, "docker-compose.yml")
+			start := strings.Index(compose, "  "+tc.service+":")
+			if start < 0 {
+				t.Fatalf("no %s service in the compose file:\n%s", tc.service, compose)
+			}
+			block := compose[start:]
+			if end := strings.Index(block, "restart:"); end > 0 {
+				block = block[:end]
+			}
+			if strings.Contains(block, "x86_64") {
+				t.Errorf("%s %s still pinned to x86_64:\n%s", tc.service, tc.version, block)
+			}
+			if got := strings.Contains(block, "platform: linux/amd64"); got != tc.amd64 {
+				t.Errorf("%s %s: platform linux/amd64 rendered = %v, want %v:\n%s", tc.service, tc.version, got, tc.amd64, block)
+			}
+		})
+	}
+}
+
 func TestMessengerLimitsAreSettings(t *testing.T) {
 	for _, tc := range []struct{ platform, want string }{
 		{"shopware", "--time-limit=600 --memory-limit=1G"},
