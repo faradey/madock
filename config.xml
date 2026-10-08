@@ -169,42 +169,33 @@
                      that the first attempt to justify them attributed a whole
                      suite's result to all four keys changed at once, which is a
                      coincidence wearing a measurement's clothes. -->
-                <!-- What php-fpm is told per request by the vhost.
-                     
-                     These were three copies of the same number inside the
-                     platform vhosts (magento2, shopware, sylius and the shared
-                     php snippet), and a project could not change them without
-                     copying a 240-line vhost into its own .madock/docker.
-                     An import or a reindex through the web is exactly what runs
-                     into them, and what it looks like is a 500 with nothing in
-                     the nginx log to explain it.
+                <!-- php.ini directives, under the names PHP gives them.
 
-                     max_execution_time is what every request through the front
-                     controller gets, on every platform (index.php, and on
-                     Magento get.php, static.php and the error pages too).
-                     max_execution_time_setup is what Magento's web setup wizard,
-                     /setup/index.php, gets — nothing else reads it. It was
-                     max_execution_time_web until the release after 4.3.0, a name
-                     read as "every web request", and this comment said so too;
-                     the old name is still read (src/helper/configs/renamed.go).
+                     Two ways in, chosen per directive and invisible in the name,
+                     which is the point: whoever looks for max_execution_time
+                     looks here.
 
-                     These are not php.ini values. nginx hands them to php-fpm
-                     per request as PHP_VALUE, so they differ per location, apply
-                     to web requests only — never to the CLI, cron or queue
-                     consumers — and change with an nginx reload instead of an
-                     image rebuild. -->
-                <limits>
-                    <memory>756M</memory>
-                    <max_execution_time>18000</max_execution_time>
-                    <max_execution_time_setup>600</max_execution_time_setup>
-                </limits>
-                <!-- php.ini values written when the image is built.
-                     
-                     Editing php.ini inside a running container does not survive
-                     the next rebuild — the image is built from the template, and
-                     the edit goes with it. These are the four that get changed
-                     first, so they are keys rather than literals in a snippet. -->
+                     memory_limit and max_execution_time are handed to php-fpm by
+                     the vhost with every request, as PHP_VALUE. So they apply to
+                     web requests only — never to the CLI, cron or queue
+                     consumers — reach every location the platform's vhost
+                     serves, Magento's /setup included, and change with an nginx
+                     reload, no rebuild. They lived under php/limits until 4.3.1,
+                     where the name hid them from anyone who knows them as ini
+                     settings; the old names are still read until 5.0.0. Magento's
+                     own nginx.conf.sample gives /setup 600 seconds, and madock
+                     did too, under a key of its own — one more name for the same
+                     directive, on one platform, for a page Magento 2.4 barely
+                     serves. It is gone; /setup gets max_execution_time like
+                     everything else.
+
+                     The rest are written into php-fpm's php.ini when the image is
+                     built, so they need a php rebuild, and an edit to php.ini
+                     inside a running container does not survive the next one.
+                     The CLI keeps its own php.ini. -->
                 <ini>
+                    <memory_limit>756M</memory_limit>
+                    <max_execution_time>18000</max_execution_time>
                     <post_max_size>80M</post_max_size>
                     <upload_max_filesize>50M</upload_max_filesize>
                     <max_input_vars>50000</max_input_vars>

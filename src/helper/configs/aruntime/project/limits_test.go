@@ -32,9 +32,8 @@ func readGenerated(t *testing.T, env *testenv.Env, relative string) string {
 // nothing in the nginx log to explain it.
 func TestPhpLimitsReachTheVhost(t *testing.T) {
 	env := testenv.SetupWith(t, "limitsproject", "limits.test", map[string]string{
-		"php/limits/memory":                   "4096M",
-		"php/limits/max_execution_time":       "7200",
-		"php/limits/max_execution_time_setup": "900",
+		"php/ini/memory_limit":       "4096M",
+		"php/ini/max_execution_time": "7200",
 	})
 
 	MakeConf("limitsproject")
@@ -43,11 +42,17 @@ func TestPhpLimitsReachTheVhost(t *testing.T) {
 	for _, want := range []string{
 		"memory_limit=4096M",
 		"max_execution_time=7200",
-		"max_execution_time=900",
 	} {
 		if !strings.Contains(vhost, want) {
 			t.Errorf("missing %q in the generated vhost:\n%s", want, firstLines(vhost, 60))
 		}
+	}
+
+	// One directive, one name: Magento's /setup reads it like every other
+	// location. It had a key of its own until 4.3.1, so a value set for the
+	// store never reached the wizard.
+	if n := strings.Count(vhost, "max_execution_time=7200"); n != 3 {
+		t.Errorf("max_execution_time reached %d of the three PHP locations of the Magento vhost:\n%s", n, firstLines(vhost, 250))
 	}
 
 	if strings.Contains(vhost, "memory_limit=756M") {
@@ -55,20 +60,23 @@ func TestPhpLimitsReachTheVhost(t *testing.T) {
 	}
 }
 
-// The setup wizard's limit was php/limits/max_execution_time_web, and a
-// project's committed .madock/config.xml carries that name back on every
-// deploy. Read as unknown, it would be dropped without a word and the wizard
-// would fall back to 600 — so the old name still has to reach the vhost.
-func TestTheOldSetupLimitNameStillReachesTheVhost(t *testing.T) {
-	env := testenv.SetupWith(t, "oldsetupname", "oldsetup.test", map[string]string{
-		"php/limits/max_execution_time_web": "1234",
+// The two directives were php/limits/memory and php/limits/max_execution_time
+// until 4.3.1, and a project's committed .madock/config.xml carries those names
+// back on every deploy. Read as unknown they would be dropped without a word,
+// so the old names still have to reach the vhost.
+func TestTheOldLimitNamesStillReachTheVhost(t *testing.T) {
+	env := testenv.SetupWith(t, "oldlimitnames", "oldlimits.test", map[string]string{
+		"php/limits/memory":             "1234M",
+		"php/limits/max_execution_time": "4321",
 	})
 
-	MakeConf("oldsetupname")
+	MakeConf("oldlimitnames")
 
 	vhost := readGenerated(t, env, "ctx/nginx.conf")
-	if !strings.Contains(vhost, "max_execution_time=1234") {
-		t.Errorf("a value under the old name did not reach /setup:\n%s", firstLines(vhost, 70))
+	for _, want := range []string{"memory_limit=1234M", "max_execution_time=4321"} {
+		if !strings.Contains(vhost, want) {
+			t.Errorf("a value under the old name did not reach the vhost: missing %q\n%s", want, firstLines(vhost, 70))
+		}
 	}
 }
 
@@ -228,13 +236,13 @@ func composeSection(compose, key string) string {
 // and no migration can rewrite it for good; it has to keep rendering.
 func TestACopiedVhostUnderTheOldNameStillRenders(t *testing.T) {
 	env := testenv.SetupWith(t, "oldcopy", "oldcopy.test", map[string]string{
-		"php/limits/max_execution_time_setup": "4321",
+		"php/ini/max_execution_time": "4321",
 	})
 	dir := filepath.Join(env.RunDir, ".madock", "docker", "nginx", "conf")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	copied := "server { setup_limit={{{.php.limits.max_execution_time_web}}}; }\n"
+	copied := "server { setup_limit={{{.php.limits.max_execution_time}}}; }\n"
 	if err := os.WriteFile(filepath.Join(dir, "default.conf"), []byte(copied), 0o644); err != nil {
 		t.Fatal(err)
 	}

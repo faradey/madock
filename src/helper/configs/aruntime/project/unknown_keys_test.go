@@ -19,16 +19,16 @@ func TestAProjectTemplateReadingARetiredKeyIsNamed(t *testing.T) {
 	legacy := `ports:
   - "{{{nginx/port/project}}}:80"
   - "{{{nginx/port/project_ssl}}}:443"
-memory: {{{php/limits/memory}}}
+memory: {{{php/ini/memory_limit}}}
 `
 	if got, want := unknownKeysIn("docker-compose.yml", legacy, r.Values, r.Data), []string{"nginx/port/project", "nginx/port/project_ssl"}; !reflect.DeepEqual(got, want) {
 		t.Errorf("old syntax: unknown keys %v, want %v", got, want)
 	}
 
-	current := `memory: {{{.php.limits.memory}}}
+	current := `memory: {{{.php.ini.memory_limit}}}
 {{{range $host := .nginx.hosts}}}{{{$host.name}}}{{{end}}}
 {{{range $name, $p := .worker.programs}}}{{{$name}}}{{{end}}}
-setup: {{{.php.limits.max_execution_time_web}}}
+old: {{{.php.limits.max_execution_time}}}
 newer: {{{.php.packages.someday}}}
 `
 	if got, want := unknownKeysIn("default.conf", current, r.Values, r.Data), []string{"php/packages/someday"}; !reflect.DeepEqual(got, want) {
