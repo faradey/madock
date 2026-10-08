@@ -1,3 +1,9 @@
+**v4.3.4**
+
+Fixed:
+- **`php/ini/memory_limit` and `php/ini/max_execution_time` did nothing on WooCommerce and PrestaShop.** Their vhosts passed no `PHP_VALUE`, so php ran on the `php.ini` of the package whatever the project set, while the documentation said the keys apply to every web request. Both vhosts now pass them like the other platforms. `TestPhpLimitsReachEveryPlatformVhost` fails against the old templates
+- **nginx stopped waiting for php before php was allowed to stop.** `fastcgi_read_timeout` was a literal per vhost — 18000 seconds on most, 600 on Magento's `/setup`, 300 on WooCommerce, 30 on PrestaShop — so raising `max_execution_time` above it answered 504 while the script was still running. It now follows `php/ini/max_execution_time` in every php vhost, and `0`, which php reads as no limit, waits a day instead of rendering `0s`; a value that is not whole seconds fails the render and names the setting. With the defaults, Magento, Shopware, Sylius and custom projects render unchanged; Magento's `/setup` waits 18000 seconds instead of 600, WooCommerce and PrestaShop wait 18000 instead of 300 and 30 and get `memory_limit` 756M. Through the shared proxy every request still ends at `proxy/timeout/read` (300 seconds by default). `TestPhpLimitsReachTheVhost`, `TestUnlimitedExecutionTimeIsNotAZeroWait` and `TestPhpWaitFollowsMaxExecutionTime` fail against the old templates or with the zero branch removed
+
 **v4.3.3**
 
 Added:
