@@ -1,3 +1,8 @@
+**v4.3.2**
+
+Fixed:
+- **A copied vhost asking for `php/limits/max_execution_time_web` rendered `max_execution_time=` with no value.** 4.3.1 folded `/setup`'s own limit into `php/ini/max_execution_time` and dropped the old key outright, while a production store's own copy of the Magento vhost under `.madock/docker/` still read it — found by the unknown-settings warning on the store's first rebuild after the upgrade. Templates that ask for the old name now get `max_execution_time`. A value stored under the old key is still not read: it was set for `/setup` alone, and read as `max_execution_time` it would become the limit of every request — 60 seconds for the wizard turning into 60 seconds for the store. The deprecation ledger can now say that (`TemplateOnly`). `TestACopiedVhostAskingForTheOldSetupKeyGetsMaxExecutionTime` fails without the entry; `TestAValueUnderTheOldSetupKeyDoesNotBecomeTheStoreLimit` fails when the entry is not template-only
+
 **v4.3.1**
 
 Upgrading:

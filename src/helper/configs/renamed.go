@@ -15,9 +15,13 @@ import "github.com/faradey/madock/v4/src/helper/deprecation"
 // both keeps the new one — that is the deliberate one.
 var renamedKeys = deprecation.RenamedKeys()
 
+// templateNames is every renamed key, template-only ones included: what a
+// copied template may still ask for, and what config:set redirects.
+var templateNames = deprecation.TemplateNames()
+
 // RenamedTo reports the current name of a renamed key.
 func RenamedTo(name string) (string, bool) {
-	newName, ok := renamedKeys[name]
+	newName, ok := templateNames[name]
 	return newName, ok
 }
 
@@ -29,7 +33,7 @@ func RenamedTo(name string) (string, bool) {
 // rendered. Only template values get this — config:list and config:set see the
 // current names alone.
 func MirrorRenamed(values map[string]string) {
-	for oldName, newName := range renamedKeys {
+	for oldName, newName := range templateNames {
 		if value, ok := values[newName]; ok {
 			values[oldName] = value
 		}

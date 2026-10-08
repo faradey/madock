@@ -290,8 +290,10 @@ a running container does not survive the next one.
 Until 4.3.1 the first two were `php/limits/memory` and
 `php/limits/max_execution_time`; those names are still read until 5.0.0. Magento's
 `/setup` had a time limit of its own, `php/limits/max_execution_time_web` (600);
-it now reads `php/ini/max_execution_time` like every other location, and the old
-key is no longer read.
+it now reads `php/ini/max_execution_time` like every other location. A copied
+template that still asks for the old key gets `max_execution_time`; a value
+stored under the old key is not read, because it was meant for `/setup` alone
+and would otherwise become the limit of every request.
 
 Every idle worker
 holds memory of its own, which is why the spare values are small: a burst

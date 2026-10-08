@@ -40,6 +40,11 @@ type Entry struct {
 	Kind Kind
 	// Old and New, for a renamed key.
 	Old, New string
+	// TemplateOnly answers the old name to templates without reading a value
+	// stored under it as the new key — for a key whose meaning widened in the
+	// move, where a value set for the narrow meaning must not become the wide
+	// one.
+	TemplateOnly bool
 	// What is kept and why, one sentence for whoever removes it.
 	What string
 	// Where the code to delete lives.
@@ -71,6 +76,26 @@ var Ledger = []Entry{
 		RemoveIn: "5.0.0",
 	},
 	{
+		// /setup's own limit was folded into max_execution_time in 4.3.1, and
+		// the old name was dropped outright — while a production store's own
+		// copy of the Magento vhost still read it, and rendered
+		// max_execution_time= with no value. Found by the unknown-settings
+		// warning on that store's first rebuild after the upgrade.
+		//
+		// Template-only on purpose: a value stored under the old key was set
+		// for /setup alone, and read as max_execution_time it would become the
+		// limit of every request — 60 seconds for the wizard turning into 60
+		// seconds for the store.
+		Kind:         RenamedKey,
+		Old:          "php/limits/max_execution_time_web",
+		New:          "php/ini/max_execution_time",
+		TemplateOnly: true,
+		What:         "copied templates that still ask for the setup wizard's old time-limit key are answered with max_execution_time; a value stored under the old key is not read",
+		Where:        "src/helper/configs/renamed.go",
+		Since:        "4.3.2",
+		RemoveIn:     "5.0.0",
+	},
+	{
 		Kind:     Other,
 		What:     "templates in the pre-3.10 syntax ({{{nginx/port}}}, <<<if, {{{include}}}) are converted at render time; a project's own copies under .madock/docker are the only ones left — on one developer machine on 2026-10-08, seven of ten override templates still used it",
 		Where:    "src/helper/tmpl/legacy.go, and its callers in tmpl.Renderer.source and the template audit",
@@ -79,8 +104,21 @@ var Ledger = []Entry{
 	},
 }
 
-// RenamedKeys is the old-name → new-name map of every RenamedKey entry.
+// RenamedKeys is the old-name → new-name map of the renamed keys whose stored
+// values are read under the new name.
 func RenamedKeys() map[string]string {
+	keys := map[string]string{}
+	for _, e := range Ledger {
+		if e.Kind == RenamedKey && !e.TemplateOnly {
+			keys[e.Old] = e.New
+		}
+	}
+	return keys
+}
+
+// TemplateNames is the old-name → new-name map of every renamed key, for
+// answering copied templates and for pointing config:set at the new name.
+func TemplateNames() map[string]string {
 	keys := map[string]string{}
 	for _, e := range Ledger {
 		if e.Kind == RenamedKey {
