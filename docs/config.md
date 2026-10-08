@@ -41,6 +41,49 @@ cp ~/.madock/projects/{project_name}/config.xml .madock/config.xml
 
 > **Important**: `.madock/config.xml` is read-only for madock — CLI commands (`service:enable/disable`, `config:set`, `debug:enable/disable`, `cron:enable/disable`) always write to `~/.madock/projects/{project_name}/config.xml`. This allows `.madock/config.xml` to be safely committed to your repository without unexpected modifications on servers or CI environments.
 
+## What is shared by a team, and which madock it needs
+
+Everything under the project's `.madock/` is committed, so every developer and
+every server on the project reads the same files: `config.xml` and every
+template under `.madock/docker/`. What `config:set` writes —
+`~/.madock/projects/<project>/` — is each machine's own.
+
+The people sharing those files do not all run the same madock. A newer madock
+keeps reading names that were renamed, so an older file is never the problem.
+A newer one is: a setting, a template function or a snippet that an older
+madock does not know. A missing snippet or function stops the render with an
+error; an unknown setting would render as empty, so madock names it on every
+render of a project's own template:
+
+```
+.madock/docker/docker-compose.yml reads settings this madock does not have, so they render empty:
+  nginx/port/project
+```
+
+When a project starts relying on something new, say which madock it needs, in
+`.madock/config.xml`:
+
+```xml
+<config>
+    <scopes>
+        <default>
+            <madock>
+                <min_version>4.4.0</min_version>
+            </madock>
+        </default>
+    </scopes>
+</config>
+```
+
+An older madock then refuses every project command and names the version to
+update to; `madock version` and the other global commands still run. madock
+never writes this key and never creates the file for it — it is the project's
+statement. madock-pro reads `madock_pro/min_version` the same way.
+
+Support for old names and old syntax lasts until the next major release and is
+removed in it; `src/helper/deprecation/deprecation.go` lists what is kept and
+the release that removes it.
+
 ## Benefits of Project-Local Configuration
 
 - **Version Control**: Track configuration changes in Git without risk of automatic overwrites

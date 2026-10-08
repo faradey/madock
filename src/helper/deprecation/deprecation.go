@@ -61,6 +61,13 @@ var Ledger = []Entry{
 		Since:    "4.3.1",
 		RemoveIn: "5.0.0",
 	},
+	{
+		Kind:     Other,
+		What:     "templates in the pre-3.10 syntax ({{{nginx/port}}}, <<<if, {{{include}}}) are converted at render time; a project's own copies under .madock/docker are the only ones left — on one developer machine on 2026-10-08, seven of ten override templates still used it",
+		Where:    "src/helper/tmpl/legacy.go, and its callers in tmpl.Renderer.source and the template audit",
+		Since:    "3.10.0",
+		RemoveIn: "5.0.0",
+	},
 }
 
 // RenamedKeys is the old-name → new-name map of every RenamedKey entry.
