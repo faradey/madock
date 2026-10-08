@@ -201,6 +201,20 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// Global npm packages as settings: the default cut to nothing, and
+			// two of the project's own installed after it with the one-by-one
+			// fallback.
+			name: "custom-nodejs-npm",
+			overrides: map[string]string{
+				"platform":           "custom",
+				"language":           "nodejs",
+				"php/enabled":        "false",
+				"nodejs/enabled":     "true",
+				"nodejs/npm/default": "",
+				"nodejs/npm/extra":   "pnpm tsx",
+			},
+		},
+		{
 			// A Node service beside a language that is not Node. The compose
 			// file renders the service on nodejs/enabled alone, and its
 			// Dockerfile used to be written only for PHP projects — so this

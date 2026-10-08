@@ -14,7 +14,7 @@
     command: "-p default_keep=300"
     environment:
       VARNISH_HTTP_PORT: 6081
-      VARNISH_SIZE: 1G
+      VARNISH_SIZE: {{{.varnish.size}}}
     {{{- if .nginx.enabled}}}
     depends_on:
       - nginx

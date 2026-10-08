@@ -375,6 +375,15 @@
                 <packages>
                     <extra></extra>
                 </packages>
+                <!-- npm packages installed globally wherever node is: the node
+                     container, node embedded in the application container, and
+                     the claude container. `default` is what every image always
+                     had; empty it to install none. `extra` is installed after it.
+                     yarn stays behind nodejs/yarn/enabled. -->
+                <npm>
+                    <default>grunt-cli</default>
+                    <extra></extra>
+                </npm>
             </nodejs>
             <search>
                 <engine>elasticsearch</engine>
@@ -527,8 +536,13 @@
                 </n98magerun>
             </magento>
             <shopware>
+                <!-- memory_limit and time_limit are messenger:consume's own
+                     options: the worker exits past either and the container
+                     restarts it, which is what keeps a leaking consumer bounded. -->
                 <messenger>
                     <enabled>false</enabled>
+                    <memory_limit>512M</memory_limit>
+                    <time_limit>3600</time_limit>
                 </messenger>
                 <!-- shopware-cli, the vendor's extension tooling. Off by
                      default and downloaded into the php image when enabled, the
@@ -579,8 +593,11 @@
                 </storefront>
             </spree>
             <sylius>
+                <!-- As shopware/messenger. -->
                 <messenger>
                     <enabled>false</enabled>
+                    <memory_limit>256M</memory_limit>
+                    <time_limit>3600</time_limit>
                 </messenger>
                 <encore>
                     <enabled>false</enabled>
@@ -738,6 +755,9 @@
                 <repository>varnish</repository>
                 <version>7.5.0</version>
                 <config_file>default.vcl</config_file>
+                <!-- The cache storage, VARNISH_SIZE. Varnish takes it as it fills,
+                     so this is a ceiling rather than memory reserved at start. -->
+                <size>1G</size>
             </varnish>
             <grafana>
                 <enabled>false</enabled>

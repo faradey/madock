@@ -1,3 +1,15 @@
+**Unreleased**
+
+Added:
+- **Global npm packages are settings: `nodejs/npm/default` and `nodejs/npm/extra`.** `grunt-cli` was installed into every image that has node — the node container, node embedded in the application image, the claude container — whether or not the project builds anything with grunt. `default` is that list and renders the same line as before; emptying it installs none. `extra` is installed after it, all at once and then one by one, so a name the registry does not have is reported in the build output rather than stopping the build halfway on a server. yarn stays behind `nodejs/yarn/enabled`. `TestNpmGlobalPackagesAreSettings` fails against the old templates in all four places, the nodejs language image included
+- `varnish/size` — the cache storage, `VARNISH_SIZE`, was `1G` in the template
+- `shopware/messenger/memory_limit`, `shopware/messenger/time_limit`, `sylius/messenger/memory_limit`, `sylius/messenger/time_limit` — the consumer's `--memory-limit` and `--time-limit`, which were literals in the compose snippets (`512M`/`3600` and `256M`/`3600`). `TestVarnishSizeIsASetting` and `TestMessengerLimitsAreSettings` fail against the old templates
+
+Every default is the literal it replaces: all existing golden fixtures render byte for byte as before, so nothing rebuilds on upgrade.
+
+Docs:
+- `proxy/timeout/connect`, `proxy/timeout/send` and `proxy/timeout/read` are in the table of proxy settings. They existed and were documented nowhere, and `proxy/timeout/read` (300 seconds) is the longest a request through the proxy can wait, whatever `php/ini/max_execution_time` and the project's vhost allow
+
 **v4.3.2**
 
 Fixed:

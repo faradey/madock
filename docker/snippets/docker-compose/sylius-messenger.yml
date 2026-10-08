@@ -47,7 +47,7 @@
         # NB: `$$` escapes docker-compose interpolation so bash sees `$`.
         TRANSPORTS="$${SYLIUS_MESSENGER_TRANSPORTS:-main payment_request catalog_promotion_removal}"
         echo "[madock] messenger: consuming transports: $$TRANSPORTS"
-        exec php bin/console messenger:consume $$TRANSPORTS --memory-limit=256M --time-limit=3600 -vv
+        exec php bin/console messenger:consume $$TRANSPORTS --memory-limit={{{.sylius.messenger.memory_limit}}} --time-limit={{{.sylius.messenger.time_limit}}} -vv
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{- range $host := .nginx.hosts}}}

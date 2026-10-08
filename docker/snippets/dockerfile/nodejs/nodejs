@@ -1,7 +1,10 @@
 FROM {{{.nodejs.repository}}}:{{{.nodejs.version}}}
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
-RUN npm install -g grunt-cli
+{{{- if .nodejs.npm.default}}}
+RUN npm install -g {{{aptLines "" .nodejs.npm.default}}}
+{{{- end}}}
+{{{- template "snippets/dockerfile/common/npm-extra" .nodejs.npm.extra}}}
 
 RUN usermod -u {{{.os.user.uid}}} -o node && groupmod -g {{{.os.user.guid}}} -o node
 RUN usermod -u {{{.os.user.uid}}} -o www-data && groupmod -g {{{.os.user.guid}}} -o www-data

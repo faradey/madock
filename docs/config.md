@@ -314,6 +314,11 @@ An upload has to pass three limits, and the smallest one wins:
 | `search/elasticsearch/heap` | `800m` | the JVM heap | search recreate |
 | `search/elasticsearch/memory_limit` | `2512m` | the container's limit | search recreate |
 | `memcached/memory` | `256` | megabytes | memcached recreate |
+| `varnish/size` | `1G` | the cache storage, `VARNISH_SIZE` — filled as pages are cached, not reserved at start | varnish recreate |
+| `shopware/messenger/memory_limit` | `512M` | `messenger:consume --memory-limit`: the worker exits past it and is restarted | messenger recreate |
+| `shopware/messenger/time_limit` | `3600` | `messenger:consume --time-limit`, seconds | messenger recreate |
+| `sylius/messenger/memory_limit` | `256M` | as above | messenger recreate |
+| `sylius/messenger/time_limit` | `3600` | as above | messenger recreate |
 
 The search engine needs memory beyond its heap, so the limit has to be well
 above it; a heap that does not fit under its limit is refused when the
@@ -341,6 +346,9 @@ madock proxy:start
 | `proxy/worker/rlimit_nofile` | `200000` | `worker_rlimit_nofile` |
 | `proxy/server_names_hash/bucket_size` | `128` | raise it when nginx refuses a long host name |
 | `proxy/server_names_hash/max_size` | `1024` | raise it with many host names on one machine |
+| `proxy/timeout/connect` | `60` | `proxy_connect_timeout`, seconds |
+| `proxy/timeout/send` | `300` | `proxy_send_timeout`, seconds |
+| `proxy/timeout/read` | `300` | `proxy_read_timeout`, seconds: the longest a request through the proxy waits for an answer, whatever the project allows behind it |
 
 Without `--global`, a `proxy/` key is written into the project and changes
 nothing — the proxy reads the installation's config only. A value nginx cannot

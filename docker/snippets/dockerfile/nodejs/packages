@@ -1,4 +1,5 @@
-RUN npm install -g grunt-cli
+{{{if .nodejs.npm.default}}}RUN npm install -g {{{aptLines "" .nodejs.npm.default}}}{{{end}}}
+{{{- template "snippets/dockerfile/common/npm-extra" .nodejs.npm.extra}}}
 {{{- if .nodejs.browser_libs}}}
 # Shared libraries a headless browser needs. Playwright is asked for the list
 # rather than the list being written here: it knows the package names for the
