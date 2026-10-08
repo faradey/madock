@@ -9,7 +9,7 @@
     # Bypass the Shopware php entrypoint (it does chown as root — not needed
     # for the consumer and we already drop to www-data here).
     entrypoint: []
-    command: ["bash", "-c", "exec php bin/console messenger:consume async low_priority --time-limit=3600 --memory-limit=512M -vv"]
+    command: ["bash", "-c", "exec php bin/console messenger:consume async low_priority --time-limit={{{.shopware.messenger.time_limit}}} --memory-limit={{{.shopware.messenger.memory_limit}}} -vv"]
     volumes:
       - ./src:/var/www/html:cached
       - ./composer:/var/www/.composer:cached

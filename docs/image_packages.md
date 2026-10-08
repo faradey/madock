@@ -15,6 +15,8 @@ template. A project takes the tools it needs without copying a Dockerfile into
 | `app/packages/default` | the apt list the ubuntu-based application image always installed | `none`, `python`, `ruby` languages, first layer |
 | `app/packages/extra` | empty | `none`, `python`, `ruby`, `golang`, last layer |
 | `nodejs/packages/extra` | empty | the node container, last layer |
+| `nodejs/npm/default` | `grunt-cli` | `npm install -g` wherever node is: the node container, node embedded in the application image (`nodejs/embedded/enabled`), the claude container. Empty installs none |
+| `nodejs/npm/extra` | empty | `npm install -g`, after `default`, in the same images |
 
 Lists are space-separated names:
 
@@ -26,6 +28,9 @@ madock rebuild --changed
 
 `php_without_xdebug` takes the `extra` keys too; its first layers keep their own
 list.
+
+The npm keys are not apt: a name the registry does not have stops the build, as
+`npm install -g` does on its own. The fallback described below is for apt only.
 
 ## `extra` — adding a tool
 

@@ -1,0 +1,8 @@
+{{{- if .}}}
+# npm packages the project adds: nodejs/npm/extra. All at once first; when that
+# fails, one by one, for the reason given in common/packages-extra — a rebuild
+# that stops halfway on a server leaves the site down.
+RUN { npm install -g {{{.}}} \
+        || for p in {{{.}}}; do npm install -g "$p" || echo "madock: npm package $p could not be installed"; done; } \
+    && npm cache clean --force
+{{{- end}}}
