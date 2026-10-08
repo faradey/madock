@@ -42,6 +42,9 @@ This document lists the Docker images used by Madock.
 ### OpenSearch Dashboards
 * [opensearchproject/opensearch-dashboards](https://hub.docker.com/r/opensearchproject/opensearch-dashboards)
 
+Same version as the engine. Runs on the host's own architecture; version 1.0,
+published for amd64 only, is emulated on an arm64 host (`platform: linux/amd64`).
+
 ## Caching
 
 ### Redis
@@ -87,6 +90,10 @@ Grafana provides a comprehensive monitoring solution with pre-configured dashboa
 
 ### Kibana
 * [kibana](https://hub.docker.com/_/kibana)
+
+Same version as Elasticsearch. Runs on the host's own architecture; versions
+before 7.16, published for amd64 only, are emulated on an arm64 host
+(`platform: linux/amd64`).
 
 ## Email Testing
 

@@ -1,3 +1,8 @@
+**v4.3.5**
+
+Fixed:
+- **Kibana and OpenSearch Dashboards ran emulated on every arm64 machine.** Both compose snippets pinned `platform: linux/x86_64` whatever the host, so on an Apple Silicon Mac docker pulled the amd64 image and ran it through emulation even where an arm64 image exists. The pin is now written only for versions published for amd64 alone — kibana before 7.16, opensearch-dashboards 1.0 — checked on Docker Hub on 2026-10-08; every version madock's setup offers (Elasticsearch 7.17 and 8.11, OpenSearch 2.8 to 3.0) has an arm64 image. A project with a dashboard enabled recreates that container once; on an amd64 host it keeps the same image. `TestDashboardsRunNativeWhereAnImageExists` fails against the old snippets
+
 **v4.3.4**
 
 Fixed:

@@ -1,7 +1,12 @@
 {{{- if .search.elasticsearch.dashboard.enabled}}}
   kibana:
     init: true
-    platform: linux/x86_64
+    {{{- if versionLt .search.elasticsearch.version "7.16"}}}
+    # Kibana before 7.16 is published for amd64 only, so an arm64 host has to be
+    # told to emulate it. From 7.16 on there is an arm64 image and docker takes
+    # the host's own architecture.
+    platform: linux/amd64
+    {{{- end}}}
     image: {{{.search.elasticsearch.dashboard.repository}}}:{{{.search.elasticsearch.version}}}
     ports:
       - "{{{port "kibana"}}}:5601"

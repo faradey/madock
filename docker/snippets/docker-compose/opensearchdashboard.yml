@@ -1,7 +1,12 @@
 {{{- if .search.opensearch.dashboard.enabled}}}
   opensearchdashboard:
     init: true
-    platform: linux/x86_64
+    {{{- if versionLt .search.opensearch.version "1.1"}}}
+    # OpenSearch Dashboards 1.0 is published for amd64 only, so an arm64 host has
+    # to be told to emulate it. From 1.1 on there is an arm64 image and docker
+    # takes the host's own architecture.
+    platform: linux/amd64
+    {{{- end}}}
     image: {{{.search.opensearch.dashboard.repository}}}:{{{.search.opensearch.version}}}
     ports:
       - "{{{port "opensearchdashboard"}}}:5601"
