@@ -254,3 +254,46 @@ func TestACopiedVhostUnderTheOldNameStillRenders(t *testing.T) {
 		t.Errorf("the copied vhost lost the setup limit:\n%s", firstLines(vhost, 20))
 	}
 }
+
+// The case found on a production store after 4.3.1: its own copy of the
+// Magento vhost still asked /setup for php/limits/max_execution_time_web,
+// which 4.3.1 had dropped outright, and rendered "max_execution_time=" with
+// no value. The old name is answered to templates with max_execution_time.
+func TestACopiedVhostAskingForTheOldSetupKeyGetsMaxExecutionTime(t *testing.T) {
+	env := testenv.SetupWith(t, "oldsetupcopy", "oldsetupcopy.test", map[string]string{
+		"php/ini/max_execution_time": "4321",
+	})
+	dir := filepath.Join(env.RunDir, ".madock", "docker", "nginx", "conf")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	copied := "server { setup={{{.php.limits.max_execution_time_web}}}; }\n"
+	if err := os.WriteFile(filepath.Join(dir, "default.conf"), []byte(copied), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	MakeConf("oldsetupcopy")
+
+	if vhost := readGenerated(t, env, "ctx/nginx.conf"); !strings.Contains(vhost, "setup=4321;") {
+		t.Errorf("the copied vhost's /setup lost its time limit:\n%s", firstLines(vhost, 20))
+	}
+}
+
+// And the other half: a value a project stored under the old setup key was
+// meant for /setup alone. Read as max_execution_time it would become the limit
+// of every request, so it is not read at all.
+func TestAValueUnderTheOldSetupKeyDoesNotBecomeTheStoreLimit(t *testing.T) {
+	env := testenv.SetupWith(t, "oldsetupvalue", "oldsetupvalue.test", map[string]string{
+		"php/limits/max_execution_time_web": "60",
+	})
+
+	MakeConf("oldsetupvalue")
+
+	vhost := readGenerated(t, env, "ctx/nginx.conf")
+	if strings.Contains(vhost, "max_execution_time=60") {
+		t.Errorf("the setup wizard's old value became the limit of the store:\n%s", firstLines(vhost, 250))
+	}
+	if n := strings.Count(vhost, "max_execution_time=18000"); n != 3 {
+		t.Errorf("max_execution_time=18000 reached %d of three locations", n)
+	}
+}
