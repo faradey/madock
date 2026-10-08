@@ -522,6 +522,22 @@ func (r *Renderer) funcMap() template.FuncMap {
 			return strings.Join(fields, " \\\n    ")
 		},
 
+		// phpWait turns php's max_execution_time into how long nginx waits
+		// for php-fpm, so the two cannot disagree: a timeout below the php
+		// limit answers 504 while the script is still allowed to run. PHP reads
+		// 0 as no limit; nginx reads 0s as no wait at all, so 0 becomes a day.
+		"phpWait": func(v any) (string, error) {
+			s := strings.TrimSpace(fmt.Sprint(v))
+			n, err := strconv.Atoi(s)
+			if err != nil {
+				return "", fmt.Errorf("php/ini/max_execution_time %q is not a whole number of seconds", s)
+			}
+			if n <= 0 {
+				return "86400", nil
+			}
+			return strconv.Itoa(n), nil
+		},
+
 		"lower": strings.ToLower,
 		"upper": strings.ToUpper,
 

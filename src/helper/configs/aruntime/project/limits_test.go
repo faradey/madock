@@ -58,6 +58,56 @@ func TestPhpLimitsReachTheVhost(t *testing.T) {
 	if strings.Contains(vhost, "memory_limit=756M") {
 		t.Errorf("the vhost still carries the old hardcoded memory limit:\n%s", firstLines(vhost, 60))
 	}
+
+	// nginx waits as long as php may run. A shorter wait answers 504 while
+	// the script is still allowed to work — /setup's 600s did that to every
+	// limit above it.
+	if n := strings.Count(vhost, "fastcgi_read_timeout 7200s;"); n != 3 {
+		t.Errorf("fastcgi_read_timeout follows max_execution_time in %d of the three PHP locations:\n%s", n, firstLines(vhost, 250))
+	}
+}
+
+// WooCommerce and PrestaShop handed php neither limit: both keys were read
+// nowhere on those platforms, and php ran on the php.ini of the package.
+func TestPhpLimitsReachEveryPlatformVhost(t *testing.T) {
+	for _, platform := range []string{"woocommerce", "prestashop", "shopware", "sylius"} {
+		t.Run(platform, func(t *testing.T) {
+			name := "limits" + platform
+			env := testenv.SetupWith(t, name, name+".test", map[string]string{
+				"platform":                   platform,
+				"language":                   "php",
+				"php/ini/memory_limit":       "4096M",
+				"php/ini/max_execution_time": "7200",
+			})
+
+			MakeConf(name)
+
+			vhost := readGenerated(t, env, "ctx/nginx.conf")
+			for _, want := range []string{
+				`PHP_VALUE "memory_limit=4096M \n max_execution_time=7200"`,
+				"fastcgi_read_timeout 7200s;",
+			} {
+				if !strings.Contains(vhost, want) {
+					t.Errorf("missing %q in the %s vhost:\n%s", want, platform, vhost)
+				}
+			}
+		})
+	}
+}
+
+// PHP reads 0 as no limit, nginx reads 0s as not waiting at all: rendered
+// literally, the setting meant to lift the limit would fail every request.
+func TestUnlimitedExecutionTimeIsNotAZeroWait(t *testing.T) {
+	env := testenv.SetupWith(t, "limitszero", "limitszero.test", map[string]string{
+		"php/ini/max_execution_time": "0",
+	})
+
+	MakeConf("limitszero")
+
+	vhost := readGenerated(t, env, "ctx/nginx.conf")
+	if strings.Contains(vhost, "fastcgi_read_timeout 0s;") || !strings.Contains(vhost, "fastcgi_read_timeout 86400s;") {
+		t.Errorf("max_execution_time 0 did not become a day of waiting:\n%s", firstLines(vhost, 250))
+	}
 }
 
 // The two directives were php/limits/memory and php/limits/max_execution_time

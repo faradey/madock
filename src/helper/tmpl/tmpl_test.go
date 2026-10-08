@@ -346,3 +346,21 @@ func TestAptLinesKeepsTheHandWrittenShape(t *testing.T) {
 		t.Errorf("prefixed list rendered %q", got)
 	}
 }
+
+func TestPhpWaitFollowsMaxExecutionTime(t *testing.T) {
+	for value, want := range map[string]string{"18000": "18000", " 60 ": "60", "0": "86400", "-1": "86400"} {
+		got := render(t, `{{{phpWait .php.ini.max_execution_time}}}`, map[string]string{
+			"php/ini/max_execution_time": value,
+		})
+		if got != want {
+			t.Errorf("max_execution_time %q waits %q, want %q", value, got, want)
+		}
+	}
+
+	// A value nginx cannot read would stop the project's nginx after the
+	// render; failing the render names the setting instead.
+	r := &Renderer{Values: map[string]string{"php/ini/max_execution_time": "5m"}}
+	if _, err := r.Render("test", `{{{phpWait .php.ini.max_execution_time}}}`); err == nil || !strings.Contains(err.Error(), "max_execution_time") {
+		t.Errorf("max_execution_time 5m rendered without an error naming the setting: %v", err)
+	}
+}

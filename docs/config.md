@@ -268,7 +268,7 @@ project's own `.madock/config.xml` sets wins over it — edit it there instead.
 | Key | Default | What it is | Applied by |
 |---|---|---|---|
 | `php/ini/memory_limit` | `756M` | `memory_limit` of web requests, passed by the vhost | nginx reload |
-| `php/ini/max_execution_time` | `18000` | `max_execution_time` of web requests, passed by the vhost — every location, Magento's `/setup` included | nginx reload |
+| `php/ini/max_execution_time` | `18000` | `max_execution_time` of web requests, passed by the vhost — every location, Magento's `/setup` included — and how long nginx waits for php-fpm (`fastcgi_read_timeout`) | nginx reload |
 | `php/ini/post_max_size` | `80M` | `php.ini` | php rebuild |
 | `php/ini/upload_max_filesize` | `50M` | `php.ini` | php rebuild |
 | `php/ini/max_input_vars` | `50000` | `php.ini` | php rebuild |
@@ -298,6 +298,14 @@ and would otherwise become the limit of every request.
 Every idle worker
 holds memory of its own, which is why the spare values are small: a burst
 spawns up to `max_children` as it arrives.
+
+A web request has three time limits, and the smallest one wins: php's
+`max_execution_time`, the project's nginx waiting for php-fpm, and the shared
+proxy waiting for the project (`proxy/timeout/read`, 300 seconds by default,
+below). The first two are one setting — nginx waits exactly as long as php may
+run, and `0` (no limit in php) waits a day. The proxy is the machine's: a
+project that needs requests longer than five minutes raises it with `--global`
+as well, and that applies to every project on the machine.
 
 An upload has to pass three limits, and the smallest one wins:
 `php/ini/upload_max_filesize` (and `post_max_size`), the project's
