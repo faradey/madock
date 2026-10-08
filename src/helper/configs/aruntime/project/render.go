@@ -39,7 +39,10 @@ func Render(projectName, file, name string, extra map[string]string) string {
 		logger.Fatal(err)
 	}
 
-	out, err := newRenderer(projectName, file, extra).Render(name, string(body))
+	renderer := newRenderer(projectName, file, extra)
+	warnUnknownKeys(projectName, file, string(body), renderer.Values, renderer.Data)
+
+	out, err := renderer.Render(name, string(body))
 	if err != nil {
 		logger.Fatal(fmt.Errorf("rendering %s for project %s: %w%s", name, projectName, err, adviceFor(err)))
 	}
@@ -89,13 +92,19 @@ func newRenderer(projectName, file string, extra map[string]string) *tmpl.Render
 	// Which file a snippet name came from, so a warning about one can name it.
 	legacySource := map[string]string{}
 
+	values := renderValues(projectName, conf, extra)
+	data := renderData(projectName, conf)
+
 	return &tmpl.Renderer{
-		Values: renderValues(projectName, conf, extra),
-		Data:   renderData(projectName, conf),
+		Values: values,
+		Data:   data,
 		Snippet: func(name string) (string, error) {
 			snippet := GetSnippetFile(projectName, name)
 			legacySource[name] = snippet
 			body, err := os.ReadFile(snippet)
+			if err == nil {
+				warnUnknownKeys(projectName, snippet, string(body), values, data)
+			}
 			return string(body), err
 		},
 		Port: func(service string) (int, error) {

@@ -51,6 +51,18 @@ func Run(appVersion string) {
 			refuseOutsideProject(cmdName)
 			return
 		}
+		// A project that says it needs a newer madock is refused before the
+		// handler reads anything it might misread. Global commands still run:
+		// they are how a person finds out what is installed, and the way out.
+		if !command.IsGlobal(def) {
+			if unmet := configs.UnmetVersionRequirements(configs.GetCurrentProjectConfig()); len(unmet) > 0 {
+				for _, line := range unmet {
+					fmtc.ErrorLn(line)
+				}
+				fmtc.ToDoLn("Update madock, or ask whoever set the requirement in .madock/config.xml whether it is still needed.")
+				os.Exit(1)
+			}
+		}
 		def.Handler()
 	} else {
 		isnotdefine.Execute(cmdName)
