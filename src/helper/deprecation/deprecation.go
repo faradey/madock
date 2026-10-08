@@ -54,9 +54,18 @@ type Entry struct {
 var Ledger = []Entry{
 	{
 		Kind:     RenamedKey,
-		Old:      "php/limits/max_execution_time_web",
-		New:      "php/limits/max_execution_time_setup",
-		What:     "the old name of the setup wizard's time limit is still read from every config layer and still answered to copied templates",
+		Old:      "php/limits/memory",
+		New:      "php/ini/memory_limit",
+		What:     "memory_limit under its old madock name is still read from every config layer and still answered to copied templates",
+		Where:    "src/helper/configs/renamed.go",
+		Since:    "4.3.1",
+		RemoveIn: "5.0.0",
+	},
+	{
+		Kind:     RenamedKey,
+		Old:      "php/limits/max_execution_time",
+		New:      "php/ini/max_execution_time",
+		What:     "max_execution_time under its old madock name is still read from every config layer and still answered to copied templates",
 		Where:    "src/helper/configs/renamed.go",
 		Since:    "4.3.1",
 		RemoveIn: "5.0.0",
