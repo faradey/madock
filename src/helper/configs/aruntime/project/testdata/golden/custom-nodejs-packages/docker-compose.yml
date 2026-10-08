@@ -1,0 +1,115 @@
+name: madock_golden
+services:
+  nginx:
+    init: true
+    build:
+      context: ctx
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "<PORT>:80"
+      - "<PORT>:443"
+    volumes:
+      - ./src:/var/www/html:delegated
+      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+      # The project's own server-scope snippets, rendered by makeNginxConf from
+      # .madock/docker/nginx/vhost.d/. Mounted whether or not there are any: the
+      # vhost includes the directory unconditionally, and a bind mount of a path
+      # that does not exist is created by docker as root.
+      - ./ctx/nginx-vhost.d:/etc/nginx/vhost.d:delegated
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    depends_on:
+      - nodejs
+    restart: no
+  db:
+    init: true
+    command:
+      --default-authentication-plugin=mysql_native_password
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    ports:
+      - "<PORT>:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "magento"
+      MYSQL_USER: "magento"
+      MYSQL_PASSWORD: "magento"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+    restart: no
+  nodejs:
+    init: true
+    build:
+      context: ctx
+      dockerfile: nodejs.Dockerfile
+    tty: true
+    environment:
+      # **Not NODE_ENV.** This is madock's own decision — which script the
+      # entrypoint starts when `nodejs/script` is not configured — and naming it
+      # NODE_ENV published a private choice to every tool in the container.
+      #
+      # `next build` obeys it instead of setting `production` itself, so a
+      # production bundle was built in development mode and React's internals
+      # disagreed with themselves: prerendering `/_global-error` died on
+      # `useContext` with a null dispatcher. Next says so in the first line of
+      # every build — "You are using a non-standard NODE_ENV value" — and that
+      # line went past about ten times, because a warning printed always is
+      # indistinguishable from noise until it is the cause. The search cost an
+      # hour and ruled out React, Node, Next, styled-components and the app's
+      # own layout before an application of two files failed the same way.
+      #
+      # Nothing has to set NODE_ENV: `next dev` sets development, `next build`
+      # and `next start` set production. A project that genuinely wants it can
+      # put it in its own package.json script, where it applies to one command
+      # rather than to everything that runs in the container.
+      MADOCK_NODE_ENV: "development"
+      # Polling-based file watching for macOS bind mounts (no inotify forwarding).
+      # Harmless on Linux. Picked up by next/webpack/chokidar/medusa watcher.
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./src:/var/www/html:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    restart: no
+  opensearch:
+    init: true
+    build:
+      context: ctx
+      dockerfile: opensearch.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 2512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      OPENSEARCH_DISCOVERY_TYPE: 'single-node'
+      DISABLE_INSTALL_DEMO_CONFIG: 'true'
+      DISABLE_SECURITY_PLUGIN: 'true'
+      OPENSEARCH_JAVA_OPTS: '-Xms1g -Xmx1g'
+    volumes:
+      - opensearch_vlm_2.19.0:/usr/share/opensearch/data
+    restart: no
+
+volumes:
+  # Declared unconditionally on purpose. Every other entry here is optional, so
+  # gating this one too lets `volumes:` render empty when a project runs without
+  # a database, without search and without grafana — and compose rejects that
+  # with "volumes must be a mapping". An unused named volume costs nothing.
+  dbdata:
+  opensearch_vlm_2.19.0:
+
+networks:
+  madock-proxy:
+    external: true
+

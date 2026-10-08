@@ -506,6 +506,22 @@ func (r *Renderer) funcMap() template.FuncMap {
 			return strings.Join(list, sep), nil
 		},
 
+		// aptLines lays a space-separated package list out the way the
+		// Dockerfiles always wrote it by hand: the first package where the call
+		// stands, each next one on its own line behind " \", indented four
+		// spaces. The shape is the point, not the looks — a layer's cache key is
+		// its command, so a list moved from a literal into a setting has to
+		// render byte for byte as the literal did, or every image rebuilds once
+		// for nothing. prefix is prepended to each name ("php8.4-" for the
+		// extension list).
+		"aptLines": func(prefix string, list any) string {
+			fields := strings.Fields(fmt.Sprint(list))
+			for i, name := range fields {
+				fields[i] = prefix + name
+			}
+			return strings.Join(fields, " \\\n    ")
+		},
+
 		"lower": strings.ToLower,
 		"upper": strings.ToUpper,
 

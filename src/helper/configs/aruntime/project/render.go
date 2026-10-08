@@ -147,6 +147,9 @@ func renderValues(projectName string, conf map[string]string, extra map[string]s
 	// raw field.
 	values["db/type"] = configs.GetDbType(conf)
 
+	// A copied template under the old name of a renamed key renders as before.
+	configs.MirrorRenamed(values)
+
 	values["project_name"] = strings.ToLower(projectName)
 	values["scope"] = configs.GetActiveScope(projectName, false, "-")
 

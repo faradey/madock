@@ -1,0 +1,11 @@
+name: madock_golden
+services:
+  snapshot:
+    image: ubuntu:22.04
+    tty: true
+    user: "<UID>:<GID>"
+    volumes:
+      - ./src:/var/www/html
+      - dbdata:/var/www/mysql
+volumes:
+  dbdata:

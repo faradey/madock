@@ -1,0 +1,14 @@
+{{{- if .}}}
+
+# Packages the project adds: php/packages/extra, app/packages/extra or
+# nodejs/packages/extra. Last among the shared layers, so those stay one copy on
+# the machine. All at once first; when that fails, one by one, so a name the
+# index lacks costs that name alone and is said out loud instead of stopping the
+# build — a rebuild that stops halfway on a server leaves the site down.
+#
+# The index is left in place, not removed here: steps after this one install
+# from it without fetching their own (cron does), and the footer removes it.
+RUN apt-get -y --allow-releaseinfo-change update \
+    && { apt-get install -y {{{.}}} \
+        || for p in {{{.}}}; do apt-get install -y "$p" || echo "madock: $p is not available in this index"; done; }
+{{{- end}}}

@@ -1,0 +1,10 @@
+{{{- if .php.extensions.extra}}}
+
+# PHP extensions the project adds: php/extensions/extra, each name becoming
+# php{{{.php.version}}}-<name>. Same rules as the packages above: one by one on
+# failure, never fatal, the index left for the steps after.
+RUN apt-get -y --allow-releaseinfo-change update \
+    && pkgs="$(for e in {{{.php.extensions.extra}}}; do printf "php{{{.php.version}}}-%s " "$e"; done)" \
+    && { apt-get install -y $pkgs \
+        || for p in $pkgs; do apt-get install -y "$p" || echo "madock: $p is not available in this index"; done; }
+{{{- end}}}

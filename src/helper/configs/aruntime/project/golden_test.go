@@ -65,6 +65,15 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// Tools and extensions a project adds: the last layers of both php
+			// images, after everything projects share.
+			name: "magento2-php-packages",
+			overrides: map[string]string{
+				"php/packages/extra":   "htop tree",
+				"php/extensions/extra": "gmp bz2",
+			},
+		},
+		{
 			// The reason the key was renamed. A Python service with a
 			// JavaScript front end needs node in its own image exactly as a PHP
 			// one does, and before 3.9.8 there was no way to ask for it.
@@ -156,6 +165,21 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// The packages a project adds, and a project that cuts the first
+			// layer down to its own list. extra lands after the timezone, so the
+			// layers every project shares stay above it; default replaces the
+			// first layer's list whole.
+			name: "custom-none-app-packages",
+			overrides: map[string]string{
+				"platform":             "custom",
+				"language":             "none",
+				"php/enabled":          "false",
+				"app/enabled":          "true",
+				"app/packages/default": "locales curl ca-certificates procps",
+				"app/packages/extra":   "htop tree",
+			},
+		},
+		{
 			// Node as the main service. Its Dockerfile comes from the language
 			// template, which carries cron where the service template does not.
 			name: "custom-nodejs",
@@ -164,6 +188,16 @@ func goldenCases() []goldenCase {
 				"language":       "nodejs",
 				"php/enabled":    "false",
 				"nodejs/enabled": "true",
+			},
+		},
+		{
+			name: "custom-nodejs-packages",
+			overrides: map[string]string{
+				"platform":              "custom",
+				"language":              "nodejs",
+				"php/enabled":           "false",
+				"nodejs/enabled":        "true",
+				"nodejs/packages/extra": "htop",
 			},
 		},
 		{

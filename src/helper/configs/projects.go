@@ -173,6 +173,11 @@ func GetProjectConfigOnly(projectName string) map[string]string {
 	}
 	projectFileConfig := GetProjectConfigInProject(projectPath)
 
+	// Old names first, per layer: renamed after the merge, the default of the
+	// new name would already have won over a project's value under the old one.
+	applyRenamed(projectFileConfig)
+	applyRenamed(activeConfig)
+
 	// The last moment the layers are separate. See layers.go: an extension may
 	// remove from one of them here, and after the merge below nothing outside
 	// this function can tell which file a value came from.
