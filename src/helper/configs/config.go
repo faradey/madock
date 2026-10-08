@@ -266,6 +266,9 @@ func IsOption(name string) bool {
 	if source, derived := IsDerived(name); derived {
 		logger.Fatalln("The option \"" + name + "\" is derived from \"" + source + "\" and cannot be set on its own. Set \"" + source + "\" instead.")
 	}
+	if newName, renamed := RenamedTo(name); renamed {
+		logger.Fatalln("The option \"" + name + "\" was renamed to \"" + newName + "\". Set \"" + newName + "\" instead.")
+	}
 	for key := range GetCurrentProjectConfig() {
 		if key == name {
 			return true

@@ -182,11 +182,11 @@
                      max_execution_time is what every request through the front
                      controller gets, on every platform (index.php, and on
                      Magento get.php, static.php and the error pages too).
-                     max_execution_time_web is narrower than its name: only
-                     Magento's web setup wizard, /setup/index.php, reads it.
-                     The two literals were carried over as they stood when they
-                     became keys (18000 and 600), and this comment described them
-                     the other way round until 2026-10-08.
+                     max_execution_time_setup is what Magento's web setup wizard,
+                     /setup/index.php, gets — nothing else reads it. It was
+                     max_execution_time_web until the release after 4.3.0, a name
+                     read as "every web request", and this comment said so too;
+                     the old name is still read (src/helper/configs/renamed.go).
 
                      These are not php.ini values. nginx hands them to php-fpm
                      per request as PHP_VALUE, so they differ per location, apply
@@ -196,7 +196,7 @@
                 <limits>
                     <memory>756M</memory>
                     <max_execution_time>18000</max_execution_time>
-                    <max_execution_time_web>600</max_execution_time_web>
+                    <max_execution_time_setup>600</max_execution_time_setup>
                 </limits>
                 <!-- php.ini values written when the image is built.
                      

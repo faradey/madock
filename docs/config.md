@@ -226,7 +226,7 @@ project's own `.madock/config.xml` sets wins over it — edit it there instead.
 |---|---|---|---|
 | `php/limits/memory` | `756M` | `memory_limit` for web requests, passed by the vhost | nginx reload |
 | `php/limits/max_execution_time` | `18000` | time limit of every web request through the front controller, on every platform | nginx reload |
-| `php/limits/max_execution_time_web` | `600` | time limit of Magento's web setup wizard (`/setup`) only — narrower than its name | nginx reload |
+| `php/limits/max_execution_time_setup` | `600` | time limit of Magento's web setup wizard (`/setup`) only; was `php/limits/max_execution_time_web`, which is still read | nginx reload |
 | `php/ini/post_max_size` | `80M` | `php.ini` | php rebuild |
 | `php/ini/upload_max_filesize` | `50M` | `php.ini` | php rebuild |
 | `php/ini/max_input_vars` | `50000` | `php.ini` | php rebuild |

@@ -1,5 +1,8 @@
 **Unreleased**
 
+Changed:
+- **`php/limits/max_execution_time_web` is `php/limits/max_execution_time_setup`.** Only Magento's web setup wizard, `/setup/index.php`, ever read it; the name said "web" and was read as every web request — which is `php/limits/max_execution_time`, on every platform. The comment in `config.xml` described the two the wrong way round, and the docs written from it did too. **The old name keeps working, and nothing on disk is rewritten for it**: every config layer is read through a rename map before the layers merge, so a value under the old name still reaches `/setup`, and a template a project copied under `.madock/docker/` that still says `.php.limits.max_execution_time_web` renders the current value. There is deliberately no migration: a project's `.madock/config.xml` is committed and shared, and rewriting it on the machine of whoever upgraded first hands a name the other developers' older madock does not know to everyone who pulls. `config:set` refuses the old name and names the new one. `TestTheOldSetupLimitNameStillReachesTheVhost` and `TestACopiedVhostUnderTheOldNameStillRenders` fail when the rename map or the mirror for templates is switched off
+
 Docs:
 - **How to set the limits, `php.ini` values, service memory and proxy settings that became keys in 4.3.0** — `docs/config.md`, "Limits, php.ini, memory and the proxy": every key with its default, which command applies it, why a `proxy/` key needs `--global`, and the three limits an upload has to pass. Asked for by a user the day 4.3.0 was announced: the release named the settings and said nowhere how to use them
 

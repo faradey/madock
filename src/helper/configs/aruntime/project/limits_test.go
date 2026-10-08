@@ -32,9 +32,9 @@ func readGenerated(t *testing.T, env *testenv.Env, relative string) string {
 // nothing in the nginx log to explain it.
 func TestPhpLimitsReachTheVhost(t *testing.T) {
 	env := testenv.SetupWith(t, "limitsproject", "limits.test", map[string]string{
-		"php/limits/memory":                 "4096M",
-		"php/limits/max_execution_time":     "7200",
-		"php/limits/max_execution_time_web": "900",
+		"php/limits/memory":                   "4096M",
+		"php/limits/max_execution_time":       "7200",
+		"php/limits/max_execution_time_setup": "900",
 	})
 
 	MakeConf("limitsproject")
@@ -52,6 +52,23 @@ func TestPhpLimitsReachTheVhost(t *testing.T) {
 
 	if strings.Contains(vhost, "memory_limit=756M") {
 		t.Errorf("the vhost still carries the old hardcoded memory limit:\n%s", firstLines(vhost, 60))
+	}
+}
+
+// The setup wizard's limit was php/limits/max_execution_time_web, and a
+// project's committed .madock/config.xml carries that name back on every
+// deploy. Read as unknown, it would be dropped without a word and the wizard
+// would fall back to 600 — so the old name still has to reach the vhost.
+func TestTheOldSetupLimitNameStillReachesTheVhost(t *testing.T) {
+	env := testenv.SetupWith(t, "oldsetupname", "oldsetup.test", map[string]string{
+		"php/limits/max_execution_time_web": "1234",
+	})
+
+	MakeConf("oldsetupname")
+
+	vhost := readGenerated(t, env, "ctx/nginx.conf")
+	if !strings.Contains(vhost, "max_execution_time=1234") {
+		t.Errorf("a value under the old name did not reach /setup:\n%s", firstLines(vhost, 70))
 	}
 }
 
@@ -204,4 +221,28 @@ func composeSection(compose, key string) string {
 	}
 
 	return compose[start:]
+}
+
+// A vhost a project copied into .madock/docker before the rename still asks for
+// the old name. The copy is committed, so a deploy brings it back every time
+// and no migration can rewrite it for good; it has to keep rendering.
+func TestACopiedVhostUnderTheOldNameStillRenders(t *testing.T) {
+	env := testenv.SetupWith(t, "oldcopy", "oldcopy.test", map[string]string{
+		"php/limits/max_execution_time_setup": "4321",
+	})
+	dir := filepath.Join(env.RunDir, ".madock", "docker", "nginx", "conf")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	copied := "server { setup_limit={{{.php.limits.max_execution_time_web}}}; }\n"
+	if err := os.WriteFile(filepath.Join(dir, "default.conf"), []byte(copied), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	MakeConf("oldcopy")
+
+	vhost := readGenerated(t, env, "ctx/nginx.conf")
+	if !strings.Contains(vhost, "setup_limit=4321;") {
+		t.Errorf("the copied vhost lost the setup limit:\n%s", firstLines(vhost, 20))
+	}
 }
