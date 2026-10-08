@@ -101,7 +101,7 @@ func TestPhpMemoryLimitReachesTheRunningInterpreter(t *testing.T) {
 		"--hosts=e2ephplimit.test",
 	)
 
-	p.run(2*time.Minute, "config:set", "-n", "php/limits/memory", "-v", "333M")
+	p.run(2*time.Minute, "config:set", "-n", "php/ini/memory_limit", "-v", "333M")
 
 	// The page that answers the question, in the directory the vhost actually
 	// serves: `public/`, from `public_dir` in the defaults. The first run put it
