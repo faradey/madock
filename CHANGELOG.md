@@ -1,4 +1,4 @@
-**Unreleased**
+**v4.3.1**
 
 Added:
 - **A project can say which madock it needs: `madock/min_version` in `.madock/config.xml`.** That file and every template under `.madock/docker/` are committed and read by every developer on the project, and they do not all run the same madock. A newer madock reads old names, so an older file is never the problem; a newer one is, and the older binary cannot be taught after the fact. From this version on, a madock older than the project's `min_version` refuses every project command and names the version to update to; global commands such as `version` still run. madock never writes the key or creates the file for it, and `config:set` refuses it. An edition registers its own key with `configs.RegisterVersionRequirement`. `TestAProjectNeedingANewerMadockIsRefused` runs `status` against a project needing 99.0.0 and fails when the check is taken out of the dispatcher
