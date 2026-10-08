@@ -1,6 +1,9 @@
 package configs
 
-// renamedKeys maps a key's old name to the one it moved to.
+import "github.com/faradey/madock/v4/src/helper/deprecation"
+
+// renamedKeys maps a key's old name to the one it moved to. The pairs live in
+// the deprecation ledger, with the major release that stops reading them.
 //
 // A migration moves the key in every file madock can reach once, and that is
 // not every file that will ever hold it: a project's .madock/config.xml is
@@ -10,12 +13,7 @@ package configs
 // setting would fall back to the default. So each layer is read through this
 // map before the layers merge: the old name still works, and a layer that holds
 // both keeps the new one — that is the deliberate one.
-var renamedKeys = map[string]string{
-	// It only ever reached Magento's web setup wizard, /setup/index.php, and the
-	// name said "web" — read, reasonably, as every web request. Those get
-	// php/limits/max_execution_time. Renamed in the release after 4.3.0.
-	"php/limits/max_execution_time_web": "php/limits/max_execution_time_setup",
-}
+var renamedKeys = deprecation.RenamedKeys()
 
 // RenamedTo reports the current name of a renamed key.
 func RenamedTo(name string) (string, bool) {
