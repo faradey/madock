@@ -1,7 +1,6 @@
 package _import
 
 import (
-	"bufio"
 	"bytes"
 	"compress/gzip"
 	"errors"
@@ -24,6 +23,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/sqldump"
 )
 
 type progressReader struct {
@@ -262,7 +262,7 @@ func importMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbImp
 
 		var stdin io.Reader = progress
 		if filterGtid {
-			stdin = filterGtidReader(progress)
+			stdin = sqldump.StripGtidPurged(progress)
 		}
 
 		cmd.Stdin = stdin
@@ -384,43 +384,6 @@ func handleDuplicateEntry(runImport func(bool, bool) (string, error)) error {
 	default:
 		return errors.New("import cancelled by user")
 	}
-}
-
-// filterGtidReader returns a reader that drops mysqldump GTID statements which
-// commonly cause GTID_PURGED conflicts on a server with non-empty GTID_EXECUTED.
-func filterGtidReader(r io.Reader) io.Reader {
-	pr, pw := io.Pipe()
-	go func() {
-		defer pw.Close()
-		scanner := bufio.NewScanner(r)
-		// Allow very large lines (mysqldump extended INSERTs can be huge).
-		scanner.Buffer(make([]byte, 1024*1024), 256*1024*1024)
-
-		skipUntilSemicolon := false
-		for scanner.Scan() {
-			line := scanner.Bytes()
-			if skipUntilSemicolon {
-				if bytes.HasSuffix(bytes.TrimRight(line, " \t\r"), []byte(";")) {
-					skipUntilSemicolon = false
-				}
-				continue
-			}
-			if bytes.Contains(line, []byte("@@GLOBAL.GTID_PURGED")) {
-				if !bytes.HasSuffix(bytes.TrimRight(line, " \t\r"), []byte(";")) {
-					skipUntilSemicolon = true
-				}
-				continue
-			}
-			if _, err := pw.Write(append(line, '\n')); err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-		}
-		if err := scanner.Err(); err != nil {
-			pw.CloseWithError(err)
-		}
-	}()
-	return pr
 }
 
 func importPostgresql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbImport, selectedFile *os.File, ext string, totalSize int64) {
