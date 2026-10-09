@@ -1,3 +1,8 @@
+**v4.3.6**
+
+Changed:
+- **Stripping `SET @@GLOBAL.GTID_PURGED` from a dump is a helper, `src/helper/sqldump`.** `db:import` already did it when a server refused the statement, inside its own package where nothing else could reach it; a backup restore needs the same thing every time, because restoring into the server the dump came from always conflicts with that server's own GTID_EXECUTED. The statement is now matched only at the start of a line: the old check matched the text anywhere, so a data row mentioning it would have been dropped from the import without a word. `TestARowMentioningTheStatementIsKept` fails with the old match, `TestTheGtidStatementIsDroppedAndNothingElse` with the drop disabled
+
 **v4.3.5**
 
 Fixed:
