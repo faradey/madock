@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Checked on 2026-10-15. Medusa 2.x: @medusajs/medusa declares
+  "engines": {"node": ">=22.22.0"}; the docs say v20.19+ or v22.12+. Medusa 1.x
+  declares >=16. PostgreSQL and Redis versions are not stated by Medusa, so the
+  values chosen for the presets stay. Medusa does not use RabbitMQ at all — its
+  event bus is BullMQ on Redis — so no stack here carries one.
+-->
+<platform name="medusa">
+    <tool name="language"><default>nodejs</default></tool>
+    <tool name="dbtype"><default>PostgreSQL</default></tool>
+    <tool name="db">
+        <when version="2">postgres:17</when>
+        <when version="1">postgres:14.13</when>
+        <default>postgres:16.4</default>
+    </tool>
+    <tool name="redis">
+        <when version="2">7.4</when>
+        <when version="1">7.0</when>
+        <default>7.2.1</default>
+    </tool>
+    <tool name="nodejs">
+        <when version="2">22.22.0</when>
+        <when version="1">18.20.0</when>
+        <!-- the docs' floor for 2.x: v20.19+ -->
+        <default>20.19.0</default>
+    </tool>
+    <tool name="yarn">
+        <when version="1">1.22.22</when>
+        <default>4.5.0</default>
+    </tool>
+
+    <preset version="2" name="Medusa 2.x (Latest)" description="Latest Medusa.js v2 with Node {nodejs}, PostgreSQL 17, Redis {redis}"/>
+    <preset version="2.0" name="Medusa 2.0 (Stable)" description="Medusa.js v2 baseline with Node {nodejs}, PostgreSQL 16, Redis {redis}"/>
+    <preset version="1" name="Medusa 1.x (Legacy)" description="Medusa.js v1 with Node {nodejs}, PostgreSQL 14, Redis {redis}"/>
+</platform>

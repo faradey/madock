@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<platform name="prestashop">
+    <tool name="language"><default>php</default></tool>
+    <tool name="php"><default>8.1</default></tool>
+    <tool name="db"><default>10.6</default></tool>
+    <tool name="searchengine"><default>Elasticsearch</default></tool>
+    <tool name="elastic"><default>8.11.14</default></tool>
+    <tool name="opensearch"><default>2.12.0</default></tool>
+    <tool name="composer"><default>2</default></tool>
+    <tool name="redis"><default>7.2</default></tool>
+    <tool name="valkey"><default>8.1.3</default></tool>
+    <tool name="rabbitmq"><default>3.13</default></tool>
+    <tool name="nodejs"><default>18.15.0</default></tool>
+    <tool name="yarn"><default>3.6.4</default></tool>
+</platform>

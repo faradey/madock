@@ -23,18 +23,8 @@ type ToolsVersions struct {
 	Ruby string
 }
 
+// GetXdebugVersion is the Xdebug that goes with a PHP version, from
+// matrix/common.xml.
 func GetXdebugVersion(phpVer string) string {
-	if AtLeast(phpVer, "8.5") {
-		return "3.5.0"
-	} else if AtLeast(phpVer, "8.4") {
-		return "3.4.4"
-	} else if AtLeast(phpVer, "8.3") {
-		return "3.3.1"
-	} else if AtLeast(phpVer, "8.1") {
-		return "3.2.2"
-	} else if AtLeast(phpVer, "7.2") {
-		return "3.1.6"
-	}
-
-	return "2.7.2"
+	return AnswerFor("common", "xdebug", phpVer)
 }

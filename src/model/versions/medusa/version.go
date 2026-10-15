@@ -4,20 +4,17 @@ import (
 	"github.com/faradey/madock/v4/src/model/versions"
 )
 
+// The stack is data: src/model/versions/matrix/medusa.xml.
+
 func init() {
-	versions.RegisterProvider("medusa", func(_ string) versions.ToolsVersions {
-		return GetVersions()
+	versions.RegisterProvider("medusa", func(ver string) versions.ToolsVersions {
+		tv, _ := versions.FromMatrix("medusa", ver)
+		return tv
 	})
 }
 
+// GetVersions is the baseline stack, before any preset is chosen.
 func GetVersions() versions.ToolsVersions {
-	return versions.ToolsVersions{
-		Platform: "medusa",
-		Language: "nodejs",
-		DbType:   "PostgreSQL",
-		Db:       "postgres:16.4",
-		Redis:    "7.2.1",
-		NodeJs:   "20.18.0",
-		Yarn:     "4.5.0",
-	}
+	tv, _ := versions.FromMatrix("medusa", "")
+	return tv
 }

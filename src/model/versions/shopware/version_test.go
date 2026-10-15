@@ -24,7 +24,8 @@ func TestTwoDigitMinorIsLaterThanOneDigit(t *testing.T) {
 func TestCurrentReleasesAreUnchanged(t *testing.T) {
 	tests := []struct{ ver, php string }{
 		{"6.7.13.1", "8.3"},
-		{"6.5.8.0", "8.3"},
+		// Shopware recommends 8.2 for 6.5 (checked 2026-10-15).
+		{"6.5.8.0", "8.2"},
 		{"6.4.20.2", "8.1"},
 		{"6.3.5.0", ""},
 		{"", ""},

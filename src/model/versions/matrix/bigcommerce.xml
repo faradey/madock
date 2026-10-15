@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  BigCommerce has no platform version; the "version" is the stack flavour a
+  preset picks: catalyst, stencil, api-php, app-node. An empty value is a
+  service that flavour does not run. Without a flavour the baseline applies.
+
+  Checked on 2026-10-15: "Catalyst supports Node.js version 24.x"
+  (docs.bigcommerce.com/developer/docs/storefront/catalyst/development/prerequisites).
+-->
+<platform name="bigcommerce">
+    <tool name="language">
+        <when version="api-php">php</when>
+        <default>nodejs</default>
+    </tool>
+    <tool name="nodejs">
+        <when version="catalyst">24.10.0</when>
+        <when version="api-php"></when>
+        <default>22.20.0</default>
+    </tool>
+    <tool name="yarn">
+        <when version="api-php"></when>
+        <default>1.22.22</default>
+    </tool>
+    <tool name="php">
+        <when version="catalyst"></when>
+        <when version="stencil"></when>
+        <when version="app-node"></when>
+        <default>8.3</default>
+    </tool>
+    <tool name="db">
+        <when version="catalyst"></when>
+        <when version="stencil"></when>
+        <when version="app-node"></when>
+        <default>mariadb:11.4</default>
+    </tool>
+    <tool name="composer">
+        <when version="catalyst"></when>
+        <when version="stencil"></when>
+        <when version="app-node"></when>
+        <default>2</default>
+    </tool>
+    <tool name="redis">
+        <when version="catalyst"></when>
+        <when version="stencil"></when>
+        <when version="app-node"></when>
+        <default>7.4</default>
+    </tool>
+    <!-- No Xdebug in these stacks. -->
+    <tool name="xdebug" by="php"/>
+
+    <preset version="catalyst" name="Catalyst (Next.js storefront)" description="Official headless storefront — Next.js + TypeScript, Tailwind. Node {nodejs}."/>
+    <preset version="stencil" name="Stencil theme (Node + Handlebars)" description="Legacy theme dev with @bigcommerce/stencil-cli — Cornerstone-based themes, Handlebars templates. Node {nodejs}."/>
+    <preset version="api-php" name="PHP API SDK (bigcommerce/api)" description="Backend integration via the official bigcommerce/api Composer package. PHP {php}, MariaDB, Redis."/>
+    <preset version="app-node" name="Node App (Express / Next.js)" description="Embedded App Marketplace template — Express + Next.js + OAuth handshake. Node {nodejs}."/>
+</platform>

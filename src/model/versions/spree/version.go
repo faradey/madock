@@ -4,19 +4,17 @@ import (
 	"github.com/faradey/madock/v4/src/model/versions"
 )
 
+// The stack is data: src/model/versions/matrix/spree.xml.
+
 func init() {
-	versions.RegisterProvider("spree", func(_ string) versions.ToolsVersions {
-		return GetVersions()
+	versions.RegisterProvider("spree", func(ver string) versions.ToolsVersions {
+		tv, _ := versions.FromMatrix("spree", ver)
+		return tv
 	})
 }
 
+// GetVersions is the baseline stack, before any preset is chosen.
 func GetVersions() versions.ToolsVersions {
-	return versions.ToolsVersions{
-		Platform: "spree",
-		Language: "ruby",
-		Ruby:     "4.0.5",
-		DbType:   "PostgreSQL",
-		Db:       "postgres:16.4",
-		Redis:    "7.2.5",
-	}
+	tv, _ := versions.FromMatrix("spree", "")
+	return tv
 }

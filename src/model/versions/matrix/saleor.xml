@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Saleor states no versions. Its official saleor-platform compose files
+  (checked 2026-10-15) run postgres:15 for 3.20 and 3.23, redis:7.0 for 3.20,
+  and valkey 8.1 for 3.23 — the 3.23 stack keeps Redis 7.2, which Saleor's
+  Redis client speaks the same way.
+-->
+<platform name="saleor">
+    <tool name="language"><default>python</default></tool>
+    <tool name="python"><default>3.12</default></tool>
+    <tool name="dbtype"><default>PostgreSQL</default></tool>
+    <tool name="db"><default>postgres:15</default></tool>
+    <tool name="redis">
+        <when from="3.23">7.2.5</when>
+        <when from="3.20">7.0</when>
+        <default>7.2.5</default>
+    </tool>
+
+    <preset version="3.23" name="Saleor 3.23 (Latest)" description="Saleor 3.23.x with Python {python}, PostgreSQL 15, Redis {redis}"/>
+    <preset version="3.20" name="Saleor 3.20 (Stable)" description="Saleor 3.20.x with Python {python}, PostgreSQL 15, Redis {redis}"/>
+</platform>

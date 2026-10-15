@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  6.5 checked against developer.shopware.com/docs/v6.5/guides/installation/requirements.html
+  on 2026-10-15: PHP 8.1–8.3 supported, 8.2 recommended; MariaDB at least 10.11
+  recommended. 6.6 and later keep PHP 8.3 — not re-checked.
+-->
+<platform name="shopware">
+    <tool name="language"><default>php</default></tool>
+    <tool name="php">
+        <when from="6.6">8.3</when>
+        <when from="6.5">8.2</when>
+        <when from="6.4">8.1</when>
+    </tool>
+    <tool name="db">
+        <when from="6.5">10.11</when>
+        <when from="6.4">10.5</when>
+    </tool>
+    <tool name="searchengine">
+        <when from="6.5">OpenSearch</when>
+        <default>Elasticsearch</default>
+    </tool>
+    <tool name="elastic">
+        <when from="6.5">8.11.14</when>
+        <when from="6.4">8.4.3</when>
+    </tool>
+    <tool name="opensearch">
+        <when from="6.5">2.8.0</when>
+        <when from="6.4">2.5.0</when>
+    </tool>
+    <tool name="composer"><when from="6.3">2</when></tool>
+    <tool name="redis"><when from="6.5">7.2</when></tool>
+    <tool name="valkey"><default>8.1.3</default></tool>
+    <tool name="rabbitmq"><when from="6.3">3.13</when></tool>
+    <tool name="nodejs"><default>20.16.0</default></tool>
+    <tool name="yarn"><default>3.6.4</default></tool>
+
+    <preset version="6.5" name="Shopware 6.5" description="PHP {php}, MariaDB {db}, OpenSearch {opensearch}"/>
+</platform>

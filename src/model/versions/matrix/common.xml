@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Tools every platform shares unless its own file defines them. -->
+<platform name="common">
+    <tool name="xdebug" by="php">
+        <when from="8.5">3.5.0</when>
+        <when from="8.4">3.4.4</when>
+        <when from="8.3">3.3.1</when>
+        <when from="8.1">3.2.2</when>
+        <when from="7.2">3.1.6</when>
+        <default>2.7.2</default>
+    </tool>
+</platform>
