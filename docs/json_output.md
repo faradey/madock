@@ -193,6 +193,38 @@ madock db:export --json
 }
 ```
 
+### Commands that do work: snapshot:create, snapshot:restore, project:clone
+
+These copy volumes, stop and start containers and untar into helpers, and
+every step prints as it goes — so do the docker and tar processes they start.
+With `--json` that progress goes to **stderr**, and stdout carries exactly one
+document, written at the end.
+
+If the process is ended from inside a helper before the command can answer,
+stdout is **empty** and the exit status is non-zero; the reason is on stderr.
+An empty stdout is never a success.
+
+```bash
+madock snapshot:create --name=before-upgrade --json
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "name": "snapshot-before-upgrade-2026-10-15-12-00-00",
+    "path": "/path/to/madock/projects/myproject/backup/snapshot/snapshot-before-upgrade-2026-10-15-12-00-00",
+    "files": ["db.tar.gz", "files.tar.gz"],
+    "size_bytes": 104857600
+  }
+}
+```
+
+`snapshot:list --json` answers `{"snapshots": [ … ]}` with the same object for
+each, oldest first. `snapshot:restore --json` requires `--name`, because without
+it the snapshot is chosen at a prompt, and answers `{"name": "…"}`.
+`project:clone --json` answers `{"name": "…", "path": "…", "hosts": ["…"]}`.
+
 ## Exit codes
 
 **Zero means the question was answered, not that the answer was cheerful.** `status` on a project whose containers are all stopped — or that was never started — prints what it found and exits 0: "nothing is running" is a true answer to "what is running", and a script that treats it as a failure cannot tell a stopped project from a broken one.

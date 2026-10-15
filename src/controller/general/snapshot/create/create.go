@@ -10,28 +10,35 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/cli/output"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/dbtarget"
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"snapshot:create"},
-		Handler:  Execute,
-		Help:     "Create snapshot",
-		Category: "snapshot",
-		ArgsType: new(arg_struct.ControllerGeneralSnapshotCreate),
+		Aliases:    []string{"snapshot:create"},
+		Handler:    Execute,
+		Help:       "Create snapshot. Supports --json (-j)",
+		Category:   "snapshot",
+		ArgsType:   new(arg_struct.ControllerGeneralSnapshotCreate),
+		JSONOutput: true,
 	})
 }
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralSnapshotCreate)).(*arg_struct.ControllerGeneralSnapshotCreate)
+	var w *output.Writer
+	if args.Json {
+		w = output.Begin()
+	}
 	projectConf := configs.GetCurrentProjectConfig()
 	exPath := paths.GetExecDirPath()
 	projectName := configs.GetProjectName()
@@ -79,7 +86,41 @@ func Execute() {
 		}
 	}
 
+	if w != nil {
+		w.Print(Describe(dest, name))
+		return
+	}
+
 	fmt.Println("Snapshot completed successfully")
+}
+
+// SnapshotJSON is one snapshot in a --json answer.
+type SnapshotJSON struct {
+	Name      string   `json:"name"`
+	Path      string   `json:"path"`
+	Files     []string `json:"files"`
+	SizeBytes int64    `json:"size_bytes"`
+}
+
+// Describe reads what a snapshot directory holds. Shared with snapshot:list,
+// so the two answers name the same things the same way.
+func Describe(snapshotsDir, name string) SnapshotJSON {
+	dir := filepath.Join(snapshotsDir, name)
+	out := SnapshotJSON{Name: name, Path: dir, Files: []string{}}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return out
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		out.Files = append(out.Files, e.Name())
+		if info, err := e.Info(); err == nil {
+			out.SizeBytes += info.Size()
+		}
+	}
+	return out
 }
 
 // volumePaths names where the data lives inside the container being read.

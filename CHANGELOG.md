@@ -1,3 +1,15 @@
+**v4.3.8**
+
+Added:
+- **`--json` on `snapshot:create`, `snapshot:restore` and `project:clone`, and a new `snapshot:list`.** These commands copy volumes, stop and start containers and untar into helpers, and print as they go, so with `--json` that progress goes to stderr and stdout carries one document written at the end — `output.Begin` in `src/helper/cli/output`, for any command that does work rather than a lookup. A failure that ends the process from inside a helper leaves stdout empty and exits non-zero; an empty stdout is never a success. `snapshot:restore --json` requires `--name`, because without it the snapshot is chosen at a prompt. `snapshot:list` exists because the only list of snapshot names was the one `snapshot:restore` prints before asking for a number; it sorts by the timestamp at the end of each name, so a snapshot created as `-n zzz` is not listed after a newer `-n aaa`. `TestProgressGoesToStderrAndTheDocumentToStdout` fails without the diversion, `TestSnapshotsAreListedOldestFirstWhateverTheirName` with a sort by name
+
+Fixed:
+- **`snapshot:restore` refused on a deployer project, then rebuilt it and reported success.** The refusal returned nothing, so the command went on to `rebuild` and printed "Snapshot restored successfully" with exit status 0 after restoring nothing. It now exits 1. `TestARestoreRefusedOnADeployerProjectSaysSo` fails with the old return
+- **`project:clone` refusals exited 0.** A name that already exists, a name or suffix with a period or space, an empty `--domain-suffix` and a deployer project all printed the reason and exited 0, which a script reads as a clone made. They exit 1
+
+Docs:
+- `snapshot.md` said `project:clone` copies a running source; it stops the source for the copy, as `snapshot:create` does. `project_clone.md` now names `--domain-suffix`, which is required
+
 **v4.3.7**
 
 Fixed:

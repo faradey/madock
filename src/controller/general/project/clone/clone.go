@@ -8,12 +8,14 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/cli/output"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -21,37 +23,56 @@ func init() {
 	command.Register(&command.Definition{
 		Aliases:  []string{"project:clone"},
 		Handler:  Execute,
-		Help:     "Clone project",
+		Help:     "Clone project. Supports --json (-j)",
 		Category: "project",
 		ArgsType: new(arg_struct.ControllerGeneralProjectClone),
 		// Global: creates a project, so it cannot require one.
-		Global: true,
+		Global:     true,
+		JSONOutput: true,
 	})
+}
+
+// ClonedJSON is the --json answer of project:clone.
+type ClonedJSON struct {
+	Name  string   `json:"name"`
+	Path  string   `json:"path"`
+	Hosts []string `json:"hosts"`
+}
+
+// refuse ends a clone that cannot start. Each of these used to print the
+// error and return, which exited 0: to a script, a clone refused for a name
+// that already exists looked like a clone made.
+func refuse(w *output.Writer, msg string) {
+	if w != nil {
+		w.Fail("%s", msg)
+	}
+	fmtc.ErrorLn(msg)
+	os.Exit(1)
 }
 
 func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralProjectClone)).(*arg_struct.ControllerGeneralProjectClone)
+	var w *output.Writer
+	if args.Json {
+		w = output.Begin()
+	}
 
 	cloneName := args.Name
 	if strings.Contains(cloneName, ".") || strings.Contains(cloneName, " ") {
-		fmtc.ErrorLn("The project folder name cannot contain a period or space")
-		return
+		refuse(w, "The project folder name cannot contain a period or space")
 	}
 	domainSuffix := strings.TrimSpace(args.DomainSuffix)
 	if domainSuffix == "" {
-		fmtc.ErrorLn("--domain-suffix is required and cannot be empty")
-		return
+		refuse(w, "--domain-suffix is required and cannot be empty")
 	}
 	if strings.Contains(domainSuffix, ".") || strings.Contains(domainSuffix, " ") {
-		fmtc.ErrorLn("--domain-suffix cannot contain a period or space")
-		return
+		refuse(w, "--domain-suffix cannot contain a period or space")
 	}
 	projectsPath := paths.GetExecDirPath() + "/projects"
 	dirs := paths.GetDirs(projectsPath)
 	for _, val := range dirs {
 		if val == cloneName {
-			fmtc.ErrorLn("The project with the same name is exist")
-			return
+			refuse(w, "The project with the same name is exist")
 		}
 	}
 	projectConf := configs.GetCurrentProjectConfig()
@@ -70,6 +91,9 @@ func Execute() {
 	// reason: `/var/www/html` means the application and the mount at once on an
 	// ordinary project, and two different things here.
 	if configs.IsDeployManaged(projectConf) {
+		if w != nil {
+			w.Fail("project:clone is refused on a project managed by deployer: its source tree is the deploy layout, not the application")
+		}
 		fmtc.WarningLn("project:clone is refused on a project managed by deployer.")
 		fmt.Println("  Its source tree is releases/, shared/ and current — the deploy layout, not the")
 		fmt.Println("  application. Copying it would produce a project pointing at the original's")
@@ -77,7 +101,7 @@ func Execute() {
 		fmt.Println("")
 		fmt.Println("  Set up the second environment from the repository instead: create the project,")
 		fmt.Println("  `madock deploy:enable`, and deploy the branch you want into it.")
-		return
+		os.Exit(1)
 	}
 
 	fmt.Println("Cloning the project")
@@ -214,6 +238,18 @@ func Execute() {
 	}
 
 	docker.StopSnapshot(cloneName)
+
+	if w != nil {
+		cloned := ClonedJSON{Name: cloneName, Path: clonePath, Hosts: []string{}}
+		for key, val := range configs.GetProjectConfig(cloneName) {
+			if val != "" && strings.Contains(key, "/hosts/") && strings.HasSuffix(key, "/name") {
+				cloned.Hosts = append(cloned.Hosts, val)
+			}
+		}
+		sort.Strings(cloned.Hosts)
+		w.Print(cloned)
+		return
+	}
 
 	fmtc.SuccessLn("Project cloned successfully.\nThe new project name is " + cloneName + ".\nThe path to the project is " + clonePath)
 }

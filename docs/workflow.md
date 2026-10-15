@@ -415,7 +415,12 @@ see `allow_destructive_commands` in [config.md](config.md). madock-pro ships it 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name, -n`  Name of the snapshot
 
 
+* `snapshot:list`   List the project's snapshots, oldest first. Supports --json (-j) output
+
+
 * `snapshot:restore`   To restore a project of the snapshot. The databases and project files will be restored
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--name, -n`  Snapshot to restore, without the prompt
 
 
 * `ssl:rebuild`   Rebuild SSL Certificates  
