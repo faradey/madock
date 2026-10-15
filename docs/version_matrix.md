@@ -54,6 +54,27 @@ Tool names: `language`, `php`, `dbtype`, `db`, `searchengine`, `elastic`,
 `yarn`, `python`, `golang`, `ruby`. An unknown name, a tool defined twice, or a
 rule with both or neither of `from` and `version` fails the tests.
 
+### Container memory per platform
+
+A platform file may set its own memory for a container where it should differ
+from madock's default for every platform:
+
+```xml
+<resource key="search/opensearch/heap">2g</resource>
+```
+
+Keys: `db/memory`, `search/elasticsearch/memory_limit`,
+`search/elasticsearch/heap`, `search/opensearch/memory_limit`,
+`search/opensearch/heap`, `memcached/memory`. The value is applied when a
+project's configuration is read, **never written into it**, so a change reaches
+every project of that platform at its next rebuild. The order is: madock's
+defaults, then the platform's `<resource>`, then `projects/config.xml` (what
+`config:set` writes for the installation), then the project — anything set by
+hand wins. A value equal to madock's default fails the tests: it would be a
+copy that stops following the default the day the default changes.
+
+No platform sets one yet; the defaults in `config_defaults.xml` apply to all.
+
 ### What the menus offer
 
 `common.xml` also holds what `setup`'s menus list for each service, newest

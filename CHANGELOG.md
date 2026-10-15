@@ -1,3 +1,8 @@
+**v4.4.3**
+
+Added:
+- **A platform can set its own container memory in its matrix file: `<resource key="search/opensearch/heap">2g</resource>`.** For the database, Elasticsearch, OpenSearch and Memcached memory keys. Applied when a project's configuration is read and never written into it, so a change reaches every project of that platform at its next rebuild; the order is madock's defaults, the platform's value, `projects/config.xml`, the project — anything set by hand wins. No platform sets one yet, so nothing changes today. A value equal to madock's default is refused by a test, because a copy stops following the default the day it changes. `TestAPlatformResourceReplacesTheDefaultAndNothingElse` fails when the platform value is laid over the project's
+
 **v4.4.2**
 
 Changed:

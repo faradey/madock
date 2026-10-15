@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/model/versions"
 	"github.com/go-xmlfmt/xmlfmt"
 	"os"
 	"path/filepath"
@@ -124,17 +125,51 @@ func SetCurrentProjectConfig(conf map[string]string) {
 func GetProjectConfig(projectName string) map[string]string {
 	if projectName == GetProjectName() {
 		if len(projectConfig) == 0 {
-			config := GetProjectConfigOnly(projectName)
-			ConfigMapping(GetGeneralConfig(), config)
-			applyDerived(config)
-			projectConfig = config
+			projectConfig = buildProjectConfig(projectName)
 		}
 		return projectConfig
-	} else {
-		config := GetProjectConfigOnly(projectName)
-		ConfigMapping(GetGeneralConfig(), config)
-		applyDerived(config)
-		return config
+	}
+	return buildProjectConfig(projectName)
+}
+
+func buildProjectConfig(projectName string) map[string]string {
+	config := GetProjectConfigOnly(projectName)
+	explicit := explicitKeys(config, GetProjectsGeneralConfig())
+	ConfigMapping(GetGeneralConfig(), config)
+	applyPlatformResources(config, explicit)
+	applyDerived(config)
+	return config
+}
+
+// explicitKeys are the keys somebody set: in the project — its runtime config
+// or its .madock/config.xml — or in projects/config.xml, where config:set
+// writes for the whole installation. What is left came from madock's defaults.
+func explicitKeys(layers ...map[string]string) map[string]bool {
+	out := map[string]bool{}
+	for _, layer := range layers {
+		for k := range layer {
+			out[k] = true
+		}
+	}
+	return out
+}
+
+// platformResources is replaceable so a test can give a platform its own
+// values without shipping them.
+var platformResources = versions.PlatformResources
+
+// applyPlatformResources lays a platform's own resource defaults from the
+// version matrix over madock's defaults, under everything anybody set.
+//
+// Never written into the project: a value pinned there would stop following
+// the defaults, and a change to them has to reach every project at its next
+// rebuild. The order is madock's defaults, then the platform's, then
+// projects/config.xml, then the project.
+func applyPlatformResources(config map[string]string, explicit map[string]bool) {
+	for key, value := range platformResources(config["platform"]) {
+		if !explicit[key] {
+			config[key] = value
+		}
 	}
 }
 
