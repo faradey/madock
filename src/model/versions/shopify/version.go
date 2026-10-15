@@ -4,24 +4,17 @@ import (
 	"github.com/faradey/madock/v4/src/model/versions"
 )
 
+// The stack is data: src/model/versions/matrix/shopify.xml.
+
 func init() {
-	versions.RegisterProvider("shopify", func(_ string) versions.ToolsVersions {
-		return GetVersions()
+	versions.RegisterProvider("shopify", func(ver string) versions.ToolsVersions {
+		tv, _ := versions.FromMatrix("shopify", ver)
+		return tv
 	})
 }
 
+// GetVersions is the baseline stack, before any preset is chosen.
 func GetVersions() versions.ToolsVersions {
-	return versions.ToolsVersions{
-		Platform: "shopify",
-		Language: "php",
-		Php:      "8.2",
-		Db:       "11.1.2",
-		Composer: "2",
-		Redis:    "7.2.1",
-		Valkey:   "8.1.3",
-		RabbitMQ: "3.9.29",
-		Xdebug:   "3.2.2",
-		NodeJs:   "18.15.0",
-		Yarn:     "3.6.4",
-	}
+	tv, _ := versions.FromMatrix("shopify", "")
+	return tv
 }

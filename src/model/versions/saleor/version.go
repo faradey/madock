@@ -4,19 +4,17 @@ import (
 	"github.com/faradey/madock/v4/src/model/versions"
 )
 
+// The stack is data: src/model/versions/matrix/saleor.xml.
+
 func init() {
-	versions.RegisterProvider("saleor", func(_ string) versions.ToolsVersions {
-		return GetVersions()
+	versions.RegisterProvider("saleor", func(ver string) versions.ToolsVersions {
+		tv, _ := versions.FromMatrix("saleor", ver)
+		return tv
 	})
 }
 
+// GetVersions is the baseline stack, before any preset is chosen.
 func GetVersions() versions.ToolsVersions {
-	return versions.ToolsVersions{
-		Platform: "saleor",
-		Language: "python",
-		Python:   "3.12",
-		DbType:   "PostgreSQL",
-		Db:       "postgres:15",
-		Redis:    "7.2.5",
-	}
+	tv, _ := versions.FromMatrix("saleor", "")
+	return tv
 }

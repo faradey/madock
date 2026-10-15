@@ -5,6 +5,10 @@ import (
 	"github.com/faradey/madock/v4/src/model/versions/languages"
 )
 
+// The stack is data: src/model/versions/matrix/custom.xml. Python, Go and Ruby
+// come from the languages package, which knows them for every language madock
+// supports.
+
 func init() {
 	versions.RegisterProvider("custom", func(_ string) versions.ToolsVersions {
 		return GetVersions()
@@ -12,73 +16,10 @@ func init() {
 }
 
 func GetVersions() versions.ToolsVersions {
-	phpVer := GetPhpVersion()
+	tv, _ := versions.FromMatrix("custom", "")
 	langDefaults := languages.GetAllDefaults()
-	return versions.ToolsVersions{
-		Platform:     "custom",
-		Language:     "php",
-		Php:          phpVer,
-		Db:           GetDBVersion(),
-		SearchEngine: GetSearchEngineVersion(),
-		Elastic:      GetElasticVersion(),
-		OpenSearch:   GetOpenSearchVersion(),
-		Composer:     GetComposerVersion(),
-		Redis:        GetRedisVersion(),
-		Valkey:       GetValkeyVersion(),
-		RabbitMQ:     GetRabbitMQVersion(),
-		Xdebug:       GetXdebugVersion(phpVer),
-		Python:       langDefaults["python"],
-		Golang:       langDefaults["golang"],
-		Ruby:         langDefaults["ruby"],
-	}
-}
-
-func GetPhpVersion() string {
-	return "8.2"
-}
-
-func GetDBVersion() string {
-	return "10.6"
-}
-
-func GetElasticVersion() string {
-	return "8.4.3"
-}
-
-func GetSearchEngineVersion() string {
-	return "Elasticsearch"
-}
-
-func GetOpenSearchVersion() string {
-	return "2.5.0"
-}
-
-func GetComposerVersion() string {
-	return "2"
-}
-
-func GetRedisVersion() string {
-	return "7.0"
-}
-
-func GetValkeyVersion() string {
-	return "8.1.3"
-}
-
-func GetRabbitMQVersion() string {
-	return "3.9"
-}
-
-func GetXdebugVersion(phpVer string) string {
-	if versions.AtLeast(phpVer, "8.4") {
-		return "3.4.4"
-	} else if versions.AtLeast(phpVer, "8.3") {
-		return "3.3.1"
-	} else if versions.AtLeast(phpVer, "8.1") {
-		return "3.2.2"
-	} else if versions.AtLeast(phpVer, "7.2") {
-		return "3.1.6"
-	}
-
-	return "2.7.2"
+	tv.Python = langDefaults["python"]
+	tv.Golang = langDefaults["golang"]
+	tv.Ruby = langDefaults["ruby"]
+	return tv
 }

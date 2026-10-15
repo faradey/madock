@@ -228,6 +228,10 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 					toolsDefVersions.Elastic = args.SearchEngineVersion
 				}
 			} else if strings.EqualFold(toolsDefVersions.SearchEngine, "OpenSearch") {
+				if refusal := openSearchRefusal(toolsDefVersions, args.SearchEngineVersion); refusal != "" {
+					fmtc.ErrorLn(refusal)
+					os.Exit(1)
+				}
 				if args.SearchEngineVersion == "" {
 					tools.OpenSearch(&toolsDefVersions.OpenSearch)
 				} else {
@@ -457,4 +461,20 @@ func findPresetByName(name string) *preset.Preset {
 	}
 
 	return nil
+}
+
+// openSearchRefusal says why OpenSearch cannot be the search engine of this
+// Magento release, or nothing when it can.
+//
+// The matrix answers "NotCompatible" for a release older than 2.4.3-p2, and
+// that answer was never read: it became the pre-selected version, and under
+// -y the version, written into the config as the OpenSearch image tag. The
+// project then failed at the image pull. A version given explicitly is still
+// taken at its word — whoever names one knows something the matrix does not.
+func openSearchRefusal(tv versions.ToolsVersions, explicitVersion string) string {
+	if explicitVersion != "" || tv.OpenSearch != versions.NotCompatible {
+		return ""
+	}
+	return "OpenSearch does not support Magento " + tv.PlatformVersion +
+		" — it is supported from 2.4.3-p2 (2.3.7-p3 and 2.3.7-p4 on the 2.3 line). Choose Elasticsearch, or name a version with --search-engine-version."
 }

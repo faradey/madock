@@ -1,3 +1,16 @@
+**v4.4.1**
+
+Changed:
+- **The version matrix is data: `src/model/versions/matrix/<platform>.xml`, one file per platform, compiled into the binary.** It was hand-written Go, a function per tool per platform. Rules are read top to bottom, the first match wins, `from=` is "this version or later" compared as versions and `version=` is an exact name; `by="php"` lets Xdebug follow PHP. The format and how to change it are in `docs/version_matrix.md`. Moving it changed no answer except two that carried nothing — `PlatformVersion` is now echoed for platforms with one stack, and a stack with no PHP gets no Xdebug instead of `2.7.2` — which `golden/testdata/matrix.golden.json` pins, together with every answer for every boundary version of every platform
+- **The setup presets are built from the matrix.** They were a second, hand-kept copy of the same answers and had drifted from it in twelve of twenty-two presets: "Magento 2.4.6-p4 (LTS)" from the menu gave PHP 8.2 and Elasticsearch, typing 2.4.6-p4 gave PHP 8.1 and OpenSearch. A preset is now a name, a description and a platform version in the same XML; picking it gives exactly what typing its version gives, and its description is filled in from those versions. Shopify and BigCommerce flavours (`hydrogen`, `catalyst`, …) are named versions in their matrix
+
+Fixed — where the two copies disagreed, the value is now the vendor's, checked on 2026-10-15 and noted in each file:
+- **Magento 2.4.6**: PHP 8.2 and MariaDB 10.6, which the matrix had as 8.1 and 10.4; OpenSearch 2.5 and RabbitMQ 3.11, which the preset had as Elasticsearch and 3.12. Adobe's patch-level changes for 2.4.6-pN are in: OpenSearch 2.12 from p5 and 2.19 from p10, RabbitMQ 3.13 from p7 and 4.1 from p10, Redis 7.2 from p8, MariaDB 10.11 from p11
+- **Shopware 6.5**: PHP 8.2, the version Shopware recommends (8.3 in the matrix); MariaDB 10.11 (10.6 in the preset)
+- **Sylius 1.13**: Node 20 — Sylius 1.13 supports 18 and 20, and the matrix gave 22
+- **Medusa 2.x**: Node 22.22 for the latest, which `@medusajs/medusa` requires (`>=22.22.0`; the preset had 22.11), and 20.19 for 2.0, the floor the docs state (20.18). No Medusa stack carries RabbitMQ any more: Medusa does not use it
+- **OpenSearch on a Magento release that cannot run it is refused.** The matrix answers `NotCompatible` before 2.4.3-p2, and that answer was never checked: chosen with `-y` it became the OpenSearch image tag and the project failed at the image pull. `setup` now says from which release OpenSearch works; a version given with `--search-engine-version` is still taken at its word. `TestOpenSearchIsRefusedWhereTheMatrixSaysNotCompatible` fails with the check removed, `TestTheFirstMatchingRuleWins` with the rules read in reverse
+
 **v4.4.0**
 
 Fixed:

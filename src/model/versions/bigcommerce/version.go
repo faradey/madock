@@ -4,23 +4,17 @@ import (
 	"github.com/faradey/madock/v4/src/model/versions"
 )
 
+// The stack is data: src/model/versions/matrix/bigcommerce.xml.
+
 func init() {
-	versions.RegisterProvider("bigcommerce", func(_ string) versions.ToolsVersions {
-		return GetVersions()
+	versions.RegisterProvider("bigcommerce", func(ver string) versions.ToolsVersions {
+		tv, _ := versions.FromMatrix("bigcommerce", ver)
+		return tv
 	})
 }
 
-// GetVersions is the catch-all baseline used when no preset is
-// selected. Real per-preset stacks come from GetBigcommercePresets.
+// GetVersions is the baseline stack, before any preset is chosen.
 func GetVersions() versions.ToolsVersions {
-	return versions.ToolsVersions{
-		Platform: "bigcommerce",
-		Language: "nodejs",
-		NodeJs:   "22.20.0",
-		Yarn:     "1.22.22",
-		Php:      "8.3",
-		Db:       "mariadb:11.4",
-		Composer: "2",
-		Redis:    "7.4",
-	}
+	tv, _ := versions.FromMatrix("bigcommerce", "")
+	return tv
 }
