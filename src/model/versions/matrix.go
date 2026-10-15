@@ -179,24 +179,29 @@ func flatten(n rawNode, prefix string, out map[string]string) {
 // toolFields maps a tool name in the XML to its ToolsVersions field. A name
 // that is not here is refused when the files are loaded, so a typo fails the
 // tests instead of quietly answering nothing.
+//
+// The names follow config.xml, not the Go fields: `elasticsearch` as in
+// search/elasticsearch, `dbtype` as in db/type. They used to be the field
+// names (`elastic`), and the menu lists called the database engine `dbengine`
+// while the rules in the same file called it `dbtype`.
 var toolFields = map[string]func(*ToolsVersions) *string{
-	"language":     func(t *ToolsVersions) *string { return &t.Language },
-	"php":          func(t *ToolsVersions) *string { return &t.Php },
-	"dbtype":       func(t *ToolsVersions) *string { return &t.DbType },
-	"db":           func(t *ToolsVersions) *string { return &t.Db },
-	"searchengine": func(t *ToolsVersions) *string { return &t.SearchEngine },
-	"elastic":      func(t *ToolsVersions) *string { return &t.Elastic },
-	"opensearch":   func(t *ToolsVersions) *string { return &t.OpenSearch },
-	"composer":     func(t *ToolsVersions) *string { return &t.Composer },
-	"redis":        func(t *ToolsVersions) *string { return &t.Redis },
-	"valkey":       func(t *ToolsVersions) *string { return &t.Valkey },
-	"rabbitmq":     func(t *ToolsVersions) *string { return &t.RabbitMQ },
-	"xdebug":       func(t *ToolsVersions) *string { return &t.Xdebug },
-	"nodejs":       func(t *ToolsVersions) *string { return &t.NodeJs },
-	"yarn":         func(t *ToolsVersions) *string { return &t.Yarn },
-	"python":       func(t *ToolsVersions) *string { return &t.Python },
-	"golang":       func(t *ToolsVersions) *string { return &t.Golang },
-	"ruby":         func(t *ToolsVersions) *string { return &t.Ruby },
+	"language":      func(t *ToolsVersions) *string { return &t.Language },
+	"php":           func(t *ToolsVersions) *string { return &t.Php },
+	"dbtype":        func(t *ToolsVersions) *string { return &t.DbType },
+	"db":            func(t *ToolsVersions) *string { return &t.Db },
+	"searchengine":  func(t *ToolsVersions) *string { return &t.SearchEngine },
+	"elasticsearch": func(t *ToolsVersions) *string { return &t.Elastic },
+	"opensearch":    func(t *ToolsVersions) *string { return &t.OpenSearch },
+	"composer":      func(t *ToolsVersions) *string { return &t.Composer },
+	"redis":         func(t *ToolsVersions) *string { return &t.Redis },
+	"valkey":        func(t *ToolsVersions) *string { return &t.Valkey },
+	"rabbitmq":      func(t *ToolsVersions) *string { return &t.RabbitMQ },
+	"xdebug":        func(t *ToolsVersions) *string { return &t.Xdebug },
+	"nodejs":        func(t *ToolsVersions) *string { return &t.NodeJs },
+	"yarn":          func(t *ToolsVersions) *string { return &t.Yarn },
+	"python":        func(t *ToolsVersions) *string { return &t.Python },
+	"golang":        func(t *ToolsVersions) *string { return &t.Golang },
+	"ruby":          func(t *ToolsVersions) *string { return &t.Ruby },
 }
 
 var (

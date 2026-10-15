@@ -60,7 +60,7 @@ The files are shaped like `config.xml`: elements only, **no attributes**.
 - `NotCompatible` means the tool cannot run with that platform version.
   `setup` refuses it rather than writing it into the config as a version.
 
-Tool names: `language`, `php`, `dbtype`, `db`, `searchengine`, `elastic`,
+Tool names: `language`, `php`, `dbtype`, `db`, `searchengine`, `elasticsearch`,
 `opensearch`, `composer`, `redis`, `valkey`, `rabbitmq`, `xdebug`, `nodejs`,
 `yarn`, `python`, `golang`, `ruby`. An unknown name, a tool defined twice, a
 rule with both or neither of `<from>` and `<version>`, or an attribute anywhere
@@ -112,8 +112,8 @@ first:
 </offers>
 ```
 
-Names: `php`, `dbengine`, `mariadb`, `mysql`, `postgresql`, `mongodb`,
-`composer`, `searchengine`, `elastic`, `opensearch`, `redis`, `valkey`,
+Names: `php`, `dbtype`, `mariadb`, `mysql`, `postgresql`, `mongodb`,
+`composer`, `searchengine`, `elasticsearch`, `opensearch`, `redis`, `valkey`,
 `memcached`, `artemis`, `xdebug`, `rabbitmq`, `nodejs`, `yarn`, `language`,
 `python`, `golang`, `ruby`. The menu adds "Custom" where a free value makes
 sense, and **always shows the default the matrix gave**, highlighted, whether

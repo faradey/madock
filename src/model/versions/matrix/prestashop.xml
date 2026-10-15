@@ -14,9 +14,9 @@
         <searchengine>
             <default>Elasticsearch</default>
         </searchengine>
-        <elastic>
+        <elasticsearch>
             <default>8.11.14</default>
-        </elastic>
+        </elasticsearch>
         <opensearch>
             <default>2.12.0</default>
         </opensearch>

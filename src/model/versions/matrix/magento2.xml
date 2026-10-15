@@ -38,7 +38,7 @@
             <rule><from>2.4.6</from><value>OpenSearch</value></rule>
             <default>Elasticsearch</default>
         </searchengine>
-        <elastic>
+        <elasticsearch>
             <rule><from>2.4.8</from><value>8.17.6</value></rule>
             <rule><from>2.4.7</from><value>8.11.14</value></rule>
             <rule><from>2.4.6</from><value>8.4.3</value></rule>
@@ -52,7 +52,7 @@
             <rule><from>2.3.6</from><value>7.7.1</value></rule>
             <rule><from>2.3.5</from><value>7.6.2</value></rule>
             <rule><from>2.0.0</from><value>6.8.13</value></rule>
-        </elastic>
+        </elasticsearch>
         <opensearch>
             <rule><from>2.4.9</from><value>3.0.0</value></rule>
             <rule><from>2.4.8</from><value>2.19.0</value></rule>
@@ -128,7 +128,7 @@
         <preset>
             <version>2.4.5</version>
             <name>Magento 2.4.5 (Legacy)</name>
-            <description>Older stable with PHP {php}, Elasticsearch {elastic}</description>
+            <description>Older stable with PHP {php}, Elasticsearch {elasticsearch}</description>
         </preset>
     </presets>
 </config>

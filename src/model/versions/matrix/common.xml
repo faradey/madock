@@ -23,14 +23,14 @@
     </tools>
     <offers>
         <php><v>8.5</v><v>8.4</v><v>8.3</v><v>8.2</v><v>8.1</v><v>8.0</v><v>7.4</v></php>
-        <dbengine><v>MariaDB</v><v>MySQL</v><v>PostgreSQL</v><v>MongoDB</v></dbengine>
+        <dbtype><v>MariaDB</v><v>MySQL</v><v>PostgreSQL</v><v>MongoDB</v></dbtype>
         <mariadb><v>12</v><v>11.8</v><v>11.6</v><v>11.4</v><v>11.1</v><v>10.6</v><v>10.4</v></mariadb>
         <mysql><v>9.4</v><v>9.3</v><v>9.2</v><v>8.4</v><v>8.0</v></mysql>
         <postgresql><v>18</v><v>17</v><v>16</v><v>15</v><v>14</v></postgresql>
         <mongodb><v>8.0</v><v>7.0</v><v>6.0</v><v>5.0</v></mongodb>
         <composer><v>1</v><v>2</v></composer>
         <searchengine><v>OpenSearch</v><v>Elasticsearch</v><v>Do not use</v></searchengine>
-        <elastic><v>9.1.0</v><v>9.0.0</v><v>8.18.0</v><v>8.17.6</v><v>8.11.14</v><v>7.17.5</v></elastic>
+        <elasticsearch><v>9.1.0</v><v>9.0.0</v><v>8.18.0</v><v>8.17.6</v><v>8.11.14</v><v>7.17.5</v></elasticsearch>
         <opensearch><v>3.0.0</v><v>2.19.1</v><v>2.18.0</v><v>2.12.0</v><v>1.2.0</v></opensearch>
         <redis><v>8.2</v><v>8.0</v><v>7.4</v><v>7.2</v><v>7.0</v><v>6.2</v></redis>
         <valkey><v>9.0.0</v><v>8.1.3</v></valkey>

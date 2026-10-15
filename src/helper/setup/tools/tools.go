@@ -168,7 +168,7 @@ func DbEngine(defEngine *string) {
 	if *defEngine == "" {
 		*defEngine = "MariaDB"
 	}
-	availableVersions := versions.Offer("dbengine")
+	availableVersions := versions.Offer("dbtype")
 
 	fmt.Println("")
 	SelectInteractive("Database Engine", availableVersions, defEngine)
@@ -221,7 +221,7 @@ func SearchEngine(defVersion *string) {
 }
 
 func Elastic(defVersion *string) {
-	availableVersions := withCustom("elastic")
+	availableVersions := withCustom("elasticsearch")
 
 	fmt.Println("")
 	SelectInteractive("Elasticsearch Version", availableVersions, defVersion)
