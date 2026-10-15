@@ -1,3 +1,14 @@
+**v4.4.0**
+
+Fixed:
+- **A Magento patch release was detected as a later version and set up with the wrong stack.** `setup` reads the version from `composer.json` through `cleanVersion`, which dropped every character that is not a digit or a dot: `2.4.7-p3` became `2.4.73`. While versions were compared as strings that happened to give the right tools; since 4.3.7 compares them as numbers, `2.4.73` is later than `2.4.9`, and a store pinned to `2.4.7-p3` was offered PHP 8.5, MariaDB 11.8 and OpenSearch 3.0. The `-pN` suffix is now kept, and any other suffix is dropped whole — `2.4.8-beta1` used to become `2.4.81`. Projects already set up are not affected: their stack is in their configuration. `TestAPatchReleaseGetsTheStackOfItsLine` and `TestCleanVersionKeepsTheMagentoPatchSuffix` fail with the old strip
+- **`snapshot:restore --name backup` could restore a different snapshot.** Any snapshot whose creation name started with `backup-` matched too, and the newest was picked by whole name, so `snapshot-backup-old-2026-01-01-…` won over `snapshot-backup-2026-10-15-…` ('o' sorts after '2') and its data was restored with a success message. A creation name now has to be followed by exactly the timestamp, and the newest is picked by that timestamp. `TestANameMeansExactlyThatNameAndTheNewestOfIt` fails without the timestamp check
+- `snapshot:list --json` wrote through the old printer, which on an encoding error printed the error to stdout and exited 0; it uses `output.Writer` like the other commands
+
+Changed:
+- **One rule for what counts as `--json`: `output.Requested`.** madock's dispatcher and madock-pro's commands each had their own copy, and they had drifted — one read the arguments from the command name, the other from the first argument after it. Both now call this one
+- `project:clone --json` reports the hosts it rewrote, collected in the loop that rewrites them, instead of reading the configuration back and filtering it a second time
+
 **v4.3.9**
 
 Fixed:

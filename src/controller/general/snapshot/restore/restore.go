@@ -17,6 +17,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/paths"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -87,18 +88,7 @@ func Execute() {
 		// name is unambiguous and wins. Otherwise the name is read as the one
 		// given at creation, and the newest snapshot carrying it is restored —
 		// the timestamp suffix sorts chronologically, so "newest" is the last.
-		wanted := "snapshot-" + args.Name + "-"
-		matched := ""
-		for _, snapshotName := range snapshotNames {
-			base := filepath.Base(snapshotName)
-			if base == args.Name {
-				matched = base
-				break
-			}
-			if strings.HasPrefix(base, wanted) && base > matched {
-				matched = base
-			}
-		}
+		matched := MatchName(snapshotNames, args.Name)
 
 		for index, snapshotName := range snapshotNames {
 			if filepath.Base(snapshotName) == matched {
@@ -162,6 +152,39 @@ func Execute() {
 		return
 	}
 	fmt.Println("Snapshot restored successfully")
+}
+
+// createdStamp is the suffix snapshot:create appends: 2006-01-02-15-04-05.
+var createdStamp = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}$`)
+
+// MatchName picks the snapshot a name means. An exact directory name wins.
+// Otherwise the name is the one given at creation, and the newest snapshot
+// made with exactly that name is chosen.
+//
+// "Exactly" is the fix. The prefix used to be enough, and the newest was the
+// last by whole name, so `--name backup` also matched `snapshot-backup-old-…`
+// and preferred it over every `snapshot-backup-2026-…` because 'o' sorts after
+// '2' — restoring January's data and reporting success.
+func MatchName(snapshotNames []string, name string) string {
+	wanted := "snapshot-" + name + "-"
+	matched, newest := "", ""
+	for _, snapshotName := range snapshotNames {
+		base := filepath.Base(snapshotName)
+		if base == name {
+			return base
+		}
+		if !strings.HasPrefix(base, wanted) {
+			continue
+		}
+		stamp := strings.TrimPrefix(base, wanted)
+		if !createdStamp.MatchString(stamp) {
+			continue
+		}
+		if stamp > newest {
+			matched, newest = base, stamp
+		}
+	}
+	return matched
 }
 
 func RestoreSnapshot(projectName string, projectConf map[string]string, selectedInt int, snapshotNames []string, dbsPath string) error {
