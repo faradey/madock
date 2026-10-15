@@ -1,3 +1,8 @@
+**v4.3.7**
+
+Fixed:
+- **Platform versions were compared as strings, so a two-digit segment picked the wrong tools.** Every version provider decided with `mageVer >= "2.4.9"`, which compares bytes: `"2.4.10"` sorts below `"2.4.2"`, so the first two-digit Magento release would have been set up with PHP 7.4, MariaDB 10.4, Redis 5.0 and no OpenSearch; `"2.4.7-p10"` sorted below `"2.4.7-p5"` and got RabbitMQ 3.13 instead of 4.1; Shopware `6.10` got no PHP, database or search engine at all; and a PHP `8.10` would have been given the Xdebug of 8.1. They now go through `versions.AtLeast`, which compares segments as numbers and reads a Magento `-pN` as a patch on top of its release; any other suffix (`-beta1`) still counts as the release itself, as before. The install command's search-engine and 2FA branches use the same comparison. Every version that exists today gets the same answer as before, with one exception: Sylius 1.9 sorted after 1.13 and was given PHP 8.2 and MariaDB 10.11, and now takes the same defaults as 1.10 and 1.11. `configs.CompareVersions` is not reused because it reads `7-p5` as 0 and so puts every Magento patch release below the release it patches. `TestTwoDigitSegmentsAreComparedAsNumbers`, `TestTwoDigitMinorIsLaterThanOneDigit` and `TestXdebugForATwoDigitPhpMinor` fail against the old comparisons; `TestCompare`, `TestGetOpenSearchVersion` and `TestGetRabbitMQVersion` fail with the patch suffix ignored
+
 **v4.3.6**
 
 Changed:

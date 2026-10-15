@@ -137,7 +137,7 @@ func Magento(projectName, platformVer string) {
 		"--currency=" + projectConf["magento/currency"] + " " +
 		"--timezone=" + projectConf["magento/timezone"] + " " +
 		"--use-rewrites=1 "
-	if platformVer >= "2.3.7" {
+	if versions.AtLeast(platformVer, "2.3.7") {
 		if projectConf["search/elasticsearch/enabled"] == "true" {
 			installCommand += "--search-engine=elasticsearch7 " +
 				"--elasticsearch-host=elasticsearch " +
@@ -145,7 +145,7 @@ func Magento(projectName, platformVer string) {
 				"--elasticsearch-index-prefix=magento2 " +
 				"--elasticsearch-timeout=15 "
 		} else if projectConf["search/opensearch/enabled"] == "true" {
-			if platformVer >= "2.4.6" {
+			if versions.AtLeast(platformVer, "2.4.6") {
 				installCommand += "--search-engine=opensearch " +
 					"--opensearch-host=opensearch " +
 					"--opensearch-port=9200 " +
@@ -160,7 +160,7 @@ func Magento(projectName, platformVer string) {
 			}
 		}
 
-		if platformVer >= "2.4.6" {
+		if versions.AtLeast(platformVer, "2.4.6") {
 			installCommand += "&& bin/magento module:disable Magento_AdminAdobeImsTwoFactorAuth "
 		}
 		installCommand += "&& bin/magento module:disable Magento_TwoFactorAuth "

@@ -37,9 +37,9 @@ func GetVersions(ver string) versions.ToolsVersions {
 }
 
 func GetPhpVersion(mageVer string) string {
-	if mageVer >= "6.5" {
+	if versions.AtLeast(mageVer, "6.5") {
 		return "8.3"
-	} else if mageVer >= "6.4" {
+	} else if versions.AtLeast(mageVer, "6.4") {
 		return "8.1"
 	}
 
@@ -47,9 +47,9 @@ func GetPhpVersion(mageVer string) string {
 }
 
 func GetDBVersion(mageVer string) string {
-	if mageVer >= "6.5" {
+	if versions.AtLeast(mageVer, "6.5") {
 		return "10.11"
-	} else if mageVer >= "6.4" {
+	} else if versions.AtLeast(mageVer, "6.4") {
 		return "10.5"
 	}
 
@@ -57,9 +57,9 @@ func GetDBVersion(mageVer string) string {
 }
 
 func GetElasticVersion(mageVer string) string {
-	if mageVer >= "6.5" {
+	if versions.AtLeast(mageVer, "6.5") {
 		return "8.11.14"
-	} else if mageVer >= "6.4" {
+	} else if versions.AtLeast(mageVer, "6.4") {
 		return "8.4.3"
 	}
 
@@ -67,7 +67,7 @@ func GetElasticVersion(mageVer string) string {
 }
 
 func GetSearchEngineVersion(mageVer string) string {
-	if mageVer >= "6.5" {
+	if versions.AtLeast(mageVer, "6.5") {
 		return "OpenSearch"
 	}
 
@@ -75,9 +75,9 @@ func GetSearchEngineVersion(mageVer string) string {
 }
 
 func GetOpenSearchVersion(mageVer string) string {
-	if mageVer >= "6.5" {
+	if versions.AtLeast(mageVer, "6.5") {
 		return "2.8.0"
-	} else if mageVer >= "6.4" {
+	} else if versions.AtLeast(mageVer, "6.4") {
 		return "2.5.0"
 	}
 
@@ -85,7 +85,7 @@ func GetOpenSearchVersion(mageVer string) string {
 }
 
 func GetComposerVersion(mageVer string) string {
-	if mageVer >= "6.3" {
+	if versions.AtLeast(mageVer, "6.3") {
 		return "2"
 	}
 
@@ -93,7 +93,7 @@ func GetComposerVersion(mageVer string) string {
 }
 
 func GetRedisVersion(mageVer string) string {
-	if mageVer >= "6.5" {
+	if versions.AtLeast(mageVer, "6.5") {
 		return "7.2"
 	}
 
@@ -105,7 +105,7 @@ func GetValkeyVersion(mageVer string) string {
 }
 
 func GetRabbitMQVersion(mageVer string) string {
-	if mageVer >= "6.3" {
+	if versions.AtLeast(mageVer, "6.3") {
 		return "3.13"
 	}
 
@@ -113,13 +113,13 @@ func GetRabbitMQVersion(mageVer string) string {
 }
 
 func GetXdebugVersion(phpVer string) string {
-	if phpVer >= "8.4" {
+	if versions.AtLeast(phpVer, "8.4") {
 		return "3.4.4"
-	} else if phpVer >= "8.3" {
+	} else if versions.AtLeast(phpVer, "8.3") {
 		return "3.3.1"
-	} else if phpVer >= "8.1" {
+	} else if versions.AtLeast(phpVer, "8.1") {
 		return "3.2.2"
-	} else if phpVer >= "7.2" {
+	} else if versions.AtLeast(phpVer, "7.2") {
 		return "3.1.6"
 	}
 
