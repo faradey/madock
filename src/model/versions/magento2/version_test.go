@@ -124,7 +124,7 @@ func TestGetOpenSearchVersion(t *testing.T) {
 		{"2.4.8", "2.19.0"},
 		{"2.4.7", "2.12.0"},
 		{"2.4.6", "2.5.0"},
-		// Note: 2.4.5 and 2.4.4 return "1.2.0" due to string comparison (>= "2.4.3-p2")
+		// 2.4.4 and 2.4.5 are later than 2.4.3-p2, so they take the same answer
 		{"2.4.5", "1.2.0"},
 		{"2.4.4", "1.2.0"},
 		{"2.4.3-p2", "1.2.0"},
@@ -314,5 +314,32 @@ func TestGetVersions(t *testing.T) {
 	}
 	if versions.PlatformVersion != "2.4.7" {
 		t.Errorf("Expected PlatformVersion 2.4.7, got %s", versions.PlatformVersion)
+	}
+}
+
+// Compared as strings, "2.4.10" sorts below "2.4.9" — and below "2.4.2", so the
+// first two-digit release would have been set up with PHP 7.4, MariaDB 10.4,
+// Redis 5.0 and no OpenSearch at all. The same comparison put "2.4.7-p10" below
+// "2.4.7-p5".
+func TestTwoDigitSegmentsAreComparedAsNumbers(t *testing.T) {
+	got := GetVersions("2.4.10")
+	want := map[string][2]string{
+		"Php":        {got.Php, "8.5"},
+		"Db":         {got.Db, "11.8"},
+		"OpenSearch": {got.OpenSearch, "3.0.0"},
+		"Elastic":    {got.Elastic, "8.17.6"},
+		"Redis":      {got.Redis, "8.0"},
+		"Valkey":     {got.Valkey, "9.0.0"},
+		"RabbitMQ":   {got.RabbitMQ, "4.2"},
+		"Xdebug":     {got.Xdebug, "3.5.0"},
+	}
+	for name, pair := range want {
+		if pair[0] != pair[1] {
+			t.Errorf("2.4.10: %s = %q, want %q", name, pair[0], pair[1])
+		}
+	}
+
+	if got := GetRabbitMQVersion("2.4.7-p10"); got != "4.1" {
+		t.Errorf("GetRabbitMQVersion(\"2.4.7-p10\") = %q, want \"4.1\"", got)
 	}
 }

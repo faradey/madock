@@ -29,41 +29,41 @@ func GetVersions(ver string) versions.ToolsVersions {
 }
 
 func GetPhpVersion(v string) string {
-	if v >= "2.0" {
+	if versions.AtLeast(v, "2.0") {
 		return "8.3"
 	}
-	if v >= "1.13" {
+	if versions.AtLeast(v, "1.13") {
 		return "8.2"
 	}
-	if v >= "1.12" {
+	if versions.AtLeast(v, "1.12") {
 		return "8.1"
 	}
 	return "8.3"
 }
 
 func GetDBVersion(v string) string {
-	if v >= "2.0" {
+	if versions.AtLeast(v, "2.0") {
 		return "mariadb:11.4"
 	}
-	if v >= "1.13" {
+	if versions.AtLeast(v, "1.13") {
 		return "mariadb:10.11"
 	}
 	return "mariadb:10.6"
 }
 
 func GetRedisVersion(v string) string {
-	if v >= "2.0" {
+	if versions.AtLeast(v, "2.0") {
 		return "7.4"
 	}
 	return "7.2"
 }
 
 func GetXdebugVersion(phpVer string) string {
-	if phpVer >= "8.4" {
+	if versions.AtLeast(phpVer, "8.4") {
 		return "3.4.4"
-	} else if phpVer >= "8.3" {
+	} else if versions.AtLeast(phpVer, "8.3") {
 		return "3.3.1"
-	} else if phpVer >= "8.1" {
+	} else if versions.AtLeast(phpVer, "8.1") {
 		return "3.2.2"
 	}
 	return "3.1.6"
