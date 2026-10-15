@@ -10,6 +10,7 @@ import (
 	"github.com/faradey/madock/v4/src/controller/general/help"
 	"github.com/faradey/madock/v4/src/controller/general/isnotdefine"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/cli/output"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/embedded"
 	"github.com/faradey/madock/v4/src/helper/paths"
@@ -113,16 +114,7 @@ func wantsHelp(argv []string) bool {
 // Exact tokens only, and everything after a `--` belongs to whatever the command
 // passes it to — the same rule wantsHelp follows, for the same reason.
 func wantsJSON(argv []string) bool {
-	for _, arg := range argv {
-		if arg == "--" {
-			return false
-		}
-		if arg == "--json" || arg == "-j" || strings.HasPrefix(arg, "--json=") {
-			return true
-		}
-	}
-
-	return false
+	return output.Requested(argv)
 }
 
 // refuseJSON explains that this command has no JSON output, instead of running

@@ -44,9 +44,7 @@ func Execute() {
 	out := ListJSON{Snapshots: Read(dir)}
 
 	if args.Json {
-		if err := output.PrintJSON(out); err != nil {
-			fmt.Println(err)
-		}
+		output.Begin().Print(out)
 		return
 	}
 

@@ -126,12 +126,16 @@ func Execute() {
 	// Rewrite cloned hosts so they don't collide with the source project.
 	// Suffix is inserted before the TLD dot: shop.test + "-update" -> shop-update.test
 	cloneProjectConfTmp := configs.GetProjectConfig(cloneName)
+	clonedHosts := []string{}
 	for key, val := range cloneProjectConfTmp {
 		if val == "" || !strings.Contains(key, "/hosts/") || !strings.HasSuffix(key, "/name") {
 			continue
 		}
-		configs.SetParam(cloneName, key, applyDomainSuffix(val, domainSuffix), projectConf["activeScope"], "")
+		host := applyDomainSuffix(val, domainSuffix)
+		configs.SetParam(cloneName, key, host, projectConf["activeScope"], "")
+		clonedHosts = append(clonedHosts, host)
 	}
+	sort.Strings(clonedHosts)
 	cloneProjectConf := configs.GetProjectConfig(cloneName)
 
 	// The source stands still while it is copied.
@@ -240,14 +244,7 @@ func Execute() {
 	docker.StopSnapshot(cloneName)
 
 	if w != nil {
-		cloned := ClonedJSON{Name: cloneName, Path: clonePath, Hosts: []string{}}
-		for key, val := range configs.GetProjectConfig(cloneName) {
-			if val != "" && strings.Contains(key, "/hosts/") && strings.HasSuffix(key, "/name") {
-				cloned.Hosts = append(cloned.Hosts, val)
-			}
-		}
-		sort.Strings(cloned.Hosts)
-		w.Print(cloned)
+		w.Print(ClonedJSON{Name: cloneName, Path: clonePath, Hosts: clonedHosts})
 		return
 	}
 

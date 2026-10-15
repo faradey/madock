@@ -24,6 +24,26 @@ import (
 //     (logger.Fatal deep in a helper) leaves stdout empty and exits non-zero,
 //     with the reason on stderr. An empty stdout is therefore never a success.
 
+// Requested reports whether the arguments after the command name ask for JSON:
+// exact tokens, and nothing after a `--`, which belongs to whatever the command
+// passes it to.
+//
+// One copy for madock's dispatcher and for madock-pro's commands, which read
+// os.Args by hand. Two copies of "what counts as --json" decide independently
+// whether stdout is diverted, and they had already drifted apart — one counted
+// from the command name, the other from the first argument.
+func Requested(argv []string) bool {
+	for _, arg := range argv {
+		if arg == "--" {
+			return false
+		}
+		if arg == "--json" || arg == "-j" || strings.HasPrefix(arg, "--json=") {
+			return true
+		}
+	}
+	return false
+}
+
 // Writer holds the real stdout while progress goes to stderr.
 type Writer struct {
 	out io.Writer

@@ -322,6 +322,21 @@ func cleanVersion(version string) string {
 		version = parts[0]
 	}
 
+	// A Magento patch release keeps its "-pN". The strip below removes every
+	// character that is not a digit or a dot, so "2.4.7-p3" used to come out as
+	// "2.4.73" — harmless while versions were compared as strings, and a
+	// wrong stack once they were compared as numbers: 2.4.73 is later than
+	// 2.4.9, so a store pinned to 2.4.7-p3 was set up with PHP 8.5.
+	// Any other suffix ("-beta1", "-RC2") is dropped whole for the same reason:
+	// its digits used to be glued onto the last segment, "2.4.8-beta1" → "2.4.81".
+	patch := ""
+	if m := versionHead.FindStringSubmatch(version); m != nil {
+		version = m[1]
+		if m[2] != "" {
+			patch = "-p" + m[2]
+		}
+	}
+
 	// Remove any remaining constraint characters
 	re := regexp.MustCompile(`[^0-9.]`)
 	version = re.ReplaceAllString(version, "")
@@ -329,5 +344,10 @@ func cleanVersion(version string) string {
 	// Trim trailing dots
 	version = strings.TrimSuffix(version, ".")
 
-	return version
+	if version == "" {
+		return ""
+	}
+	return version + patch
 }
+
+var versionHead = regexp.MustCompile(`^([0-9.]+)(?:-p(\d+))?`)
