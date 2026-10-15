@@ -1,3 +1,8 @@
+**v4.3.9**
+
+Fixed:
+- **A refusal before the command ran put text on stdout under `--json`.** Run from inside an already registered project — a Deployer `current` — `backup:list --json` answered with the nested-project refusal in red on stdout, where one document was promised; found while rolling 4.3.8 out on a production machine. The refusal is printed by the configuration layer and ends in `os.Exit`, before any command can call `output.Begin`. The dispatcher now diverts stdout to stderr whenever `--json` is on the command line, for everything madock prints before the command — templates unpacked, a migration, a nested-project or version-requirement refusal — and hands stdout back just before the command runs. Such a failure now leaves stdout empty and exits 1, which the JSON contract already defines as a failure. e2e `TestARefusalBeforeTheCommandLeavesStdoutEmpty` fails with the diversion disabled (measured on the e2e VM); `TestStdoutIsDivertedUntilTheCommandRuns` covers the hand-back
+
 **v4.3.8**
 
 Added:

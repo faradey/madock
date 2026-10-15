@@ -21,6 +21,19 @@ import (
 // to the appropriate registered handler.
 func Run(appVersion string) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
+
+	// Everything madock says before the command itself runs — templates
+	// unpacked, a migration applied, a refusal to register a nested project,
+	// an unmet version requirement — goes to stderr when JSON was asked for.
+	// Those are printed with fmt and end in os.Exit, so a caller parsing stdout
+	// got a page of coloured text where one document was promised. Now it gets
+	// an empty stdout and a non-zero exit, which the contract already defines
+	// as a failure. Stdout is handed back to the command just before it runs.
+	restoreStdout := func() {}
+	if len(os.Args) > 2 && wantsJSON(os.Args[2:]) {
+		restoreStdout = divertStdout()
+	}
+
 	embedded.ExtractIfNeeded(appVersion)
 	migration.Apply(appVersion)
 
@@ -35,6 +48,7 @@ func Run(appVersion string) {
 		// Before the project check, and before the handler. Asking what a command
 		// does is not itself a use of a project, so it answers outside one too.
 		if !def.PassThrough && wantsHelp(os.Args[2:]) {
+			restoreStdout()
 			help.ShowCommand(cmdName)
 			return
 		}
@@ -63,8 +77,10 @@ func Run(appVersion string) {
 				os.Exit(1)
 			}
 		}
+		restoreStdout()
 		def.Handler()
 	} else {
+		restoreStdout()
 		isnotdefine.Execute(cmdName)
 	}
 }
@@ -167,4 +183,13 @@ func refuseOutsideProject(cmdName string) {
 
 	fmtc.ToDoLn("Run madock setup")
 	os.Exit(1)
+}
+
+// divertStdout points os.Stdout at stderr and returns the function that puts
+// it back. Whatever prints with fmt in between — and every subprocess started
+// with os.Stdout — writes to stderr.
+func divertStdout() func() {
+	real := os.Stdout
+	os.Stdout = os.Stderr
+	return func() { os.Stdout = real }
 }
