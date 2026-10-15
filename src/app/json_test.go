@@ -1,6 +1,12 @@
 package app
 
-import "testing"
+import (
+	"bytes"
+	"fmt"
+	"os"
+	"strings"
+	"testing"
+)
 
 // The dispatcher decides whether --json was asked for before any command parses
 // its arguments, so it reads the raw argv and has to be exact about it. A false
@@ -30,5 +36,36 @@ func TestWantsJSON(t *testing.T) {
 		if got := wantsJSON(c.argv); got != c.want {
 			t.Errorf("%s: wantsJSON(%q) = %v, want %v", c.name, c.argv, got, c.want)
 		}
+	}
+}
+
+// A refusal printed before the command runs — a nested project, an unmet
+// version requirement — goes through fmt and ends in os.Exit. With --json it
+// has to land on stderr, or stdout carries text where one document was
+// promised; and the command itself has to get stdout back for its answer.
+func TestStdoutIsDivertedUntilTheCommandRuns(t *testing.T) {
+	realStdout, realStderr := os.Stdout, os.Stderr
+	defer func() { os.Stdout, os.Stderr = realStdout, realStderr }()
+
+	outR, outW, _ := os.Pipe()
+	errR, errW, _ := os.Pipe()
+	os.Stdout, os.Stderr = outW, errW
+
+	restore := divertStdout()
+	fmt.Println("This directory is inside project 'shop', which is already registered.")
+	restore()
+	fmt.Println(`{"success": true}`)
+
+	outW.Close()
+	errW.Close()
+	var stdout, stderr bytes.Buffer
+	stdout.ReadFrom(outR)
+	stderr.ReadFrom(errR)
+
+	if got := strings.TrimSpace(stdout.String()); got != `{"success": true}` {
+		t.Errorf("stdout should carry only the command's answer, got %q", got)
+	}
+	if !strings.Contains(stderr.String(), "already registered") {
+		t.Errorf("the refusal should be on stderr, got %q", stderr.String())
 	}
 }

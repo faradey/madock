@@ -204,6 +204,11 @@ If the process is ended from inside a helper before the command can answer,
 stdout is **empty** and the exit status is non-zero; the reason is on stderr.
 An empty stdout is never a success.
 
+The same holds for every `--json` command when madock refuses before the
+command is reached — run from inside an already registered project, or on a
+project that requires a newer madock: the refusal goes to stderr, stdout stays
+empty, the exit status is 1.
+
 ```bash
 madock snapshot:create --name=before-upgrade --json
 ```
