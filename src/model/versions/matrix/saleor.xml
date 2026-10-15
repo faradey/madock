@@ -5,17 +5,37 @@
   and valkey 8.1 for 3.23 — the 3.23 stack keeps Redis 7.2, which Saleor's
   Redis client speaks the same way.
 -->
-<platform name="saleor">
-    <tool name="language"><default>python</default></tool>
-    <tool name="python"><default>3.12</default></tool>
-    <tool name="dbtype"><default>PostgreSQL</default></tool>
-    <tool name="db"><default>postgres:15</default></tool>
-    <tool name="redis">
-        <when from="3.23">7.2.5</when>
-        <when from="3.20">7.0</when>
-        <default>7.2.5</default>
-    </tool>
-
-    <preset version="3.23" name="Saleor 3.23 (Latest)" description="Saleor 3.23.x with Python {python}, PostgreSQL 15, Redis {redis}"/>
-    <preset version="3.20" name="Saleor 3.20 (Stable)" description="Saleor 3.20.x with Python {python}, PostgreSQL 15, Redis {redis}"/>
-</platform>
+<config>
+    <name>saleor</name>
+    <tools>
+        <language>
+            <default>python</default>
+        </language>
+        <python>
+            <default>3.12</default>
+        </python>
+        <dbtype>
+            <default>PostgreSQL</default>
+        </dbtype>
+        <db>
+            <default>postgres:15</default>
+        </db>
+        <redis>
+            <rule><from>3.23</from><value>7.2.5</value></rule>
+            <rule><from>3.20</from><value>7.0</value></rule>
+            <default>7.2.5</default>
+        </redis>
+    </tools>
+    <presets>
+        <preset>
+            <version>3.23</version>
+            <name>Saleor 3.23 (Latest)</name>
+            <description>Saleor 3.23.x with Python {python}, PostgreSQL 15, Redis {redis}</description>
+        </preset>
+        <preset>
+            <version>3.20</version>
+            <name>Saleor 3.20 (Stable)</name>
+            <description>Saleor 3.20.x with Python {python}, PostgreSQL 15, Redis {redis}</description>
+        </preset>
+    </presets>
+</config>

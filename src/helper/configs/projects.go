@@ -136,7 +136,7 @@ func buildProjectConfig(projectName string) map[string]string {
 	config := GetProjectConfigOnly(projectName)
 	explicit := explicitKeys(config, GetProjectsGeneralConfig())
 	ConfigMapping(GetGeneralConfig(), config)
-	applyPlatformResources(config, explicit)
+	applyPlatformBudgets(config, explicit)
 	applyDerived(config)
 	return config
 }
@@ -154,19 +154,20 @@ func explicitKeys(layers ...map[string]string) map[string]bool {
 	return out
 }
 
-// platformResources is replaceable so a test can give a platform its own
+// platformBudgets is replaceable so a test can give a platform its own
 // values without shipping them.
-var platformResources = versions.PlatformResources
+var platformBudgets = versions.PlatformBudgets
 
-// applyPlatformResources lays a platform's own resource defaults from the
-// version matrix over madock's defaults, under everything anybody set.
+// applyPlatformBudgets lays a platform's own budgets from the version matrix
+// — the memory a program takes inside its container — over madock's defaults,
+// under everything anybody set.
 //
 // Never written into the project: a value pinned there would stop following
 // the defaults, and a change to them has to reach every project at its next
 // rebuild. The order is madock's defaults, then the platform's, then
 // projects/config.xml, then the project.
-func applyPlatformResources(config map[string]string, explicit map[string]bool) {
-	for key, value := range platformResources(config["platform"]) {
+func applyPlatformBudgets(config map[string]string, explicit map[string]bool) {
+	for key, value := range platformBudgets(config["platform"]) {
 		if !explicit[key] {
 			config[key] = value
 		}

@@ -4,31 +4,49 @@
   (old-docs.sylius.com/en/1.13/book/installation/requirements.html), Sylius 2.x
   ^20 || ^22 (docs.sylius.com). Versions before 1.13 keep Node 22 — not re-checked.
 -->
-<platform name="sylius">
-    <tool name="language"><default>php</default></tool>
-    <tool name="php">
-        <when from="2.0">8.3</when>
-        <when from="1.13">8.2</when>
-        <when from="1.12">8.1</when>
-        <default>8.3</default>
-    </tool>
-    <tool name="db">
-        <when from="2.0">mariadb:11.4</when>
-        <when from="1.13">mariadb:10.11</when>
-        <default>mariadb:10.6</default>
-    </tool>
-    <tool name="composer"><default>2</default></tool>
-    <tool name="redis">
-        <when from="2.0">7.4</when>
-        <default>7.2</default>
-    </tool>
-    <tool name="nodejs">
-        <when from="2.0">22.20.0</when>
-        <when from="1.13">20.16.0</when>
-        <default>22.20.0</default>
-    </tool>
-    <tool name="yarn"><default>1.22.22</default></tool>
-
-    <preset version="2.0" name="Sylius 2.0 (Latest)" description="Sylius 2.0.x with PHP {php}, {db}, Redis {redis}, Node {nodejs}, Yarn"/>
-    <preset version="1.13" name="Sylius 1.13 (Stable)" description="Sylius 1.13.x with PHP {php}, {db}, Redis {redis}, Node {nodejs}"/>
-</platform>
+<config>
+    <name>sylius</name>
+    <tools>
+        <language>
+            <default>php</default>
+        </language>
+        <php>
+            <rule><from>2.0</from><value>8.3</value></rule>
+            <rule><from>1.13</from><value>8.2</value></rule>
+            <rule><from>1.12</from><value>8.1</value></rule>
+            <default>8.3</default>
+        </php>
+        <db>
+            <rule><from>2.0</from><value>mariadb:11.4</value></rule>
+            <rule><from>1.13</from><value>mariadb:10.11</value></rule>
+            <default>mariadb:10.6</default>
+        </db>
+        <composer>
+            <default>2</default>
+        </composer>
+        <redis>
+            <rule><from>2.0</from><value>7.4</value></rule>
+            <default>7.2</default>
+        </redis>
+        <nodejs>
+            <rule><from>2.0</from><value>22.20.0</value></rule>
+            <rule><from>1.13</from><value>20.16.0</value></rule>
+            <default>22.20.0</default>
+        </nodejs>
+        <yarn>
+            <default>1.22.22</default>
+        </yarn>
+    </tools>
+    <presets>
+        <preset>
+            <version>2.0</version>
+            <name>Sylius 2.0 (Latest)</name>
+            <description>Sylius 2.0.x with PHP {php}, {db}, Redis {redis}, Node {nodejs}, Yarn</description>
+        </preset>
+        <preset>
+            <version>1.13</version>
+            <name>Sylius 1.13 (Stable)</name>
+            <description>Sylius 1.13.x with PHP {php}, {db}, Redis {redis}, Node {nodejs}</description>
+        </preset>
+    </presets>
+</config>

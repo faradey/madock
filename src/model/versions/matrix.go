@@ -18,63 +18,67 @@ import (
 // one place can be read by something other than madock, and the presets are
 // now built from it rather than beside it.
 //
-// A file looks like this:
+// The files are shaped like config.xml: elements only, no attributes.
 //
-//	<platform name="magento2">
-//	  <tool name="php">
-//	    <when from="2.4.9">8.5</when>
-//	    <when from="2.4.8">8.4</when>
-//	  </tool>
-//	  <tool name="opensearch">
-//	    <when version="2.3.7-p4">1.2.0</when>
-//	    <default>NotCompatible</default>
-//	  </tool>
-//	  <tool name="xdebug" by="php"> … </tool>
-//	  <preset version="2.4.9" name="Magento 2.4.9 (Latest)" description="PHP {php}, OpenSearch {opensearch}"/>
-//	</platform>
+//	<config>
+//	    <name>magento2</name>
+//	    <tools>
+//	        <php>
+//	            <rule><from>2.4.9</from><value>8.5</value></rule>
+//	            <rule><from>2.4.8</from><value>8.4</value></rule>
+//	        </php>
+//	        <opensearch>
+//	            <rule><version>2.3.7-p4</version><value>1.2.0</value></rule>
+//	            <default>NotCompatible</default>
+//	        </opensearch>
+//	        <xdebug><by>php</by> … </xdebug>
+//	    </tools>
+//	    <presets>
+//	        <preset>
+//	            <version>2.4.9</version>
+//	            <name>Magento 2.4.9 (Latest)</name>
+//	            <description>PHP {php}, OpenSearch {opensearch}</description>
+//	        </preset>
+//	    </presets>
+//	    <budgets>
+//	        <search><opensearch><heap>2g</heap></opensearch></search>
+//	    </budgets>
+//	</config>
 //
-// Rules are read top to bottom and the first that matches wins: `from` is
-// "this version or later" (compared as versions — see AtLeast), `version` is
+// Rules are read top to bottom and the first that matches wins: <from> is
+// "this version or later" (compared as versions — see AtLeast), <version> is
 // exactly that string, which is how named variants such as Shopify's
-// "hydrogen" are written. No match gives <default>, or nothing. `by` asks a
+// "hydrogen" are written. No match gives <default>, or nothing. <by> asks a
 // tool about another tool's answer instead of the platform version — Xdebug
 // follows PHP — and a tool whose input is empty answers nothing.
 //
 // matrix/common.xml holds tools every platform shares unless its own file
-// defines them.
+// defines them, and the lists setup's menus offer.
 
 //go:embed matrix/*.xml
 var matrixFS embed.FS
 
+// The model the rest of the package works with.
+
 type matrixFile struct {
-	Name      string           `xml:"name,attr"`
-	Tools     []matrixTool     `xml:"tool"`
-	Presets   []PresetSpec     `xml:"preset"`
-	Offers    []matrixOffer    `xml:"offer"`
-	Resources []matrixResource `xml:"resource"`
+	Name    string
+	Tools   []matrixTool
+	Presets []PresetSpec
+	Offers  []matrixOffer
+	Budgets map[string]string
 }
 
-// matrixResource is a platform's own default for a container's resources — the
-// memory a database or a search engine gets — where it differs from madock's
-// default for every platform. Applied when a project's config is read, never
-// written into it: a value set in projects/config.xml or in the project wins,
-// and a change here reaches every project of that platform at its next
-// rebuild, the same as a change to the defaults would.
-type matrixResource struct {
-	Key   string `xml:"key,attr"`
-	Value string `xml:",chardata"`
+type matrixTool struct {
+	Name    string
+	By      string
+	Rules   []matrixRule
+	Default *string
 }
 
-// ResourceKeys are the config keys a platform may set in <resource>. The
-// container's memory, and nothing else: a platform file is not a second
-// place for every setting.
-var ResourceKeys = map[string]bool{
-	"db/memory":                         true,
-	"search/elasticsearch/memory_limit": true,
-	"search/elasticsearch/heap":         true,
-	"search/opensearch/memory_limit":    true,
-	"search/opensearch/heap":            true,
-	"memcached/memory":                  true,
+type matrixRule struct {
+	From    string
+	Version string
+	Value   string
 }
 
 // matrixOffer is what setup's menu lists for one service, newest first. The
@@ -84,21 +88,8 @@ var ResourceKeys = map[string]bool{
 // through "Custom". The menu now also always shows the default it was handed;
 // see tools.SelectInteractive.
 type matrixOffer struct {
-	Name     string   `xml:"name,attr"`
-	Versions []string `xml:"v"`
-}
-
-type matrixTool struct {
-	Name    string       `xml:"name,attr"`
-	By      string       `xml:"by,attr"`
-	Rules   []matrixRule `xml:"when"`
-	Default *string      `xml:"default"`
-}
-
-type matrixRule struct {
-	From    string `xml:"from,attr"`
-	Version string `xml:"version,attr"`
-	Value   string `xml:",chardata"`
+	Name     string
+	Versions []string
 }
 
 // PresetSpec is a named setup choice: a platform version the matrix is asked
@@ -106,9 +97,83 @@ type matrixRule struct {
 // tools in braces — "PHP {php}" — so it says what the matrix gives and cannot
 // fall behind it.
 type PresetSpec struct {
-	Version     string `xml:"version,attr"`
-	Name        string `xml:"name,attr"`
-	Description string `xml:"description,attr"`
+	Version     string `xml:"version"`
+	Name        string `xml:"name"`
+	Description string `xml:"description"`
+}
+
+// BudgetKeys are the config keys a platform may set in <budgets>: what a
+// program inside a container takes for itself, not what the container may use.
+// The database's memory split into its buffer pool and caches, Java's heap for
+// Elasticsearch and OpenSearch, Memcached's cache size — and, because the JVM
+// lives beyond its heap and cannot run without one, the search engines'
+// container limit. Every other container limit is madock Pro's resources:*.
+var BudgetKeys = map[string]bool{
+	"db/memory":                         true,
+	"search/elasticsearch/memory_limit": true,
+	"search/elasticsearch/heap":         true,
+	"search/opensearch/memory_limit":    true,
+	"search/opensearch/heap":            true,
+	"memcached/memory":                  true,
+}
+
+// The shape of the files.
+
+type rawFile struct {
+	Name    string       `xml:"name"`
+	Tools   rawTools     `xml:"tools"`
+	Offers  rawOffers    `xml:"offers"`
+	Presets []PresetSpec `xml:"presets>preset"`
+	Budgets rawNode      `xml:"budgets"`
+}
+
+type rawTools struct {
+	Items []rawTool `xml:",any"`
+}
+
+type rawTool struct {
+	XMLName xml.Name
+	By      string    `xml:"by"`
+	Rules   []rawRule `xml:"rule"`
+	Default *string   `xml:"default"`
+}
+
+type rawRule struct {
+	From    *string `xml:"from"`
+	Version *string `xml:"version"`
+	Value   *string `xml:"value"`
+}
+
+type rawOffers struct {
+	Items []rawOffer `xml:",any"`
+}
+
+type rawOffer struct {
+	XMLName  xml.Name
+	Versions []string `xml:"v"`
+}
+
+type rawNode struct {
+	XMLName  xml.Name
+	Value    string    `xml:",chardata"`
+	Children []rawNode `xml:",any"`
+}
+
+// flatten turns nested elements into config keys, the way config.xml is read:
+// <search><opensearch><heap>2g</heap></opensearch></search> is
+// search/opensearch/heap = 2g.
+func flatten(n rawNode, prefix string, out map[string]string) {
+	for _, c := range n.Children {
+		key := c.XMLName.Local
+		if prefix != "" {
+			key = prefix + "/" + key
+		}
+		if len(c.Children) == 0 {
+			out[key] = strings.TrimSpace(c.Value)
+			continue
+		}
+		flatten(c, key, out)
+	}
 }
 
 // toolFields maps a tool name in the XML to its ToolsVersions field. A name
@@ -158,70 +223,94 @@ func parseMatrices() (map[string]matrixFile, error) {
 		if err != nil {
 			return nil, err
 		}
-		var f matrixFile
-		if err := xml.Unmarshal(data, &f); err != nil {
+		f, err := parseMatrix(data)
+		if err != nil {
 			return nil, fmt.Errorf("matrix/%s: %w", e.Name(), err)
-		}
-		if f.Name == "" {
-			return nil, fmt.Errorf("matrix/%s: <platform> has no name", e.Name())
-		}
-		seen := map[string]bool{}
-		for _, tool := range f.Tools {
-			if _, ok := toolFields[tool.Name]; !ok {
-				return nil, fmt.Errorf("matrix/%s: unknown tool %q", e.Name(), tool.Name)
-			}
-			if seen[tool.Name] {
-				return nil, fmt.Errorf("matrix/%s: tool %q is defined twice", e.Name(), tool.Name)
-			}
-			seen[tool.Name] = true
-			if tool.By != "" {
-				if _, ok := toolFields[tool.By]; !ok {
-					return nil, fmt.Errorf("matrix/%s: tool %q is by unknown tool %q", e.Name(), tool.Name, tool.By)
-				}
-			}
-			for _, r := range tool.Rules {
-				if (r.From == "") == (r.Version == "") {
-					return nil, fmt.Errorf("matrix/%s: a rule of %q needs exactly one of from= or version=", e.Name(), tool.Name)
-				}
-			}
-		}
-		resourced := map[string]bool{}
-		for _, r := range f.Resources {
-			if !ResourceKeys[r.Key] {
-				return nil, fmt.Errorf("matrix/%s: %q is not a resource key a platform may set", e.Name(), r.Key)
-			}
-			if resourced[r.Key] {
-				return nil, fmt.Errorf("matrix/%s: resource %q is defined twice", e.Name(), r.Key)
-			}
-			if strings.TrimSpace(r.Value) == "" {
-				return nil, fmt.Errorf("matrix/%s: resource %q has no value", e.Name(), r.Key)
-			}
-			resourced[r.Key] = true
-		}
-		offered := map[string]bool{}
-		for _, o := range f.Offers {
-			if o.Name == "" || len(o.Versions) == 0 {
-				return nil, fmt.Errorf("matrix/%s: an <offer> needs a name and at least one <v>", e.Name())
-			}
-			if offered[o.Name] {
-				return nil, fmt.Errorf("matrix/%s: offer %q is defined twice", e.Name(), o.Name)
-			}
-			offered[o.Name] = true
 		}
 		out[f.Name] = f
 	}
 	return out, nil
 }
 
-// PlatformResources is a platform's own resource defaults, by config key.
-func PlatformResources(platform string) map[string]string {
+func parseMatrix(data []byte) (matrixFile, error) {
+	var raw rawFile
+	if err := xml.Unmarshal(data, &raw); err != nil {
+		return matrixFile{}, err
+	}
+	f := matrixFile{Name: strings.TrimSpace(raw.Name), Presets: raw.Presets, Budgets: map[string]string{}}
+	if f.Name == "" {
+		return matrixFile{}, fmt.Errorf("<name> is missing")
+	}
+
+	seen := map[string]bool{}
+	for _, rt := range raw.Tools.Items {
+		name := rt.XMLName.Local
+		if _, ok := toolFields[name]; !ok {
+			return matrixFile{}, fmt.Errorf("unknown tool <%s>", name)
+		}
+		if seen[name] {
+			return matrixFile{}, fmt.Errorf("tool <%s> is defined twice", name)
+		}
+		seen[name] = true
+		by := strings.TrimSpace(rt.By)
+		if by != "" {
+			if _, ok := toolFields[by]; !ok {
+				return matrixFile{}, fmt.Errorf("tool <%s> follows unknown tool <%s>", name, by)
+			}
+		}
+		tool := matrixTool{Name: name, By: by, Default: rt.Default}
+		for _, rr := range rt.Rules {
+			if (rr.From == nil) == (rr.Version == nil) {
+				return matrixFile{}, fmt.Errorf("a <rule> of <%s> needs exactly one of <from> or <version>", name)
+			}
+			if rr.Value == nil {
+				return matrixFile{}, fmt.Errorf("a <rule> of <%s> has no <value> — write <value/> for none", name)
+			}
+			r := matrixRule{Value: *rr.Value}
+			if rr.From != nil {
+				r.From = strings.TrimSpace(*rr.From)
+			} else {
+				r.Version = strings.TrimSpace(*rr.Version)
+			}
+			tool.Rules = append(tool.Rules, r)
+		}
+		f.Tools = append(f.Tools, tool)
+	}
+
+	offered := map[string]bool{}
+	for _, ro := range raw.Offers.Items {
+		name := ro.XMLName.Local
+		if len(ro.Versions) == 0 {
+			return matrixFile{}, fmt.Errorf("offer <%s> needs at least one <v>", name)
+		}
+		if offered[name] {
+			return matrixFile{}, fmt.Errorf("offer <%s> is defined twice", name)
+		}
+		offered[name] = true
+		f.Offers = append(f.Offers, matrixOffer{Name: name, Versions: ro.Versions})
+	}
+
+	flatten(raw.Budgets, "", f.Budgets)
+	for key, value := range f.Budgets {
+		if !BudgetKeys[key] {
+			return matrixFile{}, fmt.Errorf("%s is not a budget a platform may set", key)
+		}
+		if value == "" {
+			return matrixFile{}, fmt.Errorf("budget %s has no value", key)
+		}
+	}
+	return f, nil
+}
+
+// PlatformBudgets is a platform's own budgets, by config key.
+func PlatformBudgets(platform string) map[string]string {
 	out := map[string]string{}
 	f, ok := MustLoadMatrices()[platform]
 	if !ok {
 		return out
 	}
-	for _, r := range f.Resources {
-		out[r.Key] = strings.TrimSpace(r.Value)
+	for k, v := range f.Budgets {
+		out[k] = v
 	}
 	return out
 }
@@ -268,7 +357,7 @@ func (tool matrixTool) answer(input string) string {
 
 // FromMatrix answers what the matrix gives a platform at a version. The
 // platform's own tools are evaluated in file order, then the common tools it
-// does not define; a `by` tool reads the answer of a tool before it.
+// does not define; a <by> tool reads the answer of a tool before it.
 func FromMatrix(platform, version string) (ToolsVersions, bool) {
 	all := MustLoadMatrices()
 	f, ok := all[platform]
@@ -303,7 +392,7 @@ func FromMatrix(platform, version string) (ToolsVersions, bool) {
 	return out, true
 }
 
-// AnswerFor asks one tool of one file about an input directly — for a `by`
+// AnswerFor asks one tool of one file about an input directly — for a <by>
 // tool, the value of the tool it follows. GetXdebugVersion is common.xml's
 // xdebug asked about a PHP version.
 func AnswerFor(platform, tool, input string) string {
@@ -340,7 +429,13 @@ func Presets(platform string) []PresetSpec {
 		return nil
 	}
 	out := make([]PresetSpec, len(f.Presets))
-	copy(out, f.Presets)
+	for i, p := range f.Presets {
+		out[i] = PresetSpec{
+			Version:     strings.TrimSpace(p.Version),
+			Name:        strings.TrimSpace(p.Name),
+			Description: strings.TrimSpace(p.Description),
+		}
+	}
 	return out
 }
 
