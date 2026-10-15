@@ -69,7 +69,7 @@ func getMagentoVersion() (edition, version string) {
 func GetPhpVersion(v string) string { return versions.Answer("magento2", "php", v) }
 func GetDBVersion(v string) string  { return versions.Answer("magento2", "db", v) }
 func GetElasticVersion(v string) string {
-	return versions.Answer("magento2", "elastic", v)
+	return versions.Answer("magento2", "elasticsearch", v)
 }
 func GetSearchEngineVersion(v string) string {
 	return versions.Answer("magento2", "searchengine", v)

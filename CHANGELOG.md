@@ -1,3 +1,8 @@
+**v4.4.5**
+
+Changed:
+- **Matrix tool names follow `config.xml`.** `<elastic>` is `<elasticsearch>`, as in `search/elasticsearch`, and so is the preset placeholder (`{elasticsearch}`). The menu list of database engines was `<dbengine>` while the rules in the same file called the same choice `dbtype`; both are `dbtype` now, as in `db/type`. The files are compiled into the binary, so nothing outside madock reads the old names. Every answer is unchanged: the golden file passes untouched
+
 **v4.4.4**
 
 Changed:

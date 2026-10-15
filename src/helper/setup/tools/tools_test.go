@@ -99,8 +99,8 @@ func TestAClosedMenuIsLeftAsItIs(t *testing.T) {
 // The menus come from matrix/common.xml now; an empty one means a name that
 // does not match the file.
 func TestEveryMenuHasItsList(t *testing.T) {
-	for _, name := range []string{"php", "dbengine", "mariadb", "mysql", "postgresql", "mongodb", "composer",
-		"searchengine", "elastic", "opensearch", "redis", "valkey", "memcached", "artemis", "xdebug",
+	for _, name := range []string{"php", "dbtype", "mariadb", "mysql", "postgresql", "mongodb", "composer",
+		"searchengine", "elasticsearch", "opensearch", "redis", "valkey", "memcached", "artemis", "xdebug",
 		"rabbitmq", "nodejs", "yarn", "language", "python", "golang", "ruby"} {
 		if len(versions.Offer(name)) == 0 {
 			t.Errorf("no menu for %q in matrix/common.xml", name)
