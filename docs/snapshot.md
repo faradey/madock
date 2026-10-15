@@ -31,6 +31,27 @@ madock snapshot:restore
 ```
 
 You will be prompted to select which snapshot to restore if multiple exist.
+`--name` skips the prompt: an exact snapshot directory name, or the name given
+at creation, in which case the newest snapshot carrying it is restored.
+
+`snapshot:restore` is refused on a project managed by deployer, and exits 1.
+
+### List snapshots
+
+```bash
+madock snapshot:list
+```
+
+Oldest first, by the timestamp at the end of each name.
+
+### JSON
+
+`snapshot:create`, `snapshot:list` and `snapshot:restore` answer `--json` (`-j`)
+with one document on stdout — `{"success": true, "data": …}` or
+`{"success": false, "error": "…"}` — and the exit status agrees with it. The
+progress the commands print goes to stderr while they run. `snapshot:restore
+--json` requires `--name`, because without it the snapshot is chosen at a
+prompt.
 
 ## The project stands still while the snapshot is taken
 
@@ -53,9 +74,9 @@ If you need a database copy *without* pausing anything, use `madock db:export`
 means. It is not interchangeable with a snapshot: it holds one schema, not the
 files.
 
-`project:clone` deliberately does **not** stop the source project — cloning must
-not interrupt whatever the source is doing — so a clone accepts the risk that
-`snapshot:create` refuses.
+`project:clone` takes its copy the same way and stops the source for it. It used
+to copy a running source on the grounds that cloning should not interrupt it,
+and the archive came out torn for exactly the reason above.
 
 ## What's Included in a Snapshot
 
@@ -92,7 +113,7 @@ project has a second database, `db2.tar.gz`.
 
 ### Check available snapshots
 ```bash
-ls {madock_dir}/projects/{project_name}/backup/snapshot/
+madock snapshot:list
 ```
 
 ### Disk space

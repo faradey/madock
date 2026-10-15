@@ -56,6 +56,7 @@ import (
 	_ "github.com/faradey/madock/v4/src/controller/custom/setup"
 	_ "github.com/faradey/madock/v4/src/controller/general/project/orphans"
 	_ "github.com/faradey/madock/v4/src/controller/general/snapshot/create"
+	_ "github.com/faradey/madock/v4/src/controller/general/snapshot/list"
 	_ "github.com/faradey/madock/v4/src/controller/general/snapshot/restore"
 	_ "github.com/faradey/madock/v4/src/controller/general/ssl"
 	_ "github.com/faradey/madock/v4/src/controller/general/start"

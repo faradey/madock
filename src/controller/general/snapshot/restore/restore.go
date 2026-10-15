@@ -3,12 +3,14 @@ package restore
 import (
 	"bufio"
 	"compress/gzip"
+	"errors"
 	"fmt"
 
 	"github.com/faradey/madock/v4/src/command"
 	"github.com/faradey/madock/v4/src/controller/general/rebuild"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/cli/output"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
@@ -28,16 +30,34 @@ type ArgsStruct struct {
 
 func init() {
 	command.Register(&command.Definition{
-		Aliases:  []string{"snapshot:restore"},
-		Handler:  Execute,
-		Help:     "Restore snapshot",
-		Category: "snapshot",
-		ArgsType: new(ArgsStruct),
+		Aliases:    []string{"snapshot:restore"},
+		Handler:    Execute,
+		Help:       "Restore snapshot. Supports --json (-j), which requires --name",
+		Category:   "snapshot",
+		ArgsType:   new(ArgsStruct),
+		JSONOutput: true,
 	})
 }
 
+// RestoredJSON is the --json answer of snapshot:restore.
+type RestoredJSON struct {
+	Name string `json:"name"`
+}
+
+// errDeployManaged is RestoreSnapshot refusing a project deployer owns.
+var errDeployManaged = errors.New("snapshot:restore is refused on a project managed by deployer")
+
 func Execute() {
 	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
+	var w *output.Writer
+	if args.Json {
+		w = output.Begin()
+		// A JSON caller is a program; the list below ends in a prompt it
+		// cannot answer.
+		if args.Name == "" {
+			w.Fail("--json needs --name: without it the snapshot is chosen at a prompt")
+		}
+	}
 
 	projectName := configs.GetProjectName()
 	projectConf := configs.GetCurrentProjectConfig()
@@ -49,6 +69,9 @@ func Execute() {
 	}
 
 	if len(snapshotNames) == 0 {
+		if w != nil {
+			w.Fail("No snapshots found for restore")
+		}
 		logger.Fatal("No snapshots found for restore")
 	}
 
@@ -98,6 +121,9 @@ func Execute() {
 			// Named and not found is a mistake worth stopping on. Falling back
 			// to the prompt would hang a script; picking a different snapshot
 			// would restore the wrong data.
+			if w != nil {
+				w.Fail("No snapshot named %q", args.Name)
+			}
 			logger.Fatal("No snapshot named \"" + args.Name + "\"")
 		}
 	} else {
@@ -118,13 +144,27 @@ func Execute() {
 		}
 	}
 
-	RestoreSnapshot(projectName, projectConf, selectedInt, snapshotNames, dbsPath)
+	// The refusal used to return nothing, so a restore refused on a deployer
+	// project went on to rebuild the project and print "Snapshot restored
+	// successfully" with exit status 0 — the one sentence that must not follow
+	// a restore that did not happen.
+	if err := RestoreSnapshot(projectName, projectConf, selectedInt, snapshotNames, dbsPath); err != nil {
+		if w != nil {
+			w.Fail("%v", err)
+		}
+		os.Exit(1)
+	}
 	os.Args = append(os.Args, "-c")
 	rebuild.Execute()
+
+	if w != nil {
+		w.Print(RestoredJSON{Name: filepath.Base(snapshotNames[selectedInt-1])})
+		return
+	}
 	fmt.Println("Snapshot restored successfully")
 }
 
-func RestoreSnapshot(projectName string, projectConf map[string]string, selectedInt int, snapshotNames []string, dbsPath string) {
+func RestoreSnapshot(projectName string, projectConf map[string]string, selectedInt int, snapshotNames []string, dbsPath string) error {
 	// Refused where deployer owns the source tree, because the file half of a
 	// restore is `rm -rf /var/www/html/*` followed by an untar.
 	//
@@ -146,7 +186,7 @@ func RestoreSnapshot(projectName string, projectConf map[string]string, selected
 		fmt.Println("  Put the application back with a deploy instead: `madock deploy <stage>`, or")
 		fmt.Println("  `madock deploy:rollback <stage>` for the release that was serving before.")
 		fmt.Println("  For the database alone, `madock db:import` takes the dump from the snapshot.")
-		return
+		return errDeployManaged
 	}
 
 	containerName := docker.GetContainerName(projectConf, projectName, "snapshot")
@@ -225,4 +265,5 @@ func RestoreSnapshot(projectName string, projectConf map[string]string, selected
 	}
 
 	docker.StopSnapshot(projectName)
+	return nil
 }
