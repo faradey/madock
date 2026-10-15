@@ -1,3 +1,9 @@
+**v4.4.2**
+
+Changed:
+- **`setup`'s version menus come from the matrix too: `<offer>` in `src/model/versions/matrix/common.xml`.** They were literals in `src/helper/setup/tools`, a third copy beside the matrix and the presets. The lists are unchanged
+- **The menu always shows the default it was given.** The matrix's own default was sometimes not on the list — OpenSearch 2.5.0, the default for Magento 2.4.6, was not — so nothing was highlighted and the default could be reached only by typing it under "Custom". A default missing from a menu that takes a free value is now shown right after "Custom" and highlighted; the closed menus (database engine, search engine, language) are left as they are. `-y` is unaffected: it always took the default. `TestTheMenuOffersTheDefaultItWasGiven` fails with the insertion disabled
+
 **v4.4.1**
 
 Changed:

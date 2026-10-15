@@ -47,9 +47,21 @@ import (
 var matrixFS embed.FS
 
 type matrixFile struct {
-	Name    string       `xml:"name,attr"`
-	Tools   []matrixTool `xml:"tool"`
-	Presets []PresetSpec `xml:"preset"`
+	Name    string        `xml:"name,attr"`
+	Tools   []matrixTool  `xml:"tool"`
+	Presets []PresetSpec  `xml:"preset"`
+	Offers  []matrixOffer `xml:"offer"`
+}
+
+// matrixOffer is what setup's menu lists for one service, newest first. The
+// lists used to be literals in helper/setup/tools, a third copy beside the
+// matrix and the presets, and the matrix's own default was sometimes not on
+// them — OpenSearch 2.5.0, the default for Magento 2.4.6, could be reached only
+// through "Custom". The menu now also always shows the default it was handed;
+// see tools.SelectInteractive.
+type matrixOffer struct {
+	Name     string   `xml:"name,attr"`
+	Versions []string `xml:"v"`
 }
 
 type matrixTool struct {
@@ -149,9 +161,34 @@ func parseMatrices() (map[string]matrixFile, error) {
 				}
 			}
 		}
+		offered := map[string]bool{}
+		for _, o := range f.Offers {
+			if o.Name == "" || len(o.Versions) == 0 {
+				return nil, fmt.Errorf("matrix/%s: an <offer> needs a name and at least one <v>", e.Name())
+			}
+			if offered[o.Name] {
+				return nil, fmt.Errorf("matrix/%s: offer %q is defined twice", e.Name(), o.Name)
+			}
+			offered[o.Name] = true
+		}
 		out[f.Name] = f
 	}
 	return out, nil
+}
+
+// Offer is what setup's menu lists for a service, from matrix/common.xml.
+// An unknown name is a defect in the caller and answers nothing.
+func Offer(name string) []string {
+	for _, o := range MustLoadMatrices()["common"].Offers {
+		if o.Name == name {
+			out := make([]string, len(o.Versions))
+			for i, v := range o.Versions {
+				out[i] = strings.TrimSpace(v)
+			}
+			return out
+		}
+	}
+	return nil
 }
 
 // MustLoadMatrices fails loudly when an embedded file is malformed. The files

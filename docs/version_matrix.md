@@ -54,6 +54,23 @@ Tool names: `language`, `php`, `dbtype`, `db`, `searchengine`, `elastic`,
 `yarn`, `python`, `golang`, `ruby`. An unknown name, a tool defined twice, or a
 rule with both or neither of `from` and `version` fails the tests.
 
+### What the menus offer
+
+`common.xml` also holds what `setup`'s menus list for each service, newest
+first:
+
+```xml
+<offer name="opensearch"><v>3.0.0</v><v>2.19.1</v><v>2.12.0</v></offer>
+```
+
+Names: `php`, `dbengine`, `mariadb`, `mysql`, `postgresql`, `mongodb`,
+`composer`, `searchengine`, `elastic`, `opensearch`, `redis`, `valkey`,
+`memcached`, `artemis`, `xdebug`, `rabbitmq`, `nodejs`, `yarn`, `language`,
+`python`, `golang`, `ruby`. The menu adds "Custom" where a free value makes
+sense, and **always shows the default the matrix gave**, highlighted, whether
+or not the list carries it — a default can never be out of reach. The engine,
+search-engine and language menus are closed lists and show only what they list.
+
 A preset's `description` may name tools in braces — `{php}` — and is filled in
 from the versions the preset gets, so it cannot name a version the preset does
 not install.

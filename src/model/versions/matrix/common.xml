@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Tools every platform shares unless its own file defines them. -->
+<!--
+  Shared by every platform.
+
+  <tool>   a tool every platform gets unless its own file defines it.
+  <offer>  what setup's menu lists for a service, newest first. The menu also
+           shows the default the matrix gives, whether or not it is listed
+           here, so a default can never be out of reach. "Custom" is added by
+           the menu itself where a free value makes sense.
+-->
 <platform name="common">
     <tool name="xdebug" by="php">
         <when from="8.5">3.5.0</when>
@@ -9,4 +17,27 @@
         <when from="7.2">3.1.6</when>
         <default>2.7.2</default>
     </tool>
+
+    <offer name="php"><v>8.5</v><v>8.4</v><v>8.3</v><v>8.2</v><v>8.1</v><v>8.0</v><v>7.4</v></offer>
+    <offer name="dbengine"><v>MariaDB</v><v>MySQL</v><v>PostgreSQL</v><v>MongoDB</v></offer>
+    <offer name="mariadb"><v>12</v><v>11.8</v><v>11.6</v><v>11.4</v><v>11.1</v><v>10.6</v><v>10.4</v></offer>
+    <offer name="mysql"><v>9.4</v><v>9.3</v><v>9.2</v><v>8.4</v><v>8.0</v></offer>
+    <offer name="postgresql"><v>18</v><v>17</v><v>16</v><v>15</v><v>14</v></offer>
+    <offer name="mongodb"><v>8.0</v><v>7.0</v><v>6.0</v><v>5.0</v></offer>
+    <offer name="composer"><v>1</v><v>2</v></offer>
+    <offer name="searchengine"><v>OpenSearch</v><v>Elasticsearch</v><v>Do not use</v></offer>
+    <offer name="elastic"><v>9.1.0</v><v>9.0.0</v><v>8.18.0</v><v>8.17.6</v><v>8.11.14</v><v>7.17.5</v></offer>
+    <offer name="opensearch"><v>3.0.0</v><v>2.19.1</v><v>2.18.0</v><v>2.12.0</v><v>1.2.0</v></offer>
+    <offer name="redis"><v>8.2</v><v>8.0</v><v>7.4</v><v>7.2</v><v>7.0</v><v>6.2</v></offer>
+    <offer name="valkey"><v>9.0.0</v><v>8.1.3</v></offer>
+    <offer name="memcached"><v>1.6.39-alpine</v><v>1.6.39</v><v>1.6-alpine</v></offer>
+    <offer name="artemis"><v>2.42.0</v><v>2.41.0</v><v>2.40.0</v></offer>
+    <offer name="xdebug"><v>3.5.0</v><v>3.4.4</v><v>3.3.1</v><v>3.2.2</v><v>3.1.6</v><v>2.7.2</v></offer>
+    <offer name="rabbitmq"><v>4.2</v><v>4.1</v><v>4.0</v><v>3.13</v><v>3.12</v><v>3.9</v></offer>
+    <offer name="nodejs"><v>24.10.0</v><v>22.20.0</v><v>20.19.0</v><v>18.20.0</v></offer>
+    <offer name="yarn"><v>4.5.3</v><v>3.8.7</v><v>1.22.22</v></offer>
+    <offer name="language"><v>php</v><v>nodejs</v><v>python</v><v>golang</v><v>ruby</v><v>none</v></offer>
+    <offer name="python"><v>3.14</v><v>3.13</v><v>3.12</v><v>3.11</v></offer>
+    <offer name="golang"><v>1.26</v><v>1.25</v><v>1.24</v><v>1.23</v></offer>
+    <offer name="ruby"><v>3.4</v><v>3.3</v><v>3.2</v><v>3.1</v></offer>
 </platform>

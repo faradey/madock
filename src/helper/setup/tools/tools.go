@@ -91,7 +91,7 @@ func Platform(choices []PlatformChoice) string {
 }
 
 func Php(defVersion *string) {
-	availableVersions := []string{"Custom", "8.5", "8.4", "8.3", "8.2", "8.1", "8.0", "7.4"}
+	availableVersions := withCustom("php")
 
 	fmt.Println("")
 	SelectInteractive("PHP Version", availableVersions, defVersion)
@@ -168,14 +168,14 @@ func DbEngine(defEngine *string) {
 	if *defEngine == "" {
 		*defEngine = "MariaDB"
 	}
-	availableVersions := []string{"MariaDB", "MySQL", "PostgreSQL", "MongoDB"}
+	availableVersions := versions.Offer("dbengine")
 
 	fmt.Println("")
 	SelectInteractive("Database Engine", availableVersions, defEngine)
 }
 
 func Db(defVersion *string) {
-	availableVersions := []string{"Custom", "12", "11.8", "11.6", "11.4", "11.1", "10.6", "10.4"}
+	availableVersions := withCustom("mariadb")
 
 	forgetForeignDbVersion(defVersion, availableVersions)
 	fmt.Println("")
@@ -183,7 +183,7 @@ func Db(defVersion *string) {
 }
 
 func DbMysql(defVersion *string) {
-	availableVersions := []string{"Custom", "9.4", "9.3", "9.2", "8.4", "8.0"}
+	availableVersions := withCustom("mysql")
 
 	forgetForeignDbVersion(defVersion, availableVersions)
 	fmt.Println("")
@@ -191,7 +191,7 @@ func DbMysql(defVersion *string) {
 }
 
 func DbPostgresql(defVersion *string) {
-	availableVersions := []string{"Custom", "18", "17", "16", "15", "14"}
+	availableVersions := withCustom("postgresql")
 
 	forgetForeignDbVersion(defVersion, availableVersions)
 	fmt.Println("")
@@ -199,7 +199,7 @@ func DbPostgresql(defVersion *string) {
 }
 
 func DbMongodb(defVersion *string) {
-	availableVersions := []string{"Custom", "8.0", "7.0", "6.0", "5.0"}
+	availableVersions := withCustom("mongodb")
 
 	forgetForeignDbVersion(defVersion, availableVersions)
 	fmt.Println("")
@@ -207,70 +207,70 @@ func DbMongodb(defVersion *string) {
 }
 
 func Composer(defVersion *string) {
-	availableVersions := []string{"Custom", "1", "2"}
+	availableVersions := withCustom("composer")
 
 	fmt.Println("")
 	SelectInteractive("Composer Version", availableVersions, defVersion)
 }
 
 func SearchEngine(defVersion *string) {
-	availableVersions := []string{"OpenSearch", "Elasticsearch", "Do not use"}
+	availableVersions := versions.Offer("searchengine")
 
 	fmt.Println("")
 	SelectInteractive("Search Engine", availableVersions, defVersion)
 }
 
 func Elastic(defVersion *string) {
-	availableVersions := []string{"Custom", "9.1.0", "9.0.0", "8.18.0", "8.17.6", "8.11.14", "7.17.5"}
+	availableVersions := withCustom("elastic")
 
 	fmt.Println("")
 	SelectInteractive("Elasticsearch Version", availableVersions, defVersion)
 }
 
 func OpenSearch(defVersion *string) {
-	availableVersions := []string{"Custom", "3.0.0", "2.19.1", "2.18.0", "2.12.0", "1.2.0"}
+	availableVersions := withCustom("opensearch")
 
 	fmt.Println("")
 	SelectInteractive("OpenSearch Version", availableVersions, defVersion)
 }
 
 func Redis(defVersion *string) {
-	availableVersions := []string{"Custom", "8.2", "8.0", "7.4", "7.2", "7.0", "6.2"}
+	availableVersions := withCustom("redis")
 
 	fmt.Println("")
 	SelectInteractive("Redis Version", availableVersions, defVersion)
 }
 
 func Valkey(defVersion *string) {
-	availableVersions := []string{"Custom", "9.0.0", "8.1.3"}
+	availableVersions := withCustom("valkey")
 
 	fmt.Println("")
 	SelectInteractive("Valkey Version", availableVersions, defVersion)
 }
 
 func Memcached(defVersion *string) {
-	availableVersions := []string{"Custom", "1.6.39-alpine", "1.6.39", "1.6-alpine"}
+	availableVersions := withCustom("memcached")
 
 	fmt.Println("")
 	SelectInteractive("Memcached Version", availableVersions, defVersion)
 }
 
 func Artemis(defVersion *string) {
-	availableVersions := []string{"Custom", "2.42.0", "2.41.0", "2.40.0"}
+	availableVersions := withCustom("artemis")
 
 	fmt.Println("")
 	SelectInteractive("ActiveMQ Artemis Version", availableVersions, defVersion)
 }
 
 func Xdebug(defVersion *string) {
-	availableVersions := []string{"Custom", "3.5.0", "3.4.4", "3.3.1", "3.2.2", "3.1.6", "2.7.2"}
+	availableVersions := withCustom("xdebug")
 
 	fmt.Println("")
 	SelectInteractive("Xdebug Version", availableVersions, defVersion)
 }
 
 func RabbitMQ(defVersion *string) {
-	availableVersions := []string{"Custom", "4.2", "4.1", "4.0", "3.13", "3.12", "3.9"}
+	availableVersions := withCustom("rabbitmq")
 
 	fmt.Println("")
 	SelectInteractive("RabbitMQ Version", availableVersions, defVersion)
@@ -296,14 +296,14 @@ func Hosts(projectName string, defVersion *string, projectConf map[string]string
 }
 
 func NodeJs(defVersion *string) {
-	availableVersions := []string{"Custom", "24.10.0", "22.20.0", "20.19.0", "18.20.0"}
+	availableVersions := withCustom("nodejs")
 
 	fmt.Println("")
 	SelectInteractive("NodeJS Version", availableVersions, defVersion)
 }
 
 func Yarn(defVersion *string) {
-	availableVersions := []string{"Custom", "4.5.3", "3.8.7", "1.22.22"}
+	availableVersions := withCustom("yarn")
 
 	fmt.Println("")
 	SelectInteractive("Yarn Version", availableVersions, defVersion)
@@ -314,7 +314,7 @@ func Language(current string) string {
 	if defVersion == "" {
 		defVersion = "php"
 	}
-	availableVersions := []string{"php", "nodejs", "python", "golang", "ruby", "none"}
+	availableVersions := versions.Offer("language")
 
 	fmt.Println("")
 	SelectInteractive("Primary Language", availableVersions, &defVersion)
@@ -322,24 +322,51 @@ func Language(current string) string {
 }
 
 func PythonVersion(defVersion *string) {
-	availableVersions := []string{"Custom", "3.14", "3.13", "3.12", "3.11"}
+	availableVersions := withCustom("python")
 
 	fmt.Println("")
 	SelectInteractive("Python Version", availableVersions, defVersion)
 }
 
 func GoVersion(defVersion *string) {
-	availableVersions := []string{"Custom", "1.26", "1.25", "1.24", "1.23"}
+	availableVersions := withCustom("golang")
 
 	fmt.Println("")
 	SelectInteractive("Go Version", availableVersions, defVersion)
 }
 
 func RubyVersion(defVersion *string) {
-	availableVersions := []string{"Custom", "3.4", "3.3", "3.2", "3.1"}
+	availableVersions := withCustom("ruby")
 
 	fmt.Println("")
 	SelectInteractive("Ruby Version", availableVersions, defVersion)
+}
+
+// withCustom is a service's menu from the version matrix, with "Custom" first.
+func withCustom(name string) []string {
+	return append([]string{"Custom"}, versions.Offer(name)...)
+}
+
+// offerTheDefault puts the default on a menu that does not list it, right
+// after "Custom", so it is the highlighted choice.
+//
+// The menus and the matrix were kept apart, and the matrix's own default was
+// sometimes not on the menu — OpenSearch 2.5.0, the default for Magento 2.4.6,
+// was not — so nothing was highlighted and the default could be reached only
+// by typing it under "Custom". Only menus that take a free value: a closed
+// list (the engine, the search engine) means what it lists.
+func offerTheDefault(available []string, def string) []string {
+	if def == "" || len(available) == 0 || available[0] != "Custom" {
+		return available
+	}
+	for _, v := range available {
+		if v == def {
+			return available
+		}
+	}
+	out := make([]string, 0, len(available)+1)
+	out = append(out, available[0], def)
+	return append(out, available[1:]...)
 }
 
 // SelectInteractive runs an interactive selector and returns the selected value
@@ -379,6 +406,8 @@ func SelectInteractive(title string, availableVersions []string, defVersion *str
 		}
 		return
 	}
+
+	availableVersions = offerTheDefault(availableVersions, *defVersion)
 
 	// Find recommended index
 	recommendedIdx := -1
