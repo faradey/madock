@@ -1,3 +1,9 @@
+**v4.4.4**
+
+Changed:
+- **The matrix files have no attributes; they are shaped like `config.xml`.** `<tool name="php"><when from="2.4.9">8.5</when>` is now `<tools><php><rule><from>2.4.9</from><value>8.5</value></rule>`, presets and menu lists likewise, and an empty answer is `<value/>`. Every answer is unchanged: the golden file of every boundary version of every platform passes untouched. A test refuses an attribute anywhere in the files
+- **`<resource>` is `<budgets>`, nested like `config.xml`, and says what it is.** Of its six keys only the search engines' `memory_limit` is a container limit; the rest are what a program takes inside its container — the database's buffer pool and caches (`db/memory`; the database container itself has no limit), Java's heap, Memcached's cache. Calling them "container memory" made them look like the same thing as madock Pro's `resources:*`, which are container limits. No platform sets one, so nothing else changes. `docs/version_matrix.md` has the table
+
 **v4.4.3**
 
 Added:

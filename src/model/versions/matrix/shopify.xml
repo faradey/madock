@@ -9,69 +9,89 @@
   template >=20.19 <22 || >=22.12 (its package.json); shopify/shopify-api-php
   "php": "^8.1"; Kyon147/laravel-shopify "php": "^8.2".
 -->
-<platform name="shopify">
-    <tool name="language">
-        <when version="hydrogen">nodejs</when>
-        <when version="app-remix">nodejs</when>
-        <default>php</default>
-    </tool>
-    <tool name="php">
-        <when version="hydrogen"></when>
-        <when version="app-remix"></when>
-        <when version="api-php">8.3</when>
-        <when version="laravel-shopify">8.3</when>
-        <default>8.2</default>
-    </tool>
-    <tool name="db">
-        <when version="hydrogen"></when>
-        <when version="app-remix"></when>
-        <when version="api-php">mariadb:11.4</when>
-        <when version="laravel-shopify">mariadb:11.4</when>
-        <default>11.1.2</default>
-    </tool>
-    <tool name="composer">
-        <when version="hydrogen"></when>
-        <when version="app-remix"></when>
-        <default>2</default>
-    </tool>
-    <tool name="redis">
-        <when version="hydrogen"></when>
-        <when version="app-remix"></when>
-        <when version="api-php">7.4</when>
-        <when version="laravel-shopify">7.4</when>
-        <default>7.2.1</default>
-    </tool>
-    <tool name="valkey">
-        <when version="hydrogen"></when>
-        <when version="app-remix"></when>
-        <when version="api-php"></when>
-        <when version="laravel-shopify"></when>
-        <default>8.1.3</default>
-    </tool>
-    <tool name="rabbitmq">
-        <when version="hydrogen"></when>
-        <when version="app-remix"></when>
-        <when version="api-php"></when>
-        <when version="laravel-shopify"></when>
-        <default>3.9.29</default>
-    </tool>
-    <tool name="nodejs">
-        <when version="hydrogen">22.20.0</when>
-        <when version="app-remix">22.20.0</when>
-        <when version="api-php"></when>
-        <when version="laravel-shopify">22.20.0</when>
-        <default>18.15.0</default>
-    </tool>
-    <tool name="yarn">
-        <when version="hydrogen">1.22.22</when>
-        <when version="app-remix">1.22.22</when>
-        <when version="api-php"></when>
-        <when version="laravel-shopify">1.22.22</when>
-        <default>3.6.4</default>
-    </tool>
-
-    <preset version="hydrogen" name="Hydrogen (Node.js storefront)" description="Official headless storefront — Remix on Vite, Node {nodejs}, TypeScript. Deploys to Shopify Oxygen."/>
-    <preset version="app-remix" name="Shopify App (Node.js / Remix)" description="Official embedded app template — Remix + Prisma + App Bridge, Node {nodejs}, TypeScript."/>
-    <preset version="api-php" name="PHP API SDK (shopify-api-php)" description="Backend integration via official shopify/shopify-api Composer package. PHP {php}, MariaDB, Redis."/>
-    <preset version="laravel-shopify" name="Laravel Shopify App (Kyon147/laravel-shopify)" description="Full embedded Shopify App on Laravel — OAuth, billing, webhooks, AppBridge wired. PHP {php}, MariaDB, Redis, Node for assets."/>
-</platform>
+<config>
+    <name>shopify</name>
+    <tools>
+        <language>
+            <rule><version>hydrogen</version><value>nodejs</value></rule>
+            <rule><version>app-remix</version><value>nodejs</value></rule>
+            <default>php</default>
+        </language>
+        <php>
+            <rule><version>hydrogen</version><value/></rule>
+            <rule><version>app-remix</version><value/></rule>
+            <rule><version>api-php</version><value>8.3</value></rule>
+            <rule><version>laravel-shopify</version><value>8.3</value></rule>
+            <default>8.2</default>
+        </php>
+        <db>
+            <rule><version>hydrogen</version><value/></rule>
+            <rule><version>app-remix</version><value/></rule>
+            <rule><version>api-php</version><value>mariadb:11.4</value></rule>
+            <rule><version>laravel-shopify</version><value>mariadb:11.4</value></rule>
+            <default>11.1.2</default>
+        </db>
+        <composer>
+            <rule><version>hydrogen</version><value/></rule>
+            <rule><version>app-remix</version><value/></rule>
+            <default>2</default>
+        </composer>
+        <redis>
+            <rule><version>hydrogen</version><value/></rule>
+            <rule><version>app-remix</version><value/></rule>
+            <rule><version>api-php</version><value>7.4</value></rule>
+            <rule><version>laravel-shopify</version><value>7.4</value></rule>
+            <default>7.2.1</default>
+        </redis>
+        <valkey>
+            <rule><version>hydrogen</version><value/></rule>
+            <rule><version>app-remix</version><value/></rule>
+            <rule><version>api-php</version><value/></rule>
+            <rule><version>laravel-shopify</version><value/></rule>
+            <default>8.1.3</default>
+        </valkey>
+        <rabbitmq>
+            <rule><version>hydrogen</version><value/></rule>
+            <rule><version>app-remix</version><value/></rule>
+            <rule><version>api-php</version><value/></rule>
+            <rule><version>laravel-shopify</version><value/></rule>
+            <default>3.9.29</default>
+        </rabbitmq>
+        <nodejs>
+            <rule><version>hydrogen</version><value>22.20.0</value></rule>
+            <rule><version>app-remix</version><value>22.20.0</value></rule>
+            <rule><version>api-php</version><value/></rule>
+            <rule><version>laravel-shopify</version><value>22.20.0</value></rule>
+            <default>18.15.0</default>
+        </nodejs>
+        <yarn>
+            <rule><version>hydrogen</version><value>1.22.22</value></rule>
+            <rule><version>app-remix</version><value>1.22.22</value></rule>
+            <rule><version>api-php</version><value/></rule>
+            <rule><version>laravel-shopify</version><value>1.22.22</value></rule>
+            <default>3.6.4</default>
+        </yarn>
+    </tools>
+    <presets>
+        <preset>
+            <version>hydrogen</version>
+            <name>Hydrogen (Node.js storefront)</name>
+            <description>Official headless storefront — Remix on Vite, Node {nodejs}, TypeScript. Deploys to Shopify Oxygen.</description>
+        </preset>
+        <preset>
+            <version>app-remix</version>
+            <name>Shopify App (Node.js / Remix)</name>
+            <description>Official embedded app template — Remix + Prisma + App Bridge, Node {nodejs}, TypeScript.</description>
+        </preset>
+        <preset>
+            <version>api-php</version>
+            <name>PHP API SDK (shopify-api-php)</name>
+            <description>Backend integration via official shopify/shopify-api Composer package. PHP {php}, MariaDB, Redis.</description>
+        </preset>
+        <preset>
+            <version>laravel-shopify</version>
+            <name>Laravel Shopify App (Kyon147/laravel-shopify)</name>
+            <description>Full embedded Shopify App on Laravel — OAuth, billing, webhooks, AppBridge wired. PHP {php}, MariaDB, Redis, Node for assets.</description>
+        </preset>
+    </presets>
+</config>

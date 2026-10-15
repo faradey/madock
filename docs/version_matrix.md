@@ -6,7 +6,7 @@ It is data, one XML file per platform, compiled into the binary:
 
 ```
 src/model/versions/matrix/<platform>.xml
-src/model/versions/matrix/common.xml      tools every platform shares (Xdebug)
+src/model/versions/matrix/common.xml      what every platform shares: Xdebug, the menus
 ```
 
 `madock setup` reads it twice: for the version you type or that madock finds in
@@ -17,61 +17,87 @@ stack is in their own configuration.
 
 ## Format
 
+The files are shaped like `config.xml`: elements only, **no attributes**.
+
 ```xml
-<platform name="magento2">
-    <tool name="php">
-        <when from="2.4.9">8.5</when>
-        <when from="2.4.8">8.4</when>
-        <when from="2.4.6">8.2</when>
-    </tool>
-    <tool name="opensearch">
-        <when from="2.4.3-p2">1.2.0</when>
-        <when version="2.3.7-p4">1.2.0</when>
-        <default>NotCompatible</default>
-    </tool>
-    <preset version="2.4.9" name="Magento 2.4.9 (Latest)"
-            description="Latest stable with PHP {php}, OpenSearch {opensearch}"/>
-</platform>
+<config>
+    <name>magento2</name>
+    <tools>
+        <php>
+            <rule><from>2.4.9</from><value>8.5</value></rule>
+            <rule><from>2.4.8</from><value>8.4</value></rule>
+            <rule><from>2.4.6</from><value>8.2</value></rule>
+        </php>
+        <opensearch>
+            <rule><from>2.4.3-p2</from><value>1.2.0</value></rule>
+            <rule><version>2.3.7-p4</version><value>1.2.0</value></rule>
+            <default>NotCompatible</default>
+        </opensearch>
+    </tools>
+    <presets>
+        <preset>
+            <version>2.4.9</version>
+            <name>Magento 2.4.9 (Latest)</name>
+            <description>Latest stable with PHP {php}, OpenSearch {opensearch}</description>
+        </preset>
+    </presets>
+</config>
 ```
 
-- **Rules are read top to bottom; the first that matches wins.**
-- `from="X"` matches X and every later version. Versions are compared as
+- **A tool is an element named after it; its rules are read top to bottom and
+  the first that matches wins.**
+- `<from>X</from>` matches X and every later version. Versions are compared as
   numbers, segment by segment — `2.4.10` is later than `2.4.9` — and a Magento
   `-pN` is a patch on top of its release: `2.4.6-p11` is later than `2.4.6` and
   earlier than `2.4.7`. Put a patch line below the next minor's rules.
-- `version="X"` matches exactly that string. It is how named variants are
-  written: Shopify's `hydrogen`, BigCommerce's `catalyst`.
-- An empty rule — `<when version="hydrogen"></when>` — answers nothing: that
-  stack does not run the service.
+- `<version>X</version>` matches exactly that string. It is how named variants
+  are written: Shopify's `hydrogen`, BigCommerce's `catalyst`.
+- `<value/>` — empty — answers nothing: that stack does not run the service.
+  Every rule has a `<value>`; a missing one fails the tests.
 - No match gives `<default>`, or nothing.
-- `by="php"` asks a tool about another tool's answer instead of the platform
+- `<by>php</by>` asks a tool about another tool's answer instead of the platform
   version. Xdebug follows PHP; a stack with no PHP gets no Xdebug.
 - `NotCompatible` means the tool cannot run with that platform version.
   `setup` refuses it rather than writing it into the config as a version.
 
 Tool names: `language`, `php`, `dbtype`, `db`, `searchengine`, `elastic`,
 `opensearch`, `composer`, `redis`, `valkey`, `rabbitmq`, `xdebug`, `nodejs`,
-`yarn`, `python`, `golang`, `ruby`. An unknown name, a tool defined twice, or a
-rule with both or neither of `from` and `version` fails the tests.
+`yarn`, `python`, `golang`, `ruby`. An unknown name, a tool defined twice, a
+rule with both or neither of `<from>` and `<version>`, or an attribute anywhere
+fails the tests.
 
-### Container memory per platform
+### Budgets: what a program takes inside its container
 
-A platform file may set its own memory for a container where it should differ
-from madock's default for every platform:
+A platform file may set its own budgets where they should differ from madock's
+default for every platform. They nest the way `config.xml` does:
 
 ```xml
-<resource key="search/opensearch/heap">2g</resource>
+<budgets>
+    <search>
+        <opensearch>
+            <heap>2g</heap>
+        </opensearch>
+    </search>
+</budgets>
 ```
 
-Keys: `db/memory`, `search/elasticsearch/memory_limit`,
-`search/elasticsearch/heap`, `search/opensearch/memory_limit`,
-`search/opensearch/heap`, `memcached/memory`. The value is applied when a
-project's configuration is read, **never written into it**, so a change reaches
-every project of that platform at its next rebuild. The order is: madock's
-defaults, then the platform's `<resource>`, then `projects/config.xml` (what
-`config:set` writes for the installation), then the project — anything set by
-hand wins. A value equal to madock's default fails the tests: it would be a
-copy that stops following the default the day the default changes.
+| Key | What it is |
+|---|---|
+| `db/memory` | the database engine's budget, split into its buffer pool and caches (MariaDB/MySQL, PostgreSQL, MongoDB). The container itself has no limit |
+| `search/elasticsearch/heap`, `search/opensearch/heap` | Java's heap (`-Xmx`) |
+| `search/elasticsearch/memory_limit`, `search/opensearch/memory_limit` | the search engine's **container** limit — the one container limit in open madock, because the JVM lives beyond its heap and cannot run without one |
+| `memcached/memory` | Memcached's cache size, in megabytes with no unit |
+
+These are budgets, not container limits. Every other container limit — CPU and
+memory for any service — is madock Pro's `resources:*`.
+
+A budget is applied when a project's configuration is read, **never written
+into it**, so a change reaches every project of that platform at its next
+rebuild. The order is: madock's defaults, then the platform's budget, then
+`projects/config.xml` (what `config:set` writes for the installation), then the
+project — anything set by hand wins. A value equal to madock's default fails the
+tests: it would be a copy that stops following the default the day the default
+changes.
 
 No platform sets one yet; the defaults in `config_defaults.xml` apply to all.
 
@@ -81,7 +107,9 @@ No platform sets one yet; the defaults in `config_defaults.xml` apply to all.
 first:
 
 ```xml
-<offer name="opensearch"><v>3.0.0</v><v>2.19.1</v><v>2.12.0</v></offer>
+<offers>
+    <opensearch><v>3.0.0</v><v>2.19.1</v><v>2.12.0</v></opensearch>
+</offers>
 ```
 
 Names: `php`, `dbengine`, `mariadb`, `mysql`, `postgresql`, `mongodb`,
@@ -92,7 +120,7 @@ sense, and **always shows the default the matrix gave**, highlighted, whether
 or not the list carries it — a default can never be out of reach. The engine,
 search-engine and language menus are closed lists and show only what they list.
 
-A preset's `description` may name tools in braces — `{php}` — and is filled in
+A preset's `<description>` may name tools in braces — `{php}` — and is filled in
 from the versions the preset gets, so it cannot name a version the preset does
 not install.
 

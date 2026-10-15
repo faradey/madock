@@ -7,49 +7,71 @@
   Checked on 2026-10-15: "Catalyst supports Node.js version 24.x"
   (docs.bigcommerce.com/developer/docs/storefront/catalyst/development/prerequisites).
 -->
-<platform name="bigcommerce">
-    <tool name="language">
-        <when version="api-php">php</when>
-        <default>nodejs</default>
-    </tool>
-    <tool name="nodejs">
-        <when version="catalyst">24.10.0</when>
-        <when version="api-php"></when>
-        <default>22.20.0</default>
-    </tool>
-    <tool name="yarn">
-        <when version="api-php"></when>
-        <default>1.22.22</default>
-    </tool>
-    <tool name="php">
-        <when version="catalyst"></when>
-        <when version="stencil"></when>
-        <when version="app-node"></when>
-        <default>8.3</default>
-    </tool>
-    <tool name="db">
-        <when version="catalyst"></when>
-        <when version="stencil"></when>
-        <when version="app-node"></when>
-        <default>mariadb:11.4</default>
-    </tool>
-    <tool name="composer">
-        <when version="catalyst"></when>
-        <when version="stencil"></when>
-        <when version="app-node"></when>
-        <default>2</default>
-    </tool>
-    <tool name="redis">
-        <when version="catalyst"></when>
-        <when version="stencil"></when>
-        <when version="app-node"></when>
-        <default>7.4</default>
-    </tool>
-    <!-- No Xdebug in these stacks. -->
-    <tool name="xdebug" by="php"/>
-
-    <preset version="catalyst" name="Catalyst (Next.js storefront)" description="Official headless storefront — Next.js + TypeScript, Tailwind. Node {nodejs}."/>
-    <preset version="stencil" name="Stencil theme (Node + Handlebars)" description="Legacy theme dev with @bigcommerce/stencil-cli — Cornerstone-based themes, Handlebars templates. Node {nodejs}."/>
-    <preset version="api-php" name="PHP API SDK (bigcommerce/api)" description="Backend integration via the official bigcommerce/api Composer package. PHP {php}, MariaDB, Redis."/>
-    <preset version="app-node" name="Node App (Express / Next.js)" description="Embedded App Marketplace template — Express + Next.js + OAuth handshake. Node {nodejs}."/>
-</platform>
+<config>
+    <name>bigcommerce</name>
+    <tools>
+        <language>
+            <rule><version>api-php</version><value>php</value></rule>
+            <default>nodejs</default>
+        </language>
+        <nodejs>
+            <rule><version>catalyst</version><value>24.10.0</value></rule>
+            <rule><version>api-php</version><value/></rule>
+            <default>22.20.0</default>
+        </nodejs>
+        <yarn>
+            <rule><version>api-php</version><value/></rule>
+            <default>1.22.22</default>
+        </yarn>
+        <php>
+            <rule><version>catalyst</version><value/></rule>
+            <rule><version>stencil</version><value/></rule>
+            <rule><version>app-node</version><value/></rule>
+            <default>8.3</default>
+        </php>
+        <db>
+            <rule><version>catalyst</version><value/></rule>
+            <rule><version>stencil</version><value/></rule>
+            <rule><version>app-node</version><value/></rule>
+            <default>mariadb:11.4</default>
+        </db>
+        <composer>
+            <rule><version>catalyst</version><value/></rule>
+            <rule><version>stencil</version><value/></rule>
+            <rule><version>app-node</version><value/></rule>
+            <default>2</default>
+        </composer>
+        <redis>
+            <rule><version>catalyst</version><value/></rule>
+            <rule><version>stencil</version><value/></rule>
+            <rule><version>app-node</version><value/></rule>
+            <default>7.4</default>
+        </redis>
+        <!-- No Xdebug in these stacks: no rules means it answers nothing. -->
+        <xdebug>
+            <by>php</by>
+        </xdebug>
+    </tools>
+    <presets>
+        <preset>
+            <version>catalyst</version>
+            <name>Catalyst (Next.js storefront)</name>
+            <description>Official headless storefront — Next.js + TypeScript, Tailwind. Node {nodejs}.</description>
+        </preset>
+        <preset>
+            <version>stencil</version>
+            <name>Stencil theme (Node + Handlebars)</name>
+            <description>Legacy theme dev with @bigcommerce/stencil-cli — Cornerstone-based themes, Handlebars templates. Node {nodejs}.</description>
+        </preset>
+        <preset>
+            <version>api-php</version>
+            <name>PHP API SDK (bigcommerce/api)</name>
+            <description>Backend integration via the official bigcommerce/api Composer package. PHP {php}, MariaDB, Redis.</description>
+        </preset>
+        <preset>
+            <version>app-node</version>
+            <name>Node App (Express / Next.js)</name>
+            <description>Embedded App Marketplace template — Express + Next.js + OAuth handshake. Node {nodejs}.</description>
+        </preset>
+    </presets>
+</config>

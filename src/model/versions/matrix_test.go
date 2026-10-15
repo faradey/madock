@@ -1,6 +1,7 @@
 package versions
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -64,6 +65,54 @@ func TestAPresetDescriptionSaysWhatThePresetInstalls(t *testing.T) {
 			if strings.Contains(desc, "{") {
 				t.Errorf("%s / %s: placeholder left in %q", p, spec.Name, desc)
 			}
+		}
+	}
+}
+
+func TestTheFormatRefusesWhatItCannotRead(t *testing.T) {
+	cases := map[string]string{
+		"no name":            `<config><tools><php><default>8.2</default></php></tools></config>`,
+		"unknown tool":       `<config><name>x</name><tools><phpp><default>8.2</default></phpp></tools></config>`,
+		"tool twice":         `<config><name>x</name><tools><php/><php/></tools></config>`,
+		"rule without value": `<config><name>x</name><tools><php><rule><from>1</from></rule></php></tools></config>`,
+		"rule with both":     `<config><name>x</name><tools><php><rule><from>1</from><version>1</version><value>8</value></rule></php></tools></config>`,
+		"rule with neither":  `<config><name>x</name><tools><php><rule><value>8</value></rule></php></tools></config>`,
+		"unknown budget":     `<config><name>x</name><budgets><php><memory>1G</memory></php></budgets></config>`,
+		"empty budget":       `<config><name>x</name><budgets><db><memory></memory></db></budgets></config>`,
+	}
+	for name, xmlText := range cases {
+		if _, err := parseMatrix([]byte(xmlText)); err == nil {
+			t.Errorf("%s: accepted %s", name, xmlText)
+		}
+	}
+}
+
+// Budgets nest the way config.xml does, and are read back as config keys.
+func TestBudgetsNestLikeConfigXML(t *testing.T) {
+	f, err := parseMatrix([]byte(`<config><name>x</name><budgets>
+		<search><opensearch><heap>2g</heap><memory_limit>4g</memory_limit></opensearch></search>
+		<db><memory>1G</memory></db>
+	</budgets></config>`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{"search/opensearch/heap": "2g", "search/opensearch/memory_limit": "4g", "db/memory": "1G"}
+	for k, v := range want {
+		if f.Budgets[k] != v {
+			t.Errorf("%s = %q, want %q (all: %v)", k, f.Budgets[k], v, f.Budgets)
+		}
+	}
+}
+
+// No attributes anywhere: the files are shaped like config.xml.
+func TestNoMatrixFileUsesAttributes(t *testing.T) {
+	entries, _ := matrixFS.ReadDir("matrix")
+	attr := regexp.MustCompile(`<[a-zA-Z_]+\s+[a-zA-Z_]+=`)
+	for _, e := range entries {
+		data, _ := matrixFS.ReadFile("matrix/" + e.Name())
+		body := regexp.MustCompile(`(?s)<!--.*?-->|<\?xml.*?\?>`).ReplaceAll(data, nil)
+		if m := attr.Find(body); m != nil {
+			t.Errorf("matrix/%s uses an attribute: %s", e.Name(), m)
 		}
 	}
 }

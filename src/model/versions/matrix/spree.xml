@@ -3,25 +3,41 @@
   Spree states no PostgreSQL or Redis version (checked 2026-10-15); the values
   chosen for the presets stay. Redis is needed only for Sidekiq and Action Cable.
 -->
-<platform name="spree">
-    <tool name="language"><default>ruby</default></tool>
-    <tool name="ruby">
-        <when from="5.0">4.0.5</when>
-        <when from="4.0">3.2.6</when>
-        <default>4.0.5</default>
-    </tool>
-    <tool name="dbtype"><default>PostgreSQL</default></tool>
-    <tool name="db">
-        <when from="5.0">postgres:16.4</when>
-        <when from="4.0">postgres:15</when>
-        <default>postgres:16.4</default>
-    </tool>
-    <tool name="redis">
-        <when from="5.0">7.2.5</when>
-        <when from="4.0">7.0</when>
-        <default>7.2.5</default>
-    </tool>
-
-    <preset version="5.0" name="Spree 5.x (Latest)" description="Spree 5.x with Ruby {ruby}, PostgreSQL 16, Redis {redis} (Rails 8)"/>
-    <preset version="4.10" name="Spree 4.x (Stable)" description="Spree 4.10.x with Ruby {ruby}, PostgreSQL 15, Redis {redis} (Rails 7.1)"/>
-</platform>
+<config>
+    <name>spree</name>
+    <tools>
+        <language>
+            <default>ruby</default>
+        </language>
+        <ruby>
+            <rule><from>5.0</from><value>4.0.5</value></rule>
+            <rule><from>4.0</from><value>3.2.6</value></rule>
+            <default>4.0.5</default>
+        </ruby>
+        <dbtype>
+            <default>PostgreSQL</default>
+        </dbtype>
+        <db>
+            <rule><from>5.0</from><value>postgres:16.4</value></rule>
+            <rule><from>4.0</from><value>postgres:15</value></rule>
+            <default>postgres:16.4</default>
+        </db>
+        <redis>
+            <rule><from>5.0</from><value>7.2.5</value></rule>
+            <rule><from>4.0</from><value>7.0</value></rule>
+            <default>7.2.5</default>
+        </redis>
+    </tools>
+    <presets>
+        <preset>
+            <version>5.0</version>
+            <name>Spree 5.x (Latest)</name>
+            <description>Spree 5.x with Ruby {ruby}, PostgreSQL 16, Redis {redis} (Rails 8)</description>
+        </preset>
+        <preset>
+            <version>4.10</version>
+            <name>Spree 4.x (Stable)</name>
+            <description>Spree 4.10.x with Ruby {ruby}, PostgreSQL 15, Redis {redis} (Rails 7.1)</description>
+        </preset>
+    </presets>
+</config>

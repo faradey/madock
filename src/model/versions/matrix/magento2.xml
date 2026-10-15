@@ -5,100 +5,130 @@
   Each line is the newest version Adobe supports for that release. Patch lines
   (-pN) sit below the next minor's rules: 2.4.6-p11 is earlier than 2.4.7.
 -->
-<platform name="magento2">
-    <tool name="language"><default>php</default></tool>
-    <tool name="php">
-        <when from="2.4.9">8.5</when>
-        <when from="2.4.8">8.4</when>
-        <when from="2.4.7">8.3</when>
-        <when from="2.4.6">8.2</when>
-        <when from="2.4.4">8.1</when>
-        <when from="2.3.7">7.4</when>
-        <when from="2.3.3">7.3</when>
-        <when from="2.3.0">7.2</when>
-        <when from="2.2.0">7.1</when>
-        <when from="2.0.0">7.0</when>
-    </tool>
-    <tool name="db">
-        <when from="2.4.9">11.8</when>
-        <when from="2.4.8">11.4</when>
-        <when from="2.4.7">10.6</when>
-        <when from="2.4.6-p11">10.11</when>
-        <when from="2.4.6">10.6</when>
-        <when from="2.4.1">10.4</when>
-        <when from="2.3.7">10.3</when>
-        <when from="2.3.0">10.2</when>
-        <when from="2.0.0">10.0</when>
-    </tool>
-    <tool name="searchengine">
-        <when from="2.4.6">OpenSearch</when>
-        <default>Elasticsearch</default>
-    </tool>
-    <tool name="elastic">
-        <when from="2.4.8">8.17.6</when>
-        <when from="2.4.7">8.11.14</when>
-        <when from="2.4.6">8.4.3</when>
-        <when from="2.4.5">7.17.5</when>
-        <when from="2.4.4">7.16.3</when>
-        <when from="2.4.3">7.10.1</when>
-        <when from="2.4.2">7.9.3</when>
-        <when from="2.4.1">7.7.1</when>
-        <when from="2.4.0">7.6.2</when>
-        <when from="2.3.7">7.9.3</when>
-        <when from="2.3.6">7.7.1</when>
-        <when from="2.3.5">7.6.2</when>
-        <when from="2.0.0">6.8.13</when>
-    </tool>
-    <tool name="opensearch">
-        <when from="2.4.9">3.0.0</when>
-        <when from="2.4.8">2.19.0</when>
-        <when from="2.4.7">2.12.0</when>
-        <when from="2.4.6-p10">2.19.0</when>
-        <when from="2.4.6-p5">2.12.0</when>
-        <when from="2.4.6">2.5.0</when>
-        <when from="2.4.3-p2">1.2.0</when>
-        <when version="2.3.7-p4">1.2.0</when>
-        <when version="2.3.7-p3">1.2.0</when>
-        <default>NotCompatible</default>
-    </tool>
-    <tool name="composer">
-        <when from="2.4.2">2</when>
-        <when from="2.4.0">1</when>
-        <when from="2.3.7">2</when>
-        <when from="2.0.0">1</when>
-    </tool>
-    <tool name="redis">
-        <when from="2.4.8">8.0</when>
-        <when from="2.4.7">7.2</when>
-        <when from="2.4.6-p8">7.2</when>
-        <when from="2.4.6">7.0</when>
-        <when from="2.4.4">6.2</when>
-        <when from="2.4.2">6.0</when>
-        <when from="2.4.0">5.0</when>
-        <when from="2.3.7">6.0</when>
-        <when from="2.0.0">5.0</when>
-    </tool>
-    <tool name="valkey">
-        <when from="2.4.9">9.0.0</when>
-        <default>8.1.3</default>
-    </tool>
-    <tool name="rabbitmq">
-        <when from="2.4.9">4.2</when>
-        <when from="2.4.7-p5">4.1</when>
-        <when from="2.4.7">3.13</when>
-        <when from="2.4.6-p10">4.1</when>
-        <when from="2.4.6-p7">3.13</when>
-        <when from="2.4.6">3.11</when>
-        <when from="2.4.4">3.9</when>
-        <when from="2.3.4">3.8</when>
-        <when from="2.0.0">3.7</when>
-    </tool>
-    <tool name="nodejs"><default>18.15.0</default></tool>
-    <tool name="yarn"><default>3.6.4</default></tool>
-
-    <preset version="2.4.9" name="Magento 2.4.9 (Latest)" description="Latest stable with PHP {php}, OpenSearch {opensearch}, Redis {redis}, MariaDB {db}"/>
-    <preset version="2.4.8" name="Magento 2.4.8 (Previous)" description="Previous stable with PHP {php}, OpenSearch {opensearch}, Redis {redis}"/>
-    <preset version="2.4.7" name="Magento 2.4.7 (Stable)" description="Stable release with PHP {php}, OpenSearch {opensearch}, Redis {redis}"/>
-    <preset version="2.4.6-p4" name="Magento 2.4.6-p4 (LTS)" description="Long-term support with PHP {php}, OpenSearch {opensearch}, MariaDB {db}"/>
-    <preset version="2.4.5" name="Magento 2.4.5 (Legacy)" description="Older stable with PHP {php}, Elasticsearch {elastic}"/>
-</platform>
+<config>
+    <name>magento2</name>
+    <tools>
+        <language>
+            <default>php</default>
+        </language>
+        <php>
+            <rule><from>2.4.9</from><value>8.5</value></rule>
+            <rule><from>2.4.8</from><value>8.4</value></rule>
+            <rule><from>2.4.7</from><value>8.3</value></rule>
+            <rule><from>2.4.6</from><value>8.2</value></rule>
+            <rule><from>2.4.4</from><value>8.1</value></rule>
+            <rule><from>2.3.7</from><value>7.4</value></rule>
+            <rule><from>2.3.3</from><value>7.3</value></rule>
+            <rule><from>2.3.0</from><value>7.2</value></rule>
+            <rule><from>2.2.0</from><value>7.1</value></rule>
+            <rule><from>2.0.0</from><value>7.0</value></rule>
+        </php>
+        <db>
+            <rule><from>2.4.9</from><value>11.8</value></rule>
+            <rule><from>2.4.8</from><value>11.4</value></rule>
+            <rule><from>2.4.7</from><value>10.6</value></rule>
+            <rule><from>2.4.6-p11</from><value>10.11</value></rule>
+            <rule><from>2.4.6</from><value>10.6</value></rule>
+            <rule><from>2.4.1</from><value>10.4</value></rule>
+            <rule><from>2.3.7</from><value>10.3</value></rule>
+            <rule><from>2.3.0</from><value>10.2</value></rule>
+            <rule><from>2.0.0</from><value>10.0</value></rule>
+        </db>
+        <searchengine>
+            <rule><from>2.4.6</from><value>OpenSearch</value></rule>
+            <default>Elasticsearch</default>
+        </searchengine>
+        <elastic>
+            <rule><from>2.4.8</from><value>8.17.6</value></rule>
+            <rule><from>2.4.7</from><value>8.11.14</value></rule>
+            <rule><from>2.4.6</from><value>8.4.3</value></rule>
+            <rule><from>2.4.5</from><value>7.17.5</value></rule>
+            <rule><from>2.4.4</from><value>7.16.3</value></rule>
+            <rule><from>2.4.3</from><value>7.10.1</value></rule>
+            <rule><from>2.4.2</from><value>7.9.3</value></rule>
+            <rule><from>2.4.1</from><value>7.7.1</value></rule>
+            <rule><from>2.4.0</from><value>7.6.2</value></rule>
+            <rule><from>2.3.7</from><value>7.9.3</value></rule>
+            <rule><from>2.3.6</from><value>7.7.1</value></rule>
+            <rule><from>2.3.5</from><value>7.6.2</value></rule>
+            <rule><from>2.0.0</from><value>6.8.13</value></rule>
+        </elastic>
+        <opensearch>
+            <rule><from>2.4.9</from><value>3.0.0</value></rule>
+            <rule><from>2.4.8</from><value>2.19.0</value></rule>
+            <rule><from>2.4.7</from><value>2.12.0</value></rule>
+            <rule><from>2.4.6-p10</from><value>2.19.0</value></rule>
+            <rule><from>2.4.6-p5</from><value>2.12.0</value></rule>
+            <rule><from>2.4.6</from><value>2.5.0</value></rule>
+            <rule><from>2.4.3-p2</from><value>1.2.0</value></rule>
+            <rule><version>2.3.7-p4</version><value>1.2.0</value></rule>
+            <rule><version>2.3.7-p3</version><value>1.2.0</value></rule>
+            <default>NotCompatible</default>
+        </opensearch>
+        <composer>
+            <rule><from>2.4.2</from><value>2</value></rule>
+            <rule><from>2.4.0</from><value>1</value></rule>
+            <rule><from>2.3.7</from><value>2</value></rule>
+            <rule><from>2.0.0</from><value>1</value></rule>
+        </composer>
+        <redis>
+            <rule><from>2.4.8</from><value>8.0</value></rule>
+            <rule><from>2.4.7</from><value>7.2</value></rule>
+            <rule><from>2.4.6-p8</from><value>7.2</value></rule>
+            <rule><from>2.4.6</from><value>7.0</value></rule>
+            <rule><from>2.4.4</from><value>6.2</value></rule>
+            <rule><from>2.4.2</from><value>6.0</value></rule>
+            <rule><from>2.4.0</from><value>5.0</value></rule>
+            <rule><from>2.3.7</from><value>6.0</value></rule>
+            <rule><from>2.0.0</from><value>5.0</value></rule>
+        </redis>
+        <valkey>
+            <rule><from>2.4.9</from><value>9.0.0</value></rule>
+            <default>8.1.3</default>
+        </valkey>
+        <rabbitmq>
+            <rule><from>2.4.9</from><value>4.2</value></rule>
+            <rule><from>2.4.7-p5</from><value>4.1</value></rule>
+            <rule><from>2.4.7</from><value>3.13</value></rule>
+            <rule><from>2.4.6-p10</from><value>4.1</value></rule>
+            <rule><from>2.4.6-p7</from><value>3.13</value></rule>
+            <rule><from>2.4.6</from><value>3.11</value></rule>
+            <rule><from>2.4.4</from><value>3.9</value></rule>
+            <rule><from>2.3.4</from><value>3.8</value></rule>
+            <rule><from>2.0.0</from><value>3.7</value></rule>
+        </rabbitmq>
+        <nodejs>
+            <default>18.15.0</default>
+        </nodejs>
+        <yarn>
+            <default>3.6.4</default>
+        </yarn>
+    </tools>
+    <presets>
+        <preset>
+            <version>2.4.9</version>
+            <name>Magento 2.4.9 (Latest)</name>
+            <description>Latest stable with PHP {php}, OpenSearch {opensearch}, Redis {redis}, MariaDB {db}</description>
+        </preset>
+        <preset>
+            <version>2.4.8</version>
+            <name>Magento 2.4.8 (Previous)</name>
+            <description>Previous stable with PHP {php}, OpenSearch {opensearch}, Redis {redis}</description>
+        </preset>
+        <preset>
+            <version>2.4.7</version>
+            <name>Magento 2.4.7 (Stable)</name>
+            <description>Stable release with PHP {php}, OpenSearch {opensearch}, Redis {redis}</description>
+        </preset>
+        <preset>
+            <version>2.4.6-p4</version>
+            <name>Magento 2.4.6-p4 (LTS)</name>
+            <description>Long-term support with PHP {php}, OpenSearch {opensearch}, MariaDB {db}</description>
+        </preset>
+        <preset>
+            <version>2.4.5</version>
+            <name>Magento 2.4.5 (Legacy)</name>
+            <description>Older stable with PHP {php}, Elasticsearch {elastic}</description>
+        </preset>
+    </presets>
+</config>
