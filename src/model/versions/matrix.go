@@ -47,10 +47,34 @@ import (
 var matrixFS embed.FS
 
 type matrixFile struct {
-	Name    string        `xml:"name,attr"`
-	Tools   []matrixTool  `xml:"tool"`
-	Presets []PresetSpec  `xml:"preset"`
-	Offers  []matrixOffer `xml:"offer"`
+	Name      string           `xml:"name,attr"`
+	Tools     []matrixTool     `xml:"tool"`
+	Presets   []PresetSpec     `xml:"preset"`
+	Offers    []matrixOffer    `xml:"offer"`
+	Resources []matrixResource `xml:"resource"`
+}
+
+// matrixResource is a platform's own default for a container's resources — the
+// memory a database or a search engine gets — where it differs from madock's
+// default for every platform. Applied when a project's config is read, never
+// written into it: a value set in projects/config.xml or in the project wins,
+// and a change here reaches every project of that platform at its next
+// rebuild, the same as a change to the defaults would.
+type matrixResource struct {
+	Key   string `xml:"key,attr"`
+	Value string `xml:",chardata"`
+}
+
+// ResourceKeys are the config keys a platform may set in <resource>. The
+// container's memory, and nothing else: a platform file is not a second
+// place for every setting.
+var ResourceKeys = map[string]bool{
+	"db/memory":                         true,
+	"search/elasticsearch/memory_limit": true,
+	"search/elasticsearch/heap":         true,
+	"search/opensearch/memory_limit":    true,
+	"search/opensearch/heap":            true,
+	"memcached/memory":                  true,
 }
 
 // matrixOffer is what setup's menu lists for one service, newest first. The
@@ -161,6 +185,19 @@ func parseMatrices() (map[string]matrixFile, error) {
 				}
 			}
 		}
+		resourced := map[string]bool{}
+		for _, r := range f.Resources {
+			if !ResourceKeys[r.Key] {
+				return nil, fmt.Errorf("matrix/%s: %q is not a resource key a platform may set", e.Name(), r.Key)
+			}
+			if resourced[r.Key] {
+				return nil, fmt.Errorf("matrix/%s: resource %q is defined twice", e.Name(), r.Key)
+			}
+			if strings.TrimSpace(r.Value) == "" {
+				return nil, fmt.Errorf("matrix/%s: resource %q has no value", e.Name(), r.Key)
+			}
+			resourced[r.Key] = true
+		}
 		offered := map[string]bool{}
 		for _, o := range f.Offers {
 			if o.Name == "" || len(o.Versions) == 0 {
@@ -174,6 +211,19 @@ func parseMatrices() (map[string]matrixFile, error) {
 		out[f.Name] = f
 	}
 	return out, nil
+}
+
+// PlatformResources is a platform's own resource defaults, by config key.
+func PlatformResources(platform string) map[string]string {
+	out := map[string]string{}
+	f, ok := MustLoadMatrices()[platform]
+	if !ok {
+		return out
+	}
+	for _, r := range f.Resources {
+		out[r.Key] = strings.TrimSpace(r.Value)
+	}
+	return out
 }
 
 // Offer is what setup's menu lists for a service, from matrix/common.xml.
