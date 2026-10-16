@@ -200,6 +200,7 @@
                     <upload_max_filesize>50M</upload_max_filesize>
                     <max_input_vars>50000</max_input_vars>
                     <session_cookie_lifetime>2592000</session_cookie_lifetime>
+                    <session_gc_maxlifetime>1440</session_gc_maxlifetime>
                 </ini>
                 <fpm>
                     <max_children>40</max_children>
