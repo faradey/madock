@@ -1,3 +1,8 @@
+**v4.4.6**
+
+Fixed:
+- **`start` in one project warned about an encrypted secret in another.** The warning lived in the XML parser, which runs for every project config a command reads — `start` in a Magento stand said "A secret in this project's configuration is encrypted" about a `rabbitmq/password` madock Pro had written into a different project's file. The parser is silent now; the warning comes once, only from the current project's own configuration, and names the project. This edition still decrypts nothing: it has no key. `TestParsingAnotherProjectsConfigSaysNothing` fails with the warning put back into the parser
+
 **v4.4.5**
 
 Changed:

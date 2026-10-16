@@ -126,6 +126,7 @@ func GetProjectConfig(projectName string) map[string]string {
 	if projectName == GetProjectName() {
 		if len(projectConfig) == 0 {
 			projectConfig = buildProjectConfig(projectName)
+			reportCiphertextOf(projectName, projectConfig)
 		}
 		return projectConfig
 	}

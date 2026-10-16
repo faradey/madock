@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"sort"
 	"sync"
 
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
@@ -89,10 +90,13 @@ func decryptIfSecret(key, value string) string {
 	// Said once, for the same reason as below — and said at all because the
 	// ciphertext otherwise travels on as the password and the database is the
 	// one that complains.
+	//
+	// Not said here, though. This runs for every config file madock parses,
+	// and a command reads other projects' files too — `start` in one project
+	// warned about a ciphertext in another one's config, as if it were its
+	// own. The warning is the current project's, and comes from
+	// reportCiphertextOf when that project's config is built.
 	if secretsProvider == nil {
-		if fmtc.IsCiphertext(value) {
-			reportEncryptedWithoutProvider(key)
-		}
 		return value
 	}
 	decrypted, err := secretsProvider.Decrypt(key, value)
@@ -119,9 +123,30 @@ func reportUnreadableSecret(key string, err error) {
 	})
 }
 
-func reportEncryptedWithoutProvider(key string) {
+// reportCiphertextOf warns, once, when the named project's own configuration
+// holds a secret madock-pro enciphered and this edition has no key to read it.
+// Only the current project is asked: another project's ciphertext is that
+// project's business, and this run passes none of it anywhere.
+func reportCiphertextOf(projectName string, conf map[string]string) {
+	if secretsProvider != nil {
+		return
+	}
+	keys := make([]string, 0, len(conf))
+	for k := range conf {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		if isSecretKey(k) && fmtc.IsCiphertext(conf[k]) {
+			reportEncryptedWithoutProvider(projectName, k)
+			return
+		}
+	}
+}
+
+func reportEncryptedWithoutProvider(projectName, key string) {
 	secretReportOnce.Do(func() {
-		fmtc.WarningErrLn("A secret in this project's configuration is encrypted and this edition has no key: " + key)
+		fmtc.WarningErrLn("A secret in the configuration of project " + projectName + " is encrypted and this edition has no key: " + key)
 		fmtc.WarningErrLn("  It was written by madock-pro. madock passes the stored ciphertext on as it is, so a")
 		fmtc.WarningErrLn("  database or a mail relay reading it will refuse it and blame its own credentials.")
 		fmtc.WarningErrLn("  Set the value again with `madock config:set` to store it in plain text here.")
