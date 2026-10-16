@@ -1,3 +1,8 @@
+**Unreleased**
+
+Added:
+- **`php/ini/session_gc_maxlifetime`, default `1440`.** On Debian, PHP's own session garbage collection is off and `/etc/cron.d/php` runs `sessionclean` at :09 and :39. That script deletes every session file idle for longer than `session.gc_maxlifetime`, so a Magento admin with `admin/security/session_lifetime` at ten days was still logged out after 24 minutes. The value is written into both the fpm and the cli `php.ini`, because `sessionclean` reads both and takes the larger. The default is PHP's own, so nothing changes until the key is set. Applied by a php rebuild. Irrelevant when sessions are stored in Redis
+
 **v4.4.6**
 
 Fixed:

@@ -186,6 +186,21 @@ RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /
     && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 50M/g' /etc/php/8.4/fpm/php.ini \
     && sed -i 's/;max_input_vars = 1000/max_input_vars = 50000/g' /etc/php/8.4/fpm/php.ini
 
+# How long a session file may sit unused before it is deleted. On Debian PHP's
+# own garbage collection is off (gc_probability = 0) and /etc/cron.d/php runs
+# sessionclean twice an hour instead, which removes every file in the session
+# directory idle longer than this value. It reads the value from both the fpm
+# and the cli php.ini and takes the larger, so both are written: setting only
+# fpm would leave the cli's 1440 in charge.
+#
+# This is what logged a Magento admin out after 24 minutes with
+# admin/security/session_lifetime set to ten days. The application's lifetime
+# only decides when it stops trusting a session; the file was already gone.
+# Irrelevant when sessions live in Redis or the application keeps its own
+# session directory — sessionclean looks only at session.save_path.
+RUN sed -i 's/^session.gc_maxlifetime = .*/session.gc_maxlifetime = 1440/' /etc/php/8.4/fpm/php.ini \
+    && sed -i 's/^session.gc_maxlifetime = .*/session.gc_maxlifetime = 1440/' /etc/php/8.4/cli/php.ini
+
 # Where PHP's mail() sends. Written only when there is somewhere for it to go.
 #
 # This used to be unconditional and hardcoded to the mailpit port, which meant
