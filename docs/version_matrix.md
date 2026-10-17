@@ -124,6 +124,30 @@ A preset's `<description>` may name tools in braces — `{php}` — and is fille
 from the versions the preset gets, so it cannot name a version the preset does
 not install.
 
+## Reading it from outside madock
+
+```bash
+madock matrix                       # every platform, then common.xml, as text
+madock matrix --json                # the same as JSON
+madock matrix --json --platform magento2
+```
+
+The JSON is the files as madock reads them, not a table of answers: per
+platform its tools in file order, each with `by`, its `rules` (exactly one of
+`from` or `version`, and `value`) and `default`; its presets with the
+description already filled in; its `budgets` by config key. `common` holds the
+shared tools and the menu `offers`, and is printed with `--platform` too, because
+a platform's answers are not complete without it. `default` is `null` when a
+tool has none — no answer at all — and `""` when it answers nothing; the two are
+different. An unknown `--platform` exits 1 and names the known ones.
+
+To answer a version the way madock does: take the platform's tools in order, then
+the common tools it does not define; for each, the first rule that matches wins,
+otherwise `default`; a tool with `by` is asked about the answer of the tool it
+names instead of the platform version, and answers nothing when that is empty.
+`TestTheExportAnswersWhatTheMatrixAnswers` holds the export to exactly that: every
+version any rule names, and every preset, gets from the export what `setup` gets.
+
 ## Where the values come from
 
 Each file says in a comment what it was checked against and when. The rule is:

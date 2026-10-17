@@ -2,6 +2,7 @@
 
 Added:
 - **`php/ini/session_gc_maxlifetime`, default `1440`.** On Debian, PHP's own session garbage collection is off and `/etc/cron.d/php` runs `sessionclean` at :09 and :39. That script deletes every session file idle for longer than `session.gc_maxlifetime`, so a Magento admin with `admin/security/session_lifetime` at ten days was still logged out after 24 minutes. The value is written into both the fpm and the cli `php.ini`, because `sessionclean` reads both and takes the larger. The default is PHP's own, so nothing changes until the key is set. Applied by a php rebuild. Irrelevant when sessions are stored in Redis
+- **`madock matrix [--json] [--platform <name>]` prints the compatibility matrix**: every platform's tools in evaluation order with their rules and defaults, its presets with filled descriptions, its budgets, and `common.xml`'s tools and menu lists. For tools that build environments from the same rules and need all of them at once rather than one answer per version. Runs outside a project. `docs/version_matrix.md` says how to evaluate it; `TestTheExportAnswersWhatTheMatrixAnswers` checks that the export, evaluated that way, gives what `setup` gives for every version a rule names and every preset — it fails with `by` or `default` left out of the export
 
 **v4.4.6**
 

@@ -16,8 +16,9 @@ import (
 // flag that gets added in passing: this test makes adding one a deliberate edit in
 // two places rather than a one-line decision nobody reviews.
 //
-// setup and project:clone are here because they create a project; help, version and
-// mcp because they answer about the binary; proxy:logs because one proxy serves
+// setup and project:clone are here because they create a project; help, version,
+// matrix and mcp because they answer about the binary — matrix prints the
+// compatibility rules compiled into it; proxy:logs because one proxy serves
 // every project and "why is it answering 502" is asked from wherever one stands;
 // project:list because it describes the installation, and the reason to run it is
 // usually that something about the registry is wrong; template:convert because a
@@ -36,6 +37,7 @@ func TestGlobalCommands(t *testing.T) {
 		"--version",
 		"-v",
 		"help",
+		"matrix",
 		"mcp",
 		"project:clone",
 		"project:list",
