@@ -139,7 +139,8 @@ description already filled in; its `budgets` by config key. `common` holds the
 shared tools and the menu `offers`, and is printed with `--platform` too, because
 a platform's answers are not complete without it. `default` is `null` when a
 tool has none — no answer at all — and `""` when it answers nothing; the two are
-different. An unknown `--platform` exits 1 and names the known ones.
+different. An unknown `--platform` exits 1 with stdout empty and names the known
+ones on stderr.
 
 To answer a version the way madock does: take the platform's tools in order, then
 the common tools it does not define; for each, the first rule that matches wins,
