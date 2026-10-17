@@ -193,6 +193,35 @@ madock db:export --json
 }
 ```
 
+### matrix
+
+The compatibility matrix compiled into the binary. Runs outside a project.
+`--platform <name>` keeps one platform; `common` is always there. The shape and
+how to evaluate it are in [version_matrix.md](version_matrix.md#reading-it-from-outside-madock).
+
+```bash
+madock matrix --json --platform magento2
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "platforms": [
+      {
+        "name": "magento2",
+        "tools": [
+          {"name": "php", "rules": [{"from": "2.4.9", "value": "8.5"}], "default": null}
+        ],
+        "presets": [{"version": "2.4.9", "name": "Magento 2.4.9 (Latest)", "description": "Latest stable with PHP 8.5, OpenSearch 3.0.0, …"}],
+        "budgets": {}
+      }
+    ],
+    "common": {"tools": [ … ], "offers": [{"name": "php", "versions": ["8.5", "8.4"]}]}
+  }
+}
+```
+
 ### Commands that do work: snapshot:create, snapshot:restore, project:clone
 
 These copy volumes, stop and start containers and untar into helpers, and

@@ -33,12 +33,9 @@ func Execute() {
 	if platform != "" {
 		p, ok := versions.ExportPlatform(platform)
 		if !ok {
-			msg := fmt.Sprintf("no matrix for platform %q; known: %s", platform, strings.Join(versions.MatrixPlatforms(), ", "))
-			if args.Json {
-				output.PrintJSONError(msg)
-			} else {
-				fmt.Fprintln(os.Stderr, msg)
-			}
+			// A refusal, as docs/json_output.md describes it for every --json
+			// command: the reason on stderr, stdout empty, exit 1.
+			fmt.Fprintf(os.Stderr, "no matrix for platform %q; known: %s\n", platform, strings.Join(versions.MatrixPlatforms(), ", "))
 			os.Exit(1)
 		}
 		all.Platforms = []versions.PlatformMatrix{p}

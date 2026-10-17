@@ -273,7 +273,7 @@ project's own `.madock/config.xml` sets wins over it — edit it there instead.
 | `php/ini/upload_max_filesize` | `50M` | `php.ini` | php rebuild |
 | `php/ini/max_input_vars` | `50000` | `php.ini` | php rebuild |
 | `php/ini/session_cookie_lifetime` | `2592000` | `php.ini` | php rebuild |
-| `php/ini/session_gc_maxlifetime` | `1440` | seconds a session file may sit unused before Debian's `sessionclean` cron deletes it; written into the fpm and the cli `php.ini`. Raise it when an application keeps its sessions in PHP's own files and people are logged out early | php rebuild |
+| `php/ini/session_gc_maxlifetime` | `1440` | seconds a session file may sit unused before Debian's `sessionclean` cron deletes it; written into the fpm and the cli `php.ini`. Raise it when an application keeps its sessions in PHP's own files and people are logged out early. `sessionclean` works in whole minutes (`value / 60`, rounded down), so anything under `60` deletes every session file at each run | php rebuild |
 | `php/fpm/max_children` | `40` | the most workers php-fpm starts | php rebuild |
 | `php/fpm/start_servers` | `2` | workers started at boot | php rebuild |
 | `php/fpm/min_spare_servers` | `1` | idle workers kept at least | php rebuild |
