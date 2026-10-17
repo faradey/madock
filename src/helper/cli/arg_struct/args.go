@@ -215,6 +215,11 @@ type ControllerGeneralVersion struct {
 	attr.Arguments
 }
 
+type ControllerGeneralMatrix struct {
+	attr.Arguments
+	Platform string `arg:"--platform" help:"Only this platform's file (e.g., magento2). common.xml is printed either way"`
+}
+
 type ControllerGeneralInfoPorts struct {
 	attr.Arguments
 }
