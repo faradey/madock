@@ -274,7 +274,7 @@ func makeDockerCompose(projectName string) {
 		if file != "" {
 			str = Render(projectName, file, name, nil)
 		}
-		write(runtimeDir+"/"+name, dockertransform.ApplyComposeTransform(name, str))
+		write(runtimeDir+"/"+name, dockertransform.ApplyProjectComposeTransform(projectName, name, str))
 	}
 }
 
