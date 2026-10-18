@@ -202,8 +202,19 @@ func flushDatabaseLogs(projectConf map[string]string, projectName string) error 
 			continue
 		}
 		login, password := target.Login()
+		// FLUSH ENGINE LOGS alone did nothing here, and the e2e run said so: the
+		// row inserted just before the snapshot was missing after the restore
+		// with the flush in place. InnoDB answers it only when
+		// innodb_flush_log_at_trx_commit is not 0, so for the length of this one
+		// session it is set to 1, the log flushed, and the old value put back.
+		// The log is sequential: flushing it up to now flushes every commit
+		// before now.
 		cmd, err := docker.PrepareContainerExec(target.Container, "mysql", false,
-			target.MySQLClient(), "-u", login, "-p"+password, "-h", target.Host, "-e", "FLUSH ENGINE LOGS")
+			target.MySQLClient(), "-u", login, "-p"+password, "-h", target.Host, "-e",
+			"SET @madock_flush = @@GLOBAL.innodb_flush_log_at_trx_commit; "+
+				"SET GLOBAL innodb_flush_log_at_trx_commit = 1; "+
+				"FLUSH ENGINE LOGS; "+
+				"SET GLOBAL innodb_flush_log_at_trx_commit = @madock_flush")
 		if err != nil {
 			return err
 		}
