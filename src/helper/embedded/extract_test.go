@@ -105,7 +105,7 @@ func TestExtractIfNeeded_FillsAModuleThatDoesNotShipItsTemplates(t *testing.T) {
 	}
 
 	stamp, err := os.ReadFile(filepath.Join(dir, ".embedded_version"))
-	if err != nil || string(stamp) != "9.9.9" {
+	if err != nil || !strings.HasPrefix(string(stamp), "9.9.9 sha256:") {
 		t.Fatalf("the version stamp was not updated: %q, %v", string(stamp), err)
 	}
 }
@@ -226,7 +226,7 @@ func TestExtractIfNeeded_ReplacesATemplateItCannotWriteInPlace(t *testing.T) {
 	if err != nil || string(body) != "from the binary\n" {
 		t.Fatalf("the unwritable template was not replaced: %q, %v", string(body), err)
 	}
-	if stamp, err := os.ReadFile(filepath.Join(dir, ".embedded_version")); err != nil || string(stamp) != "9.9.9" {
+	if stamp, err := os.ReadFile(filepath.Join(dir, ".embedded_version")); err != nil || !strings.HasPrefix(string(stamp), "9.9.9 sha256:") {
 		t.Fatalf("a run that repaired itself should still count as finished: %q, %v", string(stamp), err)
 	}
 }
@@ -339,7 +339,48 @@ func TestExtractIfNeeded_StillFillsABinaryInstallation(t *testing.T) {
 	}
 
 	stamp, err := os.ReadFile(filepath.Join(dir, ".embedded_version"))
-	if err != nil || string(stamp) != "9.9.9" {
+	if err != nil || !strings.HasPrefix(string(stamp), "9.9.9 sha256:") {
 		t.Fatalf("the version stamp was not written: %q, %v", string(stamp), err)
+	}
+}
+
+// The version constant does not move between releases, so a binary carrying
+// new templates under the same version must still put them on disk. It did not:
+// madock-pro 0.69.0 on a server kept the old my.cnf because both builds said 4.4.6.
+func TestExtractIfNeeded_NewTemplatesUnderTheSameVersionAreExtracted(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("MADOCK_EXEC_DIR", dir)
+	t.Cleanup(func() { DockerFS = nil })
+
+	DockerFS = fstest.MapFS{"snippets/my.cnf": {Data: []byte("innodb_flush_log_at_trx_commit = 0\n")}}
+	ExtractIfNeeded("4.4.6")
+
+	DockerFS = fstest.MapFS{"snippets/my.cnf": {Data: []byte("innodb_flush_log_at_trx_commit = {{{.db.flush}}}\n")}}
+	ExtractIfNeeded("4.4.6")
+
+	body, err := os.ReadFile(filepath.Join(dir, "docker", "snippets", "my.cnf"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), "{{{.db.flush}}}") {
+		t.Errorf("the second build's template did not reach the disk:\n%s", body)
+	}
+}
+
+// And a run with nothing new extracts nothing: the stamp is still a shortcut.
+func TestExtractIfNeeded_TheSameTemplatesAreNotExtractedAgain(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("MADOCK_EXEC_DIR", dir)
+	t.Cleanup(func() { DockerFS = nil })
+
+	DockerFS = fstest.MapFS{"snippets/a.yml": {Data: []byte("a\n")}}
+	ExtractIfNeeded("4.4.6")
+	target := filepath.Join(dir, "docker", "snippets", "a.yml")
+	if err := os.WriteFile(target, []byte("edited\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ExtractIfNeeded("4.4.6")
+	if body, _ := os.ReadFile(target); string(body) != "edited\n" {
+		t.Errorf("an unchanged build extracted again: %q", body)
 	}
 }
