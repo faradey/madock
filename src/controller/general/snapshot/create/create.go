@@ -16,6 +16,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/snapshotengine"
 	"os"
 	"path/filepath"
 	"strings"
@@ -50,7 +51,27 @@ func Execute() {
 	}
 	name += time.Now().Format("2006-01-02-15-04-05")
 
+	// Asked before anything is created or stopped: a project configured for an
+	// engine this build does not have is refused, not copied the slow way.
+	engine, engineName, err := snapshotengine.For(projectConf)
+	if err != nil {
+		if w != nil {
+			w.Fail("%v", err)
+		}
+		logger.Fatal(err)
+	}
+
 	dbsPath := paths.MakeDirsByPath(dest + "/" + name + "/")
+
+	if engine != nil {
+		captureWithEngine(w, engine, engineName, projectConf, projectName, name, dbsPath)
+		if w != nil {
+			w.Print(Describe(dest, name))
+			return
+		}
+		fmt.Println("Snapshot completed successfully")
+		return
+	}
 
 	// The snapshot is taken with the project's own containers stopped, from the
 	// helper container that mounts the same volumes — the mirror of what
@@ -92,6 +113,162 @@ func Execute() {
 	}
 
 	fmt.Println("Snapshot completed successfully")
+}
+
+// captureWithEngine takes the databases with the project's engine and the files
+// with tar. An engine that snapshots atomically does it with the project up;
+// the files then come from the running application container, as project:clone
+// has always read them — a log written during the copy is a warning, not a
+// torn snapshot. An engine that copies file by file, or snapshot/live=stop,
+// stops the project first, exactly as the tar path does.
+func captureWithEngine(w *output.Writer, engine snapshotengine.Engine, engineName string, projectConf map[string]string, projectName, name, dbsPath string) {
+	stop := snapshotengine.Stops(engine, projectConf)
+	wasRunning := isRunning(projectName)
+	if stop && wasRunning {
+		fmtc.TitleLn("Stopping containers for a consistent copy...")
+		if err := docker.Stop(projectName); err != nil {
+			logger.Fatal(err)
+		}
+	}
+
+	fail := func(err error) {
+		// The directory would otherwise look like a snapshot without databases.
+		_ = os.RemoveAll(dbsPath)
+		if stop && wasRunning {
+			_ = docker.Start(projectName)
+		}
+		if w != nil {
+			w.Fail("%v", err)
+		}
+		logger.Fatal(err)
+	}
+
+	if dbtarget.HasLocal(projectConf, "db") {
+		if !stop && wasRunning {
+			if err := flushDatabaseLogs(projectConf, projectName); err != nil {
+				fail(fmt.Errorf("the databases could not be flushed before a live snapshot, so it would miss recent commits: %w", err))
+			}
+		}
+		ref, err := engine.Capture(snapshotengine.Project{Name: projectName, Conf: projectConf}, name)
+		if err != nil {
+			fail(fmt.Errorf("%s snapshot of the databases: %w", engineName, err))
+		}
+		if err := snapshotengine.WriteMarker(dbsPath, snapshotengine.Marker{Engine: engineName, Ref: ref}); err != nil {
+			fail(err)
+		}
+	} else {
+		fmtc.WarningLn("Skipping the database: this project does not run its own db service.")
+	}
+
+	if stop || !wasRunning {
+		docker.UpSnapshot(projectName)
+		archiveFiles(docker.GetContainerName(projectConf, projectName, "snapshot"), snapshotVolumePaths.files, dbsPath)
+		docker.StopSnapshot(projectName)
+	} else {
+		GetFiles(projectConf, projectName, dbsPath)
+	}
+
+	if stop && wasRunning {
+		fmtc.TitleLn("Starting containers again...")
+		if err := docker.Start(projectName); err != nil {
+			logger.Fatal(err)
+		}
+	}
+}
+
+// flushDatabaseLogs writes InnoDB's log buffer to disk in the project's own
+// MySQL-family databases, for a snapshot about to be taken with them running.
+//
+// madock's my.cnf sets innodb_flush_log_at_trx_commit = 0: a commit returns
+// before its log reaches the disk, which is written about once a second. An
+// atomic snapshot captures the disk exactly — so without this it missed the
+// last second of commits, and the first e2e run of the zfs engine restored a
+// database without the row inserted just before the snapshot. FLUSH ENGINE
+// LOGS puts everything committed so far on disk; a snapshot taken after it
+// holds every commit made before the command started.
+//
+// PostgreSQL and MongoDB are left alone: both make a commit durable before
+// acknowledging it unless told otherwise, which madock does not do.
+func flushDatabaseLogs(projectConf map[string]string, projectName string) error {
+	for _, service := range []string{"db", "db2"} {
+		if service == "db2" && projectConf["db2/enabled"] != "true" {
+			continue
+		}
+		if !dbtarget.HasLocal(projectConf, service) {
+			continue
+		}
+		target, ok := dbtarget.Resolve(projectConf, projectName, service)
+		if !ok || target.Type == "postgresql" || target.Type == "mongodb" {
+			continue
+		}
+		login, password := target.Login()
+		// FLUSH ENGINE LOGS alone did nothing here, and the e2e run said so: the
+		// row inserted just before the snapshot was missing after the restore
+		// with the flush in place. InnoDB answers it only when
+		// innodb_flush_log_at_trx_commit is not 0, so for the length of this one
+		// session it is set to 1, the log flushed, and the old value put back.
+		// The log is sequential: flushing it up to now flushes every commit
+		// before now.
+		cmd, err := docker.PrepareContainerExec(target.Container, "mysql", false,
+			target.MySQLClient(), "-u", login, "-p"+password, "-h", target.Host, "-e",
+			"SET @madock_flush = @@GLOBAL.innodb_flush_log_at_trx_commit; "+
+				"SET GLOBAL innodb_flush_log_at_trx_commit = 1; "+
+				"FLUSH ENGINE LOGS; "+
+				"SET GLOBAL innodb_flush_log_at_trx_commit = @madock_flush")
+		if err != nil {
+			return err
+		}
+		if out, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("FLUSH ENGINE LOGS on %s: %v: %s", service, err, strings.TrimSpace(string(out)))
+		}
+	}
+	return nil
+}
+
+// CloneWithEngine is CopyStandingStill for a project with an engine: the engine
+// gives the clone its database volumes, and the files go into dest as
+// files.tar.gz for project:clone to unpack. The source stops only when the
+// engine cannot copy a running database.
+func CloneWithEngine(engine snapshotengine.Engine, engineName string, projectConf map[string]string, projectName string, clone snapshotengine.Project, dest string) error {
+	stop := snapshotengine.Stops(engine, projectConf)
+	wasRunning := isRunning(projectName)
+	if stop && wasRunning {
+		fmtc.TitleLn("Stopping the source for a consistent copy...")
+		if err := docker.Stop(projectName); err != nil {
+			return err
+		}
+	}
+	restart := func() {
+		if stop && wasRunning {
+			fmtc.TitleLn("Starting the source again...")
+			if err := docker.Start(projectName); err != nil {
+				logger.Fatal(err)
+			}
+		}
+	}
+
+	if dbtarget.HasLocal(projectConf, "db") {
+		if !stop && wasRunning {
+			if err := flushDatabaseLogs(projectConf, projectName); err != nil {
+				restart()
+				return fmt.Errorf("the databases could not be flushed before a live clone, so it would miss recent commits: %w", err)
+			}
+		}
+		if err := engine.Clone(snapshotengine.Project{Name: projectName, Conf: projectConf}, clone); err != nil {
+			restart()
+			return fmt.Errorf("%s clone of the databases: %w", engineName, err)
+		}
+	}
+
+	if stop || !wasRunning {
+		docker.UpSnapshot(projectName)
+		archiveFiles(docker.GetContainerName(projectConf, projectName, "snapshot"), snapshotVolumePaths.files, dest)
+		docker.StopSnapshot(projectName)
+	} else {
+		GetFiles(projectConf, projectName, dest)
+	}
+	restart()
+	return nil
 }
 
 // SnapshotJSON is one snapshot in a --json answer.

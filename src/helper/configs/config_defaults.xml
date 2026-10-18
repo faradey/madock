@@ -285,6 +285,12 @@
                      itself it sizes its cache from the host's RAM, not from the
                      container's limit. -->
                 <memory>768M</memory>
+                <!-- innodb_flush_log_at_trx_commit. 0 writes the redo log about
+                     once a second, so a crash of the machine loses up to a second
+                     of commits — fast, and right for a laptop. 1 makes every commit
+                     durable before it returns; 2 survives a crash of the database
+                     but not of the machine. MySQL and MariaDB only. -->
+                <flush_log_at_trx_commit>0</flush_log_at_trx_commit>
                 <repository>mariadb</repository>
                 <root_password>password</root_password>
                 <user>db</user>
@@ -746,6 +752,16 @@
             <isolation>
                 <enabled>false</enabled>
             </isolation>
+            <!-- What snapshot:create, snapshot:restore and project:clone copy the
+                 databases with. tar is madock's own and works everywhere; any
+                 other name is an engine a build registers (madock Pro), and a
+                 name this build does not have is refused rather than copied
+                 with tar. live=auto lets an engine that snapshots atomically
+                 keep the project running; stop always stops it. -->
+            <snapshot>
+                <engine>tar</engine>
+                <live>auto</live>
+            </snapshot>
             <permissions>
                 <umask>
                     <permissive>true</permissive>

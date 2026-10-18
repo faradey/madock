@@ -13,6 +13,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/snapshotengine"
 	"os"
 	"path/filepath"
 	"sort"
@@ -104,6 +105,12 @@ func Execute() {
 		os.Exit(1)
 	}
 
+	// Before anything is copied: a source set to an engine this build lacks.
+	engine, engineName, engineErr := snapshotengine.For(projectConf)
+	if engineErr != nil {
+		refuse(w, engineErr.Error())
+	}
+
 	fmt.Println("Cloning the project")
 	exPath := paths.GetExecDirPath()
 	projectName := configs.GetProjectName()
@@ -145,7 +152,17 @@ func Execute() {
 	// writes to its log during any copy, so the archive came out torn — and once
 	// the copy was checked for exactly that, clone stopped working at all for
 	// any project with a database, which is every project worth cloning.
-	create.CopyStandingStill(projectConf, projectName, dest)
+	//
+	// With an engine the databases are the engine's to copy, before the clone's
+	// containers exist; the files still travel as files.tar.gz.
+	if engine != nil {
+		clone := snapshotengine.Project{Name: cloneName, Conf: cloneProjectConf}
+		if err := create.CloneWithEngine(engine, engineName, projectConf, projectName, clone, dest); err != nil {
+			refuse(w, err.Error())
+		}
+	} else {
+		create.CopyStandingStill(projectConf, projectName, dest)
+	}
 
 	containerName := docker.GetContainerName(cloneProjectConf, cloneName, "snapshot")
 	if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {

@@ -318,6 +318,7 @@ An upload has to pass three limits, and the smallest one wins:
 | Key | Default | What it is | Applied by |
 |---|---|---|---|
 | `db/memory` | `768M` | the database's budget, divided between its buffers in `my.cnf` | db restart |
+| `db/flush_log_at_trx_commit` | `0` | `innodb_flush_log_at_trx_commit` in `my.cnf`, MySQL and MariaDB. `0` writes the redo log about once a second, so a crash of the machine loses up to a second of acknowledged commits; `1` makes each commit durable before it returns; `2` survives the database crashing but not the machine. madock Pro defaults to `1` | db restart |
 | `search/opensearch/heap` | `1g` | the JVM heap | search recreate |
 | `search/opensearch/memory_limit` | `2512m` | the container's limit | search recreate |
 | `search/elasticsearch/heap` | `800m` | the JVM heap | search recreate |
@@ -363,6 +364,19 @@ Without `--global`, a `proxy/` key is written into the project and changes
 nothing — the proxy reads the installation's config only. A value nginx cannot
 read stops the proxy, and the proxy serves every project on the machine; check
 `madock proxy:logs` after a change.
+
+### Snapshots
+
+| Key | Default | What it is |
+|---|---|---|
+| `snapshot/engine` | `tar` | what `snapshot:create`, `snapshot:restore` and `project:clone` copy the databases (`dbdata`, `dbdata2`) with. `tar` stops the project and archives the data directory. Any other value is an engine a build registers — madock Pro adds them; a value this build does not have is refused, not copied with `tar` |
+| `snapshot/live` | `auto` | `auto`: an engine whose snapshot is atomic keeps the project running; `stop`: the project is stopped for every snapshot |
+
+Project files are archived with `tar` whatever the engine. A snapshot taken by
+an engine holds `engine.json` in place of `db.tar.gz`, and `snapshot:restore`
+hands it back to that engine — the one the snapshot names, not the one the
+project is set to now — so snapshots taken before the key changed restore as
+they always did.
 
 ## Node.js in two places, and they are different questions
 

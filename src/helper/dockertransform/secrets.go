@@ -34,6 +34,30 @@ func ApplyComposeTransform(serviceName, content string) string {
 	return content
 }
 
+// renderingProject is the project whose files are being generated right now.
+var renderingProject string
+
+// RenderingProject names the project whose compose file a transformer is being
+// handed, or "" outside a render.
+//
+// The current directory's project is not the same thing, and a transformer
+// that assumed it was would be wrong in exactly one command: project:clone
+// generates the clone's files while standing in the source, so a transform
+// reading "the current project" configures the clone as the source — for a
+// volume that is the clone's database written into the source's storage.
+func RenderingProject() string {
+	return renderingProject
+}
+
+// ApplyProjectComposeTransform is ApplyComposeTransform for a file that belongs
+// to project, which RenderingProject reports for the length of the call.
+func ApplyProjectComposeTransform(project, serviceName, content string) string {
+	previous := renderingProject
+	renderingProject = project
+	defer func() { renderingProject = previous }()
+	return ApplyComposeTransform(serviceName, content)
+}
+
 // ApplyDockerfileTransform applies the transformer to Dockerfile content.
 // Returns content unchanged if no transformer is set.
 func ApplyDockerfileTransform(serviceName, content string) string {
