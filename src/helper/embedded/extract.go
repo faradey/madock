@@ -1,6 +1,8 @@
 package embedded
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -57,8 +59,16 @@ func ExtractIfNeeded(appVersion string) {
 
 	markerFile := filepath.Join(execDir, ".embedded_version")
 
+	// The stamp is the version and what the binary carries, not the version
+	// alone. Between releases the version constant does not move — every
+	// `-norelease` tag reports the release before it — so a binary with new
+	// templates read its own stamp as current and kept the old ones on disk.
+	// Found on a server on 2026-10-18: madock-pro 0.69.0 swapped in, my.cnf still
+	// the 4.4.6 one, and nothing said so.
+	stamp := appVersion + " " + contentDigest(DockerFS, ScriptsFS)
+
 	existing, _ := os.ReadFile(markerFile)
-	if string(existing) == appVersion {
+	if string(existing) == stamp {
 		return
 	}
 
@@ -99,7 +109,35 @@ func ExtractIfNeeded(appVersion string) {
 	removeWithdrawn(execDir, written)
 	writeManifest(execDir, written)
 
-	os.WriteFile(markerFile, []byte(appVersion), 0644)
+	os.WriteFile(markerFile, []byte(stamp), 0644)
+}
+
+// contentDigest names what the trees hold: every path and its bytes, in order.
+// The first 12 hex digits of a sha256 — a stamp to compare, not a signature.
+func contentDigest(trees ...fs.FS) string {
+	h := sha256.New()
+	for i, tree := range trees {
+		if tree == nil {
+			continue
+		}
+		var files []string
+		_ = fs.WalkDir(tree, ".", func(p string, d fs.DirEntry, err error) error {
+			if err == nil && !d.IsDir() {
+				files = append(files, p)
+			}
+			return nil
+		})
+		sort.Strings(files)
+		for _, p := range files {
+			data, err := fs.ReadFile(tree, p)
+			if err != nil {
+				continue
+			}
+			fmt.Fprintf(h, "%d\x00%s\x00%d\x00", i, p, len(data))
+			h.Write(data)
+		}
+	}
+	return "sha256:" + hex.EncodeToString(h.Sum(nil))[:12]
 }
 
 // ExtractFailure is one file the extraction could not put on disk.
