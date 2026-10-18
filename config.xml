@@ -746,6 +746,16 @@
             <isolation>
                 <enabled>false</enabled>
             </isolation>
+            <!-- What snapshot:create, snapshot:restore and project:clone copy the
+                 databases with. tar is madock's own and works everywhere; any
+                 other name is an engine a build registers (madock Pro), and a
+                 name this build does not have is refused rather than copied
+                 with tar. live=auto lets an engine that snapshots atomically
+                 keep the project running; stop always stops it. -->
+            <snapshot>
+                <engine>tar</engine>
+                <live>auto</live>
+            </snapshot>
             <permissions>
                 <umask>
                     <permissive>true</permissive>

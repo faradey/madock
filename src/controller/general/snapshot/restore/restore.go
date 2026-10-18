@@ -15,6 +15,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/snapshotengine"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -142,6 +143,10 @@ func Execute() {
 		if w != nil {
 			w.Fail("%v", err)
 		}
+		// The deployer refusal has already said why, at length.
+		if !errors.Is(err, errDeployManaged) {
+			fmtc.ErrorLn(err.Error())
+		}
 		os.Exit(1)
 	}
 	os.Args = append(os.Args, "-c")
@@ -212,8 +217,31 @@ func RestoreSnapshot(projectName string, projectConf map[string]string, selected
 		return errDeployManaged
 	}
 
+	// A snapshot whose databases an engine took is restored by that engine —
+	// the one its marker names, which need not be what the project is set to
+	// now. Both are checked before anything is taken down: a restore that
+	// cannot finish must not start.
+	snapshotDir := dbsPath + "/" + snapshotNames[selectedInt-1]
+	marker, byEngine, err := snapshotengine.ReadMarker(snapshotDir)
+	if err != nil {
+		return err
+	}
+	var engine snapshotengine.Engine
+	if byEngine {
+		var ok bool
+		engine, ok = snapshotengine.ByName(marker.Engine)
+		if !ok {
+			return fmt.Errorf("%w: this snapshot's databases are held by %q", snapshotengine.ErrUnknown, marker.Engine)
+		}
+	}
+
 	containerName := docker.GetContainerName(projectConf, projectName, "snapshot")
 	docker.Down(projectName, false)
+	if byEngine {
+		if err := engine.Restore(snapshotengine.Project{Name: projectName, Conf: projectConf}, marker.Ref); err != nil {
+			return fmt.Errorf("%s restore of the databases: %w", marker.Engine, err)
+		}
+	}
 	docker.UpSnapshot(projectName)
 	if paths.IsFileExist(dbsPath + "/" + snapshotNames[selectedInt-1] + "/db.tar.gz") {
 		selectedFile, err := os.Open(dbsPath + "/" + snapshotNames[selectedInt-1] + "/db.tar.gz")

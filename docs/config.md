@@ -364,6 +364,19 @@ nothing — the proxy reads the installation's config only. A value nginx cannot
 read stops the proxy, and the proxy serves every project on the machine; check
 `madock proxy:logs` after a change.
 
+### Snapshots
+
+| Key | Default | What it is |
+|---|---|---|
+| `snapshot/engine` | `tar` | what `snapshot:create`, `snapshot:restore` and `project:clone` copy the databases (`dbdata`, `dbdata2`) with. `tar` stops the project and archives the data directory. Any other value is an engine a build registers — madock Pro adds them; a value this build does not have is refused, not copied with `tar` |
+| `snapshot/live` | `auto` | `auto`: an engine whose snapshot is atomic keeps the project running; `stop`: the project is stopped for every snapshot |
+
+Project files are archived with `tar` whatever the engine. A snapshot taken by
+an engine holds `engine.json` in place of `db.tar.gz`, and `snapshot:restore`
+hands it back to that engine — the one the snapshot names, not the one the
+project is set to now — so snapshots taken before the key changed restore as
+they always did.
+
 ## Node.js in two places, and they are different questions
 
 ```bash
