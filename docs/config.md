@@ -318,6 +318,7 @@ An upload has to pass three limits, and the smallest one wins:
 | Key | Default | What it is | Applied by |
 |---|---|---|---|
 | `db/memory` | `768M` | the database's budget, divided between its buffers in `my.cnf` | db restart |
+| `db/flush_log_at_trx_commit` | `0` | `innodb_flush_log_at_trx_commit` in `my.cnf`, MySQL and MariaDB. `0` writes the redo log about once a second, so a crash of the machine loses up to a second of acknowledged commits; `1` makes each commit durable before it returns; `2` survives the database crashing but not the machine. madock Pro defaults to `1` | db restart |
 | `search/opensearch/heap` | `1g` | the JVM heap | search recreate |
 | `search/opensearch/memory_limit` | `2512m` | the container's limit | search recreate |
 | `search/elasticsearch/heap` | `800m` | the JVM heap | search recreate |
