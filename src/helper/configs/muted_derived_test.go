@@ -26,6 +26,28 @@ func TestAMutedCloneRunsNoCronAndSendsNoMail(t *testing.T) {
 	}
 }
 
+// A registered rule runs inside applyDerived, after madock's own, so what it
+// sets is what every reader of the configuration sees — and before the
+// sendmail argument is rendered from php/sendmail.
+func TestARegisteredDerivedRuleRunsAfterMadocksOwn(t *testing.T) {
+	saved := derivedExtensions
+	t.Cleanup(func() { derivedExtensions = saved })
+	RegisterDerived(func(conf map[string]string) {
+		if conf["cron/enabled"] == "false" {
+			conf["isolation/enabled"] = "true"
+		}
+		conf["php/sendmail/from"] = "noreply@example.com"
+	})
+	conf := map[string]string{"clone/muted": "true", "cron/enabled": "true"}
+	applyDerived(conf)
+	if conf["isolation/enabled"] != "true" {
+		t.Errorf("the rule did not see madock's own muted override, or did not run: %v", conf)
+	}
+	if conf["php/sendmail/from_argument"] != " --from=noreply@example.com" {
+		t.Errorf("the sendmail argument was rendered before the rule ran: %q", conf["php/sendmail/from_argument"])
+	}
+}
+
 func TestAnUnmutedProjectKeepsItsSettings(t *testing.T) {
 	conf := map[string]string{"clone/muted": "false", "cron/enabled": "true", "php/sendmail/host": "relay.example.com"}
 	applyDerived(conf)

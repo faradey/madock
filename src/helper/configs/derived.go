@@ -148,11 +148,29 @@ func applyDerived(conf map[string]string) {
 	// whole argument here rather than the address keeps the template free of a
 	// conditional it cannot express — an unset address has to produce nothing at
 	// all, not an empty --from=.
+	// Extensions after madock's own rules and before from_argument, which is
+	// rendered from whatever they leave in php/sendmail.
+	for _, derive := range derivedExtensions {
+		derive(conf)
+	}
+
 	if from := strings.TrimSpace(conf["php/sendmail/from"]); from != "" {
 		conf["php/sendmail/from_argument"] = " --from=" + from
 	} else {
 		conf["php/sendmail/from_argument"] = ""
 	}
+}
+
+// derivedExtensions are the rules another edition adds to applyDerived.
+var derivedExtensions []func(conf map[string]string)
+
+// RegisterDerived adds a rule that adjusts the assembled configuration, the way
+// applyDerived does: a value that follows from others, decided once where the
+// configuration is built, so that every reader — status, start, the templates —
+// sees the same answer. Extension point for madock-pro, which turns isolation on
+// for a muted clone and for an outbound allowlist; community registers nothing.
+func RegisterDerived(derive func(conf map[string]string)) {
+	derivedExtensions = append(derivedExtensions, derive)
 }
 
 // deployRelativeRoot puts the active release between the mount point and the
