@@ -52,7 +52,12 @@ func stamp(name string) string {
 // space for good and no command lists it. And an engine that refuses to drop
 // (zfs will, while a clone still lives on the snapshot) keeps the directory, so
 // the snapshot stays restorable and visible instead of half gone.
-func Remove(dir, name string) error {
+//
+// The project travels with its configuration: an engine finds its storage from
+// it (snapshot/zfs/parent, snapshot/btrfs/path), and the first version passed
+// the name alone — every engine snapshot would have been "kept" with a refusal
+// about a missing setting.
+func Remove(project snapshotengine.Project, dir, name string) error {
 	path := filepath.Join(dir, name)
 	marker, byEngine, err := snapshotengine.ReadMarker(path)
 	if err != nil {
@@ -63,10 +68,7 @@ func Remove(dir, name string) error {
 		if !ok {
 			return fmt.Errorf("%w: snapshot %s is held by %q, so it cannot be dropped by this build", snapshotengine.ErrUnknown, name, marker.Engine)
 		}
-		// The project's name is the snapshot directory's grandparent:
-		// projects/<name>/backup/snapshot/<snapshot>.
-		project := filepath.Base(filepath.Dir(filepath.Dir(filepath.Dir(path))))
-		if err := engine.Drop(snapshotengine.Project{Name: project}, marker.Ref); err != nil {
+		if err := engine.Drop(project, marker.Ref); err != nil {
 			return fmt.Errorf("%s would not drop snapshot %s (a clone may still live on it): %w", marker.Engine, name, err)
 		}
 	}
@@ -87,7 +89,7 @@ func Keep(projectConf map[string]string) int {
 // be removed — an engine snapshot a clone still lives on — is skipped and said,
 // and the next oldest is tried, so a pinned snapshot does not stop the rest
 // from being cleaned. It counts towards keep all the same: it is there.
-func Prune(dir string, keep int) (removed []string) {
+func Prune(project snapshotengine.Project, dir string, keep int) (removed []string) {
 	if keep <= 0 {
 		return nil
 	}
@@ -97,7 +99,7 @@ func Prune(dir string, keep int) (removed []string) {
 		if excess <= 0 {
 			break
 		}
-		if err := Remove(dir, name); err != nil {
+		if err := Remove(project, dir, name); err != nil {
 			fmtc.WarningLn("Kept snapshot " + name + ": " + err.Error())
 			continue
 		}

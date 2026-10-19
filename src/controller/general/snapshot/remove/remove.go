@@ -12,6 +12,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/output"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/snapshotengine"
 )
 
 // A snapshot could be made and restored and never removed. With tar that was a
@@ -55,12 +56,13 @@ func Execute() {
 		os.Exit(1)
 	}
 
-	dir := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/backup/snapshot"
+	project := snapshotengine.Project{Name: configs.GetProjectName(), Conf: configs.GetCurrentProjectConfig()}
+	dir := paths.GetExecDirPath() + "/projects/" + project.Name + "/backup/snapshot"
 	name := restore.MatchName(create.OrderedNames(dir), args.Name)
 	if name == "" {
 		fail(fmt.Sprintf("No snapshot named %q", args.Name))
 	}
-	if err := create.Remove(dir, name); err != nil {
+	if err := create.Remove(project, dir, name); err != nil {
 		fail(err.Error())
 	}
 	if w != nil {

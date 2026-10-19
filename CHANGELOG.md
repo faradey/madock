@@ -1,6 +1,7 @@
 **Unreleased**
 
 Fixed:
+- **`snapshot:remove` and `snapshot/keep` could not drop a snapshot an engine holds.** The engine was handed the project's name without its configuration, and the engines find their storage from it (`snapshot/zfs/parent`, `snapshot/btrfs/path`) — every such snapshot would have been kept with a refusal about a missing setting. Found reading the madock Pro engines before using the call there, not in use. `TestAPinnedSnapshotStaysAndTheNextOldestGoes` fails with the name-only project
 - **A binary with new templates kept the old ones on disk when its version number had not moved.** Extraction ran only when `.embedded_version` differed from the version constant, and between releases that constant does not change — every `-norelease` tag reports the release before it. Found on a server: madock Pro 0.69.0 swapped in, and `my.cnf` stayed the previous one because both builds said 4.4.6. The stamp is now the version and a digest of the templates and scripts the binary carries (`4.4.6 sha256:…`), so any change to them is extracted once and an unchanged build still extracts nothing. Every installation extracts once after updating, because the old stamp has no digest. `TestExtractIfNeeded_NewTemplatesUnderTheSameVersionAreExtracted` fails with the version-only stamp
 
 Added:

@@ -122,7 +122,8 @@ func Execute() {
 // pruneAfterCreate applies snapshot/keep once the new snapshot exists, so a
 // failed capture never costs an old one.
 func pruneAfterCreate(projectConf map[string]string, dest string) {
-	for _, name := range Prune(dest, Keep(projectConf)) {
+	project := snapshotengine.Project{Name: configs.GetProjectName(), Conf: projectConf}
+	for _, name := range Prune(project, dest, Keep(projectConf)) {
 		fmtc.TitleLn("Removed old snapshot " + name + " (snapshot/keep " + projectConf["snapshot/keep"] + ")")
 	}
 }
