@@ -21,7 +21,12 @@ func (pinEngine) Live() bool                                                 { r
 func (pinEngine) Capture(snapshotengine.Project, string) (string, error)     { return "", nil }
 func (pinEngine) Restore(snapshotengine.Project, string) error               { return nil }
 func (pinEngine) Clone(snapshotengine.Project, snapshotengine.Project) error { return nil }
-func (e pinEngine) Drop(_ snapshotengine.Project, ref string) error {
+func (e pinEngine) Drop(p snapshotengine.Project, ref string) error {
+	// An engine finds its storage from the project's configuration; a drop
+	// without it is the bug the first version had.
+	if p.Conf["snapshot/zfs/parent"] == "" {
+		return errors.New("no snapshot/zfs/parent: the project's configuration did not reach the engine")
+	}
 	if e.pinned[ref] {
 		return errors.New("snapshot has dependent clones")
 	}
@@ -30,6 +35,10 @@ func (e pinEngine) Drop(_ snapshotengine.Project, ref string) error {
 }
 
 var dropped []string
+
+// shop is the project the snapshots below belong to, with the setting an
+// engine needs to find them.
+var shop = snapshotengine.Project{Name: "shop", Conf: map[string]string{"snapshot/zfs/parent": "tank/madock"}}
 
 func init() {
 	snapshotengine.Register("prune-test", pinEngine{pinned: map[string]bool{"ref-oldest": true}, dropped: &dropped})
@@ -65,7 +74,7 @@ func TestKeepWithoutAValueIsNoLimit(t *testing.T) {
 	}
 	dir := snapshotDir(t)
 	makeSnapshot(t, dir, "snapshot-2026-01-01-00-00-00", "")
-	if removed := Prune(dir, 0); len(removed) != 0 {
+	if removed := Prune(shop, dir, 0); len(removed) != 0 {
 		t.Errorf("no limit removed %v", removed)
 	}
 }
@@ -78,7 +87,7 @@ func TestPruneRemovesTheOldestByTimestamp(t *testing.T) {
 	makeSnapshot(t, dir, "snapshot-aaa-2026-03-01-00-00-00", "")
 	makeSnapshot(t, dir, "snapshot-2026-02-01-00-00-00", "")
 
-	removed := Prune(dir, 2)
+	removed := Prune(shop, dir, 2)
 	if strings.Join(removed, ",") != "snapshot-zzz-2026-01-01-00-00-00" {
 		t.Fatalf("removed %v, want the January one", removed)
 	}
@@ -97,7 +106,7 @@ func TestAPinnedSnapshotStaysAndTheNextOldestGoes(t *testing.T) {
 	makeSnapshot(t, dir, "snapshot-2026-02-01-00-00-00", "ref-middle")
 	makeSnapshot(t, dir, "snapshot-2026-03-01-00-00-00", "ref-newest")
 
-	removed := Prune(dir, 2)
+	removed := Prune(shop, dir, 2)
 	if strings.Join(removed, ",") != "snapshot-2026-02-01-00-00-00" {
 		t.Fatalf("removed %v, want the middle one", removed)
 	}
@@ -120,7 +129,7 @@ func TestRemoveKeepsTheDirectoryWhenTheEngineIsMissing(t *testing.T) {
 	if err := snapshotengine.WriteMarker(path, snapshotengine.Marker{Engine: "no-such-engine", Ref: "r"}); err != nil {
 		t.Fatal(err)
 	}
-	if err := Remove(dir, "snapshot-2026-01-01-00-00-00"); !errors.Is(err, snapshotengine.ErrUnknown) {
+	if err := Remove(shop, dir, "snapshot-2026-01-01-00-00-00"); !errors.Is(err, snapshotengine.ErrUnknown) {
 		t.Fatalf("removing a snapshot held by a missing engine: %v", err)
 	}
 	if _, err := os.Stat(path); err != nil {
