@@ -187,6 +187,24 @@ func Execute() {
 		create.CopyStandingStill(projectConf, projectName, dest)
 	}
 
+	// Code the engine keeps: the clone of the storage already holds it, so the
+	// clone's directory beside the source becomes a link to it, and no
+	// files.tar.gz was written to unpack.
+	codeEngine := engine
+	if from.dir != "" {
+		codeEngine = nil
+		if from.engine != nil {
+			codeEngine = from.engine.(snapshotengine.Engine)
+		}
+	}
+	if codeEngine != nil {
+		if dir := snapshotengine.CodeDirOf(codeEngine, clone); dir != "" {
+			if err := linkCode(clonePath, dir); err != nil {
+				refuse(w, err.Error())
+			}
+		}
+	}
+
 	containerName := docker.GetContainerName(cloneProjectConf, cloneName, "snapshot")
 	if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
 		err := os.Remove(paths.CacheDir() + "/conf-cache")
@@ -426,6 +444,23 @@ func linkArchives(snapshotDir, dest string) error {
 		}
 	}
 	return nil
+}
+
+// linkCode replaces the clone's freshly made, empty directory with a link to
+// where its engine keeps the code. A directory that is not empty is refused:
+// something is there that the link would hide.
+func linkCode(clonePath, codeDir string) error {
+	entries, err := os.ReadDir(clonePath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if len(entries) > 0 {
+		return fmt.Errorf("%s is not empty; the clone's code is in %s and cannot be linked there", clonePath, codeDir)
+	}
+	if err := os.Remove(clonePath); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return os.Symlink(codeDir, clonePath)
 }
 
 // applyDomainSuffix inserts suffix before the last dot of domain. If domain

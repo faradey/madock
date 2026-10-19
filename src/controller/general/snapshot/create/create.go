@@ -173,15 +173,19 @@ func captureWithEngine(w *output.Writer, engine snapshotengine.Engine, engineNam
 		fmtc.WarningLn("Skipping the database: this project does not run its own db service.")
 	}
 
+	// The code too, unless the engine's snapshot already holds it.
+	takesCode := snapshotengine.CodeDirOf(engine, snapshotengine.Project{Name: projectName, Conf: projectConf}) != ""
 	if stop || !wasRunning {
 		docker.UpSnapshot(projectName)
 		helper := docker.GetContainerName(projectConf, projectName, "snapshot")
 		if !snapshotengine.TakesAll(engine) {
 			archiveVolumes(helper, snapshotengine.Others(projectConf), dbsPath)
 		}
-		archiveFiles(helper, snapshotVolumePaths.files, dbsPath)
+		if !takesCode {
+			archiveFiles(helper, snapshotVolumePaths.files, dbsPath)
+		}
 		docker.StopSnapshot(projectName)
-	} else {
+	} else if !takesCode {
 		GetFiles(projectConf, projectName, dbsPath)
 	}
 
@@ -277,15 +281,18 @@ func CloneWithEngine(engine snapshotengine.Engine, engineName string, projectCon
 		}
 	}
 
+	takesCode := snapshotengine.CodeDirOf(engine, snapshotengine.Project{Name: projectName, Conf: projectConf}) != ""
 	if stop || !wasRunning {
 		docker.UpSnapshot(projectName)
 		helper := docker.GetContainerName(projectConf, projectName, "snapshot")
 		if !snapshotengine.TakesAll(engine) {
 			archiveVolumes(helper, snapshotengine.Others(projectConf), dest)
 		}
-		archiveFiles(helper, snapshotVolumePaths.files, dest)
+		if !takesCode {
+			archiveFiles(helper, snapshotVolumePaths.files, dest)
+		}
 		docker.StopSnapshot(projectName)
-	} else {
+	} else if !takesCode {
 		GetFiles(projectConf, projectName, dest)
 	}
 	restart()
