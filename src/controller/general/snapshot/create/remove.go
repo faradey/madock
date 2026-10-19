@@ -59,6 +59,11 @@ func stamp(name string) string {
 // about a missing setting.
 func Remove(project snapshotengine.Project, dir, name string) error {
 	path := filepath.Join(dir, name)
+	// Before the engine drops anything: a snapshot something else lives on
+	// stays whole, its engine snapshot included.
+	if reason := snapshotengine.InUse(project, path); reason != "" {
+		return fmt.Errorf("snapshot %s is in use: %s", name, reason)
+	}
 	marker, byEngine, err := snapshotengine.ReadMarker(path)
 	if err != nil {
 		return err
