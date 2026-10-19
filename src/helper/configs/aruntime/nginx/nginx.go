@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -260,6 +261,7 @@ func makeProxy(projectName string) {
 					if projectConf["varnish/enabled"] == "true" {
 						upstreamPort = ports.GetPort(name, "varnish")
 					}
+					upstreamServer, upstreamResolve := MainUpstream(projectConf, name, upstreamPort)
 
 					// HTTP/2 directive (new nginx 1.25+ syntax)
 					http2Directive := ""
@@ -290,7 +292,8 @@ func makeProxy(projectName string) {
 					// and come from the general config, not from the project
 					// whose block this is.
 					strReplaced := project.Render(name, nginxDefFile, "nginx/conf/default-proxy.conf", map[string]string{
-						"main_upstream_server":  "host.docker.internal:" + strconv.Itoa(upstreamPort),
+						"main_upstream_server":  upstreamServer,
+						"main_upstream_resolve": upstreamResolve,
 						"nginx/port/unsecure":   generalConfig["nginx/port/unsecure"],
 						"nginx/port/secure":     generalConfig["nginx/port/secure"],
 						"nginx/http2/directive": http2Directive,
@@ -329,6 +332,7 @@ func makeProxy(projectName string) {
 	if generalConfig["nginx/http/version"] == "http2" {
 		http2DefaultDirective = "\n    http2 on;"
 	}
+	allFileData += ResolverFor(allFileData)
 	allFileData += "\nserver {\n    listen       " + generalConfig["nginx/port/unsecure"] + "  default_server;\n    listen " + generalConfig["nginx/port/secure"] + " default_server ssl;" + http2DefaultDirective + "\n    server_name  _;\n    return       444;\n    ssl_certificate /sslcert/fullchain.crt;\n    ssl_certificate_key /sslcert/madock.local.key;\n    include /sslcert/options-ssl-nginx.conf; \n}\n"
 	allFileData += "\n}"
 	nginxFile := paths.MakeDirsByPath(paths.CtxDir()) + "/proxy.conf"
@@ -339,6 +343,57 @@ func makeProxy(projectName string) {
 	}
 	/* END Create nginx default configuration for Magento2 */
 }
+
+// MainUpstream is where the shared proxy sends a project's traffic, and
+// whether nginx has to resolve that name itself.
+//
+// With ports/publish on — every project until that key existed — it is the
+// port the project publishes on the host, reached through host.docker.internal.
+// With it off nothing is published, and the proxy reaches the project's web
+// server (or varnish in front of it) over the madock-proxy network by the
+// container's name, at the port inside the container.
+//
+// A name needs `resolve`, and that is not a detail. nginx resolves the names in
+// an upstream block when it loads its configuration, and a name it cannot
+// resolve is `[emerg] host not found in upstream` — the proxy exits. A stopped
+// project keeps its block on purpose, and its container is not in docker's DNS,
+// so without `resolve` stopping one such project would take the shared proxy,
+// and every other project behind it, down at its next reload. With `resolve`
+// (nginx 1.27.3 and later) the name is looked up at run time through the
+// resolver ResolverFor adds, and an absent container is an unavailable server.
+func MainUpstream(projectConf map[string]string, projectName string, publishedPort int) (server, resolve string) {
+	if projectConf["ports/publish"] != "false" {
+		return "host.docker.internal:" + strconv.Itoa(publishedPort), ""
+	}
+	service, port := "nginx", "80"
+	if projectConf["varnish/enabled"] == "true" {
+		service, port = "varnish", "6081"
+	}
+	return containerName(projectConf, projectName, service) + ":" + port, "true"
+}
+
+// containerName is docker.GetContainerName, which this package cannot import —
+// helper/docker imports it. A test in nginx_test holds the two together.
+func containerName(projectConf map[string]string, projectName, service string) string {
+	scope := ""
+	if val, ok := projectConf["activeScope"]; ok && val != "default" {
+		scope = strings.ToLower("-" + val)
+	}
+	return strings.ToLower(projectConf["container_name_prefix"]) + strings.ToLower(projectName) + scope + "-" + service + "-1"
+}
+
+// ResolverFor is the resolver line the proxy needs when any upstream in it is
+// resolved at run time, and nothing otherwise — so a machine with no such
+// project renders the file it always did. 127.0.0.11 is docker's embedded DNS,
+// which answers for containers on the networks the proxy is attached to.
+func ResolverFor(proxyConf string) string {
+	if !upstreamResolves.MatchString(proxyConf) {
+		return ""
+	}
+	return "\n# Upstreams named by container are resolved at run time (ports/publish false)\nresolver 127.0.0.11 valid=10s ipv6=off;\n"
+}
+
+var upstreamResolves = regexp.MustCompile(`(?m)^\s*server \S+ resolve\b`)
 
 func makeDockerfile(projectName string) {
 	/* Create nginx Dockerfile configuration */

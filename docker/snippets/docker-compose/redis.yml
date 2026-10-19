@@ -5,6 +5,13 @@
       context: ctx
       dockerfile: redis.Dockerfile
     restart: {{{.restart_policy}}}
+    {{{- if .redis.persist}}}
+    # A named volume, so the data survives a recreated container and travels
+    # with snapshots and clones. Without it the image's own anonymous volume
+    # holds /data, which no snapshot sees and a `down` leaves behind.
+    volumes:
+      - redisdata:/data
+    {{{- end}}}
 {{{- end}}}
     {{{- if and .redis.enabled .isolation.enabled}}}
     networks:

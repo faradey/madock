@@ -8,8 +8,10 @@
     platform: linux/amd64
     {{{- end}}}
     image: {{{.search.opensearch.dashboard.repository}}}:{{{.search.opensearch.version}}}
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "opensearchdashboard"}}}:5601"
+    {{{- end}}}
     environment:
       SERVER_BASEPATH: /opensearch-dashboard
       OPENSEARCH_HOSTS: '["http://opensearch:9200"]'

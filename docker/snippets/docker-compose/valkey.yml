@@ -3,6 +3,11 @@
     init: true
     image: {{{.valkey.repository}}}:{{{.valkey.version}}}
     restart: {{{.restart_policy}}}
+    {{{- if .valkey.persist}}}
+    # Same reason as redisdata: a named volume is one snapshots and clones see.
+    volumes:
+      - valkeydata:/data
+    {{{- end}}}
 {{{- end}}}
     {{{- if and .valkey.enabled .isolation.enabled}}}
     networks:

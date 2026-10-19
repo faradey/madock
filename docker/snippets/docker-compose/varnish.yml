@@ -2,8 +2,10 @@
   varnish:
     init: true
     image: {{{.varnish.repository}}}:{{{.varnish.version}}}
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "varnish"}}}:6081"
+    {{{- end}}}
     volumes:
       - ./src/{{{.varnish.config_file}}}:/etc/varnish/default.vcl:ro
     extra_hosts:
@@ -23,6 +25,11 @@
       - default
       {{{- if .isolation.enabled}}}
       - isolated
+      {{{- end}}}
+      {{{- if not .ports.publish}}}
+      # Varnish is what the shared proxy talks to when it is enabled; with no
+      # port on the host it is reached on this network, by the container's name.
+      - madock-proxy
       {{{- end}}}
     restart: {{{.restart_policy}}}
 {{{- end}}}

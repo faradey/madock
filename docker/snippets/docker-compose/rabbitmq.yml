@@ -2,12 +2,22 @@
   rabbitmq:
     init: true
     image: {{{.rabbitmq.repository}}}:{{{.rabbitmq.version}}}-management
+    {{{- if .rabbitmq.persist}}}
+    # RabbitMQ keeps its data under the node name, rabbit@<hostname>, and a new
+    # container gets a new hostname: without a fixed one, a restored or cloned
+    # volume is ignored and the broker starts empty beside it.
+    hostname: rabbitmq
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    {{{- end}}}
     environment:
       RABBITMQ_DEFAULT_USER: {{{.rabbitmq.user}}}
       RABBITMQ_DEFAULT_PASS: {{{.rabbitmq.password}}}
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "rabbitmq"}}}:5672"
       - "{{{port "rabbitmq_management"}}}:15672"
+    {{{- end}}}
     networks:
       - default
       {{{- if .isolation.enabled}}}

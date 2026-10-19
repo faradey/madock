@@ -118,6 +118,7 @@ func knownKeys(t *testing.T) map[string]bool {
 		"main_service_enabled",  // and whether it is part of the stack at all
 		"main_service_port",     // the port to proxy to when it is not php
 		"main_upstream_server",  // host:port of the shared proxy's upstream
+		"main_upstream_resolve", // "true" when that upstream is a container name (ports/publish false)
 		"project_name",          // lowercased, as containers are named
 		"scope",                 // the active scope, as a name suffix
 		"nginx/hosts",           // the ordered host list, never empty

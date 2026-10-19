@@ -3,8 +3,10 @@
     init: true
     image: {{{.magento.mftf.selenium.repository}}}:{{{.magento.mftf.selenium.version}}}
     platform: linux/amd64
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "selenium"}}}:7900"
+    {{{- end}}}
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{- range $host := .nginx.hosts}}}

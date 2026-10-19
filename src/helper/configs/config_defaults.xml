@@ -437,6 +437,7 @@
                 <enabled>false</enabled>
                 <repository>redis</repository>
                 <version>7.2.3</version>
+                <persist>false</persist>
                 <auth>
                     <enabled>false</enabled>
                     <password></password>
@@ -446,6 +447,7 @@
                 <enabled>false</enabled>
                 <repository>valkey/valkey</repository>
                 <version>8.1.3</version>
+                <persist>false</persist>
                 <auth>
                     <enabled>false</enabled>
                     <password></password>
@@ -462,6 +464,7 @@
                 <enabled>false</enabled>
                 <repository>rabbitmq</repository>
                 <version>3.12.10</version>
+                <persist>false</persist>
                 <user>guest</user>
                 <password>guest</password>
             </rabbitmq>
@@ -761,7 +764,22 @@
             <snapshot>
                 <engine>tar</engine>
                 <live>auto</live>
+                <keep>0</keep>
             </snapshot>
+            <clone>
+                <!-- true for a copy that must not act as its source: cron is off
+                     and cannot be turned on, PHP's mail() goes to mailpit
+                     whatever php/sendmail says. project:clone sets it on the
+                     clone when asked for a muted one. -->
+                <muted>false</muted>
+            </clone>
+            <ports>
+                <!-- false publishes no port of the project on the host: the
+                     shared proxy reaches its web server over the madock-proxy
+                     network by name, and that proxy is the only way in. For a
+                     server whose projects must not be reachable around it. -->
+                <publish>true</publish>
+            </ports>
             <permissions>
                 <umask>
                     <permissive>true</permissive>

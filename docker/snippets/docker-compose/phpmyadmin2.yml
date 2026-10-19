@@ -2,8 +2,10 @@
   phpmyadmin2:
     init: true
     image: {{{.db2.phpmyadmin.repository}}}:{{{.db2.phpmyadmin.version}}}
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "phpmyadmin2"}}}:80"
+    {{{- end}}}
     environment:
       PMA_HOST: "db2"
       PMA_PORT: 3306

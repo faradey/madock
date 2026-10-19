@@ -65,6 +65,7 @@ func Execute() {
 
 	if engine != nil {
 		captureWithEngine(w, engine, engineName, projectConf, projectName, name, dbsPath)
+		pruneAfterCreate(projectConf, dest)
 		if w != nil {
 			w.Print(Describe(dest, name))
 			return
@@ -96,6 +97,7 @@ func Execute() {
 	container := docker.GetContainerName(projectConf, projectName, "snapshot")
 
 	archiveDatabases(projectConf, projectName, container, snapshotVolumePaths, dbsPath)
+	archiveVolumes(container, snapshotengine.Others(projectConf), dbsPath)
 	archiveFiles(container, snapshotVolumePaths.files, dbsPath)
 
 	docker.StopSnapshot(projectName)
@@ -107,12 +109,22 @@ func Execute() {
 		}
 	}
 
+	pruneAfterCreate(projectConf, dest)
+
 	if w != nil {
 		w.Print(Describe(dest, name))
 		return
 	}
 
 	fmt.Println("Snapshot completed successfully")
+}
+
+// pruneAfterCreate applies snapshot/keep once the new snapshot exists, so a
+// failed capture never costs an old one.
+func pruneAfterCreate(projectConf map[string]string, dest string) {
+	for _, name := range Prune(dest, Keep(projectConf)) {
+		fmtc.TitleLn("Removed old snapshot " + name + " (snapshot/keep " + projectConf["snapshot/keep"] + ")")
+	}
 }
 
 // captureWithEngine takes the databases with the project's engine and the files
@@ -162,7 +174,11 @@ func captureWithEngine(w *output.Writer, engine snapshotengine.Engine, engineNam
 
 	if stop || !wasRunning {
 		docker.UpSnapshot(projectName)
-		archiveFiles(docker.GetContainerName(projectConf, projectName, "snapshot"), snapshotVolumePaths.files, dbsPath)
+		helper := docker.GetContainerName(projectConf, projectName, "snapshot")
+		if !snapshotengine.TakesAll(engine) {
+			archiveVolumes(helper, snapshotengine.Others(projectConf), dbsPath)
+		}
+		archiveFiles(helper, snapshotVolumePaths.files, dbsPath)
 		docker.StopSnapshot(projectName)
 	} else {
 		GetFiles(projectConf, projectName, dbsPath)
@@ -262,7 +278,11 @@ func CloneWithEngine(engine snapshotengine.Engine, engineName string, projectCon
 
 	if stop || !wasRunning {
 		docker.UpSnapshot(projectName)
-		archiveFiles(docker.GetContainerName(projectConf, projectName, "snapshot"), snapshotVolumePaths.files, dest)
+		helper := docker.GetContainerName(projectConf, projectName, "snapshot")
+		if !snapshotengine.TakesAll(engine) {
+			archiveVolumes(helper, snapshotengine.Others(projectConf), dest)
+		}
+		archiveFiles(helper, snapshotVolumePaths.files, dest)
 		docker.StopSnapshot(projectName)
 	} else {
 		GetFiles(projectConf, projectName, dest)
@@ -345,6 +365,7 @@ func CopyStandingStill(projectConf map[string]string, projectName, dest string) 
 	container := docker.GetContainerName(projectConf, projectName, "snapshot")
 
 	archiveDatabases(projectConf, projectName, container, snapshotVolumePaths, dest)
+	archiveVolumes(container, snapshotengine.Others(projectConf), dest)
 	archiveFiles(container, snapshotVolumePaths.files, dest)
 
 	docker.StopSnapshot(projectName)
@@ -404,6 +425,77 @@ func archiveDatabases(projectConf map[string]string, projectName, container stri
 		}
 		archiveDataDir(db2Container, dirs.db2, dbsPath+"db2.tar.gz")
 	}
+}
+
+// archiveVolumes writes one archive per named volume other than the databases —
+// the search index, monitoring data, Redis and RabbitMQ when persisted — each
+// from its mount in the helper container. The project is down whenever this
+// runs (snapshotengine.Stops makes sure of it), so a change mid-copy is as fatal
+// here as it is for a database: an index copied while being written is torn.
+func archiveVolumes(container string, volumes []snapshotengine.Volume, dest string) {
+	for _, v := range volumes {
+		fmtc.TitleLn("Copying volume " + v.Name + "...")
+		archiveDataDir(container, v.Mount(), dest+v.Archive())
+	}
+}
+
+// RestoreVolumes puts the archives archiveVolumes wrote back into the helper
+// container's mounts. snapshot:restore and project:clone both call it with the
+// helper up and the project's own containers down.
+//
+// Two mismatches are said rather than hidden. A snapshot taken before a volume
+// was carried has no archive for it: the volume is left as it is, which for a
+// restore means the index of today beside the database of then. A snapshot
+// holding a volume the project no longer declares (search switched off, another
+// version) is skipped, since there is nowhere to put it.
+func RestoreVolumes(container string, volumes []snapshotengine.Volume, dir string) error {
+	wanted := map[string]bool{}
+	for _, v := range volumes {
+		wanted[v.Archive()] = true
+		path := filepath.Join(dir, v.Archive())
+		if !paths.IsFileExist(path) {
+			fmtc.WarningLn("The snapshot holds no copy of volume " + v.Name + "; it is left as it is.")
+			continue
+		}
+		fmtc.TitleLn("Restoring volume " + v.Name + "...")
+		if err := extract(container, v.Mount(), path); err != nil {
+			return fmt.Errorf("volume %s: %w", v.Name, err)
+		}
+	}
+	entries, _ := os.ReadDir(dir)
+	for _, e := range entries {
+		name := e.Name()
+		if strings.HasPrefix(name, "vol-") && strings.HasSuffix(name, ".tar.gz") && !wanted[name] {
+			fmtc.WarningLn("The snapshot holds " + name + ", a volume this project no longer has; skipped.")
+		}
+	}
+	return nil
+}
+
+// extract empties dir inside the container and unpacks archivePath into it.
+// find -delete rather than rm -rf dir/*: the glob misses dot files, and a
+// broker's or an index's data directory has them.
+func extract(container, dir, archivePath string) error {
+	file, err := os.Open(archivePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	// archive gzips twice; the outer layer comes off here, the inner one in tar.
+	unzipped, err := gzip.NewReader(file)
+	if err != nil {
+		return err
+	}
+	defer unzipped.Close()
+	cmd, err := docker.PrepareContainerExec(container, "root", false, "bash", "-c",
+		"cd "+dir+" || exit 2; find . -mindepth 1 -delete && tar -zxf -")
+	if err != nil {
+		return err
+	}
+	cmd.Stdin = unzipped
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 // archiveDataDir copies a database container's data directory into an archive.

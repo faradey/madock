@@ -44,9 +44,32 @@ madock snapshot:list
 
 Oldest first, by the timestamp at the end of each name.
 
+### Remove a snapshot
+
+```bash
+madock snapshot:remove --name=before-upgrade-247
+```
+
+The name is matched as `snapshot:restore --name` matches it. With a snapshot
+engine, the engine's snapshot is dropped first and the directory after; if the
+engine refuses (a clone still lives on it), both stay. Deleting the directory by
+hand would leave the engine's snapshot holding its space.
+
+`snapshot/keep` does the same automatically: after each `snapshot:create`, the
+oldest snapshots are removed until that many remain (`0`, the default, keeps
+all).
+
+### Clone from a snapshot
+
+```bash
+madock project:clone --name=shop-demo --domain-suffix=-demo --from=golden
+```
+
+See [project_clone.md](project_clone.md).
+
 ### JSON
 
-`snapshot:create`, `snapshot:list` and `snapshot:restore` answer `--json` (`-j`)
+`snapshot:create`, `snapshot:list`, `snapshot:remove` and `snapshot:restore` answer `--json` (`-j`)
 with one document on stdout — `{"success": true, "data": …}` or
 `{"success": false, "error": "…"}` — and the exit status agrees with it. The
 progress the commands print goes to stderr while they run. `snapshot:restore
@@ -107,7 +130,25 @@ backup directory:
 ```
 
 Each snapshot is a directory holding `db.tar.gz`, `files.tar.gz` and, when the
-project has a second database, `db2.tar.gz`.
+project has a second database, `db2.tar.gz`. Every other named volume of the
+project has its own `vol-<name>.tar.gz`:
+
+| Volume | When |
+|---|---|
+| `elasticsearch_vlm_<version>`, `opensearch_vlm_<version>`, `meilisearch_vlm_<version>` | the search engine is enabled |
+| `grafanadata`, `lokidata` | `grafana/enabled` |
+| `redisdata`, `valkeydata`, `rabbitmqdata` | the service is enabled **and** `<service>/persist` is `true` |
+
+Redis, Valkey and RabbitMQ have no named volume by default (`persist` is
+`false`): their data lives in the image's anonymous volume, survives
+`stop`/`start`, and is in no snapshot or clone. Set `<service>/persist` to `true`
+for it to be carried.
+
+A snapshot taken before a volume was carried has no archive for it, and a restore
+leaves that volume as it is — saying so. With a snapshot engine
+(`snapshot/engine`), the engine takes the databases; the other volumes still go
+through tar unless the engine takes them too, and the project is then stopped for
+the copy, since an index copied out of a running server is torn.
 
 ## Tips
 

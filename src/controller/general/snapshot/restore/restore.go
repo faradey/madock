@@ -8,6 +8,7 @@ import (
 
 	"github.com/faradey/madock/v4/src/command"
 	"github.com/faradey/madock/v4/src/controller/general/rebuild"
+	"github.com/faradey/madock/v4/src/controller/general/snapshot/create"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/cli/output"
@@ -288,6 +289,12 @@ func RestoreSnapshot(projectName string, projectConf map[string]string, selected
 		err = cmd.Run()
 		if err != nil {
 			logger.Fatal(err, containerName)
+		}
+	}
+
+	if !byEngine || !snapshotengine.TakesAll(engine) {
+		if err := create.RestoreVolumes(containerName, snapshotengine.Others(projectConf), snapshotDir); err != nil {
+			logger.Fatal(err)
 		}
 	}
 

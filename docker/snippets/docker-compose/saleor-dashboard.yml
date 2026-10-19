@@ -2,8 +2,10 @@
   dashboard:
     image: {{{.saleor.dashboard.repository}}}:{{{.saleor.dashboard.version}}}
     init: true
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "saleor_dashboard"}}}:80"
+    {{{- end}}}
     environment:
       API_URL: "{{{.saleor.dashboard.api_url}}}"
       APP_MOUNT_URI: "/"

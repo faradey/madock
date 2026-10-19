@@ -8,6 +8,8 @@ services:
       - ./src:/var/www/html
       - dbdata:/var/www/mysql
       - dbdata2:/var/www/mysql2/mysql
+      - opensearch_vlm_2.19.0:/var/www/volumes/opensearch_vlm_2.19.0
 volumes:
   dbdata:
   dbdata2:
+  opensearch_vlm_2.19.0:

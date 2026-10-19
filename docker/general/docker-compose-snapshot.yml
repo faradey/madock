@@ -10,8 +10,54 @@ services:
       {{{- if .db2.enabled}}}
       - dbdata2:/var/www/mysql2/mysql
       {{{- end}}}
+      {{{- /* Every other named volume, at /var/www/volumes/<name> (snapshotengine.Volume.Mount).
+      The conditions are volumes.yml's; a test holds the two lists together. */}}}
+      {{{- if .search.elasticsearch.enabled}}}
+      - elasticsearch_vlm_{{{.search.elasticsearch.version}}}:/var/www/volumes/elasticsearch_vlm_{{{.search.elasticsearch.version}}}
+      {{{- end}}}
+      {{{- if .search.opensearch.enabled}}}
+      - opensearch_vlm_{{{.search.opensearch.version}}}:/var/www/volumes/opensearch_vlm_{{{.search.opensearch.version}}}
+      {{{- end}}}
+      {{{- if .search.meilisearch.enabled}}}
+      - meilisearch_vlm_{{{.search.meilisearch.version}}}:/var/www/volumes/meilisearch_vlm_{{{.search.meilisearch.version}}}
+      {{{- end}}}
+      {{{- if .grafana.enabled}}}
+      - grafanadata:/var/www/volumes/grafanadata
+      - lokidata:/var/www/volumes/lokidata
+      {{{- end}}}
+      {{{- if and .redis.enabled .redis.persist}}}
+      - redisdata:/var/www/volumes/redisdata
+      {{{- end}}}
+      {{{- if and .valkey.enabled .valkey.persist}}}
+      - valkeydata:/var/www/volumes/valkeydata
+      {{{- end}}}
+      {{{- if and .rabbitmq.enabled .rabbitmq.persist}}}
+      - rabbitmqdata:/var/www/volumes/rabbitmqdata
+      {{{- end}}}
 volumes:
   dbdata:
   {{{- if .db2.enabled}}}
   dbdata2:
+  {{{- end}}}
+  {{{- if .search.elasticsearch.enabled}}}
+  elasticsearch_vlm_{{{.search.elasticsearch.version}}}:
+  {{{- end}}}
+  {{{- if .search.opensearch.enabled}}}
+  opensearch_vlm_{{{.search.opensearch.version}}}:
+  {{{- end}}}
+  {{{- if .search.meilisearch.enabled}}}
+  meilisearch_vlm_{{{.search.meilisearch.version}}}:
+  {{{- end}}}
+  {{{- if .grafana.enabled}}}
+  grafanadata:
+  lokidata:
+  {{{- end}}}
+  {{{- if and .redis.enabled .redis.persist}}}
+  redisdata:
+  {{{- end}}}
+  {{{- if and .valkey.enabled .valkey.persist}}}
+  valkeydata:
+  {{{- end}}}
+  {{{- if and .rabbitmq.enabled .rabbitmq.persist}}}
+  rabbitmqdata:
   {{{- end}}}

@@ -262,6 +262,16 @@ func goldenCases() []goldenCase {
 			// depends on one — the compose file is the whole point of the case,
 			// because a service left with `depends_on: nginx` is a file docker
 			// refuses to read.
+			// ports/publish false: no service publishes a port, and nginx joins
+			// madock-proxy so the shared proxy can reach it by name. A `ports:`
+			// left behind anywhere is a port reachable around the proxy.
+			name: "magento2-no-published-ports",
+			overrides: map[string]string{
+				"platform":      "magento2",
+				"ports/publish": "false",
+			},
+		},
+		{
 			name: "custom-none-no-nginx",
 			overrides: map[string]string{
 				"platform":        "custom",

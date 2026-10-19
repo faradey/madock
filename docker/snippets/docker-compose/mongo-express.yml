@@ -2,8 +2,10 @@
   mongo-express:
     init: true
     image: {{{.db.mongo_express.repository}}}:{{{.db.mongo_express.version}}}
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "mongo_express"}}}:8081"
+    {{{- end}}}
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: {{{.db.user}}}
       ME_CONFIG_MONGODB_ADMINPASSWORD: {{{.db.password}}}

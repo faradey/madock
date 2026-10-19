@@ -22,3 +22,12 @@ volumes:
   {{{- if .grafana.enabled}}}
   lokidata:
   {{{- end}}}
+  {{{- if and .redis.enabled .redis.persist}}}
+  redisdata:
+  {{{- end}}}
+  {{{- if and .valkey.enabled .valkey.persist}}}
+  valkeydata:
+  {{{- end}}}
+  {{{- if and .rabbitmq.enabled .rabbitmq.persist}}}
+  rabbitmqdata:
+  {{{- end}}}

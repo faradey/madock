@@ -205,6 +205,8 @@ type ControllerGeneralProjectClone struct {
 	// express: `-s -update` is read as two flags and fails with "missing value
 	// for -s". The help says `=` for that reason.
 	DomainSuffix string `arg:"-s,--domain-suffix,required" help:"Suffix appended to each host before the TLD dot, written with an equals sign: -s=-update turns shop.test into shop-update.test. Required to avoid domain collisions with the source project"`
+	From         string `arg:"--from" help:"Clone from this snapshot of the project instead of from the project as it is now. The project is not stopped or touched. A directory name, or the name given at creation (the newest one carrying it)"`
+	Muted        bool   `arg:"--muted" help:"Make a copy that cannot act as its source: clone/muted is set on it, so cron is off and mail() goes to mailpit, and a persisted RabbitMQ is emptied of the source's messages"`
 }
 
 type ControllerGeneralStatus struct {

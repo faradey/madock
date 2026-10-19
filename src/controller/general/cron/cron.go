@@ -48,6 +48,13 @@ func Enable() {
 	attr.Parse(new(ArgsStruct))
 	projectName := configs.GetProjectName()
 	projectConfig := configs.GetProjectConfig(projectName)
+	// A muted clone runs no cron, and saying so beats writing a value that
+	// applyDerived would quietly undo.
+	if projectConfig["clone/muted"] == "true" {
+		fmtc.ErrorLn("cron:enable is refused: this project is a muted clone (clone/muted is true), so its scheduled jobs would run as the project it was copied from.")
+		fmtc.ToDoLn("Set clone/muted to false first if this copy is meant to act on its own.")
+		os.Exit(1)
+	}
 	configs.SetParam(projectName, "cron/enabled", "true", projectConfig["activeScope"], "")
 	docker.CronExecute(projectName, true, true)
 	reportOverriddenSetting(projectName, "true")

@@ -4,9 +4,11 @@
     build:
       context: ctx
       dockerfile: nginx.Dockerfile
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "nginx"}}}:80"
       - "{{{port "nginx_ssl"}}}:443"
+    {{{- end}}}
     volumes:
       - ./src:/var/www/html:delegated
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
@@ -37,10 +39,19 @@
       - php_without_xdebug
       {{{- end}}}
     {{{- end}}}
-    {{{- if .isolation.enabled}}}
+    {{{- if or .isolation.enabled (not .ports.publish)}}}
     networks:
+      {{{- if .isolation.enabled}}}
       - opened
       - isolated
+      {{{- else}}}
+      - default
+      {{{- end}}}
+      {{{- if and (not .ports.publish) (not .varnish.enabled)}}}
+      # Nothing is published on the host, so the shared proxy reaches this
+      # container on its own network, by the container's name.
+      - madock-proxy
+      {{{- end}}}
     {{{- end}}}
     restart: {{{.restart_policy}}}
 {{{- end}}}
