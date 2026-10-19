@@ -12,8 +12,10 @@
       postgres
       -c shared_buffers={{{memShare .db.memory 1 4 "MB"}}}
       -c effective_cache_size={{{memShare .db.memory 3 4 "MB"}}}
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "db"}}}:5432"
+    {{{- end}}}
     environment:
       POSTGRES_DB: "{{{.db.database}}}"
       POSTGRES_USER: "{{{.db.user}}}"

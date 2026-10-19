@@ -17,11 +17,13 @@
       {{{- range $host := .nginx.hosts}}}
       - "{{{$host.name}}}:host-gateway"
       {{{- end}}}
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "livereload"}}}:35729"
       - "{{{port "vite"}}}:5173"
       - "{{{port "hot_reload"}}}:9998"
       - "{{{port "hot_reload_2"}}}:9999"
+    {{{- end}}}
     {{{- if .isolation.enabled}}}
     networks:
       - isolated

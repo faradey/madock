@@ -142,7 +142,9 @@ func collectGeneric(ctx *inforeg.InfoContext, showSecrets bool) []inforeg.Block 
 			dbItems = append(dbItems, inforeg.Item{Key: "password", Value: fmtc.SecretOrValue(v, showSecrets)})
 		}
 		// Read-only lookup — do not allocate a port from `madock info`.
-		if dbPort := ports.GetRegistry().Get(ctx.ProjectName, ports.ServiceDB); dbPort > 0 {
+		// Not under ports/publish false: the number stays in the registry and
+		// nothing listens on it.
+		if dbPort := ports.GetRegistry().Get(ctx.ProjectName, ports.ServiceDB); dbPort > 0 && conf["ports/publish"] != "false" {
 			dbItems = append(dbItems, inforeg.Item{Key: "remote", Value: "localhost:" + strconv.Itoa(dbPort)})
 		}
 		blocks = append(blocks, inforeg.Block{Key: "database", Title: "Database", Items: dbItems})

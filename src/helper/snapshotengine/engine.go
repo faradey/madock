@@ -15,8 +15,9 @@
 // configured for zfs and run by a binary that has no zfs must not quietly fall
 // back to a copy that stops the project and takes minutes.
 //
-// Only the database volumes go through an engine — dbdata and, when enabled,
-// dbdata2, which is exactly what a snapshot has always held. Project files keep
+// The database volumes go through an engine — dbdata and, when enabled,
+// dbdata2. The project's other named volumes (Volumes) go through it too when it
+// says so (AllVolumes); otherwise madock copies them with tar. Project files keep
 // going through tar.
 package snapshotengine
 
@@ -37,7 +38,8 @@ type Project struct {
 	Conf map[string]string
 }
 
-// Engine snapshots, restores and clones a project's database volumes.
+// Engine snapshots, restores and clones a project's database volumes, and all of
+// its named volumes when it also implements AllVolumes.
 type Engine interface {
 	// Live reports whether Capture can run with the project's database up.
 	// Only an atomic snapshot can: one instant for every file. Anything that
@@ -110,13 +112,44 @@ func For(conf map[string]string) (Engine, string, error) {
 	return e, name, nil
 }
 
+// AllVolumes is an engine that captures, restores and clones every volume in
+// Volumes, not only the databases. One that does not leaves the others to
+// madock's tar, volume by volume.
+type AllVolumes interface {
+	AllVolumes() bool
+}
+
+// SnapshotCloner is an engine that can give a new project the volumes of one of
+// its snapshots, not only of the source as it is now — `project:clone --from`.
+// On zfs and btrfs that is a clone of the snapshot itself: nothing is copied
+// and the source is not asked anything. An engine without it refuses --from
+// for the snapshots it holds.
+type SnapshotCloner interface {
+	CloneSnapshot(src Project, ref string, dst Project) error
+}
+
+// TakesAll reports whether e handles every volume itself.
+func TakesAll(e Engine) bool {
+	a, ok := e.(AllVolumes)
+	return ok && a.AllVolumes()
+}
+
 // Stops reports whether a snapshot with e must stop the project's containers.
 // snapshot/live=stop asks for it even of an engine that could run live.
+//
+// So does a volume the engine leaves to tar. A search index copied file by file
+// out of a running OpenSearch is torn the way a database would be; an engine
+// that snapshots the databases atomically does not make the tar copy beside it
+// safe, so a project with such volumes stands still unless its engine takes
+// them too.
 func Stops(e Engine, conf map[string]string) bool {
 	if e == nil {
 		return true
 	}
 	if strings.TrimSpace(conf["snapshot/live"]) == "stop" {
+		return true
+	}
+	if !TakesAll(e) && len(Others(conf)) > 0 {
 		return true
 	}
 	return !e.Live()

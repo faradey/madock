@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/faradey/madock/v4/src/command"
 	"github.com/faradey/madock/v4/src/controller/general/snapshot/create"
+	"github.com/faradey/madock/v4/src/controller/general/snapshot/restore"
 	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
@@ -111,6 +112,11 @@ func Execute() {
 		refuse(w, engineErr.Error())
 	}
 
+	// --from: the clone is made from a snapshot, not from the project as it is.
+	// Resolved and checked here, before anything is created, for the same
+	// reason as the engine above.
+	from := resolveFrom(w, configs.GetProjectName(), args.From)
+
 	fmt.Println("Cloning the project")
 	exPath := paths.GetExecDirPath()
 	projectName := configs.GetProjectName()
@@ -143,6 +149,11 @@ func Execute() {
 		clonedHosts = append(clonedHosts, host)
 	}
 	sort.Strings(clonedHosts)
+	// Before the clone's configuration is read below, so everything built from
+	// it — the compose file, cron — is built muted from the first start.
+	if args.Muted {
+		configs.SetParam(cloneName, "clone/muted", "true", projectConf["activeScope"], "")
+	}
 	cloneProjectConf := configs.GetProjectConfig(cloneName)
 
 	// The source stands still while it is copied.
@@ -155,8 +166,20 @@ func Execute() {
 	//
 	// With an engine the databases are the engine's to copy, before the clone's
 	// containers exist; the files still travel as files.tar.gz.
-	if engine != nil {
-		clone := snapshotengine.Project{Name: cloneName, Conf: cloneProjectConf}
+	//
+	// From a snapshot nothing about the source moves: its saved state is what
+	// the clone gets, whatever the source has done since.
+	clone := snapshotengine.Project{Name: cloneName, Conf: cloneProjectConf}
+	if from.dir != "" {
+		if from.engine != nil {
+			if err := from.engine.CloneSnapshot(snapshotengine.Project{Name: projectName, Conf: projectConf}, from.ref, clone); err != nil {
+				refuse(w, fmt.Sprintf("%s clone of snapshot %s: %v", from.engineName, filepath.Base(from.dir), err))
+			}
+		}
+		if err := linkArchives(from.dir, dest); err != nil {
+			refuse(w, err.Error())
+		}
+	} else if engine != nil {
 		if err := create.CloneWithEngine(engine, engineName, projectConf, projectName, clone, dest); err != nil {
 			refuse(w, err.Error())
 		}
@@ -230,6 +253,25 @@ func Execute() {
 		}
 	}
 
+	// The other named volumes, unless the engine already gave the clone its own.
+	// The archives sit in the clone's project directory only for this step.
+	volumesEngine := engine
+	if from.dir != "" {
+		volumesEngine = nil
+		if from.engine != nil {
+			volumesEngine = from.engine.(snapshotengine.Engine)
+		}
+	}
+	if volumesEngine == nil || !snapshotengine.TakesAll(volumesEngine) {
+		others := snapshotengine.Others(cloneProjectConf)
+		if err := create.RestoreVolumes(containerName, others, dest); err != nil {
+			logger.Fatal(err)
+		}
+		for _, v := range others {
+			_ = os.Remove(dest + v.Archive())
+		}
+	}
+
 	if paths.IsFileExist(dest + "files.tar.gz") {
 		selectedFileFiles, err := os.Open(dest + "files.tar.gz")
 		if err != nil {
@@ -260,12 +302,130 @@ func Execute() {
 
 	docker.StopSnapshot(cloneName)
 
+	if args.Muted {
+		if err := purgeQueues(cloneProjectConf, cloneName); err != nil {
+			refuse(w, "the clone was made, but its RabbitMQ still holds the source's messages: "+err.Error())
+		}
+	}
+
 	if w != nil {
 		w.Print(ClonedJSON{Name: cloneName, Path: clonePath, Hosts: clonedHosts})
 		return
 	}
 
 	fmtc.SuccessLn("Project cloned successfully.\nThe new project name is " + cloneName + ".\nThe path to the project is " + clonePath)
+}
+
+// purgeQueues empties every queue of a muted clone's RabbitMQ, keeping the
+// queues themselves.
+//
+// The clone's broker holds whatever the source had queued — orders to export,
+// mails to send — and the clone's consumers would process each of them a second
+// time. The queues stay: an application publishes to exchanges and queues it
+// declared once at setup, and an empty broker without them refuses its next
+// publish. Only a persisted broker carries anything (rabbitmq/persist); one
+// without the volume starts empty already.
+func purgeQueues(conf map[string]string, cloneName string) error {
+	if conf["rabbitmq/enabled"] != "true" || conf["rabbitmq/persist"] != "true" {
+		return nil
+	}
+	fmtc.TitleLn("Emptying the clone's RabbitMQ queues...")
+	if err := docker.UpService(cloneName, "rabbitmq"); err != nil {
+		return err
+	}
+	defer func() { _ = docker.StopService(cloneName, "rabbitmq") }()
+	// As the broker's own user, not root. rabbitmqctl reads the Erlang cookie,
+	// and run as root it creates one when there is none yet — owned by root,
+	// unreadable to the broker, which then dies at its next start with
+	// "Error when reading /var/lib/rabbitmq/.erlang.cookie: eacces". The e2e
+	// run hit exactly that.
+	cmd, err := docker.PrepareContainerExec(docker.GetContainerName(conf, cloneName, "rabbitmq"), "rabbitmq", false, "bash", "-c", purgeScript)
+	if err != nil {
+		return err
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// purgeScript waits for the broker, then purges every queue of every vhost.
+// A broker that never answers is a failure, not "nothing to purge".
+//
+// check_running, not ping: ping answers as soon as the Erlang node is up, while
+// the rabbit application inside it may still be starting, and list_queues then
+// fails with "this command requires the 'rabbit' app to be running".
+const purgeScript = `ok=
+for i in $(seq 1 90); do rabbitmq-diagnostics -q check_running >/dev/null 2>&1 && { ok=1; break; }; sleep 2; done
+[ -n "$ok" ] || { echo "RabbitMQ did not come up" >&2; exit 1; }
+rabbitmqctl -q --no-table-headers list_vhosts | while read -r vhost; do
+  rabbitmqctl -q --no-table-headers list_queues -p "$vhost" name | while read -r queue; do
+    rabbitmqctl -q purge_queue -p "$vhost" "$queue" || exit 1
+  done || exit 1
+done`
+
+// fromSnapshot is the snapshot `--from` named. dir is empty without --from;
+// engine is nil when the snapshot's databases are in tar archives.
+type fromSnapshot struct {
+	dir        string
+	engine     snapshotengine.SnapshotCloner
+	engineName string
+	ref        string
+}
+
+// resolveFrom finds the snapshot --from names and refuses, before anything is
+// created, one this build cannot clone from.
+func resolveFrom(w *output.Writer, projectName, from string) fromSnapshot {
+	from = strings.TrimSpace(from)
+	if from == "" {
+		return fromSnapshot{}
+	}
+	snapshots := paths.GetExecDirPath() + "/projects/" + projectName + "/backup/snapshot"
+	name := restore.MatchName(create.OrderedNames(snapshots), from)
+	if name == "" {
+		refuse(w, fmt.Sprintf("No snapshot named %q; snapshot:list shows the ones there are", from))
+	}
+	out := fromSnapshot{dir: filepath.Join(snapshots, name)}
+	marker, byEngine, err := snapshotengine.ReadMarker(out.dir)
+	if err != nil {
+		refuse(w, err.Error())
+	}
+	if !byEngine {
+		return out
+	}
+	engine, ok := snapshotengine.ByName(marker.Engine)
+	if !ok {
+		refuse(w, fmt.Sprintf("snapshot %s is held by %q, which this build does not have", name, marker.Engine))
+	}
+	cloner, ok := engine.(snapshotengine.SnapshotCloner)
+	if !ok {
+		refuse(w, fmt.Sprintf("snapshot %s is held by %q, which cannot clone from a snapshot in this build", name, marker.Engine))
+	}
+	out.engine, out.engineName, out.ref = cloner, marker.Engine, marker.Ref
+	return out
+}
+
+// linkArchives puts the snapshot's archives where the clone unpacks them from.
+// A hard link when it can be one: the clone removes each archive once it is
+// unpacked, and removing a link leaves the snapshot's copy alone — while a copy
+// of a multi-gigabyte archive would be the slowest step of the clone.
+func linkArchives(snapshotDir, dest string) error {
+	entries, err := os.ReadDir(snapshotDir)
+	if err != nil {
+		return err
+	}
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".tar.gz") {
+			continue
+		}
+		src, dst := filepath.Join(snapshotDir, e.Name()), filepath.Join(dest, e.Name())
+		if err := os.Link(src, dst); err == nil {
+			continue
+		}
+		if err := paths.Copy(src, dst); err != nil {
+			return fmt.Errorf("copying %s from the snapshot: %w", e.Name(), err)
+		}
+	}
+	return nil
 }
 
 // applyDomainSuffix inserts suffix before the last dot of domain. If domain

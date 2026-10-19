@@ -6,8 +6,10 @@
       dockerfile: storefront.Dockerfile
     tty: true
     working_dir: {{{.medusa.storefront.workdir}}}
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "storefront"}}}:8000"
+    {{{- end}}}
     volumes:
       - ./src/{{{.medusa.storefront.path}}}:{{{.medusa.storefront.workdir}}}:cached
     environment:

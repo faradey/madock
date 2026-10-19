@@ -120,6 +120,28 @@ func applyDerived(conf map[string]string) {
 		conf["workdir"] = deployRelativeRoot(conf["workdir"])
 	}
 
+	// A muted clone must not act as the project it was copied from. It has the
+	// same database, so the same scheduled jobs, the same queued messages and
+	// the same customers' addresses: with cron running it sends their
+	// newsletters and exports their orders a second time, and with mail()
+	// pointed at a real relay the second copy reaches real people.
+	//
+	// Applied here, where the configuration is assembled, rather than in the
+	// commands that read it: cron/enabled is read by status, by start, by the
+	// platform code and by the templates, and an override in one of them is a
+	// clone that is muted for some of them. cron:enable refuses on top of this,
+	// so the refusal is said rather than silently undone.
+	//
+	// What madock cannot see stays the application's: an SMTP server or a
+	// webhook configured inside its own database. Outgoing network is closed by
+	// madock Pro; inside open madock the clone's addresses are the caller's.
+	if strings.TrimSpace(conf["clone/muted"]) == "true" {
+		conf["cron/enabled"] = "false"
+		conf["php/sendmail/enabled"] = "true"
+		conf["php/sendmail/host"] = "host.docker.internal"
+		conf["php/sendmail/port"] = "1025"
+	}
+
 	// msmtp will not send without an envelope sender, and there is no msmtprc in
 	// the image to hold a default. A mail transport supplies one; a bare mail()
 	// call with four arguments does not, and fails with exit 78. Rendering the

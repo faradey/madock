@@ -370,7 +370,11 @@ read stops the proxy, and the proxy serves every project on the machine; check
 | Key | Default | What it is |
 |---|---|---|
 | `snapshot/engine` | `tar` | what `snapshot:create`, `snapshot:restore` and `project:clone` copy the databases (`dbdata`, `dbdata2`) with. `tar` stops the project and archives the data directory. Any other value is an engine a build registers — madock Pro adds them; a value this build does not have is refused, not copied with `tar` |
-| `snapshot/live` | `auto` | `auto`: an engine whose snapshot is atomic keeps the project running; `stop`: the project is stopped for every snapshot |
+| `snapshot/live` | `auto` | `auto`: an engine whose snapshot is atomic keeps the project running; `stop`: the project is stopped for every snapshot. A project with named volumes the engine leaves to `tar` (search index, Grafana, persisted Redis/RabbitMQ) is stopped either way |
+| `snapshot/keep` | `0` | how many snapshots the project holds; after each `snapshot:create` the oldest are removed beyond it. `0` is no limit. A snapshot its engine will not drop (a clone lives on it) is kept |
+| `clone/muted` | `false` | `true` on a copy that must not act as its source: cron off (and `cron:enable` refused), `mail()` to mailpit. `project:clone --muted` sets it |
+| `ports/publish` | `true` | `false` publishes no port of the project on the host; the shared proxy reaches its nginx (or varnish) over `madock-proxy` by container name. A varnish VCL pointing at `host.docker.internal:<port>` stops working then — point it at `nginx:80` |
+| `redis/persist`, `valkey/persist`, `rabbitmq/persist` | `false` | `true` gives the service a named volume, so its data survives a recreated container and is carried by snapshots and clones. RabbitMQ also gets a fixed `hostname` |
 
 Project files are archived with `tar` whatever the engine. A snapshot taken by
 an engine holds `engine.json` in place of `db.tar.gz`, and `snapshot:restore`

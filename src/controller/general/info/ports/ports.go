@@ -21,6 +21,11 @@ type PortInfo struct {
 type PortsOutput struct {
 	Project string     `json:"project"`
 	Ports   []PortInfo `json:"ports"`
+	// Published is false under ports/publish false. The registry still holds
+	// the project's numbers — the shared proxy names its upstreams by them —
+	// but nothing listens on any of them, and a script that connected to one
+	// would conclude the service is down.
+	Published bool `json:"published"`
 }
 
 func init() {
@@ -38,6 +43,15 @@ func Execute() {
 	args := attr.Parse(new(arg_struct.ControllerGeneralInfoPorts)).(*arg_struct.ControllerGeneralInfoPorts)
 
 	projectName := configs.GetProjectName()
+	if configs.GetCurrentProjectConfig()["ports/publish"] == "false" {
+		if args.Json {
+			output.PrintJSON(PortsOutput{Project: projectName, Ports: []PortInfo{}, Published: false})
+			return
+		}
+		fmtc.TitleLn("Ports for project: " + projectName)
+		fmtc.WarningLn("No port is published: ports/publish is false. The project is reached only through the shared proxy.")
+		return
+	}
 	registry := ports.GetRegistry()
 	projectPorts := registry.GetAllForProject(projectName)
 
@@ -58,8 +72,9 @@ func Execute() {
 
 	if args.Json {
 		portsOutput := PortsOutput{
-			Project: projectName,
-			Ports:   portInfos,
+			Project:   projectName,
+			Ports:     portInfos,
+			Published: true,
 		}
 		output.PrintJSON(portsOutput)
 		return

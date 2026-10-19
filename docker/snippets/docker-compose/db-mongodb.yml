@@ -8,8 +8,10 @@
     # from the RAM it can see — the host's, not the container's limit — so on a
     # large machine one mongod quietly reserves gigabytes.
     command: mongod --wiredTigerCacheSizeGB {{{memShareGB .db.memory 1 2}}}
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "db"}}}:27017"
+    {{{- end}}}
     environment:
       MONGO_INITDB_ROOT_USERNAME: "{{{.db.user}}}"
       MONGO_INITDB_ROOT_PASSWORD: "{{{.db.password}}}"

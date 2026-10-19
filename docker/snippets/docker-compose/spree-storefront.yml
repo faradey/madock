@@ -6,8 +6,10 @@
       dockerfile: storefront.Dockerfile
     tty: true
     working_dir: {{{.spree.storefront.workdir}}}
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "storefront"}}}:3001"
+    {{{- end}}}
     volumes:
       - ./src/{{{.spree.storefront.path}}}:{{{.spree.storefront.workdir}}}:cached
     environment:

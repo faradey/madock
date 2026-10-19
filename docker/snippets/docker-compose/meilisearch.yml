@@ -2,8 +2,10 @@
   meilisearch:
     image: {{{.search.meilisearch.repository}}}:v{{{.search.meilisearch.version}}}
     init: true
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "meilisearch"}}}:7700"
+    {{{- end}}}
     environment:
       MEILI_MASTER_KEY: "{{{.search.meilisearch.master_key}}}"
       MEILI_ENV: "development"

@@ -132,6 +132,7 @@ Config is stored in `.madock/config.xml` (project-level) as hierarchical XML wit
 ### Redis
 - `redis/enabled` — enable Redis
 - `redis/version` — Redis version
+- `redis/persist` — `true` gives Redis a named volume, carried by snapshots and clones (default `false`; same key for `valkey/`)
 
 ### Node.js
 - `nodejs/enabled` — enable Node.js container
@@ -142,6 +143,7 @@ Config is stored in `.madock/config.xml` (project-level) as hierarchical XML wit
 - `rabbitmq/enabled` — enable RabbitMQ
 - `rabbitmq/version` — RabbitMQ version
 - `rabbitmq/user`, `rabbitmq/password` — credentials
+- `rabbitmq/persist` — `true` gives RabbitMQ a named volume and a fixed hostname, carried by snapshots and clones (default `false`)
 
 ### Nginx
 - `nginx/ssl` — enable SSL (true/false)

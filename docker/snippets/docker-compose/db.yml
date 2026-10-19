@@ -8,8 +8,10 @@
     build:
       context: ctx
       dockerfile: db.Dockerfile
+    {{{- if .ports.publish}}}
     ports:
       - "{{{port "db"}}}:3306"
+    {{{- end}}}
     environment:
       MYSQL_ROOT_PASSWORD: "{{{.db.root_password}}}"
       MYSQL_DATABASE: "{{{.db.database}}}"

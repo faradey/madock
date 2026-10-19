@@ -302,6 +302,25 @@ func Stop(projectName string) error {
 	return cmd.Run()
 }
 
+// UpService brings one service of the project up on its own, without the
+// services it depends on — for work that needs that one container running and
+// nothing else, such as clearing a cloned broker before the application that
+// would consume from it exists. StopService puts it down again.
+func UpService(projectName, service string) error {
+	pp := paths.NewProjectPaths(projectName)
+	cmd := exec.Command("docker", "compose", "-f", pp.DockerCompose(), "-f", pp.DockerComposeOverride(), "up", "-d", "--no-deps", service)
+	attachOutput(cmd)
+	return cmd.Run()
+}
+
+// StopService stops one service of the project.
+func StopService(projectName, service string) error {
+	pp := paths.NewProjectPaths(projectName)
+	cmd := exec.Command("docker", "compose", "-f", pp.DockerCompose(), "-f", pp.DockerComposeOverride(), "stop", service)
+	attachOutput(cmd)
+	return cmd.Run()
+}
+
 // Start starts containers that already exist. It does not create or rebuild
 // anything — see UpProjectWithBuild for that.
 func Start(projectName string) error {

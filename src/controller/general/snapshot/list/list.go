@@ -2,8 +2,6 @@ package list
 
 import (
 	"fmt"
-	"path/filepath"
-	"sort"
 
 	"github.com/faradey/madock/v4/src/command"
 	"github.com/faradey/madock/v4/src/controller/general/snapshot/create"
@@ -57,36 +55,13 @@ func Execute() {
 	}
 }
 
-// Read lists the snapshots in dir, oldest first.
-//
-// By the timestamp at the end of the name, not by the name: `snapshot:create
-// -n zzz` sorts after a newer `-n aaa` as a string.
+// Read lists the snapshots in dir, oldest first (create.OrderedNames).
 func Read(dir string) []create.SnapshotJSON {
 	snapshots := []create.SnapshotJSON{}
-	if !paths.IsFileExist(dir) {
-		return snapshots
-	}
-	names := paths.GetDirs(dir)
-	sort.SliceStable(names, func(i, j int) bool {
-		a, b := stamp(filepath.Base(names[i])), stamp(filepath.Base(names[j]))
-		if a != b {
-			return a < b
-		}
-		return names[i] < names[j]
-	})
-	for _, name := range names {
-		snapshots = append(snapshots, create.Describe(dir, filepath.Base(name)))
+	for _, name := range create.OrderedNames(dir) {
+		snapshots = append(snapshots, create.Describe(dir, name))
 	}
 	return snapshots
-}
-
-// stamp is the "2006-01-02-15-04-05" suffix snapshot:create writes.
-func stamp(name string) string {
-	const width = len("2006-01-02-15-04-05")
-	if len(name) < width {
-		return name
-	}
-	return name[len(name)-width:]
 }
 
 func humanBytes(n int64) string {
