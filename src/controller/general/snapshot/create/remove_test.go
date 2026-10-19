@@ -136,3 +136,32 @@ func TestRemoveKeepsTheDirectoryWhenTheEngineIsMissing(t *testing.T) {
 		t.Fatalf("the directory was removed although its engine snapshot could not be: %v", err)
 	}
 }
+
+// A snapshot something lives on stays, and prune skips it for the next oldest.
+// The check here answers for a directory holding an "in-use" file, so the
+// other tests in this package are not affected by it being registered.
+func TestASnapshotInUseIsNotRemoved(t *testing.T) {
+	snapshotengine.RegisterInUse(func(_ snapshotengine.Project, dir string) string {
+		if _, err := os.Stat(filepath.Join(dir, "in-use")); err == nil {
+			return "a clone's code is an overlay over it"
+		}
+		return ""
+	})
+	dir := snapshotDir(t)
+	makeSnapshot(t, dir, "snapshot-2026-01-01-00-00-00", "")
+	makeSnapshot(t, dir, "snapshot-2026-02-01-00-00-00", "")
+	if err := os.WriteFile(filepath.Join(dir, "snapshot-2026-01-01-00-00-00", "in-use"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := Remove(shop, dir, "snapshot-2026-01-01-00-00-00")
+	if err == nil || !strings.Contains(err.Error(), "in use") {
+		t.Fatalf("a snapshot in use was removed: %v", err)
+	}
+	if removed := Prune(shop, dir, 1); strings.Join(removed, ",") != "snapshot-2026-02-01-00-00-00" {
+		t.Fatalf("prune removed %v, want the one not in use", removed)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "snapshot-2026-01-01-00-00-00", "db.tar.gz")); err != nil {
+		t.Fatalf("the snapshot in use lost its files: %v", err)
+	}
+}

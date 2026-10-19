@@ -179,6 +179,17 @@ func Execute() {
 		if err := linkArchives(from.dir, dest); err != nil {
 			refuse(w, err.Error())
 		}
+		// Code of a tar snapshot: another edition may give it without the
+		// unpack, and then files.tar.gz has nothing left to do here.
+		if from.engine == nil {
+			handled, err := snapshotengine.CodeFromArchive(snapshotengine.Project{Name: projectName, Conf: projectConf}, from.dir, clone)
+			if err != nil {
+				refuse(w, "the clone's code: "+err.Error())
+			}
+			if handled {
+				_ = os.Remove(dest + "files.tar.gz")
+			}
+		}
 	} else if engine != nil {
 		if err := create.CloneWithEngine(engine, engineName, projectConf, projectName, clone, dest); err != nil {
 			refuse(w, err.Error())
