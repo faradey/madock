@@ -57,3 +57,32 @@ func TestSnapshotsAndClonesCarryEveryNamedVolume(t *testing.T) {
 		t.Errorf("a write in the clone's Redis reached the source: %q", got)
 	}
 }
+
+// TestTurningPersistOnCarriesTheOldData — redis/persist moves Redis to a named
+// volume, and until this the next start began it empty: the data stayed in the
+// old container's anonymous volume. On a server that is a Packeton's download
+// statistics or an application's queued jobs.
+func TestTurningPersistOnCarriesTheOldData(t *testing.T) {
+	p := newProject(t, "e2epersist")
+	p.run(5*time.Minute, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2epersist.test")
+	p.run(2*time.Minute, "config:set", "-n", "redis/enabled", "-v", "true")
+	p.run(25*time.Minute, "start")
+
+	redis := func(args ...string) string {
+		return strings.TrimSpace(p.run(2*time.Minute, append([]string{"cli", "--service", "redisdb", "redis-cli"}, args...)...))
+	}
+	redis("SET", "probe", "kept-across-persist")
+
+	p.run(2*time.Minute, "config:set", "-n", "redis/persist", "-v", "true")
+	out := p.run(25*time.Minute, "start")
+	t.Logf("start after persist:\n%s", out)
+	requireContains(t, out, "data carried", "the start that switched Redis to its named volume")
+	if got := redis("GET", "probe"); got != "kept-across-persist" {
+		t.Errorf("after redis/persist Redis holds %q, want the value written before", got)
+	}
+
+	// Once carried, a later start does it no more.
+	if out := p.run(10*time.Minute, "start"); strings.Contains(out, "Carrying") {
+		t.Errorf("a second start carried the data again:\n%s", out)
+	}
+}
