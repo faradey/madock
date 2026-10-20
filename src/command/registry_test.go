@@ -59,3 +59,34 @@ func TestIsGlobal(t *testing.T) {
 		t.Error("a resolver's explicit answer must beat the flag")
 	}
 }
+
+// A flag in GlobalWith excuses that one run, and only as an exact token before
+// any `--`. config:set is the case: with --global it writes the installation's
+// config, which a fresh server has before it has any project.
+func TestIsGlobalFor(t *testing.T) {
+	set := &Definition{Aliases: []string{"config:set"}, GlobalWith: []string{"--global", "-g"}}
+
+	cases := []struct {
+		name string
+		argv []string
+		want bool
+	}{
+		{"the long flag", []string{"--global", "--name", "machine/zfs/root", "--value", "tank/machine"}, true},
+		{"the short flag", []string{"-n", "snapshot/engine", "-v", "zfs", "-g"}, true},
+		{"without it", []string{"--name", "php/version", "--value", "8.3"}, false},
+		{"the word as a value", []string{"--name", "x", "--value", "--global-ish"}, false},
+		{"after a double dash", []string{"--", "--global"}, false},
+	}
+	for _, c := range cases {
+		if got := IsGlobalFor(set, c.argv); got != c.want {
+			t.Errorf("%s: IsGlobalFor(%q) = %v, want %v", c.name, c.argv, got, c.want)
+		}
+	}
+
+	if !IsGlobalFor(&Definition{Global: true}, nil) {
+		t.Error("a global command must stay global without any flag")
+	}
+	if IsGlobalFor(&Definition{Aliases: []string{"start"}}, []string{"--global"}) {
+		t.Error("a flag the command does not name must not excuse it")
+	}
+}

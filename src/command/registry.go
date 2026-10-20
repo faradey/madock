@@ -30,6 +30,18 @@ type Definition struct {
 	// version long gone included.
 	Global bool
 
+	// GlobalWith names flags that take a project command out of any project for
+	// that one run: given one of them, the command reads and writes nothing of a
+	// project's, so it runs anywhere, as a Global command does.
+	//
+	// `config:set --global` writes the installation's own config. It was refused
+	// outside a project all the same, by the check that guards the project half
+	// of the command, so on a fresh server — the one place nothing is a project
+	// yet — madock Pro's `machine/zfs/root` and `snapshot/engine` could not be set
+	// through madock at all (Indemorio IND-14). Exact tokens only, and nothing
+	// after a `--`, the rule --help and --json follow.
+	GlobalWith []string
+
 	// PassThrough marks a command whose arguments are not madock's to read: it
 	// hands os.Args[2:] to another program — composer, bin/magento, npm, wp-cli,
 	// a shell — and `--help` there is a request for that program's help.
@@ -110,6 +122,25 @@ func IsGlobal(def *Definition) bool {
 	}
 
 	return def.Global
+}
+
+// IsGlobalFor reports whether this run of a command may happen outside a
+// project: the command is global, or argv carries one of its GlobalWith flags.
+func IsGlobalFor(def *Definition, argv []string) bool {
+	if IsGlobal(def) {
+		return true
+	}
+	for _, arg := range argv {
+		if arg == "--" {
+			return false
+		}
+		for _, flag := range def.GlobalWith {
+			if arg == flag {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // Register adds a command definition to the registry
