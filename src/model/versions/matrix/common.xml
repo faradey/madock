@@ -42,7 +42,7 @@
         <yarn><v>4.5.3</v><v>3.8.7</v><v>1.22.22</v></yarn>
         <language><v>php</v><v>nodejs</v><v>python</v><v>golang</v><v>ruby</v><v>none</v></language>
         <python><v>3.14</v><v>3.13</v><v>3.12</v><v>3.11</v></python>
-        <golang><v>1.26</v><v>1.25</v><v>1.24</v><v>1.23</v></golang>
+        <golang><v>1.27</v><v>1.26</v><v>1.25</v><v>1.24</v><v>1.23</v></golang>
         <ruby><v>3.4</v><v>3.3</v><v>3.2</v><v>3.1</v></ruby>
     </offers>
 </config>

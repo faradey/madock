@@ -488,6 +488,12 @@
                     command: for example a program named "queue" whose command is
                     "php artisan queue:work redis", or one named "consumer"
                     running "php bin/console messenger:consume async".
+
+                    The command runs through sh -c. A single program is run with
+                    exec, so it becomes the container's process; one with shell
+                    syntax in it (a ; or &&, a pipe, a redirection, $( ), or a
+                    builtin such as set or cd at the front) is run as written,
+                    for example "set -a; . ./.env; php artisan queue:work".
                 -->
                 <enabled>false</enabled>
                 <user></user>
