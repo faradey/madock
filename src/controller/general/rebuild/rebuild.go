@@ -53,7 +53,10 @@ func Execute() {
 		// Before anything is taken down: the old container is the only thing
 		// that still points at the anonymous volume a newly persisted Redis or
 		// Valkey kept its data in.
-		docker.CarryToPersisted(projectName, configs.GetProjectConfig(projectName))
+		if err := docker.CarryToPersisted(projectName, configs.GetProjectConfig(projectName)); err != nil {
+			fmtc.ErrorLn(err.Error())
+			os.Exit(1)
+		}
 
 		if args.Changed && rebuildChanged(projectName, args.WithChown) {
 			return
