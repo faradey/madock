@@ -22,6 +22,11 @@ func (f *fakeDocker) run(args ...string) (string, error) {
 			return "[]", nil
 		}
 		return "", errors.New("no such volume")
+	case args[0] == "inspect" && args[2] == "{{.Id}}":
+		if _, ok := f.mounts[args[3]]; ok {
+			return "id", nil
+		}
+		return "", errors.New("no such container")
 	case args[0] == "inspect" && strings.Contains(args[2], ".Mounts"):
 		if m, ok := f.mounts[args[3]]; ok {
 			return m, nil
@@ -58,7 +63,9 @@ var redisOn = map[string]string{"redis/enabled": "true", "redis/persist": "true"
 func TestTheOldAnonymousVolumeIsCopiedIntoTheNamedOne(t *testing.T) {
 	f := &fakeDocker{mounts: map[string]string{"madock_shop-redisdb-1": "volume 0123456789abcdef"}}
 	withFake(t, f)
-	CarryToPersisted("shop", redisOn)
+	if err := CarryToPersisted("shop", redisOn); err != nil {
+		t.Fatal(err)
+	}
 	for _, want := range []string{
 		"stop madock_shop-redisdb-1",
 		"volume create --label com.docker.compose.project=madock_shop --label com.docker.compose.volume=redisdata madock_shop_redisdata",
@@ -112,5 +119,51 @@ func TestNothingHappensWithoutPersistOrWithABind(t *testing.T) {
 	CarryToPersisted("shop", redisOn)
 	if f.did("stop") || f.did("run") {
 		t.Errorf("acted:\n%s", strings.Join(f.calls, "\n"))
+	}
+}
+
+// The case that lost a production store's sessions: an image with no VOLUME
+// for the data path keeps the data in the container's own layer. It is
+// streamed out of the container, and a failure stops the start rather than
+// letting the recreate take the data.
+func TestDataInTheContainersLayerIsCopiedOrTheStartStops(t *testing.T) {
+	valkeyOn := map[string]string{"valkey/enabled": "true", "valkey/persist": "true", "container_name_prefix": "madock_"}
+	f := &fakeDocker{mounts: map[string]string{"madock_shop-valkeydb-1": ""}}
+	withFake(t, f)
+	var copied []string
+	old := copyFromLayer
+	t.Cleanup(func() { copyFromLayer = old })
+	copyFromLayer = func(container, path, named, image string) error {
+		copied = append(copied, container+" "+path+" "+named)
+		return nil
+	}
+	if err := CarryToPersisted("shop", valkeyOn); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(copied, ",") != "madock_shop-valkeydb-1 /data madock_shop_valkeydata" {
+		t.Errorf("the layer was not copied: %v\n%s", copied, strings.Join(f.calls, "\n"))
+	}
+
+	f2 := &fakeDocker{mounts: map[string]string{"madock_shop-valkeydb-1": ""}}
+	withFake(t, f2)
+	copyFromLayer = func(string, string, string, string) error { return errors.New("docker cp failed") }
+	err := CarryToPersisted("shop", valkeyOn)
+	if err == nil || !strings.Contains(err.Error(), "Nothing was recreated") {
+		t.Errorf("a failed copy from the layer did not stop the start: %v", err)
+	}
+	if !f2.did("volume rm madock_shop_valkeydata") {
+		t.Error("the empty volume stayed after a failed copy")
+	}
+}
+
+// No old container is a fresh start: nothing to carry, nothing stopped.
+func TestNoOldContainerIsAFreshStart(t *testing.T) {
+	f := &fakeDocker{mounts: map[string]string{}}
+	withFake(t, f)
+	if err := CarryToPersisted("shop", redisOn); err != nil {
+		t.Fatal(err)
+	}
+	if f.did("stop") || f.did("volume create") {
+		t.Errorf("acted without an old container:\n%s", strings.Join(f.calls, "\n"))
 	}
 }

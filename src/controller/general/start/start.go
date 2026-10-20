@@ -2,6 +2,7 @@ package start
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -43,7 +44,10 @@ func ExecuteWith(args *arg_struct.ControllerGeneralStart) {
 		startTime := time.Now()
 
 		// Before compose recreates anything: see docker.CarryToPersisted.
-		docker.CarryToPersisted(projectName, projectConf)
+		if err := docker.CarryToPersisted(projectName, projectConf); err != nil {
+			fmtc.ErrorLn(err.Error())
+			os.Exit(1)
+		}
 
 		fmtc.TitleLn("Starting containers...")
 
