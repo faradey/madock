@@ -29,10 +29,11 @@ func init() {
 }
 
 type InfoStruct struct {
-	Name    string `json:"Name"`
-	Project string `json:"Project"`
-	Service string `json:"Service"`
-	State   string `json:"State"`
+	Name     string `json:"Name"`
+	Project  string `json:"Project"`
+	Service  string `json:"Service"`
+	State    string `json:"State"`
+	ExitCode int    `json:"ExitCode"`
 }
 
 type StatusOutput struct {
@@ -51,6 +52,12 @@ type ServiceStatus struct {
 	// of the configuration. Absent for the ordinary case, so a script reading
 	// this can treat its presence as the exception it is.
 	Orphan bool `json:"orphan,omitempty"`
+	// ExitCode is how a stopped service ended, present only for one that is
+	// not running. A worker that refused to start used to be missing from the
+	// list altogether — absent rather than failed — because `compose ps`
+	// shows only running containers; worker-<name> services are now listed
+	// stopped too, with this.
+	ExitCode *int `json:"exit_code,omitempty"`
 }
 
 type ToolsStatus struct {
@@ -72,12 +79,12 @@ func Execute() {
 	pp := paths.NewProjectPaths(projectName)
 
 	// Get services status
-	servicesData := getContainerStatus(pp.DockerCompose())
+	servicesData := withStoppedWorkers(getContainerStatus(pp.DockerCompose(), true))
 	knownServices, servicesKnown := definedServices(pp.DockerCompose(), pp.DockerComposeOverride())
 	servicesData = markOrphans(servicesData, knownServices, servicesKnown)
 
 	// Get proxy status
-	proxyData := getContainerStatus(paths.ProxyDockerCompose())
+	proxyData := getContainerStatus(paths.ProxyDockerCompose(), false)
 	// The proxy has the same problem and a documented instance of it: disabling
 	// mailpit leaves its container behind, and it went on being listed as one of
 	// the proxy's services.
@@ -169,6 +176,9 @@ func Execute() {
 // still running, and those two look identical in a list.
 func printServiceRow(val ServiceStatus, indent string) {
 	row := fmt.Sprintf("%s%s %s", indent, val.Service, val.State)
+	if val.ExitCode != nil {
+		row += fmt.Sprintf(" (exit %d)", *val.ExitCode)
+	}
 	if val.Orphan {
 		fmtc.WarningLn(row + " — orphan: not in this project's configuration any more")
 		return
@@ -180,8 +190,27 @@ func printServiceRow(val ServiceStatus, indent string) {
 	}
 }
 
-func getContainerStatus(composePath string) []ServiceStatus {
-	cmd := exec.Command("docker", "compose", "-f", composePath, "ps", "--format", "json")
+// withStoppedWorkers keeps every running service and, of the stopped ones,
+// the worker-<name> services: a worker is meant to be up whenever the project
+// is, so one that is not is a failure to report. Other stopped containers stay
+// out as before — a stopped project would otherwise list every service as
+// exited, and one-shot helpers end by design.
+func withStoppedWorkers(all []ServiceStatus) []ServiceStatus {
+	var out []ServiceStatus
+	for _, s := range all {
+		if s.Running || strings.HasPrefix(s.Service, "worker-") {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func getContainerStatus(composePath string, all bool) []ServiceStatus {
+	psArgs := []string{"compose", "-f", composePath, "ps", "--format", "json"}
+	if all {
+		psArgs = append(psArgs, "-a")
+	}
+	cmd := exec.Command("docker", psArgs...)
 
 	// Separate streams, not CombinedOutput.
 	//
@@ -224,12 +253,17 @@ func getContainerStatus(composePath string) []ServiceStatus {
 			return statusData
 		}
 		for _, val := range rawData {
-			statusData = append(statusData, ServiceStatus{
+			st := ServiceStatus{
 				Name:    val.Name,
 				Service: val.Service,
 				State:   val.State,
 				Running: val.State == "running",
-			})
+			}
+			if !st.Running {
+				code := val.ExitCode
+				st.ExitCode = &code
+			}
+			statusData = append(statusData, st)
 		}
 	}
 	return statusData
