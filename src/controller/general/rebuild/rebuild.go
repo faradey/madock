@@ -50,6 +50,11 @@ func Execute() {
 
 		reportReconciliation(projectName)
 
+		// Before anything is taken down: the old container is the only thing
+		// that still points at the anonymous volume a newly persisted Redis or
+		// Valkey kept its data in.
+		docker.CarryToPersisted(projectName, configs.GetProjectConfig(projectName))
+
 		if args.Changed && rebuildChanged(projectName, args.WithChown) {
 			return
 		}

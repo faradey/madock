@@ -42,6 +42,9 @@ func ExecuteWith(args *arg_struct.ControllerGeneralStart) {
 		platformName := projectConf["platform"]
 		startTime := time.Now()
 
+		// Before compose recreates anything: see docker.CarryToPersisted.
+		docker.CarryToPersisted(projectName, projectConf)
+
 		fmtc.TitleLn("Starting containers...")
 
 		handler := platform.GetOrDefault(platformName)

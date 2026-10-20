@@ -131,6 +131,18 @@ func TestDatabaseMemoryReachesMongodb(t *testing.T) {
 	)
 	p.run(20*time.Minute, "start")
 
+	// MongoDB itself refuses to start on a host kernel from 6.19 to 7.0.13 —
+	// its vendored TCMalloc breaks the rseq ABI there (SERVER-121912), and the
+	// fix is a kernel of 7.0.14 or later, not a MongoDB release. GitHub's
+	// runners moved onto such a kernel on 2026-10-19 and this test went red on
+	// a pull request that touched nothing of MongoDB's. That is "could not
+	// tell", not a pass: skipped, and only on mongod's own words for it.
+	if status := p.run(3*time.Minute, "status"); !strings.Contains(status, "db running") {
+		if logs, _ := p.tryRun(time.Minute, "logs", "-s", "db"); strings.Contains(logs, "Linux kernel versions 6.19 and newer has a known incompatibility") {
+			t.Skip("mongod refuses this host's kernel (6.19–7.0.13, SERVER-121912); the memory flag could not be checked here")
+		}
+	}
+
 	requireContains(t, p.run(3*time.Minute, "status"), "db running",
 		"mongod must actually start with --wiredTigerCacheSizeGB")
 
