@@ -43,7 +43,7 @@ the platform-specific snippets already gave three platforms for free.
     user: {{{$.worker.user}}}
     {{{- end}}}
     entrypoint: []
-    command: ["sh", "-c", "exec {{{$command}}}"]
+    command: ["sh", "-c", "{{{workerCommand $command}}}"]
     volumes:
       - ./src:/var/www/html:cached
     extra_hosts:

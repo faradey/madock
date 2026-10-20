@@ -547,6 +547,9 @@ func (r *Renderer) funcMap() template.FuncMap {
 		// copying the file into a project and letting the copy drift.
 		"memShare":   memShare,
 		"memShareGB": memShareGB,
+
+		// A worker's command, with exec only when it is one program.
+		"workerCommand": workerCommand,
 	}
 }
 
