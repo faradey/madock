@@ -702,6 +702,37 @@ func pullArgs(composeFiles []string, refresh, policySupported, quiet bool) []str
 	return args
 }
 
+// BuildWithoutCache builds every image of the project anew, its base images
+// pulled again, without stopping or recreating anything.
+//
+// `up --build` reuses the layer cache, and an image installs its packages in a
+// layer whose instruction never changes: `apt-get install php8.5-fpm` reads the
+// same on the day a security release lands as the day before. Found on
+// 2026-10-21, when PHP shipped fixes for two remote code execution bugs and the
+// PPA had the packages within hours: a rebuild would have reused the cached
+// layer and kept 8.5.11, and nothing in its output would have said so.
+//
+// Run while the old containers are still serving. The images it leaves are
+// what the following `up --build` finds in the cache, so the outage of the
+// rebuild stays the length of a recreate rather than of a build from scratch.
+func BuildWithoutCache(projectName string) error {
+	pp := paths.NewProjectPaths(projectName)
+	cmd := exec.Command("docker", buildWithoutCacheArgs([]string{"compose", "-f", pp.DockerCompose(), "-f", pp.DockerComposeOverride()}, attr.IsQuiet)...)
+	attachOutput(cmd)
+	return cmd.Run()
+}
+
+// buildWithoutCacheArgs builds the argument list, separated so it can be
+// asserted for the same reason as pullArgs.
+func buildWithoutCacheArgs(composeFiles []string, quiet bool) []string {
+	args := append(append([]string{}, composeFiles...), "build", "--no-cache", "--pull")
+	if quiet {
+		args = append(args, "--quiet")
+	}
+
+	return args
+}
+
 // attachOutput connects cmd stdout/stderr to os.Stdout/os.Stderr unless quiet mode is active
 func attachOutput(cmd *exec.Cmd) {
 	attr.AttachOutput(cmd)

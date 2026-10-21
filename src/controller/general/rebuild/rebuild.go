@@ -58,6 +58,26 @@ func Execute() {
 			os.Exit(1)
 		}
 
+		if args.NoCache {
+			// --changed compares what the containers were created from, and a
+			// fresh build of an unchanged definition looks to it like nothing
+			// to do: the new image would be built and left unused.
+			if args.Changed {
+				fmtc.ErrorLn("--no-cache and --changed cannot be combined: a rebuilt image from an unchanged definition counts as no change")
+				os.Exit(1)
+			}
+
+			// Rendered first, because the full rebuild below generates the
+			// build context only after taking the containers down.
+			docker.UpNginx(projectName)
+
+			fmtc.TitleLn("Building images without cache...")
+			if err := docker.BuildWithoutCache(projectName); err != nil {
+				fmtc.ErrorLn("Build failed, nothing was stopped: " + err.Error())
+				os.Exit(1)
+			}
+		}
+
 		if args.Changed && rebuildChanged(projectName, args.WithChown) {
 			return
 		}

@@ -1,6 +1,9 @@
 package docker
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // The boundary is a real date and a real release — compose v2.22.0, 2023-09-21,
 // is where `docker compose pull --policy` first appears in the command's own
@@ -93,5 +96,27 @@ func TestPullAsksForAPolicyOnlyWhenItShould(t *testing.T) {
 	// array would leak "pull" into whatever else shared it.
 	if len(files) != 3 {
 		t.Errorf("pullArgs modified the slice it was given: %v", files)
+	}
+}
+
+// A rebuild for a security fix has to reach the package layer: without
+// --no-cache the cached `apt-get install` layer is reused and the old package
+// stays, and without --pull the base image is the one already on the machine.
+func TestBuildWithoutCacheSkipsTheCacheAndPullsTheBase(t *testing.T) {
+	files := []string{"compose", "-f", "docker-compose.yml"}
+
+	got := buildWithoutCacheArgs(files, false)
+	want := []string{"compose", "-f", "docker-compose.yml", "build", "--no-cache", "--pull"}
+	if strings.Join(got, " ") != strings.Join(want, " ") {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	got = buildWithoutCacheArgs(files, true)
+	if got[len(got)-1] != "--quiet" {
+		t.Errorf("quiet: got %v, want --quiet last", got)
+	}
+
+	if len(files) != 3 {
+		t.Errorf("buildWithoutCacheArgs modified the slice it was given: %v", files)
 	}
 }
