@@ -37,6 +37,8 @@ func init() {
 		Help:     "Set configuration option",
 		Category: "config",
 		ArgsType: new(arg_struct.ControllerGeneralConfig),
+		// --global writes only the installation's config, so it needs no project.
+		GlobalWith: []string{"--global", "-g"},
 	})
 	command.Register(&command.Definition{
 		Aliases:  []string{"config:unset"},

@@ -62,7 +62,7 @@ func Run(appVersion string) {
 			return
 		}
 
-		if !command.IsGlobal(def) && !configs.IsHasConfig("") {
+		if !command.IsGlobalFor(def, os.Args[2:]) && !configs.IsHasConfig("") {
 			refuseOutsideProject(cmdName)
 			return
 		}
