@@ -3,6 +3,13 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NOWARNINGS="yes"
 
+# Retry a failed download instead of failing the image. On 2026-10-21, the day
+# PHP shipped fixes for two remote code execution bugs, the PPA answered 503 to a
+# few of the ~60 packages on every attempt: each build fetched most of them and
+# failed on the rest, five times in a row, and the fixed PHP never got in. apt
+# retries with a growing delay, so a busy mirror costs minutes, not the build.
+RUN echo 'Acquire::Retries "10";' > /etc/apt/apt.conf.d/80-retries
+
 RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y locales \
     curl \
     wget \

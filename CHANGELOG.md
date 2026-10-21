@@ -1,5 +1,8 @@
 **Unreleased**
 
+Fixed:
+- **A PHP image failed whole when the PPA refused a few packages.** On 2026-10-21, with the fixed PHP 8.5.12 / 8.4.27 just published, the PPA answered `503` to a handful of the ~60 packages on every attempt; apt gave up on the first refusal and the build failed five times in a row on two servers. The PHP images now set `Acquire::Retries "10"`, so apt retries a refused download with a growing delay. Every PHP image's first layer changes, so the next build of each starts from scratch. The golden files show the one added line in each PHP Dockerfile and nothing else
+
 Added:
 - **`rebuild --no-cache` builds every image anew before anything is stopped.** `up --build` reuses the layer cache, and the layer that installs PHP (or any package) has an instruction that never changes, so a rebuild after a security release kept the old package and said nothing: on 2026-10-21, with PHP 8.5.12 / 8.4.27 fixing two remote code execution bugs and already in the PPA, `apt-cache policy` in a rebuilt container still offered 8.5.11. The flag runs `docker compose build --no-cache --pull` while the old containers are still serving, then the ordinary rebuild, which finds the new layers in the cache — the outage stays the length of a recreate. A failed build stops the run with nothing stopped. Refused together with `--changed`, which would see an unchanged definition and leave the new image unused. `TestBuildWithoutCacheSkipsTheCacheAndPullsTheBase` fails with `--no-cache` dropped
 
