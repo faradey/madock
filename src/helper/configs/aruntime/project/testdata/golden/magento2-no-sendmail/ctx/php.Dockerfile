@@ -98,12 +98,18 @@ RUN apt-get -y --allow-releaseinfo-change update \
 SHELL ["/bin/bash", "-c"]
 RUN IFS='.' read major minor patch <<< "8.4" \
     && if [[ "${major}" -ge "9" ]] || [[ "${major}" = "8" && "${minor}" -ge "4" ]]; then \
-        # PHP 8.4+ — no compatible pecl mcrypt release, skip it
+        # PHP 8.4+ — no compatible pecl mcrypt release, skip it. Nothing here
+        # talks to pecl.php.net: a channel-update used to, for nothing, and a
+        # bad answer from it failed the whole image (2026-10-22, PHP 8.5).
         apt-get install -y pkg-config libmcrypt-dev \
-        && pecl channel-update pecl.php.net \
         && echo "Skipping pecl mcrypt for PHP ${major}.${minor} (no compatible release)" \
     ; elif [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then \
-        pecl install mcrypt-1.0.7 \
+        # pecl knows its own channel without an update, and a download from
+        # pecl.php.net that fails once is tried again before the image fails.
+        (for attempt in 1 2 3; do \
+            pecl install mcrypt-1.0.7 && exit 0; \
+            echo "madock: pecl install mcrypt-1.0.7 failed (attempt ${attempt} of 3)"; sleep 15; \
+        done; exit 1) \
         && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
         && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/8.4/cli/conf.d/mcrypt.ini" \
         && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/8.4/fpm/conf.d/mcrypt.ini" \
