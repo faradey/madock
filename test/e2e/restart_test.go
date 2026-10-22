@@ -32,7 +32,7 @@ import (
 func TestRestartReadsArgumentsBeforeStopping(t *testing.T) {
 	p := newProject(t, "e2erestart")
 
-	p.run(3*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2erestart.test",

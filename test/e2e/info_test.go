@@ -41,7 +41,7 @@ const dbPassword = "e2e-plaintext-password"
 func TestInfoReportsWhatIsActuallyPublished(t *testing.T) {
 	p := newProject(t, "e2einfo")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2einfo.test",

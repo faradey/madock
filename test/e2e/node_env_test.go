@@ -32,7 +32,7 @@ import (
 func TestNodeContainerDoesNotSetNodeEnv(t *testing.T) {
 	p := newProject(t, "e2enodeenv")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=nodejs",
 		"--hosts=e2enodeenv.test",

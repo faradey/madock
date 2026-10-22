@@ -28,7 +28,7 @@ func TestProxyRoutesEveryProjectOverHTTPS(t *testing.T) {
 	second := install.project("e2eproxyb")
 
 	for _, p := range []*project{first, second} {
-		p.run(5*time.Minute, "setup", "-y",
+		p.run(setupTimeout, "setup", "-y",
 			"--platform=custom",
 			"--language=none",
 			"--hosts="+p.name+".test",
@@ -118,7 +118,7 @@ func requireCertificateFor(t *testing.T, p *project, host string) {
 func TestChangedHostGetsItsOwnCertificate(t *testing.T) {
 	p := newProject(t, "e2ehost")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2ehost-before.test",

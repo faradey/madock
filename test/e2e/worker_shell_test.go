@@ -17,7 +17,7 @@ import (
 // command now runs, and the worker stays up on its last one.
 func TestAWorkerCommandWithShellSyntaxRunsWhole(t *testing.T) {
 	p := newProject(t, "e2eworkershell")
-	p.run(5*time.Minute, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2eworkershell.test")
+	p.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2eworkershell.test")
 	if err := os.WriteFile(filepath.Join(p.runDir, ".env"), []byte("E2E_GREETING=from-env\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}

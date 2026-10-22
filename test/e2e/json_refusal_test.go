@@ -25,7 +25,7 @@ import (
 // that broke it, measured on a production machine on 2026-10-15.
 func TestARefusalBeforeTheCommandLeavesStdoutEmpty(t *testing.T) {
 	p := newProject(t, "jsonrefusal")
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=jsonrefusal.test",

@@ -22,7 +22,7 @@ import (
 func TestJSONOutputIsUsable(t *testing.T) {
 	p := newProject(t, "e2ejson")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2ejson.test",

@@ -25,7 +25,7 @@ import (
 func TestCronReportsWhatTheContainerHas(t *testing.T) {
 	p := newProject(t, "e2ecron")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2ecron.test",
@@ -74,7 +74,7 @@ func TestCronReportsWhatTheContainerHas(t *testing.T) {
 func TestCronSurvivesARestartOfItsContainer(t *testing.T) {
 	p := newProject(t, "e2ecronrestart")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2ecronrestart.test",
@@ -124,7 +124,7 @@ func TestCronSurvivesARestartOfItsContainer(t *testing.T) {
 func TestCronStatusIgnoresAStalePidfile(t *testing.T) {
 	p := newProject(t, "e2ecronpidfile")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2ecronpidfile.test",
@@ -237,7 +237,7 @@ func cronFromJSON(t *testing.T, p *project) (running, enabled bool) {
 func TestCronComesBackAfterARebuildAndARestart(t *testing.T) {
 	p := newProject(t, "e2ecronrebuild")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2ecronrebuild.test",

@@ -27,7 +27,7 @@ import (
 func TestDatabaseMemoryReachesMysql(t *testing.T) {
 	p := newProject(t, "e2edbmemmysql")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2edbmemmysql.test",
@@ -55,7 +55,7 @@ func TestDatabaseMemoryReachesMysql(t *testing.T) {
 func TestDatabaseMemoryReachesPostgresql(t *testing.T) {
 	p := newProject(t, "e2edbmempg")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--db-type=postgresql",
@@ -98,7 +98,7 @@ func TestDatabaseMemoryReachesPostgresql(t *testing.T) {
 func TestPostgres18Starts(t *testing.T) {
 	p := newProject(t, "e2epg18")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--db-type=postgresql",
@@ -123,7 +123,7 @@ func TestPostgres18Starts(t *testing.T) {
 func TestDatabaseMemoryReachesMongodb(t *testing.T) {
 	p := newProject(t, "e2edbmemmongo")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--db-type=mongodb",

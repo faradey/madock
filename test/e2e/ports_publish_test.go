@@ -29,7 +29,7 @@ func TestAProjectWithoutPublishedPortsIsReachedOnlyThroughTheProxy(t *testing.T)
 	hidden := install.project("e2epub")
 	other := install.project("e2epubother")
 
-	hidden.run(5*time.Minute, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2epub.test")
+	hidden.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2epub.test")
 	hidden.run(2*time.Minute, "config:set", "-n", "ports/publish", "-v", "false")
 	hidden.run(20*time.Minute, "start")
 
@@ -85,7 +85,7 @@ func TestAProjectWithoutPublishedPortsIsReachedOnlyThroughTheProxy(t *testing.T)
 	// Stopped, its block stays in the proxy; starting another project reloads
 	// the proxy with that block in it.
 	hidden.run(5*time.Minute, "stop")
-	other.run(5*time.Minute, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2epubother.test")
+	other.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2epubother.test")
 	other.run(20*time.Minute, "start")
 	requireCertificateFor(t, other, "e2epubother.test")
 }

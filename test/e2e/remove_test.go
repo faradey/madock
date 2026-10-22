@@ -27,7 +27,7 @@ func TestProjectRemoveLeavesNothingBehind(t *testing.T) {
 	install := newInstallation(t)
 	p := install.project("e2egone")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2egone.test",
@@ -63,7 +63,7 @@ func TestProjectRemoveLeavesNothingBehind(t *testing.T) {
 	// The same name again, which means the same container and volume names.
 	// Anything Docker kept comes back here.
 	second := install.project("e2egone")
-	second.run(5*time.Minute, "setup", "-y",
+	second.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2egone.test",

@@ -21,7 +21,7 @@ func TestSnapshotsAndClonesCarryEveryNamedVolume(t *testing.T) {
 	install := newInstallation(t)
 	source := install.project("e2evols")
 
-	source.run(5*time.Minute, "setup", "-y",
+	source.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2evols.test",
@@ -64,7 +64,7 @@ func TestSnapshotsAndClonesCarryEveryNamedVolume(t *testing.T) {
 // statistics or an application's queued jobs.
 func TestTurningPersistOnCarriesTheOldData(t *testing.T) {
 	p := newProject(t, "e2epersist")
-	p.run(5*time.Minute, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2epersist.test")
+	p.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2epersist.test")
 	p.run(2*time.Minute, "config:set", "-n", "redis/enabled", "-v", "true")
 	p.run(25*time.Minute, "start")
 
@@ -95,7 +95,7 @@ func TestTurningPersistOnCarriesTheOldData(t *testing.T) {
 // start recreate the container.
 func TestTurningPersistOnCarriesValkeyFromItsLayer(t *testing.T) {
 	p := newProject(t, "e2evalkeylayer")
-	p.run(5*time.Minute, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2evalkeylayer.test")
+	p.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2evalkeylayer.test")
 	p.run(2*time.Minute, "config:set", "-n", "valkey/enabled", "-v", "true")
 	// 9, the version the store ran: valkey/valkey:9 declares no VOLUME, the
 	// 8.1 line madock defaults to does — and with it the data is in an

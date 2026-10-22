@@ -17,7 +17,7 @@ import (
 // The start has to say so — and still start, because those projects run today.
 func TestAProjectTemplateReadingAnUnknownSettingIsNamed(t *testing.T) {
 	p := newProject(t, "e2eunknownkey")
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2eunknownkey.test",

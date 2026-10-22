@@ -18,7 +18,7 @@ import (
 // and in --json; other stopped services stay out as before.
 func TestStatusListsAWorkerThatStopped(t *testing.T) {
 	p := newProject(t, "e2eworkerdown")
-	p.run(5*time.Minute, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2eworkerdown.test")
+	p.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2eworkerdown.test")
 	// Program names are the project's own keys, so they go in its
 	// .madock/config.xml rather than through config:set.
 	dir := filepath.Join(p.runDir, ".madock")

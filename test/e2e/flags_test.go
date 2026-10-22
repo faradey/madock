@@ -25,7 +25,7 @@ import (
 func TestServiceEnabledAtTheAskedVersion(t *testing.T) {
 	p := newProject(t, "e2esvcver")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2esvcver.test",
@@ -69,7 +69,7 @@ func TestServiceEnabledAtTheAskedVersion(t *testing.T) {
 func TestStartWithChownTakesOwnershipBack(t *testing.T) {
 	p := newProject(t, "e2echown")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2echown.test",
@@ -119,7 +119,7 @@ func TestStartWithChownTakesOwnershipBack(t *testing.T) {
 func TestRebuildForceKeepsTheData(t *testing.T) {
 	p := newProject(t, "e2erebuildf")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2erebuildf.test",
@@ -147,7 +147,7 @@ func TestRebuildForceKeepsTheData(t *testing.T) {
 func TestExportAsAnotherContainerUser(t *testing.T) {
 	p := newProject(t, "e2eexportu")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2eexportu.test",
