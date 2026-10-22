@@ -73,6 +73,16 @@ The two programs above become two compose services. This is the real output, fro
 
 `dockerfile` is the main service's — `nodejs.Dockerfile` here because the project's language is Node, `php.Dockerfile` on a PHP project. `exec` in the command means the process replaces the shell, so docker signals reach it and a stop is a stop rather than a ten-second wait.
 
+`exec` is added only to a single program. A command with shell syntax in it — a `;` or `&&`, a pipe, a redirection, `$( )`, or a builtin such as `set` or `cd` at the front — is run by the shell as written, because `exec a && b` would never run `b`. So a worker can load the project's environment first:
+
+```xml
+<programs>
+    <queue>set -a; . ./.env; php artisan queue:work redis</queue>
+</programs>
+```
+
+The command is escaped for compose: a `$VAR` is expanded by the shell inside the container, from the container's environment, not by compose from the host's.
+
 ## What a worker gets
 
 - **The main service's image.** `php` for a PHP project, `nodejs`, `python`, `golang`, `ruby`, or `app` for a language-less one — whatever the project is built around. So the worker has exactly the runtime the application has, and there is no second Dockerfile to drift out of step.

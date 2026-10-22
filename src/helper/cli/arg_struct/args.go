@@ -171,6 +171,7 @@ type ControllerGeneralRebuild struct {
 	Force     bool `arg:"-f,--force" help:"Force"`
 	WithChown bool `arg:"-c,--with-chown" help:"With Chown"`
 	Changed   bool `arg:"--changed" help:"Only the services whose definition or files changed; nginx reloads for a vhost edit. Everything else is left running"`
+	NoCache   bool `arg:"--no-cache" help:"Build every image anew, base images pulled again, before anything is stopped. For a security fix in a package an image installs"`
 }
 
 type ControllerGeneralRemoteSyncDb struct {

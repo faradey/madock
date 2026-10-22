@@ -17,7 +17,7 @@ func TestAMutedCloneCannotActAsItsSource(t *testing.T) {
 	install := newInstallation(t)
 	source := install.project("e2emute")
 
-	source.run(5*time.Minute, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2emute.test")
+	source.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2emute.test")
 	source.run(2*time.Minute, "config:set", "-n", "rabbitmq/enabled", "-v", "true")
 	source.run(2*time.Minute, "config:set", "-n", "rabbitmq/persist", "-v", "true")
 	source.run(25*time.Minute, "start")

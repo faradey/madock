@@ -505,6 +505,13 @@
                 </jobs>-->
             </cron>
             <ssh>
+                <!-- true mounts the host user's ~/.ssh (read-only) into the
+                     application containers, so composer and git reach private
+                     repositories with the developer's own keys. false mounts
+                     nothing: for code that must not read those keys — a
+                     project to be cleaned of malware, a copy from a stranger.
+                     Git over ssh inside the container then needs its own key. -->
+                <mount>true</mount>
                 <auth_type>key</auth_type>
                 <host></host>
                 <port>22</port>

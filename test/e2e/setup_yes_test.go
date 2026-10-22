@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 )
 
 // TestSetupYesRefusesAQuestionItCannotAnswer covers the questions `--yes` had no
@@ -30,7 +29,7 @@ import (
 func TestSetupYesRefusesAQuestionItCannotAnswer(t *testing.T) {
 	p := newProject(t, "e2esetupyes")
 
-	out, err := p.tryRun(3*time.Minute, "setup", "-y",
+	out, err := p.tryRun(setupTimeout, "setup", "-y",
 		"--platform=shopware",
 		"--hosts=e2esetupyes.test",
 	)

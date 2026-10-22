@@ -50,10 +50,15 @@ func Execute() {
 
 		reportReconciliation(projectName)
 
-		// Before anything is taken down: the old container is the only thing
-		// that still points at the anonymous volume a newly persisted Redis or
-		// Valkey kept its data in.
-		if err := docker.CarryToPersisted(projectName, configs.GetProjectConfig(projectName)); err != nil {
+		// --changed compares what the containers were created from, and a
+		// fresh build of an unchanged definition looks to it like nothing to
+		// do: the new image would be built and left unused.
+		if args.NoCache && args.Changed {
+			fmtc.ErrorLn("--no-cache and --changed cannot be combined: a rebuilt image from an unchanged definition counts as no change")
+			os.Exit(1)
+		}
+
+		if err := prepare(projectName, args.NoCache); err != nil {
 			fmtc.ErrorLn(err.Error())
 			os.Exit(1)
 		}
@@ -215,4 +220,40 @@ func rebuildChanged(projectName string, withChown bool) bool {
 	}
 	fmtc.SuccessIconLn(fmt.Sprintf("Applied in %s; every other container was left running", time.Since(startTime).Round(time.Second)))
 	return true
+}
+
+// The steps prepare runs, as variables so a test can record their order.
+var (
+	renderStack       = docker.UpNginx
+	buildWithoutCache = docker.BuildWithoutCache
+	carryToPersisted  = func(projectName string) error {
+		return docker.CarryToPersisted(projectName, configs.GetProjectConfig(projectName))
+	}
+)
+
+// prepare does what has to happen before anything is taken down: with
+// --no-cache the images are built, and then a newly persisted Redis, Valkey or
+// RabbitMQ is carried into its named volume.
+//
+// The order is the point. The carry stops the old service to copy its data,
+// and a --no-cache build takes minutes; carried first, the service stayed down
+// for the whole build — found reading the steps on 2026-10-22 before turning
+// persist on for a production queue. Built first, a failed build leaves the
+// service untouched as well as the containers.
+func prepare(projectName string, noCache bool) error {
+	if noCache {
+		// Rendered first, because the full rebuild generates the build
+		// context only after taking the containers down.
+		renderStack(projectName)
+
+		fmtc.TitleLn("Building images without cache...")
+		if err := buildWithoutCache(projectName); err != nil {
+			return fmt.Errorf("Build failed, nothing was stopped: %w", err)
+		}
+	}
+
+	// Before anything is taken down: the old container is the only thing that
+	// still points at the anonymous volume a newly persisted Redis or Valkey
+	// kept its data in.
+	return carryToPersisted(projectName)
 }

@@ -39,7 +39,7 @@ func TestNginxOffKeepsTheProjectOutOfTheSharedProxy(t *testing.T) {
 	neighbour := install.project("e2ewithnginx")
 
 	for _, p := range []*project{quiet, neighbour} {
-		p.run(5*time.Minute, "setup", "-y",
+		p.run(setupTimeout, "setup", "-y",
 			"--platform=custom",
 			"--language=none",
 			"--hosts="+p.name+".test",
@@ -151,7 +151,7 @@ func TestAProjectShippedWithoutNginxNeverTakesTheWebPorts(t *testing.T) {
 </config>
 `)
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2eshippedoff.test",

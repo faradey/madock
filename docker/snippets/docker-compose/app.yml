@@ -7,8 +7,10 @@
     tty: true
     volumes:
       - ./src:/var/www/html:cached
+      {{{- if .ssh.mount}}}
       - ./ssh:/var/www/.ssh:ro
       - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
+      {{{- end}}}
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{- range $host := .nginx.hosts}}}

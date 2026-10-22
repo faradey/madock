@@ -20,7 +20,7 @@ import (
 func TestConfigChangeReachesGeneratedFiles(t *testing.T) {
 	p := newProject(t, "e2econf")
 
-	p.run(3*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2econf.test",

@@ -2,6 +2,7 @@ package list
 
 import (
 	"fmt"
+	"github.com/faradey/madock/v4/src/helper/snapshotengine"
 
 	"github.com/faradey/madock/v4/src/command"
 	"github.com/faradey/madock/v4/src/controller/general/snapshot/create"
@@ -39,7 +40,8 @@ func Execute() {
 	args := attr.Parse(new(ArgsStruct)).(*ArgsStruct)
 
 	dir := paths.GetExecDirPath() + "/projects/" + configs.GetProjectName() + "/backup/snapshot"
-	out := ListJSON{Snapshots: Read(dir)}
+	project := snapshotengine.Project{Name: configs.GetProjectName(), Conf: configs.GetCurrentProjectConfig()}
+	out := ListJSON{Snapshots: ReadFor(project, dir)}
 
 	if args.Json {
 		output.Begin().Print(out)
@@ -53,6 +55,15 @@ func Execute() {
 	for _, s := range out.Snapshots {
 		fmt.Printf("  %-45s %8s  %v\n", s.Name, humanBytes(s.SizeBytes), s.Files)
 	}
+}
+
+// ReadFor is Read with each engine snapshot's own size (engine_bytes).
+func ReadFor(p snapshotengine.Project, dir string) []create.SnapshotJSON {
+	snapshots := []create.SnapshotJSON{}
+	for _, name := range create.OrderedNames(dir) {
+		snapshots = append(snapshots, create.DescribeFor(p, dir, name))
+	}
+	return snapshots
 }
 
 // Read lists the snapshots in dir, oldest first (create.OrderedNames).

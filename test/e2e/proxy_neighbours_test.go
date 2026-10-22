@@ -30,7 +30,7 @@ func TestRemovingAProjectTakesItOutOfTheProxy(t *testing.T) {
 	leaving := install.project("e2eleaves")
 
 	for _, p := range []*project{staying, leaving} {
-		p.run(5*time.Minute, "setup", "-y",
+		p.run(setupTimeout, "setup", "-y",
 			"--platform=custom",
 			"--language=none",
 			"--hosts="+p.name+".test",

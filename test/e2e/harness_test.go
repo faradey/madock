@@ -35,6 +35,14 @@ import (
 // project registry, the generated runtime and the unpacked docker templates.
 // Container names are not isolated by it, which is why each test picks its own
 // project name — two tests sharing a name would share containers.
+// setupTimeout is how long `madock setup` may take. Setup builds the
+// project's images, and the first build in a fresh runner downloads its
+// packages: on 2026-10-22 one apt step there took 338 s and another 293 s
+// against Ubuntu's archive, and four tests failed on a five-minute limit while
+// every other setup in the same run took ten seconds. A setup that really hangs
+// still fails, later.
+const setupTimeout = 15 * time.Minute
+
 type project struct {
 	t       *testing.T
 	install *installation

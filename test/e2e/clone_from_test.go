@@ -20,7 +20,7 @@ func TestCloneFromASnapshotTakesItsSavedState(t *testing.T) {
 	install := newInstallation(t)
 	source := install.project("e2efrom")
 
-	source.run(5*time.Minute, "setup", "-y",
+	source.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2efrom.test",

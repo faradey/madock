@@ -30,7 +30,7 @@ func TestProxyStartsWithTheWorkerSettingsItIsGiven(t *testing.T) {
 	install := newInstallation(t)
 	p := install.project("e2eworkers")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2eworkers.test",
@@ -132,7 +132,7 @@ func TestProxyOffersOnlyTheTlsVersionsItIsGiven(t *testing.T) {
 	install := newInstallation(t)
 	p := install.project("e2etls")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2etls.test",

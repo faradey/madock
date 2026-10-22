@@ -30,7 +30,7 @@ import (
 func TestSslRebuildIssuesANewCertificate(t *testing.T) {
 	p := newProject(t, "e2essl")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2essl.test",
@@ -85,7 +85,7 @@ func TestSslRebuildIssuesANewCertificate(t *testing.T) {
 func TestConfigCacheCleanRemovesTheCacheAndNothingElse(t *testing.T) {
 	p := newProject(t, "e2econfcache")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2econfcache.test",

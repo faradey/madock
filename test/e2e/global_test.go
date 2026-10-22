@@ -24,7 +24,7 @@ func TestGlobalServiceReachesTheNextProject(t *testing.T) {
 	install := newInstallation(t)
 
 	first := install.project("e2eglobalfirst")
-	first.run(5*time.Minute, "setup", "-y",
+	first.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2eglobalfirst.test",
@@ -39,7 +39,7 @@ func TestGlobalServiceReachesTheNextProject(t *testing.T) {
 	// A project created afterwards inherits it, because that is what --global
 	// means and the only way to tell it apart from a local enable.
 	second := install.project("e2eglobalsecond")
-	second.run(5*time.Minute, "setup", "-y",
+	second.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2eglobalsecond.test",
@@ -59,7 +59,7 @@ func TestLocalServiceStaysLocal(t *testing.T) {
 	install := newInstallation(t)
 
 	first := install.project("e2elocalfirst")
-	first.run(5*time.Minute, "setup", "-y",
+	first.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2elocalfirst.test",
@@ -71,7 +71,7 @@ func TestLocalServiceStaysLocal(t *testing.T) {
 		"the project the command was run in")
 
 	second := install.project("e2elocalsecond")
-	second.run(5*time.Minute, "setup", "-y",
+	second.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2elocalsecond.test",

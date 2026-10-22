@@ -17,7 +17,7 @@ import (
 // witness is a real command, not the function.
 func TestAProjectNeedingANewerMadockIsRefused(t *testing.T) {
 	p := newProject(t, "e2eminver")
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2eminver.test",

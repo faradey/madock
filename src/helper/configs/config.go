@@ -178,6 +178,15 @@ func IsHasConfig(projectName string) bool {
 		}
 	}
 
+	// A question asked outside any project — a directory with no runtime config
+	// and no .madock/config.xml — is answered no, and leaves nothing behind. It
+	// used to create projects/<dir>/docker/{nginx,php} in the installation for
+	// every such directory, so a `config:set --global` run from a home directory
+	// registered an empty project shell named after it (Indemorio IND-14).
+	if !paths.IsFileExist(runtimeConfigPath) && !inProjectConfigExists {
+		return false
+	}
+
 	PrepareDirsForProject(projectName)
 	if !paths.IsFileExist(runtimeConfigPath) && inProjectConfigExists {
 		err := paths.Copy(paths.GetRunDirPath()+"/.madock/config.xml", runtimeConfigPath)

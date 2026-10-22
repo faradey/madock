@@ -23,7 +23,7 @@ import (
 func TestExecResolvesContainerAndUser(t *testing.T) {
 	p := newProject(t, "e2eexecres")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2eexecres.test",
@@ -92,7 +92,7 @@ func TestExecResolvesContainerAndUser(t *testing.T) {
 func TestExecCommandsFailLoudlyWithNoContainer(t *testing.T) {
 	p := newProject(t, "e2eexecmiss")
 
-	p.run(5*time.Minute, "setup", "-y",
+	p.run(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--hosts=e2eexecmiss.test",
