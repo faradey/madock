@@ -67,7 +67,7 @@ func Execute() {
 		captureWithEngine(w, engine, engineName, projectConf, projectName, name, dbsPath)
 		pruneAfterCreate(projectConf, dest)
 		if w != nil {
-			w.Print(Describe(dest, name))
+			w.Print(DescribeFor(snapshotengine.Project{Name: projectName, Conf: projectConf}, dest, name))
 			return
 		}
 		fmt.Println("Snapshot completed successfully")
@@ -305,6 +305,28 @@ type SnapshotJSON struct {
 	Path      string   `json:"path"`
 	Files     []string `json:"files"`
 	SizeBytes int64    `json:"size_bytes"`
+	// EngineBytes is what the engine's own snapshot holds, when an engine
+	// took it and can say. size_bytes is the directory, which for such a
+	// snapshot is engine.json alone.
+	EngineBytes *int64 `json:"engine_bytes,omitempty"`
+}
+
+// DescribeFor is Describe with the engine's own size added when an engine
+// took the snapshot and reports one.
+func DescribeFor(p snapshotengine.Project, snapshotsDir, name string) SnapshotJSON {
+	out := Describe(snapshotsDir, name)
+	marker, byEngine, err := snapshotengine.ReadMarker(out.Path)
+	if err != nil || !byEngine {
+		return out
+	}
+	engine, ok := snapshotengine.ByName(marker.Engine)
+	if !ok {
+		return out
+	}
+	if n, ok := snapshotengine.BytesOf(engine, p, marker.Ref); ok {
+		out.EngineBytes = &n
+	}
+	return out
 }
 
 // Describe reads what a snapshot directory holds. Shared with snapshot:list,

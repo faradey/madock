@@ -232,3 +232,27 @@ func reset() {
 	engines = map[string]Engine{}
 	mu.Unlock()
 }
+
+// Sizer is an engine that can say how much one of its snapshots holds.
+//
+// Extension point for madock-pro: a snapshot an engine took leaves only
+// engine.json in its directory, so the size madock sums from the directory is
+// the size of that marker — a few dozen bytes for a snapshot of gigabytes
+// (Indemorio IND-15). An engine that implements this reports the real figure,
+// which --json gives as engine_bytes.
+type Sizer interface {
+	SnapshotBytes(p Project, ref string) (int64, error)
+}
+
+// BytesOf is e's SnapshotBytes for ref, and whether it could say.
+func BytesOf(e Engine, p Project, ref string) (int64, bool) {
+	s, ok := e.(Sizer)
+	if !ok {
+		return 0, false
+	}
+	n, err := s.SnapshotBytes(p, ref)
+	if err != nil {
+		return 0, false
+	}
+	return n, true
+}
