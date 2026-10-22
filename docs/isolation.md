@@ -102,8 +102,8 @@ madock rebuild
 | `php/composer/shared_cache` | `true` | The download cache is the project's own |
 
 Check what was rendered before running anything: the generated
-`docker-compose.yml` of the project (`madock info` shows where) should carry no
-`./ssh` line and no `ports:` block.
+`<madock installation>/aruntime/projects/<project>/docker-compose.yml` should
+carry no `./ssh` line and no `ports:` block.
 
 ### What madock does not promise
 
