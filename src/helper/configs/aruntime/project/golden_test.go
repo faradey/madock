@@ -272,6 +272,16 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// ssh/mount false: the host user's ~/.ssh reaches no container —
+			// for code that must not read those keys. A ./ssh line left in any
+			// service is the keys handed over.
+			name: "magento2-no-host-ssh",
+			overrides: map[string]string{
+				"platform":  "magento2",
+				"ssh/mount": "false",
+			},
+		},
+		{
 			name: "custom-none-no-nginx",
 			overrides: map[string]string{
 				"platform":        "custom",

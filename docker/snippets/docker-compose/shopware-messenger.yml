@@ -13,8 +13,10 @@
     volumes:
       - ./src:/var/www/html:cached
       - ./composer:/var/www/.composer:cached
+      {{{- if .ssh.mount}}}
       - ./ssh:/var/www/.ssh:ro
       - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
+      {{{- end}}}
       - ./ctx/scripts/:/var/www/scripts/:cached
     environment:
       - COMPOSER_HOME=/var/www/.composer
