@@ -13,6 +13,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/docker"
+	"github.com/faradey/madock/v4/src/helper/matrixcheck"
 )
 
 func init() {
@@ -48,6 +49,8 @@ func ExecuteWith(args *arg_struct.ControllerGeneralStart) {
 			fmtc.ErrorLn(err.Error())
 			os.Exit(1)
 		}
+
+		matrixcheck.Warn(projectConf, projectConf["path"])
 
 		fmtc.TitleLn("Starting containers...")
 

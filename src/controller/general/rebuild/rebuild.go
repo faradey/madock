@@ -16,6 +16,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/embedded"
 	"github.com/faradey/madock/v4/src/helper/logger"
+	"github.com/faradey/madock/v4/src/helper/matrixcheck"
 	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
@@ -49,6 +50,9 @@ func Execute() {
 		embedded.ReportOnce()
 
 		reportReconciliation(projectName)
+
+		projectConf := configs.GetProjectConfig(projectName)
+		matrixcheck.Warn(projectConf, projectConf["path"])
 
 		// --changed compares what the containers were created from, and a
 		// fresh build of an unchanged definition looks to it like nothing to
