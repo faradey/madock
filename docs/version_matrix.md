@@ -157,6 +157,32 @@ or `require` of its own package — and the newest of those it supports. Where
 the vendor states nothing, the value chosen earlier stays, and the comment says
 so.
 
+## The warning at start and rebuild
+
+Since 4.5.16 `madock start` and `madock rebuild` hold the project's configured
+versions against the matrix and warn, on stderr, about each one past its line:
+
+```
+Outside the version matrix: php/version 8.4 is newer than magento2 2.4.7 supports (8.3 by the matrix)
+A warning only: madock starts it as configured. `madock matrix --platform magento2` shows the lines.
+```
+
+- The platform version comes from the project's code, the way `setup` detects
+  it. Code whose version cannot be read, or code of another platform than the
+  config names, is not compared.
+- Versions are compared by major.minor, because a line names a release line:
+  OpenSearch 2.12.1 is within Adobe's 2.12.0.
+- Only newer is named. A line is the newest supported version and the matrix
+  has no floor, so an older version is neither confirmed nor flagged.
+- A tool the matrix answers `NotCompatible` for is named when it is enabled.
+- Only what runs is compared: a service with `enabled` false, PHP and Composer
+  when the language is not PHP, a database of another engine than the
+  matrix's (MariaDB when the matrix names none, as in `setup`).
+- An answer that is no version — medusa's `postgres:17` — is skipped.
+
+It never stops anything. Whoever pinned a version past the line may know
+something the matrix does not.
+
 ## Changing it
 
 Edit the XML, then:
