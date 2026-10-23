@@ -8,6 +8,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/cli/output"
 	"github.com/faradey/madock/v4/src/helper/cli/shell"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/dbtarget"
@@ -76,33 +77,63 @@ func executeMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbEx
 		return
 	}
 
+	w := output.Begin()
+	rows := rowsFile(w)
+	defer os.Remove(rows.Name())
+
 	// Streamed rather than buffered: this is the command a table dump is taken
 	// with, and holding the whole result in memory twice is a cost for the case
-	// that matters most.
+	// that matters most. Streamed into a file, not onto stdout: the answer is
+	// one document, and a query that fails half way must answer
+	// {"success": false} rather than leave half an array behind.
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		logger.Fatal(err)
+		w.Fail("%v", err)
 	}
 	if err := cmd.Start(); err != nil {
-		logger.Fatal(err)
+		w.Fail("%v", err)
 	}
 
-	sets, convertErr := mysqlXMLToJSON(stdout, os.Stdout)
+	sets, convertErr := mysqlXMLToJSON(stdout, rows)
 
 	// Waited on before the conversion error is reported: the client's own message
 	// on stderr says more about a broken query than "unexpected EOF" does.
 	if err := cmd.Wait(); err != nil {
-		logger.Fatal(err)
+		w.Fail("the query failed: %v", err)
 	}
 	if convertErr != nil {
-		logger.Fatal(convertErr)
+		w.Fail("reading the client's answer: %v", convertErr)
 	}
 
 	// Several statements in one -e produce several result sets, and they are
 	// concatenated into the one array. Said out loud, because a consumer counting
-	// rows would otherwise have no way to know two queries were merged.
+	// rows would otherwise have no way to know two queries were merged. On
+	// stderr, as everything is once Begin has diverted stdout.
 	if sets > 1 {
 		fmtc.WarningLn("The query returned " + strconv.Itoa(sets) + " result sets; their rows are concatenated into one JSON array")
+	}
+	answerRows(w, rows)
+}
+
+// rowsFile is where the rows wait until the query is known to have succeeded.
+func rowsFile(w *output.Writer) *os.File {
+	f, err := os.CreateTemp("", "madock-db-execute-*.json")
+	if err != nil {
+		w.Fail("a file for the rows: %v", err)
+	}
+	return f
+}
+
+// answerRows writes {"success": true, "data": <the rows>}. db:execute answered
+// the bare array until 4.5.17, the one --json command outside the response
+// format every other one follows (found by the Indemorio engine, 2026-10-23).
+func answerRows(w *output.Writer, rows *os.File) {
+	if _, err := rows.Seek(0, 0); err != nil {
+		w.Fail("%v", err)
+	}
+	if err := w.PrintRaw(rows); err != nil {
+		fmtc.ErrorLn("writing the answer: " + err.Error())
+		os.Exit(1)
 	}
 }
 
@@ -139,11 +170,23 @@ func executePostgresql(target dbtarget.Target, args *arg_struct.ControllerGenera
 	if err != nil {
 		logger.FatalChild(err)
 	}
-	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		logger.Fatal(err)
+	if !args.Json {
+		cmd.Stdout = os.Stdout
+		if err := cmd.Run(); err != nil {
+			logger.Fatal(err)
+		}
+		return
 	}
+
+	w := output.Begin()
+	rows := rowsFile(w)
+	defer os.Remove(rows.Name())
+	cmd.Stdout = rows
+	if err := cmd.Run(); err != nil {
+		w.Fail("the query failed: %v", err)
+	}
+	answerRows(w, rows)
 }
 
 func executeMongodb(target dbtarget.Target, args *arg_struct.ControllerGeneralDbExecute) {

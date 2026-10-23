@@ -60,3 +60,23 @@ func TestFailWritesAFailureAndExitsOne(t *testing.T) {
 		t.Errorf("exit code = %d, want 1", code)
 	}
 }
+
+// Rows that are JSON already are wrapped as they are, in the same document
+// every other answer is: db:execute answered the bare array.
+func TestRawDataIsWrappedInTheResponse(t *testing.T) {
+	var out bytes.Buffer
+	w := &Writer{out: &out}
+	if err := w.PrintRaw(bytes.NewBufferString(`[{"v":"one"}]`)); err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		Success bool                `json:"success"`
+		Data    []map[string]string `json:"data"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &doc); err != nil {
+		t.Fatalf("not one document: %v\n%s", err, out.String())
+	}
+	if !doc.Success || len(doc.Data) != 1 || doc.Data[0]["v"] != "one" {
+		t.Errorf("got %s", out.String())
+	}
+}

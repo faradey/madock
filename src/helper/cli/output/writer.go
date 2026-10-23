@@ -75,6 +75,20 @@ func (w *Writer) FailWith(data any, format string, a ...any) {
 	exit(1)
 }
 
+// PrintRaw writes a success document whose data is already JSON, copied from
+// r as it is: db:execute's rows, which may be a table dump and are not worth
+// decoding only to encode them again. r must hold one JSON value.
+func (w *Writer) PrintRaw(r io.Reader) error {
+	if _, err := io.WriteString(w.out, `{"success": true, "data": `); err != nil {
+		return err
+	}
+	if _, err := io.Copy(w.out, r); err != nil {
+		return err
+	}
+	_, err := io.WriteString(w.out, "}\n")
+	return err
+}
+
 // exit is replaceable so a test can see a failure without ending the run.
 var exit = os.Exit
 

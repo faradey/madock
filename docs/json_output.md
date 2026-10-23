@@ -193,6 +193,22 @@ madock db:export --json
 }
 ```
 
+### db:execute
+
+The rows of the query, as an array of objects keyed by column, in `data`.
+MySQL, MariaDB and PostgreSQL; MongoDB refuses `--json`.
+
+```bash
+madock db:execute --json "SELECT entity_id, sku FROM catalog_product_entity LIMIT 2"
+```
+
+```json
+{"success": true, "data": [{"entity_id":"1","sku":"24-MB01"},{"entity_id":"2","sku":"24-MB04"}]}
+```
+
+A query that fails answers `{"success": false, "error": "…"}` with the
+client's own message on stderr. Until 4.5.17 the answer was the bare array.
+
 ### matrix
 
 The compatibility matrix compiled into the binary. Runs outside a project.
