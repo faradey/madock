@@ -16,7 +16,7 @@ type ControllerGeneralSetup struct {
 	Platform            string `arg:"--platform" help:"Platform"`
 	PlatformEdition     string `arg:"--platform-edition" help:"Platform edition"`
 	PlatformVersion     string `arg:"--platform-version" help:"Platform version"`
-	Preset              string `arg:"--preset" help:"Use a preset configuration (e.g., 'magento-247', 'magento-246', 'shopware-65')"`
+	Preset              string `arg:"--preset" help:"Use a preset of the platform, by its version or its name (e.g. '2.4.8', 'lts'); 'madock matrix --platform <platform>' lists them. A preset that matches none is refused"`
 	Language            string `arg:"-l,--language" help:"Primary language (php, nodejs, python, golang, ruby, none)"`
 	Php                 string `arg:"--php" help:"PHP version"`
 	Db                  string `arg:"--db" help:"DB version"`

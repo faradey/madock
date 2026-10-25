@@ -53,7 +53,8 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 			usePreset = true
 			fmtc.SuccessIconLn(fmt.Sprintf("Using preset: %s", selectedPreset.Name))
 		} else {
-			fmtc.WarningLn(fmt.Sprintf("Preset '%s' not found, proceeding with manual configuration", args.Preset))
+			fmtc.ErrorLn(preset.Unmatched(args.Preset, "magento2"))
+			os.Exit(1)
 		}
 	}
 
@@ -310,6 +311,9 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 	}
 
 	if args.Download {
+		if why := composerBlocks(mageVersion); why != "" {
+			fmtc.WarningLn(why)
+		}
 		DownloadMagento(projectName, edition, mageVersion, args.SampleData)
 	}
 
@@ -419,6 +423,27 @@ func dbDisplayName(v versions.ToolsVersions) string {
 	default:
 		return "MariaDB " + v.Db
 	}
+}
+
+// composerBlocks says why Composer will refuse to install this Magento
+// release, or nothing.
+//
+// Measured on 2026-10-25 against packagist's advisories and repo.magento.com's
+// metadata: every product-community-edition below 2.4.8 requires
+// league/flysystem 1.x or 2.x, and PKSA-w9tt-7782-78jx (published 2026-09-29)
+// covers every flysystem up to 3.35.2 — 1.x and 2.x have no fixed release, the
+// fix is 3.36.0, which only 2.4.8 and later accept (^3.0). Composer 2.8+
+// blocks a package with an advisory, so a download or composer update of an
+// older release fails. Not bypassed: that would mean installing the
+// vulnerable package on purpose, which is the owner's decision, not setup's.
+// An existing project of such a release still starts and runs.
+func composerBlocks(version string) string {
+	if version == "" || !versions.AtLeast(version, "2.0.0") || versions.AtLeast(version, "2.4.8") {
+		return ""
+	}
+	return "Composer refuses to install Magento " + version + ": every release below 2.4.8 needs league/flysystem 1.x or 2.x, " +
+		"which advisory PKSA-w9tt-7782-78jx covers with no fixed 1.x or 2.x release (the fix, 3.36.0, needs Magento 2.4.8+). " +
+		"The download below will fail; choose 2.4.8 or later for a new install."
 }
 
 // findPresetByName finds a preset by name or keyword

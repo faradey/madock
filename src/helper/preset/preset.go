@@ -1,8 +1,30 @@
 package preset
 
 import (
+	"strings"
+
 	"github.com/faradey/madock/v4/src/model/versions"
 )
+
+// Unmatched is the refusal for a --preset that names no preset of the
+// platform, with the ones that exist.
+//
+// setup warned "not found, proceeding with manual configuration" and went on,
+// and under --yes manual configuration is the defaults: `--preset magento-247`
+// — the example the help itself gave, which matches nothing — installed
+// Magento 2.4.9 without a word (found by the Indemorio engine, 2026-10-25). A
+// script names a preset to get that preset; anything else is a refusal.
+func Unmatched(name, platform string) string {
+	var lines []string
+	for _, p := range GetPresetsByPlatform(platform) {
+		lines = append(lines, "  "+p.Versions.PlatformVersion+"  "+p.Name)
+	}
+	msg := "No " + platform + " preset matches --preset " + name + "; nothing was set up."
+	if len(lines) > 0 {
+		msg += " Give a version or a name from these:\n" + strings.Join(lines, "\n")
+	}
+	return msg
+}
 
 // Preset represents a pre-configured setup
 type Preset struct {
