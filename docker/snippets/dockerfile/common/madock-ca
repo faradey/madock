@@ -1,0 +1,12 @@
+# madock's local CA, trusted inside the container as on the host, so code in
+# it can call https://<project>.test. madock put the CA only into the host's
+# store; on OrbStack it reached the container's bundle because OrbStack copies
+# the host's roots in, but without a hash file OpenSSL — PHP's file_get_contents,
+# curl in Python — did not find it, and on Docker Desktop it was not there at
+# all. madockCA.crt is empty when this installation has no CA (nginx/ssl off).
+COPY madockCA.crt /tmp/madockCA.crt
+RUN if [ -s /tmp/madockCA.crt ] && command -v update-ca-certificates >/dev/null 2>&1; then \
+        mkdir -p /usr/local/share/ca-certificates \
+        && cp /tmp/madockCA.crt /usr/local/share/ca-certificates/madockCA.crt \
+        && update-ca-certificates; \
+    fi; rm -f /tmp/madockCA.crt

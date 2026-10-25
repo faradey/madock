@@ -527,6 +527,9 @@ func GenerateSslCert(ctxPath string, force bool) {
 				logger.Fatal(err)
 			}
 
+			// The application images carry the CA (common/madock-ca), so a new
+			// one reaches a container only with its image rebuilt.
+			fmtc.WarningLn("madock's CA was created anew. Containers trust it after `madock rebuild` in each project; until then https://*.test from inside them fails verification.")
 			fmt.Println("Enter your password for adding an SSL certificate to your system.")
 
 			if runtime.GOOS == "darwin" {

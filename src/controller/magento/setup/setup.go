@@ -11,6 +11,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli"
 	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
+	"github.com/faradey/madock/v4/src/helper/composerpolicy"
 	configs2 "github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/configs/projects"
 	"github.com/faradey/madock/v4/src/helper/docker"
@@ -40,6 +41,20 @@ func init() {
 
 func ExecuteWithVersion(projectName string, projectConf map[string]string, continueSetup bool, args *arg_struct.ControllerGeneralSetup, detectedVersion string) {
 	toolsDefVersions := magento2.GetVersions("")
+
+	// Before anything is written: an id that is no id, or an edition that
+	// does not accept advisories at all, refuses the whole setup.
+	advisories, err := composerpolicy.Parse(args.AllowAdvisory)
+	if err != nil {
+		fmtc.ErrorLn(err.Error())
+		os.Exit(1)
+	}
+	if len(advisories) > 0 && composerpolicy.Refusal != nil {
+		if why := composerpolicy.Refusal(); why != "" {
+			fmtc.ErrorLn(why)
+			os.Exit(1)
+		}
+	}
 
 	mageVersion := ""
 	usePreset := false
@@ -311,10 +326,10 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 	}
 
 	if args.Download {
-		if why := composerBlocks(mageVersion); why != "" {
+		if why := composerBlocks(mageVersion); why != "" && len(advisories) == 0 {
 			fmtc.WarningLn(why)
 		}
-		DownloadMagento(projectName, edition, mageVersion, args.SampleData)
+		DownloadMagento(projectName, edition, mageVersion, args.SampleData, advisories)
 	}
 
 	if args.Install {
@@ -322,12 +337,8 @@ func ExecuteWithVersion(projectName string, projectConf map[string]string, conti
 	}
 }
 
-func DownloadMagento(projectName, edition, version string, isSampleData bool) {
+func DownloadMagento(projectName, edition, version string, isSampleData bool, advisories []string) {
 	projectConf := configs2.GetCurrentProjectConfig()
-	sampleData := ""
-	if isSampleData {
-		sampleData = " && bin/magento sampledata:deploy"
-	}
 	service, user, workdir := cli.GetEnvForUserServiceWorkdir("php", "www-data", projectConf["workdir"])
 	ttyFlag := "-i"
 	if docker.IsTTYAvailable() {
@@ -341,14 +352,7 @@ func DownloadMagento(projectName, edition, version string, isSampleData bool) {
 		docker.GetContainerName(projectConf, projectName, service),
 		"bash",
 		"-c",
-		"cd " + workdir + " " +
-			"&& rm -r -f " + workdir + "/download-magento123456789 " +
-			"&& mkdir " + workdir + "/download-magento123456789 " +
-			"&& composer create-project --repository-url=https://repo.magento.com/ magento/project-" + edition + "-edition:" + version + " ./download-magento123456789 " +
-			"&& shopt -s dotglob " +
-			"&& mv  -v ./download-magento123456789/* ./ " +
-			"&& rm -r -f ./download-magento123456789 " +
-			"&& composer install" + sampleData,
+		downloadScript(workdir, edition, version, isSampleData, advisories),
 	}
 	cmd := exec.Command("docker", command...)
 	cmd.Stdin = os.Stdin
@@ -425,6 +429,34 @@ func dbDisplayName(v versions.ToolsVersions) string {
 	}
 }
 
+// downloadScript is the shell line that downloads Magento into workdir.
+//
+// With advisories, create-project only writes the project's files
+// (--no-install), the ids go into its composer.json as audit.ignore, and the
+// install that follows reads them: create-project resolves before any
+// composer.json of the project exists, so there is nowhere earlier to put
+// them. Without, the line is what it always was.
+func downloadScript(workdir, edition, version string, sampleData bool, advisories []string) string {
+	tmp := workdir + "/download-magento123456789"
+	createProject := "composer create-project --repository-url=https://repo.magento.com/ magento/project-" + edition + "-edition:" + version + " ./download-magento123456789 "
+	if cfg := composerpolicy.ConfigCommand(advisories); cfg != "" {
+		createProject = "composer create-project --no-install --repository-url=https://repo.magento.com/ magento/project-" + edition + "-edition:" + version + " ./download-magento123456789 " +
+			"&& (cd ./download-magento123456789 && " + cfg + ") "
+	}
+	script := "cd " + workdir + " " +
+		"&& rm -r -f " + tmp + " " +
+		"&& mkdir " + tmp + " " +
+		"&& " + createProject +
+		"&& shopt -s dotglob " +
+		"&& mv  -v ./download-magento123456789/* ./ " +
+		"&& rm -r -f ./download-magento123456789 " +
+		"&& composer install"
+	if sampleData {
+		script += " && bin/magento sampledata:deploy"
+	}
+	return script
+}
+
 // composerBlocks says why Composer will refuse to install this Magento
 // release, or nothing.
 //
@@ -443,7 +475,8 @@ func composerBlocks(version string) string {
 	}
 	return "Composer refuses to install Magento " + version + ": every release below 2.4.8 needs league/flysystem 1.x or 2.x, " +
 		"which advisory PKSA-w9tt-7782-78jx covers with no fixed 1.x or 2.x release (the fix, 3.36.0, needs Magento 2.4.8+). " +
-		"The download below will fail; choose 2.4.8 or later for a new install."
+		"The download below will fail; choose 2.4.8 or later, or accept those advisories for this project on purpose: " +
+		"--allow-advisory PKSA-w9tt-7782-78jx,PKSA-db8d-773v-rd1n."
 }
 
 // findPresetByName finds a preset by name or keyword

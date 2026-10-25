@@ -6,9 +6,18 @@ import (
 	"testing"
 )
 
-// A community build writes exactly what it wrote before the seam existed.
-func TestWithNoProviderTheCtxDirectoryIsUnchanged(t *testing.T) {
+// isolateCtxFiles empties the registry for one test and puts back what was
+// registered — madock's own madockCA.crt among it — when the test ends.
+func isolateCtxFiles(t *testing.T) {
+	t.Helper()
+	prev := ctxFiles
 	ctxFiles = nil
+	t.Cleanup(func() { ctxFiles = prev })
+}
+
+// With nothing registered the seam writes nothing.
+func TestWithNoProviderTheCtxDirectoryIsUnchanged(t *testing.T) {
+	isolateCtxFiles(t)
 
 	dir := t.TempDir()
 	writeCtxFiles("someproject", dir)
@@ -23,8 +32,7 @@ func TestWithNoProviderTheCtxDirectoryIsUnchanged(t *testing.T) {
 }
 
 func TestAProviderWritesItsFile(t *testing.T) {
-	ctxFiles = nil
-	t.Cleanup(func() { ctxFiles = nil })
+	isolateCtxFiles(t)
 
 	RegisterCtxFile(CtxFile{
 		Name:   "madock-logs.conf",
@@ -48,8 +56,7 @@ func TestAProviderWritesItsFile(t *testing.T) {
 // leftover points a container at something that is no longer there — and nginx
 // refuses to start over a path it cannot open.
 func TestAProviderCanTakeItsFileAway(t *testing.T) {
-	ctxFiles = nil
-	t.Cleanup(func() { ctxFiles = nil })
+	isolateCtxFiles(t)
 
 	dir := t.TempDir()
 	stale := filepath.Join(dir, "madock-logs.conf")

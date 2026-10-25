@@ -5,6 +5,8 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
 
 EXPOSE 9001 9003 35729 5173 9998 9999
 
+{{{template "snippets/dockerfile/common/madock-ca" .}}}
+
 {{{template "snippets/dockerfile/common/umask" .}}}
 
 # Start cron when the container has jobs and nothing else would.
