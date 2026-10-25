@@ -109,6 +109,21 @@ func Execute() {
 			}
 			fmt.Println("")
 		}
+	} else if args.PlatformVersion == "" {
+		// --platform named, no version: the version is still the code's. It
+		// was not read at all here, so `setup --platform magento2` on a
+		// 2.4.8-p5 shop got the newest release's defaults — PHP 8.5, which the
+		// shop's lock refuses (found by the Indemorio engine, 2026-10-25). A
+		// version given on the command line is left alone: the platform's
+		// handler would otherwise prefer the detected one.
+		detection := detect.Detect(paths.GetRunDirPath())
+		switch {
+		case detection.Detected && detection.Platform == platform && detection.PlatformVersion != "":
+			detectedVersion = detection.PlatformVersion
+			fmtc.SuccessIconLn(fmt.Sprintf("Detected %s %s from %s", platform, detection.PlatformVersion, detection.Source))
+		case detection.Detected && detection.Platform != platform && detection.Platform != "custom":
+			fmtc.WarningLn(fmt.Sprintf("The code here looks like %s (%s), not %s; setting up %s as asked.", detection.Platform, detection.Source, platform, platform))
+		}
 	}
 
 	if platform == "" {
