@@ -2,6 +2,8 @@ WORKDIR {{{.workdir}}}
 
 EXPOSE 3000
 
+{{{template "snippets/dockerfile/common/madock-ca" .}}}
+
 {{{template "snippets/dockerfile/common/umask" .}}}
 
 CMD ["bash"]

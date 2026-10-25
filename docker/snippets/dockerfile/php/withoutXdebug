@@ -131,6 +131,8 @@ WORKDIR {{{.workdir}}}
 RUN usermod -u {{{.os.user.uid}}} -o www-data && groupmod -g {{{.os.user.guid}}} -o www-data \
     && chown {{{.os.user.uid}}}:{{{.os.user.guid}}} {{{.workdir}}}
 
+{{{template "snippets/dockerfile/common/madock-ca" .}}}
+
 {{{template "snippets/dockerfile/common/umask" .}}}
 
 {{{- if .permissions.umask.permissive}}}

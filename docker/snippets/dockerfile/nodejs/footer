@@ -1,5 +1,7 @@
 WORKDIR {{{.workdir}}}
 
+{{{template "snippets/dockerfile/common/madock-ca" .}}}
+
 {{{template "snippets/dockerfile/common/umask" .}}}
 
 # madock smart entrypoint:

@@ -17,6 +17,7 @@ type ControllerGeneralSetup struct {
 	PlatformEdition     string `arg:"--platform-edition" help:"Platform edition"`
 	PlatformVersion     string `arg:"--platform-version" help:"Platform version"`
 	Preset              string `arg:"--preset" help:"Use a preset of the platform, by its version or its name (e.g. '2.4.8', 'lts'); 'madock matrix --platform <platform>' lists them. A preset that matches none is refused"`
+	AllowAdvisory       string `arg:"--allow-advisory" help:"Magento download only: security advisory ids Composer may install past for this project, comma-separated (e.g. PKSA-w9tt-7782-78jx). Written into the project's composer.json as audit.ignore. Never all advisories; refused by madock Pro"`
 	Language            string `arg:"-l,--language" help:"Primary language (php, nodejs, python, golang, ruby, none)"`
 	Php                 string `arg:"--php" help:"PHP version"`
 	Db                  string `arg:"--db" help:"DB version"`

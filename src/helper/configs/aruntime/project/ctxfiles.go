@@ -21,8 +21,8 @@ import (
 // is conditional on the same setting, and a file left behind from an earlier
 // configuration points a container at something that is no longer there.
 //
-// Nothing in this repository registers a provider, so `ctx/` holds exactly what
-// it held before the seam existed.
+// madock itself registers one, madockCA.crt (madockca.go): the installation's
+// CA for the application images to trust.
 type CtxFile struct {
 	// Name is the file's name inside ctx/, without a directory.
 	Name string
