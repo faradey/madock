@@ -112,6 +112,15 @@ func isolateFromGlobal(projectDir, globalDir string, sharedCache bool) (string, 
 
 	cache := filepath.Join(projectDir, "cache")
 	if !sharedCache {
+		// A link made while the cache was shared would keep it shared: the
+		// setting changed and the project went on writing into every other
+		// project's downloads (found by the Indemorio engine, 2026-10-25).
+		// Only the link goes — the shared cache it points at is untouched.
+		if cfi, cerr := os.Lstat(cache); cerr == nil && cfi.Mode()&os.ModeSymlink == os.ModeSymlink {
+			if rmErr := os.Remove(cache); rmErr != nil {
+				return notice, rmErr
+			}
+		}
 		return notice, nil
 	}
 	// The half worth keeping shared. A link one level down, so the project owns

@@ -155,6 +155,27 @@ func TestIsolateWithPrivateCacheLinksNothing(t *testing.T) {
 	}
 }
 
+// Turning the shared cache off after it was on: the link it left must go, or
+// the project keeps writing into every other project's downloads — and the
+// shared cache itself must survive the link's removal.
+func TestTurningTheSharedCacheOffRemovesTheLinkAndNothingElse(t *testing.T) {
+	global := newGlobalHome(t)
+	project := filepath.Join(t.TempDir(), "composer")
+
+	if _, err := prepareProjectComposerDir(project, global, false, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := prepareProjectComposerDir(project, global, false, false); err != nil {
+		t.Fatal(err)
+	}
+	if fi, err := os.Lstat(filepath.Join(project, "cache")); err == nil && fi.Mode()&os.ModeSymlink != 0 {
+		t.Error("shared_cache=false left the cache a link to the shared one")
+	}
+	if body, err := os.ReadFile(filepath.Join(global, "cache", "package.zip")); err != nil || string(body) != "cached" {
+		t.Errorf("removing the link touched the shared cache: %v %q", err, body)
+	}
+}
+
 // The one that would be catastrophic and is invisible in a diff: os.Remove on a
 // symlink must remove the link. If it ever followed the link, the machine's
 // composer home — every project's packages — would go with it.

@@ -46,7 +46,8 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 			usePreset = true
 			fmtc.SuccessIconLn(fmt.Sprintf("Using preset: %s", selected.Name))
 		} else {
-			fmtc.WarningLn(fmt.Sprintf("Preset '%s' not found, proceeding with manual configuration", args.Preset))
+			fmtc.ErrorLn(preset.Unmatched(args.Preset, "medusa"))
+			os.Exit(1)
 		}
 	}
 

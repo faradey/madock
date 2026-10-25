@@ -4,6 +4,12 @@
   (experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements).
   Each line is the newest version Adobe supports for that release. Patch lines
   (-pN) sit below the next minor's rules: 2.4.6-p11 is earlier than 2.4.7.
+
+  Since 2026-09-29 Composer refuses a fresh install of every release below
+  2.4.8: they require league/flysystem 1.x or 2.x, advisory PKSA-w9tt-7782-78jx
+  covers every flysystem up to 3.35.2, and only 3.36.0 is fixed, which 2.4.8+
+  accepts. The lines below stay — an existing project of such a release still
+  starts — and setup names the refusal before a download (composerBlocks).
 -->
 <config>
     <name>magento2</name>
