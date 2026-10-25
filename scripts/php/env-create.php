@@ -157,9 +157,19 @@ try {
 
         $env["system"]["default"]["web"]["cookie"]["cookie_domain"] = "";
         $env["system"]["default"]["web"]["secure"]["offloader_header"] = "X-Forwarded-Proto";
-        $env["system"]["default"]["catalog"]["search"]["engine"] = "elasticsearch".$projectConfig["search/elasticsearch/version"][0];
-        $env["system"]["default"]["catalog"]["search"]["elasticsearch7_server_hostname"] = "elasticsearch";
-        $env["system"]["default"]["catalog"]["search"]["elasticsearch7_server_port"] = "9200";
+        // The engine the project runs, not always Elasticsearch: every Magento
+        // 2.4.8+ project runs OpenSearch, and an env.php naming
+        // elasticsearch:9200 there sent setup:upgrade to a host that does not
+        // exist ("No alive nodes", found by the Indemorio engine, 2026-10-25).
+        if (($projectConfig["search/opensearch/enabled"] ?? "") === "true") {
+            $env["system"]["default"]["catalog"]["search"]["engine"] = "opensearch";
+            $env["system"]["default"]["catalog"]["search"]["opensearch_server_hostname"] = "opensearch";
+            $env["system"]["default"]["catalog"]["search"]["opensearch_server_port"] = "9200";
+        } else {
+            $env["system"]["default"]["catalog"]["search"]["engine"] = "elasticsearch".$projectConfig["search/elasticsearch/version"][0];
+            $env["system"]["default"]["catalog"]["search"]["elasticsearch7_server_hostname"] = "elasticsearch";
+            $env["system"]["default"]["catalog"]["search"]["elasticsearch7_server_port"] = "9200";
+        }
         $env["system"]["default"]["admin"]["security"]["password_lifetime"] = 0;
         $env["system"]["default"]["admin"]["security"]["password_is_forced"] = 0;
         $env["system"]["default"]["admin"]["captcha"]["enable"] = 0;
@@ -240,11 +250,15 @@ try {
         print("and you can add the domains to /etc/hosts\n"); 
         print("127.0.0.1 ".implode(" ", array_unique($domains))."\n");     
     } else {
-        die("Table core_config_data was not found");
+        // Exit 1, not die("..."): die with a string exits 0, so setup:env
+        // reported success over an env.php it never wrote.
+        fwrite(STDERR, "Table core_config_data was not found: env.php was not written\n");
+        exit(1);
     }
     $conn = null;
   } catch(PDOException $e) {
-    die("DB connection failed: " . $e->getMessage());
+    fwrite(STDERR, "DB connection failed: " . $e->getMessage() . "\n");
+    exit(1);
   }
 
   function setUrls(&$domain, $val, $path, $scope, $scopeCode, &$env, &$hosts, &$domains, $defaultHost, $defaultWebsiteCode) {
