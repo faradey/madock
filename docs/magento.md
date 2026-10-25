@@ -30,9 +30,45 @@ sudo echo "127.0.0.1 magento.local" >> /etc/hosts
 # Create new Magento project with download and installation
 madock setup --download --install
 
-# Or use a preset
-madock setup --preset magento-247
+# Or use a preset, by its version or name; `madock matrix --platform magento2` lists them
+madock setup --preset 2.4.8
 ```
+
+A `--preset` that matches no preset is refused before anything is written,
+with the list of presets — it never falls back to the defaults.
+
+### Magento below 2.4.8 and Composer's security advisories
+
+Since 2026-09-29 Composer refuses to install **every Magento release below
+2.4.8**. They all require `league/flysystem` 1.x or 2.x; advisory
+`PKSA-w9tt-7782-78jx` covers every flysystem up to 3.35.2, and the only fixed
+release, 3.36.0, is accepted by Magento 2.4.8 and later alone. The first patch
+releases of each line (2.4.4 to -p8, 2.4.5 to -p7, 2.4.6 to -p5, 2.4.7 without a
+patch) are also covered by `PKSA-db8d-773v-rd1n`. Composer 2.9+ blocks such
+packages on `create-project`, `install` and `update`.
+
+An **existing** project on such a release is not affected: it starts and runs
+as before; only a new download or a `composer update` stops.
+
+To work on an older release on your own machine anyway, accept those advisories
+for that project, by id:
+
+```bash
+madock setup --download --platform-version 2.4.7 \
+  --allow-advisory PKSA-w9tt-7782-78jx,PKSA-db8d-773v-rd1n
+```
+
+madock downloads with `create-project --no-install`, writes the ids into the
+project's `composer.json` as `audit.ignore`, and then installs, so later updates
+of that project keep the decision and it stays visible in the project. Only
+ids are accepted (`PKSA-…`, `CVE-…`, `GHSA-…`) — never "all advisories". For a
+project already on disk, the same line is
+`madock composer config audit.ignore --json '["PKSA-w9tt-7782-78jx"]'`.
+
+This is a decision to run a package with a known vulnerability, and it is
+yours to make on your machine. **madock Pro refuses `--allow-advisory`**: it
+runs servers, where that package is exactly what must stay out — upgrade to
+2.4.8 or later there.
 
 ## Workflow
 

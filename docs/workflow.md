@@ -361,7 +361,9 @@ see `allow_destructive_commands` in [config.md](config.md). madock-pro ships it 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--yes, -y`   Skip confirmation prompts
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--preset`   Use a preset configuration (e.g., 'magento-247', 'magento-246', 'shopware-65')
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--preset`   Use a preset of the platform, by its version or name (e.g. '2.4.8', 'lts'); `madock matrix --platform <platform>` lists them. One that matches none is refused
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--allow-advisory`   Magento download only: security advisory ids Composer may install past for this project (see [Magento below 2.4.8](magento.md#magento-below-248-and-composers-security-advisories)). Refused by madock Pro
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`--platform`   Platform (magento2, shopify, custom, etc.)
 

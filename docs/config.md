@@ -423,6 +423,26 @@ platforms whose configurator happened to write `php/yarn/enabled`. Both are
 aliases rather than a second spelling, and both will be removed once the new
 names are the ones in people's fingers.
 
+## HTTPS to a project from inside a container
+
+With `nginx/ssl/enabled` (the default) madock creates its own CA, `CN=madock`,
+and trusts it in the host's store, so the browser opens `https://<project>.test`.
+Since 4.5.19 every application image (php, app, golang, python, ruby, nodejs)
+trusts it too: the CA is installed into `/usr/local/share/ca-certificates/` and
+`update-ca-certificates` puts it in the bundle and as a hash file, so PHP's
+`file_get_contents`, curl, Python's requests and Node reach
+`https://<project>.test` from inside a container without `verify_peer=false` or
+`SSL_CERT_FILE`. Before, it worked only on OrbStack, and only for tools that read
+the bundle, because OrbStack copies the host's roots in.
+
+The CA is part of the image, so it changes only with a rebuild. madock renews it
+after a year and says so; then run `madock rebuild` in each project:
+
+```bash
+madock rebuild
+madock cli php -r 'var_dump(file_get_contents("https://<project>.test/robots.txt") !== false);'
+```
+
 ## A project with no web server
 
 Some projects answer no request and never will: a queue worker, a bus consumer,
