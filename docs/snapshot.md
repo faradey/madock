@@ -121,6 +121,19 @@ so and names the provider. Snapshot the provider from the provider: its data
 directory holds every consumer, and restoring a copy taken from one would
 overwrite all of them.
 
+### The passwords the data holds
+
+A database or broker takes its password from the configuration once, when its
+volume is first created; from then on the volume holds it. A snapshot records
+the passwords current when it was taken (`db/root_password`, `db/password`,
+`db2/root_password`, `db2/password`, `rabbitmq/password`) in `credentials.xml`
+beside its data. `snapshot:restore` and `project:clone --from` put them back
+into the project's configuration, so a project restored or cloned from a
+snapshot older than a password change can still log in to its own database.
+Your application's own settings (`app/etc/env.php` and the like) come back with
+the files of the snapshot. A snapshot taken before madock 4.5.22 has no record;
+restoring it leaves the configuration as it is.
+
 ## Storage Location
 
 Snapshots are stored next to the madock installation, under the project's

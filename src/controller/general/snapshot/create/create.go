@@ -12,6 +12,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/cli/output"
 	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/credentials"
 	"github.com/faradey/madock/v4/src/helper/dbtarget"
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
@@ -62,6 +63,9 @@ func Execute() {
 	}
 
 	dbsPath := paths.MakeDirsByPath(dest + "/" + name + "/")
+	// The volumes about to be copied hold these passwords; a restore or a clone
+	// from this snapshot needs them back, whatever the configuration says then.
+	credentials.Record(dbsPath, projectConf)
 
 	if engine != nil {
 		captureWithEngine(w, engine, engineName, projectConf, projectName, name, dbsPath)
