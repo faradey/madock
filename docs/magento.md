@@ -61,9 +61,36 @@ madock setup --download --platform-version 2.4.7 \
 madock downloads with `create-project --no-install`, writes the ids into the
 project's `composer.json` as `audit.ignore`, and then installs, so later updates
 of that project keep the decision and it stays visible in the project. Only
-ids are accepted (`PKSA-…`, `CVE-…`, `GHSA-…`) — never "all advisories". For a
-project already on disk, the same line is
-`madock composer config audit.ignore --json '["PKSA-w9tt-7782-78jx"]'`.
+ids are accepted (`PKSA-…`, `CVE-…`, `GHSA-…`) — never "all advisories". Check
+what was written with `madock composer config audit.ignore`.
+
+**A project already on disk** whose `composer update` or `install` now stops:
+
+```bash
+madock composer config audit.ignore --json '["PKSA-w9tt-7782-78jx","PKSA-db8d-773v-rd1n"]'
+madock composer update        # or: madock composer install
+```
+
+Commit the changed `composer.json`, so everybody working on the project has
+the same decision.
+
+**On madock older than 4.5.19**, which has no `--allow-advisory`, the same by
+hand:
+
+```bash
+madock setup --platform-version 2.4.7     # without --download
+madock start
+madock composer create-project --no-install --repository-url=https://repo.magento.com/ \
+  magento/project-community-edition:2.4.7 .
+madock composer config audit.ignore --json '["PKSA-w9tt-7782-78jx","PKSA-db8d-773v-rd1n"]'
+madock composer install
+```
+
+**Do not switch the blocking off as a whole** — `audit.block-insecure false`,
+`COMPOSER_NO_SECURITY_BLOCKING`, `COMPOSER_NO_BLOCKING`. That lets through every
+other vulnerable package as well, including ones you have never heard of. An
+id accepts that one advisory and nothing else: with another id accepted the
+flysystem install stays blocked (the e2e `TestAnAcceptedAdvisoryLetsComposerInstallPastIt`).
 
 This is a decision to run a package with a known vulnerability, and it is
 yours to make on your machine. **madock Pro refuses `--allow-advisory`**: it
