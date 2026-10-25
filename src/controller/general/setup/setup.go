@@ -69,7 +69,11 @@ func Execute() {
 		return
 	}
 
-	envFile := paths.MakeDirsByPath(paths.GetExecDirPath()+"/projects/"+projectName) + "/config.xml"
+	// Only read here, never made: a setup refused further on — a --preset that
+	// matches nothing, an --allow-advisory madock Pro does not take — left an
+	// empty projects/<name> behind, an entry for a project that never was.
+	// The directory is made when the configuration is saved (SetEnvForProject).
+	envFile := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
 	var projectConf map[string]string
 	if paths.IsFileExist(envFile) {
 		projectConf = configs2.GetProjectConfig(projectName)

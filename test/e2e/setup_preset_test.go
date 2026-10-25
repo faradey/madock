@@ -24,4 +24,7 @@ func TestAnUnmatchedPresetIsRefused(t *testing.T) {
 	if _, statErr := os.Stat(filepath.Join(p.execDir, "aruntime", "projects", p.name)); statErr == nil {
 		t.Error("the refusal left generated files behind")
 	}
+	if _, statErr := os.Stat(filepath.Join(p.execDir, "projects", p.name)); statErr == nil {
+		t.Error("the refusal left an empty projects/" + p.name + " behind, an entry for a project that never was")
+	}
 }
