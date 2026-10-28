@@ -204,40 +204,86 @@ func UnsetEnvOption() {
 		return
 	}
 
-	files := []string{paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"}
-	if args.Global {
-		files = append(files, paths.GetExecDirPath()+"/config.xml")
-	}
-
 	var names []string
 	for _, name := range args.Name {
 		names = append(names, strings.ToLower(name))
 	}
 
-	for _, file := range files {
-		if !paths.IsFileExist(file) {
+	for _, target := range unsetTargets(projectName, activeScope, args.Global) {
+		if !paths.IsFileExist(target.file) {
 			continue
 		}
-		if err := configs.RemoveKeepingComments(file, names, activeScope); err != nil {
+		if err := configs.RemoveKeepingComments(target.file, names, target.scope); err != nil {
 			logger.Fatalln(err)
 		}
 	}
 	configs.CleanCache()
 
 	// Reported by reading it back, not by trusting the write. A key can survive
-	// this in a way that looks exactly like success: it may also be set in the
-	// project's own config.xml, which madock does not write, and which wins.
+	// this in a way that looks exactly like success: it may also be stored in
+	// the project's own config.xml, which madock does not write, and which wins.
 	// Saying so is the difference between a command that worked and a command
 	// that appeared to.
+	//
+	// What is read back is what is stored, not the merged configuration. The
+	// merged one holds the defaults too, so a key that is gone from every file
+	// would be reported as still set to its default.
 	after := configs.GetCurrentProjectConfig()
 	for _, name := range names {
-		if value, still := after[name]; still {
-			fmtc.WarningLn("\"" + name + "\" is still set to \"" + value + "\".")
-			fmtc.ToDoLn("It comes from somewhere this command does not write. Check the project's own .madock/config.xml.")
+		if value, file, still := configs.StoredValue(projectName, name); still {
+			fmtc.WarningLn("\"" + name + "\" is still set to \"" + value + "\" in " + file + ".")
+			if !args.Global && isInstallationFile(file) {
+				fmtc.ToDoLn("It is set for every project of this installation. config:unset --global removes it there.")
+			} else {
+				fmtc.ToDoLn("This command does not write that file for this project. Remove the setting from it by hand.")
+			}
+			continue
+		}
+		if value, ok := after[name]; ok {
+			fmtc.SuccessLn("Removed \"" + name + "\". The default applies now: \"" + value + "\".")
 			continue
 		}
 		fmtc.SuccessLn("Removed \"" + name + "\".")
 	}
+}
+
+// unsetTarget is a file a removal is made in, and the scope its settings are
+// read under there.
+type unsetTarget struct {
+	file  string
+	scope string
+}
+
+// unsetTargets lists the files a removal is made in.
+//
+// The installation's files are read and written under the default scope:
+// `config:set --global` writes projects/config.xml under it, and the
+// installation's config.xml is read the same way. Removing from them under the
+// project's scope would find nothing and still report success.
+func unsetTargets(projectName, activeScope string, global bool) []unsetTarget {
+	targets := []unsetTarget{{paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml", activeScope}}
+	if global {
+		targets = append(targets,
+			unsetTarget{installationConfigFile(), "default"},
+			unsetTarget{sharedConfigFile(), "default"},
+		)
+	}
+	return targets
+}
+
+// installationConfigFile is the installation's own config.xml.
+func installationConfigFile() string {
+	return paths.GetExecDirPath() + "/config.xml"
+}
+
+// sharedConfigFile is projects/config.xml, the settings every project of the
+// installation gets, and the one `config:set --global` writes.
+func sharedConfigFile() string {
+	return paths.GetExecDirPath() + "/projects/config.xml"
+}
+
+func isInstallationFile(file string) bool {
+	return file == installationConfigFile() || file == sharedConfigFile()
 }
 
 func CacheClean() {

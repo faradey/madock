@@ -89,7 +89,7 @@ type ControllerGeneralConfig struct {
 type ControllerGeneralConfigUnset struct {
 	attr.Arguments
 	Name    []string `arg:"-n,--name" help:"Parameter name. May be given more than once"`
-	Global  bool     `arg:"-g,--global" help:"Also remove it from the installation's own config"`
+	Global  bool     `arg:"-g,--global" help:"Also remove it from the installation-wide config (config.xml and projects/config.xml), which every project reads"`
 	Machine bool     `arg:"-m,--machine" help:"Keep the key out on this machine, even when the project's committed .madock/config.xml sets it (madock-pro)"`
 }
 

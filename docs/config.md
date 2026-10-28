@@ -141,6 +141,9 @@ madock config:unset --name=php/version
 madock config:unset -n a -n b --global
 ```
 
+`--global` also removes the value from the installation-wide settings, the ones
+`config:set --global` writes and every project of the installation reads.
+
 **Why this exists.** madock keeps two copies of a project's configuration: the
 one in the project (`{project}/.madock/config.xml`, committed to your
 repository) and a machine-side one under `~/.madock/projects/{name}/`, seeded
