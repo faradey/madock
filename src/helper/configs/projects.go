@@ -264,6 +264,39 @@ func GetProjectConfigInProject(projectPath string) map[string]string {
 	return activeConfig
 }
 
+// StoredValue reports a setting that something a person stored still gives,
+// and the file it is stored in. Defaults are not stored values: madock's own
+// and an edition's are never reported, whichever layer they arrive through.
+//
+// The merged configuration cannot answer this, because the defaults are in it.
+// A key that every file has dropped still reads back, at its default, and
+// asking the merged configuration says it is still set.
+func StoredValue(projectName, name string) (value, file string, ok bool) {
+	projectFile := paths.GetRunDirPath() + "/.madock/config.xml"
+	if v, found := GetProjectConfigInProject(paths.GetRunDirPath())[name]; found {
+		return v, projectFile, true
+	}
+
+	runtimeFile := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+	if v, found := GetProjectConfigOnly(projectName)[name]; found {
+		return v, runtimeFile, true
+	}
+
+	sharedFile := paths.GetExecDirPath() + "/projects/config.xml"
+	if v, found := GetProjectsGeneralConfig()[name]; found {
+		return v, sharedFile, true
+	}
+
+	installationFile := paths.GetExecDirPath() + "/config.xml"
+	if paths.IsFileExist(installationFile) {
+		if v, found := getConfigByScope(ParseXmlFile(installationFile), "default")[name]; found {
+			return v, installationFile, true
+		}
+	}
+
+	return "", "", false
+}
+
 func GetOption(name string, generalConf, projectConf map[string]string) string {
 	if val, ok := projectConf[name]; ok && val != "" {
 		return strings.TrimSpace(val)

@@ -105,7 +105,12 @@ func editXml(body []byte, data map[string]string, remove []string, activeScope s
 	// place a new leaf inside a parent that is already there.
 	closeOf := map[string]int{}
 	indentOf := map[string]string{}
-	openedAt := map[string]int{}
+
+	// Every element inside the scope, in document order, so a removal can be
+	// judged against what it contains. open holds the element being read at
+	// each depth, -1 where it is not inside the scope.
+	var elements []element
+	var open []int
 
 	decoder := xml.NewDecoder(bytes.NewReader(body))
 	var stack []string
@@ -129,9 +134,18 @@ func editXml(body []byte, data map[string]string, remove []string, activeScope s
 			valueStart = int(after)
 			lastText = ""
 
+			idx := -1
 			if rel, ok := relativeTo(stack, prefix); ok {
 				indentOf[rel] = indentBefore(body, int(before))
-				openedAt[rel] = int(before)
+				parent := -1
+				if n := len(open); n > 0 {
+					parent = open[n-1]
+				}
+				idx = len(elements)
+				elements = append(elements, element{rel: rel, open: int(before), parent: parent})
+				if parent >= 0 {
+					elements[parent].children = append(elements[parent].children, idx)
+				}
 			} else if isScopeItself(stack, prefix) {
 				// The scope element is the insertion point of last resort: a
 				// key whose whole parent chain is missing has nowhere else to
@@ -139,9 +153,13 @@ func editXml(body []byte, data map[string]string, remove []string, activeScope s
 				// relative to itself is empty — so it is recorded here.
 				indentOf[""] = indentBefore(body, int(before))
 			}
+			open = append(open, idx)
 
 		case xml.CharData:
 			lastText = string(t)
+			if n := len(open); n > 0 && open[n-1] >= 0 && strings.TrimSpace(lastText) != "" {
+				elements[open[n-1]].text = true
+			}
 
 		case xml.EndElement:
 			if isScopeItself(stack, prefix) {
@@ -151,13 +169,6 @@ func editXml(body []byte, data map[string]string, remove []string, activeScope s
 			rel, inScope := relativeTo(stack, prefix)
 			if inScope {
 				closeOf[rel] = int(before)
-
-				if dropping[rel] {
-					// The whole element goes, with the line it sits on and the
-					// indentation in front of it — otherwise a blank, indented
-					// line is left where the setting was.
-					edits = append(edits, edit{lineStart(body, openedAt[rel]), int(after), ""})
-				}
 
 				if value, wanted := remaining[rel]; wanted {
 					// A leaf that is already here: replace what is between the
@@ -170,10 +181,16 @@ func editXml(body []byte, data map[string]string, remove []string, activeScope s
 					}
 				}
 			}
+			if top := open[len(open)-1]; top >= 0 {
+				elements[top].end = int(after)
+			}
+			open = open[:len(open)-1]
 			stack = stack[:len(stack)-1]
 			valueStart = -1
 		}
 	}
+
+	edits = append(edits, removalEdits(body, elements, dropping)...)
 
 	// What is left has to be created. Deepest-first is deliberate: creating
 	// "db/type" may need <db>, and if both are missing the same insertion point
@@ -190,6 +207,60 @@ func editXml(body []byte, data map[string]string, remove []string, activeScope s
 	}
 
 	return applyEdits(body, edits), nil
+}
+
+// element is one element inside the active scope, as the document has it.
+type element struct {
+	rel      string // path inside the scope, the way keys are written
+	open     int    // offset of the start tag
+	end      int    // offset just past the end tag
+	parent   int    // index of the enclosing element, or -1 for the scope itself
+	children []int  // indexes of the elements directly inside it
+	text     bool   // holds non-blank text itself, so it is a value rather than a group
+}
+
+// removalEdits takes out every element named for removal, and every group
+// whose children have all gone with them.
+//
+// The second part is not tidiness. Removing the last child of a group used to
+// leave the group behind as an empty element, which reads back as a value; the
+// next key under the same name then failed to assemble with "is already a
+// value". A group that still has a child stays, and so does an element that
+// was empty to begin with, since that one was never a group.
+//
+// A child always comes after its parent in document order, so walking backwards
+// judges every group after everything inside it.
+func removalEdits(body []byte, elements []element, dropping map[string]bool) []edit {
+	gone := make([]bool, len(elements))
+	for i := len(elements) - 1; i >= 0; i-- {
+		e := elements[i]
+		if dropping[e.rel] {
+			gone[i] = true
+			continue
+		}
+		if len(e.children) == 0 || e.text {
+			continue
+		}
+		gone[i] = true
+		for _, child := range e.children {
+			if !gone[child] {
+				gone[i] = false
+				break
+			}
+		}
+	}
+
+	var edits []edit
+	for i, e := range elements {
+		if !gone[i] || (e.parent >= 0 && gone[e.parent]) {
+			continue
+		}
+		// The whole element goes, with the line it sits on and the indentation
+		// in front of it — otherwise a blank, indented line is left where the
+		// setting was.
+		edits = append(edits, edit{lineStart(body, e.open), e.end, ""})
+	}
+	return edits
 }
 
 // isScopeItself reports whether the current element is the scope element.

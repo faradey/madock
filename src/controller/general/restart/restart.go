@@ -12,6 +12,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/v4/src/helper/docker"
 )
 
 func init() {
@@ -30,6 +31,7 @@ var (
 		return attr.Parse(new(arg_struct.ControllerGeneralStart)).(*arg_struct.ControllerGeneralStart)
 	}
 	checkTemplates  = project.ReportBrokenIncludes
+	renderConfig    = docker.RenderProject
 	stopContainers  = stop.Execute
 	startContainers = start.ExecuteWith
 )
@@ -73,6 +75,12 @@ func Execute() {
 	if checkTemplates(configs.GetProjectName()) {
 		os.Exit(1)
 	}
+
+	// The includes are not the whole of it: a value the templates cannot
+	// assemble fails the nginx render, and that render used to come after the
+	// stop. Rendering here fails while the containers are still up, as it does
+	// in rebuild.
+	renderConfig(configs.GetProjectName())
 
 	stopContainers()
 	startContainers(args)

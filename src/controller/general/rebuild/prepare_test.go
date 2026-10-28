@@ -41,13 +41,15 @@ func TestAFailedBuildCarriesNothing(t *testing.T) {
 	}
 }
 
-func TestWithoutNoCacheOnlyTheCarryRuns(t *testing.T) {
+// Without --no-cache there is no build, but the configuration still has to
+// assemble before the containers are taken down.
+func TestWithoutNoCacheTheRenderStillComesFirst(t *testing.T) {
 	steps := recordSteps(t, nil)
 
 	if err := prepare("p", false); err != nil {
 		t.Fatalf("prepare: %v", err)
 	}
-	if got := strings.Join(*steps, ","); got != "carry" {
-		t.Errorf("steps ran as %s, want carry", got)
+	if got := strings.Join(*steps, ","); got != "render,carry" {
+		t.Errorf("steps ran as %s, want render,carry", got)
 	}
 }

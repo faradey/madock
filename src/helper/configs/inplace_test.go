@@ -332,7 +332,8 @@ func TestEditXml_Depth(t *testing.T) {
 }
 
 // And removing from the middle of a deep branch takes that element and nothing
-// above it.
+// above it that still has something in it. <jobs> held only apply_due, so it
+// goes with it rather than being left empty.
 func TestEditXml_RemovesFromDepth(t *testing.T) {
 	out, err := editXml([]byte(handWritten), nil, []string{"cron/jobs/apply_due"}, "default")
 	if err != nil {
@@ -340,12 +341,12 @@ func TestEditXml_RemovesFromDepth(t *testing.T) {
 	}
 	got := string(out)
 
-	for _, gone := range []string{"apply_due", "<schedule>"} {
+	for _, gone := range []string{"apply_due", "<schedule>", "<jobs>", "</jobs>"} {
 		if strings.Contains(got, gone) {
 			t.Errorf("%q survived:\n%s", gone, got)
 		}
 	}
-	for _, kept := range []string{"<cron>", "<jobs>", "</jobs>", "<enabled>true</enabled>"} {
+	for _, kept := range []string{"<cron>", "<enabled>true</enabled>"} {
 		if !strings.Contains(got, kept) {
 			t.Errorf("%q was taken with it:\n%s", kept, got)
 		}
