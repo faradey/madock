@@ -345,7 +345,7 @@ func Execute() {
 	docker.StopSnapshot(cloneName)
 
 	if args.Muted {
-		if err := purgeQueues(cloneProjectConf, cloneName, args.NoStart); err != nil {
+		if err := purgeQueues(cloneProjectConf, cloneName); err != nil {
 			refuse(w, "the clone was made, but its RabbitMQ still holds the source's messages: "+err.Error())
 		}
 	}
@@ -371,10 +371,10 @@ func Execute() {
 // publish. Only a persisted broker carries anything (rabbitmq/persist); one
 // without the volume starts empty already.
 //
-// With noStart the broker's container is removed afterwards, not only stopped:
-// a stopped container of the project makes `start` wake it and create nothing
-// else. The volume stays.
-func purgeQueues(conf map[string]string, cloneName string, noStart bool) error {
+// The broker's container is removed afterwards, not only stopped: a stopped
+// container of the project makes `start` wake it and create nothing else, when
+// the stack record matches. The volume stays.
+func purgeQueues(conf map[string]string, cloneName string) error {
 	if conf["rabbitmq/enabled"] != "true" || conf["rabbitmq/persist"] != "true" {
 		return nil
 	}
@@ -382,13 +382,7 @@ func purgeQueues(conf map[string]string, cloneName string, noStart bool) error {
 	if err := docker.UpService(cloneName, "rabbitmq"); err != nil {
 		return err
 	}
-	defer func() {
-		if noStart {
-			_ = docker.RemoveService(cloneName, "rabbitmq")
-			return
-		}
-		_ = docker.StopService(cloneName, "rabbitmq")
-	}()
+	defer func() { _ = docker.RemoveService(cloneName, "rabbitmq") }()
 	// As the broker's own user, not root. rabbitmqctl reads the Erlang cookie,
 	// and run as root it creates one when there is none yet — owned by root,
 	// unreadable to the broker, which then dies at its next start with
