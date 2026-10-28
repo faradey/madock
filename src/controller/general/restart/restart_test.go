@@ -8,18 +8,20 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
 )
 
-// swap replaces the three seams for the duration of one test and restores them.
+// swap replaces the seams for the duration of one test and restores them. The
+// render is a no-op unless the test asks for it, so nothing reaches docker.
 func swap(t *testing.T, parse func() *arg_struct.ControllerGeneralStart, stop func(), start func(*arg_struct.ControllerGeneralStart)) {
 	t.Helper()
 
-	origParse, origStop, origStart := parseArgs, stopContainers, startContainers
+	origParse, origRender, origStop, origStart := parseArgs, renderConfig, stopContainers, startContainers
 	t.Cleanup(func() {
-		parseArgs, stopContainers, startContainers = origParse, origStop, origStart
+		parseArgs, renderConfig, stopContainers, startContainers = origParse, origRender, origStop, origStart
 	})
 
 	if parse != nil {
 		parseArgs = parse
 	}
+	renderConfig = func(string) {}
 	stopContainers = stop
 	startContainers = start
 }
@@ -55,11 +57,13 @@ func TestFlagsAreNotMistakenForServiceNames(t *testing.T) {
 	}
 }
 
-// The command line is read before a single container is stopped.
+// The command line is read, and the configuration rendered, before a single
+// container is stopped.
 //
 // The order is the fix: go-arg ends the process on an argument the command does
 // not take, so parsing after the stop left a production environment down with a
-// message that read like nothing had happened.
+// message that read like nothing had happened. The render is the same kind of
+// failure — a value that does not assemble used to be found after the stop.
 func TestArgumentsAreReadBeforeContainersStop(t *testing.T) {
 	var order []string
 
@@ -71,10 +75,11 @@ func TestArgumentsAreReadBeforeContainersStop(t *testing.T) {
 		func() { order = append(order, "stop") },
 		func(*arg_struct.ControllerGeneralStart) { order = append(order, "start") },
 	)
+	renderConfig = func(string) { order = append(order, "render") }
 
 	Execute()
 
-	want := []string{"parse", "stop", "start"}
+	want := []string{"parse", "render", "stop", "start"}
 	if len(order) != len(want) {
 		t.Fatalf("got %v, want %v", order, want)
 	}

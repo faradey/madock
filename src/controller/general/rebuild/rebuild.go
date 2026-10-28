@@ -228,16 +228,22 @@ func rebuildChanged(projectName string, withChown bool) bool {
 
 // The steps prepare runs, as variables so a test can record their order.
 var (
-	renderStack       = docker.UpNginx
+	renderStack       = docker.RenderProject
 	buildWithoutCache = docker.BuildWithoutCache
 	carryToPersisted  = func(projectName string) error {
 		return docker.CarryToPersisted(projectName, configs.GetProjectConfig(projectName))
 	}
 )
 
-// prepare does what has to happen before anything is taken down: with
-// --no-cache the images are built, and then a newly persisted Redis, Valkey or
-// RabbitMQ is carried into its named volume.
+// prepare does what has to happen before anything is taken down: the
+// configuration is rendered, with --no-cache the images are built, and then a
+// newly persisted Redis, Valkey or RabbitMQ is carried into its named volume.
+//
+// The render is first and is not optional. The full rebuild takes the
+// containers down and only then generates the build context, so a value the
+// templates cannot assemble used to fail there, with the stack already stopped
+// — `docker compose down` had run and the nginx render failed after it. Here
+// it fails while everything is still up.
 //
 // The order is the point. The carry stops the old service to copy its data,
 // and a --no-cache build takes minutes; carried first, the service stayed down
@@ -245,11 +251,9 @@ var (
 // persist on for a production queue. Built first, a failed build leaves the
 // service untouched as well as the containers.
 func prepare(projectName string, noCache bool) error {
-	if noCache {
-		// Rendered first, because the full rebuild generates the build
-		// context only after taking the containers down.
-		renderStack(projectName)
+	renderStack(projectName)
 
+	if noCache {
 		fmtc.TitleLn("Building images without cache...")
 		if err := buildWithoutCache(projectName); err != nil {
 			return fmt.Errorf("Build failed, nothing was stopped: %w", err)
