@@ -416,6 +416,17 @@ func buildTree(values map[string]string) (map[string]any, error) {
 				child := map[string]any{}
 				node[part] = child
 				node = child
+			case string:
+				// An empty value here is a group whose children were removed
+				// and whose element was left in the file, which setNestedValue
+				// in configs also reads as a group. Anything non-empty is a real
+				// value.
+				if existing != "" {
+					return nil, fmt.Errorf("config key %q cannot be read as a tree: %q is already a value", key, strings.Join(parts[:i+1], "/"))
+				}
+				child := map[string]any{}
+				node[part] = child
+				node = child
 			default:
 				return nil, fmt.Errorf("config key %q cannot be read as a tree: %q is already a value", key, strings.Join(parts[:i+1], "/"))
 			}
