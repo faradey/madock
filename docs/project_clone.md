@@ -34,6 +34,17 @@ What madock cannot see is not covered: an SMTP server, a payment callback or a
 webhook configured inside the application's own database. Give the clone its
 own addresses and credentials for those.
 
+**No start.** `--no-start` writes the clone's files and restores its data, and
+creates no container of the clone. Run `madock start` in the clone to create and
+start its containers:
+```
+madock project:clone --name=shop-demo --domain-suffix=-demo --from=golden --no-start
+```
+Without the flag the copy creates the clone's containers and removes them again
+before it returns; `madock start` creates them anew. With `--muted` and a
+persisted RabbitMQ the broker is started for the purge; with `--no-start` its
+container is then removed, so `madock start` creates the whole stack.
+
 A refusal — a name that already exists, a name or suffix with a period or a
 space, a project managed by deployer, a `--from` snapshot that does not exist —
 exits 1.

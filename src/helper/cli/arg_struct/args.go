@@ -209,6 +209,7 @@ type ControllerGeneralProjectClone struct {
 	DomainSuffix string `arg:"-s,--domain-suffix,required" help:"Suffix appended to each host before the TLD dot, written with an equals sign: -s=-update turns shop.test into shop-update.test. Required to avoid domain collisions with the source project"`
 	From         string `arg:"--from" help:"Clone from this snapshot of the project instead of from the project as it is now. The project is not stopped or touched. A directory name, or the name given at creation (the newest one carrying it)"`
 	Muted        bool   `arg:"--muted" help:"Make a copy that cannot act as its source: clone/muted is set on it, so cron is off and mail() goes to mailpit, and a persisted RabbitMQ is emptied of the source's messages"`
+	NoStart      bool   `arg:"--no-start" help:"Only write the clone's files and restore its data; no container of the clone is created or started. madock start creates and starts them"`
 }
 
 type ControllerGeneralStatus struct {

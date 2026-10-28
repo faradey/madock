@@ -21,6 +21,13 @@ func UpNginx(projectName string) {
 	UpNginxWithBuild(projectName, false)
 }
 
+// RenderProject writes the proxy's and the project's configuration and compose
+// files, as UpNginxWithBuild does before it starts anything, and starts nothing.
+func RenderProject(projectName string) {
+	nginx.MakeConf(projectName)
+	project.MakeConf(projectName)
+}
+
 // UpNginxWithBuild starts the nginx proxy container with optional rebuild
 func UpNginxWithBuild(projectName string, force bool) {
 	if !paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
