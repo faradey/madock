@@ -321,6 +321,15 @@ func StopService(projectName, service string) error {
 	return cmd.Run()
 }
 
+// RemoveService stops one service of the project and removes its container,
+// keeping its volumes. A service that was never created is not an error.
+func RemoveService(projectName, service string) error {
+	pp := paths.NewProjectPaths(projectName)
+	cmd := exec.Command("docker", "compose", "-f", pp.DockerCompose(), "-f", pp.DockerComposeOverride(), "rm", "--stop", "--force", service)
+	attachOutput(cmd)
+	return cmd.Run()
+}
+
 // Start starts containers that already exist. It does not create or rebuild
 // anything — see UpProjectWithBuild for that.
 func Start(projectName string) error {

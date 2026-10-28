@@ -8,6 +8,36 @@ import (
 	"time"
 )
 
+// TestAMutedCloneWithAPersistedBrokerStartsTheWholeStack — the purge of a muted
+// clone's queues starts the broker alone. Its container must not be left
+// behind stopped: `start` would then find a container of the stack, wake only
+// it when the stack record matches, and report success with the database and
+// the rest never created.
+func TestAMutedCloneWithAPersistedBrokerStartsTheWholeStack(t *testing.T) {
+	install := newInstallation(t)
+	source := install.project("e2emutestack")
+	clone := install.project("e2emutestackcopy")
+
+	source.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=none", "--hosts=e2emutestack.test")
+	source.run(2*time.Minute, "config:set", "-n", "rabbitmq/enabled", "-v", "true")
+	source.run(2*time.Minute, "config:set", "-n", "rabbitmq/persist", "-v", "true")
+	source.run(25*time.Minute, "start")
+	source.freshTable("state", "(note VARCHAR(32))")
+	source.query("INSERT INTO state VALUES ('saved')")
+	source.run(10*time.Minute, "snapshot:create", "-n", "golden")
+
+	source.run(30*time.Minute, "project:clone", "-n", clone.name, "-s=-copy", "--from", "golden", "--muted")
+	clone.run(25*time.Minute, "start")
+
+	names := strings.Join(containersOf(t, clone.name), " ")
+	for _, service := range []string{"-db-1", "-rabbitmq-1"} {
+		if !strings.Contains(names, service) {
+			t.Errorf("after madock start the muted clone has no %s container; containers: %q", service, names)
+		}
+	}
+	requireContains(t, clone.query("SELECT note FROM state"), "saved", "the clone should hold the snapshot's row")
+}
+
 // TestAMutedCloneCannotActAsItsSource — a clone has the source's database and,
 // with rabbitmq/persist, the source's queued messages. A muted one must not
 // run them: its queues are emptied (the queues themselves stay, or the

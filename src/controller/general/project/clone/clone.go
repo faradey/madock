@@ -229,8 +229,15 @@ func Execute() {
 			logger.Fatal(err)
 		}
 	}
-	docker.UpWithBuild(cloneName, false)
-	docker.Down(cloneName, false)
+	// --no-start: the clone's containers are not created here. The volumes are
+	// filled through the snapshot helper, which needs no other container, and
+	// madock start creates the stack afterwards.
+	if args.NoStart {
+		docker.RenderProject(cloneName)
+	} else {
+		docker.UpWithBuild(cloneName, false)
+		docker.Down(cloneName, false)
+	}
 	docker.UpSnapshot(cloneName)
 	if paths.IsFileExist(dest + "db.tar.gz") {
 		selectedFile, err := os.Open(dest + "db.tar.gz")
@@ -349,6 +356,9 @@ func Execute() {
 	}
 
 	fmtc.SuccessLn("Project cloned successfully.\nThe new project name is " + cloneName + ".\nThe path to the project is " + clonePath)
+	if args.NoStart {
+		fmtc.ToDoLn("The containers are not started: run madock start in the clone")
+	}
 }
 
 // purgeQueues empties every queue of a muted clone's RabbitMQ, keeping the
@@ -360,6 +370,10 @@ func Execute() {
 // declared once at setup, and an empty broker without them refuses its next
 // publish. Only a persisted broker carries anything (rabbitmq/persist); one
 // without the volume starts empty already.
+//
+// The broker's container is removed afterwards, not only stopped: a stopped
+// container of the project makes `start` wake it and create nothing else, when
+// the stack record matches. The volume stays.
 func purgeQueues(conf map[string]string, cloneName string) error {
 	if conf["rabbitmq/enabled"] != "true" || conf["rabbitmq/persist"] != "true" {
 		return nil
@@ -368,7 +382,7 @@ func purgeQueues(conf map[string]string, cloneName string) error {
 	if err := docker.UpService(cloneName, "rabbitmq"); err != nil {
 		return err
 	}
-	defer func() { _ = docker.StopService(cloneName, "rabbitmq") }()
+	defer func() { _ = docker.RemoveService(cloneName, "rabbitmq") }()
 	// As the broker's own user, not root. rabbitmqctl reads the Erlang cookie,
 	// and run as root it creates one when there is none yet — owned by root,
 	// unreadable to the broker, which then dies at its next start with
