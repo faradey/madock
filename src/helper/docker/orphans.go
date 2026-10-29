@@ -72,7 +72,7 @@ func dockerLines(kind, verb string) []string {
 	// `docker image ls` has no .Name and no labels at all in its template —
 	// neither .Label nor .Labels — so the shared format failed for images and,
 	// a failure being an empty list, project:orphans never reported an image.
-	// Found writing system:prune, which asked the same question and got the
+	// Found writing an image cleanup, which asked the same question and got the
 	// template error. The labels are only in `image inspect`.
 	if kind == "image" {
 		var lines []string
