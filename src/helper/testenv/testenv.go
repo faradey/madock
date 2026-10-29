@@ -192,7 +192,6 @@ func writeProjectConfig(execDir, runDir, projectName, hostName string, overrides
 		"db/database":                               "magento",
 		"db/phpmyadmin/enabled":                     "false",
 		"db2/enabled":                               "false",
-		"search/engine":                             "OpenSearch",
 		"search/elasticsearch/enabled":              "false",
 		"search/elasticsearch/version":              "8.17.6",
 		"search/elasticsearch/repository":           "elasticsearch",

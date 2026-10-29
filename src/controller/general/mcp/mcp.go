@@ -109,10 +109,10 @@ func registerTools(s *server.MCPServer) {
 	// --- Configuration tools ---
 
 	s.AddTool(mcp.NewTool("madock_config_set",
-		mcp.WithDescription("Set a configuration option for the current madock project. Use config_list to see available keys. Example keys: php/version, db/version, search/engine, redis/enabled, nginx/hosts/{code}/name."),
+		mcp.WithDescription("Set a configuration option for the current madock project. Use config_list to see available keys. Example keys: php/version, db/version, search/opensearch/enabled, redis/enabled, nginx/hosts/{code}/name."),
 		mcp.WithString("key",
 			mcp.Required(),
-			mcp.Description("Configuration key (e.g. php/version, db/version, search/engine)"),
+			mcp.Description("Configuration key (e.g. php/version, db/version, search/opensearch/enabled)"),
 		),
 		mcp.WithString("value",
 			mcp.Required(),

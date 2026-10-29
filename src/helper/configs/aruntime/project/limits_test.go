@@ -183,7 +183,6 @@ func TestSearchMemoryReachesTheComposeFile(t *testing.T) {
 			// the defaults, and the assertion below — that the old numbers are
 			// gone — would fail against the neighbour rather than the code.
 			env := testenv.SetupWith(t, "search"+engine, engine+".test", map[string]string{
-				"search/engine":                      engine,
 				"search/" + engine + "/enabled":      "true",
 				"search/" + engine + "/memory_limit": "768m",
 				"search/" + engine + "/heap":         "256m",

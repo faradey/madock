@@ -393,7 +393,6 @@
                 </npm>
             </nodejs>
             <search>
-                <engine>elasticsearch</engine>
                 <elasticsearch>
                     <enabled>false</enabled>
                     <memory_limit>2512m</memory_limit>
