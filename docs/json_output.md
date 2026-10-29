@@ -236,6 +236,32 @@ Image sizes are unique sizes: a layer shared between images is counted once.
 `reclaimable_bytes` is what no container uses — for volumes that is data, not
 cache.
 
+### system:prune
+
+Without `--yes`, the plan: what `--images` and `--build-cache` would remove.
+With it, the same plan and what was removed. Behind `allow_destructive_commands`;
+volumes are never removed.
+
+```bash
+madock system:prune --images --build-cache --json
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "plan": {
+      "images": [{"id": "0123456789ab", "name": "madock_shop-php:latest", "bytes": 300000000}],
+      "image_bytes": 11430000000,
+      "build_cache_bytes": 60040000000
+    },
+    "removed": false,
+    "images_removed": 0,
+    "build_cache_removed": false
+  }
+}
+```
+
 ### matrix
 
 The compatibility matrix compiled into the binary. Runs outside a project.

@@ -93,7 +93,7 @@ func PruneUnusedNetworks() []string {
 	var removed []string
 	for _, line := range dockerLines("network", "ls") {
 		name, label, ok := strings.Cut(strings.TrimSpace(line), "\t")
-		if !ok || !isMadockNetwork(label) {
+		if !ok || !isMadockProject(label) {
 			continue
 		}
 		if removeNetworkIfUnused(name) {
@@ -121,7 +121,8 @@ func removeNetworkIfUnused(name string) bool {
 	return exec.Command("docker", "network", "rm", name).Run() == nil
 }
 
-func isMadockNetwork(label string) bool {
+// isMadockProject reports whether a compose project label is one of madock's.
+func isMadockProject(label string) bool {
 	project, ours := strings.CutPrefix(label, "madock_")
 	return ours && project != ""
 }

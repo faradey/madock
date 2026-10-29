@@ -53,6 +53,7 @@ type ProjectUsage struct {
 // dfReport is the part of `docker system df -v --format json` this reads.
 type dfReport struct {
 	Images []struct {
+		ID         string `json:"ID"`
 		Repository string `json:"Repository"`
 		Tag        string `json:"Tag"`
 		Containers string `json:"Containers"`

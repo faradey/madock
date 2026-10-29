@@ -245,6 +245,13 @@ type ControllerGeneralSystemDf struct {
 	attr.Arguments
 }
 
+type ControllerGeneralSystemPrune struct {
+	attr.Arguments
+	Images     bool `arg:"--images" help:"Unused images of madock projects, the untagged ones included"`
+	BuildCache bool `arg:"--build-cache" help:"The build cache not in use — the whole machine's, not only madock's"`
+	Yes        bool `arg:"-y,--yes" help:"Remove; without it the command only shows what it would free"`
+}
+
 type ControllerGeneralDbExecute struct {
 	attr.Arguments
 	DBServiceName string `arg:"-s,--service" help:"DB service name. For example: db"`
