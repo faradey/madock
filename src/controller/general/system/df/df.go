@@ -57,7 +57,7 @@ func Execute() {
 
 	fmtc.TitleLn("Docker disk")
 	row := func(name string, k docker.KindUsage, what string) {
-		fmt.Printf("  %-16s %5d  %10s   unused %10s   %s\n", name, k.Count, docker.HumanBytes(k.Bytes), docker.HumanBytes(k.Reclaimable), what)
+		fmt.Printf("  %-16s %5d  %10s   unused %10s   %s\n", name, k.Count, docker.DockerBytes(k.Bytes), docker.DockerBytes(k.Reclaimable), what)
 	}
 	row("build cache", usage.BuildCache, "rebuilt by the next build")
 	row("images", usage.Images, "pulled or built again on start")
@@ -75,6 +75,6 @@ func Execute() {
 			mark = "   not registered"
 		}
 		fmt.Printf("  %-32s images %3d %10s   volumes %3d %10s%s\n",
-			p.Project, p.Images, docker.HumanBytes(p.ImageBytes), p.Volumes, docker.HumanBytes(p.VolumeBytes), mark)
+			p.Project, p.Images, docker.DockerBytes(p.ImageBytes), p.Volumes, docker.DockerBytes(p.VolumeBytes), mark)
 	}
 }
