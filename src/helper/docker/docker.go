@@ -831,12 +831,28 @@ func StopSnapshot(projectName string) {
 	pp := paths.NewProjectPaths(projectName)
 	composerFile := pp.DockerComposeSnapshot()
 	if paths.IsFileExist(composerFile) {
-		cmd := exec.Command("docker", "compose", "-f", composerFile, "rm", "--stop", "--force", "snapshot")
-		attachOutput(cmd)
-		err := cmd.Run()
-		if err != nil {
-			fmt.Println(err)
+		for _, args := range snapshotHelperRemoval(composerFile) {
+			cmd := exec.Command("docker", args...)
+			attachOutput(cmd)
+			if err := cmd.Run(); err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 	removeProjectNetworksIfUnused(projectName)
+}
+
+// snapshotHelperRemoval kills the helper, then removes it.
+//
+// Killed, not stopped: its main process is an idle shell that ignores SIGTERM,
+// so a stop waited docker's ten seconds and then killed it anyway — the
+// `Exited (137)` it was left in. Measured on the test VM: 10.2 s of an 11.0 s
+// `project:clone --no-start`, and the same on every snapshot. Its work is done
+// by then — the tar processes run through exec and have exited — so there is
+// nothing for a graceful stop to let finish.
+func snapshotHelperRemoval(composeFile string) [][]string {
+	return [][]string{
+		{"compose", "-f", composeFile, "kill", "snapshot"},
+		{"compose", "-f", composeFile, "rm", "--force", "snapshot"},
+	}
 }

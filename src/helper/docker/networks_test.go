@@ -65,3 +65,19 @@ func TestMissingFromNamesServicesWithoutAContainer(t *testing.T) {
 		t.Fatalf("missing = %v, want none", got)
 	}
 }
+
+// A stop waited ten seconds for a shell that ignores SIGTERM, on every clone
+// and snapshot. The helper is killed, then removed.
+func TestSnapshotHelperIsKilledNotStopped(t *testing.T) {
+	steps := snapshotHelperRemoval("snap.yml")
+	if len(steps) != 2 || steps[0][3] != "kill" || steps[1][3] != "rm" {
+		t.Fatalf("steps = %v, want kill then rm", steps)
+	}
+	for _, step := range steps {
+		for _, arg := range step {
+			if arg == "stop" || arg == "--stop" {
+				t.Errorf("%v stops the helper, which waits ten seconds for nothing", step)
+			}
+		}
+	}
+}
