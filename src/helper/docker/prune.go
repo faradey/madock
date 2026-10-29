@@ -42,6 +42,10 @@ type PrunePlan struct {
 }
 
 // PlanPrune reads what is removable. It removes nothing.
+//
+// Extension point for madock-pro: its `disk:clean` shows this plan and removes
+// it. madock has no command that removes images or cache, so nothing here
+// calls it.
 func PlanPrune() (PrunePlan, error) {
 	df, err := exec.Command("docker", "system", "df", "-v", "--format", "{{json .}}").Output()
 	if err != nil {
@@ -104,6 +108,9 @@ func shortID(id string) string {
 // RemoveImages removes the images of a plan, by ID, and returns how many went.
 // An image another one is built on, or one a container took since the plan was
 // read, is refused by docker and stays; that is reported, not forced.
+//
+// Extension point for madock-pro, called by `disk:clean`; unreachable from
+// madock, which removes no images outside project:remove.
 func RemoveImages(images []PruneImage) (removed int, refused []string) {
 	for _, img := range images {
 		if out, err := exec.Command("docker", "image", "rm", img.ID).CombinedOutput(); err != nil {
@@ -117,6 +124,9 @@ func RemoveImages(images []PruneImage) (removed int, refused []string) {
 
 // PruneBuildCache removes the build cache no build is using, for the whole
 // machine.
+//
+// Extension point for madock-pro, called by `disk:clean`; madock itself never
+// empties the build cache.
 //
 // `--all`, because without it docker removes only the dangling entries — those
 // no image refers to — and keeps every reusable layer. The plan counts all

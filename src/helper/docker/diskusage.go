@@ -242,8 +242,10 @@ func parseSize(s string) int64 {
 	return 0
 }
 
-// HumanBytes writes a size the way docker does, so the two can be compared.
-func HumanBytes(b int64) string {
+// DockerBytes writes a size the way docker does — powers of 1000 — so the two
+// can be compared. Not the 1024-based kind madock Pro prints disk space with;
+// the name says which one this is.
+func DockerBytes(b int64) string {
 	switch {
 	case b >= 1e12:
 		return fmt.Sprintf("%.2f TB", float64(b)/1e12)
