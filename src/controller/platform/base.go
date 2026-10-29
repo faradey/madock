@@ -93,6 +93,19 @@ func (h *BaseHandler) Start(projectName string, withChown bool, projectConf map[
 		return
 	}
 
+	// Some exist and some do not: a narrowed recreate created only what had
+	// changed, and the record it compared with may belong to an earlier project
+	// of the same name. `compose start` below would wake what is there and
+	// leave the rest uncreated, with nothing said.
+	if missing := docker.MissingServices(projectName); len(missing) > 0 {
+		fmtc.ToDoLn("Creating " + strings.Join(missing, ", ") + " — no container yet")
+		if err := docker.ApplyStackDiff(projectName, project.StackDiff{Known: true, Recreate: missing}, withChown); err != nil {
+			fmtc.WarningIconLn(err.Error())
+			fmtc.ToDoLn("madock rebuild   # recreates the whole stack")
+			return
+		}
+	}
+
 	pp := paths.NewProjectPaths(projectName)
 	profilesOn := []string{
 		"compose",

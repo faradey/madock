@@ -105,3 +105,45 @@ func TestCloneWithNoStartAndAPersistedBrokerStartsTheWholeStack(t *testing.T) {
 
 	requireContains(t, clone.query("SELECT note FROM state"), "saved", "the clone should hold the snapshot's row")
 }
+
+// TestCloneLeavesNoHelperAndNoNetworkBehind — the snapshot helper goes once the
+// clone's volumes are filled, and with --no-start so does the network it was
+// created on. A stopped helper was reported by `start` as "Left over from a
+// service this project no longer has: snapshot", and each unstarted clone held
+// an address pool: the fourth clone of a test run failed with "all predefined
+// address pools have been fully subnetted".
+func TestCloneLeavesNoHelperAndNoNetworkBehind(t *testing.T) {
+	install := newInstallation(t)
+	source := install.project("e2ehelper")
+	clone := install.project("e2ehelpercopy")
+
+	source.run(setupTimeout, "setup", "-y",
+		"--platform=custom",
+		"--language=none",
+		"--hosts=e2ehelper.test",
+	)
+	source.run(20*time.Minute, "start")
+	source.run(10*time.Minute, "snapshot:create", "-n", "golden")
+
+	source.run(30*time.Minute, "project:clone", "-n", clone.name, "-s=-copy", "--from", "golden", "--no-start")
+
+	out, err := exec.Command("docker", "ps", "-a", "--format", "{{.Names}}", "--filter", "label=com.docker.compose.project=madock_"+clone.name).Output()
+	if err != nil {
+		t.Fatalf("docker ps: %v", err)
+	}
+	if names := strings.Fields(string(out)); len(names) > 0 {
+		t.Errorf("the clone left containers behind: %v", names)
+	}
+	nets, err := exec.Command("docker", "network", "ls", "--format", "{{.Name}}", "--filter", "label=com.docker.compose.project=madock_"+clone.name).Output()
+	if err != nil {
+		t.Fatalf("docker network ls: %v", err)
+	}
+	if names := strings.Fields(string(nets)); len(names) > 0 {
+		t.Errorf("the unstarted clone holds networks: %v", names)
+	}
+
+	started := clone.run(20*time.Minute, "start")
+	if strings.Contains(started, "Left over") {
+		t.Errorf("start reported a leftover on a fresh clone:\n%s", started)
+	}
+}

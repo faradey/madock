@@ -96,6 +96,19 @@ func RecordApplied(projectName string) {
 	RecordStack(projectName)
 }
 
+// ForgetApplied removes both records of what the containers were created from.
+//
+// They live in the shared cache under the project's name, not in the project's
+// directory, so removing a project left them behind — and the next project of
+// that name inherited them. A test runner that clones `dbg1`, removes it and
+// clones `dbg1` again got a clone whose first start compared its stack with the
+// previous `dbg1`'s, recreated the services that differed, and never created
+// the ones that matched: valkey, on one clone in three.
+func ForgetApplied(projectName string) {
+	_ = os.Remove(appliedFingerprintPath(projectName))
+	_ = os.Remove(stackRecordPath(projectName))
+}
+
 // NeedsRecreate reports that the generated stack differs from the one the
 // running containers were created from — `docker compose start` would bring up
 // the old containers and quietly ignore the new files.

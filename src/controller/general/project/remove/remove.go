@@ -12,6 +12,7 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/nginx"
+	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
@@ -328,6 +329,7 @@ func removeRegistered(projectName string, reclaimSource, withVolumes bool) {
 	if err := os.RemoveAll(pp.RuntimeDir()); err != nil {
 		logger.Fatal(err)
 	}
+	project.ForgetApplied(projectName)
 
 	// Take the project out of the shared proxy.
 	//

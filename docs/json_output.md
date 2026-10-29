@@ -270,10 +270,35 @@ madock snapshot:create --name=before-upgrade --json
 }
 ```
 
+The shapes below are what `data` holds; every one of them arrives inside the
+`{"success": …, "data": …}` envelope.
+
 `snapshot:list --json` answers `{"snapshots": [ … ]}` with the same object for
 each, oldest first. `snapshot:restore --json` requires `--name`, because without
 it the snapshot is chosen at a prompt, and answers `{"name": "…"}`.
-`project:clone --json` answers `{"name": "…", "path": "…", "hosts": ["…"]}`.
+`project:clone --json` answers `{"name": "…", "path": "…", "hosts": ["…"]}`:
+
+```json
+{
+  "success": true,
+  "data": {"name": "shop-update", "path": "/path/to/shop-update", "hosts": ["shop-update.test"]}
+}
+```
+
+A clone that fails answers `{"success": false, "error": "…"}` with docker's own
+words in the error, and takes what it had made with it: the project directory,
+its runtime, its containers, volumes and networks, and the directory beside the
+source when the clone created it.
+
+### project:list — no envelope
+
+`project:list --json` is the one exception: it prints a bare array, one object
+per project, without `success` and `data`. It predates the envelope and scripts
+read it as it is.
+
+```bash
+madock project:list --json | jq -r '.[].name'
+```
 
 ## Exit codes
 

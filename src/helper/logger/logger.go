@@ -31,8 +31,30 @@ func SetLogPath(path string) {
 	customPath = path
 }
 
+// onFatal runs before Fatal ends the process.
+var onFatal []func(message string)
+
+// OnFatal registers f to run when Fatal ends the process, with the message it
+// is about to print.
+//
+// For a command that creates things across several steps and calls helpers
+// that end the process on their own: project:clone made a project directory,
+// a registry entry and a runtime before a docker failure deep in a helper
+// ended it, and left all three behind for project:remove to trip over.
+func OnFatal(f func(message string)) {
+	onFatal = append(onFatal, f)
+}
+
 func Fatal(v ...any) {
 	debugger(v...)
+	// Taken before they run, so a hook that fails into Fatal again does not
+	// run itself a second time.
+	hooks := onFatal
+	onFatal = nil
+	message := strings.TrimSpace(fmt.Sprintln(v...))
+	for _, f := range hooks {
+		f(message)
+	}
 	log.Fatal(v...)
 }
 

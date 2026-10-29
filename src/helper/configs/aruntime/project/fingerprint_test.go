@@ -124,3 +124,28 @@ func TestNeedsRecreateAdoptsAnUnknownStack(t *testing.T) {
 		t.Error("NeedsRecreate did not record the stack it adopted")
 	}
 }
+
+// A removed project's records stayed in the shared cache, and the next project
+// of the same name compared its first start against them.
+func TestForgetAppliedRemovesBothRecords(t *testing.T) {
+	t.Setenv("MADOCK_EXEC_DIR", t.TempDir())
+
+	stack(t, "dbg1", map[string]string{"docker-compose.yml": "services: {}"})
+	if err := os.WriteFile(appliedFingerprintPath("dbg1"), []byte("old"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(stackRecordPath("dbg1"), []byte(`{"global":"old"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ForgetApplied("dbg1")
+
+	for _, path := range []string{appliedFingerprintPath("dbg1"), stackRecordPath("dbg1")} {
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Errorf("%s is still there", path)
+		}
+	}
+	if _, err := readStackRecord("dbg1"); err == nil {
+		t.Error("a forgotten project still has a stack record to diff against")
+	}
+}

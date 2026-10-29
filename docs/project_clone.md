@@ -49,5 +49,8 @@ A refusal — a name that already exists, a name or suffix with a period or a
 space, a project managed by deployer, a `--from` snapshot that does not exist —
 exits 1.
 
-`--json` (`-j`) answers `{"name": "…", "path": "…", "hosts": ["…"]}` on stdout,
-with the progress on stderr. See [JSON output](json_output.md).
+`--json` (`-j`) answers
+`{"success": true, "data": {"name": "…", "path": "…", "hosts": ["…"]}}` on
+stdout, with the progress on stderr; a failure is `{"success": false, "error":
+"…"}` carrying docker's message, and the half-made clone is removed. See
+[JSON output](json_output.md).
