@@ -114,10 +114,22 @@ func RemoveImages(images []PruneImage) (removed int, refused []string) {
 
 // PruneBuildCache removes the build cache no build is using, for the whole
 // machine.
+//
+// `--all`, because without it docker removes only the dangling entries — those
+// no image refers to — and keeps every reusable layer. The plan counts all
+// entries not in use, and the two disagreed by most of the cache: on the first
+// run 60.0 GB were planned, 18.3 GB went, and `system:df` still showed 41.7 GB
+// "unused" afterwards.
 func PruneBuildCache() error {
-	out, err := exec.Command("docker", "builder", "prune", "--force").CombinedOutput()
+	out, err := exec.Command("docker", pruneBuildCacheArgs()...).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("docker builder prune: %w: %s", err, lastLines(string(out), 3))
 	}
 	return nil
+}
+
+// pruneBuildCacheArgs is separate so the flag that makes the removal match the
+// plan can be asserted.
+func pruneBuildCacheArgs() []string {
+	return []string{"builder", "prune", "--all", "--force"}
 }

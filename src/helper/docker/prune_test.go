@@ -61,3 +61,17 @@ func TestParseLabelledImages(t *testing.T) {
 		t.Errorf("second = %+v", got[1])
 	}
 }
+
+// Without --all docker keeps every reusable cache entry, and the removal fell
+// short of the plan by 41.7 GB of 60.0.
+func TestBuildCachePruneTakesEveryUnusedEntry(t *testing.T) {
+	has := false
+	for _, arg := range pruneBuildCacheArgs() {
+		if arg == "--all" {
+			has = true
+		}
+	}
+	if !has {
+		t.Fatalf("builder prune without --all removes only dangling entries: %v", pruneBuildCacheArgs())
+	}
+}
