@@ -275,6 +275,11 @@ func IsOption(name string) bool {
 	if source, derived := IsDerived(name); derived {
 		logger.Fatalln("The option \"" + name + "\" is derived from \"" + source + "\" and cannot be set on its own. Set \"" + source + "\" instead.")
 	}
+	// Still in the machine's copy of every project set up before it was
+	// retired, so the loop below would accept it and store a value nothing reads.
+	if instead, retired := RetiredInstead(name); retired {
+		logger.Fatalln("The option \"" + name + "\" is no longer read. Set " + instead + " instead.")
+	}
 	if newName, renamed := RenamedTo(name); renamed {
 		logger.Fatalln("The option \"" + name + "\" was renamed to \"" + newName + "\". Set \"" + newName + "\" instead.")
 	}

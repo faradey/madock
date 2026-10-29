@@ -52,6 +52,11 @@ func ExecuteWith(args *arg_struct.ControllerGeneralStart) {
 
 		matrixcheck.Warn(projectConf, projectConf["path"])
 
+		// A committed setting nothing reads looks like a choice the project made.
+		for _, r := range configs2.RetiredKeysInProject(projectConf["path"]) {
+			fmtc.WarningIconLn("\"" + r.Key + "\" in .madock/config.xml (scope " + r.Scope + ") is no longer read and changes nothing. Set " + r.Instead + " instead.")
+		}
+
 		fmtc.TitleLn("Starting containers...")
 
 		handler := platform.GetOrDefault(platformName)

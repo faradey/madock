@@ -88,7 +88,6 @@ func TestDashboardsRunNativeWhereAnImageExists(t *testing.T) {
 		t.Run(tc.service+"-"+tc.version, func(t *testing.T) {
 			name := "dash" + strings.ReplaceAll(tc.engine+tc.version, ".", "")
 			env := testenv.SetupWith(t, name, name+".test", map[string]string{
-				"search/engine":                             tc.engine,
 				"search/" + tc.engine + "/enabled":           "true",
 				"search/" + tc.engine + "/version":           tc.version,
 				"search/" + tc.engine + "/dashboard/enabled": "true",

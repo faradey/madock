@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
@@ -55,6 +56,14 @@ func forceRemoveByLabel(projectName string, withVolumes bool) {
 	if nets := dockerQuery("network", "ls", "-q", "--filter", labelFilter); len(nets) > 0 {
 		dockerRun("network", append([]string{"rm"}, nets...)...)
 	}
+}
+
+// Discard removes every container, volume, image and network that carries the
+// project's compose label, compose file or not. For undoing a project that was
+// never finished — a clone that failed half way — and nothing else: everything
+// it finds is the project's own, and its volumes go with it.
+func Discard(projectName string) {
+	forceRemoveByLabel(projectName, true)
 }
 
 // dockerQuery runs `docker <subject> <args…>` and returns whitespace-
@@ -169,6 +178,41 @@ func HasContainers(projectName string) bool {
 		}
 	}
 	return false
+}
+
+// MissingServices returns the services the stack declares that have no
+// container at all, running or stopped, or nil when docker cannot be asked.
+//
+// `docker compose start` wakes the containers that exist and says nothing
+// about the ones that do not, so a stack that is partly there starts partly.
+// A narrowed recreate leaves the same gap: it creates the services whose
+// definition changed and trusts the record about the rest.
+func MissingServices(projectName string) []string {
+	declared := DeclaredServices(projectName)
+	if declared == nil {
+		return nil
+	}
+	entries, err := ServiceStates(projectName)
+	if err != nil {
+		return nil
+	}
+	return missingFrom(declared, entries)
+}
+
+// missingFrom is the decision on its own, testable without a daemon.
+func missingFrom(declared map[string]bool, entries []ServiceState) []string {
+	present := make(map[string]bool, len(entries))
+	for _, entry := range entries {
+		present[entry.Service] = true
+	}
+	var missing []string
+	for service := range declared {
+		if !present[service] {
+			missing = append(missing, service)
+		}
+	}
+	sort.Strings(missing)
+	return missing
 }
 
 // NotRunning returns the project's services that are not running.
@@ -612,10 +656,7 @@ func upProjectWithBuild(projectName string, withChown bool, refresh bool, servic
 	}
 	profilesOn = append(profilesOn, services...)
 	dockerComposePull([]string{"compose", "-f", composeFile, "-f", composeFileOS}, refresh)
-	cmd := exec.Command("docker", profilesOn...)
-	attachOutput(cmd)
-	err = cmd.Run()
-	if err != nil {
+	if err = runCompose(profilesOn...); err != nil {
 		logger.Fatal(err)
 	}
 
@@ -749,6 +790,14 @@ func attachOutput(cmd *exec.Cmd) {
 
 // UpSnapshot starts snapshot container
 func UpSnapshot(projectName string) {
+	if err := UpSnapshotErr(projectName); err != nil {
+		logger.Fatal(err)
+	}
+}
+
+// UpSnapshotErr starts the snapshot container and returns the failure with
+// docker's own words in it, for a caller that has something to undo first.
+func UpSnapshotErr(projectName string) error {
 	pp := paths.NewProjectPaths(projectName)
 	paths.MakeDirsByPath(pp.RuntimeDir())
 	composerFile := pp.DockerComposeSnapshot()
@@ -765,25 +814,29 @@ func UpSnapshot(projectName string) {
 	// A snapshot only needs the image present; it is not a place to go
 	// looking for a newer one.
 	dockerComposePull([]string{"compose", "-f", composerFile}, false)
-	cmd := exec.Command("docker", profilesOn...)
-	attachOutput(cmd)
-	err := cmd.Run()
-	if err != nil {
-		logger.Fatal(err)
-	}
+	return runCompose(profilesOn...)
 }
 
-// StopSnapshot stops snapshot container
+// StopSnapshot removes the snapshot container once its work is done.
+//
+// It used to only stop it. The helper is not a service of the project, so a
+// stopped one is a container `start` reports as "Left over from a service this
+// project no longer has: snapshot", it keeps the project's network alive on a
+// clone whose own containers were never created, and every later snapshot
+// recreates it anyway (`--force-recreate`). The volumes it mounted stay.
+//
+// The network goes with it when nothing else is on it: a clone made with
+// --no-start otherwise holds an address pool for a stack that does not exist.
 func StopSnapshot(projectName string) {
 	pp := paths.NewProjectPaths(projectName)
 	composerFile := pp.DockerComposeSnapshot()
 	if paths.IsFileExist(composerFile) {
-		command := "stop"
-		cmd := exec.Command("docker", "compose", "-f", composerFile, command)
+		cmd := exec.Command("docker", "compose", "-f", composerFile, "rm", "--stop", "--force", "snapshot")
 		attachOutput(cmd)
 		err := cmd.Run()
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
+	removeProjectNetworksIfUnused(projectName)
 }

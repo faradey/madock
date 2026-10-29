@@ -11,10 +11,12 @@ import (
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/cli/output"
 	"github.com/faradey/madock/v4/src/helper/configs"
+	stackrecord "github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/v4/src/helper/credentials"
 	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/ports"
 	"github.com/faradey/madock/v4/src/helper/snapshotengine"
 	"os"
 	"path/filepath"
@@ -46,11 +48,55 @@ type ClonedJSON struct {
 // error and return, which exited 0: to a script, a clone refused for a name
 // that already exists looked like a clone made.
 func refuse(w *output.Writer, msg string) {
+	if rollbackOnFailure != nil {
+		rollbackOnFailure.run()
+	}
 	if w != nil {
 		w.Fail("%s", msg)
 	}
 	fmtc.ErrorLn(msg)
 	os.Exit(1)
+}
+
+// rollbackOnFailure is the clone being made, while there is one to undo.
+var rollbackOnFailure *rollback
+
+// rollback takes a clone that failed half way back out.
+//
+// A clone that died on docker used to leave its project directory, its runtime
+// and its registry entry, and an empty directory beside the source. The next
+// clone of that name was refused as existing, and project:remove, run from the
+// clone's directory, found a project with nothing in it. Found when the address
+// pools ran out on the fourth clone of a test run.
+type rollback struct {
+	name string
+	path string
+	// ownsPath: the clone's directory beside the source was created by this
+	// run. One that was already there is somebody's, and stays.
+	ownsPath bool
+	done     bool
+}
+
+func (r *rollback) run() {
+	if r.done {
+		return
+	}
+	r.done = true
+	// Execute refuses these names before anything is made; this is the line
+	// that keeps a removal from reaching projects/ itself if that ever changes.
+	if nameRefusal(r.name) != "" {
+		return
+	}
+
+	fmtc.WarningLn("Removing the unfinished clone " + r.name)
+	docker.Discard(r.name)
+	_ = os.RemoveAll(paths.GetExecDirPath() + "/projects/" + r.name + "/")
+	_ = os.RemoveAll(paths.NewProjectPaths(r.name).RuntimeDir())
+	stackrecord.ForgetApplied(r.name)
+	ports.GetRegistry().RemoveProject(r.name)
+	if r.ownsPath {
+		_ = os.RemoveAll(r.path)
+	}
 }
 
 func Execute() {
@@ -61,8 +107,8 @@ func Execute() {
 	}
 
 	cloneName := args.Name
-	if strings.Contains(cloneName, ".") || strings.Contains(cloneName, " ") {
-		refuse(w, "The project folder name cannot contain a period or space")
+	if refusal := nameRefusal(cloneName); refusal != "" {
+		refuse(w, refusal)
 	}
 	domainSuffix := strings.TrimSpace(args.DomainSuffix)
 	if domainSuffix == "" {
@@ -121,6 +167,23 @@ func Execute() {
 	fmt.Println("Cloning the project")
 	exPath := paths.GetExecDirPath()
 	projectName := configs.GetProjectName()
+	clonePathParts := strings.Split(projectConf["path"], "/")
+	clonePath := strings.Join(clonePathParts[:len(clonePathParts)-1], "/") + "/" + cloneName
+
+	// From here on a failure takes the half-made clone with it.
+	undo := rollback{name: cloneName, path: clonePath, ownsPath: !paths.IsFileExist(clonePath)}
+	rollbackOnFailure = &undo
+	logger.OnFatal(func(message string) {
+		undo.run()
+		if w != nil {
+			fmtc.ErrorLn(message)
+			w.Fail("%s", message)
+		}
+	})
+	// A previous project of this name may have left its records of what its
+	// containers were created from; see project.ForgetApplied.
+	stackrecord.ForgetApplied(cloneName)
+
 	currentDest := paths.MakeDirsByPath(exPath + "/projects/" + projectName + "/")
 	dest := paths.MakeDirsByPath(exPath + "/projects/" + cloneName + "/")
 	configs.PrepareDirsForProject(cloneName)
@@ -133,8 +196,6 @@ func Execute() {
 		}
 	}
 
-	clonePathParts := strings.Split(projectConf["path"], "/")
-	clonePath := strings.Join(clonePathParts[:len(clonePathParts)-1], "/") + "/" + cloneName
 	paths.MakeDirsByPath(clonePath)
 	configs.SetParam(cloneName, "path", clonePath, projectConf["activeScope"], "")
 	// Rewrite cloned hosts so they don't collide with the source project.
@@ -238,7 +299,9 @@ func Execute() {
 		docker.UpWithBuild(cloneName, false)
 		docker.Down(cloneName, false)
 	}
-	docker.UpSnapshot(cloneName)
+	if err := docker.UpSnapshotErr(cloneName); err != nil {
+		refuse(w, "the snapshot helper of the clone did not start: "+err.Error())
+	}
 	if paths.IsFileExist(dest + "db.tar.gz") {
 		selectedFile, err := os.Open(dest + "db.tar.gz")
 		if err != nil {
@@ -343,6 +406,11 @@ func Execute() {
 	}
 
 	docker.StopSnapshot(cloneName)
+
+	// The clone exists. A muted broker that cannot be emptied is reported, and
+	// the clone stays: the message says it was made.
+	rollbackOnFailure = nil
+	undo.done = true
 
 	if args.Muted {
 		if err := purgeQueues(cloneProjectConf, cloneName); err != nil {
