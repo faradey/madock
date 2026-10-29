@@ -45,6 +45,8 @@ func TestGlobalCommands(t *testing.T) {
 		"project:remove",
 		"proxy:logs",
 		"setup",
+		"system:df",
+		"system:prune",
 		"template:convert",
 		"version",
 	}

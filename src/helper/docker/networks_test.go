@@ -8,7 +8,7 @@ import (
 
 // Which networks madock may give back when the address pools run out. A wrong
 // answer removes somebody else's compose network.
-func TestIsMadockNetwork(t *testing.T) {
+func TestIsMadockProject(t *testing.T) {
 	cases := map[string]bool{
 		"madock_shop-clean":   true,
 		"madock_dbg4":         true,
@@ -18,8 +18,8 @@ func TestIsMadockNetwork(t *testing.T) {
 		"":                    false,
 	}
 	for label, want := range cases {
-		if got := isMadockNetwork(label); got != want {
-			t.Errorf("isMadockNetwork(%q) = %v, want %v", label, got, want)
+		if got := isMadockProject(label); got != want {
+			t.Errorf("isMadockProject(%q) = %v, want %v", label, got, want)
 		}
 	}
 }

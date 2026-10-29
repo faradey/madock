@@ -69,18 +69,81 @@ func FindOrphans(known map[string]bool) []Orphan {
 // nothing to report anyway — every other madock command will have said so
 // first, and louder.
 func dockerLines(kind, verb string) []string {
+	// `docker image ls` has no .Name and no labels at all in its template —
+	// neither .Label nor .Labels — so the shared format failed for images and,
+	// a failure being an empty list, project:orphans never reported an image.
+	// Found writing system:prune, which asked the same question and got the
+	// template error. The labels are only in `image inspect`.
+	if kind == "image" {
+		var lines []string
+		for _, img := range labelledImages() {
+			lines = append(lines, img.name+"\t"+img.project)
+		}
+		return lines
+	}
+
 	cmd := exec.Command("docker", kind, verb,
 		"--filter", "label="+composeLabel,
 		"--format", "{{.Name}}\t{{.Label \""+composeLabel+"\"}}")
 
-	// `docker image ls` prints the repository under .Name only for images that
-	// have one; the format is the same otherwise.
 	out, err := cmd.Output()
 	if err != nil {
 		return nil
 	}
 
 	return strings.Split(strings.TrimSpace(string(out)), "\n")
+}
+
+// labelledImage is an image carrying the compose project label.
+type labelledImage struct {
+	id      string // the 12-character short form
+	name    string // first repo:tag, or the ID for an untagged image
+	project string // the label's value, "madock_<name>" for ours
+}
+
+// labelledImages lists the images with a compose project label: the IDs from
+// `image ls`, which can filter on a label but not print one, and the labels from
+// one `image inspect` of all of them. Nil when docker cannot be asked.
+func labelledImages() []labelledImage {
+	ids, err := exec.Command("docker", "image", "ls", "-a", "-q", "--no-trunc", "--filter", "label="+composeLabel).Output()
+	if err != nil {
+		return nil
+	}
+	list := strings.Fields(string(ids))
+	if len(list) == 0 {
+		return nil
+	}
+	seen := map[string]bool{}
+	args := []string{"image", "inspect", "--format", "{{.Id}}\t{{index .Config.Labels \"" + composeLabel + "\"}}\t{{join .RepoTags \",\"}}"}
+	for _, id := range list {
+		if !seen[id] {
+			seen[id] = true
+			args = append(args, id)
+		}
+	}
+	out, err := exec.Command("docker", args...).Output()
+	if err != nil {
+		return nil
+	}
+	return parseLabelledImages(string(out))
+}
+
+func parseLabelledImages(out string) []labelledImage {
+	var images []labelledImage
+	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
+		fields := strings.SplitN(strings.TrimSpace(line), "\t", 3)
+		if len(fields) < 2 || fields[0] == "" {
+			continue
+		}
+		img := labelledImage{id: shortID(fields[0]), project: fields[1]}
+		if len(fields) == 3 && fields[2] != "" {
+			img.name, _, _ = strings.Cut(fields[2], ",")
+		} else {
+			img.name = img.id
+		}
+		images = append(images, img)
+	}
+	return images
 }
 
 // orphansOf keeps the resources whose project is one of madock's and is not in

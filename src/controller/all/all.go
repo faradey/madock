@@ -64,6 +64,8 @@ import (
 	_ "github.com/faradey/madock/v4/src/controller/general/start"
 	_ "github.com/faradey/madock/v4/src/controller/general/status"
 	_ "github.com/faradey/madock/v4/src/controller/general/stop"
+	_ "github.com/faradey/madock/v4/src/controller/general/system/df"
+	_ "github.com/faradey/madock/v4/src/controller/general/system/prune"
 	_ "github.com/faradey/madock/v4/src/controller/magento"
 	_ "github.com/faradey/madock/v4/src/controller/magento/cloud"
 	_ "github.com/faradey/madock/v4/src/controller/magento/info"

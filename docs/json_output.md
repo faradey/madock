@@ -209,6 +209,59 @@ madock db:execute --json "SELECT entity_id, sku FROM catalog_product_entity LIMI
 A query that fails answers `{"success": false, "error": "…"}` with the
 client's own message on stderr. Until 4.5.17 the answer was the bare array.
 
+### system:df
+
+What fills the Docker disk, by kind and by project. Read-only.
+
+```bash
+madock system:df --json
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "images": {"count": 581, "bytes": 50510552075, "reclaimable_bytes": 38457009953},
+    "volumes": {"count": 178, "bytes": 15968258935, "reclaimable_bytes": 438701176},
+    "build_cache": {"count": 2503, "bytes": 60040000000, "reclaimable_bytes": 60040000000},
+    "dangling_images": {"count": 410, "bytes": 34440000000, "reclaimable_bytes": 33100000000},
+    "projects": [
+      {"project": "shop", "registered": true, "images": 4, "image_bytes": 1150000000, "volumes": 2, "volume_bytes": 328000000}
+    ]
+  }
+}
+```
+
+Image sizes are unique sizes: a layer shared between images is counted once.
+`reclaimable_bytes` is what no container uses — for volumes that is data, not
+cache.
+
+### system:prune
+
+Without `--yes`, the plan: what `--images` and `--build-cache` would remove.
+With it, the same plan and what was removed. Behind `allow_destructive_commands`;
+volumes are never removed.
+
+```bash
+madock system:prune --images --build-cache --json
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "plan": {
+      "images": [{"id": "0123456789ab", "name": "madock_shop-php:latest", "bytes": 300000000}],
+      "image_bytes": 11430000000,
+      "build_cache_bytes": 60040000000
+    },
+    "removed": false,
+    "images_removed": 0,
+    "build_cache_removed": false
+  }
+}
+```
+
 ### matrix
 
 The compatibility matrix compiled into the binary. Runs outside a project.
