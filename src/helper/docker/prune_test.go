@@ -2,7 +2,7 @@ package docker
 
 import "testing"
 
-// What system:prune may remove. A wrong answer here removes an image somebody
+// What a cleanup may remove. A wrong answer here removes an image somebody
 // else's stack needs, or one a stopped madock project still runs from.
 func TestPlanFromTakesOnlyUnusedImagesOfMadockProjects(t *testing.T) {
 	df := []byte(`{

@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
-// What system:prune may remove, and nothing else.
+// What a cleanup of the Docker disk may remove, and nothing else. madock has no
+// command for it — madock Pro's `disk:clean` is the one, and it uses these, so
+// there is one answer to "which images are madock's" and one way to empty the
+// build cache. A `system:prune` here briefly duplicated it and was taken out.
 //
 // Two kinds, chosen because neither holds data and both come back on their own:
 //
@@ -16,7 +19,7 @@ import (
 //   - the build cache — the next build fills it again.
 //
 // Volumes are never candidates. They are databases, and removing one is
-// project:remove's, behind the same switch, with the project named.
+// project:remove's, behind allow_destructive_commands, with the project named.
 //
 // The images are madock's only: an image counts when its compose label names a
 // madock project, or, for one without the label, when its name starts with
@@ -24,7 +27,7 @@ import (
 // for the whole machine — and is removed only when asked for by name, and said
 // to be the machine's.
 
-// PruneImage is one image system:prune would remove.
+// PruneImage is one image a cleanup would remove.
 type PruneImage struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
@@ -120,12 +123,15 @@ func RemoveImages(images []PruneImage) (removed int, refused []string) {
 // entries not in use, and the two disagreed by most of the cache: on the first
 // run 60.0 GB were planned, 18.3 GB went, and `system:df` still showed 41.7 GB
 // "unused" afterwards.
-func PruneBuildCache() error {
+//
+// The output is returned for its last line, `Total: 41.72GB`, which is what
+// docker says it freed.
+func PruneBuildCache() (string, error) {
 	out, err := exec.Command("docker", pruneBuildCacheArgs()...).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("docker builder prune: %w: %s", err, lastLines(string(out), 3))
+		return string(out), fmt.Errorf("docker builder prune: %w: %s", err, lastLines(string(out), 3))
 	}
-	return nil
+	return string(out), nil
 }
 
 // pruneBuildCacheArgs is separate so the flag that makes the removal match the
