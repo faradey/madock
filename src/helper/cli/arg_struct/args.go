@@ -241,6 +241,10 @@ type ControllerGeneralProjectOrphans struct {
 	attr.Arguments
 }
 
+type ControllerGeneralSystemDf struct {
+	attr.Arguments
+}
+
 type ControllerGeneralDbExecute struct {
 	attr.Arguments
 	DBServiceName string `arg:"-s,--service" help:"DB service name. For example: db"`
