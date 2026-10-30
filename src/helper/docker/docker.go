@@ -487,23 +487,40 @@ func ReclaimProjectFiles(projectName string) {
 	container := GetContainerName(projectConf, projectName, service)
 
 	own := "chown -R " + usr.Uid + ":" + usr.Gid + " " + workdir
-	if out, execErr := exec.Command("docker", "exec", "-u", "root", container, "sh", "-c", own).CombinedOutput(); execErr == nil {
-		return
-	} else {
-		logger.Println("could not reclaim "+workdir+" through "+container+":", execErr, string(out))
+	runDir := paths.GetRunDirPath()
+	viaContainer := func() ([]byte, error) {
+		return exec.Command("docker", "exec", "-u", "root", container, "sh", "-c", own).CombinedOutput()
 	}
-
 	// The container may already be gone — a project that was stopped, or one
 	// whose stack failed to come up. A throwaway container mounting the same
 	// directory does the same job and needs nothing of the project.
-	runDir := paths.GetRunDirPath()
-	fallback := exec.Command("docker", "run", "--rm",
-		"-v", runDir+":/madock-target",
-		"--entrypoint", "sh", "alpine:3",
-		"-c", "chown -R "+usr.Uid+":"+usr.Gid+" /madock-target")
-	if out, runErr := fallback.CombinedOutput(); runErr != nil {
-		logger.Println("could not reclaim "+runDir+":", runErr, string(out))
+	viaThrowaway := func() ([]byte, error) {
+		return exec.Command("docker", "run", "--rm",
+			"-v", runDir+":/madock-target",
+			"--entrypoint", "sh", "alpine:3",
+			"-c", "chown -R "+usr.Uid+":"+usr.Gid+" /madock-target").CombinedOutput()
 	}
+	for _, line := range reclaim(viaContainer, viaThrowaway, workdir+" through "+container, runDir) {
+		logger.Println(line)
+	}
+}
+
+// reclaim tries the project's container, then a throwaway one, and returns what
+// is worth telling. A stopped project is the case the throwaway exists for, so
+// the first attempt failing says nothing on its own: it was printed on every
+// removal of a stopped project, as an error, ahead of a removal that worked.
+// It is reported only when the second attempt fails too, with both reasons.
+func reclaim(viaContainer, viaThrowaway func() ([]byte, error), first, second string) []string {
+	out, err := viaContainer()
+	if err == nil {
+		return nil
+	}
+	firstLine := fmt.Sprintf("could not reclaim %s: %v %s", first, err, strings.TrimSpace(string(out)))
+	out, err = viaThrowaway()
+	if err == nil {
+		return nil
+	}
+	return []string{firstLine, fmt.Sprintf("could not reclaim %s: %v %s", second, err, strings.TrimSpace(string(out)))}
 }
 
 // prepareHomeDirs makes sure the host directories a project links into exist,
