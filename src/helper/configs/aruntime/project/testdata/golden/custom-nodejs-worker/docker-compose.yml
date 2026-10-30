@@ -24,6 +24,12 @@ services:
     restart: no
   db:
     init: true
+    # InnoDB ignores SIGTERM until crash recovery is over, and a database that
+    # was killed, or cloned from a running one, starts with recovery. Measured
+    # on MariaDB 10.6 with the default 96 MB redo log: up to 9 s to become ready
+    # after a kill under write load. Docker's 10 s default then kills it again
+    # mid-recovery, and the next start recovers once more.
+    stop_grace_period: 30s
     command:
       --default-authentication-plugin=mysql_native_password
     build:
