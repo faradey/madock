@@ -2,14 +2,16 @@ module github.com/faradey/madock/v4
 
 go 1.27.0
 
+toolchain go1.27.3
+
 require (
 	github.com/alexflint/go-arg v1.4.3
 	github.com/go-xmlfmt/xmlfmt v1.1.2
 	github.com/mark3labs/mcp-go v0.48.0
 	github.com/pkg/sftp v1.13.6
 	github.com/sbabiv/xml2map v1.2.1
-	golang.org/x/crypto v0.52.0
-	golang.org/x/term v0.43.0
+	golang.org/x/crypto v0.56.0
+	golang.org/x/term v0.45.0
 )
 
 require (
@@ -19,5 +21,5 @@ require (
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
-	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
 )

@@ -1,0 +1,48 @@
+name: Vulnerability check
+
+# Weekly, and on demand. It reports and never blocks: new advisories against
+# the Go standard library arrive every few weeks, and a check in CI that fails
+# on them would turn every pull request red for something none of them changed.
+# A finding here is a reason to raise `toolchain` in go.mod or bump a module in
+# the next release.
+#
+# Found when a scan of the code that shipped found eleven reachable advisories —
+# nine in go1.27.0's standard library, two in golang.org/x/crypto/ssh — that
+# nothing had reported: go.mod named no toolchain, so every build used the
+# release the module was written against.
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: govulncheck
+        # continue-on-error: the job reports; the summary below says what it found.
+        continue-on-error: true
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./... | tee govulncheck.txt
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo '## govulncheck'
+            echo
+            echo '```'
+            tail -n 40 govulncheck.txt 2>/dev/null || echo 'no output'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

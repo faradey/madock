@@ -6,4 +6,4 @@ EXPOSE 3000 8080
 
 {{{template "snippets/dockerfile/common/umask" .}}}
 
-CMD ["bash"]
+CMD ["sleep", "infinity"]
