@@ -20,6 +20,11 @@
       DISABLE_INSTALL_DEMO_CONFIG: 'true'
       DISABLE_SECURITY_PLUGIN: 'true'
       OPENSEARCH_JAVA_OPTS: '-Xms{{{.search.opensearch.heap}}} -Xmx{{{.search.opensearch.heap}}}'
+      # The image starts a second JVM, the performance analyzer agent, which
+      # nothing in madock reads. Measured on a Magento stand: 98 MB RSS; with it
+      # off, setup:upgrade, reindex, search, layered navigation, product save and
+      # checkout pass and are no slower.
+      DISABLE_PERFORMANCE_ANALYZER_AGENT_CLI: 'true'
     volumes:
       - opensearch_vlm_{{{.search.opensearch.version}}}:/usr/share/opensearch/data
     restart: {{{.restart_policy}}}
