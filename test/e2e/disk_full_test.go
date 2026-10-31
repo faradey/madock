@@ -52,6 +52,13 @@ func TestAFullDiskIsAFailureAndTheProjectSurvivesIt(t *testing.T) {
 	// kernel's "No space left on device", a download with curl's error 23,
 	// "Failure writing output to destination" — measured: the second, here.
 	lower := strings.ToLower(out)
+	// A runner that cannot reach GitHub fails before the disk is ever
+	// touched — curl's error 7, "Connection refused" in 0 ms, seen on the
+	// scheduled runs of 2026-10-26 and 2026-10-31. That says nothing about a
+	// full disk either way.
+	if strings.Contains(lower, "curl error 7 ") {
+		t.Skipf("composer could not reach the network, the disk was never filled:\n%s", firstLines(out, 40))
+	}
 	if !strings.Contains(lower, "no space left on device") && !strings.Contains(lower, "failure writing output") {
 		t.Errorf("the output does not say the disk is full:\n%s", firstLines(out, 80))
 	}
