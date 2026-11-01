@@ -17,8 +17,8 @@ import (
 )
 
 // UpNginx starts the nginx proxy container
-func UpNginx(projectName string) {
-	UpNginxWithBuild(projectName, false)
+func UpNginx(projectName string) error {
+	return UpNginxWithBuild(projectName, false)
 }
 
 // RenderProject writes the proxy's and the project's configuration and compose
@@ -28,8 +28,14 @@ func RenderProject(projectName string) {
 	project.MakeConf(projectName)
 }
 
-// UpNginxWithBuild starts the nginx proxy container with optional rebuild
-func UpNginxWithBuild(projectName string, force bool) {
+// UpNginxWithBuild starts the nginx proxy container with optional rebuild.
+//
+// It returns the error of the `compose up` that should have started it. That
+// used to be logged and dropped, and proxy:start printed "Done" over it:
+// measured 2026-11-01, docker answered "failed to set up container networking:
+// network … not found" and exited 1, the proxy stayed down, and the command
+// reported success.
+func UpNginxWithBuild(projectName string, force bool) error {
 	if !paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
 		configs2.SetParam(configs2.MadockLevelConfigCode, "path", paths.GetRunDirPath(), "default", configs2.MadockLevelConfigCode)
 	}
@@ -51,7 +57,7 @@ func UpNginxWithBuild(projectName string, force bool) {
 	}
 
 	if projectConf["proxy/enabled"] != "true" {
-		return
+		return nil
 	}
 
 	confCache := paths.CacheDir() + "/conf-cache"
@@ -113,11 +119,11 @@ func UpNginxWithBuild(projectName string, force bool) {
 		attachOutput(cmd)
 		if err := cmd.Run(); err != nil {
 			logger.Println(err)
-		} else {
-			// Record the applied config only on a successful up; otherwise the
-			// proxy isn't actually running this config and the next run must retry.
-			writeProxyHash(hashCache, newHash)
+			return fmt.Errorf("the proxy did not start: %w", err)
 		}
+		// Record the applied config only on a successful up; otherwise the
+		// proxy isn't actually running this config and the next run must retry.
+		writeProxyHash(hashCache, newHash)
 	} else if certRefreshed || (newHash != "" && newHash != readProxyHash(hashCache)) {
 		// Proxy is already running and its config changed (a project rebuild/clone
 		// regenerated proxy.conf) → reload in place so other projects stay up
@@ -136,6 +142,7 @@ func UpNginxWithBuild(projectName string, force bool) {
 			}
 		}
 	}
+	return nil
 }
 
 // proxyConfHash returns the SHA-256 hex of the generated proxy.conf (the file
