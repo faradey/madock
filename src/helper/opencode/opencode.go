@@ -400,6 +400,21 @@ func LLMConf(baseURL string) (string, error) {
 	return strings.Join(lines, "\n"), nil
 }
 
+// Version checks opencode/version before it reaches the Dockerfile, where it
+// is part of a RUN line: an npm version or tag, nothing a shell would read.
+func Version(conf map[string]string) error {
+	v := strings.TrimSpace(conf["opencode/version"])
+	if v == "" {
+		return fmt.Errorf("opencode/version is empty")
+	}
+	for _, r := range v {
+		if !(r >= '0' && r <= '9' || r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r == '.' || r == '-' || r == '+') {
+			return fmt.Errorf("opencode/version must be an npm version such as 2.2.5, got %q", v)
+		}
+	}
+	return nil
+}
+
 // Config is opencode.json: one provider, the proxy, and the model.
 func Config(conf map[string]string) (string, error) {
 	_, path, err := Upstream(conf["opencode/base_url"])

@@ -904,9 +904,11 @@
                  OpenAI-compatible endpoint as seen from a container;
                  host.docker.internal reaches a server listening on the host's
                  127.0.0.1. agents_file replaces the generated AGENTS.md with a
-                 file of your own on the host. -->
+                 file of your own on the host. version is the npm version of
+                 @opencode/cli; changing it and running rebuild upgrades. -->
             <opencode>
                 <enabled>false</enabled>
+                <version>2.2.5</version>
                 <nodejs_repository>node</nodejs_repository>
                 <nodejs_version>22.19.0</nodejs_version>
                 <base_url>http://host.docker.internal:8080/v1</base_url>
