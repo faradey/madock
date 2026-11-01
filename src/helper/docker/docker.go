@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
 	"github.com/faradey/madock/v4/src/helper/logger"
@@ -742,12 +743,35 @@ func contains(list []string, want string) bool {
 // When compose is too old to be told, the old behaviour stands — see
 // composeSupportsPullPolicy for why that direction and not the other.
 func dockerComposePull(composeFiles []string, refresh bool) {
-	cmd := exec.Command("docker", pullArgs(composeFiles, refresh, composeSupportsPullPolicy(), attr.IsQuiet)...)
-	attachOutput(cmd)
-	err := cmd.Run()
+	err := pullWithFallback(composeFiles, refresh, composeSupportsPullPolicy(), attr.IsQuiet, func(args []string) error {
+		cmd := exec.Command("docker", args...)
+		attachOutput(cmd)
+		return cmd.Run()
+	}, func(msg string) { fmtc.WarningLn(msg) })
 	if err != nil {
 		logger.Fatal(err)
 	}
+}
+
+// pullWithFallback is dockerComposePull with the docker call passed in.
+//
+// A refresh that cannot reach the registry falls back to the images already on
+// the machine. Before, the failure was fatal, and a rebuild reaches the pull
+// after it has taken the containers down — and, when no other project was
+// running, the shared proxy too. Seen 2026-11-01: Docker Hub timed out on
+// axllent/mailpit during a rebuild, and every site on the machine stayed down
+// until somebody ran proxy:start. A newer image is what a refresh is for, not
+// what the stack needs to run; one that is missing still fails here.
+func pullWithFallback(composeFiles []string, refresh, policySupported, quiet bool, run func([]string) error, warn func(string)) error {
+	err := run(pullArgs(composeFiles, refresh, policySupported, quiet))
+	if err == nil || !refresh || !policySupported {
+		return err
+	}
+	if fallbackErr := run(pullArgs(composeFiles, false, policySupported, quiet)); fallbackErr != nil {
+		return err
+	}
+	warn("Could not check the registry for newer images (" + err.Error() + "); continuing with the images already on this machine")
+	return nil
 }
 
 // pullArgs builds the argument list, separated so it can be asserted.
