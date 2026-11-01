@@ -1,6 +1,4 @@
-**v4.6.0**
-
-The first published release since v4.3.0. Everything after it shipped only as `-norelease` tags — 4.4.x and 4.5.x, cut for madock-pro to import and never published — so an upgrade from v4.3.0 brings all of it at once: this section and the v4.4.x entries below.
+**Unreleased**
 
 Upgrading:
 - **`search/engine` is gone from the defaults, and `config:set search/engine` is refused.** madock stopped reading it on 2026-03-20 — the engine is whichever of `search/opensearch/enabled` and `search/elasticsearch/enabled` is true — and it came back as a default of `elasticsearch` when the two default files were made one, so `config:list` reported elasticsearch on projects running OpenSearch. A project whose `.madock/config.xml` still sets it is warned on `start`: committed there it looks like the project's choice of engine and chooses nothing. The machine's copies left by older setups are inert and stay. `TestARetiredKeyIsNotADefault` and `TestRetiredInNamesSearchEngineInEveryScope` fail with the default put back or the scope ignored
