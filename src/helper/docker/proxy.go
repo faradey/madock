@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/nginx"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
@@ -274,6 +275,32 @@ func IsProxyRunning() bool {
 	}
 
 	return isProxyRunning(out)
+}
+
+// proxyRunning is IsProxyRunning, replaceable in tests.
+var proxyRunning = IsProxyRunning
+
+// ProxyDown reports whether the project is served through the shared proxy and
+// the proxy is not running — the project's containers are up and none of its
+// hosts answer.
+//
+// `start` and `rebuild` both bring the proxy up on the way, and both used to
+// drop the error of that `compose up` and report success. Asked after the
+// fact rather than read from the error, so a proxy that was created and then
+// exited is caught too.
+func ProxyDown(projectConf map[string]string) bool {
+	return projectConf["proxy/enabled"] == "true" && !proxyRunning()
+}
+
+// ReportProxyDown says so when ProxyDown, and reports whether it did.
+func ReportProxyDown(projectConf map[string]string) bool {
+	if !ProxyDown(projectConf) {
+		return false
+	}
+	fmtc.WarningIconLn("The shared proxy is not running, so none of the project's hosts answer")
+	fmtc.ToDoLn("madock proxy:logs")
+	fmtc.ToDoLn("madock proxy:rebuild")
+	return true
 }
 
 // ProxyLogs shows the proxy's own container logs — the only place the reason for
