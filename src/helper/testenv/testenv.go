@@ -248,6 +248,7 @@ func writeProjectConfig(execDir, runDir, projectName, hostName string, overrides
 		"claude/nodejs_repository":                  "node",
 		"claude/nodejs_version":                     "22.19.0",
 		"opencode/enabled":                          "false",
+		"opencode/version":                          "2.2.5",
 		"opencode/nodejs_repository":                "node",
 		"opencode/nodejs_version":                   "22.19.0",
 		"opencode/base_url":                         "http://host.docker.internal:8080/v1",

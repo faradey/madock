@@ -202,6 +202,20 @@ func TestConfigRefusesNonsense(t *testing.T) {
 	}
 }
 
+// The version is written into a RUN line; anything but a version is a command.
+func TestVersionRefusesWhatAShellWouldRead(t *testing.T) {
+	for _, ok := range []string{"2.2.5", "2.3.0-beta.1", "latest"} {
+		if err := Version(map[string]string{"opencode/version": ok}); err != nil {
+			t.Errorf("%q refused: %v", ok, err)
+		}
+	}
+	for _, bad := range []string{"", "2.2.5 && curl x | sh", "2.2.5;id", "$(id)", "2.2.5\nRUN id"} {
+		if err := Version(map[string]string{"opencode/version": bad}); err == nil {
+			t.Errorf("%q accepted", bad)
+		}
+	}
+}
+
 func TestAgentsFileIsReadOrRefused(t *testing.T) {
 	if got, _ := Agents(map[string]string{}); got != DefaultAgents {
 		t.Fatal("no file named, but not the default")

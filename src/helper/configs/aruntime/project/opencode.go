@@ -31,6 +31,9 @@ func makeOpencode(projectName string) {
 		return
 	}
 
+	if err := opencode.Version(projectConf); err != nil {
+		logger.Fatalln(err.Error())
+	}
 	conf, err := opencode.Config(projectConf)
 	if err != nil {
 		logger.Fatalln(err.Error())

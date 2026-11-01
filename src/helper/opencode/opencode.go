@@ -79,16 +79,19 @@ func Enabled(conf map[string]string) bool {
 const installBlock = "\n" +
 	"# " + marker + " (sshd runs only in the opencode-exec service)\n" +
 	"RUN apt-get update && apt-get install -y --no-install-recommends openssh-server \\\n" +
-	"    && rm -rf /var/lib/apt/lists/* && mkdir -p /run/sshd\n" +
+	"    && rm -rf /var/lib/apt/lists/*\n" +
 	"RUN cat > /usr/local/bin/madock-opencode-sshd <<'MADOCK_EOF' && chmod 755 /usr/local/bin/madock-opencode-sshd\n" +
 	"#!/bin/sh\n" +
+	"# The php image sets umask 0002 for the application's shared files, and\n" +
+	"# sshd refuses a /run/sshd that is group-writable.\n" +
+	"umask 022\n" +
 	"getent passwd opencode >/dev/null || useradd -o -u \"$(id -u www-data)\" -g \"$(id -g www-data)\" -p '*' -M -d /var/www -s /bin/bash opencode\n" +
 	"{\n" +
 	"    printf 'SetEnv'\n" +
 	"    env | grep -E '^[A-Za-z_][A-Za-z0-9_]*=' | grep -v -E '^(HOME|HOSTNAME|PWD|SHLVL|_|TERM|USER|LOGNAME)=' | grep -v '\"' | while IFS= read -r line; do printf ' \"%s\"' \"$line\"; done\n" +
 	"    echo\n" +
 	"} > /etc/ssh/sshd_config.d/01-madock-opencode-env.conf\n" +
-	"mkdir -p /run/sshd\n" +
+	"install -d -m 0755 -o root -g root /run/sshd && chmod 0755 /run/sshd\n" +
 	"exec /usr/sbin/sshd -D -e\n" +
 	"MADOCK_EOF\n"
 
@@ -395,6 +398,21 @@ func LLMConf(baseURL string) (string, error) {
 		"",
 	)
 	return strings.Join(lines, "\n"), nil
+}
+
+// Version checks opencode/version before it reaches the Dockerfile, where it
+// is part of a RUN line: an npm version or tag, nothing a shell would read.
+func Version(conf map[string]string) error {
+	v := strings.TrimSpace(conf["opencode/version"])
+	if v == "" {
+		return fmt.Errorf("opencode/version is empty")
+	}
+	for _, r := range v {
+		if !(r >= '0' && r <= '9' || r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r == '.' || r == '-' || r == '+') {
+			return fmt.Errorf("opencode/version must be an npm version such as 2.2.5, got %q", v)
+		}
+	}
+	return nil
 }
 
 // Config is opencode.json: one provider, the proxy, and the model.

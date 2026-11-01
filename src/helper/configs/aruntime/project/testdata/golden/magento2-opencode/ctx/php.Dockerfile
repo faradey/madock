@@ -333,15 +333,18 @@ CMD ["bash", "-c", "exec php-fpm8.4"]
 
 # madock: opencode-exec (sshd runs only in the opencode-exec service)
 RUN apt-get update && apt-get install -y --no-install-recommends openssh-server \
-    && rm -rf /var/lib/apt/lists/* && mkdir -p /run/sshd
+    && rm -rf /var/lib/apt/lists/*
 RUN cat > /usr/local/bin/madock-opencode-sshd <<'MADOCK_EOF' && chmod 755 /usr/local/bin/madock-opencode-sshd
 #!/bin/sh
+# The php image sets umask 0002 for the application's shared files, and
+# sshd refuses a /run/sshd that is group-writable.
+umask 022
 getent passwd opencode >/dev/null || useradd -o -u "$(id -u www-data)" -g "$(id -g www-data)" -p '*' -M -d /var/www -s /bin/bash opencode
 {
     printf 'SetEnv'
     env | grep -E '^[A-Za-z_][A-Za-z0-9_]*=' | grep -v -E '^(HOME|HOSTNAME|PWD|SHLVL|_|TERM|USER|LOGNAME)=' | grep -v '"' | while IFS= read -r line; do printf ' "%s"' "$line"; done
     echo
 } > /etc/ssh/sshd_config.d/01-madock-opencode-env.conf
-mkdir -p /run/sshd
+install -d -m 0755 -o root -g root /run/sshd && chmod 0755 /run/sshd
 exec /usr/sbin/sshd -D -e
 MADOCK_EOF
