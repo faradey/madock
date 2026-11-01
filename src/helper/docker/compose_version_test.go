@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"errors"
 	"strings"
 	"testing"
 )
@@ -118,5 +119,44 @@ func TestBuildWithoutCacheSkipsTheCacheAndPullsTheBase(t *testing.T) {
 
 	if len(files) != 3 {
 		t.Errorf("buildWithoutCacheArgs modified the slice it was given: %v", files)
+	}
+}
+
+// A rebuild reaches the pull with the containers already down, and with the
+// shared proxy down when no other project runs. A registry that does not
+// answer must not leave them there when the images are on the machine.
+func TestARefreshThatCannotReachTheRegistryUsesTheLocalImages(t *testing.T) {
+	var calls [][]string
+	warned := ""
+	run := func(args []string) error {
+		calls = append(calls, args)
+		if len(calls) == 1 {
+			return errors.New("timeout")
+		}
+		return nil
+	}
+	err := pullWithFallback([]string{"compose", "-f", "x.yml"}, true, true, false, run, func(m string) { warned = m })
+	if err != nil {
+		t.Fatalf("the fallback found the images and still failed: %v", err)
+	}
+	if len(calls) != 2 || !strings.Contains(strings.Join(calls[1], " "), "--policy missing") {
+		t.Fatalf("calls: %v", calls)
+	}
+	if !strings.Contains(warned, "timeout") {
+		t.Fatalf("nothing said about the registry: %q", warned)
+	}
+}
+
+// A missing image still fails: there is nothing on the machine to run.
+func TestAMissingImageStillFails(t *testing.T) {
+	run := func(args []string) error { return errors.New("no route") }
+	if err := pullWithFallback([]string{"compose"}, true, true, false, run, func(string) {}); err == nil {
+		t.Fatal("both pulls failed and the error was swallowed")
+	}
+	// Start, not rebuild, has nothing to fall back to: one call, its error.
+	calls := 0
+	once := func(args []string) error { calls++; return errors.New("no route") }
+	if err := pullWithFallback([]string{"compose"}, false, true, false, once, func(string) {}); err == nil || calls != 1 {
+		t.Fatalf("err %v after %d calls", err, calls)
 	}
 }
