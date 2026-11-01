@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
@@ -116,9 +118,7 @@ func UpNginxWithBuild(projectName string, force bool) error {
 		if force {
 			command = append(command, "--build", "--force-recreate")
 		}
-		cmd := exec.Command("docker", command...)
-		attachOutput(cmd)
-		if err := cmd.Run(); err != nil {
+		if err := upProxy(command); err != nil {
 			logger.Println(err)
 			return fmt.Errorf("the proxy did not start: %w", err)
 		}
@@ -144,6 +144,33 @@ func UpNginxWithBuild(projectName string, force bool) error {
 		}
 	}
 	return nil
+}
+
+// staleNetwork is docker refusing to start a container attached to a network
+// that has since been removed: "failed to set up container networking: network
+// <id> not found".
+var staleNetwork = regexp.MustCompile(`network \S+ not found`)
+
+// runProxyCompose is runCompose, replaceable in tests.
+var runProxyCompose = runCompose
+
+// upProxy runs the proxy's `compose up` and recreates its containers when they
+// are attached to a network that no longer exists.
+//
+// A stopped proxy container keeps the id of every project network it was
+// joined to. A project whose stack is recreated while the proxy is down gets a
+// new network, and `up` of the old container then fails — and keeps failing,
+// for start and proxy:start alike, until something recreates it. Measured
+// 2026-11-01 on a development machine: proxy:stop, then start of a project
+// whose configuration had changed, and the proxy stayed down with "network
+// 9b4a32b7… not found" while start reported success.
+func upProxy(command []string) error {
+	err := runProxyCompose(command...)
+	if err == nil || !staleNetwork.MatchString(err.Error()) || slices.Contains(command, "--force-recreate") {
+		return err
+	}
+	fmtc.WarningLn("The proxy was attached to a network that no longer exists; recreating it")
+	return runProxyCompose(append(command, "--force-recreate")...)
 }
 
 // proxyConfHash returns the SHA-256 hex of the generated proxy.conf (the file
