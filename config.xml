@@ -896,6 +896,25 @@
                 <nodejs_repository>node</nodejs_repository>
                 <nodejs_version>22.19.0</nodejs_version>
             </claude>
+            <!-- opencode in a container of its own, for `madock opencode`. It
+                 sees the project's files and nothing else: its one network
+                 reaches opencode-exec, which runs php, composer and the
+                 project's other tools over ssh, and opencode-llm, which
+                 forwards to base_url and nowhere else. base_url is the
+                 OpenAI-compatible endpoint as seen from a container;
+                 host.docker.internal reaches a server listening on the host's
+                 127.0.0.1. agents_file replaces the generated AGENTS.md with a
+                 file of your own on the host. -->
+            <opencode>
+                <enabled>false</enabled>
+                <nodejs_repository>node</nodejs_repository>
+                <nodejs_version>22.19.0</nodejs_version>
+                <base_url>http://host.docker.internal:8080/v1</base_url>
+                <model>gpt-oss-20b-64k</model>
+                <context>65536</context>
+                <output>8192</output>
+                <agents_file></agents_file>
+            </opencode>
         </default>
     </scopes>
 </config>

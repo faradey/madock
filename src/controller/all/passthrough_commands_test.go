@@ -37,6 +37,7 @@ func TestPassThroughCommands(t *testing.T) {
 		"mftf",
 		"n98",
 		"node",
+		"opencode",
 		"prestashop",
 		"ps",
 		"saleor",

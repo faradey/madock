@@ -63,6 +63,7 @@ func MakeConf(projectName string) {
 		gen(projectName)
 	}
 	processOtherCTXFiles(projectName)
+	makeOpencode(projectName)
 
 	// Last, so an extension writes into a finished directory and nothing here
 	// writes over it afterwards. See ctxfiles.go.
@@ -243,11 +244,11 @@ func makePhpDockerfiles(projectName, withXdebug, withoutXdebug string) {
 
 	file := GetDockerConfigFile(projectName, withXdebug, "")
 	str := Render(projectName, file, withXdebug, nil)
-	write(ctx+"/php.Dockerfile", dockertransform.ApplyDockerfileTransform("php.Dockerfile", str))
+	write(ctx+"/php.Dockerfile", dockertransform.ApplyDockerfileTransform("php.Dockerfile", opencodeDockerfile(projectName, "php.Dockerfile", str)))
 
 	if file = GetDockerConfigFileOptional(projectName, withoutXdebug, ""); file != "" {
 		str = Render(projectName, file, withoutXdebug, nil)
-		write(ctx+"/php.DockerfileWithoutXdebug", dockertransform.ApplyDockerfileTransform("php.DockerfileWithoutXdebug", str))
+		write(ctx+"/php.DockerfileWithoutXdebug", dockertransform.ApplyDockerfileTransform("php.DockerfileWithoutXdebug", opencodeDockerfile(projectName, "php.DockerfileWithoutXdebug", str)))
 	}
 }
 
@@ -274,7 +275,7 @@ func makeDockerCompose(projectName string) {
 		if file != "" {
 			str = Render(projectName, file, name, nil)
 		}
-		write(runtimeDir+"/"+name, dockertransform.ApplyProjectComposeTransform(projectName, name, str))
+		write(runtimeDir+"/"+name, dockertransform.ApplyProjectComposeTransform(projectName, name, opencodeCompose(projectName, name, str)))
 	}
 }
 
@@ -386,7 +387,7 @@ func MakeDockerfile(projectName, path, fileName string) {
 	str := Render(projectName, file, path, nil)
 
 	pp := paths.NewProjectPaths(projectName)
-	write(paths.MakeDirsByPath(pp.CtxDir())+"/"+fileName, dockertransform.ApplyDockerfileTransform(fileName, str))
+	write(paths.MakeDirsByPath(pp.CtxDir())+"/"+fileName, dockertransform.ApplyDockerfileTransform(fileName, opencodeDockerfile(projectName, fileName, str)))
 }
 
 func GetDockerConfigFile(projectName, path, platform string) string {

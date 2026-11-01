@@ -333,6 +333,30 @@ func goldenCases() []goldenCase {
 				"worker/programs/reindex": "node build/reindex.js",
 			},
 		},
+		{
+			// opencode beside a php application: three services, two
+			// networks, sshd added to the php image and to nothing else.
+			// opencode-exec has to stay on the default network, because the
+			// main service names none and naming one drops it from there.
+			name: "magento2-opencode",
+			overrides: map[string]string{
+				"opencode/enabled": "true",
+			},
+		},
+		{
+			// The same with isolation on, where the main service does name a
+			// network: opencode-exec takes it, opencode stays off it.
+			name: "custom-none-opencode-isolation",
+			overrides: map[string]string{
+				"platform":          "custom",
+				"language":          "none",
+				"php/enabled":       "false",
+				"app/enabled":       "true",
+				"isolation/enabled": "true",
+				"opencode/enabled":  "true",
+				"opencode/base_url": "https://llm.example.com/api/v1",
+			},
+		},
 	}
 }
 

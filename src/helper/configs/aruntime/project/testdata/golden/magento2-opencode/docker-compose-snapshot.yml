@@ -1,0 +1,13 @@
+name: madock_golden
+services:
+  snapshot:
+    image: ubuntu:22.04
+    tty: true
+    user: "<UID>:<GID>"
+    volumes:
+      - ./src:/var/www/html
+      - dbdata:/var/www/mysql
+      - opensearch_vlm_2.19.0:/var/www/volumes/opensearch_vlm_2.19.0
+volumes:
+  dbdata:
+  opensearch_vlm_2.19.0:
