@@ -85,6 +85,8 @@ func ExecuteWith(args *arg_struct.ControllerGeneralStart) {
 			fmtc.ToDoLn("madock rebuild   # recreates the stack and clears them")
 		}
 
+		proxyDown := docker.ReportProxyDown(projectConf)
+
 		if len(dead) > 0 {
 			fmtc.WarningIconLn(fmt.Sprintf("Containers started in %s, but some are not running:", elapsed))
 			for _, service := range dead {
@@ -95,6 +97,10 @@ func ExecuteWith(args *arg_struct.ControllerGeneralStart) {
 				fmtc.WarningLn(line)
 			}
 			fmtc.ToDoLn("madock logs -s <service>")
+			return
+		}
+
+		if proxyDown {
 			return
 		}
 
