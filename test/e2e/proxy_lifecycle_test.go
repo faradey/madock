@@ -4,6 +4,7 @@ package e2e
 
 import (
 	"net"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
@@ -77,6 +78,37 @@ func TestProxyCommandsControlTheProxy(t *testing.T) {
 	// whatever the old container was serving.
 	p.run(10*time.Minute, "proxy:rebuild")
 	requireCertificateFor(t, p, "e2eproxyctl.test")
+}
+
+// TestStartBringsBackAProxyWhoseNetworkWasRemoved removes the proxy's own
+// network while the proxy is stopped, then starts the project.
+//
+// A stopped container keeps the ids of its networks, and docker removes a
+// network that only stopped containers are on. `up` of that container then
+// fails with "network … not found" — and `start` used to drop the error, print
+// "Containers started" and leave every site without its proxy, with
+// `proxy:start` failing the same way until somebody ran `proxy:rebuild`. Seen
+// on a development machine on 2026-11-01, where aruntime_default had gone.
+func TestStartBringsBackAProxyWhoseNetworkWasRemoved(t *testing.T) {
+	p := newProject(t, "e2eproxynet")
+
+	p.run(setupTimeout, "setup", "-y",
+		"--platform=custom",
+		"--language=none",
+		"--hosts=e2eproxynet.test",
+	)
+	p.run(20*time.Minute, "start")
+	requireCertificateFor(t, p, "e2eproxynet.test")
+
+	p.run(3*time.Minute, "proxy:stop")
+	requireProxyUnreachable(t, "after proxy:stop")
+
+	if out, err := exec.Command("docker", "network", "rm", "aruntime_default").CombinedOutput(); err != nil {
+		t.Fatalf("removing the proxy's network: %v\n%s", err, out)
+	}
+
+	p.run(5*time.Minute, "start")
+	requireCertificateFor(t, p, "e2eproxynet.test")
 }
 
 // requireProxyUnreachable waits for port 443 to stop accepting connections.
