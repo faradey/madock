@@ -7,6 +7,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssh-client 
 # rebuilds this layer instead of reusing whatever the cache last installed.
 RUN npm install -g @opencode/cli@{{{.opencode.version}}}
 
+# madock's configuration has to win over the project's own. A project that
+# commits an opencode.json for its developers' machines names their providers —
+# ollama on 127.0.0.1, say — and opencode reads a project file over
+# OPENCODE_CONFIG, so the sandbox talked to an address it cannot reach.
+# OPENCODE_CONFIG_CONTENT is read last. This wrapper sits ahead of the real
+# binary in PATH, so every start — and the background service a client starts —
+# carries it; the project's own instructions and tools still merge in.
+RUN cat > /usr/local/sbin/opencode <<'MADOCK_EOF' && chmod 755 /usr/local/sbin/opencode
+#!/bin/sh
+OPENCODE_CONFIG_CONTENT=$(cat /etc/madock-opencode/opencode.json)
+export OPENCODE_CONFIG_CONTENT
+exec /usr/local/bin/opencode "$@"
+MADOCK_EOF
+
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
 RUN usermod -u {{{.os.user.uid}}} -o node && groupmod -g {{{.os.user.guid}}} -o node
