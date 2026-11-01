@@ -130,18 +130,19 @@ func Execute(flag string) {
 		projectName := configs2.GetProjectName()
 		projectConf := configs2.GetCurrentProjectConfig()
 		if projectConf["proxy/enabled"] == "true" {
+			var upErr error
 			if flag == "prune" {
 				docker.DownNginx(args.Force)
 			} else if flag == "stop" {
 				docker.StopNginx(args.Force)
 			} else if flag == "restart" {
 				docker.StopNginx(args.Force)
-				docker.UpNginx(projectName)
+				upErr = docker.UpNginx(projectName)
 			} else if flag == "start" {
-				docker.UpNginx(projectName)
+				upErr = docker.UpNginx(projectName)
 			} else if flag == "rebuild" {
 				docker.DownNginx(args.Force)
-				docker.UpNginxWithBuild(projectName, true)
+				upErr = docker.UpNginxWithBuild(projectName, true)
 			} else if flag == "reload" {
 				// reload is the one verb that cannot create what it needs: it
 				// execs `nginx -s reload` inside a container that has to
@@ -156,6 +157,13 @@ func Execute(flag string) {
 					fmtc.ToDoLn("Run madock proxy:start")
 					os.Exit(1)
 				}
+			}
+			// docker has already printed why; what is left to say is that
+			// the proxy is down, and to say it with the exit status.
+			if upErr != nil {
+				fmtc.ErrorLn(upErr.Error())
+				fmtc.ToDoLn("Run madock proxy:rebuild")
+				os.Exit(1)
 			}
 			fmtc.SuccessLn("Done")
 		} else {

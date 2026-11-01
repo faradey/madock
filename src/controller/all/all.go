@@ -28,6 +28,7 @@ import (
 	_ "github.com/faradey/madock/v4/src/controller/general/mcp"
 	_ "github.com/faradey/madock/v4/src/controller/general/node"
 	_ "github.com/faradey/madock/v4/src/controller/general/open"
+	_ "github.com/faradey/madock/v4/src/controller/general/opencode"
 	_ "github.com/faradey/madock/v4/src/controller/general/patch"
 	_ "github.com/faradey/madock/v4/src/controller/general/project/clone"
 	_ "github.com/faradey/madock/v4/src/controller/general/project/list"

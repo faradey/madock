@@ -1,0 +1,30 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "madock": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "madock",
+      "options": {
+        "baseURL": "http://opencode-llm:8080/v1"
+      },
+      "models": {
+        "gpt-oss-20b-64k": {
+          "name": "gpt-oss-20b-64k",
+          "limit": {
+            "context": 65536,
+            "output": 8192
+          }
+        }
+      }
+    }
+  },
+  "model": "madock/gpt-oss-20b-64k",
+  "instructions": [
+    "/etc/madock-opencode/AGENTS.md"
+  ],
+  "permission": {
+    "external_directory": "deny"
+  },
+  "autoupdate": false,
+  "share": "disabled"
+}

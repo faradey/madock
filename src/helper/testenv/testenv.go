@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/opencode"
 	"github.com/faradey/madock/v4/src/helper/ports"
 )
 
@@ -246,6 +247,14 @@ func writeProjectConfig(execDir, runDir, projectName, hostName string, overrides
 		"claude/enabled":                            "false",
 		"claude/nodejs_repository":                  "node",
 		"claude/nodejs_version":                     "22.19.0",
+		"opencode/enabled":                          "false",
+		"opencode/nodejs_repository":                "node",
+		"opencode/nodejs_version":                   "22.19.0",
+		"opencode/base_url":                         "http://host.docker.internal:8080/v1",
+		"opencode/model":                            "gpt-oss-20b-64k",
+		"opencode/context":                          "65536",
+		"opencode/output":                           "8192",
+		"opencode/agents_file":                      "",
 		"ssh/auth_type":                             "key",
 		"ssh/port":                                  "22",
 		"magento/admin_user":                        "admin",
@@ -289,7 +298,14 @@ func Collect(t *testing.T, root string, env *Env) map[string]string {
 		// The runtime directory holds symlinks to the project source, the
 		// composer home and ~/.ssh. Following them would pull the whole
 		// working tree into the comparison.
-		if d.Type()&fs.ModeSymlink != 0 || d.IsDir() {
+		if d.Type()&fs.ModeSymlink != 0 {
+			return nil
+		}
+		if d.IsDir() {
+			// Keys generated for this run, different on every machine.
+			if d.Name() == opencode.KeysDir {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 		content, readErr := os.ReadFile(path)
