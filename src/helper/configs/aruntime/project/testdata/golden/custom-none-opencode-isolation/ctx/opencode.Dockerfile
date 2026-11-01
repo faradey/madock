@@ -1,6 +1,7 @@
 FROM node:22.19.0
 
-RUN apt-get update && apt-get install -y --no-install-recommends openssh-client \
+# ripgrep: opencode's glob and grep tools run rg, and fail without it.
+RUN apt-get update && apt-get install -y --no-install-recommends openssh-client ripgrep \
     && rm -rf /var/lib/apt/lists/*
 RUN npm install -g opencode-ai
 
