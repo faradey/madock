@@ -71,6 +71,8 @@
                      start on it. -->
                 <upstream>
                     <service></service>
+                    <!-- The port of that service. Empty is main_service_port. -->
+                    <port></port>
                 </upstream>
                 <!-- Each host is a key, a name, and optionally the website code it
                      is served as.

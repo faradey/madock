@@ -7,6 +7,7 @@ Upgrading:
 
 Added:
 - **`nginx/upstream/service` names the service the front door proxies to.** Empty, which is the default, is `main_service`, so every project renders the same proxy it did. A project of language golang that serves its API from another container sets it there; `proxy_pass` in `docker/snippets/nginx/proxy.conf` takes it for both locations. The name is not checked against the stack, and an unknown one stops nginx from starting. `custom-golang` and `custom-golang-upstream` in the golden files show the two renders
+- **`nginx/upstream/port` is the port of that service.** Empty is `main_service_port`, as before. `custom-golang-upstream-port` in the golden files shows an upstream on another port
 
 Fixed:
 - **The shared proxy did not come back after a project's network was recreated while it was stopped.** A stopped proxy container keeps the id of every project network it was joined to; once a project's stack is recreated, `up` of that container fails with "failed to set up container networking: network … not found", and `start` and `proxy:start` failed the same way until `proxy:rebuild`. Seen on a development machine: `proxy:stop`, then `start` of a project whose configuration had changed. The proxy is now recreated when `up` fails with that, once. `TestAProxyOnARemovedNetworkIsRecreated`, `TestAnotherProxyFailureIsNotRetried` and `TestARecreateThatFailsIsNotRepeated` fail with the retry, the match on the error or the guard against a second recreate taken out
