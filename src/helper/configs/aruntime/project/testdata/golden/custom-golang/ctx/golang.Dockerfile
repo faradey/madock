@@ -41,7 +41,7 @@ RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone
 
 RUN apt-get install -y cron
 RUN mkdir -p /var/www/.ssh/ && mkdir -p /var/www/scripts/ && mkdir -p /var/www/var/ && mkdir -p /var/www/var/log/
-RUN useradd -u 501 -o -m www-data 2>/dev/null; \
+RUN useradd -u <UID> -o -m www-data 2>/dev/null; \
     groupmod -g <GID> -o www-data 2>/dev/null; \
     usermod -u <UID> -o www-data 2>/dev/null; \
     chown -R <UID>:<GID> /var/www
