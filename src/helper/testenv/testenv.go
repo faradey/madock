@@ -341,6 +341,7 @@ var (
 	// only ever match the machine that wrote them.
 	composeUser = regexp.MustCompile(`user: "\d+:\d+"`)
 	usermodUid  = regexp.MustCompile(`usermod -u \d+`)
+	useraddUid  = regexp.MustCompile(`useradd -u \d+`)
 	groupmodGid = regexp.MustCompile(`groupmod -g \d+`)
 	chownPair   = regexp.MustCompile(`chown (-R )?\d+:\d+`)
 
@@ -381,6 +382,7 @@ func Normalise(content string, env *Env) string {
 	content = publishedPort.ReplaceAllString(content, `- "<PORT>:`)
 	content = composeUser.ReplaceAllString(content, `user: "<UID>:<GID>"`)
 	content = usermodUid.ReplaceAllString(content, "usermod -u <UID>")
+	content = useraddUid.ReplaceAllString(content, "useradd -u <UID>")
 	content = groupmodGid.ReplaceAllString(content, "groupmod -g <GID>")
 	content = chownPair.ReplaceAllString(content, "chown ${1}<UID>:<GID>")
 	content = loaderArch.ReplaceAllString(content, "ioncube_loaders_lin_<ARCH>.tar.gz")

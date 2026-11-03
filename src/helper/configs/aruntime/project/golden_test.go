@@ -229,6 +229,28 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// Golang as the main service of a custom project. The proxy points at
+			// the main service itself, as every language's does.
+			name: "custom-golang",
+			overrides: map[string]string{
+				"platform":       "custom",
+				"language":       "golang",
+				"php/enabled":    "false",
+				"golang/enabled": "true",
+			},
+		},
+		{
+			// The same project with the proxy's upstream named by its own setting.
+			name: "custom-golang-upstream",
+			overrides: map[string]string{
+				"platform":               "custom",
+				"language":               "golang",
+				"php/enabled":            "false",
+				"golang/enabled":         "true",
+				"nginx/upstream/service": "api",
+			},
+		},
+		{
 			// A php platform of its own. Pins the fastcgi HTTPS parameter, which
 			// used to be the constant `on`: the application then believed every
 			// request was secure, including one that arrived over plain http at the

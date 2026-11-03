@@ -167,6 +167,14 @@ func renderValues(projectName string, conf map[string]string, extra map[string]s
 	values["main_service_enabled"] = resolveMainServiceEnabled(conf, mainService)
 	values["main_service_port"] = resolveMainServicePort(conf)
 
+	// The name the front door proxies to. Empty means the main service, as it
+	// always was, so a project that never set the key renders the same proxy.
+	upstream := mainService
+	if v := conf["nginx/upstream/service"]; v != "" {
+		upstream = v
+	}
+	values["nginx/upstream/service"] = upstream
+
 	values["os/arch"] = "x86-64"
 	if runtime.GOARCH == "arm64" {
 		values["os/arch"] = "aarch64"

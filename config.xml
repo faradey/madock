@@ -64,6 +64,14 @@
                     <secure>443</secure>
                     <internal>80</internal>
                 </port>
+                <!-- The service the front door proxies to, for a project whose
+                     language is not php. Empty is the main service, which is what
+                     every project got before this key existed. A name that is not
+                     a service of the stack is not checked here: nginx refuses to
+                     start on it. -->
+                <upstream>
+                    <service></service>
+                </upstream>
                 <!-- Each host is a key, a name, and optionally the website code it
                      is served as.
 
