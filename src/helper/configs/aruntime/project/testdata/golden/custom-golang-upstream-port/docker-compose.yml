@@ -1,0 +1,104 @@
+name: madock_golden
+services:
+  nginx:
+    init: true
+    build:
+      context: ctx
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "<PORT>:80"
+      - "<PORT>:443"
+    volumes:
+      - ./src:/var/www/html:delegated
+      - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
+      # The project's own server-scope snippets, rendered by makeNginxConf from
+      # .madock/docker/nginx/vhost.d/. Mounted whether or not there are any: the
+      # vhost includes the directory unconditionally, and a bind mount of a path
+      # that does not exist is created by docker as root.
+      - ./ctx/nginx-vhost.d:/etc/nginx/vhost.d:delegated
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    depends_on:
+      - golang
+    restart: no
+  db:
+    init: true
+    # InnoDB ignores SIGTERM until crash recovery is over, and a database that
+    # was killed, or cloned from a running one, starts with recovery. Measured
+    # on MariaDB 10.6 with the default 96 MB redo log: up to 9 s to become ready
+    # after a kill under write load. Docker's 10 s default then kills it again
+    # mid-recovery, and the next start recovers once more.
+    stop_grace_period: 30s
+    command:
+      --default-authentication-plugin=mysql_native_password
+    build:
+      context: ctx
+      dockerfile: db.Dockerfile
+    ports:
+      - "<PORT>:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "magento"
+      MYSQL_USER: "magento"
+      MYSQL_PASSWORD: "magento"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./ctx/my.cnf:/etc/mysql/conf.d/mysql.cnf:delegated
+    restart: no
+  golang:
+    init: true
+    build:
+      context: ctx
+      dockerfile: golang.Dockerfile
+    tty: true
+    volumes:
+      - ./src:/var/www/html:cached
+      - ./ssh:/var/www/.ssh:ro
+      - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "golden.test:host-gateway"
+    restart: no
+  opensearch:
+    init: true
+    build:
+      context: ctx
+      dockerfile: opensearch.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 2512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      OPENSEARCH_DISCOVERY_TYPE: 'single-node'
+      DISABLE_INSTALL_DEMO_CONFIG: 'true'
+      DISABLE_SECURITY_PLUGIN: 'true'
+      OPENSEARCH_JAVA_OPTS: '-Xms1g -Xmx1g'
+      # The image starts a second JVM, the performance analyzer agent, which
+      # nothing in madock reads. Measured on a Magento stand: 98 MB RSS; with it
+      # off, setup:upgrade, reindex, search, layered navigation, product save and
+      # checkout pass and are no slower.
+      DISABLE_PERFORMANCE_ANALYZER_AGENT_CLI: 'true'
+    volumes:
+      - opensearch_vlm_2.19.0:/usr/share/opensearch/data
+    restart: no
+
+volumes:
+  # Declared unconditionally on purpose. Every other entry here is optional, so
+  # gating this one too lets `volumes:` render empty when a project runs without
+  # a database, without search and without grafana — and compose rejects that
+  # with "volumes must be a mapping". An unused named volume costs nothing.
+  dbdata:
+  opensearch_vlm_2.19.0:
+
+networks:
+  madock-proxy:
+    external: true
+

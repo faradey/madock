@@ -175,6 +175,14 @@ func renderValues(projectName string, conf map[string]string, extra map[string]s
 	}
 	values["nginx/upstream/service"] = upstream
 
+	// The port of that service. Empty means main_service_port, which is the
+	// port the main service listens on.
+	port := values["main_service_port"]
+	if v := conf["nginx/upstream/port"]; v != "" {
+		port = v
+	}
+	values["nginx/upstream/port"] = port
+
 	values["os/arch"] = "x86-64"
 	if runtime.GOARCH == "arm64" {
 		values["os/arch"] = "aarch64"

@@ -240,6 +240,18 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// The upstream service on a port of its own, not the main service's.
+			name: "custom-golang-upstream-port",
+			overrides: map[string]string{
+				"platform":               "custom",
+				"language":               "golang",
+				"php/enabled":            "false",
+				"golang/enabled":         "true",
+				"nginx/upstream/service": "api",
+				"nginx/upstream/port":    "8080",
+			},
+		},
+		{
 			// The same project with the proxy's upstream named by its own setting.
 			name: "custom-golang-upstream",
 			overrides: map[string]string{
