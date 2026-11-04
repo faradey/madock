@@ -54,6 +54,20 @@ const cronDaemonProbe = `for c in /proc/[0-9]*/comm; do
 done
 exit 1`
 
+// cronStopScript stops the daemon madock starts, and does nothing in an image
+// that has no `service` to start one with.
+//
+// madock starts cron only through `service cron start`, so without `service`
+// there is no daemon of madock's to stop. Every rebuild of a project with cron
+// disabled comes through here, and on an image without it — Packeton's Alpine
+// one, which runs its own scheduler under supervisord — the bare command ended
+// each rebuild with `exec: "service": executable file not found in $PATH`
+// above "Rebuild completed". Seen on a production machine, every run.
+//
+// sh rather than bash for the same reason: Alpine has no bash.
+const cronStopScript = `command -v service >/dev/null 2>&1 || exit 0
+exec service cron stop`
+
 // CronExecute starts or stops cron service in the container
 // CronRunning asks the container whether cron is actually running.
 //
@@ -315,7 +329,7 @@ func CronExecute(projectName string, flag, manual bool) {
 				}
 			}
 
-			err = ContainerExec(GetContainerName(projectConf, projectName, service), userOS, false, "service", "cron", "stop")
+			err = ContainerExec(GetContainerName(projectConf, projectName, service), userOS, false, "sh", "-c", cronStopScript)
 			if manual {
 				if err != nil {
 					logger.Fatal(err)
