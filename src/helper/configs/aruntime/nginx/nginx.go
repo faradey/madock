@@ -353,14 +353,33 @@ func makeProxy(projectName string) {
 // server (or varnish in front of it) over the madock-proxy network by the
 // container's name, at the port inside the container.
 //
-// A name needs `resolve`, and that is not a detail. nginx resolves the names in
-// an upstream block when it loads its configuration, and a name it cannot
+// A name is looked up per request, through a variable in proxy_pass and the
+// resolver ResolverFor adds, and that is not a detail. nginx resolves the names
+// in an upstream block when it loads its configuration, and a name it cannot
 // resolve is `[emerg] host not found in upstream` — the proxy exits. A stopped
 // project keeps its block on purpose, and its container is not in docker's DNS,
-// so without `resolve` stopping one such project would take the shared proxy,
-// and every other project behind it, down at its next reload. With `resolve`
-// (nginx 1.27.3 and later) the name is looked up at run time through the
-// resolver ResolverFor adds, and an absent container is an unavailable server.
+// so a plain upstream would take the shared proxy, and every other project behind
+// it, down at its next reload.
+//
+// `resolve` in the upstream block survives that and fails in two other ways.
+// nginx keeps the last address through a failed lookup, and a reload keeps it
+// too, while docker hands a freed address to the next container that starts.
+// Measured 2026-11-05 on nginx 1.28 in a VM with two such projects behind a proxy
+// kept up by a third: with the first stopped and the second on its old address,
+// 240 requests of 240 for the stopped project's host landed in the other one's
+// nginx, with or without a reload; started in the opposite order, the two
+// exchanged addresses and 227 of 231 did for 16 to 24 s. And a failed lookup is
+// retried after resolver_timeout, 30 s by default, so a project the proxy had no
+// address for yet — a new one, or the only one running, whose restart takes the
+// proxy down with it — answered 30 s after it was up. Per request, the same runs
+// gave 0 of 240, 0 of 4 and an answer as soon as the start returned.
+//
+// What it costs is the upstream's keepalive, which is what ResolverFor's map and
+// the proxy's tcp_tw_reuse are for. Every request becomes a connection to one
+// address, and the side that closes it holds the port for a minute: in the same VM
+// all 28 230 ports sat in TIME_WAIT and connect() failed, at 555 to 1 107 requests
+// a second against 3 000 to 18 000 with keepalive. With both in place, 2 400 to
+// 16 000 and no failure, two runs at concurrency from 1 to 256.
 func MainUpstream(projectConf map[string]string, projectName string, publishedPort int) (server, resolve string) {
 	if projectConf["ports/publish"] != "false" {
 		return "host.docker.internal:" + strconv.Itoa(publishedPort), ""
@@ -382,18 +401,29 @@ func containerName(projectConf map[string]string, projectName, service string) s
 	return strings.ToLower(projectConf["container_name_prefix"]) + strings.ToLower(projectName) + scope + "-" + service + "-1"
 }
 
-// ResolverFor is the resolver line the proxy needs when any upstream in it is
+// ResolverFor is the resolver lines the proxy needs when any upstream in it is
 // resolved at run time, and nothing otherwise — so a machine with no such
 // project renders the file it always did. 127.0.0.11 is docker's embedded DNS,
 // which answers for containers on the networks the proxy is attached to.
+//
+// valid bounds how long an address that moved is still used, and how long a name
+// that failed stays failed; resolver_timeout bounds how long a request waits on a
+// lookup docker has forwarded to a resolver that does not answer. A running
+// container is answered by docker itself.
+//
+// The map asks the project's nginx to close first when there is no keepalive to
+// keep, so the port it held is not the proxy's to wait for.
+//
+// The `server … resolve` form is still matched for a project that carries its own
+// copy of default-proxy.conf: its block needs the resolver as much as it ever did.
 func ResolverFor(proxyConf string) string {
 	if !upstreamResolves.MatchString(proxyConf) {
 		return ""
 	}
-	return "\n# Upstreams named by container are resolved at run time (ports/publish false)\nresolver 127.0.0.11 valid=10s ipv6=off;\n"
+	return "\n# Upstreams named by container are resolved at run time (ports/publish false)\nresolver 127.0.0.11 valid=2s ipv6=off;\nresolver_timeout 2s;\nmap $http_upgrade $connection_upgrade_or_close {\n  default upgrade;\n  '' close;\n}\n"
 }
 
-var upstreamResolves = regexp.MustCompile(`(?m)^\s*server \S+ resolve\b`)
+var upstreamResolves = regexp.MustCompile(`(?m)^\s*(server \S+ resolve\b|set \$madock_upstream_)`)
 
 func makeDockerfile(projectName string) {
 	/* Create nginx Dockerfile configuration */
@@ -428,7 +458,16 @@ func makeDockerCompose(projectName string) {
 	// shared proxy a volume — a log that outlives the container, say — had
 	// nowhere to do it. Everything else in this repository already offers that
 	// seam; this closes the gap rather than adding a new idea.
-	rendered := project.Render(projectName, nginxDefFile, "general/nginx/docker-compose-proxy.yml", nil)
+	//
+	// tcp_tw_reuse lets a connection take a port still in TIME_WAIT, in the proxy's
+	// own network namespace. Only with a project reached by name, so a machine with
+	// none renders the file it always did. A running proxy picks it up when it is
+	// next created, and until then it is only short of ports under heavy traffic.
+	var extra map[string]string
+	if conf, err := os.ReadFile(paths.CtxDir() + "/proxy.conf"); err == nil && upstreamResolves.Match(conf) {
+		extra = map[string]string{"proxy/tcp_tw_reuse": "true"}
+	}
+	rendered := project.Render(projectName, nginxDefFile, "general/nginx/docker-compose-proxy.yml", extra)
 	if err := os.WriteFile(paths.ProxyDockerCompose(), []byte(dockertransform.ApplyComposeTransform(ProxyComposeName, rendered)), 0755); err != nil {
 		logger.Fatalln("writing the proxy compose file: " + err.Error())
 	}

@@ -21,6 +21,10 @@ services:
     networks:
       - madock-proxy
       - default
+    {{{- if .proxy.tcp_tw_reuse}}}
+    sysctls:
+      - net.ipv4.tcp_tw_reuse=1
+    {{{- end}}}
     restart: {{{.restart_policy}}}
 
 {{{- if .proxy.mailpit.enabled}}}
