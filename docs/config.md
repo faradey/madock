@@ -242,8 +242,9 @@ does not need a different binary.
 | `nodejs/env` | `NODE_ENV` inside the container | `development` |
 | `nodejs/script` | What the container runs — see below | *(empty: pick from `package.json`)* |
 | `nodejs/script_type` | How to read `nodejs/script`: `auto`, `package`, `command` | `auto` |
-| `nodejs/browser_libs` | Install the shared libraries a headless browser needs | `false` |
-| `php/browser_libs` | The same for the PHP image (needs `nodejs/embedded/enabled`) | `false` |
+| `nodejs/browser_libs` | Install the shared libraries a headless browser needs, in the standalone Node.js container | `false` |
+| `nodejs/embedded/browser_libs` | The same for the application container, whatever its language (needs `nodejs/embedded/enabled`) | `false` |
+| `php/browser_libs` | Old name of `nodejs/embedded/browser_libs`, still read | `false` |
 | `python/version` | Python version (custom platform) | `3.12` |
 | `go/version` | Go version (custom platform) | `1.22` |
 | `ruby/version` | Ruby version (custom platform) | `3.3` |
@@ -507,9 +508,13 @@ or npm, detected from the lockfile. A path to a file is a command.
 
 ## Headless browsers
 
-`nodejs/browser_libs` (and `php/browser_libs` for the PHP image) installs the
-shared libraries a headless Chromium needs. Off by default: most projects have
-no browser, and the libraries are weight and surface they do not need.
+`nodejs/browser_libs` (and `nodejs/embedded/browser_libs` for an application
+container with Node inside, PHP, Go, Python or Ruby) installs the shared
+libraries a headless Chromium needs. Off by default: most projects have no
+browser, and the libraries are weight and surface they do not need.
+
+`php/browser_libs` is the old name of `nodejs/embedded/browser_libs` and is still
+read, so a project that sets it changes nothing.
 
 The list is not written down anywhere in madock — the image asks Playwright for
 it at build time (`playwright install-deps`), because the package names differ

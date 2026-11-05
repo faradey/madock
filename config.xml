@@ -361,6 +361,7 @@
                      silently, which is worse than not being settable at all. -->
                 <embedded>
                     <enabled>false</enabled>
+                    <browser_libs>false</browser_libs>
                 </embedded>
                 <repository>node</repository>
                 <version>18.15.0</version>
