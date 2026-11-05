@@ -1,11 +1,17 @@
 package nginx_test
 
 import (
+	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/nginx"
 	"github.com/faradey/madock/v4/src/helper/docker"
+	"github.com/faradey/madock/v4/src/helper/paths"
+	"github.com/faradey/madock/v4/src/helper/ports"
+	"github.com/faradey/madock/v4/src/helper/testenv"
 )
 
 // With ports published — the default, and every project before the key — the
@@ -50,6 +56,95 @@ func TestTheResolverIsAddedOnlyWhenAnUpstreamResolves(t *testing.T) {
 	} {
 		if got := nginx.ResolverFor(conf); !strings.Contains(got, "resolver 127.0.0.11") {
 			t.Errorf("%s got no resolver: %q", name, got)
+		}
+	}
+}
+
+var (
+	declaredUpstream = regexp.MustCompile(`upstream (upstreamm_madock_\d+) \{[^}]*?\n\s*server (\S+)`)
+	passedUpstream   = regexp.MustCompile(`proxy_pass\s+http://(upstreamm_madock_\d+)`)
+	setVariable      = regexp.MustCompile(`set (\$madock_upstream_\d+) (\S+);`)
+	passedVariable   = regexp.MustCompile(`proxy_pass\s+http://(\$madock_upstream_\d+);`)
+)
+
+// A proxy_pass naming an upstream nothing declares is `[emerg] host not found in
+// upstream`: nginx refuses the whole file, and that file is every project on the
+// machine. With varnish on, the server is varnish's port and the block is still
+// declared under nginx's, so a name built from the wrong one of the two renders
+// without a complaint and only nginx objects.
+func TestEveryUpstreamAProxyPassNamesIsDeclared(t *testing.T) {
+	for _, varnish := range []string{"false", "true"} {
+		t.Run("varnish "+varnish, func(t *testing.T) {
+			testenv.SetupWith(t, "golden", "golden.test", map[string]string{"varnish/enabled": varnish})
+
+			nginx.MakeConf("golden")
+
+			proxyConf, err := os.ReadFile(paths.CtxDir() + "/proxy.conf")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			servers := map[string]string{}
+			for _, match := range declaredUpstream.FindAllStringSubmatch(string(proxyConf), -1) {
+				servers[match[1]] = match[2]
+			}
+			passes := passedUpstream.FindAllStringSubmatch(string(proxyConf), -1)
+			if len(passes) == 0 {
+				t.Fatalf("no proxy_pass to an upstream in:\n%s", proxyConf)
+			}
+			for _, match := range passes {
+				if _, declared := servers[match[1]]; !declared {
+					t.Errorf("proxy_pass names %s, declared are %v", match[1], servers)
+				}
+			}
+
+			// Declared is not enough: the two main blocks have to reach what is
+			// in front of the site.
+			service := "nginx"
+			if varnish == "true" {
+				service = "varnish"
+			}
+			want := "host.docker.internal:" + strconv.Itoa(ports.GetPort("golden", service))
+			main := "upstreamm_madock_" + strconv.Itoa(ports.GetPort("golden", "nginx"))
+			if got := servers[main]; got != want {
+				t.Errorf("%s holds server %q, want %q", main, got, want)
+			}
+			if got := strings.Count(string(proxyConf), "http://"+main+";"); got != 2 {
+				t.Errorf("%d proxy_pass to %s, want 2: the http and the https block", got, main)
+			}
+		})
+	}
+}
+
+// The same for a project reached by name: there is no upstream block, and a
+// variable proxy_pass reads without a `set` is an unknown variable to nginx, which
+// refuses the file just the same.
+func TestEveryVariableAProxyPassReadsIsSet(t *testing.T) {
+	conf := map[string]string{"ports/publish": "false", "varnish/enabled": "true"}
+	testenv.SetupWith(t, "golden", "golden.test", conf)
+
+	nginx.MakeConf("golden")
+
+	proxyConf, err := os.ReadFile(paths.CtxDir() + "/proxy.conf")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	servers := map[string]string{}
+	for _, match := range setVariable.FindAllStringSubmatch(string(proxyConf), -1) {
+		servers[match[1]] = match[2]
+	}
+	passes := passedVariable.FindAllStringSubmatch(string(proxyConf), -1)
+	if len(passes) != 2 {
+		t.Fatalf("%d proxy_pass through a variable, want 2: the http and the https block", len(passes))
+	}
+	for _, match := range passes {
+		server, set := servers[match[1]]
+		if !set {
+			t.Errorf("proxy_pass reads %s, set are %v", match[1], servers)
+		}
+		if !strings.Contains(server, "varnish") || !strings.HasSuffix(server, ":6081") {
+			t.Errorf("%s holds %q, want the varnish container at 6081", match[1], server)
 		}
 	}
 }
