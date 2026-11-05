@@ -262,7 +262,7 @@ func makeProxy(projectName string) {
 						upstreamPort = ports.GetPort(name, "varnish")
 					}
 					upstreamServer, upstreamResolve := MainUpstream(projectConf, name, upstreamPort)
-					upstreamPass, upstreamConnection := mainPass(upstreamServer, upstreamResolve, upstreamPort)
+					upstreamPass, upstreamConnection := mainPass(upstreamServer, upstreamResolve, ports.GetPort(name, "nginx"))
 
 					// HTTP/2 directive (new nginx 1.25+ syntax)
 					http2Directive := ""
@@ -396,11 +396,16 @@ func MainUpstream(projectConf map[string]string, projectName string, publishedPo
 
 // mainPass is how `location /` reaches the project, for both server blocks of its
 // proxy.conf: the directives that send the request, and the value of Connection.
-func mainPass(server, resolve string, port int) (pass, connection string) {
+//
+// nginxPort only names things. default-proxy.conf declares the upstream under the
+// project's nginx port whatever it holds, so with varnish in front the name stays
+// nginx's while the server is varnish's: a name built from varnish's port is an
+// upstream nothing declares, and nginx refuses the whole file.
+func mainPass(server, resolve string, nginxPort int) (pass, connection string) {
 	if resolve == "" {
-		return "proxy_pass         http://upstreamm_madock_" + strconv.Itoa(port) + ";", "$connection_upgrade"
+		return "proxy_pass         http://upstreamm_madock_" + strconv.Itoa(nginxPort) + ";", "$connection_upgrade"
 	}
-	variable := "$madock_upstream_" + strconv.Itoa(port)
+	variable := "$madock_upstream_" + strconv.Itoa(nginxPort)
 	return "set " + variable + " " + server + ";\n            proxy_pass         http://" + variable + ";", "$connection_upgrade_or_close"
 }
 

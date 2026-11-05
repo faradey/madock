@@ -16,9 +16,13 @@ RUN npm install -g {{{aptLines "" .nodejs.npm.default}}} && npm cache clean --fo
 {{{- if .nodejs.yarn.enabled}}}
 RUN npm install -g yarn && npm cache clean --force
 {{{- end}}}
-{{{- if .php.browser_libs}}}
+{{{- if or .nodejs.embedded.browser_libs .php.browser_libs}}}
 # Shared libraries a headless browser needs — see the note in
 # snippets/dockerfile/nodejs/packages for why the list is asked for rather
 # than written down. Needs npx, so it depends on nodejs/embedded.
+#
+# This snippet is in every image that embeds Node, Go's and Python's as much as
+# PHP's, so the key is under nodejs/embedded. php/browser_libs is the old name,
+# kept for projects that set it, and goes at the next major.
 RUN npx --yes playwright install-deps chromium
 {{{- end}}}
