@@ -17,6 +17,8 @@ var stack = []string{"php", "php_without_xdebug", "nginx", "db", "opensearch", "
 // harness replaces the seams for one test and records what reached docker.
 type harness struct {
 	restarted []string
+	reloads   int
+	reloadErr error
 	states    []docker.ServiceState
 	statesErr error
 	listErr   error
@@ -29,11 +31,11 @@ func newHarness(t *testing.T, argv ...string) *harness {
 	h := &harness{}
 
 	origList, origRestart, origStates := composeServices, restartServices, serviceStates
-	origProject, origExit := projectName, exit
+	origProject, origExit, origReload := projectName, exit, reloadNginx
 	origArgs, origParse := os.Args, attr.IsParseArgs
 	t.Cleanup(func() {
 		composeServices, restartServices, serviceStates = origList, origRestart, origStates
-		projectName, exit = origProject, origExit
+		projectName, exit, reloadNginx = origProject, origExit, origReload
 		os.Args, attr.IsParseArgs = origArgs, origParse
 	})
 
@@ -49,6 +51,10 @@ func newHarness(t *testing.T, argv ...string) *harness {
 	}
 	serviceStates = func(string) ([]docker.ServiceState, error) {
 		return h.states, h.statesErr
+	}
+	reloadNginx = func(string) error {
+		h.reloads++
+		return h.reloadErr
 	}
 	projectName = func() string { return "project" }
 	exit = func(code int) { h.exits = append(h.exits, code) }
@@ -179,6 +185,70 @@ func TestAnUnaskableDockerStopsTheCommand(t *testing.T) {
 	}
 	if len(h.exits) == 0 || h.exits[0] != 1 {
 		t.Fatalf("exits = %v; want the command to fail", h.exits)
+	}
+}
+
+// Containers restarted together can swap addresses, and an upstream block holds
+// the one nginx read when it loaded its configuration. Without the reload a PHP
+// stack keeps talking to an address that now belongs to something else.
+func TestARunningNginxIsReloadedAfterARestart(t *testing.T) {
+	h := newHarness(t, "php", "worker-queue")
+	h.states = running("php", "worker-queue", "nginx", "db")
+
+	Execute()
+
+	if h.reloads != 1 {
+		t.Fatalf("nginx reloaded %d times; want once", h.reloads)
+	}
+}
+
+// An nginx restarted by name has just read its configuration.
+func TestAnNginxRestartedByNameIsNotReloaded(t *testing.T) {
+	h := newHarness(t, "php", "nginx")
+	h.states = running("php", "nginx", "db")
+
+	Execute()
+
+	if h.reloads != 0 {
+		t.Fatalf("nginx reloaded %d times; want none", h.reloads)
+	}
+}
+
+// One that is stopped holds no configuration, and a project may have none at all
+// (`nginx/enabled` false).
+func TestNoRunningNginxIsNotReloaded(t *testing.T) {
+	for name, states := range map[string][]docker.ServiceState{
+		"stopped": {{Service: "php", State: "running"}, {Service: "nginx", State: "exited"}},
+		"absent":  running("php", "db"),
+	} {
+		h := newHarness(t, "php")
+		h.states = states
+
+		Execute()
+
+		if h.reloads != 0 {
+			t.Errorf("%s nginx: reloaded %d times; want none", name, h.reloads)
+		}
+		if len(h.exits) != 0 {
+			t.Errorf("%s nginx: exits = %v; want success", name, h.exits)
+		}
+	}
+}
+
+// The restart happened, so a reload that fails must not read as a failed restart:
+// a recipe would roll back a deploy that worked.
+func TestAFailedReloadDoesNotFailTheCommand(t *testing.T) {
+	h := newHarness(t, "php")
+	h.states = running("php", "nginx")
+	h.reloadErr = errors.New("nginx -t failed")
+
+	Execute()
+
+	if h.reloads != 1 {
+		t.Fatalf("nginx reloaded %d times; want one attempt", h.reloads)
+	}
+	if len(h.exits) != 0 {
+		t.Fatalf("exits = %v; want success", h.exits)
 	}
 }
 

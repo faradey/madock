@@ -35,6 +35,7 @@ var (
 	composeServices = docker.ComposeServices
 	restartServices = docker.RestartServices
 	serviceStates   = docker.ServiceStates
+	reloadNginx     = docker.ReloadProjectNginx
 	projectName     = configs.GetProjectName
 	exit            = os.Exit
 )
@@ -107,6 +108,45 @@ func Execute() {
 	}
 
 	report(project, resolved)
+	refreshNginx(project, resolved)
+}
+
+// refreshNginx makes a running nginx look its upstreams up again.
+//
+// Containers restarted together can come back on each other's addresses. Seen
+// on a Go stand: `service:restart` of two workers, same container ids, .6 and .4
+// swapped, on one restart in five. An `upstream` block — fastcgi_pass in every
+// PHP stack — holds the address from when nginx loaded its configuration, so it
+// keeps talking to the old one, which now belongs to something else.
+//
+// Every restart reloads, whichever services were named: any two may swap, and a
+// reload costs nothing a request can see. nginx restarted by name has just read
+// its configuration, and one that is not running holds none.
+//
+// A reload that fails is a warning and not a failure. The restart this command
+// was asked for happened, and a red exit would have a recipe roll back a deploy
+// that worked.
+func refreshNginx(project string, restarted []string) {
+	for _, svc := range restarted {
+		if svc == "nginx" {
+			return
+		}
+	}
+
+	states, err := serviceStates(project)
+	if err != nil {
+		fmtc.WarningLn("nginx was not reloaded, docker could not be asked whether it runs: " + err.Error())
+		return
+	}
+	for _, entry := range states {
+		if entry.Service != "nginx" || entry.State != "running" {
+			continue
+		}
+		if err := reloadNginx(project); err != nil {
+			fmtc.WarningLn("nginx was not reloaded and may still hold the old address of what was restarted: " + err.Error())
+		}
+		return
+	}
 }
 
 // report says whether the services came back, and says so from docker rather

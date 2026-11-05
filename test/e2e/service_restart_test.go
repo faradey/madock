@@ -56,7 +56,18 @@ func TestServiceRestartTouchesOnlyTheServiceNamed(t *testing.T) {
 		t.Errorf("service:restart with no service name was accepted:\n%s", out)
 	}
 
-	p.run(5*time.Minute, "service:restart", "db")
+	out, err = p.tryRun(5*time.Minute, "service:restart", "db")
+	if err != nil {
+		t.Fatalf("service:restart db failed: %v\n%s", err, out)
+	}
+
+	// The reload is only a warning when it fails, so nothing else here would
+	// notice it stopped working. Asked of the real nginx, with its real
+	// `nginx -t`, which the unit tests replace.
+	requireContains(t, out, "Reloading nginx", "the reload of nginx after a restart")
+	if strings.Contains(out, "nginx was not reloaded") {
+		t.Errorf("nginx refused the reload after a restart:\n%s", out)
+	}
 
 	dbAfter := startedAt(t, p, "db")
 	nginxAfter := startedAt(t, p, "nginx")
