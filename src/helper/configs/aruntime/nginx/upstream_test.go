@@ -44,8 +44,12 @@ func TestTheResolverIsAddedOnlyWhenAnUpstreamResolves(t *testing.T) {
 	if got := nginx.ResolverFor("upstream a {\n  server host.docker.internal:17003 max_fails=3 fail_timeout=30s;\n}\n"); got != "" {
 		t.Errorf("a proxy with no named upstream gained a resolver:\n%s", got)
 	}
-	got := nginx.ResolverFor("upstream a {\n  zone a 64k;\n  server madock-shop-nginx-1:80 resolve max_fails=3 fail_timeout=30s;\n}\n")
-	if !strings.Contains(got, "resolver 127.0.0.11") {
-		t.Errorf("a named upstream got no resolver: %q", got)
+	for name, conf := range map[string]string{
+		"a variable in proxy_pass": "location / {\n            set $madock_upstream_17003 madock-shop-nginx-1:80;\n            proxy_pass http://$madock_upstream_17003;\n}\n",
+		"a project's own template": "upstream a {\n  zone a 64k;\n  server madock-shop-nginx-1:80 resolve max_fails=3 fail_timeout=30s;\n}\n",
+	} {
+		if got := nginx.ResolverFor(conf); !strings.Contains(got, "resolver 127.0.0.11") {
+			t.Errorf("%s got no resolver: %q", name, got)
+		}
 	}
 }

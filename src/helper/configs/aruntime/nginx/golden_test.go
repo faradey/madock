@@ -2,11 +2,14 @@ package nginx
 
 import (
 	"flag"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/faradey/madock/v4/src/helper/paths"
 	"github.com/faradey/madock/v4/src/helper/testenv"
 )
 
@@ -63,6 +66,45 @@ func TestGoldenProxyConf(t *testing.T) {
 		return
 	}
 	testenv.CompareGolden(t, goldenDir, only)
+}
+
+// TestGoldenProxyConfWithoutPublishedPorts pins what ports/publish false renders:
+// a name looked up per request and no upstream block for the project's web
+// server. That block is what kept a stopped project's address and sent its
+// requests to whichever project took it; see MainUpstream.
+func TestGoldenProxyConfWithoutPublishedPorts(t *testing.T) {
+	projectName := "golden"
+	env := testenv.SetupWith(t, projectName, "golden.test", map[string]string{"ports/publish": "false"})
+
+	MakeConf(projectName)
+
+	rendered := testenv.Collect(t, filepath.Join(env.ExecDir, "aruntime", "ctx"), env)
+	only := map[string]string{"proxy.conf": maskPorts(rendered["proxy.conf"])}
+
+	goldenDir := filepath.Join("testdata", "golden", "proxy-no-published-ports")
+	if *updateGolden {
+		testenv.WriteGolden(t, goldenDir, only)
+		return
+	}
+	testenv.CompareGolden(t, goldenDir, only)
+}
+
+// The proxy's network namespace changes only on a machine that needs it: a sysctl
+// a Docker refuses would stop the proxy, and with it every project behind it.
+func TestTheProxyReusesPortsOnlyForAProjectReachedByName(t *testing.T) {
+	for publish, want := range map[string]bool{"true": false, "false": true} {
+		testenv.SetupWith(t, "golden", "golden.test", map[string]string{"ports/publish": publish})
+
+		MakeConf("golden")
+
+		compose, err := os.ReadFile(paths.ProxyDockerCompose())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := strings.Contains(string(compose), "net.ipv4.tcp_tw_reuse=1"); got != want {
+			t.Errorf("ports/publish %s: tcp_tw_reuse in the proxy's compose is %v, want %v:\n%s", publish, got, want, compose)
+		}
+	}
 }
 
 // allocatedPort matches the ports madock hands out, which are five digits from
