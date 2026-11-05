@@ -164,6 +164,30 @@ func Execute(projectName string, projectConf map[string]string, continueSetup bo
 	}
 }
 
+// createProjectScript is `composer create-project`, tried three times before the
+// setup fails, as `pecl install` is in the php image.
+//
+// One failed download used to end a setup whose rebuild had just taken five
+// minutes. Seen on three CI runs out of 25, 2026-11-01 to 2026-11-05: packagist
+// answered in the same composer call, then "Failed to connect to api.github.com
+// port 443 after 0 ms: Connection refused", and a new run minutes later passed.
+// Who refused is not known. Nothing on the way to GitHub answers in 0 ms, which
+// reads like a local address coming back from DNS, so a failed attempt prints what
+// the name resolves to in this container. If that is a property of the machine
+// the retry will not help, and those lines will say so.
+//
+// composer refuses a directory that is not empty, and a failed attempt can leave
+// files in it, so each new attempt starts from an empty one.
+func createProjectScript(version, dir string, pauseSeconds int) string {
+	return fmt.Sprintf("(for attempt in 1 2 3; do "+
+		"composer create-project shopware/production:%[1]s %[2]s && exit 0; "+
+		"echo \"madock: composer create-project failed (attempt ${attempt} of 3). api.github.com resolves to:\"; "+
+		"getent ahosts api.github.com 2>&1 || true; "+
+		"rm -r -f %[2]s && mkdir %[2]s; "+
+		"sleep %[3]d; "+
+		"done; exit 1)", version, dir, pauseSeconds)
+}
+
 func DownloadShopware(projectName, version string, isSampleData bool) {
 	projectConf := configs2.GetCurrentProjectConfig()
 	sampleData := ""
@@ -183,7 +207,7 @@ func DownloadShopware(projectName, version string, isSampleData bool) {
 		"cd " + workdir + " " +
 			"&& rm -r -f " + workdir + "/download-shopware123456789 " +
 			"&& mkdir " + workdir + "/download-shopware123456789 " +
-			"&& composer create-project shopware/production:" + version + " ./download-shopware123456789 " +
+			"&& " + createProjectScript(version, "./download-shopware123456789", 15) + " " +
 			"&& shopt -s dotglob " +
 			"&& mv  -v ./download-shopware123456789/* ./ " +
 			"&& rm -r -f ./download-shopware123456789 " +
