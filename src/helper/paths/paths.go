@@ -175,7 +175,7 @@ func MakeDirsByPath(val string) string {
 		var err error
 		for i := 0; i < len(dirs); i++ {
 			if !IsFileExist("/" + strings.Join(dirs[:i+1], "/")) {
-				err = os.Mkdir("/"+strings.Join(dirs[:i+1], "/"), 0755)
+				err = makeDir("/" + strings.Join(dirs[:i+1], "/"))
 				if err != nil {
 					logger.Fatal(err)
 				}
@@ -184,6 +184,25 @@ func MakeDirsByPath(val string) string {
 	}
 
 	return val
+}
+
+// makeDir is os.Mkdir, with the one failure its message hides named.
+//
+// A symlink whose target is gone reads as absent to IsFileExist and as present to
+// mkdir, so all anyone saw was `mkdir <path>: file exists` over a path that `ls`
+// shows and `cd` refuses. Met on a test machine on 2026-11-05: project directories
+// linked to a temporary directory that had since been removed, and every command
+// in those projects stopped on that sentence.
+func makeDir(path string) error {
+	err := os.Mkdir(path, 0755)
+	if err == nil {
+		return nil
+	}
+	if target, readErr := os.Readlink(path); readErr == nil {
+		return fmt.Errorf("%s is a symlink to %s, which does not exist. Remove the link or restore its target", path, target)
+	}
+
+	return err
 }
 
 func GetActiveProjects() []string {

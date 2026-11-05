@@ -3,6 +3,7 @@ package paths
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -395,5 +396,39 @@ func TestGetDirsFollowsSymlinks(t *testing.T) {
 	}
 	if got["broken"] {
 		t.Error("a symlink pointing at nothing was reported as a directory")
+	}
+}
+
+// A link whose target is gone: IsFileExist says absent and mkdir says present. The
+// message has to name the link and where it points, or nobody finds it.
+func TestMakeDirNamesALinkWhoseTargetIsGone(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "gone")
+	link := filepath.Join(dir, "link")
+	if err := os.Symlink(target, link); err != nil {
+		t.Fatal(err)
+	}
+
+	err := makeDir(link)
+	if err == nil {
+		t.Fatal("no error for a path that is a dangling link")
+	}
+	for _, want := range []string{link, target} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the message does not name %s: %v", want, err)
+		}
+	}
+}
+
+// Anything else stays what the system said.
+func TestMakeDirKeepsOtherFailuresAsTheyAre(t *testing.T) {
+	dir := t.TempDir()
+	if err := makeDir(filepath.Join(dir, "new")); err != nil {
+		t.Errorf("a new directory failed: %v", err)
+	}
+
+	err := makeDir(filepath.Join(dir, "absent", "child"))
+	if err == nil || !os.IsNotExist(err) {
+		t.Errorf("want the system's own error for a missing parent, got %v", err)
 	}
 }
