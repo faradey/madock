@@ -262,6 +262,7 @@ func makeProxy(projectName string) {
 						upstreamPort = ports.GetPort(name, "varnish")
 					}
 					upstreamServer, upstreamResolve := MainUpstream(projectConf, name, upstreamPort)
+					upstreamPass, upstreamConnection := mainPass(upstreamServer, upstreamResolve, upstreamPort)
 
 					// HTTP/2 directive (new nginx 1.25+ syntax)
 					http2Directive := ""
@@ -292,17 +293,19 @@ func makeProxy(projectName string) {
 					// and come from the general config, not from the project
 					// whose block this is.
 					strReplaced := project.Render(name, nginxDefFile, "nginx/conf/default-proxy.conf", map[string]string{
-						"main_upstream_server":  upstreamServer,
-						"main_upstream_resolve": upstreamResolve,
-						"nginx/port/unsecure":   generalConfig["nginx/port/unsecure"],
-						"nginx/port/secure":     generalConfig["nginx/port/secure"],
-						"nginx/http2/directive": http2Directive,
-						"proxy/timeout/connect": generalConfig["proxy/timeout/connect"],
-						"proxy/timeout/send":    generalConfig["proxy/timeout/send"],
-						"proxy/timeout/read":    generalConfig["proxy/timeout/read"],
-						"proxy/rate_limit/req":  rateLimitReq,
-						"proxy/conn_limit/req":  connLimit,
-						"proxy/max_body_size":   generalConfig["proxy/max_body_size"],
+						"main_upstream_server":     upstreamServer,
+						"main_upstream_resolve":    upstreamResolve,
+						"main_upstream_pass":       upstreamPass,
+						"main_upstream_connection": upstreamConnection,
+						"nginx/port/unsecure":      generalConfig["nginx/port/unsecure"],
+						"nginx/port/secure":        generalConfig["nginx/port/secure"],
+						"nginx/http2/directive":    http2Directive,
+						"proxy/timeout/connect":    generalConfig["proxy/timeout/connect"],
+						"proxy/timeout/send":       generalConfig["proxy/timeout/send"],
+						"proxy/timeout/read":       generalConfig["proxy/timeout/read"],
+						"proxy/rate_limit/req":     rateLimitReq,
+						"proxy/conn_limit/req":     connLimit,
+						"proxy/max_body_size":      generalConfig["proxy/max_body_size"],
 					})
 
 					err := os.WriteFile(paths.MakeDirsByPath(paths.CacheDir())+"/"+name+"-proxy.conf", []byte(strReplaced), 0755)
@@ -389,6 +392,16 @@ func MainUpstream(projectConf map[string]string, projectName string, publishedPo
 		service, port = "varnish", "6081"
 	}
 	return containerName(projectConf, projectName, service) + ":" + port, "true"
+}
+
+// mainPass is how `location /` reaches the project, for both server blocks of its
+// proxy.conf: the directives that send the request, and the value of Connection.
+func mainPass(server, resolve string, port int) (pass, connection string) {
+	if resolve == "" {
+		return "proxy_pass         http://upstreamm_madock_" + strconv.Itoa(port) + ";", "$connection_upgrade"
+	}
+	variable := "$madock_upstream_" + strconv.Itoa(port)
+	return "set " + variable + " " + server + ";\n            proxy_pass         http://" + variable + ";", "$connection_upgrade_or_close"
 }
 
 // containerName is docker.GetContainerName, which this package cannot import —

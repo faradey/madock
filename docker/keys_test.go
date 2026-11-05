@@ -114,14 +114,16 @@ func knownKeys(t *testing.T) map[string]bool {
 	// values the renderer computes for every template. They are listed rather
 	// than discovered, so that adding one is a decision somebody wrote down.
 	for _, key := range []string{
-		"main_service",          // which container the front door points at
-		"main_service_enabled",  // and whether it is part of the stack at all
-		"main_service_port",     // the port to proxy to when it is not php
-		"main_upstream_server",  // host:port of the shared proxy's upstream
-		"main_upstream_resolve", // "true" when that upstream is a container name (ports/publish false)
-		"project_name",          // lowercased, as containers are named
-		"scope",                 // the active scope, as a name suffix
-		"nginx/hosts",           // the ordered host list, never empty
+		"main_service",             // which container the front door points at
+		"main_service_enabled",     // and whether it is part of the stack at all
+		"main_service_port",        // the port to proxy to when it is not php
+		"main_upstream_server",     // host:port of the shared proxy's upstream
+		"main_upstream_resolve",    // "true" when that upstream is a container name (ports/publish false)
+		"main_upstream_pass",       // the directives that send a request to it
+		"main_upstream_connection", // the Connection header that goes with them
+		"project_name",             // lowercased, as containers are named
+		"scope",                    // the active scope, as a name suffix
+		"nginx/hosts",              // the ordered host list, never empty
 		// A block whose children are named by whoever writes them, like
 		// nginx/hosts above. Declaring the parent in config.xml is not the
 		// answer and was tried: an empty <programs></programs> makes it a
