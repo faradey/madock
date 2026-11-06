@@ -123,13 +123,19 @@ func TestPostgres18Starts(t *testing.T) {
 func TestDatabaseMemoryReachesMongodb(t *testing.T) {
 	p := newProject(t, "e2edbmemmongo")
 
-	p.run(setupTimeout, "setup", "-y",
+	// tryRun, not run: both exit 1 when a service is seen dead, and whether mongod
+	// died of this host's kernel is the question the check below answers.
+	if out, err := p.tryRun(setupTimeout, "setup", "-y",
 		"--platform=custom",
 		"--language=none",
 		"--db-type=mongodb",
 		"--hosts=e2edbmemmongo.test",
-	)
-	p.run(20*time.Minute, "start")
+	); err != nil {
+		t.Logf("setup: %v\n%s", err, lastLines(out, 20))
+	}
+	if out, err := p.tryRun(20*time.Minute, "start"); err != nil {
+		t.Logf("start: %v\n%s", err, lastLines(out, 20))
+	}
 
 	// MongoDB itself refuses to start on a host kernel from 6.19 to 7.0.13 —
 	// its vendored TCMalloc breaks the rseq ABI there (SERVER-121912), and the

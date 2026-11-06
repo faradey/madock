@@ -21,6 +21,7 @@ func TestExtraPackagesReachTheImage(t *testing.T) {
 	p.run(15*time.Minute, "setup", "-y",
 		"--platform=custom",
 		"--language=php",
+		"--search-engine=none",
 		"--hosts=e2epkgs.test",
 	)
 	p.run(2*time.Minute, "config:set", "-n", "php/packages/extra", "-v", "tree no-such-package-madock")

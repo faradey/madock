@@ -30,6 +30,7 @@ func TestPhpImagesOfDifferentTimezonesShareTheToolchain(t *testing.T) {
 	first.run(15*time.Minute, "setup", "-y",
 		"--platform=custom",
 		"--language=php",
+		"--search-engine=none",
 		"--hosts=e2etzone.test",
 	)
 
@@ -37,6 +38,7 @@ func TestPhpImagesOfDifferentTimezonesShareTheToolchain(t *testing.T) {
 	second.run(15*time.Minute, "setup", "-y",
 		"--platform=custom",
 		"--language=php",
+		"--search-engine=none",
 		"--hosts=e2etztwo.test",
 	)
 	second.run(2*time.Minute, "config:set", "-n", "timezone", "-v", "Europe/Kyiv")
