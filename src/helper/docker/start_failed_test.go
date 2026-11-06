@@ -1,6 +1,10 @@
 package docker
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 func TestStartFailed(t *testing.T) {
 	tests := []struct {
@@ -25,5 +29,21 @@ func TestStartFailed(t *testing.T) {
 				t.Errorf("StartFailed() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestRemovingAMarkerAnotherProcessRemovedIsNotAFailure(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "conf-cache")
+	if err := os.WriteFile(path, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := removeIfThere(path); err != nil {
+		t.Errorf("present: %v", err)
+	}
+	if err := removeIfThere(path); err != nil {
+		t.Errorf("already gone: %v", err)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Errorf("still there: %v", err)
 	}
 }

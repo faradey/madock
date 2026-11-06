@@ -6,6 +6,7 @@ import (
 	"os/user"
 	"strings"
 
+	"github.com/faradey/madock/v4/src/command"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
@@ -53,7 +54,10 @@ func (h *BaseHandler) SupportsCron() bool {
 // Start starts the containers for a project
 func (h *BaseHandler) Start(projectName string, withChown bool, projectConf map[string]string) {
 	// Regenerates the compose files and build context from the current config.
-	docker.UpNginx(projectName)
+	if err := docker.UpNginx(projectName); err != nil {
+		fmtc.WarningIconLn(err.Error())
+		command.Fail()
+	}
 
 	// `docker compose start` only wakes existing containers: it reads the
 	// compose file for names, not for content, so a changed image or service

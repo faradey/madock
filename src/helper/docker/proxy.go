@@ -4,9 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
@@ -15,6 +18,7 @@ import (
 	configs2 "github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/nginx"
 	"github.com/faradey/madock/v4/src/helper/configs/aruntime/project"
+	"github.com/faradey/madock/v4/src/helper/lockfile"
 	"github.com/faradey/madock/v4/src/helper/logger"
 	"github.com/faradey/madock/v4/src/helper/paths"
 )
@@ -24,9 +28,41 @@ func UpNginx(projectName string) error {
 	return UpNginxWithBuild(projectName, false)
 }
 
+// HoldProxyConfig makes this process the only writer of proxy.conf until the
+// returned function is called, waiting for whoever is one now. That file holds
+// every project's routing and is written whole from what its writer read, so two
+// madock processes at once lose each other's work: measured 2026-11-06 with four
+// `project:clone` + `start` at once on a 2 CPU VM, a clone's host was missing from
+// proxy.conf in 4 rounds of 12, until the next start of anything, and none with
+// one at a time. A reload takes it too: nginx must not read a file half written.
+func HoldProxyConfig() func() {
+	release, err := lockfile.Hold(filepath.Join(paths.MakeDirsByPath(paths.RuntimeBase()), "proxy.lock"), func() {
+		fmtc.WarningErrLn("Another madock is writing the proxy configuration, waiting for it")
+	})
+	if err != nil {
+		logger.Fatal(err)
+	}
+	return release
+}
+
+// ForgetProxyCache removes the conf-cache marker, so the next render starts over.
+// Another madock may have just done it: seen as a clone that ended in "remove
+// .../conf-cache: no such file or directory" with four clones at once.
+func ForgetProxyCache() error {
+	return removeIfThere(paths.CacheDir() + "/conf-cache")
+}
+
+func removeIfThere(path string) error {
+	if err := os.Remove(path); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return err
+	}
+	return nil
+}
+
 // RenderProject writes the proxy's and the project's configuration and compose
 // files, as UpNginxWithBuild does before it starts anything, and starts nothing.
 func RenderProject(projectName string) {
+	defer HoldProxyConfig()()
 	nginx.MakeConf(projectName)
 	project.MakeConf(projectName)
 }
@@ -39,6 +75,7 @@ func RenderProject(projectName string) {
 // network … not found" and exited 1, the proxy stayed down, and the command
 // reported success.
 func UpNginxWithBuild(projectName string, force bool) error {
+	defer HoldProxyConfig()()
 	if !paths.IsFileExist(paths.GetRunDirPath() + "/.madock/config.xml") {
 		configs2.SetParam(configs2.MadockLevelConfigCode, "path", paths.GetRunDirPath(), "default", configs2.MadockLevelConfigCode)
 	}
@@ -130,16 +167,16 @@ func UpNginxWithBuild(projectName string, force bool) error {
 		// regenerated proxy.conf) → reload in place so other projects stay up
 		// (zero-downtime). reload re-parses the full config: routing, upstreams
 		// (re-resolves container DNS) and certs.
-		if err := ReloadNginx(); err == nil {
-			// Persist the applied hash and restore the conf-cache marker the
-			// rebuild removed (so MakeConf resumes caching) only when the reload
-			// command actually ran — if the exec failed (proxy missing / docker
-			// error) we must not record the config as applied or we'd never retry.
-			writeProxyHash(hashCache, newHash)
-			if !paths.IsFileExist(confCache) {
-				if err := os.WriteFile(confCache, []byte("config cache"), 0755); err != nil {
-					logger.Fatal(err)
-				}
+		// Persist the applied hash and restore the conf-cache marker the
+		// rebuild removed (so MakeConf resumes caching) only when the reload
+		// worked: a config not applied must not be recorded, or we'd never retry.
+		if err := ReloadNginx(); err != nil {
+			return fmt.Errorf("the proxy did not take the new configuration: %w", err)
+		}
+		writeProxyHash(hashCache, newHash)
+		if !paths.IsFileExist(confCache) {
+			if err := os.WriteFile(confCache, []byte("config cache"), 0755); err != nil {
+				logger.Fatal(err)
 			}
 		}
 	}
@@ -284,9 +321,9 @@ func StopNginx(force bool) {
 // the container "<project>-nginx-<index>" (aruntime-nginx-1) — a hardcoded
 // container name would not match. `-T` disables TTY allocation (non-interactive).
 //
-// Note: `nginx -s reload` returns 0 even when the new config is rejected (nginx
-// logs the error and keeps the old config and workers live), so a non-nil error
-// here means the exec itself failed, not that the config was bad.
+// `nginx -s reload` parses the configuration before it signals the master, so
+// one nginx rejects fails the command and the old one keeps serving (measured
+// with nginx 1.28, status 1). A non-nil error is that, or the exec failing.
 // IsProxyRunning reports whether the aruntime nginx container is up.
 func IsProxyRunning() bool {
 	composeFile := paths.ProxyDockerCompose()

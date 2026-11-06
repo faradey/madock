@@ -347,8 +347,11 @@ func removeRegistered(projectName string, reclaimSource, withVolumes bool) {
 	// reservation straight back.
 	remaining := paths.GetActiveProjects()
 	if len(remaining) > 0 {
+		release := docker.HoldProxyConfig()
 		nginx.MakeConf(remaining[0])
-		if err := docker.ReloadNginx(); err != nil {
+		err := docker.ReloadNginx()
+		release()
+		if err != nil {
 			for _, line := range reloadFailureLines(err, docker.IsProxyRunning()) {
 				fmtc.WarningLn(line)
 			}

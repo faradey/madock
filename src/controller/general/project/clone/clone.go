@@ -284,11 +284,8 @@ func Execute() {
 	}
 
 	containerName := docker.GetContainerName(cloneProjectConf, cloneName, "snapshot")
-	if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
-		err := os.Remove(paths.CacheDir() + "/conf-cache")
-		if err != nil {
-			logger.Fatal(err)
-		}
+	if err := docker.ForgetProxyCache(); err != nil {
+		logger.Fatal(err)
 	}
 	// --no-start: the clone's containers are not created here. The volumes are
 	// filled through the snapshot helper, which needs no other container, and

@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/faradey/madock/v4/src/command"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	configs2 "github.com/faradey/madock/v4/src/helper/configs"
@@ -88,7 +89,10 @@ func dockerRun(subject string, args ...string) {
 
 // UpWithBuild starts both nginx proxy and project containers with build
 func UpWithBuild(projectName string, withChown bool) {
-	UpNginxWithBuild(projectName, true)
+	if err := UpNginxWithBuild(projectName, true); err != nil {
+		fmtc.WarningIconLn(err.Error())
+		command.Fail()
+	}
 	UpProjectWithBuildRefresh(projectName, withChown)
 }
 
