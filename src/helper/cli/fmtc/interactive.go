@@ -51,10 +51,15 @@ func NewInteractiveSelector(title string, options []string, recommended int) *In
 	}
 }
 
+// StdinIsTerminal reports whether a person can answer a prompt.
+func StdinIsTerminal() bool {
+	return term.IsTerminal(int(os.Stdin.Fd()))
+}
+
 // Run displays the selector and returns the selected index and value
 func (s *InteractiveSelector) Run() (int, string) {
 	// Check if we're in a terminal
-	if !term.IsTerminal(int(os.Stdin.Fd())) {
+	if !StdinIsTerminal() {
 		// Fallback to non-interactive mode
 		return s.Selected, s.Options[s.Selected]
 	}
