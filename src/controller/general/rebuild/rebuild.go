@@ -76,12 +76,9 @@ func Execute() {
 		// Clear config cache with spinner
 		spinner := fmtc.NewSpinner("Preparing environment...")
 		spinner.Start()
-		if paths.IsFileExist(paths.CacheDir() + "/conf-cache") {
-			err := os.Remove(paths.CacheDir() + "/conf-cache")
-			if err != nil {
-				spinner.StopWithError("Failed to clear cache")
-				logger.Fatal(err)
-			}
+		if err := docker.ForgetProxyCache(); err != nil {
+			spinner.StopWithError("Failed to clear cache")
+			logger.Fatal(err)
 		}
 		spinner.StopWithSuccess("Environment prepared")
 
@@ -201,7 +198,10 @@ func reportReconciliation(projectName string) {
 // afterwards, so a template that fails to render leaves the environment gone.
 func rebuildChanged(projectName string, withChown bool) bool {
 	// Render from the current configuration; this is what the diff compares.
-	docker.UpNginx(projectName)
+	if err := docker.UpNginx(projectName); err != nil {
+		fmtc.WarningIconLn(err.Error())
+		command.Fail()
+	}
 
 	diff := project.DiffStack(projectName)
 	switch {
