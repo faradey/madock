@@ -152,9 +152,13 @@ func Execute(flag string) {
 				// happened, and the caller (a script, or a person who has just
 				// changed a host) would carry on believing the proxy is
 				// serving the new config.
-				if err := docker.ReloadNginx(); err != nil {
-					fmtc.ErrorLn("The proxy configuration was not reloaded: the proxy is not running")
-					fmtc.ToDoLn("Run madock proxy:start")
+				release := docker.HoldProxyConfig()
+				err := docker.ReloadNginx()
+				release()
+				if err != nil {
+					message, todo := reloadRefusal(docker.IsProxyRunning())
+					fmtc.ErrorLn(message)
+					fmtc.ToDoLn(todo)
 					os.Exit(1)
 				}
 			}
@@ -162,7 +166,14 @@ func Execute(flag string) {
 			// the proxy is down, and to say it with the exit status.
 			if upErr != nil {
 				fmtc.ErrorLn(upErr.Error())
-				fmtc.ToDoLn("Run madock proxy:rebuild")
+				// A rebuild takes a running proxy down first, and one that has
+				// just refused this configuration would not come back.
+				if docker.IsProxyRunning() {
+					_, todo := reloadRefusal(true)
+					fmtc.ToDoLn(todo)
+				} else {
+					fmtc.ToDoLn("Run madock proxy:rebuild")
+				}
 				os.Exit(1)
 			}
 			fmtc.SuccessLn("Done")
@@ -173,4 +184,14 @@ func Execute(flag string) {
 		fmtc.WarningLn("Set up the project")
 		fmtc.ToDoLn("Run madock setup")
 	}
+}
+
+// reloadRefusal says why a reload failed. A running proxy that fails one has
+// refused the configuration and goes on serving the old one, with nginx's own
+// line printed above this.
+func reloadRefusal(running bool) (message, todo string) {
+	if !running {
+		return "The proxy configuration was not reloaded: the proxy is not running", "Run madock proxy:start"
+	}
+	return "The proxy refused the configuration and keeps serving the previous one", "Fix what nginx names above, then run madock proxy:reload"
 }

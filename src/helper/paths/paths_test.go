@@ -432,3 +432,20 @@ func TestMakeDirKeepsOtherFailuresAsTheyAre(t *testing.T) {
 		t.Errorf("want the system's own error for a missing parent, got %v", err)
 	}
 }
+
+func TestProjectsAmongReadsTheComposeFiles(t *testing.T) {
+	const runtime = "/opt/madock/aruntime/projects"
+	projects := []string{"shop", "shop-2", "myshop", "Mixed", "madock", "stopped", "elsewhere"}
+	files := runtime + "/shop-2/docker-compose.yml," + runtime + "/shop-2/docker-compose.override.yml\n" +
+		"\n" +
+		"/opt/madock/aruntime/docker-compose.yml\n" +
+		runtime + "/Mixed/docker-compose.yml\n" +
+		"/home/someone/other/aruntime/projects/elsewhere/docker-compose.yml\n"
+
+	got := projectsAmong(projects, files, runtime)
+
+	want := []string{"shop-2", "Mixed"}
+	if strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Errorf("projectsAmong() = %v, want %v", got, want)
+	}
+}
