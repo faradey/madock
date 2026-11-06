@@ -111,6 +111,7 @@ type ControllerGeneralDbImport struct {
 	DBServiceName string `arg:"-s,--service" help:"DB service name. For example: db"`
 	User          string `arg:"-u,--user" help:"User"`
 	ResetGtid     bool   `arg:"--reset-gtid" help:"Reset GTID state before import (RESET MASTER / RESET BINARY LOGS AND GTIDS) to avoid GTID_PURGED conflicts"`
+	StripGtid     bool   `arg:"--strip-gtid" help:"Import without the dump's GTID statements, with no prompt"`
 	File          string `arg:"positional" help:"Path to database file"`
 }
 

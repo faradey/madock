@@ -182,6 +182,10 @@ func resolveImportFilePath(args *arg_struct.ControllerGeneralDbImport, projectNa
 		logger.Fatal("No database files found for import")
 	}
 
+	if !isTerminal() {
+		logger.Fatal("No terminal to choose a database file on. Name the file: madock db:import <file>")
+	}
+
 	fmt.Println("")
 	fmtc.TitleLn("Select database file to import:")
 	selector := fmtc.NewInteractiveSelector("Database File", displayNames, 0)
@@ -261,7 +265,7 @@ func importMysql(target dbtarget.Target, args *arg_struct.ControllerGeneralDbImp
 		progress.reader = src
 
 		var stdin io.Reader = progress
-		if filterGtid {
+		if filterGtid || args.StripGtid {
 			stdin = sqldump.StripGtidPurged(progress)
 		}
 
@@ -325,6 +329,10 @@ func handleGtidConflict(target dbtarget.Target, runQuery func(string) (string, e
 	fmt.Println()
 
 	resetStmt := gtidResetStatement(target)
+	if !isTerminal() {
+		return fmt.Errorf("the dump's GTID metadata conflicts with this server and there is no terminal to ask on: "+
+			"run again with --strip-gtid to import without it, or with --reset-gtid to run %s first", resetStmt)
+	}
 	options := []string{
 		"Run " + resetStmt + " and retry import",
 		"Retry import with GTID statements stripped from the dump",
@@ -363,7 +371,17 @@ func isDuplicateEntryError(stderr string) bool {
 	return strings.Contains(stderr, "ERROR 1062") || strings.Contains(stderr, "Duplicate entry")
 }
 
+// isTerminal is whether somebody can answer a prompt. Without one a selector
+// answers its first option by itself, and those options retry with errors
+// skipped or reset the server's binary logs: a person's choice, made for them by
+// a script that then reads "completed successfully" and exit 0.
+var isTerminal = fmtc.StdinIsTerminal
+
 func handleDuplicateEntry(runImport func(bool, bool) (string, error)) error {
+	if !isTerminal() {
+		return errors.New("the dump inserts rows that already exist and there is no terminal to ask on: " +
+			"nothing was skipped; run again with --force to skip every statement that fails")
+	}
 	fmt.Println()
 	fmtc.WarningLn("Detected duplicate entry error during import.")
 	fmt.Println("The dump tries to insert rows that already exist in the target database.")

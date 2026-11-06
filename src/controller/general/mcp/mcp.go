@@ -194,6 +194,9 @@ func registerTools(s *server.MCPServer) {
 			mcp.Required(),
 			mcp.Description("Path to the database dump file (e.g. dump.sql, dump.sql.gz)"),
 		),
+		mcp.WithBoolean("force", mcp.Description("Skip every statement that fails, instead of stopping at the first")),
+		mcp.WithBoolean("strip_gtid", mcp.Description("Import without the dump's GTID statements")),
+		mcp.WithBoolean("reset_gtid", mcp.Description("Reset the server's GTID state before the import")),
 		mcp.WithDestructiveHintAnnotation(true),
 	), handleDbImport)
 
@@ -613,7 +616,13 @@ func handleDbImport(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if err != nil {
 		return mcp.NewToolResultError("Missing required parameter: file"), nil
 	}
-	r, runErr := runMadock(ctx, "db:import", file)
+	args := []string{"db:import"}
+	for param, flag := range map[string]string{"force": "--force", "strip_gtid": "--strip-gtid", "reset_gtid": "--reset-gtid"} {
+		if request.GetBool(param, false) {
+			args = append(args, flag)
+		}
+	}
+	r, runErr := runMadock(ctx, append(args, file)...)
 	return toolResult(r, runErr, "import database")
 }
 
