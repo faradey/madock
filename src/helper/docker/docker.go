@@ -276,6 +276,22 @@ func classifyStates(entries []ServiceState, declared map[string]bool) (dead []Se
 	return dead, orphans
 }
 
+// StartFailed is the exit status of `start` and `rebuild`: whether what they
+// report means the project is not up. A service that ended by itself with
+// status 0 has done its job, as a one-shot in an override does, and is only
+// reported.
+func StartFailed(dead []ServiceState, proxyDown bool) bool {
+	if proxyDown {
+		return true
+	}
+	for _, service := range dead {
+		if service.State != "exited" || service.ExitCode != 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // DeclaredServices returns the services this project's compose files define, or
 // nil when docker cannot be asked.
 //

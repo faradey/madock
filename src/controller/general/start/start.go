@@ -97,10 +97,13 @@ func ExecuteWith(args *arg_struct.ControllerGeneralStart) {
 				fmtc.WarningLn(line)
 			}
 			fmtc.ToDoLn("madock logs -s <service>")
-			return
 		}
 
-		if proxyDown {
+		if docker.StartFailed(dead, proxyDown) {
+			command.Fail()
+		}
+
+		if len(dead) > 0 || proxyDown {
 			return
 		}
 
