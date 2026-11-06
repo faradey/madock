@@ -80,6 +80,9 @@ func Run(appVersion string) {
 		}
 		restoreStdout()
 		def.Handler()
+		if command.Failed() {
+			os.Exit(1)
+		}
 	} else {
 		restoreStdout()
 		isnotdefine.Execute(cmdName)

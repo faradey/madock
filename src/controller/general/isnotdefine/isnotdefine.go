@@ -28,5 +28,8 @@ func Execute(originCommand string) {
 			}
 		}
 	}
-	fmtc.ErrorLn("The command is not defined. Run 'madock help' to invoke help")
+	// On stderr with a failing status: a script with a typo in a command, or one
+	// asking a madock too old to have it, has to be able to tell.
+	fmtc.ErrorErrLn("The command is not defined. Run 'madock help' to invoke help")
+	os.Exit(1)
 }

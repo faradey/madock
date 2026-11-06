@@ -31,7 +31,7 @@ func TestAFullDiskIsAFailureAndTheProjectSurvivesIt(t *testing.T) {
 	t.Cleanup(func() { _ = exec.Command("sudo", "-n", "umount", "-l", p.runDir).Run() })
 	sudo(t, "chown", strconv.Itoa(os.Getuid())+":"+strconv.Itoa(os.Getgid()), p.runDir)
 
-	p.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=php", "--hosts=e2ediskfull.test")
+	p.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=php", "--search-engine=none", "--hosts=e2ediskfull.test")
 	p.run(20*time.Minute, "start")
 	// The AWS SDK: tens of megabytes unpacked, no advisory for Composer to
 	// block it on — a package Composer refuses would fail for that reason

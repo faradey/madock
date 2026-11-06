@@ -42,7 +42,8 @@ func TestStatusListsAWorkerThatStopped(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "config.xml"), []byte(config), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	p.run(20*time.Minute, "start")
+	// Its status is not the point here: start fails when a service is seen dead.
+	_, _ = p.tryRun(20*time.Minute, "start")
 
 	// The command fails at once (exit 1) — not `false`, which the template
 	// reads as an empty program and leaves out; restart may bring it back for a moment, so the

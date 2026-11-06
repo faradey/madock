@@ -19,6 +19,11 @@ func ErrorLn(txt string) {
 	fmt.Println(color.Red + txt + color.Reset)
 }
 
+// ErrorErrLn is ErrorLn on stderr, for a failure that must leave stdout empty.
+func ErrorErrLn(txt string) {
+	fmt.Fprintln(os.Stderr, color.Red+txt+color.Reset)
+}
+
 func WarningLn(txt string) {
 	Warning(txt + "\n")
 }

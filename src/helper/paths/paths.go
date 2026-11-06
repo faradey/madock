@@ -227,9 +227,9 @@ func GetActiveProjects() []string {
 //
 // One `docker ps` for the whole registry rather than a status call per project.
 func ActiveProjects() ([]string, error) {
-	cmd := exec.Command("docker", "ps", "--format", "json")
-	// Output, not CombinedOutput: docker's warnings go to stderr, and a project
-	// whose name appeared in one would match below.
+	cmd := exec.Command("docker", "ps", "--format", `{{.Label "com.docker.compose.project.config_files"}}`)
+	// Output, not CombinedOutput: docker's warnings go to stderr, and a line of
+	// one must not be read as a project.
 	var stderr strings.Builder
 	cmd.Stderr = &stderr
 	result, err := cmd.Output()
@@ -237,16 +237,33 @@ func ActiveProjects() ([]string, error) {
 		return nil, fmt.Errorf("docker ps failed: %w\n%s", err, stderr.String())
 	}
 
-	var activeProjects []string
-	resultString := string(result)
-	projects := GetDirs(MakeDirsByPath(RuntimeProjects()))
-	for _, projectName := range projects {
-		if strings.Contains(resultString, strings.ToLower(projectName)+"-") {
-			activeProjects = append(activeProjects, projectName)
+	return projectsAmong(GetDirs(MakeDirsByPath(RuntimeProjects())), string(result), RuntimeProjects()), nil
+}
+
+// projectsAmong are the projects with a container, given the compose files of
+// each container, one line per container and comma separated. A project's compose
+// file lives in its own directory under runtimeProjects, which says whose it is
+// whatever its name is: `shop` is not running because `shop-2` is, and the compose
+// project's name depends on a prefix and a scope this package cannot read.
+func projectsAmong(projects []string, composeFiles string, runtimeProjects string) []string {
+	up := make(map[string]bool)
+	for _, line := range strings.Split(composeFiles, "\n") {
+		for _, file := range strings.Split(strings.TrimSpace(line), ",") {
+			dir := filepath.Dir(file)
+			if filepath.Dir(dir) == runtimeProjects {
+				up[filepath.Base(dir)] = true
+			}
 		}
 	}
 
-	return activeProjects, nil
+	var active []string
+	for _, projectName := range projects {
+		if up[projectName] {
+			active = append(active, projectName)
+		}
+	}
+
+	return active
 }
 
 func IsFileExist(path string) bool {

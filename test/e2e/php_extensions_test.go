@@ -32,6 +32,7 @@ func TestTheOptionalExtensionsAreActuallyInTheImage(t *testing.T) {
 	p.run(15*time.Minute, "setup", "-y",
 		"--platform=custom",
 		"--language=php",
+		"--search-engine=none",
 		"--hosts=e2ephpext.test",
 	)
 

@@ -268,6 +268,7 @@ func (p *project) destroy() {
 		return
 	}
 	p.captureDatabaseLogs()
+	p.captureDeadServiceLogs()
 
 	p.install.destroyProxy(p)
 	if out, err := p.tryRun(5*time.Minute, "project:remove", "--force", "--name="+p.name); err != nil {
@@ -325,6 +326,42 @@ func (p *project) captureDatabaseLogs() {
 		}
 		p.t.Logf("--- %s %s: last %d lines of the container log ---\n%s",
 			p.name, service, databaseLogTail, lastLines(out, databaseLogTail))
+	}
+}
+
+// captureDeadServiceLogs does for any service that is not running what
+// captureDatabaseLogs does for the databases. With `start` and `setup` exiting 1
+// on a dead service, that service is the first thing a failure has to explain,
+// and without its log it cannot: seven tests went red on an Elasticsearch that
+// exited 1 and left only its name behind.
+func (p *project) captureDeadServiceLogs() {
+	if !p.t.Failed() {
+		return
+	}
+
+	// docker, not `status`: that lists a stopped service only when it is a worker.
+	out, err := exec.Command("docker", "ps", "-a",
+		"--filter", "label=com.docker.compose.project=madock_"+p.name,
+		"--format", `{{.Label "com.docker.compose.service"}} {{.State}}`).CombinedOutput()
+	if err != nil {
+		p.t.Logf("could not list %s's containers: %v\n%s", p.name, err, out)
+		return
+	}
+
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		service, state, found := strings.Cut(line, " ")
+		// The databases have been printed already, whatever their state.
+		if !found || state == "running" || service == "db" || service == "db2" {
+			continue
+		}
+		logs, err := p.tryRun(2*time.Minute, "logs", "-s", service)
+		if err != nil {
+			p.t.Logf("--- %s %s: %s, and its log could not be read: %v ---\n%s",
+				p.name, service, state, err, lastLines(logs, 20))
+			continue
+		}
+		p.t.Logf("--- %s %s: %s, last %d lines of the container log ---\n%s",
+			p.name, service, state, databaseLogTail, lastLines(logs, databaseLogTail))
 	}
 }
 

@@ -119,7 +119,8 @@ func Execute() {
 
 		proxyDown := docker.ReportProxyDown(projectConf)
 
-		if dead := docker.NotRunning(projectName); len(dead) > 0 {
+		dead := docker.NotRunning(projectName)
+		if len(dead) > 0 {
 			fmtc.WarningIconLn(fmt.Sprintf("Rebuild completed in %s, but some services are not running:", elapsed))
 			for _, service := range dead {
 				line := "  " + service.Service + " — " + service.State
@@ -129,10 +130,13 @@ func Execute() {
 				fmtc.WarningLn(line)
 			}
 			fmtc.ToDoLn("madock logs -s <service>")
-			return
 		}
 
-		if proxyDown {
+		if docker.StartFailed(dead, proxyDown) {
+			command.Fail()
+		}
+
+		if len(dead) > 0 || proxyDown {
 			return
 		}
 

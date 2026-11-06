@@ -216,6 +216,21 @@ func Get(name string) (*Definition, bool) {
 	return &copy, true
 }
 
+var failed bool
+
+// Fail makes the process exit 1 once the command and its after-hooks are done.
+// For a result that is a failure and not a reason to stop: a dead service does
+// not excuse a hook from putting back what its before-hook changed, nor a caller
+// from going on.
+func Fail() {
+	failed = true
+}
+
+// Failed reports whether Fail was called.
+func Failed() bool {
+	return failed
+}
+
 // GetAll returns all unique command definitions
 func GetAll() []*Definition {
 	seen := make(map[*Definition]bool)

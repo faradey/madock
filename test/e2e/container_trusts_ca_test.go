@@ -16,7 +16,7 @@ import (
 // goes into the image, and PHP's own default lookup finds it.
 func TestCodeInTheContainerTrustsMadocksCA(t *testing.T) {
 	p := newProject(t, "e2etrustca")
-	p.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=php", "--hosts=e2etrustca.test")
+	p.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=php", "--search-engine=none", "--hosts=e2etrustca.test")
 	p.run(20*time.Minute, "start")
 
 	out, err := p.tryRun(2*time.Minute, "cli", "php", "-r",

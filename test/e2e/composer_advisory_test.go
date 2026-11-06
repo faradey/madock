@@ -18,7 +18,7 @@ import (
 // --allow-advisory would fail again and this is where it would show.
 func TestAnAcceptedAdvisoryLetsComposerInstallPastIt(t *testing.T) {
 	p := newProject(t, "e2eadvisory")
-	p.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=php", "--hosts=e2eadvisory.test")
+	p.run(setupTimeout, "setup", "-y", "--platform=custom", "--language=php", "--search-engine=none", "--hosts=e2eadvisory.test")
 	p.run(20*time.Minute, "start")
 	if err := os.WriteFile(filepath.Join(p.runDir, "composer.json"), []byte(`{"require": {"league/flysystem": "2.5.0"}}`), 0o644); err != nil {
 		t.Fatal(err)
