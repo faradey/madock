@@ -31,6 +31,11 @@ func TestADuplicateRowWithoutATerminalIsNotRetried(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "--force") {
 		t.Errorf("err = %v, want a refusal naming --force", err)
 	}
+	// A script reading this decides whether its database is still whole. The
+	// import stops at the failing statement, so what came before it stays applied.
+	if err == nil || !strings.Contains(err.Error(), "already applied") || !strings.Contains(err.Error(), "DROP TABLE") {
+		t.Errorf("err = %v, want it to say what the dump has already done", err)
+	}
 }
 
 func TestAGtidConflictWithoutATerminalResetsNothing(t *testing.T) {

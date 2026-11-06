@@ -380,7 +380,8 @@ var isTerminal = fmtc.StdinIsTerminal
 func handleDuplicateEntry(runImport func(bool, bool) (string, error)) error {
 	if !isTerminal() {
 		return errors.New("the dump inserts rows that already exist and there is no terminal to ask on: " +
-			"nothing was skipped; run again with --force to skip every statement that fails")
+			"the import stopped at the first of them, the statements before it are already applied, a DROP TABLE in the dump included, " +
+			"and nothing was skipped; run again with --force to skip every statement that fails")
 	}
 	fmt.Println()
 	fmtc.WarningLn("Detected duplicate entry error during import.")
