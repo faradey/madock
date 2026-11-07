@@ -8,6 +8,7 @@
     working_dir: {{{.workdir}}}
     volumes:
       - ./src:/var/www/html:cached
+      - ./src/.madock:/var/www/html/.madock:ro
     environment:
       APP_ENV: "dev"
     command:

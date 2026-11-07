@@ -12,6 +12,7 @@
     command: ["bash", "-c", "exec php bin/console messenger:consume async low_priority --time-limit={{{.shopware.messenger.time_limit}}} --memory-limit={{{.shopware.messenger.memory_limit}}} -vv"]
     volumes:
       - ./src:/var/www/html:cached
+      - ./src/.madock:/var/www/html/.madock:ro
       - ./composer:/var/www/.composer:cached
       {{{- if .ssh.mount}}}
       - ./ssh:/var/www/.ssh:ro

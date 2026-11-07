@@ -7,6 +7,7 @@ services:
       dockerfile: php.Dockerfile
     volumes:
       - ./src:/var/www/html:cached
+      - ./src/.madock:/var/www/html/.madock:ro
       - ./composer:/var/www/.composer:cached
       - ./ssh:/var/www/.ssh:ro
       - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
@@ -24,6 +25,7 @@ services:
       dockerfile: nginx.Dockerfile
     volumes:
       - ./src:/var/www/html:delegated
+      - ./src/.madock:/var/www/html/.madock:ro
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
       # The project's own server-scope snippets, rendered by makeNginxConf from
       # .madock/docker/nginx/vhost.d/. Mounted whether or not there are any: the

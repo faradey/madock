@@ -46,6 +46,7 @@ the platform-specific snippets already gave three platforms for free.
     command: ["sh", "-c", "{{{workerCommand $command}}}"]
     volumes:
       - ./src:/var/www/html:cached
+      - ./src/.madock:/var/www/html/.madock:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{- range $host := $.nginx.hosts}}}

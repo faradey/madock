@@ -547,6 +547,16 @@ func ensureBindMountSources(composeFile string) {
 // project's own image is available, and a failure is reported rather than
 // fatal. Removal has to continue either way — stopping at this point would
 // leave the user with both the files and the containers.
+// ChownWorkdirSkippingMadock returns a shell command that chowns dir to uid:gid
+// but leaves a read-only `.madock` mounted inside it alone. Every container that
+// mounts the project code mounts `.madock` read-only over it — so a process in
+// the container cannot plant a compose override the host's next start would run —
+// and a plain `chown -R` of the workdir then stops on "Read-only file system".
+// The control plane is host configuration and is not the container's to own.
+func ChownWorkdirSkippingMadock(uid, gid, dir string) string {
+	return "find " + dir + " -name .madock -prune -o -exec chown " + uid + ":" + gid + " {} +"
+}
+
 func ReclaimProjectFiles(projectName string) {
 	usr, err := user.Current()
 	if err != nil {
@@ -562,7 +572,7 @@ func ReclaimProjectFiles(projectName string) {
 	service := configs2.ResolveMainService(projectConf, "php")
 	container := GetContainerName(projectConf, projectName, service)
 
-	own := "chown -R " + usr.Uid + ":" + usr.Gid + " " + workdir
+	own := ChownWorkdirSkippingMadock(usr.Uid, usr.Gid, workdir)
 	runDir := paths.GetRunDirPath()
 	viaContainer := func() ([]byte, error) {
 		return exec.Command("docker", "exec", "-u", "root", container, "sh", "-c", own).CombinedOutput()
@@ -770,7 +780,7 @@ func upProjectWithBuild(projectName string, withChown bool, refresh bool, servic
 		// The service running the application code, not "php" — a Node, Python
 		// or Go project has no php container, and reaching for one turned
 		// --with-chown into a fatal error on those platforms.
-		chownCmd := "chown -R " + usr.Uid + ":" + usr.Gid + " " + projectConf["workdir"]
+		chownCmd := ChownWorkdirSkippingMadock(usr.Uid, usr.Gid, projectConf["workdir"])
 		if mainService == "php" {
 			// Only the php image mounts the composer home.
 			chownCmd += " && chown -R " + usr.Uid + ":" + usr.Gid + " /var/www/.composer"
