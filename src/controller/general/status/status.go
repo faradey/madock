@@ -22,7 +22,7 @@ func init() {
 		Aliases:    []string{"status"},
 		JSONOutput: true,
 		Handler:    Execute,
-		Help:       "Show container status. Supports --json (-j) output",
+		Help:       "Show container status. --all lists stopped services too. Supports --json (-j) output",
 		Category:   "general",
 		ArgsType:   new(arg_struct.ControllerGeneralStatus),
 	})
@@ -79,12 +79,15 @@ func Execute() {
 	pp := paths.NewProjectPaths(projectName)
 
 	// Get services status
-	servicesData := withStoppedWorkers(getContainerStatus(pp.DockerCompose(), true))
+	servicesData := getContainerStatus(pp.DockerCompose(), true)
+	if !args.All {
+		servicesData = withStoppedWorkers(servicesData)
+	}
 	knownServices, servicesKnown := definedServices(pp.DockerCompose(), pp.DockerComposeOverride())
 	servicesData = markOrphans(servicesData, knownServices, servicesKnown)
 
 	// Get proxy status
-	proxyData := getContainerStatus(paths.ProxyDockerCompose(), false)
+	proxyData := getContainerStatus(paths.ProxyDockerCompose(), args.All)
 	// The proxy has the same problem and a documented instance of it: disabling
 	// mailpit leaves its container behind, and it went on being listed as one of
 	// the proxy's services.
