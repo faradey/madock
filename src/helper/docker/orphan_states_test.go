@@ -1,6 +1,9 @@
 package docker
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 // What is guarded here is a report, not a container: `docker compose ps -a`
 // lists by project label, and a label outlives the service it was put on. The
@@ -96,13 +99,79 @@ func TestUnknownDeclaredSetCallsNothingALeftover(t *testing.T) {
 	}
 }
 
-func TestRestartingCountsAsAlive(t *testing.T) {
+// By the time this is asked settledStates has given it its chance.
+func TestStillRestartingCountsAsDead(t *testing.T) {
 	dead, orphans := classifyStates(
 		states([2]string{"php", "restarting"}),
 		map[string]bool{"php": true},
 	)
-	if len(dead) != 0 || len(orphans) != 0 {
-		t.Errorf("a restarting container is not a failure: dead=%v orphans=%v", names(dead), names(orphans))
+	if len(dead) != 1 || len(orphans) != 0 {
+		t.Errorf("a service still restarting is not up: dead=%v orphans=%v", names(dead), names(orphans))
+	}
+}
+
+func withStates(t *testing.T, grace time.Duration, answers ...[]ServiceState) *int {
+	t.Helper()
+	prevStates, prevGrace, prevPoll := serviceStatesNow, restartGrace, restartPoll
+	t.Cleanup(func() { serviceStatesNow, restartGrace, restartPoll = prevStates, prevGrace, prevPoll })
+
+	asked := 0
+	serviceStatesNow = func(string) ([]ServiceState, error) {
+		answer := answers[min(asked, len(answers)-1)]
+		asked++
+		return answer, nil
+	}
+	restartGrace, restartPoll = grace, time.Millisecond
+	return &asked
+}
+
+var (
+	allUp     = []ServiceState{{Service: "php", State: "running"}}
+	looping   = []ServiceState{{Service: "php", State: "restarting", ExitCode: 1}}
+	longGrace = time.Minute
+)
+
+// Most projects: nobody restarting, so nobody waits.
+func TestNothingRestartingAsksOnceAndDoesNotWait(t *testing.T) {
+	asked := withStates(t, longGrace, allUp)
+	if _, err := settledStates("p"); err != nil {
+		t.Fatal(err)
+	}
+	if *asked != 1 {
+		t.Errorf("asked %d times", *asked)
+	}
+}
+
+func TestAServiceThatComesUpIsNotReportedAsRestarting(t *testing.T) {
+	withStates(t, longGrace, looping, looping, allUp)
+	entries, err := settledStates("p")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if anyRestarting(entries) {
+		t.Errorf("reported %+v", entries)
+	}
+}
+
+func TestAServiceThatKeepsRestartingIsReportedSo(t *testing.T) {
+	withStates(t, 20*time.Millisecond, looping)
+	entries, err := settledStates("p")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !anyRestarting(entries) {
+		t.Errorf("reported %+v", entries)
+	}
+}
+
+// The moment such a process lives is not it coming up.
+func TestOneRunningSampleInALoopIsNotComingUp(t *testing.T) {
+	asked := withStates(t, longGrace, looping, allUp, looping, allUp, allUp)
+	if _, err := settledStates("p"); err != nil {
+		t.Fatal(err)
+	}
+	if *asked != 5 {
+		t.Errorf("asked %d times: one running sample ended the wait", *asked)
 	}
 }
 

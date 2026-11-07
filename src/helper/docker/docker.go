@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/faradey/madock/v4/src/command"
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
@@ -252,13 +253,67 @@ func NotRunning(projectName string) []ServiceState {
 // established, everything is reported as before — a check that cannot tell must
 // not invent a new category, and the old behaviour is the safe one.
 func NotRunningAndOrphans(projectName string) (dead []ServiceState, orphans []ServiceState) {
-	entries, err := ServiceStates(projectName)
+	entries, err := settledStates(projectName)
 	if err != nil {
 		// Nothing to report rather than a false alarm: a docker that cannot be
 		// asked is not evidence that a service died.
 		return nil, nil
 	}
 	return classifyStates(entries, DeclaredServices(projectName))
+}
+
+// serviceStatesNow and restartGrace are replaceable in tests.
+var (
+	serviceStatesNow = ServiceStates
+	restartGrace     = 30 * time.Second
+	restartPoll      = time.Second
+)
+
+// settledStates is ServiceStates, given time when a service is restarting.
+//
+// With a restart policy a service that keeps dying is never "exited": start said
+// "Containers started" and exited 0 over an nginx in `Restarting (1)`, and the page
+// answered 502. But restarting right after `up` can also be a service waiting for a
+// database, so it gets a chance. Measured on a VM with a process that exits at once:
+// docker's restarts came at about 7, 13 and 26 s, each pause double the last, so 30 s
+// lets through whatever is ready by the third, and only a project that has a service
+// restarting waits at all. restart_policy=no, the default, never does.
+//
+// Twice in a row, because such a process is also seen `running` for the moment it
+// lives: 1 sample in 60. What this does not catch is a process that lives for some
+// seconds between deaths: `running` in nearly every sample, so nothing starts the wait.
+func settledStates(projectName string) ([]ServiceState, error) {
+	entries, err := serviceStatesNow(projectName)
+	if err != nil || !anyRestarting(entries) {
+		return entries, err
+	}
+
+	fmtc.WarningErrLn("A service is restarting, giving it up to " + restartGrace.String() + " to come up")
+	calm := 0
+	for deadline := time.Now().Add(restartGrace); time.Now().Before(deadline); {
+		time.Sleep(restartPoll)
+		entries, err = serviceStatesNow(projectName)
+		if err != nil {
+			return nil, err
+		}
+		if anyRestarting(entries) {
+			calm = 0
+			continue
+		}
+		if calm++; calm == 2 {
+			break
+		}
+	}
+	return entries, nil
+}
+
+func anyRestarting(entries []ServiceState) bool {
+	for _, entry := range entries {
+		if entry.State == "restarting" {
+			return true
+		}
+	}
+	return false
 }
 
 // classifyStates is the decision on its own: which stopped containers belong to
@@ -268,7 +323,7 @@ func NotRunningAndOrphans(projectName string) (dead []ServiceState, orphans []Se
 // an orphan.
 func classifyStates(entries []ServiceState, declared map[string]bool) (dead []ServiceState, orphans []ServiceState) {
 	for _, entry := range entries {
-		if entry.State == "running" || entry.State == "restarting" {
+		if entry.State == "running" {
 			continue
 		}
 		if declared != nil && !declared[entry.Service] {
