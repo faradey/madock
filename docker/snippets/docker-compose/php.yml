@@ -6,6 +6,7 @@
       dockerfile: php.Dockerfile
     volumes:
       - ./src:/var/www/html:cached
+      - ./src/.madock:/var/www/html/.madock:ro
       - ./composer:/var/www/.composer:cached
       {{{- if .ssh.mount}}}
       - ./ssh:/var/www/.ssh:ro

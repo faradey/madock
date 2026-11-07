@@ -10,6 +10,7 @@ services:
       - "<PORT>:443"
     volumes:
       - ./src:/var/www/html:delegated
+      - ./src/.madock:/var/www/html/.madock:ro
       - ./ctx/nginx.conf:/etc/nginx/conf.d/default.conf:delegated
       # The project's own server-scope snippets, rendered by makeNginxConf from
       # .madock/docker/nginx/vhost.d/. Mounted whether or not there are any: the
@@ -78,6 +79,7 @@ services:
       CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./src:/var/www/html:cached
+      - ./src/.madock:/var/www/html/.madock:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "golden.test:host-gateway"
@@ -90,6 +92,7 @@ services:
     tty: true
     volumes:
       - ./src:/var/www/html:cached
+      - ./src/.madock:/var/www/html/.madock:ro
       - ./ssh:/var/www/.ssh:ro
       - ./ssh/known_hosts:/var/www/.ssh/known_hosts:cached
     extra_hosts:

@@ -6,6 +6,7 @@
       dockerfile: php.DockerfileWithoutXdebug
     volumes:
       - ./src:/var/www/html:delegated
+      - ./src/.madock:/var/www/html/.madock:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
