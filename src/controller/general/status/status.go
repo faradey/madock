@@ -197,11 +197,12 @@ func printServiceRow(val ServiceStatus, indent string) {
 // the worker-<name> services: a worker is meant to be up whenever the project
 // is, so one that is not is a failure to report. Other stopped containers stay
 // out as before — a stopped project would otherwise list every service as
-// exited, and one-shot helpers end by design.
+// exited, and one-shot helpers end by design. A service that is restarting is not
+// stopped: left out, a crash loop was a service missing from the list.
 func withStoppedWorkers(all []ServiceStatus) []ServiceStatus {
 	var out []ServiceStatus
 	for _, s := range all {
-		if s.Running || strings.HasPrefix(s.Service, "worker-") {
+		if s.Running || s.State == "restarting" || strings.HasPrefix(s.Service, "worker-") {
 			out = append(out, s)
 		}
 	}

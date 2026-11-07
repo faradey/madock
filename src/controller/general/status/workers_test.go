@@ -17,3 +17,11 @@ func TestOnlyStoppedWorkersJoinTheRunningServices(t *testing.T) {
 		t.Errorf("kept %+v", got)
 	}
 }
+
+func TestARestartingServiceIsListed(t *testing.T) {
+	code := 1
+	got := withStoppedWorkers([]ServiceStatus{{Service: "nginx", State: "restarting", ExitCode: &code}})
+	if len(got) != 1 {
+		t.Errorf("a crash loop is missing from the list: %+v", got)
+	}
+}
