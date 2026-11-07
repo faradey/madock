@@ -215,6 +215,7 @@ type ControllerGeneralProjectClone struct {
 
 type ControllerGeneralStatus struct {
 	attr.Arguments
+	All bool `arg:"--all" help:"List stopped services too, with how they ended, and the proxy's"`
 }
 
 type ControllerGeneralVersion struct {

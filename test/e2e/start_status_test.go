@@ -5,6 +5,7 @@ package e2e
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -50,4 +51,15 @@ func TestStartExitStatusFollowsWhatItReports(t *testing.T) {
 		t.Fatalf("start exited 0 with a service dead:\n%s", out)
 	}
 	requireContains(t, out, "doomed", "the dead service is named")
+
+	// `start` names it once. Afterwards plain `status` lists a stopped service only
+	// when it is a worker, so --all is what answers without reaching for docker.
+	out = p.run(2*time.Minute, "status")
+	if strings.Contains(out, "doomed") {
+		t.Errorf("plain status lists a stopped service that is not a worker:\n%s", out)
+	}
+	out = p.run(2*time.Minute, "status", "--all")
+	requireContains(t, out, "doomed exited (exit 3)", "status --all names the dead service and how it ended")
+	out = p.run(2*time.Minute, "status", "--all", "--json")
+	requireContains(t, out, `"exit_code": 3`, "and so does its JSON")
 }

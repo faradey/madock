@@ -35,13 +35,14 @@ All JSON responses follow a consistent structure:
 
 ### status
 
-Shows container states, proxy status, and tools status.
+Shows container states, proxy status, and tools status. A stopped service is listed only when it is a worker; `--all` lists every one, with how it ended, and the proxy's too.
 
 ```bash
 madock status --json
+madock status --all --json
 ```
 
-**Response:**
+**Response** of `--all`:
 ```json
 {
   "success": true,
@@ -49,7 +50,7 @@ madock status --json
     "services": [
       {"name": "php-container", "service": "php", "state": "running", "running": true},
       {"name": "nginx-container", "service": "nginx", "state": "running", "running": true},
-      {"name": "db-container", "service": "db", "state": "exited", "running": false}
+      {"name": "db-container", "service": "db", "state": "exited", "running": false, "exit_code": 1}
     ],
     "proxy": [
       {"name": "proxy-container", "service": "proxy", "state": "running", "running": true}
@@ -338,8 +339,10 @@ A non-zero exit means the question could not be answered. `status` ends non-zero
 Read the state from the payload rather than from the exit code:
 
 ```bash
-madock status --json | jq -e '.data.services | length > 0 and all(.[]; .running)'
+madock status --all --json | jq -e '.data.services | length > 0 and all(.[]; .running or .exit_code == 0)'
 ```
+
+`--all`, or a dead database is simply not in the list and this passes. A service that ended with status 0 is a one-shot, the same line `start` draws.
 
 `cron_jobs` follows the same rule in the other direction: it is `-1`, with `cron_jobs_known` false, when the crontab could not be read. Zero jobs and unknown jobs are different answers, and only one of them is a problem you can act on.
 
