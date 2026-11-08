@@ -195,7 +195,7 @@ func (h *BaseHandler) executeChown(projectName string, projectConf map[string]st
 		if i > 0 {
 			chownCmd += " && "
 		}
-		chownCmd += "if [ -e " + dir + " ]; then chown -R " + usr.Uid + ":" + usr.Gid + " " + dir + "; fi"
+		chownCmd += "if [ -e " + dir + " ]; then " + docker.ChownWorkdirSkippingMadock(usr.Uid, usr.Gid, dir) + "; fi"
 	}
 
 	containerName := docker.GetContainerName(projectConf, projectName, ResolveMainService(projectConf, h.GetMainContainer()))

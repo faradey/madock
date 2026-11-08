@@ -40,7 +40,10 @@ func TestARestartingServiceIsSeenAndARecoveringOneIsNot(t *testing.T) {
 `)
 	out := p.run(20*time.Minute, "start")
 	requireContains(t, out, "Containers started", "a service that came up is not a failure")
-	requireContains(t, p.run(2*time.Minute, "status"), "recovering running", "and it is up")
+	// recovering crash-loops for 12 s before it settles. start waits for a
+	// restarting service, but whether its one check lands before or after the
+	// first crash is a race the test must not turn on: poll until it is up.
+	waitForStatusContains(t, p, "recovering running", 40*time.Second)
 
 	write(`services:
   doomed:
@@ -48,12 +51,38 @@ func TestARestartingServiceIsSeenAndARecoveringOneIsNot(t *testing.T) {
     restart: unless-stopped
     entrypoint: ["/bin/sh", "-c", "exit 3"]
 `)
+	// Bring doomed up, then wait until it is actually restarting. The guarantee
+	// under test is that start refuses while a service IS restarting, not a race
+	// on whether doomed has crashed by the time the first start happens to look.
+	p.tryRun(5*time.Minute, "start")
+	waitForStatusContains(t, p, "doomed restarting", 60*time.Second)
+
+	// doomed is restarting and the config has not changed, so this start does not
+	// recreate it: its check sees the crash loop and it has to exit 1.
 	out, err := p.tryRun(5*time.Minute, "start")
 	if err == nil {
-		t.Fatalf("start exited 0 with a service in a crash loop:\n%s", out)
+		t.Fatalf("start exited 0 with a service already restarting:\n%s", out)
 	}
 	requireContains(t, out, "doomed", "the service is named")
-	requireContains(t, p.run(2*time.Minute, "status"), "doomed restarting", "plain status lists it")
+}
+
+// waitForStatusContains polls `status` until it holds want, failing after d. The
+// restarting states these tests turn on are reached asynchronously by the Docker
+// daemon, so a single status read taken right after start is a race.
+func waitForStatusContains(t *testing.T, p *project, want string, d time.Duration) string {
+	t.Helper()
+	deadline := time.Now().Add(d)
+	for {
+		out, _ := p.tryRun(2*time.Minute, "status")
+		if strings.Contains(out, want) {
+			return out
+		}
+		if !time.Now().Before(deadline) {
+			t.Fatalf("%q did not appear in status within %s:\n%s", want, d, out)
+			return out
+		}
+		time.Sleep(2 * time.Second)
+	}
 }
 
 // TestStartExitStatusFollowsWhatItReports starts a project with a service that
