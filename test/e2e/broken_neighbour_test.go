@@ -38,7 +38,16 @@ func TestABrokenProjectConfigDoesNotBlockItsNeighbours(t *testing.T) {
 
 	// Corrupt the broken project's installation config.xml — the first file the
 	// proxy builder reads for it, and the one GetProjectConfig would Fatalln on.
+	// Its exact contents are put back before this test returns so the harness's
+	// own teardown, which runs project:remove on it, is not asked to remove a
+	// project whose config does not parse: project:remove reads that config
+	// directly and tolerating it there is a separate change.
 	brokenConf := filepath.Join(install.dir, "projects", "e2ebroken", "config.xml")
+	original, err := os.ReadFile(brokenConf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.WriteFile(brokenConf, original, 0o644)
 	if err := os.WriteFile(brokenConf, []byte("<config><scopes><default>not closed"), 0o644); err != nil {
 		t.Fatal(err)
 	}

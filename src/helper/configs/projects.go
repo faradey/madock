@@ -639,6 +639,13 @@ const (
 	// with a recursive delete of the working directory, and that directory is a
 	// live release. --registry-only is the way out.
 	ProjectNestedPath = "nested-path"
+	// ProjectBrokenConfig — the entry's config.xml does not parse. Reported
+	// rather than fatal: ListProjectsIn reads every project, and the shared
+	// proxy.conf builder reads it on every start, so a Fatalln here turned one
+	// project's broken config into a failed start, clone or stop for every other
+	// project. Nothing else about such an entry can be trusted, so it is routed
+	// nowhere and resolves to no path.
+	ProjectBrokenConfig = "broken-config"
 )
 
 // ProjectEntry is one registry entry and what is true about it.
@@ -705,7 +712,15 @@ func ListProjectsIn(execDir string) []ProjectEntry {
 			continue
 		}
 
-		raw := ParseXmlFile(configPath)
+		raw, parseErr := ParseXmlFileSafe(configPath)
+		if parseErr != nil {
+			// A project whose config.xml does not parse is reported, not fatal:
+			// this function is read by the shared proxy.conf builder on every
+			// start, and a Fatalln here took every other project down with one
+			// broken file.
+			out = append(out, ProjectEntry{Name: entry.Name(), State: ProjectBrokenConfig})
+			continue
+		}
 		path := strings.TrimSpace(getConfigByScope(raw, "default")["path"])
 
 		state := ProjectOk
