@@ -269,7 +269,8 @@ var (
 	restartPoll      = time.Second
 )
 
-// settledStates is ServiceStates, given time when a service is restarting.
+// settledStates is ServiceStates, given time when a service is restarting or has
+// not yet proved it can stay up.
 //
 // With a restart policy a service that keeps dying is never "exited": start said
 // "Containers started" and exited 0 over an nginx in `Restarting (1)`, and the page
@@ -279,13 +280,33 @@ var (
 // lets through whatever is ready by the third, and only a project that has a service
 // restarting waits at all. restart_policy=no, the default, never does.
 //
-// Twice in a row, because such a process is also seen `running` for the moment it
-// lives: 1 sample in 60. What this does not catch is a process that lives for some
-// seconds between deaths: `running` in nearly every sample, so nothing starts the wait.
+// The first sample alone cannot call a stack up. `compose up` returns when a
+// container is created, not when its command has survived: a service with a bad
+// config — an nginx that rejects a vhost, restart_policy keeping it — is seen
+// `running` for the moment it lives before its first crash, and a single sample
+// taken in that window reported success, so start exited 0 over a service already
+// crash-looping (seen 3 starts in 9 on such an nginx). So when nothing is yet
+// restarting a confirming sample is taken one restartPoll later: a service about
+// to die is caught, and one genuinely up stays up across both. This is the entry
+// side of the same "twice in a row" the grace loop uses on the way out. A start
+// where nothing was restarting pays that one poll (~1.3 s, measured: one ps call
+// ~0.3 s plus restartPoll). What it still does not catch is a process that lives
+// several seconds between deaths — `running` on both samples — but that no longer
+// describes the common case, a service that fails as soon as it is up.
 func settledStates(projectName string) ([]ServiceState, error) {
 	entries, err := serviceStatesNow(projectName)
-	if err != nil || !anyRestarting(entries) {
-		return entries, err
+	if err != nil {
+		return nil, err
+	}
+	if !anyRestarting(entries) {
+		time.Sleep(restartPoll)
+		entries, err = serviceStatesNow(projectName)
+		if err != nil {
+			return nil, err
+		}
+		if !anyRestarting(entries) {
+			return entries, nil
+		}
 	}
 
 	fmtc.WarningErrLn("A service is restarting, giving it up to " + restartGrace.String() + " to come up")
