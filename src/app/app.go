@@ -69,7 +69,14 @@ func Run(appVersion string) {
 		// A project that says it needs a newer madock is refused before the
 		// handler reads anything it might misread. Global commands still run:
 		// they are how a person finds out what is installed, and the way out.
-		if !command.IsGlobal(def) {
+		//
+		// A project whose config.xml does not parse cannot declare a requirement
+		// this could read, and reading it here would Fatalln before any handler —
+		// so `stop`, the one command you reach for when a config is broken, could
+		// not run. The requirement check is skipped for such a project and the
+		// handler decides: `stop` takes the containers down, the rest report the
+		// parse error themselves.
+		if !command.IsGlobal(def) && configs.ProjectConfigParses(configs.GetProjectName()) == nil {
 			if unmet := configs.UnmetVersionRequirements(configs.GetCurrentProjectConfig()); len(unmet) > 0 {
 				for _, line := range unmet {
 					fmtc.ErrorLn(line)

@@ -133,6 +133,36 @@ func GetProjectConfig(projectName string) map[string]string {
 	return buildProjectConfig(projectName)
 }
 
+// ProjectConfigParses reports the first unparsable file among those
+// GetProjectConfig reads for projectName — the installation's runtime config for
+// the project and, through its `path`, the project's own `.madock/config.xml` —
+// without the Fatalln GetProjectConfig takes on one. The shared proxy.conf
+// builder reads every project's config; one project's broken file used to abort
+// the render, and with it the start, clone or stop of every other project. The
+// builder calls this first and skips the project it names.
+func ProjectConfigParses(projectName string) error {
+	runtimePath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+	if !paths.IsFileExist(runtimePath) {
+		return nil
+	}
+	runtimeConfig, err := ParseXmlFileSafe(runtimePath)
+	if err != nil {
+		return err
+	}
+	ownPath := runtimeConfig["path"]
+	if ownPath == "" {
+		return nil
+	}
+	ownConfig := ownPath + "/.madock/config.xml"
+	if !paths.IsFileExist(ownConfig) {
+		return nil
+	}
+	if _, err := ParseXmlFileSafe(ownConfig); err != nil {
+		return err
+	}
+	return nil
+}
+
 func buildProjectConfig(projectName string) map[string]string {
 	config := GetProjectConfigOnly(projectName)
 	explicit := explicitKeys(config, GetProjectsGeneralConfig())
@@ -330,6 +360,14 @@ func GetProjectName() string {
 		configPath := paths.GetExecDirPath() + "/projects/" + nameOfProject + "/config.xml"
 		if !paths.IsFileExist(configPath) {
 			// No clash — this name is free for the current directory.
+			break
+		}
+		if ProjectConfigParses(nameOfProject) != nil {
+			// The entry exists but its config.xml does not parse, so its `path`
+			// cannot be read to tell whether it is this directory's. Reading it
+			// here would Fatalln on the way to every command — `stop` included —
+			// of a project whose own config is broken. The name is taken as this
+			// directory's: a broken config is still this project's entry.
 			break
 		}
 		projectConf := GetProjectConfigOnly(nameOfProject)
@@ -609,6 +647,13 @@ const (
 	// with a recursive delete of the working directory, and that directory is a
 	// live release. --registry-only is the way out.
 	ProjectNestedPath = "nested-path"
+	// ProjectBrokenConfig — the entry's config.xml does not parse. Reported
+	// rather than fatal: ListProjectsIn reads every project, and the shared
+	// proxy.conf builder reads it on every start, so a Fatalln here turned one
+	// project's broken config into a failed start, clone or stop for every other
+	// project. Nothing else about such an entry can be trusted, so it is routed
+	// nowhere and resolves to no path.
+	ProjectBrokenConfig = "broken-config"
 )
 
 // ProjectEntry is one registry entry and what is true about it.
@@ -675,7 +720,15 @@ func ListProjectsIn(execDir string) []ProjectEntry {
 			continue
 		}
 
-		raw := ParseXmlFile(configPath)
+		raw, parseErr := ParseXmlFileSafe(configPath)
+		if parseErr != nil {
+			// A project whose config.xml does not parse is reported, not fatal:
+			// this function is read by the shared proxy.conf builder on every
+			// start, and a Fatalln here took every other project down with one
+			// broken file.
+			out = append(out, ProjectEntry{Name: entry.Name(), State: ProjectBrokenConfig})
+			continue
+		}
 		path := strings.TrimSpace(getConfigByScope(raw, "default")["path"])
 
 		state := ProjectOk

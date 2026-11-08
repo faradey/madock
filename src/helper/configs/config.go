@@ -6,9 +6,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/logger"
@@ -202,9 +204,14 @@ func IsHasConfig(projectName string) bool {
 		// proxy.conf builder reads a foreign project and can't find its source).
 		// We are in the project's own source dir here (CWD has its .madock), so
 		// GetRunDirPath() is authoritative — backfill the missing key once.
-		raw := ParseXmlFile(runtimeConfigPath)
-		if getConfigByScope(raw, "default")["path"] == "" {
-			SetParam(projectName, "path", paths.GetRunDirPath(), "default", MadockLevelConfigCode)
+		// Non-fatal: a project whose runtime config does not parse still has to be
+		// reachable by `stop` and `project:remove`. The backfill is skipped — a
+		// file that does not parse has no `path` key to read — and the broken
+		// config is reported where it is read for real.
+		if raw, err := ParseXmlFileSafe(runtimeConfigPath); err == nil {
+			if getConfigByScope(raw, "default")["path"] == "" {
+				SetParam(projectName, "path", paths.GetRunDirPath(), "default", MadockLevelConfigCode)
+			}
 		}
 	}
 	if paths.IsFileExist(runtimeConfigPath) || inProjectConfigExists {
@@ -325,6 +332,11 @@ func GetHosts(data map[string]string) []map[string]string {
 			continue
 		}
 
+		if !IsValidHostName(data[key]) {
+			warnInvalidHost(data[key])
+			continue
+		}
+
 		items := strings.Split(key, "/")
 		hostKey := items[len(items)-2]
 
@@ -337,6 +349,36 @@ func GetHosts(data map[string]string) []map[string]string {
 	}
 
 	return hosts
+}
+
+// validHostName matches a host madock may put in an nginx server_name. The point
+// is not RFC-completeness but that nothing it accepts can break `nginx -t`: no
+// whitespace, no `;{}#`, no quotes, no control bytes — only the characters a
+// domain, a leading-dot domain, or a `*.` wildcard is written with. A host from
+// a project's config.xml reached `server_name` raw, so one bad value in one
+// project produced a proxy.conf the shared proxy refused, and every project lost
+// routing.
+var validHostName = regexp.MustCompile(`^\*?\.?[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$`)
+
+// IsValidHostName reports whether name is safe to write into an nginx
+// server_name directive.
+func IsValidHostName(name string) bool {
+	if name == "" || len(name) > 253 {
+		return false
+	}
+	return validHostName.MatchString(name)
+}
+
+// warnedInvalidHost dedupes the warning so the proxy.conf builder, which reads
+// every project's hosts on every start, names a bad host once rather than on
+// each pass.
+var warnedInvalidHost sync.Map
+
+func warnInvalidHost(name string) {
+	if _, loaded := warnedInvalidHost.LoadOrStore(name, true); loaded {
+		return
+	}
+	fmtc.WarningIconLn("Ignoring host \"" + name + "\" in a project's config.xml: it is not a valid hostname and would break the shared proxy's configuration.")
 }
 
 func GetCommands(data map[string]string) map[string]map[string]string {

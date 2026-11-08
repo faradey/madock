@@ -178,6 +178,8 @@ func Execute() {
 			fmtc.ErrorLn(fmt.Sprintf("%-28s %sregistered inside project '%s': %s", row.Name, state, row.Owner, row.Path))
 		case configs.ProjectNoPath:
 			fmtc.WarningLn(fmt.Sprintf("%-28s %sno path recorded", row.Name, state))
+		case configs.ProjectBrokenConfig:
+			fmtc.ErrorLn(fmt.Sprintf("%-28s %sconfig.xml does not parse", row.Name, state))
 		default:
 			fmt.Printf("%-28s %s%s\n", row.Name, state, row.Path)
 		}
