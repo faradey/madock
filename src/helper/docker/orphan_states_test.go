@@ -131,14 +131,35 @@ var (
 	longGrace = time.Minute
 )
 
-// Most projects: nobody restarting, so nobody waits.
-func TestNothingRestartingAsksOnceAndDoesNotWait(t *testing.T) {
-	asked := withStates(t, longGrace, allUp)
-	if _, err := settledStates("p"); err != nil {
+// Most projects: nobody restarting, so one confirming sample and no wait. The
+// confirm is there because `compose up` returns before a bad config has had time
+// to fail; a stack that is up stays up across both samples.
+func TestNothingRestartingConfirmsOnceAndDoesNotWait(t *testing.T) {
+	asked := withStates(t, longGrace, allUp, allUp)
+	entries, err := settledStates("p")
+	if err != nil {
 		t.Fatal(err)
 	}
-	if *asked != 1 {
-		t.Errorf("asked %d times", *asked)
+	if anyRestarting(entries) {
+		t.Errorf("reported %+v", entries)
+	}
+	if *asked != 2 {
+		t.Errorf("asked %d times, want 2 (sample + confirm)", *asked)
+	}
+}
+
+// The race this closes: `compose up` returns while an nginx that rejects its
+// vhost is still in its first running moment, so the first sample sees it up and
+// start exited 0 over a service already crash-looping. The confirming sample a
+// restartPoll later catches it restarting.
+func TestAServiceRunningOnlyBecauseItHasNotCrashedYetIsCaught(t *testing.T) {
+	withStates(t, 20*time.Millisecond, allUp, looping)
+	entries, err := settledStates("p")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !anyRestarting(entries) {
+		t.Errorf("a service that crashed right after up was reported up: %+v", entries)
 	}
 }
 
