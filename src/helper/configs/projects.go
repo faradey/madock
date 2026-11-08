@@ -362,6 +362,14 @@ func GetProjectName() string {
 			// No clash — this name is free for the current directory.
 			break
 		}
+		if ProjectConfigParses(nameOfProject) != nil {
+			// The entry exists but its config.xml does not parse, so its `path`
+			// cannot be read to tell whether it is this directory's. Reading it
+			// here would Fatalln on the way to every command — `stop` included —
+			// of a project whose own config is broken. The name is taken as this
+			// directory's: a broken config is still this project's entry.
+			break
+		}
 		projectConf := GetProjectConfigOnly(nameOfProject)
 		stored, ok := projectConf["path"]
 		if !ok {

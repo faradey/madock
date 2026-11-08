@@ -204,9 +204,14 @@ func IsHasConfig(projectName string) bool {
 		// proxy.conf builder reads a foreign project and can't find its source).
 		// We are in the project's own source dir here (CWD has its .madock), so
 		// GetRunDirPath() is authoritative — backfill the missing key once.
-		raw := ParseXmlFile(runtimeConfigPath)
-		if getConfigByScope(raw, "default")["path"] == "" {
-			SetParam(projectName, "path", paths.GetRunDirPath(), "default", MadockLevelConfigCode)
+		// Non-fatal: a project whose runtime config does not parse still has to be
+		// reachable by `stop` and `project:remove`. The backfill is skipped — a
+		// file that does not parse has no `path` key to read — and the broken
+		// config is reported where it is read for real.
+		if raw, err := ParseXmlFileSafe(runtimeConfigPath); err == nil {
+			if getConfigByScope(raw, "default")["path"] == "" {
+				SetParam(projectName, "path", paths.GetRunDirPath(), "default", MadockLevelConfigCode)
+			}
 		}
 	}
 	if paths.IsFileExist(runtimeConfigPath) || inProjectConfigExists {
