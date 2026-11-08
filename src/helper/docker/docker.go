@@ -262,12 +262,82 @@ func NotRunningAndOrphans(projectName string) (dead []ServiceState, orphans []Se
 	return classifyStates(entries, DeclaredServices(projectName))
 }
 
-// serviceStatesNow and restartGrace are replaceable in tests.
+// serviceStatesNow, restartCountsNow and restartGrace are replaceable in tests.
 var (
 	serviceStatesNow = ServiceStates
+	restartCountsNow = RestartCounts
 	restartGrace     = 30 * time.Second
 	restartPoll      = time.Second
 )
+
+// RestartCounts returns docker's RestartCount for each named container, keyed by
+// the name as `compose ps` gives it, or an error when docker cannot be asked.
+//
+// `compose ps` has no such column, and the state it does have cannot see a crash
+// loop: docker restarts a dead container after 100 ms, so a service that lives
+// under a second between deaths is `running` in almost every sample.
+func RestartCounts(names []string) (map[string]int, error) {
+	if len(names) == 0 {
+		return map[string]int{}, nil
+	}
+	args := append([]string{"inspect", "--format", "{{.Name}} {{.RestartCount}}"}, names...)
+	out, err := exec.Command("docker", args...).Output()
+	if err != nil {
+		return nil, composeError(err)
+	}
+	return parseRestartCounts(out), nil
+}
+
+// parseRestartCounts reads lines of "/name count". A line it cannot read is left
+// out, which makes that container unknown rather than calm or looping.
+func parseRestartCounts(out []byte) map[string]int {
+	counts := map[string]int{}
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) != 2 {
+			continue
+		}
+		var n int
+		if _, err := fmt.Sscanf(fields[1], "%d", &n); err != nil {
+			continue
+		}
+		counts[strings.TrimPrefix(fields[0], "/")] = n
+	}
+	return counts
+}
+
+// countsOf asks for the restart counts of the containers in entries. nil means
+// they could not be had, and the caller decides by state alone, as before.
+func countsOf(entries []ServiceState) map[string]int {
+	names := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.Name != "" && (entry.State == "running" || entry.State == "restarting") {
+			names = append(names, entry.Name)
+		}
+	}
+	counts, err := restartCountsNow(names)
+	if err != nil {
+		return nil
+	}
+	return counts
+}
+
+// restartedBetween names the services whose container docker restarted between
+// two samples of counts. Either sample unknown means nobody is named.
+func restartedBetween(entries []ServiceState, before, after map[string]int) map[string]bool {
+	grew := map[string]bool{}
+	if before == nil || after == nil {
+		return grew
+	}
+	for _, entry := range entries {
+		b, okB := before[entry.Name]
+		a, okA := after[entry.Name]
+		if okB && okA && a > b {
+			grew[entry.Service] = true
+		}
+	}
+	return grew
+}
 
 // settledStates is ServiceStates, given time when a service is restarting or has
 // not yet proved it can stay up.
@@ -280,52 +350,90 @@ var (
 // lets through whatever is ready by the third, and only a project that has a service
 // restarting waits at all. restart_policy=no, the default, never does.
 //
-// The first sample alone cannot call a stack up. `compose up` returns when a
-// container is created, not when its command has survived: a service with a bad
-// config — an nginx that rejects a vhost, restart_policy keeping it — is seen
-// `running` for the moment it lives before its first crash, and a single sample
-// taken in that window reported success, so start exited 0 over a service already
-// crash-looping (seen 3 starts in 9 on such an nginx). So when nothing is yet
-// restarting a confirming sample is taken one restartPoll later: a service about
-// to die is caught, and one genuinely up stays up across both. This is the entry
-// side of the same "twice in a row" the grace loop uses on the way out. A start
-// where nothing was restarting pays that one poll (~1.3 s, measured: one ps call
-// ~0.3 s plus restartPoll). What it still does not catch is a process that lives
-// several seconds between deaths — `running` on both samples — but that no longer
-// describes the common case, a service that fails as soon as it is up.
+// State alone cannot see the commonest crash loop. docker restarts a dead
+// container after 100 ms, doubling the pause each time, so a service that dies
+// within a second of starting — an nginx that rejects a vhost, restart_policy
+// keeping it — is `running` in nearly every sample for its first seconds. Measured
+// on a 2-CPU VM with such an nginx living 0.7 s: start exited 0 in 8 runs of 9, and
+// so did a second sample taken a second later. What does tell is docker's
+// RestartCount, which no sample can land between: it grows each time the container
+// dies and is brought back. So a service is restarting when its state says so or
+// when its count grew since the last sample, and calm only after two samples in a
+// row with neither. A start where nothing is restarting takes one extra sample a
+// restartPoll later to see whether a count moves; that is what it costs. A service
+// still not calm when the grace runs out is reported as `restarting`, whatever its
+// last sample said. When the counts cannot be read the decision falls back to
+// state alone, the behaviour before.
 func settledStates(projectName string) ([]ServiceState, error) {
 	entries, err := serviceStatesNow(projectName)
 	if err != nil {
 		return nil, err
 	}
-	if !anyRestarting(entries) {
+	counts := countsOf(entries)
+
+	time.Sleep(restartPoll)
+	next, err := serviceStatesNow(projectName)
+	if err != nil {
+		return nil, err
+	}
+	nextCounts := countsOf(next)
+	grew := restartedBetween(next, counts, nextCounts)
+	firstRestarting := anyRestarting(entries)
+	entries, counts = next, nextCounts
+	if !firstRestarting && !anyRestarting(entries) && len(grew) == 0 {
+		return entries, nil
+	}
+
+	// calmFor counts each service's samples in a row with no sign of a restart.
+	calmFor := map[string]int{}
+	note := func(entries []ServiceState, grew map[string]bool) {
+		for _, entry := range entries {
+			if entry.State == "restarting" || grew[entry.Service] {
+				calmFor[entry.Service] = 0
+			} else {
+				calmFor[entry.Service]++
+			}
+		}
+	}
+	settled := func(entries []ServiceState) bool {
+		for _, entry := range entries {
+			if calmFor[entry.Service] < 2 {
+				return false
+			}
+		}
+		return true
+	}
+	note(entries, grew)
+
+	fmtc.WarningErrLn("A service is restarting, giving it up to " + restartGrace.String() + " to come up")
+	for deadline := time.Now().Add(restartGrace); time.Now().Before(deadline); {
 		time.Sleep(restartPoll)
-		entries, err = serviceStatesNow(projectName)
+		next, err := serviceStatesNow(projectName)
 		if err != nil {
 			return nil, err
 		}
-		if !anyRestarting(entries) {
+		nextCounts := countsOf(next)
+		grew := restartedBetween(next, counts, nextCounts)
+		entries, counts = next, nextCounts
+		note(entries, grew)
+		if settled(entries) {
 			return entries, nil
 		}
 	}
+	return markUnsettled(entries, calmFor), nil
+}
 
-	fmtc.WarningErrLn("A service is restarting, giving it up to " + restartGrace.String() + " to come up")
-	calm := 0
-	for deadline := time.Now().Add(restartGrace); time.Now().Before(deadline); {
-		time.Sleep(restartPoll)
-		entries, err = serviceStatesNow(projectName)
-		if err != nil {
-			return nil, err
-		}
-		if anyRestarting(entries) {
-			calm = 0
-			continue
-		}
-		if calm++; calm == 2 {
-			break
+// markUnsettled reports as `restarting` every service the grace did not see calm,
+// so a loop whose last sample happened to catch it alive is not called up.
+func markUnsettled(entries []ServiceState, calmFor map[string]int) []ServiceState {
+	out := make([]ServiceState, len(entries))
+	for i, entry := range entries {
+		out[i] = entry
+		if calmFor[entry.Service] < 2 && entry.State == "running" {
+			out[i].State = "restarting"
 		}
 	}
-	return entries, nil
+	return out
 }
 
 func anyRestarting(entries []ServiceState) bool {
