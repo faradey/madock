@@ -133,6 +133,36 @@ func GetProjectConfig(projectName string) map[string]string {
 	return buildProjectConfig(projectName)
 }
 
+// ProjectConfigParses reports the first unparsable file among those
+// GetProjectConfig reads for projectName — the installation's runtime config for
+// the project and, through its `path`, the project's own `.madock/config.xml` —
+// without the Fatalln GetProjectConfig takes on one. The shared proxy.conf
+// builder reads every project's config; one project's broken file used to abort
+// the render, and with it the start, clone or stop of every other project. The
+// builder calls this first and skips the project it names.
+func ProjectConfigParses(projectName string) error {
+	runtimePath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+	if !paths.IsFileExist(runtimePath) {
+		return nil
+	}
+	runtimeConfig, err := ParseXmlFileSafe(runtimePath)
+	if err != nil {
+		return err
+	}
+	ownPath := runtimeConfig["path"]
+	if ownPath == "" {
+		return nil
+	}
+	ownConfig := ownPath + "/.madock/config.xml"
+	if !paths.IsFileExist(ownConfig) {
+		return nil
+	}
+	if _, err := ParseXmlFileSafe(ownConfig); err != nil {
+		return err
+	}
+	return nil
+}
+
 func buildProjectConfig(projectName string) map[string]string {
 	config := GetProjectConfigOnly(projectName)
 	explicit := explicitKeys(config, GetProjectsGeneralConfig())

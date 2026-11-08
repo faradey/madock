@@ -2,6 +2,39 @@ package configs
 
 import "testing"
 
+// A host name goes into the shared proxy's `server_name` raw. One project's
+// config.xml with a value nginx cannot parse there — a space, a `;`, a newline —
+// made the whole proxy.conf one the proxy refused, and every project lost
+// routing. GetHosts drops such a value and keeps the rest.
+func TestGetHostsDropsAHostThatWouldBreakTheProxy(t *testing.T) {
+	hosts := GetHosts(map[string]string{
+		"nginx/hosts/base/name": "good.test",
+		"nginx/hosts/bad/name":  "bad .test; rm -rf",
+	})
+
+	if len(hosts) != 1 {
+		t.Fatalf("hosts = %v, want only the valid one", hosts)
+	}
+	if hosts[0]["name"] != "good.test" {
+		t.Errorf("kept %q, want good.test", hosts[0]["name"])
+	}
+}
+
+func TestIsValidHostName(t *testing.T) {
+	valid := []string{"example.com", "www.example.com", "a.b-c.example.com", "*.example.com", ".example.com", "localhost", "x.test"}
+	invalid := []string{"", "bad host.test", "bad;.test", "has\n.test", "a_b.test", "-leading.test", "quote\".test", "semi;colon", "brace{.test"}
+	for _, h := range valid {
+		if !IsValidHostName(h) {
+			t.Errorf("IsValidHostName(%q) = false, want true", h)
+		}
+	}
+	for _, h := range invalid {
+		if IsValidHostName(h) {
+			t.Errorf("IsValidHostName(%q) = true, want false", h)
+		}
+	}
+}
+
 // The key is the website code, and that is what makes this worth a test rather
 // than a comment: `nginx/hosts/<key>/name` reaches Magento as MAGE_RUN_CODE, so
 // a host added under a key that names no website answers 500 to every request.

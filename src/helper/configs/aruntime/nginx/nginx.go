@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/faradey/madock/v4/src/helper/cli/attr"
@@ -26,6 +27,35 @@ import (
 	"github.com/faradey/madock/v4/src/helper/ports"
 	"github.com/faradey/madock/v4/src/helper/setup/tools"
 )
+
+// warnedUnparsableProject dedupes the skip warning so a project with a broken
+// config.xml is named once per render, not once per loop that reads it.
+var warnedUnparsableProject sync.Map
+
+// projectUnparsable reports whether a project's config.xml does not parse, and
+// names it once per render when so. The proxy.conf builder reads every project's
+// config; one project's unparsable file used to abort the render through
+// GetProjectConfig's Fatalln — and NginxEnabledFor's — taking the start, clone
+// or stop of every other project with it. The broken project is skipped; the
+// rest are built.
+func projectUnparsable(name string) bool {
+	if err := configs2.ProjectConfigParses(name); err != nil {
+		if _, loaded := warnedUnparsableProject.LoadOrStore(name, true); !loaded {
+			fmtc.WarningIconLn("Skipping project \"" + name + "\" while building the shared proxy: its config.xml does not parse (" + err.Error() + "). Other projects are unaffected.")
+		}
+		return true
+	}
+	return false
+}
+
+// safeProjectConf returns a project's config for the shared-proxy render, or
+// (nil, false) when its config.xml does not parse.
+func safeProjectConf(name string) (map[string]string, bool) {
+	if projectUnparsable(name) {
+		return nil, false
+	}
+	return configs2.GetProjectConfig(name), true
+}
 
 func MakeConf(projectName string) {
 	// The shared proxy.conf lists every project's routing, so it must be
@@ -191,7 +221,10 @@ func makeProxy(projectName string) {
 		}
 		scannedProjects[name] = true
 		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
-			projectConf := configs2.GetProjectConfig(name)
+			projectConf, ok := safeProjectConf(name)
+			if !ok {
+				continue
+			}
 			// A project with no web server owns none of its domains: it is not
 			// routed anywhere, so it cannot collide with a project that is.
 			if !configs2.NginxEnabled(projectConf) {
@@ -241,6 +274,12 @@ func makeProxy(projectName string) {
 		processedProjects[name] = true
 		pp := paths.NewProjectPaths(name)
 		if paths.IsFileExist(paths.GetExecDirPath() + "/projects/" + name + "/config.xml") {
+			// A project whose config.xml does not parse is skipped before
+			// anything reads it, so one broken file does not abort the render for
+			// every other project. NginxEnabledFor below would otherwise Fatalln.
+			if projectUnparsable(name) {
+				continue
+			}
 			// A project with no web server has nothing to route to. Its cached
 			// block is deleted rather than merely skipped: the cache is what a
 			// project keeps while it is stopped, so leaving it there would put
@@ -254,7 +293,10 @@ func makeProxy(projectName string) {
 			if !paths.IsFileExist(pp.StoppedFile()) {
 				if projectName == name || !paths.IsFileExist(paths.CacheDir()+"/"+name+"-proxy.conf") {
 					nginxDefFile = project.GetDockerConfigFile(name, "/nginx/conf/default-proxy.conf", "general")
-					projectConf := configs2.GetProjectConfig(name)
+					projectConf, ok := safeProjectConf(name)
+					if !ok {
+						continue
+					}
 
 					// The upstream is nginx, unless varnish is in front of it.
 					upstreamPort := ports.GetPort(name, "nginx")
@@ -504,7 +546,10 @@ func sslAltNamesExt() string {
 			continue
 		}
 
-		projectConf := configs2.GetProjectConfig(name)
+		projectConf, ok := safeProjectConf(name)
+		if !ok {
+			continue
+		}
 		// Nothing serves those names, so a certificate covering them would be
 		// issued for a site that cannot answer.
 		if !configs2.NginxEnabled(projectConf) {

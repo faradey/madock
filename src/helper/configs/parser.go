@@ -13,10 +13,21 @@ import (
 )
 
 func ParseXmlFile(path string) (conf map[string]string) {
-	mapping, err := GetXmlMap(path)
-
+	conf, err := ParseXmlFileSafe(path)
 	if err != nil {
 		logger.Fatalln(err)
+	}
+	return conf
+}
+
+// ParseXmlFileSafe is ParseXmlFile without the Fatalln: it hands an unparsable
+// file back as an error so a caller reading many projects' configs — the shared
+// proxy.conf builder reads every project's — can skip and name the one that does
+// not parse instead of taking the whole command down with it.
+func ParseXmlFileSafe(path string) (map[string]string, error) {
+	mapping, err := GetXmlMap(path)
+	if err != nil {
+		return nil, err
 	}
 
 	mappingData := make(map[string]string)
@@ -24,15 +35,12 @@ func ParseXmlFile(path string) (conf map[string]string) {
 		mappingData = ComposeConfigMap(mapping["config"].(map[string]interface{}))
 	}
 
-	if conf == nil {
-		conf = make(map[string]string)
-	}
-
+	conf := make(map[string]string)
 	for key, value := range mappingData {
 		conf[key] = decryptIfSecret(key, value)
 	}
 
-	return conf
+	return conf, nil
 }
 
 func ParseXmlBytes(data []byte) (conf map[string]string) {
