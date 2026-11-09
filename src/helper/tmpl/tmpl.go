@@ -552,6 +552,10 @@ func (r *Renderer) funcMap() template.FuncMap {
 		"lower": strings.ToLower,
 		"upper": strings.ToUpper,
 
+		// Checked before they are written into redis's command — see redis.go.
+		"redisMaxmemory": RedisMaxmemory,
+		"redisPolicy":    RedisPolicy,
+
 		// One memory budget, divided by whoever is reading it. Each engine
 		// wants a different setting in a different unit, and a template that
 		// cannot do arithmetic leaves only one way to change any of them:
