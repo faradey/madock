@@ -24,46 +24,62 @@ func ParseXmlFile(path string) (conf map[string]string) {
 // file back as an error so a caller reading many projects' configs — the shared
 // proxy.conf builder reads every project's — can skip and name the one that does
 // not parse instead of taking the whole command down with it.
+//
+// The error names the file: a project's config is read from two of them, the
+// installation's runtime copy and the project's own .madock/config.xml, and a
+// message that does not say which leaves the reader to guess.
 func ParseXmlFileSafe(path string) (map[string]string, error) {
 	mapping, err := GetXmlMap(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", path, err)
 	}
-
-	mappingData := make(map[string]string)
-	if _, ok := mapping["config"]; ok {
-		mappingData = ComposeConfigMap(mapping["config"].(map[string]interface{}))
+	conf, err := configFromMapping(mapping)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", path, err)
 	}
-
-	conf := make(map[string]string)
-	for key, value := range mappingData {
-		conf[key] = decryptIfSecret(key, value)
-	}
-
 	return conf, nil
 }
 
-func ParseXmlBytes(data []byte) (conf map[string]string) {
+func ParseXmlBytes(data []byte) map[string]string {
 	mapping, err := GetXmlMapFromBytes(data)
-
 	if err != nil {
 		logger.Fatalln(err)
 	}
-
-	mappingData := make(map[string]string)
-	if _, ok := mapping["config"]; ok {
-		mappingData = ComposeConfigMap(mapping["config"].(map[string]interface{}))
+	conf, err := configFromMapping(mapping)
+	if err != nil {
+		logger.Fatalln(err)
 	}
+	return conf
+}
 
-	if conf == nil {
-		conf = make(map[string]string)
+// configFromMapping is the one place a decoded config document becomes madock's
+// flat key/values, for files and for bytes alike. It was written out twice, and
+// both copies asserted the root unchecked.
+//
+// xml2map gives an element with no children as a string, not a map. An empty
+// root — `<config/>`, `<config></config>`, whitespace between the tags — is a
+// config that sets nothing, which a removal of the last key can leave, and it
+// reads as one. Text directly under the root is not a config madock can read, and
+// is an error. Before, both were a panic ("interface {} is string, not map")
+// that no caller could catch, so the shared proxy builder's skip of a broken
+// neighbour did not help.
+func configFromMapping(mapping map[string]interface{}) (map[string]string, error) {
+	conf := make(map[string]string)
+	root, ok := mapping["config"]
+	if !ok {
+		return conf, nil
 	}
-
-	for key, value := range mappingData {
+	tree, ok := root.(map[string]interface{})
+	if !ok {
+		if text, isText := root.(string); isText && strings.TrimSpace(text) == "" {
+			return conf, nil
+		}
+		return nil, fmt.Errorf("<config> holds text instead of settings")
+	}
+	for key, value := range ComposeConfigMap(tree) {
 		conf[key] = decryptIfSecret(key, value)
 	}
-
-	return conf
+	return conf, nil
 }
 
 func ParseFile(path string) (conf map[string]string) {
