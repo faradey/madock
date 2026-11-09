@@ -5,6 +5,20 @@
       context: ctx
       dockerfile: redis.Dockerfile
     restart: {{{.restart_policy}}}
+    {{{- if or .redis.maxmemory .redis.maxmemory_policy}}}
+    # Only when a project sets one: empty keeps redis's own defaults, and the
+    # image's command, exactly as before these settings existed.
+    command:
+      - redis-server
+      {{{- if .redis.maxmemory}}}
+      - --maxmemory
+      - "{{{redisMaxmemory .redis.maxmemory}}}"
+      {{{- end}}}
+      {{{- if .redis.maxmemory_policy}}}
+      - --maxmemory-policy
+      - "{{{redisPolicy .redis.maxmemory_policy}}}"
+      {{{- end}}}
+    {{{- end}}}
     {{{- if .redis.persist}}}
     # A named volume, so the data survives a recreated container and travels
     # with snapshots and clones. Without it the image's own anonymous volume

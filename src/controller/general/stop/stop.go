@@ -6,6 +6,7 @@ import (
 	"github.com/faradey/madock/v4/src/controller/platform"
 	"github.com/faradey/madock/v4/src/helper/cli/fmtc"
 	"github.com/faradey/madock/v4/src/helper/configs"
+	"github.com/faradey/madock/v4/src/helper/docker"
 	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
@@ -29,8 +30,9 @@ func Execute() {
 	// falls back to the default handler and says so, instead of exiting 1 with the
 	// containers left running.
 	platformName := ""
-	if err := configs.ProjectConfigParses(projectName); err != nil {
-		fmtc.WarningIconLn("Stopping \"" + projectName + "\" with its config.xml unreadable (" + err.Error() + "): the containers are stopped anyway.")
+	parseErr := configs.ProjectConfigParses(projectName)
+	if parseErr != nil {
+		fmtc.WarningIconLn("Stopping \"" + projectName + "\" with its config.xml unreadable (" + parseErr.Error() + "): the containers are stopped anyway.")
 	} else {
 		platformName = configs.GetCurrentProjectConfig()["platform"]
 	}
@@ -39,6 +41,15 @@ func Execute() {
 	handler.Stop(projectName)
 
 	if len(paths.GetActiveProjects()) == 0 {
+		if parseErr != nil {
+			// proxy.Execute reads this project's config to see whether it uses
+			// the proxy, and on an unreadable one ended the process after the
+			// containers were already down: `stop` of the last running project
+			// exited 1. With no project left running the shared proxy serves
+			// nobody, so it is stopped without asking.
+			docker.StopNginx(false)
+			return
+		}
 		proxy.Execute("stop")
 	}
 }

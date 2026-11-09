@@ -448,6 +448,8 @@
                 <repository>redis</repository>
                 <version>7.2.3</version>
                 <persist>false</persist>
+                <maxmemory></maxmemory>
+                <maxmemory_policy></maxmemory_policy>
                 <auth>
                     <enabled>false</enabled>
                     <password></password>

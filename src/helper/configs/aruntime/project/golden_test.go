@@ -65,6 +65,17 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// redis with a memory cap and an eviction policy. Unset, the redis
+			// service has no `command:` and runs the image's own, which every
+			// other case here shows; set, both flags reach redis-server.
+			name: "magento2-redis-maxmemory",
+			overrides: map[string]string{
+				"redis/enabled":          "true",
+				"redis/maxmemory":        "256mb",
+				"redis/maxmemory_policy": "allkeys-lru",
+			},
+		},
+		{
 			// Tools and extensions a project adds: the last layers of both php
 			// images, after everything projects share.
 			name: "magento2-php-packages",

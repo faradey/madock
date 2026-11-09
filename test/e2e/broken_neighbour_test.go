@@ -132,9 +132,14 @@ func TestABrokenOwnConfigDoesNotBlockItsNeighbours(t *testing.T) {
 
 	// A clone renders the same shared proxy, so it reads the same neighbours.
 	good.run(30*time.Minute, "project:clone", "-n", "e2eownclone", "-s=-copy")
-	install.project("e2eownclone")
+	clone := install.project("e2eownclone")
 
-	// The broken project still stops; the empty one stops too.
-	broken.run(5*time.Minute, "stop")
+	// The broken project still stops, and it stops last on purpose: with nothing
+	// else running, `stop` also takes the shared proxy down, and that step read
+	// the project's config and died after the containers were already stopped —
+	// which a stop with a neighbour still running never reaches.
+	good.run(5*time.Minute, "stop")
+	clone.run(5*time.Minute, "stop")
 	empty.run(5*time.Minute, "stop")
+	broken.run(5*time.Minute, "stop")
 }
