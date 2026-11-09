@@ -410,11 +410,6 @@
                     <heap>800m</heap>
                     <repository>elasticsearch</repository>
                     <version>8.4.3</version>
-                    <auth>
-                        <enabled>false</enabled>
-                        <user></user>
-                        <password></password>
-                    </auth>
                     <dashboard>
                         <enabled>false</enabled>
                         <repository>kibana</repository>
@@ -426,11 +421,6 @@
                     <heap>1g</heap>
                     <repository>opensearchproject/opensearch</repository>
                     <version>2.19.1</version>
-                    <auth>
-                        <enabled>false</enabled>
-                        <user></user>
-                        <password></password>
-                    </auth>
                     <dashboard>
                         <enabled>false</enabled>
                         <repository>opensearchproject/opensearch-dashboards</repository>
@@ -450,20 +440,12 @@
                 <persist>false</persist>
                 <maxmemory></maxmemory>
                 <maxmemory_policy></maxmemory_policy>
-                <auth>
-                    <enabled>false</enabled>
-                    <password></password>
-                </auth>
             </redis>
             <valkey>
                 <enabled>false</enabled>
                 <repository>valkey/valkey</repository>
                 <version>8.1.3</version>
                 <persist>false</persist>
-                <auth>
-                    <enabled>false</enabled>
-                    <password></password>
-                </auth>
             </valkey>
             <memcached>
                 <enabled>false</enabled>

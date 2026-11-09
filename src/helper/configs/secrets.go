@@ -9,26 +9,26 @@ import (
 
 // SecretKeys contains config keys that hold sensitive data.
 var SecretKeys = map[string]bool{
-	"db/root_password":                   true,
-	"db/password":                        true,
-	"db2/root_password":                  true,
-	"db2/password":                       true,
-	"ssh/password":                       true,
-	"ssh/key_path":                       true,
-	"magento/admin_password":             true,
-	"magento/cloud/password":             true,
-	"magento/mftf/otp_shared_secret":     true,
-	"rabbitmq/password":                  true,
-	"grafana/auth/password":              true,
-	"redis/auth/password":                true,
-	"valkey/auth/password":               true,
-	"search/elasticsearch/auth/password": true,
-	"search/opensearch/auth/password":    true,
+	"db/root_password":               true,
+	"db/password":                    true,
+	"db2/root_password":              true,
+	"db2/password":                   true,
+	"ssh/password":                   true,
+	"ssh/key_path":                   true,
+	"magento/admin_password":         true,
+	"magento/cloud/password":         true,
+	"magento/mftf/otp_shared_secret": true,
+	"rabbitmq/password":              true,
+	"grafana/auth/password":          true,
+	// redis/valkey/elasticsearch/opensearch auth passwords were listed here from
+	// 3.3.0 to 4.5.53 with keys in the defaults, and no template ever read them:
+	// a password set there was stored and never applied. Service passwords are a
+	// madock-pro feature; it declares those keys and registers them itself.
 }
 
 // RegisterSecretKey marks an additional config key as secret.
 //
-// Extension point for madock-pro, and seven keys arrive through it. Community
+// Extension point for madock-pro, which registers its own keys through it. Community
 // has no encryption, so it registers none — which is why this looks unreachable
 // here and is the whole mechanism there.
 func RegisterSecretKey(key string) {
