@@ -314,7 +314,7 @@ func Medusa(projectName, platformVer string) {
 		dbName = "db"
 	}
 	dbURL := "postgres://" + dbUser + ":" + dbPassword + "@db:5432/" + dbName + "?sslmode=disable"
-	redisURL := "redis://redisdb:6379"
+	redisURL := projectRedisURL(projectConf, "")
 
 	// Use printf instead of a heredoc — embedding EOF inside a Go string
 	// concatenated with `&& yarn install` puts the terminator on the same
@@ -638,8 +638,8 @@ func Saleor(projectName, platformVer string) {
 		dbName = "saleor"
 	}
 	dbURL := "postgres://" + dbUser + ":" + dbPassword + "@db:5432/" + dbName + "?sslmode=disable"
-	redisURL := "redis://redisdb:6379/0"
-	celeryBroker := "redis://redisdb:6379/1"
+	redisURL := projectRedisURL(projectConf, "0")
+	celeryBroker := projectRedisURL(projectConf, "1")
 
 	envBody := "SECRET_KEY=changeme-madock-dev\n" +
 		"DEBUG=True\n" +
@@ -754,7 +754,7 @@ func Spree(projectName, platformVer string) {
 		dbName = "spree"
 	}
 	dbURL := "postgresql://" + dbUser + ":" + dbPassword + "@db:5432/" + dbName
-	redisURL := "redis://redisdb:6379/0"
+	redisURL := projectRedisURL(projectConf, "0")
 
 	// SECRET_KEY_BASE is deterministic-but-not-secret in a local dev
 	// env: Rails refuses to boot without it once RAILS_ENV is set, but
