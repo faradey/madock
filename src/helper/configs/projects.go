@@ -135,32 +135,87 @@ func GetProjectConfig(projectName string) map[string]string {
 
 // ProjectConfigParses reports the first unparsable file among those
 // GetProjectConfig reads for projectName — the installation's runtime config for
-// the project and, through its `path`, the project's own `.madock/config.xml` —
-// without the Fatalln GetProjectConfig takes on one. The shared proxy.conf
-// builder reads every project's config; one project's broken file used to abort
-// the render, and with it the start, clone or stop of every other project. The
-// builder calls this first and skips the project it names.
+// the project and the project's own `.madock/config.xml` — without the Fatalln
+// GetProjectConfig takes on one. The shared proxy.conf builder reads every
+// project's config; one project's broken file used to abort the render, and with
+// it the start, clone or stop of every other project. The builder calls this
+// first and skips the project it names.
+//
+// It finds those files through the same functions GetProjectConfigOnly does —
+// runtimeConfigPath, activeLayer, ownConfigDir, ownConfigFile — and must go on
+// doing so. A first version found them its own way, read `path` unscoped where
+// the runtime file only ever holds `scopes/<scope>/path`, never reached the
+// project's own file, and passed every broken .madock/config.xml: the very case
+// it was written for. TestTheCheckFailsExactlyWhenTheReadWould holds the two
+// together.
 func ProjectConfigParses(projectName string) error {
-	runtimePath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
-	if !paths.IsFileExist(runtimePath) {
-		return nil
+	active := make(map[string]string)
+	if runtimePath := runtimeConfigPath(projectName); paths.IsFileExist(runtimePath) {
+		raw, err := ParseXmlFileSafe(runtimePath)
+		if err != nil {
+			return err
+		}
+		active = activeLayer(raw)
 	}
-	runtimeConfig, err := ParseXmlFileSafe(runtimePath)
-	if err != nil {
-		return err
-	}
-	ownPath := runtimeConfig["path"]
-	if ownPath == "" {
-		return nil
-	}
-	ownConfig := ownPath + "/.madock/config.xml"
-	if !paths.IsFileExist(ownConfig) {
-		return nil
-	}
-	if _, err := ParseXmlFileSafe(ownConfig); err != nil {
-		return err
+	dir, _ := ownConfigDir(projectName, active)
+	if own := ownConfigFile(dir); paths.IsFileExist(own) {
+		if _, err := ParseXmlFileSafe(own); err != nil {
+			return err
+		}
 	}
 	return nil
+}
+
+// runtimeConfigPath is the installation's copy of a project's config.
+func runtimeConfigPath(projectName string) string {
+	return paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
+}
+
+// ownConfigFile is the project's own config under its source directory.
+func ownConfigFile(projectPath string) string {
+	return projectPath + "/.madock/config.xml"
+}
+
+// activeLayer is a parsed config file as madock uses it: the `default` scope,
+// with the active scope's values over it, and the active scope's name recorded.
+func activeLayer(config map[string]string) map[string]string {
+	activeConfig := make(map[string]string)
+	activeScope := "default"
+	defaultConfig := getConfigByScope(config, activeScope)
+	if v, ok := config["activeScope"]; ok {
+		activeScope = v
+		activeConfig = getConfigByScope(config, activeScope)
+	}
+	ConfigMapping(defaultConfig, activeConfig)
+	activeConfig["activeScope"] = activeScope
+	return activeConfig
+}
+
+// ownPathSource says where ownConfigDir found the project's source directory.
+type ownPathSource int
+
+const (
+	ownPathRecorded ownPathSource = iota // the runtime config's `path`
+	ownPathFromCWD                       // the current directory, for the current project
+	ownPathUnknown                       // neither: another project with no `path`
+)
+
+// ownConfigDir is the directory whose .madock/config.xml belongs to projectName,
+// given the active layer of its runtime config.
+//
+// The current directory stands in only for the current project. For another
+// project it is meaningless: falling back to it would read the current project's
+// .madock/config.xml as if it belonged to projectName, and persist a wrong `path`
+// into its runtime config, corrupting cross-project regenerators such as the
+// shared proxy.conf builder.
+func ownConfigDir(projectName string, active map[string]string) (string, ownPathSource) {
+	if val, ok := active["path"]; ok {
+		return val, ownPathRecorded
+	}
+	if projectName == GetProjectName() {
+		return paths.GetRunDirPath(), ownPathFromCWD
+	}
+	return "", ownPathUnknown
 }
 
 func buildProjectConfig(projectName string) map[string]string {
@@ -205,37 +260,20 @@ func applyPlatformBudgets(config map[string]string, explicit map[string]bool) {
 	}
 }
 
+// GetProjectConfigOnly finds its files through the functions ProjectConfigParses
+// uses too — see there for why the two must not find them differently.
 func GetProjectConfigOnly(projectName string) map[string]string {
 	activeConfig := make(map[string]string)
-	configPath := paths.GetExecDirPath() + "/projects/" + projectName + "/config.xml"
-	activeScope := "default"
-	if paths.IsFileExist(configPath) {
-		config := ParseXmlFile(configPath)
-
-		defaultConfig := getConfigByScope(config, activeScope)
-		if v, ok := config["activeScope"]; ok {
-			activeScope = v
-			activeConfig = getConfigByScope(config, activeScope)
-		}
-
-		ConfigMapping(defaultConfig, activeConfig)
-		activeConfig["activeScope"] = activeScope
+	if runtimePath := runtimeConfigPath(projectName); paths.IsFileExist(runtimePath) {
+		activeConfig = activeLayer(ParseXmlFile(runtimePath))
 	}
-	projectPath := ""
-	if val, ok := activeConfig["path"]; ok {
-		projectPath = val
-	} else if projectName == GetProjectName() {
-		// Safe only for the current project: CWD is its source directory.
-		projectPath = paths.GetRunDirPath()
+	projectPath, source := ownConfigDir(projectName, activeConfig)
+	switch source {
+	case ownPathFromCWD:
 		activeConfig["path"] = projectPath
-	} else {
-		// For another project CWD is meaningless. Falling back to it would read
-		// the current project's .madock/config.xml as if it belonged to
-		// projectName (and persist a wrong `path` into its runtime config),
-		// corrupting cross-project regenerators such as the shared proxy.conf
-		// builder. Skip the release-side defaults; the runtime config alone
-		// drives. GetProjectConfigInProject("") returns an empty map, so an
-		// empty projectPath is safe here.
+	case ownPathUnknown:
+		// Skip the release-side defaults; the runtime config alone drives.
+		// GetProjectConfigInProject("") returns an empty map.
 		warnMissingProjectPath(projectName)
 	}
 	projectFileConfig := GetProjectConfigInProject(projectPath)
@@ -275,23 +313,11 @@ func GetCurrentProjectConfigPath(projectName string) string {
 }
 
 func GetProjectConfigInProject(projectPath string) map[string]string {
-	configPath := projectPath + "/.madock/config.xml"
+	configPath := ownConfigFile(projectPath)
 	if !paths.IsFileExist(configPath) {
 		return make(map[string]string)
 	}
-
-	config := ParseXmlFile(configPath)
-	activeConfig := make(map[string]string)
-	activeScope := "default"
-	defaultConfig := getConfigByScope(config, activeScope)
-	if v, ok := config["activeScope"]; ok {
-		activeScope = v
-		activeConfig = getConfigByScope(config, activeScope)
-	}
-
-	ConfigMapping(defaultConfig, activeConfig)
-	activeConfig["activeScope"] = activeScope
-	return activeConfig
+	return activeLayer(ParseXmlFile(configPath))
 }
 
 // StoredValue reports a setting that something a person stored still gives,
