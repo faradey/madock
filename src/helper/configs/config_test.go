@@ -21,10 +21,13 @@ func TestIsSecretKey(t *testing.T) {
 		// New service keys
 		{"rabbitmq/password", true},
 		{"grafana/auth/password", true},
-		{"redis/auth/password", true},
-		{"valkey/auth/password", true},
-		{"search/elasticsearch/auth/password", true},
-		{"search/opensearch/auth/password", true},
+		// Passwords for redis, valkey and the search engines are madock-pro's:
+		// it declares the keys and registers them itself. Here they are no key
+		// at all, so nothing marks them secret.
+		{"redis/auth/password", false},
+		{"valkey/auth/password", false},
+		{"search/elasticsearch/auth/password", false},
+		{"search/opensearch/auth/password", false},
 		// Non-secret keys
 		{"rabbitmq/user", false},
 		{"grafana/auth/user", false},
@@ -34,8 +37,8 @@ func TestIsSecretKey(t *testing.T) {
 		// Scoped variants
 		{"scopes/default/rabbitmq/password", true},
 		{"scopes/default/grafana/auth/password", true},
-		{"scopes/default/search/elasticsearch/auth/password", true},
-		{"scopes/staging/redis/auth/password", true},
+		{"scopes/staging/db/password", true},
+		{"scopes/staging/redis/auth/password", false},
 		{"scopes/default/rabbitmq/user", false},
 		{"scopes/default/platform", false},
 	}
