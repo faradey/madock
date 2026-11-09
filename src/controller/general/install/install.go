@@ -121,6 +121,22 @@ func Magento(projectName, platformVer string) {
 	if len(hosts) > 0 {
 		host = hosts[0]["name"]
 	}
+	installCommand := magentoInstallCommand(projectConf, host, platformVer)
+	fmt.Println(installCommand)
+	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	fmt.Println("")
+	fmtc.SuccessLn("[SUCCESS]: Magento installation complete.")
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin URI: /" + projectConf["magento/admin_frontname"])
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin User: " + projectConf["magento/admin_user"])
+	fmtc.SuccessLn("[SUCCESS]: Magento Admin Password: " + projectConf["magento/admin_password"])
+}
+
+// magentoInstallCommand builds the shell line that installs Magento in the php
+// container.
+func magentoInstallCommand(projectConf map[string]string, host, platformVer string) string {
 	installCommand := "bin/magento setup:install " +
 		"--base-url=https://" + host + " " +
 		"--db-host=db " +
@@ -143,20 +159,23 @@ func Magento(projectName, platformVer string) {
 				"--elasticsearch-host=elasticsearch " +
 				"--elasticsearch-port=9200 " +
 				"--elasticsearch-index-prefix=magento2 " +
-				"--elasticsearch-timeout=15 "
+				"--elasticsearch-timeout=15 " +
+				searchInstallArgs(projectConf, "elasticsearch", "elasticsearch")
 		} else if projectConf["search/opensearch/enabled"] == "true" {
 			if versions.AtLeast(platformVer, "2.4.6") {
 				installCommand += "--search-engine=opensearch " +
 					"--opensearch-host=opensearch " +
 					"--opensearch-port=9200 " +
 					"--opensearch-index-prefix=magento2 " +
-					"--opensearch-timeout=15 "
+					"--opensearch-timeout=15 " +
+					searchInstallArgs(projectConf, "opensearch", "opensearch")
 			} else {
 				installCommand += "--search-engine=elasticsearch7 " +
 					"--elasticsearch-host=opensearch " +
 					"--elasticsearch-port=9200 " +
 					"--elasticsearch-index-prefix=magento2 " +
-					"--elasticsearch-timeout=15 "
+					"--elasticsearch-timeout=15 " +
+					searchInstallArgs(projectConf, "elasticsearch", "opensearch")
 			}
 		}
 
@@ -166,16 +185,7 @@ func Magento(projectName, platformVer string) {
 		installCommand += "&& bin/magento module:disable Magento_TwoFactorAuth "
 	}
 	installCommand += " && bin/magento setup:upgrade && bin/magento cache:clean && bin/magento indexer:reindex | bin/magento cache:flush"
-	fmt.Println(installCommand)
-	err := docker.ContainerExec(docker.GetContainerName(projectConf, projectName, "php"), "www-data", true, "bash", "-c", "cd "+projectConf["workdir"]+" && "+installCommand)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	fmt.Println("")
-	fmtc.SuccessLn("[SUCCESS]: Magento installation complete.")
-	fmtc.SuccessLn("[SUCCESS]: Magento Admin URI: /" + projectConf["magento/admin_frontname"])
-	fmtc.SuccessLn("[SUCCESS]: Magento Admin User: " + projectConf["magento/admin_user"])
-	fmtc.SuccessLn("[SUCCESS]: Magento Admin Password: " + projectConf["magento/admin_password"])
+	return installCommand
 }
 
 func Shopware(projectName, platformVer string, isSampleData bool) {
