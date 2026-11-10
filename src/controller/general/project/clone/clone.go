@@ -127,6 +127,16 @@ func Execute() {
 	if clash := configs.ComposeNameClash(cloneName); clash != "" {
 		refuse(w, clash)
 	}
+	// The clone inherits the source's scopes, and each is a Compose project of
+	// its own, <clone>-<scope>.
+	for scope := range configs.GetScopes(configs.GetProjectName()) {
+		if scope == "default" {
+			continue
+		}
+		if clash := configs.ScopeComposeClash(cloneName, scope); clash != "" {
+			refuse(w, clash)
+		}
+	}
 	projectConf := configs.GetCurrentProjectConfig()
 
 	// A deployer-managed project is not something a file copy can reproduce.
