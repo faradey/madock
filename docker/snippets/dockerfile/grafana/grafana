@@ -1,0 +1,23 @@
+FROM {{{.grafana.repository}}}:{{{.grafana.version}}}
+
+# The plugins are installed here, when the image is built, and not by the
+# container on every start. GF_INSTALL_PLUGINS fetched them from grafana.com
+# each time Grafana started: a start with grafana.com slow or unreachable came
+# up without the Redis datasource ("plugin not registered") or not at all
+# ("failed to download plugin archive ... i/o timeout"), on a server's restart
+# as much as in a test. Built once, the layer is cached and a start needs no
+# network.
+#
+# Outside /var/lib/grafana, which is the grafanadata volume: a volume made by an
+# earlier start keeps its own plugins directory and would hide the one in the
+# image.
+USER root
+RUN set -eu; \
+    mkdir -p /usr/share/grafana/madock-plugins; \
+    echo "{{{.grafana.plugins}}}{{{if .redis.enabled}}},{{{.grafana.redis_plugins}}}{{{end}}}" | tr ',' '\n' | while read -r id version; do \
+        [ -n "$id" ] || continue; \
+        grafana cli --pluginsDir /usr/share/grafana/madock-plugins plugins install "$id" $version; \
+    done; \
+    chown -R 472:0 /usr/share/grafana/madock-plugins
+USER 472
+ENV GF_PATHS_PLUGINS=/usr/share/grafana/madock-plugins

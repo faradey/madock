@@ -1,7 +1,9 @@
 {{{- if .grafana.enabled}}}
   grafana:
     init: true
-    image: {{{.grafana.repository}}}:{{{.grafana.version}}}
+    build:
+      context: ctx
+      dockerfile: grafana.Dockerfile
     {{{- if .ports.publish}}}
     ports:
       - "{{{port "grafana"}}}:3000"
@@ -9,11 +11,6 @@
     environment:
       GF_SERVER_ROOT_URL: "https://{{{(index .nginx.hosts 0).name}}}/grafana/"
       GF_SERVER_DOMAIN: "{{{(index .nginx.hosts 0).name}}}"
-{{{- if .redis.enabled}}}
-      GF_INSTALL_PLUGINS: "{{{.grafana.plugins}}},{{{.grafana.redis_plugins}}}"
-{{{- else}}}
-      GF_INSTALL_PLUGINS: "{{{.grafana.plugins}}}"
-{{{- end}}}
       GF_SERVE_FROM_SUB_PATH: true
       GF_SERVER_PROTOCOL: http
 {{{- if .grafana.auth.enabled}}}
@@ -52,7 +49,6 @@
           url: http://loki:3100
           basicAuth: false
           isDefault: true
-          version: 1
           editable: false
 {{{- if .redis.enabled}}}
         - name: Redis
@@ -62,7 +58,6 @@
           orgId: 1
           url: redis://redisdb:6379
           basicAuth: false
-          version: 1
           editable: false
 {{{- end}}}
         - name: Prometheus
@@ -72,7 +67,6 @@
           orgId: 1
           url: http://prometheus:9090
           basicAuth: false
-          version: 1
           editable: false
         EOF
         mkdir -p /etc/grafana/provisioning/dashboards

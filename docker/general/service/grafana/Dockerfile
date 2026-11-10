@@ -1,0 +1,1 @@
+{{{template "snippets/dockerfile/grafana/grafana" .}}}
