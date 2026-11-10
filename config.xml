@@ -842,8 +842,10 @@
                     <user></user>
                     <password></password>
                 </auth>
-                <!-- Plugins, with versions, installed by the container on every
-                     start. A version is part of each entry for a reason found by
+                <!-- Plugins, with versions, installed into the Grafana image when
+                     it is built (they were fetched from grafana.com on every
+                     start, and a start without grafana.com came up without
+                     them). A version is part of each entry for a reason found by
                      reading the container's own log: `redis-app` depends on
                      `redis-datasource` and installs its own copy, so an unpinned
                      list downloaded 2.2.0 and then replaced it with 2.1.1 —
@@ -851,9 +853,9 @@
                      separated by commas, exactly as Grafana expects.
 
                      It is a setting rather than a constant so a plugin can be
-                     added or moved without a new madock: this list is handed to
-                     the container as GF_INSTALL_PLUGINS and nothing here reads
-                     it. The redis pair is installed only where redis runs. -->
+                     added or moved without a new madock: a changed list changes
+                     the Dockerfile, and the next rebuild installs it. The redis
+                     pair is installed only where redis runs. -->
                 <plugins>grafana-clock-panel 3.2.4</plugins>
                 <redis_plugins>redis-datasource 2.2.0</redis_plugins>
                 <!-- What promtail watches, one entry per Loki `job` label.

@@ -470,6 +470,12 @@ func processOtherCTXFiles(projectName string) {
 		RenderTo(projectName, file, fileName, pp.CtxDir()+"/"+fileName, nil)
 	}
 
+	// The Grafana image, with its plugins installed at build time. Only where
+	// Grafana runs: every other project's ctx stays as it was.
+	if configs.GetProjectConfig(projectName)["grafana/enabled"] == "true" {
+		MakeDockerfile(projectName, "grafana/Dockerfile", "grafana.Dockerfile")
+	}
+
 	ctxDir := paths.MakeDirsByPath(paths.GetExecDirPath() + "/projects/" + projectName + "/docker/ctx/")
 	for _, ctxFile := range paths.GetFiles(ctxDir) {
 		RenderTo(projectName, ctxDir+"/"+ctxFile, "ctx/"+ctxFile, pp.CtxDir()+"/"+ctxFile, nil)
