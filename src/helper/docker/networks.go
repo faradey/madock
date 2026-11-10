@@ -108,7 +108,7 @@ func PruneUnusedNetworks() []string {
 // whose own containers were never created.
 func removeProjectNetworksIfUnused(projectName string) {
 	for _, name := range dockerQuery("network", "ls", "--format", "{{.Name}}",
-		"--filter", "label=com.docker.compose.project="+composeProjectName(projectName)) {
+		"--filter", "label=com.docker.compose.project="+ComposeProjectName(projectName)) {
 		removeNetworkIfUnused(name)
 	}
 }

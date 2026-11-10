@@ -458,7 +458,7 @@ func containerName(projectConf map[string]string, projectName, service string) s
 	if val, ok := projectConf["activeScope"]; ok && val != "default" {
 		scope = strings.ToLower("-" + val)
 	}
-	return strings.ToLower(projectConf["container_name_prefix"]) + strings.ToLower(projectName) + scope + "-" + service + "-1"
+	return configs2.NormalizeComposeName(projectConf["container_name_prefix"]+projectName+scope) + "-" + service + "-1"
 }
 
 // ResolverFor is the resolver lines the proxy needs when any upstream in it is

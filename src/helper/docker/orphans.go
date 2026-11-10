@@ -4,6 +4,8 @@ import (
 	"os/exec"
 	"sort"
 	"strings"
+
+	"github.com/faradey/madock/v4/src/helper/configs"
 )
 
 // Orphan is one docker resource whose compose project no longer has an entry in
@@ -155,6 +157,15 @@ func parseLabelledImages(out string) []labelledImage {
 func orphansOf(kind string, lines []string, known map[string]bool) []Orphan {
 	var out []Orphan
 
+	// The label is Compose's name for the project, not the registry's: project
+	// ShopU is labelled madock_shopu. Compared as written, every live resource
+	// of a project with a capital letter was listed here as an orphan, with
+	// `docker volume rm` suggested for its database.
+	registered := map[string]bool{}
+	for name := range known {
+		registered[configs.ComposeKey(name)] = true
+	}
+
 	for _, line := range lines {
 		name, label, ok := strings.Cut(strings.TrimSpace(line), "\t")
 		if !ok || name == "" || label == "" {
@@ -168,7 +179,7 @@ func orphansOf(kind string, lines []string, known map[string]bool) []Orphan {
 		if !isOurs || project == "" {
 			continue
 		}
-		if known[project] {
+		if registered[project] {
 			continue
 		}
 

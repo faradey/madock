@@ -148,3 +148,16 @@ func TestEveryVariableAProxyPassReadsIsSet(t *testing.T) {
 		}
 	}
 }
+
+// The proxy's copy of the container name follows Compose's rule too: project
+// Shop+1 runs as madock-shop1, and an upstream with the '+' names nothing.
+func TestTheProxyNamesTheContainerComposeCreates(t *testing.T) {
+	conf := map[string]string{"ports/publish": "false", "container_name_prefix": "madock-", "activeScope": "default"}
+	server, _ := nginx.MainUpstream(conf, "Shop+1", 17003)
+	if server != "madock-shop1-nginx-1:80" {
+		t.Errorf("upstream %q, want madock-shop1-nginx-1:80", server)
+	}
+	if want := docker.GetContainerName(conf, "Shop+1", "nginx") + ":80"; server != want {
+		t.Errorf("upstream %q, docker.GetContainerName gives %q", server, want)
+	}
+}
