@@ -80,6 +80,10 @@ func composeKeyTakenBy(key, self string, entries []ProjectEntry, scopes func(str
 // under a Compose name project runs under — its own name, or its name in one of
 // its scopes — or "" when there is none. For a removal that takes everything
 // under those names: with a clash, part of it is the other project's.
+//
+// Extension point for madock-pro, whose project:purge refuses such a project.
+// Nothing in this edition removes every scope of a project, so nothing here
+// calls it.
 func ComposeNamesTakenAmong(project string, entries []ProjectEntry) string {
 	return composeNamesTakenAmong(project, entries, registeredScopes)
 }
@@ -98,6 +102,10 @@ func composeNamesTakenAmong(project string, entries []ProjectEntry, scopes func(
 
 // RegisteredScopes are the scopes other than default in a project's registry
 // config, each a Compose project of its own, <project>-<scope>.
+//
+// Extension point for madock-pro, whose project:purge removes the containers,
+// networks and volumes of every scope. This edition reads scopes through
+// registeredScopes and never calls it.
 func RegisteredScopes(name string) []string {
 	return registeredScopes(name)
 }
