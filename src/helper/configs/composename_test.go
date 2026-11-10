@@ -79,6 +79,30 @@ func TestAScopeHoldsItsComposeNameToo(t *testing.T) {
 	}
 }
 
+// A removal of everything a project runs under has to know when part of it is
+// another project's: by name, by the other's scope, or by its own scope.
+func TestComposeNamesTakenAmongCoversBothSidesScopes(t *testing.T) {
+	entries := []ProjectEntry{{Name: "shop"}, {Name: "shop-staging"}, {Name: "blog"}, {Name: "Blog"}}
+	scopes := func(name string) []string {
+		if name == "shop" {
+			return []string{"staging"}
+		}
+		return nil
+	}
+	for project, want := range map[string]string{
+		"shop-staging": "shop in scope staging",
+		"shop":         "shop-staging, the Compose name of shop in scope staging",
+		"blog":         "Blog",
+	} {
+		if got := composeNamesTakenAmong(project, entries, scopes); got != want {
+			t.Errorf("composeNamesTakenAmong(%q) = %q, want %q", project, got, want)
+		}
+	}
+	if got := composeNamesTakenAmong("shop", []ProjectEntry{{Name: "shop"}, {Name: "other"}}, scopes); got != "" {
+		t.Errorf("no clash: %q", got)
+	}
+}
+
 // Scopes are read off the registry config's keys; default is the project's own
 // name and no extra one.
 func TestScopesInSkipsDefault(t *testing.T) {

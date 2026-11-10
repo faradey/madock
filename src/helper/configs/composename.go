@@ -76,6 +76,32 @@ func composeKeyTakenBy(key, self string, entries []ProjectEntry, scopes func(str
 	return ""
 }
 
+// ComposeNamesTakenAmong describes another project among entries that runs
+// under a Compose name project runs under — its own name, or its name in one of
+// its scopes — or "" when there is none. For a removal that takes everything
+// under those names: with a clash, part of it is the other project's.
+func ComposeNamesTakenAmong(project string, entries []ProjectEntry) string {
+	return composeNamesTakenAmong(project, entries, registeredScopes)
+}
+
+func composeNamesTakenAmong(project string, entries []ProjectEntry, scopes func(string) []string) string {
+	if other := composeKeyTakenBy(ComposeKey(project), project, entries, scopes); other != "" {
+		return other
+	}
+	for _, scope := range scopes(project) {
+		if other := composeKeyTakenBy(ComposeKey(project+"-"+scope), project, entries, scopes); other != "" {
+			return other + ", the Compose name of " + project + " in scope " + scope
+		}
+	}
+	return ""
+}
+
+// RegisteredScopes are the scopes other than default in a project's registry
+// config, each a Compose project of its own, <project>-<scope>.
+func RegisteredScopes(name string) []string {
+	return registeredScopes(name)
+}
+
 // registeredScopes are the scopes other than default in a project's registry
 // config. A file that does not parse gives none: the clash check must not end
 // the process over somebody else's broken config, and its own name is still
