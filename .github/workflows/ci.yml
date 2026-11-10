@@ -245,10 +245,14 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      # Twelve groups, not eight: on test/e2e/durations.txt the heaviest of
+      # twelve is 310 s of tests against 459 s of eight (measured 2026-11-10),
+      # and a run waits on its heaviest group. Each group also pays a runner's
+      # setup of a minute and a half, so past this the gain shrinks.
       - id: plan
         name: Split the suite
         run: |
-          shards=$(./test/e2e/e2e.sh plan-shards 8)
+          shards=$(./test/e2e/e2e.sh plan-shards 12)
           echo "$shards"
           echo "shards=$shards" >> "$GITHUB_OUTPUT"
 
@@ -256,7 +260,7 @@ jobs:
     name: e2e shard ${{ matrix.shard }}
     needs: [e2e-plan, images]
     runs-on: ubuntu-latest
-    # A shard is an eighth of a suite that used to take 45 minutes, so 40 is
+    # A shard is a twelfth of a suite that used to take 45 minutes, so 40 is
     # room for a runner having a bad morning rather than a budget. It still has
     # to outlive the inner timeout the suite sets for itself, or a run that would
     # have named the test that hung is replaced by a job that says nothing.
@@ -349,7 +353,7 @@ jobs:
 
       # Saved whether the job passed or not — a failed first setup on a slow
       # mirror is exactly the run whose downloads are worth keeping. One shard
-      # saves; the packages are the same in all of them, and eight copies a
+      # saves; the packages are the same in all of them, and twelve copies a
       # run would push everything else out of the cache quota.
       - name: Keep the download cache
         if: always() && matrix.shard == 1
