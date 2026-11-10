@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
+	"github.com/faradey/madock/v4/src/helper/buildcache"
 	"github.com/faradey/madock/v4/src/helper/configs"
 	"github.com/faradey/madock/v4/src/helper/dockertransform"
 	"github.com/faradey/madock/v4/src/helper/embedded"
@@ -68,6 +70,28 @@ func MakeConf(projectName string) {
 	// Last, so an extension writes into a finished directory and nothing here
 	// writes over it afterwards. See ctxfiles.go.
 	writeCtxFiles(projectName, paths.MakeDirsByPath(pp.CtxDir()))
+
+	// After every Dockerfile exists: the cache scope is their content. CI only;
+	// see buildcache.
+	if buildcache.Enabled() {
+		addBuildCache(pp.RuntimeDir())
+	}
+}
+
+func addBuildCache(runtimeDir string) {
+	file := runtimeDir + "/docker-compose.yml"
+	body, err := os.ReadFile(file)
+	if err != nil {
+		return
+	}
+	read := func(context, dockerfile string) string {
+		content, err := os.ReadFile(filepath.Join(runtimeDir, context, dockerfile))
+		if err != nil {
+			return ""
+		}
+		return string(content)
+	}
+	write(file, buildcache.Apply(string(body), read))
 }
 
 func MakeScriptsConf(projectName string) {
