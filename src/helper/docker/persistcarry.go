@@ -66,7 +66,7 @@ func CarryToPersisted(projectName string, conf map[string]string) error {
 }
 
 func carryOne(projectName string, conf map[string]string, s persistedService) error {
-	named := strings.ToLower(composeProjectName(projectName)) + "_" + s.volume
+	named := ComposeProjectName(projectName) + "_" + s.volume
 	if _, err := dockerOut("volume", "inspect", named); err == nil {
 		return nil // already there: carried before, or persisted from the start
 	}
@@ -110,7 +110,7 @@ func carryOne(projectName string, conf map[string]string, s persistedService) er
 		return fmt.Errorf("stopping %s: %w", container, err)
 	}
 	if _, err := dockerOut("volume", "create",
-		"--label", "com.docker.compose.project="+strings.ToLower(composeProjectName(projectName)),
+		"--label", "com.docker.compose.project="+ComposeProjectName(projectName),
 		"--label", "com.docker.compose.volume="+s.volume,
 		named); err != nil {
 		return fmt.Errorf("creating %s: %w", named, err)

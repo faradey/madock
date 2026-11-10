@@ -76,3 +76,17 @@ func TestParseSize(t *testing.T) {
 		}
 	}
 }
+
+// Compose names the resources of project ShopU madock_shopu-…; they are
+// ShopU's, under the name the registry holds, and registered.
+func TestProjectOfMatchesAProjectByComposesName(t *testing.T) {
+	known := map[string]bool{"ShopU": true}
+	for _, c := range []struct {
+		name  string
+		image bool
+	}{{"madock_shopu-php", true}, {"madock_shopu_dbdata", false}, {"madock_shopu", false}} {
+		if got := projectOf(c.name, known, c.image); got != "ShopU" {
+			t.Errorf("projectOf(%q) = %q, want ShopU", c.name, got)
+		}
+	}
+}

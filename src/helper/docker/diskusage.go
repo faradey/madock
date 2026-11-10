@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/faradey/madock/v4/src/helper/configs"
 )
 
 // Disk usage of the Docker daemon, attributed to madock's projects.
@@ -182,13 +184,16 @@ func projectOf(name string, known map[string]bool, image bool) string {
 	if !ok || rest == "" {
 		return ""
 	}
-	best := ""
+	// Matched by Compose's key for each registered name — the resource of
+	// project ShopU is madock_shopu-… — and answered with the registered name.
+	best, bestKey := "", ""
 	for project := range known {
-		if len(project) <= len(best) {
+		key := configs.ComposeKey(project)
+		if len(key) <= len(bestKey) {
 			continue
 		}
-		if rest == project || strings.HasPrefix(rest, project+"-") || strings.HasPrefix(rest, project+"_") {
-			best = project
+		if rest == key || strings.HasPrefix(rest, key+"-") || strings.HasPrefix(rest, key+"_") {
+			best, bestKey = project, key
 		}
 	}
 	if best != "" {

@@ -41,6 +41,22 @@ func TestOrphansOf(t *testing.T) {
 	}
 }
 
+// Compose labels project ShopU madock_shopu. Compared with the registry as
+// written, the live database volume of ShopU was listed as an orphan, with
+// `docker volume rm` suggested for it. Reproduced on a VM before the fix.
+func TestOrphansOfKnowsAProjectByComposesName(t *testing.T) {
+	known := map[string]bool{"ShopU": true, "shop+1": true}
+
+	got := orphansOf("volume", []string{
+		"madock_shopu_dbdata\tmadock_shopu",
+		"madock_shop1_dbdata\tmadock_shop1",
+	}, known)
+
+	if len(got) != 0 {
+		t.Errorf("a registered project's volumes were reported as orphans: %+v", got)
+	}
+}
+
 // A registry entry madock cannot read is still an entry. It belongs to
 // `project:list --stale`, which now reports it, and listing it here as well
 // would ask two commands to argue about the same thing.

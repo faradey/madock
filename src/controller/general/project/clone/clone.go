@@ -124,6 +124,9 @@ func Execute() {
 			refuse(w, "The project with the same name is exist")
 		}
 	}
+	if clash := configs.ComposeNameClash(cloneName); clash != "" {
+		refuse(w, clash)
+	}
 	projectConf := configs.GetCurrentProjectConfig()
 
 	// A deployer-managed project is not something a file copy can reproduce.

@@ -21,14 +21,19 @@ import (
 	"github.com/faradey/madock/v4/src/helper/paths"
 )
 
-// composeProjectName returns the compose project name madock uses when
+// ComposeProjectName returns the compose project name madock uses when
 // generating docker-compose.yml. Containers/volumes/networks created by
 // `docker compose up` are labelled with this exact string under
 // com.docker.compose.project, which lets us find them later without the
 // compose file (e.g. after the project directory was already removed,
 // or when a different madock binary handles the cleanup).
-func composeProjectName(projectName string) string {
-	return "madock_" + projectName
+//
+// Normalised the way Compose normalises it: the label of project ShopU is
+// madock_shopu. Without that the removal by label found nothing for any name
+// with a capital letter, and project:purge reported such a project completely
+// removed with its containers and volumes still there.
+func ComposeProjectName(projectName string) string {
+	return configs2.NormalizeComposeName("madock_" + projectName)
 }
 
 // forceRemoveByLabel cleans up containers (and optionally volumes,
@@ -40,7 +45,7 @@ func composeProjectName(projectName string) string {
 // has already removed everything it owned, so the queries below come
 // back empty and the cleanup is a no-op.
 func forceRemoveByLabel(projectName string, withVolumes bool) {
-	labelFilter := "label=com.docker.compose.project=" + composeProjectName(projectName)
+	labelFilter := "label=com.docker.compose.project=" + ComposeProjectName(projectName)
 
 	// Containers first — they hold references to the network they sit on.
 	if ids := dockerQuery("ps", "-aq", "--filter", labelFilter); len(ids) > 0 {
@@ -619,7 +624,7 @@ func Kill(projectName string) {
 	}
 
 	// No compose file — kill running containers by compose project label.
-	labelFilter := "label=com.docker.compose.project=" + composeProjectName(projectName)
+	labelFilter := "label=com.docker.compose.project=" + ComposeProjectName(projectName)
 	if ids := dockerQuery("ps", "-q", "--filter", labelFilter); len(ids) > 0 {
 		dockerRun("kill", ids...)
 	}

@@ -2,7 +2,7 @@ package setup
 
 import (
 	"fmt"
-	"strings"
+	"os"
 
 	"github.com/faradey/madock/v4/src/command"
 	"github.com/faradey/madock/v4/src/helper/cli/arg_struct"
@@ -64,9 +64,11 @@ func Execute() {
 		}
 	}
 
-	if strings.Contains(projectName, ".") || strings.Contains(projectName, " ") {
-		fmtc.ErrorLn("The project folder name cannot contain a period or space")
-		return
+	// Both refusals exit 1. The first one returned, which exited 0: to a script,
+	// a setup refused for its directory name looked like a setup made.
+	if refusal := nameRefusal(projectName); refusal != "" {
+		fmtc.ErrorLn(refusal)
+		os.Exit(1)
 	}
 
 	// Only read here, never made: a setup refused further on — a --preset that
