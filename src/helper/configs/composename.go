@@ -1,6 +1,11 @@
 package configs
 
-import "strings"
+import (
+	"sort"
+	"strings"
+
+	"github.com/faradey/madock/v4/src/helper/paths"
+)
 
 // ComposeKey is what Docker Compose keeps of a project's name: lower case, and
 // only a-z, 0-9, '_' and '-'. Everything else is dropped, not replaced.
@@ -38,18 +43,64 @@ func NormalizeComposeName(name string) string {
 // ComposeNameTakenBy names the registered project that Compose would run under
 // the same name as name, or "" when there is none. name itself does not count:
 // setting a project up again is not a clash with itself.
+//
+// A project runs under its own name in the scope default and under
+// <name>-<scope> in every other scope, so project shop with a scope staging
+// holds madock_shop-staging as well. Measured on a VM with 4.5.57: setup and
+// start of a project shop-staging went through and took over the containers
+// and the database volume shop had in staging.
 func ComposeNameTakenBy(name string) string {
-	return composeNameTakenBy(name, ListProjects())
+	return composeNameTakenBy(name, ListProjects(), registeredScopes)
 }
 
-func composeNameTakenBy(name string, entries []ProjectEntry) string {
-	key := ComposeKey(name)
+func composeNameTakenBy(name string, entries []ProjectEntry, scopes func(string) []string) string {
+	return composeKeyTakenBy(ComposeKey(name), name, entries, scopes)
+}
+
+// composeKeyTakenBy describes the run of a project other than self — its own
+// name, or its name in one of its scopes — whose Compose key is key.
+func composeKeyTakenBy(key, self string, entries []ProjectEntry, scopes func(string) []string) string {
 	for _, entry := range entries {
-		if entry.Name != name && ComposeKey(entry.Name) == key {
+		if entry.Name == self {
+			continue
+		}
+		if ComposeKey(entry.Name) == key {
 			return entry.Name
+		}
+		for _, scope := range scopes(entry.Name) {
+			if ComposeKey(entry.Name+"-"+scope) == key {
+				return entry.Name + " in scope " + scope
+			}
 		}
 	}
 	return ""
+}
+
+// registeredScopes are the scopes other than default in a project's registry
+// config. A file that does not parse gives none: the clash check must not end
+// the process over somebody else's broken config, and its own name is still
+// compared.
+func registeredScopes(name string) []string {
+	conf, err := ParseXmlFileSafe(paths.GetExecDirPath() + "/projects/" + name + "/config.xml")
+	if err != nil {
+		return nil
+	}
+	return scopesIn(conf)
+}
+
+func scopesIn(conf map[string]string) []string {
+	seen := map[string]bool{}
+	var scopes []string
+	for key := range conf {
+		parts := strings.Split(key, "/")
+		if len(parts) < 2 || parts[0] != "scopes" || parts[1] == "default" || parts[1] == "" || seen[parts[1]] {
+			continue
+		}
+		seen[parts[1]] = true
+		scopes = append(scopes, parts[1])
+	}
+	sort.Strings(scopes)
+	return scopes
 }
 
 // ComposeNameClash is the refusal for a new project whose Compose name is
@@ -59,7 +110,23 @@ func ComposeNameClash(name string) string {
 	if other == "" {
 		return ""
 	}
-	return "Project " + other + " already exists, and Docker Compose runs " + name + " and " + other +
-		" under one name, " + NormalizeComposeName("madock_"+name) +
-		": they would share containers and volumes. Give this directory another name"
+	return "Project " + other + " already runs under " + NormalizeComposeName("madock_"+name) +
+		", the Docker Compose name " + name + " would get: they would share containers and volumes. Give this directory another name"
+}
+
+// ScopeComposeClash is the refusal for a scope of project whose Compose name,
+// <project>-<scope>, another project already runs under, or "" when there is
+// no clash.
+func ScopeComposeClash(project, scope string) string {
+	return scopeComposeClash(project, scope, ListProjects(), registeredScopes)
+}
+
+func scopeComposeClash(project, scope string, entries []ProjectEntry, scopes func(string) []string) string {
+	other := composeKeyTakenBy(ComposeKey(project+"-"+scope), project, entries, scopes)
+	if other == "" {
+		return ""
+	}
+	return "Project " + other + " already runs under " + NormalizeComposeName("madock_"+project+"-"+scope) +
+		", the Docker Compose name of " + project + " in scope " + scope +
+		": they would share containers and volumes. Choose another scope name"
 }

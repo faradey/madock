@@ -74,6 +74,51 @@ func TestAProjectComposeWouldShareIsRefused(t *testing.T) {
 	}
 }
 
+// A project runs as <name>-<scope> in each scope other than default, so
+// e2escope in scope staging holds madock_e2escope-staging. On a VM with 4.5.57
+// a project e2escope-staging was set up and started over the containers and
+// database volume of e2escope's staging. Refused now, in both orders: the
+// project after the scope, and the scope after the project.
+func TestAScopeAndAProjectComposeWouldShareAreRefused(t *testing.T) {
+	install := newInstallation(t)
+
+	scoped := install.project("e2escope")
+	scoped.run(setupTimeout, "setup", "-y",
+		"--platform=custom",
+		"--language=none",
+		"--hosts=e2escope.test",
+	)
+	scoped.run(2*time.Minute, "scope:add", "staging")
+
+	clash := install.project("e2escope-staging")
+	out, err := clash.tryRun(setupTimeout, "setup", "-y",
+		"--platform=custom",
+		"--language=none",
+		"--hosts=e2escopestaging.test",
+	)
+	requireStatusOne(t, err, out, "setup of a project named like another project's scope")
+	requireContains(t, out, "e2escope in scope staging", "the refusal should name the project and its scope")
+	if clash.configured() {
+		t.Errorf("the refused setup registered %s", clash.name)
+	}
+
+	plain := install.project("e2eplain-qa")
+	plain.run(setupTimeout, "setup", "-y",
+		"--platform=custom",
+		"--language=none",
+		"--hosts=e2eplainqa.test",
+	)
+	other := install.project("e2eplain")
+	other.run(setupTimeout, "setup", "-y",
+		"--platform=custom",
+		"--language=none",
+		"--hosts=e2eplain.test",
+	)
+	out, err = other.tryRun(2*time.Minute, "scope:add", "QA")
+	requireStatusOne(t, err, out, "scope QA of e2eplain beside project e2eplain-qa")
+	requireContains(t, out, "e2eplain-qa", "the refusal should name the project already there")
+}
+
 // Without its compose file a project is removed by its Compose label. The label
 // of E2eLabel is madock_e2elabel, the lookup asked for madock_E2eLabel, found
 // nothing, and the removal reported success with every container and volume
