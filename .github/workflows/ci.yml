@@ -315,9 +315,25 @@ jobs:
       - name: Load the warmed images
         uses: ./.github/actions/load-images
 
+      # The image builds share BuildKit's cache through GitHub's: a shard's
+      # first setup built every layer from nothing — 113 s for language=none,
+      # 276 s for php, measured on 2026-11-10, about 39 of the 95 minutes of
+      # tests in a run — and squid already serves the downloads, so what is
+      # left is the build steps. MADOCK_BUILD_CACHE=gha makes madock put a
+      # cache_from/cache_to on each build (src/helper/buildcache), scoped by the
+      # Dockerfile, and only a docker-container builder can write that cache.
+      # The runtime action hands BuildKit the token for GitHub's cache.
+      - name: Expose GitHub's cache to BuildKit
+        uses: crazy-max/ghaction-github-runtime@v3
+      - name: A builder that can use it
+        run: docker buildx create --name madock-cache --driver docker-container --bootstrap
+
       # run-local refuses to touch a daemon that might be somebody's own; CI=true
       # is what tells it this one is disposable. GitHub sets it.
       - name: Run the end-to-end suite
+        env:
+          MADOCK_BUILD_CACHE: gha
+          BUILDX_BUILDER: madock-cache
         run: |
           set -o pipefail
           ./test/e2e/e2e.sh run-local -run '${{ matrix.run }}' | tee shard.log
