@@ -14,6 +14,7 @@
 #   ./test/e2e/e2e.sh run-local     no VM — only where the daemon is disposable
 #   ./test/e2e/e2e.sh run --quarantined   include the tests under quarantine
 #   ./test/e2e/e2e.sh plan-shards 8 split the suite into N groups, as JSON
+#   ./test/e2e/e2e.sh durations LOG...  durations.txt from go test -v logs
 #
 # The suite is behind the `e2e` build tag, so `go test ./...` does not compile
 # it and the pre-push hook stays fast. Nothing here touches your machine's own
@@ -302,10 +303,18 @@ cmd_status() {
 # new test is always in exactly one group, and the caller is handed the count so
 # it can check that the group it was given is the group that ran.
 #
-# The groups are round-robin over the sorted names, which balances well enough:
-# the tests run between twenty seconds and two minutes, so a group is within a
-# minute of its neighbours. Balancing by measured duration needs timings kept
-# somewhere, and would buy that minute.
+# The groups are balanced by measured duration, from durations.txt: the
+# longest test goes first, each into the group that has the least so far. They
+# were round-robin over the sorted names, on the belief that tests ran twenty
+# seconds to two minutes and groups came out within a minute of each other.
+# Measured on 2026-11-10 they run from seconds to over four minutes, and the
+# eight groups of one run took 449 to 1085 s of tests: the run waited on the
+# heaviest. On the same durations the round-robin's heaviest group is 949 s
+# and this one's 571 s.
+#
+# A test missing from durations.txt — a new one — counts as the median, so it
+# lands somewhere sensible and is never left out. Refresh the file with
+# `e2e.sh durations` over the logs of a few green runs.
 cmd_plan_shards() {
     buckets="${1:-8}"
 
@@ -319,13 +328,43 @@ cmd_plan_shards() {
 That is either a build failure above or a package that no longer contains the suite,
 and splitting an empty list into groups would produce a CI run that tests nothing."
 
-    printf '%s\n' "$names" | awk -v buckets="$buckets" '
-        {
-            slot = (NR - 1) % buckets
-            group[slot] = group[slot] "|" $0
-            count[slot]++
+    durations="$script_dir/durations.txt"
+    [ -f "$durations" ] || durations=/dev/null
+
+    printf '%s\n' "$names" | awk -v buckets="$buckets" -v durations="$durations" '
+        BEGIN {
+            while ((getline line < durations) > 0) {
+                if (line ~ /^[ \t]*(#|$)/) continue
+                split(line, f, /[ \t]+/)
+                known[f[1]] = f[2] + 0
+                sorted[++n] = f[2] + 0
+            }
+            # The median of what is known, for a test that is not: asort is
+            # gawk only, so an insertion sort over a hundred numbers.
+            for (i = 2; i <= n; i++) {
+                v = sorted[i]
+                for (j = i - 1; j >= 1 && sorted[j] > v; j--) sorted[j + 1] = sorted[j]
+                sorted[j + 1] = v
+            }
+            median = n ? sorted[int((n + 1) / 2)] : 60
         }
+        { name[NR] = $0; cost[NR] = ($0 in known) ? known[$0] : median }
         END {
+            # Longest first; ties by name, so the plan is the same on every run.
+            for (i = 1; i <= NR; i++) order[i] = i
+            for (i = 2; i <= NR; i++) {
+                k = order[i]
+                for (j = i - 1; j >= 1 && (cost[order[j]] < cost[k] || (cost[order[j]] == cost[k] && name[order[j]] > name[k])); j--) order[j + 1] = order[j]
+                order[j + 1] = k
+            }
+            for (i = 1; i <= NR; i++) {
+                k = order[i]
+                slot = 0
+                for (s = 1; s < buckets; s++) if (load[s] < load[slot]) slot = s
+                load[slot] += cost[k]
+                group[slot] = group[slot] "|" name[k]
+                count[slot]++
+            }
             printf "["
             first = 1
             for (i = 0; i < buckets; i++) {
@@ -338,6 +377,21 @@ and splitting an empty list into groups would produce a CI run that tests nothin
         }'
 }
 
+# durations prints durations.txt from `go test -v` logs of the suite — a CI
+# log as `gh run view <id> --log` saves it does too. A test's line is the
+# smallest it took in any of them: the first test of a group pays the image
+# builds of its runner, and over several runs a different test is first.
+cmd_durations() {
+    [ $# -gt 0 ] || die "durations takes the logs of one or more runs"
+    printf '# Seconds each end-to-end test took, the least over the runs it was\n'
+    printf '# measured in. plan-shards balances the CI groups by it. Regenerate:\n'
+    printf '#   ./test/e2e/e2e.sh durations <go test -v logs>... > test/e2e/durations.txt\n'
+    cat "$@" | grep -oE -- '--- (PASS|FAIL|SKIP): Test[A-Za-z0-9_]+ \([0-9.]+s\)' \
+        | sed -E 's/^--- [A-Z]+: (Test[A-Za-z0-9_]+) \(([0-9.]+)s\)/\1 \2/' \
+        | awk '{ if (!($1 in m) || $2 < m[$1]) m[$1] = $2 } END { for (t in m) printf "%s %d\n", t, m[t] + 0.5 }' \
+        | LC_ALL=C sort
+}
+
 command=${1:-}
 [ $# -gt 0 ] && shift
 
@@ -346,6 +400,7 @@ case "$command" in
     run)       cmd_run "$@" ;;
     run-local) cmd_run_local "$@" ;;
     plan-shards) cmd_plan_shards "$@" ;;
+    durations)   cmd_durations "$@" ;;
     auth)   cmd_auth ;;
     shell)  cmd_shell ;;
     down)   cmd_down ;;
