@@ -104,8 +104,8 @@ func composeNamesTakenAmong(project string, entries []ProjectEntry, scopes func(
 // config, each a Compose project of its own, <project>-<scope>.
 //
 // Extension point for madock-pro, whose project:purge removes the containers,
-// networks and volumes of every scope. This edition reads scopes through
-// registeredScopes and never calls it.
+// networks and volumes of every scope. In this edition project:orphans calls it,
+// to know a scope's resources as its project's.
 func RegisteredScopes(name string) []string {
 	return registeredScopes(name)
 }
