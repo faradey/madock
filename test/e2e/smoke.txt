@@ -1,0 +1,33 @@
+# The end-to-end tests every pull request runs. The whole suite runs nightly,
+# on workflow_dispatch, and on a pull request labelled full-e2e; a tag is made
+# only after a full run of the commit it names.
+#
+# The core a change breaks most often, each test short: a project set up,
+# started, stopped, rebuilt, cloned and removed; the shared proxy; the database
+# and db:execute; config reaching the files; exec, logs, status, JSON; the
+# refusals that keep a command off Docker. About eight minutes of tests,
+# measured on 2026-11-10 (test/e2e/durations.txt).
+#
+# A name here that no longer exists stops plan-shards: a renamed test would
+# otherwise leave this set without anybody noticing.
+TestProjectLifecycle
+TestProjectRemoveLeavesNothingBehind
+TestCloneCopiesTheDataAndThenDiverges
+TestRebuildKeepsTheData
+TestProxyRoutesEveryProjectOverHTTPS
+TestProxyCommandsControlTheProxy
+TestStartExitStatusFollowsWhatItReports
+TestRestartReadsArgumentsBeforeStopping
+TestLogsSelectTheServiceAskedFor
+TestDatabaseIsReachable
+TestDbExecuteJSONIsOneDocument
+TestJSONOutputIsUsable
+TestInfoReportsWhatIsActuallyPublished
+TestConfigChangeReachesGeneratedFiles
+TestCliRunsAsTheInvokingUser
+TestStatusAnswersZeroWhenNothingRuns
+TestDestructiveCommandsObeyTheInstallation
+TestCommandsRefuseBeforeTouchingDocker
+TestHelpIsAnsweredNotActedOn
+TestAProjectComposeWouldShareIsRefused
+TestNoTemplatePlaceholderSurvivesRendering

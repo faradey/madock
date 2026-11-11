@@ -68,6 +68,8 @@ name: CI
 # to find out means finding out from a customer instead.
 on:
   pull_request:
+    # labeled: adding full-e2e to a pull request starts the whole suite on it.
+    types: [opened, synchronize, reopened, labeled]
   # Only the `images` job runs here, and only to write a cache the pull requests
   # can read. Everything else is gated on the event below, so this does not bring
   # back the second full run that was removed above.
@@ -106,6 +108,49 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # What this run has to prove, decided once for the jobs below.
+  #
+  # Every pull request ran all 107 end-to-end tests and the three platform
+  # installs, about fifteen minutes; on 2026-11-10 one that changed only Go
+  # comments took twenty. Now:
+  #   - a pull request that touches only documentation runs the unit tests;
+  #   - any other pull request runs the tests in test/e2e/smoke.txt;
+  #   - the nightly run, workflow_dispatch, and a pull request labelled
+  #     full-e2e run the whole suite and Platforms.
+  # A tag is made only after a full run of the commit it names (dispatch it
+  # on master).
+  scope:
+    name: What this change needs
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      docs_only: ${{ steps.decide.outputs.docs_only }}
+      full: ${{ steps.decide.outputs.full }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: decide
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+          LABELLED_FULL: ${{ contains(github.event.pull_request.labels.*.name, 'full-e2e') }}
+        run: |
+          full=false
+          docs_only=false
+          if [ "$EVENT" != pull_request ] || [ "$LABELLED_FULL" = true ]; then
+            full=true
+          else
+            changed=$(git diff --name-only "origin/$BASE...HEAD")
+            echo "changed files:"; echo "$changed"
+            code=$(printf '%s\n' "$changed" | grep -vE '^(docs/|.*\.md$|LICENSE$)' | grep -v '^$' || true)
+            [ -n "$changed" ] && [ -z "$code" ] && docs_only=true
+          fi
+          echo "full=$full docs_only=$docs_only"
+          echo "full=$full" >> "$GITHUB_OUTPUT"
+          echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
+
   test:
     name: Build and unit tests
     # A push to master is here for one job only, and it is not this one. Gating
@@ -232,7 +277,8 @@ jobs:
   # new test is always in exactly one group.
   e2e-plan:
     name: Plan the end-to-end shards
-    needs: test
+    needs: [test, scope]
+    if: needs.scope.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -245,10 +291,20 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      # The whole suite in eight groups, or test/e2e/smoke.txt in four. Two
+      # groups of the smoke set took 517 s and 400 s for about 240 s of tests
+      # each (2026-11-11): a runner's own setup and first builds are minutes,
+      # so four groups of about 120 s finish sooner.
       - id: plan
         name: Split the suite
+        env:
+          FULL: ${{ needs.scope.outputs.full }}
         run: |
-          shards=$(./test/e2e/e2e.sh plan-shards 8)
+          if [ "$FULL" = true ]; then
+            shards=$(./test/e2e/e2e.sh plan-shards 8)
+          else
+            shards=$(./test/e2e/e2e.sh plan-shards 4 --only test/e2e/smoke.txt)
+          fi
           echo "$shards"
           echo "shards=$shards" >> "$GITHUB_OUTPUT"
 
@@ -397,7 +453,7 @@ jobs:
   # what makes this an answer rather than a formality.
   e2e:
     name: End-to-end
-    needs: [e2e-plan, e2e-shard]
+    needs: [scope, e2e-plan, e2e-shard]
     # `always()` is what makes this a real gate rather than a formality — a job
     # that only lists `needs` is skipped when a dependency fails, and a skipped
     # required check is not a failed one. It is also why this job cannot be left
@@ -412,7 +468,15 @@ jobs:
         run: |
           plan='${{ needs.e2e-plan.result }}'
           shards='${{ needs.e2e-shard.result }}'
-          echo "plan: $plan, shards: $shards"
+          scope='${{ needs.scope.result }}'
+          docs_only='${{ needs.scope.outputs.docs_only }}'
+          echo "scope: $scope, docs only: $docs_only, plan: $plan, shards: $shards"
+          # A change to documentation alone runs no end-to-end test, and that
+          # is a pass — but only when the decision itself ran and said so.
+          if [ "$scope" = success ] && [ "$docs_only" = true ]; then
+            echo "documentation only: no end-to-end test to run"
+            exit 0
+          fi
           if [ "$plan" != success ] || [ "$shards" != success ]; then
             echo "the end-to-end suite did not pass" >&2
             exit 1
@@ -434,7 +498,11 @@ jobs:
   # a local test and this job carries the two that can be public.
   platforms:
     name: Platforms
-    needs: [test, images]
+    needs: [test, images, scope]
+    # Nightly, on workflow_dispatch and on a pull request labelled full-e2e;
+    # not on every pull request any more, and not a required check of master.
+    # A tag still waits for it: dispatch the workflow on the commit first.
+    if: needs.scope.outputs.full == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
