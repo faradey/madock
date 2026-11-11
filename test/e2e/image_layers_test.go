@@ -23,11 +23,26 @@ import (
 //
 // The witness is the images' layer list, not the rendered Dockerfile: the
 // Dockerfile can look right and the cache still not match.
+//
+// Built without the CI build cache (MADOCK_BUILD_CACHE emptied for these
+// commands): the question is what two builds on one machine share. With the
+// cache each Dockerfile has a scope of its own, so one image could come from
+// layers another runner built — other timestamps, other layer ids — and the
+// other be built here: on 2026-11-11 that gave 1 shared layer of 28 and a
+// red run with nothing wrong in the Dockerfile.
 func TestPhpImagesOfDifferentTimezonesShareTheToolchain(t *testing.T) {
 	install := newInstallation(t)
+	run := func(p *project, timeout time.Duration, args ...string) string {
+		t.Helper()
+		out, err := p.tryRunWith(timeout, "", []string{"MADOCK_BUILD_CACHE="}, args...)
+		if err != nil {
+			t.Fatalf("madock %s failed: %v\n%s", strings.Join(args, " "), err, out)
+		}
+		return out
+	}
 
 	first := install.project("e2etzone")
-	first.run(15*time.Minute, "setup", "-y",
+	run(first, 15*time.Minute, "setup", "-y",
 		"--platform=custom",
 		"--language=php",
 		"--search-engine=none",
@@ -35,16 +50,17 @@ func TestPhpImagesOfDifferentTimezonesShareTheToolchain(t *testing.T) {
 	)
 
 	second := install.project("e2etztwo")
-	second.run(15*time.Minute, "setup", "-y",
+	run(second, 15*time.Minute, "setup", "-y",
 		"--platform=custom",
 		"--language=php",
 		"--search-engine=none",
 		"--hosts=e2etztwo.test",
 	)
-	second.run(2*time.Minute, "config:set", "-n", "timezone", "-v", "Europe/Kyiv")
+	run(second, 2*time.Minute, "config:set", "-n", "timezone", "-v", "Europe/Kyiv")
 
-	first.run(25*time.Minute, "start")
-	second.run(25*time.Minute, "start")
+	install.resetProxy(first)
+	run(first, 25*time.Minute, "start")
+	run(second, 25*time.Minute, "start")
 
 	// The setting itself must still arrive: moving it is only right if the
 	// end state is the one it was before.
