@@ -3,7 +3,7 @@ package docker
 import "testing"
 
 // noScopes is a registry where no project has a scope but default.
-func noScopes(string) []string { return nil }
+func noScopes(string) ([]string, bool) { return nil, true }
 
 // The rule this tests is the one that decides whether somebody is shown their
 // own leftovers or a stranger's disk, so it is separated from the docker call
@@ -66,11 +66,11 @@ func TestOrphansOfKnowsAProjectByComposesName(t *testing.T) {
 // with no such scope behind it is still an orphan.
 func TestOrphansOfKnowsAProjectInItsScopes(t *testing.T) {
 	known := map[string]bool{"Shop": true}
-	scopes := func(name string) []string {
+	scopes := func(name string) ([]string, bool) {
 		if name == "Shop" {
-			return []string{"Staging"}
+			return []string{"Staging"}, true
 		}
-		return nil
+		return nil, true
 	}
 
 	got := orphansOf("volume", []string{
@@ -80,6 +80,36 @@ func TestOrphansOfKnowsAProjectInItsScopes(t *testing.T) {
 
 	if len(got) != 1 || got[0].Project != "shop-gone" {
 		t.Errorf("want only shop-gone as an orphan, got %+v", got)
+	}
+}
+
+// A registry config that does not parse gives no scopes, and the live database
+// of shop in scope staging was listed as the orphan of a project shop-staging.
+// Unknown scopes are not none: every madock_shop-<anything> is shop's. The match
+// stops at the '-' and at a nearer registered project: madock_shopx is another
+// forgotten project, and shop-x judges madock_shop-x-gone by its own scopes.
+func TestOrphansOfKnowsAProjectWhoseScopesCannotBeRead(t *testing.T) {
+	known := map[string]bool{"shop": true, "shop-x": true}
+	scopes := func(name string) ([]string, bool) {
+		if name == "shop" {
+			return nil, false
+		}
+		return []string{"live"}, true
+	}
+
+	got := orphansOf("volume", []string{
+		"madock_shop-staging_dbdata\tmadock_shop-staging",
+		"madock_shopx_dbdata\tmadock_shopx",
+		"madock_shop-x-live_dbdata\tmadock_shop-x-live",
+		"madock_shop-x-gone_dbdata\tmadock_shop-x-gone",
+	}, known, scopes)
+
+	var projects []string
+	for _, orphan := range got {
+		projects = append(projects, orphan.Project)
+	}
+	if len(projects) != 2 || projects[0] != "shopx" || projects[1] != "shop-x-gone" {
+		t.Errorf("want shopx and shop-x-gone as orphans, got %v", projects)
 	}
 }
 

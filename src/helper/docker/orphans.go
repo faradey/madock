@@ -35,10 +35,11 @@ const composeLabel = "com.docker.compose.project"
 // shipped — the only cleanup available was to delete the directories and leave
 // the volumes, which turns visible litter into invisible litter.
 //
-// **Read-only, and deliberately so.** Removing what this finds stays with
-// `project:remove`, behind `allow_destructive_commands`. A `--remove` flag here
-// would be a second route to deleting volumes that does not pass that switch,
-// and the switch is the thing that stops a habit from becoming an accident.
+// **Read-only.** Removing what this finds is `project:orphans --remove`, one
+// project at a time and behind `allow_destructive_commands` like
+// `project:remove`: a removal that did not pass that switch would be a second
+// route to deleting volumes, and the switch is the thing that stops a habit
+// from becoming an accident.
 //
 // `known` is the set of project names the registry holds, including the ones it
 // can no longer read: a broken registry entry is somebody's to fix, not an
@@ -46,9 +47,9 @@ const composeLabel = "com.docker.compose.project"
 func FindOrphans(known map[string]bool) []Orphan {
 	var out []Orphan
 
-	out = append(out, orphansOf("volume", dockerLines("volume", "ls"), known, configs.RegisteredScopes)...)
-	out = append(out, orphansOf("network", dockerLines("network", "ls"), known, configs.RegisteredScopes)...)
-	out = append(out, orphansOf("image", dockerLines("image", "ls"), known, configs.RegisteredScopes)...)
+	out = append(out, orphansOf("volume", dockerLines("volume", "ls"), known, configs.RegisteredScopesRead)...)
+	out = append(out, orphansOf("network", dockerLines("network", "ls"), known, configs.RegisteredScopesRead)...)
+	out = append(out, orphansOf("image", dockerLines("image", "ls"), known, configs.RegisteredScopesRead)...)
 
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].Project != out[j].Project {
@@ -154,26 +155,12 @@ func parseLabelledImages(out string) []labelledImage {
 // Split from the docker call so the rule can be tested without a daemon, which
 // matters more here than usual: the rule is what decides whether somebody is
 // shown their own leftovers or somebody else's containers. scopes gives the
-// scopes other than default of a registered project, as RegisteredScopes does.
-func orphansOf(kind string, lines []string, known map[string]bool, scopes func(string) []string) []Orphan {
+// scopes other than default of a registered project, and false when its
+// registry config cannot be read, as RegisteredScopesRead does.
+func orphansOf(kind string, lines []string, known map[string]bool, scopes func(string) ([]string, bool)) []Orphan {
 	var out []Orphan
 
-	// The label is Compose's name for the project, not the registry's: project
-	// ShopU is labelled madock_shopu. Compared as written, every live resource
-	// of a project with a capital letter was listed here as an orphan, with
-	// `docker volume rm` suggested for its database.
-	//
-	// A project runs as <name>-<scope> in every scope but default, so shop in
-	// scope staging is labelled madock_shop-staging. Without its scopes here,
-	// that scope's live database was listed as the orphan of a project
-	// shop-staging, with the same suggestion.
-	registered := map[string]bool{}
-	for name := range known {
-		registered[configs.ComposeKey(name)] = true
-		for _, scope := range scopes(name) {
-			registered[configs.ComposeKey(name+"-"+scope)] = true
-		}
-	}
+	registry := readRegistryKeys(known, scopes)
 
 	for _, line := range lines {
 		name, label, ok := strings.Cut(strings.TrimSpace(line), "\t")
@@ -188,7 +175,7 @@ func orphansOf(kind string, lines []string, known map[string]bool, scopes func(s
 		if !isOurs || project == "" {
 			continue
 		}
-		if registered[project] {
+		if registry.takenBy(project) != "" {
 			continue
 		}
 
@@ -196,4 +183,93 @@ func orphansOf(kind string, lines []string, known map[string]bool, scopes func(s
 	}
 
 	return out
+}
+
+// registryKeys is the registry as Compose sees it.
+type registryKeys struct {
+	// owners is, per Compose key a registered project runs under, who runs
+	// under it: the project's name, or its name in one of its scopes.
+	owners map[string]string
+	// readable is, per registered project's own Compose key, whether its scopes
+	// are known. Two names with one key are one Compose project, and one
+	// unreadable config among them makes the key's scopes unknown.
+	readable map[string]bool
+}
+
+// readRegistryKeys is known, the names the registry holds, in Compose's terms.
+//
+// The label is Compose's name for the project, not the registry's: project
+// ShopU is labelled madock_shopu. Compared as written, every live resource of a
+// project with a capital letter was listed as an orphan, with `docker volume rm`
+// suggested for its database.
+//
+// A project runs as <name>-<scope> in every scope but default, so shop in scope
+// staging is labelled madock_shop-staging. Without its scopes, that scope's live
+// database was listed as the orphan of a project shop-staging, with the same
+// suggestion.
+func readRegistryKeys(known map[string]bool, scopes func(string) ([]string, bool)) registryKeys {
+	// Sorted, so that when two names share a key the one a refusal names does
+	// not change from run to run.
+	names := make([]string, 0, len(known))
+	for name := range known {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	r := registryKeys{owners: map[string]string{}, readable: map[string]bool{}}
+	for _, name := range names {
+		key := configs.ComposeKey(name)
+		if _, taken := r.owners[key]; !taken {
+			r.owners[key] = name
+		}
+		scopeNames, ok := scopes(name)
+		if prev, seen := r.readable[key]; seen {
+			ok = ok && prev
+		}
+		r.readable[key] = ok
+		for _, scope := range scopeNames {
+			scopeKey := configs.ComposeKey(name + "-" + scope)
+			if _, taken := r.owners[scopeKey]; !taken {
+				r.owners[scopeKey] = name + " in scope " + scope
+			}
+		}
+	}
+	return r
+}
+
+// takenBy describes the registered project that runs, or may run, under the
+// label madock_<project>, or "" when none does.
+func (r registryKeys) takenBy(project string) string {
+	if owner, ok := r.owners[project]; ok {
+		return owner
+	}
+	if key := unreadableScopeOf(project, r.readable); key != "" {
+		return r.owners[key] + " in a scope its registry config.xml does not say, because it cannot be read"
+	}
+	return ""
+}
+
+// unreadableScopeOf answers whether project, a label with madock_ stripped, may
+// be a scope of a registered project whose scopes cannot be read — it is
+// <key>-<anything> for such a project's key — and returns that key, or "".
+//
+// A registry config that does not parse gives no scopes, and the live
+// resources of that project's scopes were listed as the orphans of a project
+// <name>-<scope>. The entry is counted as known for the same reason a broken
+// entry is: somebody's to fix, and not with `docker volume rm`.
+//
+// The registered key nearest the label decides, longest first: with shop
+// unreadable and shop-x registered, madock_shop-x-gone is judged by shop-x's
+// own scopes, not swallowed by shop. The '-' is part of the match, so
+// madock_shopx is never shop's.
+func unreadableScopeOf(project string, readable map[string]bool) string {
+	for i := strings.LastIndex(project, "-"); i > 0; i = strings.LastIndex(project[:i], "-") {
+		if ok, isRegistered := readable[project[:i]]; isRegistered {
+			if ok {
+				return ""
+			}
+			return project[:i]
+		}
+	}
+	return ""
 }
