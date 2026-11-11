@@ -104,10 +104,26 @@ func composeNamesTakenAmong(project string, entries []ProjectEntry, scopes func(
 // config, each a Compose project of its own, <project>-<scope>.
 //
 // Extension point for madock-pro, whose project:purge removes the containers,
-// networks and volumes of every scope. In this edition project:orphans calls it,
-// to know a scope's resources as its project's.
+// networks and volumes of every scope. A config that does not parse gives none;
+// RegisteredScopesRead tells that apart, and project:orphans uses it.
 func RegisteredScopes(name string) []string {
 	return registeredScopes(name)
+}
+
+// RegisteredScopesRead is RegisteredScopes that also says whether the registry
+// config could be read: false when it could not, and then the project's scopes
+// are unknown rather than none.
+//
+// RegisteredScopes cannot tell the two apart, and for project:orphans the
+// difference is a database: a project whose config does not parse still has
+// the volumes of its scopes, and "no scopes" listed every one of them as an
+// orphan, with `docker volume rm` suggested.
+func RegisteredScopesRead(name string) ([]string, bool) {
+	conf, err := ParseXmlFileSafe(paths.GetExecDirPath() + "/projects/" + name + "/config.xml")
+	if err != nil {
+		return nil, false
+	}
+	return scopesIn(conf), true
 }
 
 // registeredScopes are the scopes other than default in a project's registry
@@ -115,11 +131,8 @@ func RegisteredScopes(name string) []string {
 // the process over somebody else's broken config, and its own name is still
 // compared.
 func registeredScopes(name string) []string {
-	conf, err := ParseXmlFileSafe(paths.GetExecDirPath() + "/projects/" + name + "/config.xml")
-	if err != nil {
-		return nil
-	}
-	return scopesIn(conf)
+	scopes, _ := RegisteredScopesRead(name)
+	return scopes
 }
 
 func scopesIn(conf map[string]string) []string {
