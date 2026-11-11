@@ -315,8 +315,18 @@ cmd_status() {
 # A test missing from durations.txt — a new one — counts as the median, so it
 # lands somewhere sensible and is never left out. Refresh the file with
 # `e2e.sh durations` over the logs of a few green runs.
+#
+# --only FILE keeps the plan to the tests FILE names (one per line, # comments),
+# as test/e2e/smoke.txt does for pull requests. A name there that the package
+# does not have stops the plan: a renamed test would otherwise drop out of the
+# set and nothing would say so.
 cmd_plan_shards() {
     buckets="${1:-8}"
+    only=""
+    if [ "${2:-}" = "--only" ]; then
+        only="${3:-}"
+        [ -f "$only" ] || die "plan-shards --only needs a file of test names, got: $only"
+    fi
 
     case "$buckets" in
         ''|*[!0-9]*) die "plan-shards takes a number of groups, got: $buckets" ;;
@@ -327,6 +337,14 @@ cmd_plan_shards() {
     [ -n "$names" ] || die "the end-to-end package listed no tests.
 That is either a build failure above or a package that no longer contains the suite,
 and splitting an empty list into groups would produce a CI run that tests nothing."
+
+    if [ -n "$only" ]; then
+        wanted=$(grep -v '^[[:space:]]*#' "$only" | grep -v '^[[:space:]]*$' | sort -u)
+        missing=$(printf '%s\n' "$wanted" | grep -vxF "$names" || true)
+        [ -z "$missing" ] || die "$only names tests the package does not have:
+$missing"
+        names="$wanted"
+    fi
 
     durations="$script_dir/durations.txt"
     [ -f "$durations" ] || durations=/dev/null
