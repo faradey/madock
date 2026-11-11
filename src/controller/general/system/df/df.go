@@ -28,7 +28,7 @@ func init() {
 
 // Execute prints the Docker disk by kind and by project.
 //
-// **Read-only, and deliberately so**, for the reason project:orphans is: what
+// **Read-only, and deliberately so**, for the reason project:orphans' list is: what
 // it reports includes volumes, which are databases, and a removal here would be
 // a second route around `allow_destructive_commands`. It says what each kind
 // is, so the decision about what may go is made on numbers.

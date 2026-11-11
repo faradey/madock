@@ -241,6 +241,8 @@ type ControllerGeneralServiceList struct {
 
 type ControllerGeneralProjectOrphans struct {
 	attr.Arguments
+	Remove string `arg:"--remove" help:"Remove what is left of one project, named as the list prints it. Lists it only, unless --force. Needs allow_destructive_commands"`
+	Force  bool   `arg:"-f,--force" help:"With --remove: remove, rather than list what would go"`
 }
 
 type ControllerGeneralSystemDf struct {
