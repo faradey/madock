@@ -46,9 +46,9 @@ const composeLabel = "com.docker.compose.project"
 func FindOrphans(known map[string]bool) []Orphan {
 	var out []Orphan
 
-	out = append(out, orphansOf("volume", dockerLines("volume", "ls"), known)...)
-	out = append(out, orphansOf("network", dockerLines("network", "ls"), known)...)
-	out = append(out, orphansOf("image", dockerLines("image", "ls"), known)...)
+	out = append(out, orphansOf("volume", dockerLines("volume", "ls"), known, configs.RegisteredScopes)...)
+	out = append(out, orphansOf("network", dockerLines("network", "ls"), known, configs.RegisteredScopes)...)
+	out = append(out, orphansOf("image", dockerLines("image", "ls"), known, configs.RegisteredScopes)...)
 
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].Project != out[j].Project {
@@ -153,17 +153,26 @@ func parseLabelledImages(out string) []labelledImage {
 //
 // Split from the docker call so the rule can be tested without a daemon, which
 // matters more here than usual: the rule is what decides whether somebody is
-// shown their own leftovers or somebody else's containers.
-func orphansOf(kind string, lines []string, known map[string]bool) []Orphan {
+// shown their own leftovers or somebody else's containers. scopes gives the
+// scopes other than default of a registered project, as RegisteredScopes does.
+func orphansOf(kind string, lines []string, known map[string]bool, scopes func(string) []string) []Orphan {
 	var out []Orphan
 
 	// The label is Compose's name for the project, not the registry's: project
 	// ShopU is labelled madock_shopu. Compared as written, every live resource
 	// of a project with a capital letter was listed here as an orphan, with
 	// `docker volume rm` suggested for its database.
+	//
+	// A project runs as <name>-<scope> in every scope but default, so shop in
+	// scope staging is labelled madock_shop-staging. Without its scopes here,
+	// that scope's live database was listed as the orphan of a project
+	// shop-staging, with the same suggestion.
 	registered := map[string]bool{}
 	for name := range known {
 		registered[configs.ComposeKey(name)] = true
+		for _, scope := range scopes(name) {
+			registered[configs.ComposeKey(name+"-"+scope)] = true
+		}
 	}
 
 	for _, line := range lines {
