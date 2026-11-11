@@ -291,7 +291,10 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      # The whole suite in eight groups, or test/e2e/smoke.txt in two.
+      # The whole suite in eight groups, or test/e2e/smoke.txt in four. Two
+      # groups of the smoke set took 517 s and 400 s for about 240 s of tests
+      # each (2026-11-11): a runner's own setup and first builds are minutes,
+      # so four groups of about 120 s finish sooner.
       - id: plan
         name: Split the suite
         env:
@@ -300,7 +303,7 @@ jobs:
           if [ "$FULL" = true ]; then
             shards=$(./test/e2e/e2e.sh plan-shards 8)
           else
-            shards=$(./test/e2e/e2e.sh plan-shards 2 --only test/e2e/smoke.txt)
+            shards=$(./test/e2e/e2e.sh plan-shards 4 --only test/e2e/smoke.txt)
           fi
           echo "$shards"
           echo "shards=$shards" >> "$GITHUB_OUTPUT"
