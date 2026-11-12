@@ -162,6 +162,25 @@ func (i *installation) project(name string) *project {
 	return p
 }
 
+// projectAt registers a project madock itself put somewhere — a clone made with
+// --path — for the same cleanup as every other project. Unlike project, it
+// creates nothing: where the directory came from is what the test checks.
+func (i *installation) projectAt(name, dir string) *project {
+	i.t.Helper()
+
+	p := &project{
+		t:       i.t,
+		install: i,
+		name:    name,
+		execDir: i.dir,
+		runDir:  dir,
+	}
+	i.t.Cleanup(p.destroy)
+	i.projects = append(i.projects, p)
+
+	return p
+}
+
 // run executes a madock command and fails the test if it does not succeed.
 func (p *project) run(timeout time.Duration, args ...string) string {
 	p.t.Helper()

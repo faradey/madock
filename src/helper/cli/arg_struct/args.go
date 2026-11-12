@@ -211,6 +211,7 @@ type ControllerGeneralProjectClone struct {
 	From         string `arg:"--from" help:"Clone from this snapshot of the project instead of from the project as it is now. The project is not stopped or touched. A directory name, or the name given at creation (the newest one carrying it)"`
 	Muted        bool   `arg:"--muted" help:"Make a copy that cannot act as its source: clone/muted is set on it, so cron is off and mail() goes to mailpit, and a persisted RabbitMQ is emptied of the source's messages"`
 	NoStart      bool   `arg:"--no-start" help:"Only write the clone's files and restore its data; no container of the clone is created or started. madock start creates and starts them"`
+	Path         string `arg:"--path" help:"Directory to put the clone in, as <path>/<name>, instead of beside the source. Relative to the current directory; ~/ is the home directory; missing directories are created. Refused when <path>/<name> exists and is not empty, or lies inside the source project"`
 }
 
 type ControllerGeneralStatus struct {
