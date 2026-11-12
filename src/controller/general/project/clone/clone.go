@@ -70,9 +70,11 @@ var rollbackOnFailure *rollback
 // pools ran out on the fourth clone of a test run.
 type rollback struct {
 	name string
+	// path is the topmost directory this run created for the clone's code: the
+	// clone's directory, or the first of its parents --path had to create.
 	path string
-	// ownsPath: the clone's directory beside the source was created by this
-	// run. One that was already there is somebody's, and stays.
+	// ownsPath: path was created by this run. A directory that was already
+	// there is somebody's, and stays.
 	ownsPath bool
 	done     bool
 }
@@ -177,14 +179,22 @@ func Execute() {
 	// reason as the engine above.
 	from := resolveFrom(w, configs.GetProjectName(), args.From)
 
+	// --path: where the clone's directory goes. Also decided before anything is
+	// created, so a target that cannot be used costs nothing.
+	cwd, _ := os.Getwd()
+	home, _ := os.UserHomeDir()
+	target, targetErr := resolveTarget(projectConf["path"], args.Path, cloneName, cwd, home)
+	if targetErr != nil {
+		refuse(w, targetErr.Error())
+	}
+
 	fmt.Println("Cloning the project")
 	exPath := paths.GetExecDirPath()
 	projectName := configs.GetProjectName()
-	clonePathParts := strings.Split(projectConf["path"], "/")
-	clonePath := strings.Join(clonePathParts[:len(clonePathParts)-1], "/") + "/" + cloneName
+	clonePath := target.Dir
 
 	// From here on a failure takes the half-made clone with it.
-	undo := rollback{name: cloneName, path: clonePath, ownsPath: !paths.IsFileExist(clonePath)}
+	undo := rollback{name: cloneName, path: target.Created, ownsPath: target.Created != ""}
 	rollbackOnFailure = &undo
 	logger.OnFatal(func(message string) {
 		undo.run()

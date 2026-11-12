@@ -45,9 +45,20 @@ before it returns; `madock start` creates them anew. With `--muted` and a
 persisted RabbitMQ the broker is started for the purge; with `--no-start` its
 container is then removed, so `madock start` creates the whole stack.
 
+**Where it goes.** The clone's directory is created beside the source's, named
+after the clone. `--path=<dir>` puts it in `<dir>/<name>` instead:
+```
+madock project:clone --name=shop-try1 --domain-suffix=-try1 --path=../sandbox
+```
+A relative `--path` is taken from the directory the command is run in, `~/` from
+the home directory, and directories that do not exist yet are created (and
+removed again if the clone fails). Refused before anything is made: a
+`<dir>/<name>` that exists and is not an empty directory — the clone unpacks its
+code over it — and one inside the source project's directory.
+
 A refusal — a name that already exists, a name or suffix with a period or a
-space, a project managed by deployer, a `--from` snapshot that does not exist —
-exits 1.
+space, a project managed by deployer, a `--from` snapshot that does not exist, a
+`--path` target that cannot be used — exits 1.
 
 `--json` (`-j`) answers
 `{"success": true, "data": {"name": "…", "path": "…", "hosts": ["…"]}}` on
