@@ -122,6 +122,29 @@ func TestBuildWithoutCacheSkipsTheCacheAndPullsTheBase(t *testing.T) {
 	}
 }
 
+// The build a rebuild runs before taking the containers down stands in for the
+// one `up --build` runs after. With --no-cache or --pull it would build
+// something else, and `up --build` would build again with the containers down,
+// which is the outage it exists to remove.
+func TestBuildImagesIsTheBuildUpWouldRun(t *testing.T) {
+	files := []string{"compose", "-f", "docker-compose.yml"}
+
+	got := buildImagesArgs(files, false)
+	want := []string{"compose", "-f", "docker-compose.yml", "build"}
+	if strings.Join(got, " ") != strings.Join(want, " ") {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	got = buildImagesArgs(files, true)
+	if got[len(got)-1] != "--quiet" {
+		t.Errorf("quiet: got %v, want --quiet last", got)
+	}
+
+	if len(files) != 3 {
+		t.Errorf("buildImagesArgs modified the slice it was given: %v", files)
+	}
+}
+
 // A rebuild reaches the pull with the containers already down, and with the
 // shared proxy down when no other project runs. A registry that does not
 // answer must not leave them there when the images are on the machine.

@@ -240,14 +240,22 @@ func rebuildChanged(projectName string, withChown bool) bool {
 var (
 	renderStack       = docker.RenderProject
 	buildWithoutCache = docker.BuildWithoutCache
+	buildImages       = docker.BuildImages
 	carryToPersisted  = func(projectName string) error {
 		return docker.CarryToPersisted(projectName, configs.GetProjectConfig(projectName))
 	}
 )
 
 // prepare does what has to happen before anything is taken down: the
-// configuration is rendered, with --no-cache the images are built, and then a
-// newly persisted Redis, Valkey or RabbitMQ is carried into its named volume.
+// configuration is rendered, the images are built — with the cache, or without
+// it for --no-cache — and then a newly persisted Redis, Valkey or RabbitMQ is
+// carried into its named volume.
+//
+// The build is here for every rebuild, not only --no-cache. Left to the
+// `up --build` after the containers are down, it was the length of the outage:
+// on 2026-11-17 a live Laravel project did not answer for about eleven minutes
+// while its php image was rebuilt. Built here, `up --build` finds every layer
+// done and the outage is the recreate.
 //
 // The render is first and is not optional. The full rebuild takes the
 // containers down and only then generates the build context, so a value the
@@ -266,6 +274,11 @@ func prepare(projectName string, noCache bool) error {
 	if noCache {
 		fmtc.TitleLn("Building images without cache...")
 		if err := buildWithoutCache(projectName); err != nil {
+			return fmt.Errorf("Build failed, nothing was stopped: %w", err)
+		}
+	} else {
+		fmtc.TitleLn("Building images...")
+		if err := buildImages(projectName); err != nil {
 			return fmt.Errorf("Build failed, nothing was stopped: %w", err)
 		}
 	}

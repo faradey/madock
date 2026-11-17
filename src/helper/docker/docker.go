@@ -1032,6 +1032,35 @@ func BuildWithoutCache(projectName string) error {
 	return cmd.Run()
 }
 
+// BuildImages builds the project's images with the cache, as `up --build`
+// would, so that the `up --build` after it finds every layer built and only
+// recreates the containers.
+//
+// It exists for the order of a rebuild. The containers used to be taken down
+// first and the images built by `up --build` afterwards, so a project was down
+// for the whole build: on 2026-11-17 a live Laravel project stopped answering
+// for about eleven minutes while its php image was rebuilt from a slow PPA.
+// Built while the old containers still run, the outage is the recreate; and a
+// build that fails leaves them running.
+func BuildImages(projectName string) error {
+	pp := paths.NewProjectPaths(projectName)
+	cmd := exec.Command("docker", buildImagesArgs([]string{"compose", "-f", pp.DockerCompose(), "-f", pp.DockerComposeOverride()}, attr.IsQuiet)...)
+	attachOutput(cmd)
+	return cmd.Run()
+}
+
+// buildImagesArgs builds the argument list, separated so it can be asserted:
+// no --no-cache and no --pull, which is what `up --build` does, or the build
+// before the rebuild would differ from the one it is standing in for.
+func buildImagesArgs(composeFiles []string, quiet bool) []string {
+	args := append(append([]string{}, composeFiles...), "build")
+	if quiet {
+		args = append(args, "--quiet")
+	}
+
+	return args
+}
+
 // buildWithoutCacheArgs builds the argument list, separated so it can be
 // asserted for the same reason as pullArgs.
 func buildWithoutCacheArgs(composeFiles []string, quiet bool) []string {
