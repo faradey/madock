@@ -122,9 +122,13 @@ RUN IFS='.' read major minor patch <<< "8.4" \
     ; fi \
     && rm -rf /tmp/pear
 
+# process_control_timeout: a reload (USR2) lets a running request finish for up
+# to 10 s before its worker is ended. At the default of 0 it is ended at once,
+# so every reload after a deploy cut the requests in flight.
 RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php8.4-fpm.pid/" /etc/php/8.4/fpm/php-fpm.conf \
     && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/8.4/fpm/php-fpm.conf \
     && sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/8.4/fpm/php-fpm.conf \
+    && sed -i -e "s/^;\?process_control_timeout\s*=.*/process_control_timeout = 10s/" /etc/php/8.4/fpm/php-fpm.conf \
     && sed -i "s/listen = .*/listen = 9000/" /etc/php/8.4/fpm/pool.d/www.conf \
     && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/8.4/fpm/pool.d/www.conf \
     && sed -i "s/^pm.max_children = .*/pm.max_children = 40/" /etc/php/8.4/fpm/pool.d/www.conf \
