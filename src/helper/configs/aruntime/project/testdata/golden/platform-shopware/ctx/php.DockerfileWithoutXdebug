@@ -103,9 +103,11 @@ RUN IFS='.' read major minor patch <<< "8.4" \
     ; fi \
     && rm -rf /tmp/pear
 
+# process_control_timeout: see the same line in snippets/dockerfile/php/header.
 RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php8.4-fpm.pid/" /etc/php/8.4/fpm/php-fpm.conf \
     && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/8.4/fpm/php-fpm.conf \
     && sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/8.4/fpm/php-fpm.conf \
+    && sed -i -e "s/^;\?process_control_timeout\s*=.*/process_control_timeout = 10s/" /etc/php/8.4/fpm/php-fpm.conf \
     && sed -i "s/listen = .*/listen = 9000/" /etc/php/8.4/fpm/pool.d/www.conf \
     && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/8.4/fpm/pool.d/www.conf \
     && sed -i "s/^pm.max_children = .*/pm.max_children = 40/" /etc/php/8.4/fpm/pool.d/www.conf \
