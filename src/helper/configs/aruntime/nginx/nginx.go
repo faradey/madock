@@ -140,7 +140,13 @@ func proxyPreamble(generalConfig map[string]string) string {
 		"events {\n    worker_connections " + settingOr(generalConfig, "proxy/worker/connections", "4096") + ";\nuse epoll;\n}\n" +
 		"http {\n" +
 		"server_names_hash_bucket_size  " + settingOr(generalConfig, "proxy/server_names_hash/bucket_size", "128") + ";\n" +
-		"server_names_hash_max_size " + settingOr(generalConfig, "proxy/server_names_hash/max_size", "1024") + ";\n"
+		"server_names_hash_max_size " + settingOr(generalConfig, "proxy/server_names_hash/max_size", "1024") + ";\n" +
+		// The proxy is what the internet talks to, and nginx names its exact
+		// version in every Server header and error page by default. That turns a
+		// scan for one vulnerable release into a lookup. Upstream Server headers
+		// never pass through (proxy_pass hides them), so this one line covers
+		// every project behind the proxy.
+		"server_tokens off;\n"
 
 	// Anything the enterprise edition wants at the top of the http block.
 	//
