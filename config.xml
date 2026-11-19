@@ -56,9 +56,11 @@
                      Moving only the proxy's left this one behind, and the two
                      read alike enough that it was reported as done.
 
-                     Same version as before, 1.28. -->
+                     1.30.7 since 4.5.66: the 1.28 line had five CVEs fixed
+                     only in 1.30.7 / 1.31.9 (two HTTP/2 memory bugs among
+                     them, one reaching code execution as the worker). -->
                 <repository>nginx</repository>
-                <version>1.28</version>
+                <version>1.30.7</version>
                 <port>
                     <unsecure>80</unsecure>
                     <secure>443</secure>
@@ -630,10 +632,15 @@
                      it.
 
                      Pinned there already, so this changes who may move it and
-                     not what runs. -->
+                     not what runs.
+
+                     1.30.7 since 4.5.66, pinned to the patch: five nginx CVEs
+                     of 2026 are fixed only in 1.30.7 / 1.31.9, and this proxy
+                     faces the internet with http2 on. A floating 1.30 would
+                     keep whichever 1.30.x a machine pulled first. -->
                 <nginx>
                     <repository>nginx</repository>
-                    <version>1.28</version>
+                    <version>1.30.7</version>
                 </nginx>
                 <!-- Worker and hash-table settings for the shared proxy.
                      

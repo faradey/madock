@@ -1,4 +1,4 @@
-FROM nginx:1.28
+FROM nginx:1.30.7
 
 RUN rm -f /var/log/faillog && rm -f /var/log/lastlog
 
