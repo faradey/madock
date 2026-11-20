@@ -218,43 +218,9 @@ RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /
 RUN sed -i 's/^session.gc_maxlifetime = .*/session.gc_maxlifetime = 1440/' /etc/php/8.4/fpm/php.ini \
     && sed -i 's/^session.gc_maxlifetime = .*/session.gc_maxlifetime = 1440/' /etc/php/8.4/cli/php.ini
 
-# Where PHP's mail() sends: read from the container's environment, not written
-# into the image. The command itself — msmtp with php/sendmail/host, port and
-# from, or the system sendmail when php/sendmail is off — is built by madock
-# (configs.SendmailPath) and handed to every PHP service as
-# MADOCK_SENDMAIL_PATH in the compose file. PHP's ini parser expands ${...} when
-# it reads php.ini, in the fpm master and in every CLI run, docker exec
-# included, since both inherit the container's environment.
-#
-# Why not in the image any more. This line used to be the first one that
-# differed between projects built from the same template: a muted clone sends
-# to its own envelope address, so its image matched the template's up to here
-# and was rebuilt from here to the end — cron, node, n98, chown, the footer —
-# 6-12 s and ~2 GiB at peak per copy, measured 2026-11-20, and no two clones
-# shared those layers. With the value in the environment the line is the same
-# for everyone, and so is every layer after it.
-#
-# Changing the mail settings no longer needs a new image either: the value
-# reaches PHP when the container is created from the re-rendered compose file.
-#
-# What happens with a missing or a wrong value, measured on PHP's parser:
-#   - unset: sendmail_path is empty and mail() returns false. Nothing is sent
-#     anywhere — never to a relay the value did not name. madock always sets
-#     it, so this is only an image started by hand outside its compose file.
-#   - a quote or a newline in the value: taken literally, as part of the path.
-#     ${...} is expanded after the line is parsed, so it cannot add a directive.
-#   - a value that is not a working command: mail() returns false with
-#     "Sendmail exited with non-zero exit code". madock refuses to render one
-#     (configs.ValidateSendmail) before anything is built, because the value
-#     is run by /bin/sh — a host, port or sender is checked, not passed through.
-#
-# The fallback form ${VAR:-default} would cover "unset" too, but only from PHP
-# 8.3; older parsers look up a variable named with the ":-" in it and get the
-# same empty value, so it would promise a default it does not give.
-RUN sed -i 's|^;\?sendmail_path =.*|sendmail_path = "${MADOCK_SENDMAIL_PATH}"|' /etc/php/8.4/fpm/php.ini \
-    && sed -i 's|^;\?sendmail_path =.*|sendmail_path = "${MADOCK_SENDMAIL_PATH}"|' /etc/php/8.4/cli/php.ini \
-    && grep -q '^sendmail_path = "${MADOCK_SENDMAIL_PATH}"$' /etc/php/8.4/fpm/php.ini \
-    && grep -q '^sendmail_path = "${MADOCK_SENDMAIL_PATH}"$' /etc/php/8.4/cli/php.ini
+# sendmail_path is not set here: it is the last step of the image, in
+# snippets/dockerfile/php/footer, because it is the one line that differs
+# between projects built from the same template.
 
 WORKDIR /var/www
 
@@ -346,6 +312,33 @@ fi
 
 exec "$@"
 MADOCK_EOF
+
+# Where PHP's mail() sends — the last layer of the image, on purpose.
+#
+# The command is built by madock (configs.SendmailPath): msmtp with
+# php/sendmail/host, port and from, or the system sendmail when php/sendmail is
+# off. It is the one line that differs between projects built from the same
+# template — a muted clone sends to egress with its own envelope sender — so it
+# goes after everything else. Docker rebuilds from the first line that differs:
+# with this line in the middle (php/ini, until 4.5.67) every clone rebuilt the
+# 14 layers after it, 6-12 s and ~2 GiB at peak per copy, measured 2026-11-20.
+# Here a clone rebuilds this layer alone.
+#
+# It is written into php.ini, not read from the environment. 4.5.68 tried the
+# environment (sendmail_path = "${MADOCK_SENDMAIL_PATH}" with the value in the
+# compose file): php-fpm and docker exec saw it, cron jobs did not — cron starts
+# its jobs with an environment of its own, so every mail() from cron returned
+# false. Measured 2026-11-20 on 4.5.68 before it reached any server. A value in
+# the file reaches every PHP process, however it was started.
+#
+# The value is run by /bin/sh and pasted into this RUN line, so madock refuses
+# to render a host, port or sender outside a strict pattern
+# (configs.ValidateSendmail) before anything is built. The grep makes the build
+# fail if the line did not land in both files.
+RUN sed -i 's|^;\?sendmail_path =.*|sendmail_path = "/usr/bin/msmtp -t --port=1025 --host=host.docker.internal --from=shop@example.com"|' /etc/php/8.4/fpm/php.ini \
+    && sed -i 's|^;\?sendmail_path =.*|sendmail_path = "/usr/bin/msmtp -t --port=1025 --host=host.docker.internal --from=shop@example.com"|' /etc/php/8.4/cli/php.ini \
+    && grep -qxF 'sendmail_path = "/usr/bin/msmtp -t --port=1025 --host=host.docker.internal --from=shop@example.com"' /etc/php/8.4/fpm/php.ini \
+    && grep -qxF 'sendmail_path = "/usr/bin/msmtp -t --port=1025 --host=host.docker.internal --from=shop@example.com"' /etc/php/8.4/cli/php.ini
 
 ENTRYPOINT ["/usr/local/bin/madock-entrypoint"]
 CMD ["bash", "-c", "exec php-fpm8.4"]

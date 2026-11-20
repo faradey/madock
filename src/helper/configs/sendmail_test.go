@@ -42,8 +42,9 @@ func TestSendmailPathNamesHostPortAndSender(t *testing.T) {
 	}
 }
 
-// Every value here would reach /bin/sh through mail(), or break the quoted
-// string in the compose file on the way. None of them may produce a command.
+// Every value here would reach /bin/sh — in the Dockerfile's RUN line or later
+// through mail() — or break the quoted php.ini string. None of them may produce
+// a command.
 func TestSendmailRefusesWhatIsNotAHostAPortOrAnAddress(t *testing.T) {
 	cases := map[string]map[string]string{
 		"host with a command":    mailConf("relay;id", "25", ""),

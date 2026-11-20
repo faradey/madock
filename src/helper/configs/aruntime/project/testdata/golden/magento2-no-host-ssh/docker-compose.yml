@@ -12,7 +12,6 @@ services:
       - ./ctx/scripts/:/var/www/scripts/:cached
     environment:
       - COMPOSER_HOME=/var/www/.composer
-      - "MADOCK_SENDMAIL_PATH=/usr/bin/msmtp -t --port=1025 --host=host.docker.internal"
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "golden.test:host-gateway"

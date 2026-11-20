@@ -160,7 +160,7 @@ func applyDerived(conf map[string]string) {
 		conf["php/sendmail/from_argument"] = ""
 	}
 
-	// The whole command, for MADOCK_SENDMAIL_PATH in the compose file. Last, so
+	// The whole command, for sendmail_path in php.ini. Last, so
 	// it is built from what every rule above and every extension left.
 	conf["php/sendmail/path"] = SendmailPath(conf)
 }

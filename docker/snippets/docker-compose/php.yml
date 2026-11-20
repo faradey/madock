@@ -15,7 +15,6 @@
       - ./ctx/scripts/:/var/www/scripts/:cached
     environment:
       - COMPOSER_HOME=/var/www/.composer
-      - "MADOCK_SENDMAIL_PATH={{{.php.sendmail.path}}}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{{- range $host := .nginx.hosts}}}

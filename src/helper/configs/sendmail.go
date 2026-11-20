@@ -8,8 +8,8 @@ import (
 )
 
 // systemSendmail is what PHP uses when sendmail_path is not set, spelled out:
-// the php.ini line now always reads the environment, so "off" has to name the
-// default rather than leave the line commented out.
+// the php.ini line is always written, so "off" has to name the default rather
+// than leave the line commented out.
 const systemSendmail = "/usr/sbin/sendmail -t -i"
 
 var (
@@ -17,8 +17,8 @@ var (
 	sendmailFrom = regexp.MustCompile(`^[A-Za-z0-9._%+-]+@[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$`)
 )
 
-// SendmailPath is PHP's sendmail_path for the project, the value every PHP
-// service gets as MADOCK_SENDMAIL_PATH. It is computed from the configuration
+// SendmailPath is PHP's sendmail_path for the project, written into php.ini as
+// the last step of the php image. It is computed from the configuration
 // already passed through the derived rules, so a muted clone's or an
 // extension's host and sender are the ones in it.
 //
