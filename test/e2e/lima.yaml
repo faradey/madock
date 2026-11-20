@@ -93,11 +93,19 @@ probes:
   # `limactl start` returning is not the same as the machine being usable. Wait
   # for the things the suite needs, or the first run fails on a race and gets
   # blamed on the code under test.
+  #
+  # The daemon is asked as root. The probe runs in Lima's persistent SSH session,
+  # opened before the provision step adds the user to the docker group, and a
+  # session keeps the groups it started with: as the user, `docker info` answered
+  # "permission denied" until the timeout although the daemon was up after 76 s.
+  # Measured 2026-11-20 with Lima's ControlMaster session; three `up` runs in a
+  # row failed on it, one with the timeout raised to 25 minutes. The user's own
+  # access arrives with the restart cmd_up does after `limactl start`.
   - description: "docker to accept commands"
     script: |
       #!/bin/bash
       set -eux -o pipefail
-      timeout 120s bash -c "until docker info >/dev/null 2>&1; do sleep 3; done"
+      timeout 120s bash -c "until sudo docker info >/dev/null 2>&1; do sleep 3; done"
     hint: |
       Docker did not come up. Look at /var/log/cloud-init-output.log inside the
       guest: limactl shell madock-e2e -- sudo cat /var/log/cloud-init-output.log
