@@ -218,28 +218,43 @@ RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /
 RUN sed -i 's/^session.gc_maxlifetime = .*/session.gc_maxlifetime = 1440/' /etc/php/8.4/fpm/php.ini \
     && sed -i 's/^session.gc_maxlifetime = .*/session.gc_maxlifetime = 1440/' /etc/php/8.4/cli/php.ini
 
-# Where PHP's mail() sends. Written only when there is somewhere for it to go.
+# Where PHP's mail() sends: read from the container's environment, not written
+# into the image. The command itself — msmtp with php/sendmail/host, port and
+# from, or the system sendmail when php/sendmail is off — is built by madock
+# (configs.SendmailPath) and handed to every PHP service as
+# MADOCK_SENDMAIL_PATH in the compose file. PHP's ini parser expands ${...} when
+# it reads php.ini, in the fpm master and in every CLI run, docker exec
+# included, since both inherit the container's environment.
 #
-# This used to be unconditional and hardcoded to the mailpit port, which meant
-# that with mailpit disabled every mail() call handed the message to msmtp,
-# which connected to a port nobody was listening on. Mail did not arrive and
-# nothing said so — the setting looked right in php.ini, and the port was the
-# only wrong part of it.
+# Why not in the image any more. This line used to be the first one that
+# differed between projects built from the same template: a muted clone sends
+# to its own envelope address, so its image matched the template's up to here
+# and was rebuilt from here to the end — cron, node, n98, chown, the footer —
+# 6-12 s and ~2 GiB at peak per copy, measured 2026-11-20, and no two clones
+# shared those layers. With the value in the environment the line is the same
+# for everyone, and so is every layer after it.
 #
-# php/sendmail/host and php/sendmail/port point somewhere else when they are set:
-# a real relay on the host, another container, a smarthost. Editing php.ini
-# inside a running container is not an alternative — the image is rebuilt from
-# this file and the edit goes with it, which is exactly how a working mail
-# configuration disappears at the next rebuild.
+# Changing the mail settings no longer needs a new image either: the value
+# reaches PHP when the container is created from the re-rendered compose file.
 #
-# php/sendmail/from is the envelope sender. msmtp refuses to send without one —
-# `msmtp: envelope-from address is missing`, exit 78 — and there is no msmtprc
-# here to supply a default. A mail transport passes it (PHP's mail() takes it as
-# the fifth argument, `-f`), so Magento and Laravel are fine either way; a plain
-# mail() call with four arguments is not, and that is what anyone testing their
-# own site tries first. Setting this makes both work.
-RUN sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal --from=shop@example.com"/g' /etc/php/8.4/fpm/php.ini \
-    && sed -i 's/;sendmail_path =/sendmail_path = "\/usr\/bin\/msmtp -t --port=1025 --host=host.docker.internal --from=shop@example.com"/g' /etc/php/8.4/cli/php.ini
+# What happens with a missing or a wrong value, measured on PHP's parser:
+#   - unset: sendmail_path is empty and mail() returns false. Nothing is sent
+#     anywhere — never to a relay the value did not name. madock always sets
+#     it, so this is only an image started by hand outside its compose file.
+#   - a quote or a newline in the value: taken literally, as part of the path.
+#     ${...} is expanded after the line is parsed, so it cannot add a directive.
+#   - a value that is not a working command: mail() returns false with
+#     "Sendmail exited with non-zero exit code". madock refuses to render one
+#     (configs.ValidateSendmail) before anything is built, because the value
+#     is run by /bin/sh — a host, port or sender is checked, not passed through.
+#
+# The fallback form ${VAR:-default} would cover "unset" too, but only from PHP
+# 8.3; older parsers look up a variable named with the ":-" in it and get the
+# same empty value, so it would promise a default it does not give.
+RUN sed -i 's|^;\?sendmail_path =.*|sendmail_path = "${MADOCK_SENDMAIL_PATH}"|' /etc/php/8.4/fpm/php.ini \
+    && sed -i 's|^;\?sendmail_path =.*|sendmail_path = "${MADOCK_SENDMAIL_PATH}"|' /etc/php/8.4/cli/php.ini \
+    && grep -q '^sendmail_path = "${MADOCK_SENDMAIL_PATH}"$' /etc/php/8.4/fpm/php.ini \
+    && grep -q '^sendmail_path = "${MADOCK_SENDMAIL_PATH}"$' /etc/php/8.4/cli/php.ini
 
 WORKDIR /var/www
 

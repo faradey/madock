@@ -11,6 +11,7 @@
       - ./src/.madock:/var/www/html/.madock:ro
     environment:
       APP_ENV: "dev"
+      MADOCK_SENDMAIL_PATH: "{{{.php.sendmail.path}}}"
     command:
       - bash
       - -lc
