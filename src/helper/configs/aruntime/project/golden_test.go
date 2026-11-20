@@ -147,8 +147,10 @@ func goldenCases() []goldenCase {
 		{
 			// Mail turned off. sendmail_path used to be written whatever the
 			// configuration said, so with mailpit disabled every mail() call
-			// went to a port nobody was listening on and failed silently. The
-			// generated Dockerfile must simply not touch it.
+			// went to a port nobody was listening on and failed silently. Since
+			// 4.5.68 the Dockerfile line is the same as everyone's (it reads
+			// MADOCK_SENDMAIL_PATH), and the compose file must carry PHP's own
+			// default, not msmtp.
 			name: "magento2-no-sendmail",
 			overrides: map[string]string{
 				"php/sendmail/enabled": "false",
@@ -157,8 +159,9 @@ func goldenCases() []goldenCase {
 		{
 			// With an envelope sender configured. Without one msmtp refuses a
 			// plain mail() call, and the argument has to be absent rather than
-			// empty when the address is not set — which is why it is rendered
-			// whole rather than as a value.
+			// empty when the address is not set. The sender reaches the compose
+			// file's MADOCK_SENDMAIL_PATH and not the Dockerfile, whose line
+			// must be identical to the case above.
 			name: "magento2-sendmail-from",
 			overrides: map[string]string{
 				"php/sendmail/from": "shop@example.com",

@@ -7,6 +7,8 @@
     volumes:
       - ./src:/var/www/html:delegated
       - ./src/.madock:/var/www/html/.madock:ro
+    environment:
+      - "MADOCK_SENDMAIL_PATH={{{.php.sendmail.path}}}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

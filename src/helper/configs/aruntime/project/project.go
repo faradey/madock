@@ -262,6 +262,11 @@ func makePhpDockerfiles(projectName, withXdebug, withoutXdebug string) {
 	if err := configs.ValidateFpmPool(configs.GetProjectConfig(projectName)); err != nil {
 		logger.Fatalln(err.Error())
 	}
+	// Same reason: a mail setting that cannot become a command is said here,
+	// not in the mail log of the running application.
+	if err := configs.ValidateSendmail(configs.GetProjectConfig(projectName)); err != nil {
+		logger.Fatalln(err.Error())
+	}
 
 	pp := paths.NewProjectPaths(projectName)
 	ctx := paths.MakeDirsByPath(pp.CtxDir())
