@@ -22,7 +22,7 @@
         </xdebug>
     </tools>
     <offers>
-        <php><v>8.5</v><v>8.4</v><v>8.3</v><v>8.2</v><v>8.1</v><v>8.0</v><v>7.4</v></php>
+        <php><v>8.6</v><v>8.5</v><v>8.4</v><v>8.3</v><v>8.2</v><v>8.1</v><v>8.0</v><v>7.4</v></php>
         <dbtype><v>MariaDB</v><v>MySQL</v><v>PostgreSQL</v><v>MongoDB</v></dbtype>
         <mariadb><v>12</v><v>11.8</v><v>11.6</v><v>11.4</v><v>11.1</v><v>10.6</v><v>10.4</v></mariadb>
         <mysql><v>9.4</v><v>9.3</v><v>9.2</v><v>8.4</v><v>8.0</v></mysql>
