@@ -53,10 +53,21 @@ func TestAtLeast(t *testing.T) {
 }
 
 // A PHP minor with two digits is the case that string comparison gets wrong:
-// "8.10" sorts below "8.5". Not a release that exists yet, which is the point —
-// nobody would notice until it does.
+// "8.10" sorts below "8.6" and "8.5". Not a release that exists yet, which is
+// the point — nobody would notice until it does.
 func TestXdebugForATwoDigitPhpMinor(t *testing.T) {
-	if got := GetXdebugVersion("8.10"); got != "3.5.0" {
-		t.Errorf("GetXdebugVersion(\"8.10\") = %q, want \"3.5.0\"", got)
+	if got := GetXdebugVersion("8.10"); got != "3.6.0alpha1" {
+		t.Errorf("GetXdebugVersion(\"8.10\") = %q, want \"3.6.0alpha1\"", got)
+	}
+}
+
+// Xdebug 3.5 refuses PHP 8.6 when it is compiled, so an 8.6 image with the
+// debugger on fails to build unless 8.6 gets the first release that knows it.
+func TestXdebugForPhp86(t *testing.T) {
+	if got := GetXdebugVersion("8.6"); got != "3.6.0alpha1" {
+		t.Errorf("GetXdebugVersion(\"8.6\") = %q, want \"3.6.0alpha1\"", got)
+	}
+	if got := GetXdebugVersion("8.5"); got != "3.5.0" {
+		t.Errorf("GetXdebugVersion(\"8.5\") = %q, want \"3.5.0\"", got)
 	}
 }

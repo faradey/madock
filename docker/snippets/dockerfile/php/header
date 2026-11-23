@@ -14,7 +14,25 @@ RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get ins
     && locale-gen en_US.UTF-8 \
     && LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
 
+{{{if versionGte .php.version "8.6" -}}}
+# PHP 8.6 and newer: the PPA publishes the core packages first and the PECL ones
+# later. On 2026-11-23, four days after 8.6.0, php8.6 was out for jammy and
+# php8.6-imagick, -redis and -ssh2 were not, and one name apt does not know fails
+# the whole install. So each extension is asked for on its own: what the index
+# has goes in, what it lacks is named in the build output and left out, and the
+# next build picks it up once the PPA has it. Older versions keep the single
+# strict install below: its command is the layer's cache key, and rewriting it
+# would rebuild every existing image for nothing.
+RUN apt-get -y --allow-releaseinfo-change update \
+    && available="" \
+    && for package in {{{aptLines (printf "php%s-" .php.version) .php.extensions.default}}}; do \
+        if apt-get install -s -y "$package" > /dev/null 2>&1; then available="$available $package"; \
+        else echo "madock: $package is not available in this index"; fi; \
+    done \
+    && apt-get install -y $available
+{{{- else -}}}
 RUN apt-get -y --allow-releaseinfo-change update && apt-get install -y {{{aptLines (printf "php%s-" .php.version) .php.extensions.default}}}
+{{{- end}}}
 
 # Optional packages: not all PHP versions ship them as separate packages.
 #

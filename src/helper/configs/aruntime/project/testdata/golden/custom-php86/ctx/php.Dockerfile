@@ -1,0 +1,358 @@
+FROM ubuntu:22.04
+
+ARG DEBIAN_FRONTEND="noninteractive"
+ARG DEBCONF_NOWARNINGS="yes"
+
+# Retry a failed download instead of failing the image. On 2026-10-21, the day
+# PHP shipped fixes for two remote code execution bugs, the PPA answered 503 to a
+# few of the ~60 packages on every attempt: each build fetched most of them and
+# failed on the rest, five times in a row, and the fixed PHP never got in. apt
+# retries with a growing delay, so a busy mirror costs minutes, not the build.
+RUN echo 'Acquire::Retries "10";' > /etc/apt/apt.conf.d/80-retries
+
+RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get install -y locales \
+    curl \
+    wget \
+    ca-certificates \
+    software-properties-common \
+    git \
+    zip \
+    gzip \
+    mc \
+    mariadb-client \
+    telnet \
+    libmagickwand-dev \
+    imagemagick \
+    libmcrypt-dev \
+    procps \
+    openssh-client \
+    lsof \
+    openssl \
+    msmtp \
+    xdg-utils \
+    libssh2-1-dev \
+    libssh2-1 \
+    jq \
+    && locale-gen en_US.UTF-8 \
+    && LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
+
+# PHP 8.6 and newer: the PPA publishes the core packages first and the PECL ones
+# later. On 2026-11-23, four days after 8.6.0, php8.6 was out for jammy and
+# php8.6-imagick, -redis and -ssh2 were not, and one name apt does not know fails
+# the whole install. So each extension is asked for on its own: what the index
+# has goes in, what it lacks is named in the build output and left out, and the
+# next build picks it up once the PPA has it. Older versions keep the single
+# strict install below: its command is the layer's cache key, and rewriting it
+# would rebuild every existing image for nothing.
+RUN apt-get -y --allow-releaseinfo-change update \
+    && available="" \
+    && for package in php8.6-bcmath \
+    php8.6-cli \
+    php8.6-common \
+    php8.6-curl \
+    php8.6-dev \
+    php8.6-fpm \
+    php8.6-gd \
+    php8.6-intl \
+    php8.6-mbstring \
+    php8.6-mysql \
+    php8.6-soap \
+    php8.6-sqlite3 \
+    php8.6-xml \
+    php8.6-xsl \
+    php8.6-zip \
+    php8.6-imagick \
+    php8.6-ctype \
+    php8.6-dom \
+    php8.6-fileinfo \
+    php8.6-iconv \
+    php8.6-simplexml \
+    php8.6-sockets \
+    php8.6-tokenizer \
+    php8.6-xmlwriter \
+    php8.6-ssh2 \
+    php8.6-redis; do \
+        if apt-get install -s -y "$package" > /dev/null 2>&1; then available="$available $package"; \
+        else echo "madock: $package is not available in this index"; fi; \
+    done \
+    && apt-get install -y $available
+
+# Optional packages: not all PHP versions ship them as separate packages.
+#
+# Each line refreshes the index first, and that is not belt and braces: the
+# install above is a separate layer, so on a cached build these run against
+# whatever index that layer left behind — which apt may consider expired, and
+# which predates any package added to the PPA since. Measured on the Magento
+# stand 2026-09-10: the image built green, `apt-cache policy php8.4-ldap`
+# printed nothing inside the container, and the extension was simply absent.
+#
+# And `|| echo` rather than `|| true`: the failure above was invisible precisely
+# because the line swallowed it. A package this image could not get is now said
+# out loud in the build output, which is the only place anybody would look.
+# (e.g. php8.5-opcache is bundled into php8.5-common, php-xmlrpc was dropped
+# from PHP core in 8.0 and may be missing in newer ondrej builds). Install
+# each in its own line so a missing package does not abort the build.
+RUN apt-get -y --allow-releaseinfo-change update \
+    && apt-get install -y php8.6-opcache \
+    || echo "madock: php8.6-opcache is not available in this index"
+# ldap is here rather than in the hard list above for the same reason as the two
+# beside it: a package missing for one PHP version would abort the whole image,
+# and this one is needed by a minority of projects — an application that
+# authenticates against a directory. Without it there is nowhere to test LDAP at
+# all: `ext-ldap` appears in no madock image, measured 2026-09-09 across the
+# whole docker/ tree.
+RUN apt-get -y --allow-releaseinfo-change update \
+    && apt-get install -y php8.6-ldap \
+    && php -m | grep -qi '^ldap$' \
+    || echo "madock: php8.6-ldap is not available in this index — LDAP will not work in this image"
+RUN apt-get -y --allow-releaseinfo-change update \
+    && apt-get install -y php8.6-xmlrpc \
+    || echo "madock: php8.6-xmlrpc is not available in this index"
+
+SHELL ["/bin/bash", "-c"]
+RUN IFS='.' read major minor patch <<< "8.6" \
+    && if [[ "${major}" -ge "9" ]] || [[ "${major}" = "8" && "${minor}" -ge "4" ]]; then \
+        # PHP 8.4+ — no compatible pecl mcrypt release, skip it. Nothing here
+        # talks to pecl.php.net: a channel-update used to, for nothing, and a
+        # bad answer from it failed the whole image (2026-10-22, PHP 8.5).
+        apt-get install -y pkg-config libmcrypt-dev \
+        && echo "Skipping pecl mcrypt for PHP ${major}.${minor} (no compatible release)" \
+    ; elif [[ "${major}" > "7" || ("${major}" = "7" && "${minor}" > "1") ]]; then \
+        # pecl knows its own channel without an update, and a download from
+        # pecl.php.net that fails once is tried again before the image fails.
+        (for attempt in 1 2 3; do \
+            pecl install mcrypt-1.0.7 && exit 0; \
+            echo "madock: pecl install mcrypt-1.0.7 failed (attempt ${attempt} of 3)"; sleep 15; \
+        done; exit 1) \
+        && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
+        && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/8.6/cli/conf.d/mcrypt.ini" \
+        && bash -c "echo extension=${EXTENSION_DIR}/mcrypt.so > /etc/php/8.6/fpm/conf.d/mcrypt.ini" \
+    ; fi \
+    && if [[ "${major}" < "7" || ("${major}" = "7" && "${minor}" < "2") ]]; then \
+        apt-get install -y php8.6-mcrypt \
+    ; fi \
+    && if [[ "${major}" < "7" ]]; then \
+        apt-get install -y php8.6-json \
+    ; fi \
+    && rm -rf /tmp/pear
+
+# process_control_timeout: a reload (USR2) lets a running request finish for up
+# to 10 s before its worker is ended. At the default of 0 it is ended at once,
+# so every reload after a deploy cut the requests in flight.
+RUN sed -i -e "s/pid =.*/pid = \/var\/run\/php8.6-fpm.pid/" /etc/php/8.6/fpm/php-fpm.conf \
+    && sed -i -e "s/error_log =.*/error_log = \/proc\/self\/fd\/2/" /etc/php/8.6/fpm/php-fpm.conf \
+    && sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/8.6/fpm/php-fpm.conf \
+    && sed -i -e "s/^;\?process_control_timeout\s*=.*/process_control_timeout = 10s/" /etc/php/8.6/fpm/php-fpm.conf \
+    && sed -i "s/listen = .*/listen = 9000/" /etc/php/8.6/fpm/pool.d/www.conf \
+    && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /etc/php/8.6/fpm/pool.d/www.conf \
+    && sed -i "s/^pm.max_children = .*/pm.max_children = 40/" /etc/php/8.6/fpm/pool.d/www.conf \
+    && sed -i "s/^pm.start_servers = .*/pm.start_servers = 2/" /etc/php/8.6/fpm/pool.d/www.conf \
+    && sed -i "s/^pm.min_spare_servers = .*/pm.min_spare_servers = 1/" /etc/php/8.6/fpm/pool.d/www.conf \
+    && sed -i "s/^pm.max_spare_servers = .*/pm.max_spare_servers = 3/" /etc/php/8.6/fpm/pool.d/www.conf
+
+# Unlock ImageMagick PDF coder (default Debian/Ubuntu policy blocks PDF reads,
+# which breaks Imagick-based PDF previews in PHP apps). Local dev only.
+RUN if [ -f /etc/ImageMagick-6/policy.xml ]; then \
+        sed -i 's#rights="none" pattern="PDF"#rights="read|write" pattern="PDF"#' /etc/ImageMagick-6/policy.xml; \
+    fi
+
+# The timezone is set after the packages, not before them.
+#
+# It used to open the first RUN, and a layer's cache key is its whole command —
+# so the project's timezone was part of the key of the heaviest layer in the
+# image, and of every layer built on it. Two projects on one machine with
+# different timezones therefore shared nothing past the base image: two full
+# copies of the PHP toolchain for the sake of one symlink. Set here, the layers
+# above are the same for every timezone and docker keeps one copy of them.
+#
+# The end state is the same as before. tzdata arrives above as a dependency
+# (php-fpm and python3 both pull it; checked in a production php container on
+# 2026-10-07), configures itself to UTC in the noninteractive install, and these
+# two lines are what it would have read had they come first. Where nothing pulls
+# tzdata the link dangles, exactly as it did when it was written first.
+RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone
+
+
+
+RUN if [[ "false" = "true" ]]; then set -eux && EXTENSION_DIR="$( php -i | grep ^extension_dir | awk -F '=>' '{print $2}' | xargs )" \
+    && curl -o ioncube.tar.gz http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_<ARCH>.tar.gz \
+    && tar xvfz ioncube.tar.gz \
+    && cd ioncube \
+    && cp ioncube_loader_lin_8.6.so ${EXTENSION_DIR}/ioncube.so \
+    && cd ../ \
+    && rm -rf ioncube \
+    && rm -rf ioncube.tar.gz \
+    && echo "zend_extension=ioncube.so" >> /etc/php/8.6/mods-available/ioncube.ini \
+    && ln -s /etc/php/8.6/mods-available/ioncube.ini /etc/php/8.6/cli/conf.d/10-ioncube.ini \
+    && ln -s /etc/php/8.6/mods-available/ioncube.ini /etc/php/8.6/fpm/conf.d/10-ioncube.ini; fi
+RUN is_composer_version_one="" \
+    && if [[ "2" = "2" ]]; then is_composer_version_one="1" && php -r "readfile('https://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer; fi && if [[ "2" = "1" ]]; then  is_composer_version_one="1" && php -r "readfile('https://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer && composer self-update --1; fi \
+    && if [[ -z "${is_composer_version_one}" ]]; then php -r "readfile('https://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer --version=2; fi
+# PHP 8.6 and newer: Xdebug comes from xdebug.org, not PECL. The first release
+# that builds against 8.6 is 3.6.0alpha1, which xdebug.org has and PECL does not;
+# asked for it, pecl fetched 3.5.3 instead, whose configure refuses 8.6 (measured
+# 2026-11-23). xdebug.org keeps every release, the stable ones too.
+RUN if [[ "false" = "true" ]]; then pecl install -f https://xdebug.org/files/xdebug-3.6.0alpha1.tgz \
+    && touch /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "zend_extension=xdebug.so" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.mode=debug" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.output_dir=/var/www/html/var" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.profiler_output_name=\"cachegrind.out.%t\"" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.remote_enable=1" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.start_with_request=on" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.remote_autostart=on" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.idekey=PHPSTORM" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.client_host=host.docker.internal" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.remote_host=host.docker.internal" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.remote_port=9003" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.client_port=9003" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.log=/var/www/var/log/xdebug.log" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.log_level=7" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && ln -s /etc/php/8.6/mods-available/xdebug.ini /etc/php/8.6/cli/conf.d/11-xdebug.ini \
+    && ln -s /etc/php/8.6/mods-available/xdebug.ini /etc/php/8.6/fpm/conf.d/11-xdebug.ini \
+    && rm -rf /tmp/pear; fi
+
+RUN if [[ "false" = "true" && "debug" = "profile" ]]; then echo "xdebug.profiler_enable=1" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.profiler_output_dir=/var/www/html/var" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.xdebug.profiler_enable_trigger=0" >> /etc/php/8.6/mods-available/xdebug.ini \
+    && echo "xdebug.profiler_append=0" >> /etc/php/8.6/mods-available/xdebug.ini; fi
+RUN sed -i 's/session.cookie_lifetime = 0/session.cookie_lifetime = 2592000/g' /etc/php/8.6/fpm/php.ini \
+    && sed -i 's/post_max_size = 8M/post_max_size = 80M/g' /etc/php/8.6/fpm/php.ini \
+    && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 50M/g' /etc/php/8.6/fpm/php.ini \
+    && sed -i 's/;max_input_vars = 1000/max_input_vars = 50000/g' /etc/php/8.6/fpm/php.ini
+
+# How long a session file may sit unused before it is deleted. On Debian PHP's
+# own garbage collection is off (gc_probability = 0) and /etc/cron.d/php runs
+# sessionclean twice an hour instead, which removes every file in the session
+# directory idle longer than this value. It reads the value from both the fpm
+# and the cli php.ini and takes the larger, so both are written: setting only
+# fpm would leave the cli's 1440 in charge.
+#
+# This is what logged a Magento admin out after 24 minutes with
+# admin/security/session_lifetime set to ten days. The application's lifetime
+# only decides when it stops trusting a session; the file was already gone.
+# Irrelevant when sessions live in Redis or the application keeps its own
+# session directory — sessionclean looks only at session.save_path.
+RUN sed -i 's/^session.gc_maxlifetime = .*/session.gc_maxlifetime = 1440/' /etc/php/8.6/fpm/php.ini \
+    && sed -i 's/^session.gc_maxlifetime = .*/session.gc_maxlifetime = 1440/' /etc/php/8.6/cli/php.ini
+
+# sendmail_path is not set here: it is the last step of the image, in
+# snippets/dockerfile/php/footer, because it is the one line that differs
+# between projects built from the same template.
+
+WORKDIR /var/www
+
+RUN apt-get install -y cron
+RUN mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
+RUN usermod -u <UID> -o www-data && groupmod -g <GID> -o www-data \
+    && chown -R <UID>:<GID> /var/www \
+    && chown -R <UID>:<GID> /usr/bin/composer
+
+
+WORKDIR /var/www/html
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && rm -f /var/log/faillog && rm -f /var/log/lastlog
+
+EXPOSE 9001 9003 35729 5173 9998 9999
+
+# madock's local CA, trusted inside the container as on the host, so code in
+# it can call https://<project>.test. madock put the CA only into the host's
+# store; on OrbStack it reached the container's bundle because OrbStack copies
+# the host's roots in, but without a hash file OpenSSL — PHP's file_get_contents,
+# curl in Python — did not find it, and on Docker Desktop it was not there at
+# all. madockCA.crt is empty when this installation has no CA (nginx/ssl off).
+COPY madockCA.crt /tmp/madockCA.crt
+RUN if [ -s /tmp/madockCA.crt ] && command -v update-ca-certificates >/dev/null 2>&1; then \
+        mkdir -p /usr/local/share/ca-certificates \
+        && cp /tmp/madockCA.crt /usr/local/share/ca-certificates/madockCA.crt \
+        && update-ca-certificates; \
+    fi; rm -f /tmp/madockCA.crt
+
+
+
+# madock: permissive umask (002) for cross-user file writes in dev — makes
+# new files group-writable so root-created files don't block www-data and
+# vice versa. Sourced by interactive shells, non-interactive bash -c
+# (via BASH_ENV), and the container CMD wrapper. Toggle via
+# permissions/umask/permissive=false in config for prod-like setups.
+ENV BASH_ENV=/etc/madock-umask.sh
+RUN printf 'umask 0002\n' > /etc/madock-umask.sh \
+    && mkdir -p /etc/profile.d \
+    && printf 'umask 0002\n' > /etc/profile.d/madock-umask.sh \
+    && touch /etc/bash.bashrc \
+    && printf '\numask 0002\n' >> /etc/bash.bashrc \
+    && chmod 644 /etc/madock-umask.sh /etc/profile.d/madock-umask.sh
+
+# Start cron when the container has jobs and nothing else would.
+#
+# Nothing in an application image starts cron: this one's CMD is php-fpm. The
+# daemon existed only because `start`, `rebuild` or `cron:enable` ran a command
+# inside a container that was already up — so anything that restarts the
+# container takes the daemon with it and **leaves the crontab**. The jobs are
+# still there, nothing reads them, nothing fails, and every HTTP check stays
+# green.
+#
+# madock already re-arms it after `service:restart`, which is where a deploy lost
+# it. That cannot cover the case this exists for: when the host reboots, Docker
+# brings the containers back by its restart policy and **madock is not running at
+# all**. Measured on 2026-08-30, on a production machine rebooted for a plan
+# change — containers up, applications answering, cron down in both projects that
+# had it, found only because `cron:status` was taught to ask the right question
+# three days earlier.
+#
+# The signal is the crontab rather than the config, deliberately. A config value
+# is baked in when the image is built, so enabling cron and rebooting without a
+# rebuild would bring back the same silence. Jobs in the crontab mean jobs that
+# are meant to run — `cron:disable` removes them, so a project told to stop has
+# none — and that is true at the moment the container starts, not at the moment
+# it was built.
+#
+# Failure to start cron never blocks the application: a container that refuses to
+# serve because its scheduler is unhappy is a worse outcome than the one being
+# fixed.
+RUN cat > /usr/local/bin/madock-entrypoint <<'MADOCK_EOF' && chmod +x /usr/local/bin/madock-entrypoint
+#!/bin/sh
+has_jobs() {
+    # A line that is neither blank nor a comment. Debian keeps the explanatory
+    # header in every crontab, so "the file is not empty" would start cron for a
+    # project that has no jobs at all.
+    crontab -u "$1" -l 2>/dev/null | grep -qE '^[^#[:space:]]'
+}
+
+if has_jobs www-data || has_jobs root; then
+    service cron start >/dev/null 2>&1 || true
+fi
+
+exec "$@"
+MADOCK_EOF
+
+# Where PHP's mail() sends — the last layer of the image, on purpose.
+#
+# The command is built by madock (configs.SendmailPath): msmtp with
+# php/sendmail/host, port and from, or the system sendmail when php/sendmail is
+# off. It is the one line that differs between projects built from the same
+# template — a muted clone sends to egress with its own envelope sender — so it
+# goes after everything else. Docker rebuilds from the first line that differs:
+# with this line in the middle (php/ini, until 4.5.67) every clone rebuilt the
+# 14 layers after it, 6-12 s and ~2 GiB at peak per copy, measured 2026-11-20.
+# Here a clone rebuilds this layer alone.
+#
+# It is written into php.ini, not read from the environment. 4.5.68 tried the
+# environment (sendmail_path = "${MADOCK_SENDMAIL_PATH}" with the value in the
+# compose file): php-fpm and docker exec saw it, cron jobs did not — cron starts
+# its jobs with an environment of its own, so every mail() from cron returned
+# false. Measured 2026-11-20 on 4.5.68 before it reached any server. A value in
+# the file reaches every PHP process, however it was started.
+#
+# The value is run by /bin/sh and pasted into this RUN line, so madock refuses
+# to render a host, port or sender outside a strict pattern
+# (configs.ValidateSendmail) before anything is built. The grep makes the build
+# fail if the line did not land in both files.
+RUN sed -i 's|^;\?sendmail_path =.*|sendmail_path = "/usr/bin/msmtp -t --port=1025 --host=host.docker.internal"|' /etc/php/8.6/fpm/php.ini \
+    && sed -i 's|^;\?sendmail_path =.*|sendmail_path = "/usr/bin/msmtp -t --port=1025 --host=host.docker.internal"|' /etc/php/8.6/cli/php.ini \
+    && grep -qxF 'sendmail_path = "/usr/bin/msmtp -t --port=1025 --host=host.docker.internal"' /etc/php/8.6/fpm/php.ini \
+    && grep -qxF 'sendmail_path = "/usr/bin/msmtp -t --port=1025 --host=host.docker.internal"' /etc/php/8.6/cli/php.ini
+
+ENTRYPOINT ["/usr/local/bin/madock-entrypoint"]
+CMD ["bash", "-c", "exec php-fpm8.6"]
