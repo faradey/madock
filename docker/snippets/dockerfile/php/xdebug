@@ -1,4 +1,12 @@
+{{{if versionGte .php.version "8.6" -}}}
+# PHP 8.6 and newer: Xdebug comes from xdebug.org, not PECL. The first release
+# that builds against 8.6 is 3.6.0alpha1, which xdebug.org has and PECL does not;
+# asked for it, pecl fetched 3.5.3 instead, whose configure refuses 8.6 (measured
+# 2026-11-23). xdebug.org keeps every release, the stable ones too.
+RUN if [[ "{{{.php.xdebug.enabled}}}" = "true" ]]; then pecl install -f https://xdebug.org/files/xdebug-{{{.php.xdebug.version}}}.tgz \
+{{{- else -}}}
 RUN if [[ "{{{.php.xdebug.enabled}}}" = "true" ]]; then pecl install -f xdebug-{{{.php.xdebug.version}}} \
+{{{- end}}}
     && touch /etc/php/{{{.php.version}}}/mods-available/xdebug.ini \
     && echo "zend_extension=xdebug.so" >> /etc/php/{{{.php.version}}}/mods-available/xdebug.ini \
     && echo "xdebug.mode={{{.php.xdebug.mode}}}" >> /etc/php/{{{.php.version}}}/mods-available/xdebug.ini \

@@ -13,6 +13,10 @@
     <tools>
         <xdebug>
             <by>php</by>
+            <!-- 8.6: no stable Xdebug builds against it yet; 3.5.x refuses it
+                 at configure time, and 3.6.0alpha1 (2026-09-08) is the first
+                 release xdebug.org lists for 8.6. -->
+            <rule><from>8.6</from><value>3.6.0alpha1</value></rule>
             <rule><from>8.5</from><value>3.5.0</value></rule>
             <rule><from>8.4</from><value>3.4.4</value></rule>
             <rule><from>8.3</from><value>3.3.1</value></rule>

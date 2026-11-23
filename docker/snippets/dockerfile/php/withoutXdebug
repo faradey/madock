@@ -26,6 +26,32 @@ RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get ins
 
 RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
 
+{{{if versionGte .php.version "8.6" -}}}
+# PHP 8.6 and newer: one package at a time; see the same block in php/header.
+RUN apt-get --allow-releaseinfo-change update \
+    && available="" \
+    && for package in php{{{.php.version}}}-bcmath \
+    php{{{.php.version}}}-cli \
+    php{{{.php.version}}}-common \
+    php{{{.php.version}}}-curl \
+    php{{{.php.version}}}-dev \
+    php{{{.php.version}}}-fpm \
+    php{{{.php.version}}}-gd \
+    php{{{.php.version}}}-intl \
+    php{{{.php.version}}}-mbstring \
+    php{{{.php.version}}}-mysql \
+    php{{{.php.version}}}-soap \
+    php{{{.php.version}}}-sqlite3 \
+    php{{{.php.version}}}-xml \
+    php{{{.php.version}}}-xsl \
+    php{{{.php.version}}}-zip \
+    php{{{.php.version}}}-imagick \
+    php{{{.php.version}}}-redis; do \
+        if apt-get install -s -y "$package" > /dev/null 2>&1; then available="$available $package"; \
+        else echo "madock: $package is not available in this index"; fi; \
+    done \
+    && apt-get install -y $available
+{{{- else -}}}
 RUN apt-get --allow-releaseinfo-change update && apt-get install -y php{{{.php.version}}}-bcmath \
     php{{{.php.version}}}-cli \
     php{{{.php.version}}}-common \
@@ -43,6 +69,7 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install -y php{{{.php.v
     php{{{.php.version}}}-zip \
     php{{{.php.version}}}-imagick \
     php{{{.php.version}}}-redis
+{{{- end}}}
 
 # Optional packages: not all PHP versions ship them as separate packages.
 #

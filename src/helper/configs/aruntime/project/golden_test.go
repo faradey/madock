@@ -85,6 +85,20 @@ func goldenCases() []goldenCase {
 			},
 		},
 		{
+			// PHP 8.6 on a custom platform. Its PECL packages reached the PPA
+			// after the core ones, so from 8.6 on the extensions are installed
+			// one at a time, skipping what the index lacks, and Xdebug comes
+			// from xdebug.org, where its first 8.6 release is; every case on
+			// 8.5 and below keeps the old lines and their cache keys.
+			name: "custom-php86",
+			overrides: map[string]string{
+				"platform":           "custom",
+				"language":           "php",
+				"php/version":        "8.6",
+				"php/xdebug/version": "3.6.0alpha1",
+			},
+		},
+		{
 			// The reason the key was renamed. A Python service with a
 			// JavaScript front end needs node in its own image exactly as a PHP
 			// one does, and before 3.9.8 there was no way to ask for it.
