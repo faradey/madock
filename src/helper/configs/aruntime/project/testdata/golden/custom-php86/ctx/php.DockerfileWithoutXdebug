@@ -24,7 +24,11 @@ RUN apt-get clean && apt-get -y --allow-releaseinfo-change update && apt-get ins
     lsof \
   && locale-gen en_US.UTF-8
 
-RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
+# packages.sury.org, not the frozen ppa:ondrej/php; see snippets/dockerfile/php/header.
+RUN curl -fsSL https://packages.sury.org/debsuryorg-archive-keyring.deb -o /tmp/debsuryorg-archive-keyring.deb \
+    && dpkg -i /tmp/debsuryorg-archive-keyring.deb \
+    && rm -f /tmp/debsuryorg-archive-keyring.deb \
+    && echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(. /etc/os-release && echo "$VERSION_CODENAME") main" > /etc/apt/sources.list.d/php.list
 
 # PHP 8.6 and newer: one package at a time; see the same block in php/header.
 RUN apt-get --allow-releaseinfo-change update \
