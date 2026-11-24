@@ -68,9 +68,9 @@ Checked against the madock and madock-pro code on 2026-10-07.
 | Name | What depends on it |
 |---|---|
 | `locales` | `locale-gen` in the same layer — the build fails without it |
-| `software-properties-common` | `add-apt-repository ppa:ondrej/php` in the same layer — the build fails, and no PHP package can be installed |
-| `ca-certificates` | every HTTPS download during the build: the composer installer, NodeSource, ionCube |
-| `curl` | the ionCube download (`php/ioncube/enabled`), NodeSource (`nodejs/embedded/enabled`), the Magento Cloud CLI and n98-magerun downloads |
+| `software-properties-common` | nothing in the php image since the PHP repository moved from `add-apt-repository ppa:ondrej/php` to packages.sury.org; it stays in the default list |
+| `ca-certificates` | every HTTPS download during the build: the packages.sury.org keyring and repository, the composer installer, NodeSource, ionCube |
+| `curl` | the packages.sury.org keyring in the same layer — the build fails, and no PHP package can be installed; the ionCube download (`php/ioncube/enabled`), NodeSource (`nodejs/embedded/enabled`), the Magento Cloud CLI and n98-magerun downloads |
 | `msmtp` | `mail()` — PHP's `sendmail_path` (`php/sendmail/enabled`), and madock-pro's `mail:setup` |
 | `procps` | madock-pro's SSH access: the sidecar is built on the application image and runs `pgrep` |
 | `libmcrypt-dev` | the pecl mcrypt build for PHP 7.2–8.3 |
