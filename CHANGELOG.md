@@ -1,3 +1,8 @@
+**Unreleased**
+
+Fixed:
+- **An image that embeds Node gets the Node `nodejs/version` asks for, or its build fails.** A project with `nodejs/embedded/enabled` and Node 22 had Node 12.22.9 in its php container, and `rebuild` did not change it. NodeSource's setup script exits 0 when it fails — each step is `if ! cmd; then handle_error "$?"`, and after the `!` `$?` is 0 — so `apt-get install nodejs` took Ubuntu 22.04's own Node 12, `npm` came from apt beside it, the build stayed green, and the cached layer was reused by every rebuild after. What failed inside the script, measured on 2026-11-24: its plain `apt update` refused the ondrej/php PPA, whose Label changed to "PPA for PHP (deprecated)" after the cached layers fetched their index (`E: Repository ... changed its 'Label' value`, then `Error: Failed to run 'apt update' (Exit Code: 0)`). The snippet now refreshes the index with `--allow-releaseinfo-change` before the script runs, fails the build when the script left no NodeSource key behind, and fails it when `node -v` is not the major asked for, saying which one it got. Measured on a reference project's clone: with the two checks alone the build stopped at the script's error line; with the refresh added it built and `node -v` gave v22.23.5. The `RUN` line changed, so the next `rebuild` reinstalls Node without `--no-cache`. Applies to every image that embeds Node: PHP's, Python's, Go's, Ruby's. The golden fixtures carry the new line.
+
 **v4.6.0**
 
 Upgrading:

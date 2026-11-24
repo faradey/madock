@@ -227,14 +227,33 @@ WORKDIR /var/www
 RUN apt-get install -y cron
 RUN mkdir /var/www/.ssh/ && mkdir /var/www/.composer/ && mkdir /var/www/scripts/ && mkdir /var/www/scripts/php && mkdir /var/www/patches/ && mkdir /var/www/var/ && mkdir /var/www/var/log/ && touch /var/www/var/log/xdebug.log && chmod 0777 /var/www/var/log/xdebug.log
 
+# The image is checked for the Node it was asked for, not for "a Node".
+#
+# NodeSource's setup script exits 0 when it fails: every step reads
+# `if ! cmd; then handle_error "$?" ...`, and after the `!` $? is 0. Its apt
+# update or its key download can fail, the script says "Error" and succeeds,
+# and `apt-get install nodejs` then takes whatever the distribution carries —
+# Node 12 on Ubuntu 22.04, with npm from apt beside it. The build stayed green
+# and Docker cached that layer, so every later rebuild reused it.
+#
+# What made its apt update fail, measured 2026-11-24: the ondrej/php PPA changed
+# its Label to "PPA for PHP (deprecated)". The index in a cached layer still has
+# the old one, and a plain `apt update` refuses a repository whose Label moved.
+# Every other apt line in these images passes --allow-releaseinfo-change; the
+# script's does not, so the index is refreshed here first, where it can be.
 RUN set -eux; \
+    apt-get -y --allow-releaseinfo-change update; \
     curl -fsSL https://deb.nodesource.com/setup_22.x -o /tmp/nodesource_setup.sh; \
     bash /tmp/nodesource_setup.sh; \
     rm -f /tmp/nodesource_setup.sh; \
+    test -s /usr/share/keyrings/nodesource.gpg \
+        || { echo "madock: the NodeSource setup script did not configure its repository; see its Error line above"; exit 1; }; \
     apt-get -y --allow-releaseinfo-change update; \
     apt-get install -y nodejs; \
     command -v npm >/dev/null 2>&1 || apt-get install -y npm; \
-    node -v; npm -v
+    node -v | grep -q '^v22\.' \
+        || { echo "madock: nodejs/version asks for Node 22, the image got $(node -v)"; exit 1; }; \
+    npm -v
 RUN mkdir -p /var/www/.npm && chown <UID>:<GID> /var/www/.npm
 RUN npm install -g grunt-cli && npm cache clean --force
 RUN npm install -g yarn && npm cache clean --force
