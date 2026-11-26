@@ -1,3 +1,8 @@
+**Unreleased**
+
+Added:
+- **`project:orphans` lists `projects/<name>/` directories that have no registry entry.** The entry is that directory's `config.xml`; `project:remove` ends with `RemoveAll` on the directory, and a file it cannot delete keeps the directory after `config.xml` is gone. Nothing named it after that. A directory without `config.xml` whose name the registry does not hold is now listed as kind `directory`, with its path; `bin`, `docker` and `assets`, which `projects/` holds beside the projects, are not. Listed only: `--remove` still takes docker volumes, networks and images and nothing else, and the text says so when a directory is listed. `docker.RegisterOrphanSource` lets an edition add what it keeps outside docker (madock Pro adds its zfs datasets). A source that cannot answer is named under `unknown` in `--json` (always a list) and as an error line in the text, with a non-zero exit, never as "nothing left"; `orphans` is `[]` rather than `null` when empty. `TestAProjectDirectoryWithNoRegistryEntryIsListed` fails without the `config.xml` check and without the registry check, `TestAFailingSourceIsUnknownNotNothing` when a failing source is dropped.
+
 **v4.6.1**
 
 Upgrading:
