@@ -18,7 +18,7 @@ func init() {
 		Aliases:    []string{"project:orphans"},
 		JSONOutput: true,
 		Handler:    Execute,
-		Help:       "List docker volumes, networks and images left by projects the registry no longer knows; --remove <name> takes one project's away. Supports --json (-j) output",
+		Help:       "List docker volumes, networks and images, and projects/<name> directories, left by projects the registry no longer knows; --remove <name> takes one project's docker resources away. Supports --json (-j) output",
 		Category:   "project",
 		// Global for the same reason project:list is: it describes the
 		// installation rather than a project, and the reason to run it is
@@ -30,6 +30,10 @@ func init() {
 // Output is the --json payload.
 type Output struct {
 	Orphans []docker.Orphan `json:"orphans"`
+	// Unknown is each source that could not tell — docker's labels aside, a
+	// directory that cannot be read or a zfs that does not answer. An empty
+	// orphans list with something here is not "nothing left".
+	Unknown []docker.OrphanUnknown `json:"unknown"`
 }
 
 // Execute prints what is left on the machine of projects that no longer exist.
@@ -68,29 +72,52 @@ func Execute() {
 		os.Exit(1)
 	}
 
-	found := docker.FindOrphans(known)
+	found, unknown := docker.FindAllOrphans(known)
+	if found == nil {
+		found = []docker.Orphan{}
+	}
+	if unknown == nil {
+		unknown = []docker.OrphanUnknown{}
+	}
 
 	if args.Json {
-		output.PrintJSON(Output{Orphans: found})
+		output.PrintJSON(Output{Orphans: found, Unknown: unknown})
 		return
 	}
 
+	for _, u := range unknown {
+		fmtc.ErrorLn(fmt.Sprintf("Could not tell about %s: %s", u.Source, u.Error))
+	}
+
 	if len(found) == 0 {
+		if len(unknown) > 0 {
+			// "Nothing" would be an answer about what could not be read.
+			os.Exit(1)
+		}
 		fmtc.SuccessLn("Nothing on this machine belongs to a project the registry has forgotten")
 		return
 	}
 
 	current := ""
+	listedOnly := false
 	for _, orphan := range found {
 		if orphan.Project != current {
 			current = orphan.Project
 			fmtc.WarningLn(fmt.Sprintf("%s — no entry in this installation", current))
 		}
-		fmt.Printf("  %-8s %s\n", orphan.Kind, orphan.Name)
+		fmt.Printf("  %-9s %s\n", orphan.Kind, orphan.Name)
+		switch orphan.Kind {
+		case "volume", "network", "image":
+		default:
+			listedOnly = true
+		}
 	}
 
 	fmt.Println()
 	fmtc.ToDoLn("Nothing was removed. To see what one project's removal would take: madock project:orphans --remove <name>")
+	if listedOnly {
+		fmtc.ToDoLn("Directories and datasets are listed only: --remove takes docker volumes, networks and images, never data outside docker.")
+	}
 
 	// Non-zero so a check can ask the question, the way project:list --stale
 	// does. What is found is not an error, but it is something to act on.

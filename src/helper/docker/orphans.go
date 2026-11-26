@@ -11,7 +11,9 @@ import (
 // Orphan is one docker resource whose compose project no longer has an entry in
 // madock's registry.
 type Orphan struct {
-	// Kind is volume, network or image.
+	// Kind is volume, network or image; directory for a projects/<name>/ with
+	// no registry entry (FindAllOrphans); whatever a registered source says
+	// for its own — madock-pro's are dataset and directory.
 	Kind string `json:"kind"`
 	Name string `json:"name"`
 	// Project is the madock project name, with the compose prefix stripped —
@@ -51,15 +53,7 @@ func FindOrphans(known map[string]bool) []Orphan {
 	out = append(out, orphansOf("network", dockerLines("network", "ls"), known, configs.RegisteredScopesRead)...)
 	out = append(out, orphansOf("image", dockerLines("image", "ls"), known, configs.RegisteredScopesRead)...)
 
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].Project != out[j].Project {
-			return out[i].Project < out[j].Project
-		}
-		if out[i].Kind != out[j].Kind {
-			return out[i].Kind < out[j].Kind
-		}
-		return out[i].Name < out[j].Name
-	})
+	sortOrphans(out)
 
 	return out
 }
